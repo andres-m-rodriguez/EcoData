@@ -1,17 +1,16 @@
 @page "/counter"
-@rendermode InteractiveWebAssembly
 
-<h1>Counter</h1>
+<MudText Typo="Typo.h4" Class="mb-4">Counter</MudText>
 
-<p>Current count: @currentCount</p>
-
-<button @onclick="IncrementCount">Click me</button>
+<MudPaper Class="pa-4" Elevation="2">
+    <MudText Typo="Typo.h6" Class="mb-2">Current count: @_count</MudText>
+    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="IncrementCount" StartIcon="@Icons.Material.Filled.Add">
+        Click me
+    </MudButton>
+</MudPaper>
 
 @code {
-    private int currentCount = 0;
+    private int _count;
 
-    private void IncrementCount()
-    {
-        currentCount++;
-    }
+    private void IncrementCount() => _count++;
 }
