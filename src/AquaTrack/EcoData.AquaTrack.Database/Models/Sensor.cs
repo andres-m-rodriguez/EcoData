@@ -11,7 +11,7 @@ public sealed class Sensor
     public required string Name { get; set; }
     public required decimal Latitude { get; set; }
     public required decimal Longitude { get; set; }
-    public string? Municipality { get; set; }
+    public required string? Municipality { get; set; }
     public required bool IsActive { get; set; }
     public required DateTimeOffset CreatedAt { get; set; }
 

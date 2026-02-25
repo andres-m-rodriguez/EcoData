@@ -8,8 +8,8 @@ public sealed class Alert
     public required Guid Id { get; set; }
     public required Guid SensorId { get; set; }
     public required string Parameter { get; set; }
-    public double? ThresholdMin { get; set; }
-    public double? ThresholdMax { get; set; }
+    public required double? ThresholdMin { get; set; }
+    public required double? ThresholdMax { get; set; }
     public required DateTimeOffset TriggeredAt { get; set; }
     public required double Value { get; set; }
     public required bool Resolved { get; set; }

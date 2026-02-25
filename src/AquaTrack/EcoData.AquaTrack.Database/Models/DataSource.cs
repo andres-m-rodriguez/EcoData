@@ -8,8 +8,8 @@ public sealed class DataSource
     public required Guid Id { get; set; }
     public required string Name { get; set; }
     public required DataSourceType Type { get; set; }
-    public string? BaseUrl { get; set; }
-    public string? ApiKey { get; set; }
+    public required string? BaseUrl { get; set; }
+    public required string? ApiKey { get; set; }
     public required int PullIntervalSeconds { get; set; }
     public required bool IsActive { get; set; }
     public required DateTimeOffset CreatedAt { get; set; }
