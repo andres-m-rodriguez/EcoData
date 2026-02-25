@@ -13,6 +13,7 @@
     <PackageReference Include="BlazingSingularity" Version="1.0.0-beta.3" />
     <PackageReference Include="BlazorStaticNavigation" Version="1.0.0" />
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="10.0.3" />
+    <PackageReference Include="MudBlazor" Version="9.0.0" />
   </ItemGroup>
 
 </Project>
