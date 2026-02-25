@@ -8,6 +8,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="MudBlazor" Version="9.0.0" />
     <ProjectReference Include="..\EcoData.AquaTrack.WebApp.Client\EcoData.AquaTrack.WebApp.Client.csproj" />
     <ProjectReference Include="..\..\Host\EcoData.ServiceDefaults\EcoData.ServiceDefaults.csproj" />
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="10.0.3" />

@@ -1,4 +1,5 @@
 using EcoData.AquaTrack.WebApp.Components;
+using MudBlazor.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -6,6 +7,8 @@ builder.AddServiceDefaults();
 
 builder.Services.AddRazorComponents()
     .AddInteractiveWebAssemblyComponents();
+
+builder.Services.AddMudServices();
 
 var app = builder.Build();
 
