@@ -9,11 +9,8 @@
 
   <ItemGroup>
     <ProjectReference Include="..\EcoDataPR.AquaTrack.WebApp.Client\EcoDataPR.AquaTrack.WebApp.Client.csproj" />
+    <ProjectReference Include="..\..\Host\EcoDataPR.ServiceDefaults\EcoDataPR.ServiceDefaults.csproj" />
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="10.0.3" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\EcoDataPR.ServiceDefaults\EcoDataPR.ServiceDefaults.csproj" />
   </ItemGroup>
 
 </Project>
