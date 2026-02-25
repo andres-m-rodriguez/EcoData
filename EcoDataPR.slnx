@@ -1,9 +1,11 @@
 <Solution>
-  <Folder Name="/src/">
-    <Project Path="src/EcoDataPR.AquaTrack.WebApp.Client/EcoDataPR.AquaTrack.WebApp.Client.csproj" />
-    <Project Path="src/EcoDataPR.AquaTrack.WebApp/EcoDataPR.AquaTrack.WebApp.csproj" />
-    <Project Path="src/EcoDataPR.Gateway/EcoDataPR.Gateway.csproj" />
+  <Folder Name="/Host/">
+    <Project Path="src/Host/EcoDataPR.AppHost/EcoDataPR.AppHost.csproj" />
+    <Project Path="src/Host/EcoDataPR.ServiceDefaults/EcoDataPR.ServiceDefaults.csproj" />
+    <Project Path="src/Host/EcoDataPR.Gateway/EcoDataPR.Gateway.csproj" />
   </Folder>
-  <Project Path="src/EcoDataPR.AppHost/EcoDataPR.AppHost.csproj" />
-  <Project Path="src/EcoDataPR.ServiceDefaults/EcoDataPR.ServiceDefaults.csproj" />
+  <Folder Name="/AquaTrack/">
+    <Project Path="src/AquaTrack/EcoDataPR.AquaTrack.WebApp/EcoDataPR.AquaTrack.WebApp.csproj" />
+    <Project Path="src/AquaTrack/EcoDataPR.AquaTrack.WebApp.Client/EcoDataPR.AquaTrack.WebApp.Client.csproj" />
+  </Folder>
 </Solution>
