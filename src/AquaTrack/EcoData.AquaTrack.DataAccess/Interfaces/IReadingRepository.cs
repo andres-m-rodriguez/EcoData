@@ -15,11 +15,5 @@ public interface IReadingRepository
         int limit = 50,
         CancellationToken cancellationToken = default);
 
-    Task<HashSet<(Guid SensorId, string Parameter, DateTimeOffset RecordedAt)>> GetExistingKeysAsync(
-        ICollection<Guid> sensorIds,
-        DateTimeOffset minRecordedAt,
-        DateTimeOffset maxRecordedAt,
-        CancellationToken cancellationToken = default);
-
     Task CreateManyAsync(ICollection<ReadingDtoForCreate> dtos, CancellationToken cancellationToken = default);
 }

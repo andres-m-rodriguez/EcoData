@@ -22,12 +22,14 @@ public sealed class ReadingRepository(IDbContextFactory<AquaTrackDbContext> cont
 
         if (from.HasValue)
         {
-            query = query.Where(r => r.RecordedAt >= from.Value);
+            var fromUtc = from.Value.ToUniversalTime();
+            query = query.Where(r => r.RecordedAt >= fromUtc);
         }
 
         if (to.HasValue)
         {
-            query = query.Where(r => r.RecordedAt <= to.Value);
+            var toUtc = to.Value.ToUniversalTime();
+            query = query.Where(r => r.RecordedAt <= toUtc);
         }
 
         return await query
@@ -65,26 +67,6 @@ public sealed class ReadingRepository(IDbContextFactory<AquaTrackDbContext> cont
             .ToListAsync(cancellationToken);
     }
 
-    public async Task<HashSet<(Guid SensorId, string Parameter, DateTimeOffset RecordedAt)>> GetExistingKeysAsync(
-        ICollection<Guid> sensorIds,
-        DateTimeOffset minRecordedAt,
-        DateTimeOffset maxRecordedAt,
-        CancellationToken cancellationToken = default)
-    {
-        await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
-
-        var existingKeys = await context.Readings
-            .Where(r => sensorIds.Contains(r.SensorId) &&
-                        r.RecordedAt >= minRecordedAt &&
-                        r.RecordedAt <= maxRecordedAt)
-            .Select(r => new { r.SensorId, r.Parameter, r.RecordedAt })
-            .ToListAsync(cancellationToken);
-
-        return existingKeys
-            .Select(k => (k.SensorId, k.Parameter, k.RecordedAt))
-            .ToHashSet();
-    }
-
     public async Task CreateManyAsync(ICollection<ReadingDtoForCreate> dtos, CancellationToken cancellationToken = default)
     {
         await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
@@ -97,7 +79,7 @@ public sealed class ReadingRepository(IDbContextFactory<AquaTrackDbContext> cont
             Parameter = dto.Parameter,
             Value = dto.Value,
             Unit = dto.Unit,
-            RecordedAt = dto.RecordedAt,
+            RecordedAt = dto.RecordedAt.ToUniversalTime(),
             IngestedAt = now,
         });
 

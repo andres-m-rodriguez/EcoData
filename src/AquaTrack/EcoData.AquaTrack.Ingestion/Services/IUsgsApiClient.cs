@@ -6,6 +6,6 @@ public interface IUsgsApiClient
 {
     Task<UsgsResponse?> GetInstantaneousValuesAsync(
         string stateCode = "PR",
-        string period = "P1D",
+        DateTimeOffset? startDt = null,
         CancellationToken cancellationToken = default);
 }

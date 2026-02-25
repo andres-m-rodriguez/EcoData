@@ -11,6 +11,7 @@ public static class AquaTrackDataAccessExtensions
         services.AddScoped<IDataSourceRepository, DataSourceRepository>();
         services.AddScoped<ISensorRepository, SensorRepository>();
         services.AddScoped<IReadingRepository, ReadingRepository>();
+        services.AddScoped<IIngestionLogRepository, IngestionLogRepository>();
 
         return services;
     }

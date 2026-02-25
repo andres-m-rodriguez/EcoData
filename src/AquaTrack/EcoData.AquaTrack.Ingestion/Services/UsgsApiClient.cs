@@ -11,10 +11,14 @@ public sealed class UsgsApiClient(
 {
     public async Task<UsgsResponse?> GetInstantaneousValuesAsync(
         string stateCode = "PR",
-        string period = "P1D",
+        DateTimeOffset? startDt = null,
         CancellationToken cancellationToken = default)
     {
-        var url = $"?format=json&stateCd={stateCode}&period={period}&siteStatus=active";
+        var timeParam = startDt.HasValue
+            ? $"startDT={startDt.Value.ToUniversalTime():yyyy-MM-ddTHH:mm:ssZ}"
+            : "period=PT30M";
+
+        var url = $"?format=json&stateCd={stateCode}&{timeParam}&siteStatus=active";
 
         logger.LogInformation("Fetching USGS data from {Url}", url);
 

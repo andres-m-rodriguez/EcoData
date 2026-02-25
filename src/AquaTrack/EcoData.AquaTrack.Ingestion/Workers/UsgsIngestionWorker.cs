@@ -10,6 +10,7 @@ public sealed class UsgsIngestionWorker(
     IDataSourceRepository dataSourceRepository,
     ISensorRepository sensorRepository,
     IReadingRepository readingRepository,
+    IIngestionLogRepository ingestionLogRepository,
     IUsgsApiClient usgsApiClient,
     ILogger<UsgsIngestionWorker> logger
 ) : BackgroundService
@@ -25,19 +26,22 @@ public sealed class UsgsIngestionWorker(
         {
             try
             {
-                var response = await usgsApiClient.GetInstantaneousValuesAsync(cancellationToken: stoppingToken);
-
-                if (response?.Value.TimeSeries is not { Count: > 0 } timeSeries)
-                {
-                    logger.LogWarning("No time series data received from USGS");
-                    await Task.Delay(DefaultInterval, stoppingToken);
-                    continue;
-                }
-
                 var dataSource = await dataSourceRepository.GetByNameAsync(UsgsDataSourceName, stoppingToken)
                     ?? await dataSourceRepository.CreateAsync(new DataSourceDtoForCreate(
                         UsgsDataSourceName, "Public", "https://waterservices.usgs.gov/nwis/", null, 900, true
                     ), stoppingToken);
+
+                var lastLog = await ingestionLogRepository.GetLatestAsync(dataSource.Id, stoppingToken);
+                var startDt = lastLog?.LastRecordedAt;
+
+                var response = await usgsApiClient.GetInstantaneousValuesAsync(startDt: startDt, cancellationToken: stoppingToken);
+
+                if (response?.Value.TimeSeries is not { Count: > 0 } timeSeries)
+                {
+                    logger.LogDebug("No new time series data received from USGS");
+                    await Task.Delay(DefaultInterval, stoppingToken);
+                    continue;
+                }
 
                 var siteCodesInResponse = timeSeries
                     .SelectMany(s => s.SourceInfo.SiteCode)
@@ -106,19 +110,15 @@ public sealed class UsgsIngestionWorker(
 
                 if (readingsToAdd.Count > 0)
                 {
-                    var sensorIds = readingsToAdd.Select(r => r.SensorId).Distinct().ToList();
-                    var existingKeys = await readingRepository.GetExistingKeysAsync(
-                        sensorIds, readingsToAdd.Min(r => r.RecordedAt), readingsToAdd.Max(r => r.RecordedAt), stoppingToken);
+                    await readingRepository.CreateManyAsync(readingsToAdd, stoppingToken);
 
-                    var uniqueReadings = readingsToAdd
-                        .Where(r => !existingKeys.Contains((r.SensorId, r.Parameter, r.RecordedAt)))
-                        .ToList();
+                    var maxRecordedAt = readingsToAdd.Max(r => r.RecordedAt);
+                    await ingestionLogRepository.CreateAsync(
+                        new IngestionLogDtoForCreate(dataSource.Id, readingsToAdd.Count, maxRecordedAt),
+                        stoppingToken);
 
-                    if (uniqueReadings.Count > 0)
-                    {
-                        await readingRepository.CreateManyAsync(uniqueReadings, stoppingToken);
-                        logger.LogInformation("Added {Count} new readings", uniqueReadings.Count);
-                    }
+                    logger.LogInformation("Ingested {Count} readings, last recorded at {LastRecordedAt}",
+                        readingsToAdd.Count, maxRecordedAt);
                 }
 
                 logger.LogInformation("USGS data ingestion completed");
