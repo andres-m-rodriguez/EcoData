@@ -1,6 +1,10 @@
 <Project Sdk="Aspire.AppHost.Sdk/13.1.1">
 
   <ItemGroup>
+    <PackageReference Include="Aspire.Hosting.PostgreSQL" Version="9.2.1" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\EcoData.Gateway\EcoData.Gateway.csproj" />
     <ProjectReference Include="..\..\AquaTrack\EcoData.AquaTrack.WebApp\EcoData.AquaTrack.WebApp.csproj" />
   </ItemGroup>

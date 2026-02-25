@@ -9,9 +9,13 @@
 
   <ItemGroup>
     <PackageReference Include="MudBlazor" Version="9.0.0" />
-    <ProjectReference Include="..\EcoData.AquaTrack.WebApp.Client\EcoData.AquaTrack.WebApp.Client.csproj" />
-    <ProjectReference Include="..\..\Host\EcoData.ServiceDefaults\EcoData.ServiceDefaults.csproj" />
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="10.0.3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\EcoData.AquaTrack.WebApp.Client\EcoData.AquaTrack.WebApp.Client.csproj" />
+    <ProjectReference Include="..\EcoData.AquaTrack.Database\EcoData.AquaTrack.Database.csproj" />
+    <ProjectReference Include="..\..\Host\EcoData.ServiceDefaults\EcoData.ServiceDefaults.csproj" />
   </ItemGroup>
 
 </Project>
