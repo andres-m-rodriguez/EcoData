@@ -8,5 +8,6 @@
     <Project Path="src/AquaTrack/EcoData.AquaTrack.WebApp/EcoData.AquaTrack.WebApp.csproj" />
     <Project Path="src/AquaTrack/EcoData.AquaTrack.WebApp.Client/EcoData.AquaTrack.WebApp.Client.csproj" />
     <Project Path="src/AquaTrack/EcoData.AquaTrack.Database/EcoData.AquaTrack.Database.csproj" />
+    <Project Path="src/AquaTrack/EcoData.AquaTrack.Seeder/EcoData.AquaTrack.Seeder.csproj" />
   </Folder>
 </Solution>

@@ -14,7 +14,7 @@ public sealed class DataSource
     public required bool IsActive { get; set; }
     public required DateTimeOffset CreatedAt { get; set; }
 
-    public ICollection<Sensor> Sensors { get; set; } = [];
+    public ICollection<Sensor>? Sensors { get; set; }
 
     public sealed class EntityConfiguration : IEntityTypeConfiguration<DataSource>
     {
@@ -24,22 +24,20 @@ public sealed class DataSource
 
             builder.HasKey(static e => e.Id);
 
-            builder.Property(static e => e.Name)
-                .HasMaxLength(200)
-                .IsRequired();
+            builder.Property(static e => e.Name).HasMaxLength(200).IsRequired();
 
-            builder.Property(static e => e.Type)
+            builder
+                .Property(static e => e.Type)
                 .HasConversion<string>()
                 .HasMaxLength(50)
                 .IsRequired();
 
-            builder.Property(static e => e.BaseUrl)
-                .HasMaxLength(500);
+            builder.Property(static e => e.BaseUrl).HasMaxLength(500);
 
-            builder.Property(static e => e.ApiKey)
-                .HasMaxLength(500);
+            builder.Property(static e => e.ApiKey).HasMaxLength(500);
 
-            builder.HasMany(static e => e.Sensors)
+            builder
+                .HasMany(static e => e.Sensors)
                 .WithOne(static e => e.DataSource)
                 .HasForeignKey(static e => e.SourceId)
                 .OnDelete(DeleteBehavior.Restrict);

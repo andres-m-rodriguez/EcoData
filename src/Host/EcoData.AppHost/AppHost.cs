@@ -6,9 +6,13 @@ var postgres = builder.AddPostgres("postgres")
 
 var aquatrackDb = postgres.AddDatabase("aquatrack");
 
-var aquaTrackWebApp = builder.AddProject<Projects.EcoData_AquaTrack_WebApp>("aquatrack-webapp")
+var seeder = builder.AddProject<Projects.EcoData_AquaTrack_Seeder>("aquatrack-seeder")
     .WithReference(aquatrackDb)
     .WaitFor(aquatrackDb);
+
+var aquaTrackWebApp = builder.AddProject<Projects.EcoData_AquaTrack_WebApp>("aquatrack-webapp")
+    .WithReference(aquatrackDb)
+    .WaitFor(seeder);
 
 var gateway = builder.AddProject<Projects.EcoData_Gateway>("gateway")
     .WithExternalHttpEndpoints()

@@ -13,7 +13,7 @@ public sealed class Reading
     public required DateTimeOffset RecordedAt { get; set; }
     public required DateTimeOffset IngestedAt { get; set; }
 
-    public Sensor Sensor { get; set; } = null!;
+    public Sensor? Sensor { get; set; }
 
     public sealed class EntityConfiguration : IEntityTypeConfiguration<Reading>
     {

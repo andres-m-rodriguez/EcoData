@@ -15,9 +15,9 @@ public sealed class Sensor
     public required bool IsActive { get; set; }
     public required DateTimeOffset CreatedAt { get; set; }
 
-    public DataSource DataSource { get; set; } = null!;
-    public ICollection<Reading> Readings { get; set; } = [];
-    public ICollection<Alert> Alerts { get; set; } = [];
+    public DataSource? DataSource { get; set; }
+    public ICollection<Reading>? Readings { get; set; }
+    public ICollection<Alert>? Alerts { get; set; }
 
     public sealed class EntityConfiguration : IEntityTypeConfiguration<Sensor>
     {

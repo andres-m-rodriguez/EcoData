@@ -14,7 +14,7 @@ public sealed class Alert
     public required double Value { get; set; }
     public required bool Resolved { get; set; }
 
-    public Sensor Sensor { get; set; } = null!;
+    public Sensor? Sensor { get; set; }
 
     public sealed class EntityConfiguration : IEntityTypeConfiguration<Alert>
     {
@@ -24,9 +24,7 @@ public sealed class Alert
 
             builder.HasKey(static e => e.Id);
 
-            builder.Property(static e => e.Parameter)
-                .HasMaxLength(50)
-                .IsRequired();
+            builder.Property(static e => e.Parameter).HasMaxLength(50).IsRequired();
 
             builder.HasIndex(static e => e.TriggeredAt);
 
