@@ -5,19 +5,17 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <base href="/" />
-    <ResourcePreloader />
     <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap" rel="stylesheet" />
     <link href="_content/MudBlazor/MudBlazor.min.css" rel="stylesheet" />
     <link rel="stylesheet" href="@Assets["app.css"]" />
     <link rel="stylesheet" href="@Assets["EcoData.AquaTrack.WebApp.styles.css"]" />
-    <ImportMap />
-    <HeadOutlet />
+    <HeadOutlet @rendermode="InteractiveWebAssembly" />
 </head>
 
 <body>
-    <Routes />
+    <EcoData.AquaTrack.WebApp.Client.Routes @rendermode="InteractiveWebAssembly" />
     <script src="_content/MudBlazor/MudBlazor.min.js"></script>
-    <script src="@Assets["_framework/blazor.web.js"]"></script>
+    <script src="_framework/blazor.web.js"></script>
 </body>
 
 </html>
