@@ -16,8 +16,8 @@ public sealed class Sensor
     public required DateTimeOffset CreatedAt { get; set; }
 
     public DataSource? DataSource { get; set; }
-    public ICollection<Reading>? Readings { get; set; }
-    public ICollection<Alert>? Alerts { get; set; }
+    public ICollection<Reading> Readings { get; set; } = [];
+    public ICollection<Alert> Alerts { get; set; } = [];
 
     public sealed class EntityConfiguration : IEntityTypeConfiguration<Sensor>
     {
@@ -27,34 +27,26 @@ public sealed class Sensor
 
             builder.HasKey(static e => e.Id);
 
-            builder.Property(static e => e.ExternalId)
-                .HasMaxLength(100)
-                .IsRequired();
+            builder.Property(static e => e.ExternalId).HasMaxLength(100).IsRequired();
 
-            builder.Property(static e => e.Name)
-                .HasMaxLength(300)
-                .IsRequired();
+            builder.Property(static e => e.Name).HasMaxLength(300).IsRequired();
 
-            builder.Property(static e => e.Latitude)
-                .HasPrecision(9, 6)
-                .IsRequired();
+            builder.Property(static e => e.Latitude).HasPrecision(9, 6).IsRequired();
 
-            builder.Property(static e => e.Longitude)
-                .HasPrecision(9, 6)
-                .IsRequired();
+            builder.Property(static e => e.Longitude).HasPrecision(9, 6).IsRequired();
 
-            builder.Property(static e => e.Municipality)
-                .HasMaxLength(100);
+            builder.Property(static e => e.Municipality).HasMaxLength(100);
 
-            builder.HasIndex(static e => new { e.SourceId, e.ExternalId })
-                .IsUnique();
+            builder.HasIndex(static e => new { e.SourceId, e.ExternalId }).IsUnique();
 
-            builder.HasMany(static e => e.Readings)
+            builder
+                .HasMany(static e => e.Readings)
                 .WithOne(static e => e.Sensor)
                 .HasForeignKey(static e => e.SensorId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            builder.HasMany(static e => e.Alerts)
+            builder
+                .HasMany(static e => e.Alerts)
                 .WithOne(static e => e.Sensor)
                 .HasForeignKey(static e => e.SensorId)
                 .OnDelete(DeleteBehavior.Cascade);

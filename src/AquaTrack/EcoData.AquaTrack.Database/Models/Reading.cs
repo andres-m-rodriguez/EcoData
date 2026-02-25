@@ -23,19 +23,20 @@ public sealed class Reading
 
             builder.HasKey(static e => e.Id);
 
-            builder.Property(static e => e.Parameter)
-                .HasMaxLength(50)
-                .IsRequired();
+            builder.Property(static e => e.Parameter).HasMaxLength(50).IsRequired();
 
-            builder.Property(static e => e.Unit)
-                .HasMaxLength(30)
-                .IsRequired();
+            builder.Property(static e => e.Unit).HasMaxLength(30).IsRequired();
 
             builder.HasIndex(static e => e.RecordedAt);
 
             builder.HasIndex(static e => new { e.SensorId, e.RecordedAt });
 
-            builder.HasIndex(static e => new { e.SensorId, e.Parameter, e.RecordedAt });
+            builder.HasIndex(static e => new
+            {
+                e.SensorId,
+                e.Parameter,
+                e.RecordedAt,
+            });
         }
     }
 }
