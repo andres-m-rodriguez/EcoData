@@ -10,6 +10,10 @@ var seeder = builder.AddProject<Projects.EcoData_AquaTrack_Seeder>("aquatrack-se
     .WithReference(aquatrackDb)
     .WaitFor(aquatrackDb);
 
+var ingestion = builder.AddProject<Projects.EcoData_AquaTrack_Ingestion>("aquatrack-ingestion")
+    .WithReference(aquatrackDb)
+    .WaitFor(seeder);
+
 var aquaTrackWebApp = builder.AddProject<Projects.EcoData_AquaTrack_WebApp>("aquatrack-webapp")
     .WithReference(aquatrackDb)
     .WaitFor(seeder);

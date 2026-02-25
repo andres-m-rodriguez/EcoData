@@ -12,7 +12,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace EcoData.AquaTrack.Database.Migrations
 {
     [DbContext(typeof(AquaTrackDbContext))]
-    [Migration("20260225215019_InitialCreate")]
+    [Migration("20260225232403_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -119,6 +119,38 @@ namespace EcoData.AquaTrack.Database.Migrations
                         .HasName("pk_data_sources");
 
                     b.ToTable("data_sources", (string)null);
+                });
+
+            modelBuilder.Entity("EcoData.AquaTrack.Database.Models.IngestionLog", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid>("DataSourceId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("data_source_id");
+
+                    b.Property<DateTimeOffset>("IngestedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("ingested_at");
+
+                    b.Property<DateTimeOffset>("LastRecordedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("last_recorded_at");
+
+                    b.Property<int>("RecordCount")
+                        .HasColumnType("integer")
+                        .HasColumnName("record_count");
+
+                    b.HasKey("Id")
+                        .HasName("pk_ingestion_logs");
+
+                    b.HasIndex("DataSourceId", "IngestedAt")
+                        .HasDatabaseName("ix_ingestion_logs_data_source_id_ingested_at");
+
+                    b.ToTable("ingestion_logs", (string)null);
                 });
 
             modelBuilder.Entity("EcoData.AquaTrack.Database.Models.Reading", b =>
@@ -237,6 +269,18 @@ namespace EcoData.AquaTrack.Database.Migrations
                         .HasConstraintName("fk_alerts_sensors_sensor_id");
 
                     b.Navigation("Sensor");
+                });
+
+            modelBuilder.Entity("EcoData.AquaTrack.Database.Models.IngestionLog", b =>
+                {
+                    b.HasOne("EcoData.AquaTrack.Database.Models.DataSource", "DataSource")
+                        .WithMany()
+                        .HasForeignKey("DataSourceId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_ingestion_logs_data_sources_data_source_id");
+
+                    b.Navigation("DataSource");
                 });
 
             modelBuilder.Entity("EcoData.AquaTrack.Database.Models.Reading", b =>
