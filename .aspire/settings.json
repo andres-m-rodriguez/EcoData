@@ -1,3 +1,3 @@
 {
-  "appHostPath": "../src/EcoDataPR.AppHost/EcoDataPR.AppHost.csproj"
+  "appHostPath": "../src/Host/EcoData.AppHost/EcoData.AppHost.csproj"
 }
