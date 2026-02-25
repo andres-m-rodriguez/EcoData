@@ -12,7 +12,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\Host\EcoData.ServiceDefaults\EcoData.ServiceDefaults.csproj" />
-    <ProjectReference Include="..\EcoData.AquaTrack.Database\EcoData.AquaTrack.Database.csproj" />
+    <ProjectReference Include="..\EcoData.AquaTrack.DataAccess\EcoData.AquaTrack.DataAccess.csproj" />
   </ItemGroup>
 
 </Project>

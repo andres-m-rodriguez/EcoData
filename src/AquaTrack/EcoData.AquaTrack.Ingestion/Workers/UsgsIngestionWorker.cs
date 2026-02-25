@@ -1,20 +1,21 @@
-using EcoData.AquaTrack.Database;
 using EcoData.AquaTrack.Database.Models;
+using EcoData.AquaTrack.DataAccess.Interfaces;
 using EcoData.AquaTrack.Ingestion.Models;
 using EcoData.AquaTrack.Ingestion.Services;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
 namespace EcoData.AquaTrack.Ingestion.Workers;
 
 public sealed class UsgsIngestionWorker(
-    IServiceProvider serviceProvider,
+    IDataSourceRepository dataSourceRepository,
+    ISensorRepository sensorRepository,
+    IReadingRepository readingRepository,
     IUsgsApiClient usgsApiClient,
     ILogger<UsgsIngestionWorker> logger
 ) : BackgroundService
 {
+    private const string UsgsDataSourceName = "USGS Puerto Rico";
     private static readonly TimeSpan DefaultInterval = TimeSpan.FromMinutes(15);
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -46,11 +47,18 @@ public sealed class UsgsIngestionWorker(
             return;
         }
 
-        await using var scope = serviceProvider.CreateAsyncScope();
-        var context = scope.ServiceProvider.GetRequiredService<AquaTrackDbContext>();
+        var dataSource = await GetOrCreateUsgsDataSourceAsync(stoppingToken);
+        var siteCodesInResponse = timeSeries
+            .SelectMany(s => s.SourceInfo.SiteCode)
+            .Select(sc => sc.Value)
+            .Where(v => !string.IsNullOrEmpty(v))
+            .Distinct()
+            .ToList();
 
-        var dataSource = await GetOrCreateUsgsDataSourceAsync(context, stoppingToken);
-        var existingSensors = await GetExistingSensorsAsync(context, dataSource.Id, stoppingToken);
+        var existingSensors = await sensorRepository.GetSensorsByExternalIdsAsync(
+            dataSource.Id,
+            siteCodesInResponse,
+            stoppingToken);
 
         var sensorsToAdd = new List<Sensor>();
         var readingsToAdd = new List<Reading>();
@@ -99,32 +107,27 @@ public sealed class UsgsIngestionWorker(
 
         if (sensorsToAdd.Count > 0)
         {
-            context.Sensors.AddRange(sensorsToAdd);
-            logger.LogInformation("Adding {Count} new sensors", sensorsToAdd.Count);
+            await sensorRepository.CreateManyAsync(sensorsToAdd, stoppingToken);
+            logger.LogInformation("Added {Count} new sensors", sensorsToAdd.Count);
         }
 
         if (readingsToAdd.Count > 0)
         {
-            // Filter out duplicate readings (same sensor, parameter, recorded_at)
-            var uniqueReadings = await FilterDuplicateReadingsAsync(context, readingsToAdd, stoppingToken);
+            var uniqueReadings = await FilterDuplicateReadingsAsync(readingsToAdd, stoppingToken);
 
             if (uniqueReadings.Count > 0)
             {
-                context.Readings.AddRange(uniqueReadings);
-                logger.LogInformation("Adding {Count} new readings", uniqueReadings.Count);
+                await readingRepository.CreateManyAsync(uniqueReadings, stoppingToken);
+                logger.LogInformation("Added {Count} new readings", uniqueReadings.Count);
             }
         }
 
-        await context.SaveChangesAsync(stoppingToken);
         logger.LogInformation("USGS data ingestion completed");
     }
 
-    private static async Task<DataSource> GetOrCreateUsgsDataSourceAsync(
-        AquaTrackDbContext context,
-        CancellationToken stoppingToken)
+    private async Task<DataSource> GetOrCreateUsgsDataSourceAsync(CancellationToken stoppingToken)
     {
-        var dataSource = await context.DataSources
-            .FirstOrDefaultAsync(ds => ds.Name == "USGS Puerto Rico", stoppingToken);
+        var dataSource = await dataSourceRepository.GetByNameAsync(UsgsDataSourceName, stoppingToken);
 
         if (dataSource is not null)
         {
@@ -134,7 +137,7 @@ public sealed class UsgsIngestionWorker(
         dataSource = new DataSource
         {
             Id = Guid.CreateVersion7(),
-            Name = "USGS Puerto Rico",
+            Name = UsgsDataSourceName,
             Type = DataSourceType.Public,
             BaseUrl = "https://waterservices.usgs.gov/nwis/",
             ApiKey = null,
@@ -143,20 +146,7 @@ public sealed class UsgsIngestionWorker(
             CreatedAt = DateTimeOffset.UtcNow,
         };
 
-        context.DataSources.Add(dataSource);
-        return dataSource;
-    }
-
-    private static async Task<Dictionary<string, Sensor>> GetExistingSensorsAsync(
-        AquaTrackDbContext context,
-        Guid dataSourceId,
-        CancellationToken stoppingToken)
-    {
-        var sensors = await context.Sensors
-            .Where(s => s.SourceId == dataSourceId)
-            .ToListAsync(stoppingToken);
-
-        return sensors.ToDictionary(s => s.ExternalId);
+        return await dataSourceRepository.CreateAsync(dataSource, stoppingToken);
     }
 
     private static Sensor CreateSensor(UsgsTimeSeries series, Guid dataSourceId, DateTimeOffset now)
@@ -178,8 +168,7 @@ public sealed class UsgsIngestionWorker(
         };
     }
 
-    private static async Task<List<Reading>> FilterDuplicateReadingsAsync(
-        AquaTrackDbContext context,
+    private async Task<List<Reading>> FilterDuplicateReadingsAsync(
         List<Reading> readings,
         CancellationToken stoppingToken)
     {
@@ -188,20 +177,15 @@ public sealed class UsgsIngestionWorker(
             return readings;
         }
 
-        var sensorIds = readings.Select(r => r.SensorId).Distinct().ToList();
+        var sensorIds = readings.Select(r => r.SensorId).Distinct();
         var minRecordedAt = readings.Min(r => r.RecordedAt);
         var maxRecordedAt = readings.Max(r => r.RecordedAt);
 
-        var existingKeys = await context.Readings
-            .Where(r => sensorIds.Contains(r.SensorId) &&
-                        r.RecordedAt >= minRecordedAt &&
-                        r.RecordedAt <= maxRecordedAt)
-            .Select(r => new { r.SensorId, r.Parameter, r.RecordedAt })
-            .ToListAsync(stoppingToken);
-
-        var existingKeySet = existingKeys
-            .Select(k => (k.SensorId, k.Parameter, k.RecordedAt))
-            .ToHashSet();
+        var existingKeySet = await readingRepository.GetExistingKeysAsync(
+            sensorIds,
+            minRecordedAt,
+            maxRecordedAt,
+            stoppingToken);
 
         return readings
             .Where(r => !existingKeySet.Contains((r.SensorId, r.Parameter, r.RecordedAt)))
