@@ -9,14 +9,12 @@ public sealed class UsgsApiClient(
     ILogger<UsgsApiClient> logger
 ) : IUsgsApiClient
 {
-    private const string BaseUrl = "https://waterservices.usgs.gov/nwis/iv/";
-
     public async Task<UsgsResponse?> GetInstantaneousValuesAsync(
         string stateCode = "PR",
         string period = "P1D",
         CancellationToken cancellationToken = default)
     {
-        var url = $"{BaseUrl}?format=json&stateCd={stateCode}&period={period}&siteStatus=active";
+        var url = $"?format=json&stateCd={stateCode}&period={period}&siteStatus=active";
 
         logger.LogInformation("Fetching USGS data from {Url}", url);
 

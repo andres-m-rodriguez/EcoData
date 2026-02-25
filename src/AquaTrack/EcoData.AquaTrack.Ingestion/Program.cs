@@ -7,7 +7,10 @@ var builder = Host.CreateApplicationBuilder(args);
 builder.AddServiceDefaults();
 builder.AddAquaTrackDatabase();
 
-builder.Services.AddHttpClient<IUsgsApiClient, UsgsApiClient>();
+builder.Services.AddHttpClient<IUsgsApiClient, UsgsApiClient>(client =>
+{
+    client.BaseAddress = new Uri("https://waterservices.usgs.gov/nwis/iv/");
+});
 builder.Services.AddHostedService<UsgsIngestionWorker>();
 
 var host = builder.Build();
