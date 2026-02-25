@@ -1,4 +1,7 @@
 <Solution>
+  <Folder Name="/src/">
+    <Project Path="src/EcoDataPR.Gateway/EcoDataPR.Gateway.csproj" />
+  </Folder>
   <Project Path="src/EcoDataPR.AppHost/EcoDataPR.AppHost.csproj" />
   <Project Path="src/EcoDataPR.ServiceDefaults/EcoDataPR.ServiceDefaults.csproj" />
 </Solution>
