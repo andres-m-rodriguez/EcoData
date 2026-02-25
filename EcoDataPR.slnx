@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="EcoDataPR.AppHost/EcoDataPR.AppHost.csproj" />
+  <Project Path="EcoDataPR.ServiceDefaults/EcoDataPR.ServiceDefaults.csproj" />
+</Solution>
