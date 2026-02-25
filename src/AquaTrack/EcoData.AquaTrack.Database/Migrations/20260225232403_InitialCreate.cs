@@ -30,6 +30,27 @@ namespace EcoData.AquaTrack.Database.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "ingestion_logs",
+                columns: table => new
+                {
+                    id = table.Column<Guid>(type: "uuid", nullable: false),
+                    data_source_id = table.Column<Guid>(type: "uuid", nullable: false),
+                    ingested_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    record_count = table.Column<int>(type: "integer", nullable: false),
+                    last_recorded_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("pk_ingestion_logs", x => x.id);
+                    table.ForeignKey(
+                        name: "fk_ingestion_logs_data_sources_data_source_id",
+                        column: x => x.data_source_id,
+                        principalTable: "data_sources",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "sensors",
                 columns: table => new
                 {
@@ -112,6 +133,11 @@ namespace EcoData.AquaTrack.Database.Migrations
                 column: "triggered_at");
 
             migrationBuilder.CreateIndex(
+                name: "ix_ingestion_logs_data_source_id_ingested_at",
+                table: "ingestion_logs",
+                columns: new[] { "data_source_id", "ingested_at" });
+
+            migrationBuilder.CreateIndex(
                 name: "ix_readings_recorded_at",
                 table: "readings",
                 column: "recorded_at");
@@ -138,6 +164,9 @@ namespace EcoData.AquaTrack.Database.Migrations
         {
             migrationBuilder.DropTable(
                 name: "alerts");
+
+            migrationBuilder.DropTable(
+                name: "ingestion_logs");
 
             migrationBuilder.DropTable(
                 name: "readings");
