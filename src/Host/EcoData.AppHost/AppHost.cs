@@ -1,6 +1,18 @@
 var builder = DistributedApplication.CreateBuilder(args);
 
-var aquaTrackWebApp = builder.AddProject<Projects.EcoData_AquaTrack_WebApp>("aquatrack-webapp");
+var postgres = builder.AddPostgres("postgres")
+    .WithDataVolume()
+    .WithPgAdmin();
+
+var aquatrackDb = postgres.AddDatabase("aquatrack");
+
+var seeder = builder.AddProject<Projects.EcoData_AquaTrack_Seeder>("aquatrack-seeder")
+    .WithReference(aquatrackDb)
+    .WaitFor(aquatrackDb);
+
+var aquaTrackWebApp = builder.AddProject<Projects.EcoData_AquaTrack_WebApp>("aquatrack-webapp")
+    .WithReference(aquatrackDb)
+    .WaitFor(seeder);
 
 var gateway = builder.AddProject<Projects.EcoData_Gateway>("gateway")
     .WithExternalHttpEndpoints()
