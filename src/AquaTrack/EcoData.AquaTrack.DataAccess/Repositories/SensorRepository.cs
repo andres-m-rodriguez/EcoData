@@ -16,19 +16,12 @@ public sealed class SensorRepository(IDbContextFactory<AquaTrackDbContext> conte
             .AnyAsync(s => s.ExternalId == externalId && s.SourceId == dataSourceId, cancellationToken);
     }
 
-    public async Task<Sensor?> GetByExternalIdAsync(string externalId, Guid dataSourceId, CancellationToken cancellationToken = default)
-    {
-        await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
-        return await context.Sensors
-            .FirstOrDefaultAsync(s => s.ExternalId == externalId && s.SourceId == dataSourceId, cancellationToken);
-    }
-
-    public async Task<SensorForDetailDto?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
+    public async Task<SensorDtoForDetail?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
         await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
         return await context.Sensors
             .Where(s => s.Id == id)
-            .Select(s => new SensorForDetailDto(
+            .Select(s => new SensorDtoForDetail(
                 s.Id,
                 s.SourceId,
                 s.ExternalId,
@@ -43,12 +36,12 @@ public sealed class SensorRepository(IDbContextFactory<AquaTrackDbContext> conte
             .FirstOrDefaultAsync(cancellationToken);
     }
 
-    public async Task<IReadOnlyList<SensorForListDto>> GetByDataSourceAsync(Guid dataSourceId, CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyList<SensorDtoForList>> GetByDataSourceAsync(Guid dataSourceId, CancellationToken cancellationToken = default)
     {
         await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
         return await context.Sensors
             .Where(s => s.SourceId == dataSourceId)
-            .Select(s => new SensorForListDto(
+            .Select(s => new SensorDtoForList(
                 s.Id,
                 s.ExternalId,
                 s.Name,
@@ -60,12 +53,12 @@ public sealed class SensorRepository(IDbContextFactory<AquaTrackDbContext> conte
             .ToListAsync(cancellationToken);
     }
 
-    public async Task<IReadOnlyList<SensorForListDto>> GetAllActiveAsync(CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyList<SensorDtoForList>> GetAllActiveAsync(CancellationToken cancellationToken = default)
     {
         await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
         return await context.Sensors
             .Where(s => s.IsActive)
-            .Select(s => new SensorForListDto(
+            .Select(s => new SensorDtoForList(
                 s.Id,
                 s.ExternalId,
                 s.Name,
@@ -77,24 +70,44 @@ public sealed class SensorRepository(IDbContextFactory<AquaTrackDbContext> conte
             .ToListAsync(cancellationToken);
     }
 
-    public async Task<Dictionary<string, Sensor>> GetSensorsByExternalIdsAsync(
+    public async Task<Dictionary<string, SensorDtoForCreated>> GetSensorsByExternalIdsAsync(
         Guid dataSourceId,
-        IEnumerable<string> externalIds,
+        ICollection<string> externalIds,
         CancellationToken cancellationToken = default)
     {
         await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
-        var idList = externalIds.ToList();
+
         var sensors = await context.Sensors
-            .Where(s => s.SourceId == dataSourceId && idList.Contains(s.ExternalId))
+            .Where(s => s.SourceId == dataSourceId && externalIds.Contains(s.ExternalId))
+            .Select(s => new SensorDtoForCreated(s.Id, s.ExternalId))
             .ToListAsync(cancellationToken);
 
         return sensors.ToDictionary(s => s.ExternalId);
     }
 
-    public async Task CreateManyAsync(IEnumerable<Sensor> sensors, CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyList<SensorDtoForCreated>> CreateManyAsync(
+        ICollection<SensorDtoForCreate> dtos,
+        CancellationToken cancellationToken = default)
     {
         await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
-        context.Sensors.AddRange(sensors);
+        var now = DateTimeOffset.UtcNow;
+
+        var entities = dtos.Select(dto => new Sensor
+        {
+            Id = Guid.CreateVersion7(),
+            SourceId = dto.SourceId,
+            ExternalId = dto.ExternalId,
+            Name = dto.Name,
+            Latitude = dto.Latitude,
+            Longitude = dto.Longitude,
+            Municipality = dto.Municipality,
+            IsActive = dto.IsActive,
+            CreatedAt = now,
+        }).ToList();
+
+        context.Sensors.AddRange(entities);
         await context.SaveChangesAsync(cancellationToken);
+
+        return entities.Select(e => new SensorDtoForCreated(e.Id, e.ExternalId)).ToList();
     }
 }

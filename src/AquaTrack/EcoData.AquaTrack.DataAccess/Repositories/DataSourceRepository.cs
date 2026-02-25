@@ -9,19 +9,21 @@ namespace EcoData.AquaTrack.DataAccess.Repositories;
 public sealed class DataSourceRepository(IDbContextFactory<AquaTrackDbContext> contextFactory)
     : IDataSourceRepository
 {
-    public async Task<DataSource?> GetByNameAsync(string name, CancellationToken cancellationToken = default)
+    public async Task<DataSourceDtoForCreated?> GetByNameAsync(string name, CancellationToken cancellationToken = default)
     {
         await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
         return await context.DataSources
-            .FirstOrDefaultAsync(ds => ds.Name == name, cancellationToken);
+            .Where(ds => ds.Name == name)
+            .Select(ds => new DataSourceDtoForCreated(ds.Id, ds.Name, ds.CreatedAt))
+            .FirstOrDefaultAsync(cancellationToken);
     }
 
-    public async Task<DataSourceDto?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
+    public async Task<DataSourceDtoForList?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
         await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
         return await context.DataSources
             .Where(ds => ds.Id == id)
-            .Select(ds => new DataSourceDto(
+            .Select(ds => new DataSourceDtoForList(
                 ds.Id,
                 ds.Name,
                 ds.Type.ToString(),
@@ -34,11 +36,11 @@ public sealed class DataSourceRepository(IDbContextFactory<AquaTrackDbContext> c
             .FirstOrDefaultAsync(cancellationToken);
     }
 
-    public async Task<IReadOnlyList<DataSourceDto>> GetAllAsync(CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyList<DataSourceDtoForList>> GetAllAsync(CancellationToken cancellationToken = default)
     {
         await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
         return await context.DataSources
-            .Select(ds => new DataSourceDto(
+            .Select(ds => new DataSourceDtoForList(
                 ds.Id,
                 ds.Name,
                 ds.Type.ToString(),
@@ -51,11 +53,25 @@ public sealed class DataSourceRepository(IDbContextFactory<AquaTrackDbContext> c
             .ToListAsync(cancellationToken);
     }
 
-    public async Task<DataSource> CreateAsync(DataSource dataSource, CancellationToken cancellationToken = default)
+    public async Task<DataSourceDtoForCreated> CreateAsync(DataSourceDtoForCreate dto, CancellationToken cancellationToken = default)
     {
         await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
-        context.DataSources.Add(dataSource);
+
+        var entity = new DataSource
+        {
+            Id = Guid.CreateVersion7(),
+            Name = dto.Name,
+            Type = Enum.Parse<DataSourceType>(dto.Type),
+            BaseUrl = dto.BaseUrl,
+            ApiKey = dto.ApiKey,
+            PullIntervalSeconds = dto.PullIntervalSeconds,
+            IsActive = dto.IsActive,
+            CreatedAt = DateTimeOffset.UtcNow,
+        };
+
+        context.DataSources.Add(entity);
         await context.SaveChangesAsync(cancellationToken);
-        return dataSource;
+
+        return new DataSourceDtoForCreated(entity.Id, entity.Name, entity.CreatedAt);
     }
 }

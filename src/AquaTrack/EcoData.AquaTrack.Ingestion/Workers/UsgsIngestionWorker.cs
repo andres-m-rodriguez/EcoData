@@ -1,4 +1,4 @@
-using EcoData.AquaTrack.Database.Models;
+using EcoData.AquaTrack.Contracts.Dtos;
 using EcoData.AquaTrack.DataAccess.Interfaces;
 using EcoData.AquaTrack.Ingestion.Models;
 using EcoData.AquaTrack.Ingestion.Services;
@@ -60,9 +60,8 @@ public sealed class UsgsIngestionWorker(
             siteCodesInResponse,
             stoppingToken);
 
-        var sensorsToAdd = new List<Sensor>();
-        var readingsToAdd = new List<Reading>();
-        var now = DateTimeOffset.UtcNow;
+        var sensorsToAdd = new List<SensorDtoForCreate>();
+        var pendingSensorIds = new Dictionary<string, Guid>();
 
         foreach (var series in timeSeries)
         {
@@ -72,11 +71,32 @@ public sealed class UsgsIngestionWorker(
                 continue;
             }
 
-            if (!existingSensors.TryGetValue(siteCode, out var sensor))
+            if (!existingSensors.ContainsKey(siteCode) && !pendingSensorIds.ContainsKey(siteCode))
             {
-                sensor = CreateSensor(series, dataSource.Id, now);
-                sensorsToAdd.Add(sensor);
-                existingSensors[siteCode] = sensor;
+                var sensorDto = CreateSensorDto(series, dataSource.Id);
+                sensorsToAdd.Add(sensorDto);
+                pendingSensorIds[siteCode] = Guid.CreateVersion7();
+            }
+        }
+
+        if (sensorsToAdd.Count > 0)
+        {
+            var createdSensors = await sensorRepository.CreateManyAsync(sensorsToAdd, stoppingToken);
+            foreach (var sensor in createdSensors)
+            {
+                existingSensors[sensor.ExternalId] = sensor;
+            }
+            logger.LogInformation("Added {Count} new sensors", sensorsToAdd.Count);
+        }
+
+        var readingsToAdd = new List<ReadingDtoForCreate>();
+
+        foreach (var series in timeSeries)
+        {
+            var siteCode = series.SourceInfo.SiteCode.FirstOrDefault()?.Value;
+            if (string.IsNullOrEmpty(siteCode) || !existingSensors.TryGetValue(siteCode, out var sensor))
+            {
+                continue;
             }
 
             var parameterCode = series.Variable.VariableCode.FirstOrDefault()?.Value ?? "UNKNOWN";
@@ -91,24 +111,15 @@ public sealed class UsgsIngestionWorker(
                         continue;
                     }
 
-                    readingsToAdd.Add(new Reading
-                    {
-                        Id = Guid.CreateVersion7(),
-                        SensorId = sensor.Id,
-                        Parameter = parameterCode,
-                        Value = value,
-                        Unit = unitCode,
-                        RecordedAt = reading.DateTime,
-                        IngestedAt = now,
-                    });
+                    readingsToAdd.Add(new ReadingDtoForCreate(
+                        sensor.Id,
+                        parameterCode,
+                        value,
+                        unitCode,
+                        reading.DateTime
+                    ));
                 }
             }
-        }
-
-        if (sensorsToAdd.Count > 0)
-        {
-            await sensorRepository.CreateManyAsync(sensorsToAdd, stoppingToken);
-            logger.LogInformation("Added {Count} new sensors", sensorsToAdd.Count);
         }
 
         if (readingsToAdd.Count > 0)
@@ -125,7 +136,7 @@ public sealed class UsgsIngestionWorker(
         logger.LogInformation("USGS data ingestion completed");
     }
 
-    private async Task<DataSource> GetOrCreateUsgsDataSourceAsync(CancellationToken stoppingToken)
+    private async Task<DataSourceDtoForCreated> GetOrCreateUsgsDataSourceAsync(CancellationToken stoppingToken)
     {
         var dataSource = await dataSourceRepository.GetByNameAsync(UsgsDataSourceName, stoppingToken);
 
@@ -134,42 +145,36 @@ public sealed class UsgsIngestionWorker(
             return dataSource;
         }
 
-        dataSource = new DataSource
-        {
-            Id = Guid.CreateVersion7(),
-            Name = UsgsDataSourceName,
-            Type = DataSourceType.Public,
-            BaseUrl = "https://waterservices.usgs.gov/nwis/",
-            ApiKey = null,
-            PullIntervalSeconds = 900,
-            IsActive = true,
-            CreatedAt = DateTimeOffset.UtcNow,
-        };
+        var createDto = new DataSourceDtoForCreate(
+            UsgsDataSourceName,
+            "Public",
+            "https://waterservices.usgs.gov/nwis/",
+            null,
+            900,
+            true
+        );
 
-        return await dataSourceRepository.CreateAsync(dataSource, stoppingToken);
+        return await dataSourceRepository.CreateAsync(createDto, stoppingToken);
     }
 
-    private static Sensor CreateSensor(UsgsTimeSeries series, Guid dataSourceId, DateTimeOffset now)
+    private static SensorDtoForCreate CreateSensorDto(UsgsTimeSeries series, Guid dataSourceId)
     {
         var siteCode = series.SourceInfo.SiteCode.First().Value;
         var location = series.SourceInfo.GeoLocation.GeogLocation;
 
-        return new Sensor
-        {
-            Id = Guid.CreateVersion7(),
-            SourceId = dataSourceId,
-            ExternalId = siteCode,
-            Name = series.SourceInfo.SiteName,
-            Latitude = location.Latitude,
-            Longitude = location.Longitude,
-            Municipality = null,
-            IsActive = true,
-            CreatedAt = now,
-        };
+        return new SensorDtoForCreate(
+            dataSourceId,
+            siteCode,
+            series.SourceInfo.SiteName,
+            location.Latitude,
+            location.Longitude,
+            null,
+            true
+        );
     }
 
-    private async Task<List<Reading>> FilterDuplicateReadingsAsync(
-        List<Reading> readings,
+    private async Task<List<ReadingDtoForCreate>> FilterDuplicateReadingsAsync(
+        List<ReadingDtoForCreate> readings,
         CancellationToken stoppingToken)
     {
         if (readings.Count == 0)
@@ -177,7 +182,7 @@ public sealed class UsgsIngestionWorker(
             return readings;
         }
 
-        var sensorIds = readings.Select(r => r.SensorId).Distinct();
+        var sensorIds = readings.Select(r => r.SensorId).Distinct().ToList();
         var minRecordedAt = readings.Min(r => r.RecordedAt);
         var maxRecordedAt = readings.Max(r => r.RecordedAt);
 

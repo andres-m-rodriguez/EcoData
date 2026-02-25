@@ -1,6 +1,6 @@
 namespace EcoData.AquaTrack.Contracts.Dtos;
 
-public sealed record ReadingDto(
+public sealed record ReadingDtoForDetail(
     Guid Id,
     Guid SensorId,
     string Parameter,
@@ -10,10 +10,18 @@ public sealed record ReadingDto(
     DateTimeOffset IngestedAt
 );
 
-public sealed record ReadingWithSensorDto(
+public sealed record ReadingDtoForList(
     Guid Id,
     Guid SensorId,
     string SensorName,
+    string Parameter,
+    double Value,
+    string Unit,
+    DateTimeOffset RecordedAt
+);
+
+public sealed record ReadingDtoForCreate(
+    Guid SensorId,
     string Parameter,
     double Value,
     string Unit,
