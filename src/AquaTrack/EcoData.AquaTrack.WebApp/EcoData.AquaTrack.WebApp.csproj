@@ -8,8 +8,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\EcoDataPR.AquaTrack.WebApp.Client\EcoDataPR.AquaTrack.WebApp.Client.csproj" />
-    <ProjectReference Include="..\..\Host\EcoDataPR.ServiceDefaults\EcoDataPR.ServiceDefaults.csproj" />
+    <ProjectReference Include="..\EcoData.AquaTrack.WebApp.Client\EcoData.AquaTrack.WebApp.Client.csproj" />
+    <ProjectReference Include="..\..\Host\EcoData.ServiceDefaults\EcoData.ServiceDefaults.csproj" />
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="10.0.3" />
   </ItemGroup>
 

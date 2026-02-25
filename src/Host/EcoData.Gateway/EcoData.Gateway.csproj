@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
 
   <ItemGroup>
-    <ProjectReference Include="..\EcoDataPR.ServiceDefaults\EcoDataPR.ServiceDefaults.csproj" />
+    <ProjectReference Include="..\EcoData.ServiceDefaults\EcoData.ServiceDefaults.csproj" />
   </ItemGroup>
 
   <ItemGroup>

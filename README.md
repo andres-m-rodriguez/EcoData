@@ -1,10 +1,10 @@
-# EcoDataPR
+# EcoData
 
-A monorepo for Puerto Rico ecological and environmental data.
+A monorepo for ecological and environmental data.
 
 ## Overview
 
-This repository aggregates and manages various environmental datasets and research related to Puerto Rico, including:
+This repository aggregates and manages various environmental datasets and research, including:
 
 - **Water Sensors** - Real-time and historical water quality and level monitoring data
 - **Fauna** - Wildlife tracking, species data, and biodiversity research
@@ -13,16 +13,23 @@ This repository aggregates and manages various environmental datasets and resear
 ## Repository Structure
 
 ```
-EcoDataPR/
-├── packages/           # Shared libraries and utilities
-├── apps/               # Applications and services
-├── data/               # Data schemas and sample datasets
-└── docs/               # Documentation and research notes
+EcoData/
+├── src/
+│   ├── Host/
+│   │   ├── EcoData.AppHost/           # Aspire orchestrator
+│   │   ├── EcoData.ServiceDefaults/   # Shared service configuration
+│   │   └── EcoData.Gateway/           # YARP reverse proxy
+│   └── AquaTrack/
+│       ├── EcoData.AquaTrack.WebApp/        # Blazor server host
+│       └── EcoData.AquaTrack.WebApp.Client/ # WASM client
+└── EcoData.slnx
 ```
 
 ## Getting Started
 
-Documentation coming soon.
+```bash
+dotnet run --project src/Host/EcoData.AppHost
+```
 
 ## License
 

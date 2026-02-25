@@ -1,4 +1,4 @@
-using EcoDataPR.AquaTrack.WebApp.Components;
+using EcoData.AquaTrack.WebApp.Components;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -26,6 +26,6 @@ app.UseAntiforgery();
 app.MapStaticAssets();
 app.MapRazorComponents<App>()
     .AddInteractiveWebAssemblyRenderMode()
-    .AddAdditionalAssemblies(typeof(EcoDataPR.AquaTrack.WebApp.Client._Imports).Assembly);
+    .AddAdditionalAssemblies(typeof(EcoData.AquaTrack.WebApp.Client._Imports).Assembly);
 
 app.Run();
