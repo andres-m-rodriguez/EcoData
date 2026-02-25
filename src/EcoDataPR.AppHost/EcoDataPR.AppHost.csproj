@@ -2,6 +2,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\EcoDataPR.Gateway\EcoDataPR.Gateway.csproj" />
+    <ProjectReference Include="..\EcoDataPR.AquaTrack.WebApp\EcoDataPR.AquaTrack.WebApp.csproj" />
   </ItemGroup>
 
   <PropertyGroup>
