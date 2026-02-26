@@ -7,34 +7,44 @@ namespace EcoData.AppHost.Extensions;
 public static class DatabaseExtensions
 {
     public static IResourceBuilder<PostgresDatabaseResource> WithDropDatabaseCommand(
-        this IResourceBuilder<PostgresDatabaseResource> builder)
+        this IResourceBuilder<PostgresDatabaseResource> builder
+    )
     {
         var databaseName = builder.Resource.DatabaseName;
 
         return builder.WithCommand(
             name: "drop-database",
             displayName: "Drop & Recreate",
-            executeCommand: context => ExecuteDropDatabaseAsync(context, builder.Resource.Parent, databaseName),
-            commandOptions: CreateCommandOptions(databaseName));
+            executeCommand: context =>
+                ExecuteDropDatabaseAsync(context, builder.Resource.Parent, databaseName),
+            commandOptions: CreateCommandOptions(databaseName)
+        );
     }
 
-    private static CommandOptions CreateCommandOptions(string databaseName) => new()
-    {
-        UpdateState = context => context.ResourceSnapshot.HealthStatus is HealthStatus.Healthy
-            ? ResourceCommandState.Enabled
-            : ResourceCommandState.Disabled,
-        IconName = "Delete",
-        IconVariant = IconVariant.Filled,
-        ConfirmationMessage = $"Are you sure you want to drop and recreate '{databaseName}'?"
-    };
+    private static CommandOptions CreateCommandOptions(string databaseName) =>
+        new()
+        {
+            UpdateState = context =>
+                context.ResourceSnapshot.HealthStatus is HealthStatus.Healthy
+                    ? ResourceCommandState.Enabled
+                    : ResourceCommandState.Disabled,
+            IconName = "Delete",
+            IconVariant = IconVariant.Filled,
+            ConfirmationMessage = $"Are you sure you want to drop and recreate '{databaseName}'?",
+        };
 
     private static async Task<ExecuteCommandResult> ExecuteDropDatabaseAsync(
         ExecuteCommandContext context,
         IResourceWithConnectionString parentResource,
-        string databaseName)
+        string databaseName
+    )
     {
-        var logger = context.ServiceProvider.GetRequiredService<ILogger<PostgresDatabaseResource>>();
-        var connectionString = await parentResource.GetConnectionStringAsync(context.CancellationToken);
+        var logger = context.ServiceProvider.GetRequiredService<
+            ILogger<PostgresDatabaseResource>
+        >();
+        var connectionString = await parentResource.GetConnectionStringAsync(
+            context.CancellationToken
+        );
 
         if (string.IsNullOrEmpty(connectionString))
         {
