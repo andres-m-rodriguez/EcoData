@@ -23,6 +23,7 @@
 </div>
 
 @code {
+    private readonly CancellationTokenSource _cts = new();
     private List<SensorDtoForList>? _sensors;
     private bool _mapInitialized;
 
@@ -36,7 +37,7 @@
     {
         var parameters = new SensorParameters(PageSize: 100, IsActive: true);
         _sensors = [];
-        await foreach (var sensor in SensorClient.GetSensorsAsync(parameters))
+        await foreach (var sensor in SensorClient.GetSensorsAsync(parameters, _cts.Token))
         {
             _sensors.Add(sensor);
         }
@@ -54,6 +55,9 @@
 
     public async ValueTask DisposeAsync()
     {
+        await _cts.CancelAsync();
+        _cts.Dispose();
+
         if (_mapInitialized)
         {
             await JS.InvokeVoidAsync("sensorMap.dispose");
