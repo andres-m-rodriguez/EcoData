@@ -14,12 +14,9 @@ var ingestion = builder.AddProject<Projects.EcoData_AquaTrack_Ingestion>("aquatr
     .WithReference(aquatrackDb)
     .WaitFor(seeder);
 
-var aquaTrackWebApp = builder.AddProject<Projects.EcoData_AquaTrack_WebApp>("aquatrack-webapp")
+builder.AddProject<Projects.EcoData_AquaTrack_WebApp>("aquatrack-webapp")
+    .WithExternalHttpEndpoints()
     .WithReference(aquatrackDb)
     .WaitFor(seeder);
-
-var gateway = builder.AddProject<Projects.EcoData_Gateway>("gateway")
-    .WithExternalHttpEndpoints()
-    .WithReference(aquaTrackWebApp);
 
 builder.Build().Run();
