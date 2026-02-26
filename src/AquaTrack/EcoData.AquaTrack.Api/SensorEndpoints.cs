@@ -22,8 +22,5 @@ public static class SensorEndpoints
         [AsParameters] SensorParameters parameters,
         ISensorRepository repository,
         CancellationToken ct
-    )
-    {
-        return repository.GetSensorsAsync(parameters, ct);
-    }
+    ) => repository.GetSensorsAsync(parameters, ct);
 }
