@@ -1,0 +1,66 @@
+@page "/map"
+@using EcoData.AquaTrack.Contracts.Dtos
+@using EcoData.AquaTrack.Contracts.Parameters
+@using EcoData.AquaTrack.Application.Client
+@using BlazingSingularity
+@using BlazingSingularity.Commands
+@inject ISensorHttpClient SensorClient
+@inject IJSRuntime JS
+@implements IAsyncDisposable
+
+<PageTitle>Map</PageTitle>
+
+<div class="map-page">
+    <div class="map-container">
+        @if (LoadSensorsCommand.IsLoading)
+        {
+            <MudOverlay Visible="true" DarkBackground="false" Absolute="true" ZIndex="1000">
+                <MudProgressCircular Indeterminate="true" Color="Color.Primary" />
+            </MudOverlay>
+        }
+        <div id="sensor-map" class="map"></div>
+    </div>
+</div>
+
+@code {
+    private readonly CancellationTokenSource _cts = new();
+    private List<SensorDtoForList>? _sensors;
+    private bool _mapInitialized;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadSensorsCommand.ExecuteAsync();
+    }
+
+    [RelayCommand]
+    private async Task LoadSensors()
+    {
+        var parameters = new SensorParameters(PageSize: 100, IsActive: true);
+        _sensors = [];
+        await foreach (var sensor in SensorClient.GetSensorsAsync(parameters, _cts.Token))
+        {
+            _sensors.Add(sensor);
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!LoadSensorsCommand.IsLoading && !_mapInitialized && _sensors is not null)
+        {
+            _mapInitialized = true;
+            await JS.InvokeVoidAsync("sensorMap.init", "sensor-map");
+            await JS.InvokeVoidAsync("sensorMap.addSensors", _sensors);
+        }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        await _cts.CancelAsync();
+        _cts.Dispose();
+
+        if (_mapInitialized)
+        {
+            await JS.InvokeVoidAsync("sensorMap.dispose");
+        }
+    }
+}

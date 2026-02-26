@@ -15,6 +15,8 @@
   <ItemGroup>
     <ProjectReference Include="..\EcoData.AquaTrack.WebApp.Client\EcoData.AquaTrack.WebApp.Client.csproj" />
     <ProjectReference Include="..\EcoData.AquaTrack.Database\EcoData.AquaTrack.Database.csproj" />
+    <ProjectReference Include="..\EcoData.AquaTrack.DataAccess\EcoData.AquaTrack.DataAccess.csproj" />
+    <ProjectReference Include="..\EcoData.AquaTrack.Api\EcoData.AquaTrack.Api.csproj" />
     <ProjectReference Include="..\..\Host\EcoData.ServiceDefaults\EcoData.ServiceDefaults.csproj" />
   </ItemGroup>
 
