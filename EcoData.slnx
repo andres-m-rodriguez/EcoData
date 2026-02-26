@@ -2,7 +2,6 @@
   <Folder Name="/Host/">
     <Project Path="src/Host/EcoData.AppHost/EcoData.AppHost.csproj" />
     <Project Path="src/Host/EcoData.ServiceDefaults/EcoData.ServiceDefaults.csproj" />
-    <Project Path="src/Host/EcoData.Gateway/EcoData.Gateway.csproj" />
   </Folder>
   <Folder Name="/AquaTrack/">
     <Project Path="src/AquaTrack/EcoData.AquaTrack.WebApp/EcoData.AquaTrack.WebApp.csproj" />
