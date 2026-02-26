@@ -1,4 +1,6 @@
+using System.Runtime.CompilerServices;
 using EcoData.AquaTrack.Contracts.Dtos;
+using EcoData.AquaTrack.Contracts.Parameters;
 using EcoData.AquaTrack.Database;
 using EcoData.AquaTrack.Database.Models;
 using EcoData.AquaTrack.DataAccess.Interfaces;
@@ -53,12 +55,51 @@ public sealed class SensorRepository(IDbContextFactory<AquaTrackDbContext> conte
             .ToListAsync(cancellationToken);
     }
 
-    public async Task<IReadOnlyList<SensorDtoForList>> GetAllActiveAsync(CancellationToken cancellationToken = default)
+    public IAsyncEnumerable<SensorDtoForList> GetSensorsAsync(
+        SensorParameters parameters,
+        CancellationToken cancellationToken = default
+    )
+    {
+        return GetSensorsInternalAsync(parameters, cancellationToken);
+    }
+
+    private async IAsyncEnumerable<SensorDtoForList> GetSensorsInternalAsync(
+        SensorParameters parameters,
+        [EnumeratorCancellation] CancellationToken cancellationToken = default
+    )
     {
         await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
-        return await context.Sensors
-            .Where(s => s.IsActive)
-            .Select(s => new SensorDtoForList(
+
+        var query = context.Sensors.AsNoTracking().AsQueryable();
+
+        if (parameters.IsActive.HasValue)
+        {
+            query = query.Where(s => s.IsActive == parameters.IsActive.Value);
+        }
+
+        if (parameters.DataSourceId.HasValue)
+        {
+            query = query.Where(s => s.SourceId == parameters.DataSourceId.Value);
+        }
+
+        if (!string.IsNullOrWhiteSpace(parameters.Search))
+        {
+            var search = parameters.Search.Trim().ToLower();
+            query = query.Where(s =>
+                s.Name.ToLower().Contains(search)
+                || (s.Municipality != null && s.Municipality.ToLower().Contains(search))
+            );
+        }
+
+        if (parameters.Cursor.HasValue)
+        {
+            query = query.Where(s => s.Id > parameters.Cursor.Value);
+        }
+
+        await foreach (var sensor in query
+            .OrderBy(s => s.Id)
+            .Take(parameters.PageSize + 1)
+            .Select(static s => new SensorDtoForList(
                 s.Id,
                 s.ExternalId,
                 s.Name,
@@ -67,7 +108,11 @@ public sealed class SensorRepository(IDbContextFactory<AquaTrackDbContext> conte
                 s.Municipality,
                 s.IsActive
             ))
-            .ToListAsync(cancellationToken);
+            .AsAsyncEnumerable()
+            .WithCancellation(cancellationToken))
+        {
+            yield return sensor;
+        }
     }
 
     public async Task<Dictionary<string, SensorDtoForCreated>> GetSensorsByExternalIdsAsync(
