@@ -1,10 +1,13 @@
+using EcoData.AppHost.Extensions;
+
 var builder = DistributedApplication.CreateBuilder(args);
 
 var postgres = builder.AddPostgres("postgres")
     .WithDataVolume()
     .WithPgAdmin();
 
-var aquatrackDb = postgres.AddDatabase("aquatrack");
+var aquatrackDb = postgres.AddDatabase("aquatrack")
+    .WithDropDatabaseCommand();
 
 var seeder = builder.AddProject<Projects.EcoData_AquaTrack_Seeder>("aquatrack-seeder")
     .WithReference(aquatrackDb)
