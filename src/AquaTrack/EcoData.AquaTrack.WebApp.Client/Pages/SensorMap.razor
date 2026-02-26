@@ -2,10 +2,11 @@
 @using EcoData.AquaTrack.Contracts.Dtos
 @using EcoData.AquaTrack.Contracts.Parameters
 @using EcoData.AquaTrack.Application.Client
+@using EcoData.AquaTrack.WebApp.Client.Services
 @using BlazingSingularity
 @using BlazingSingularity.Commands
 @inject ISensorHttpClient SensorClient
-@inject IJSRuntime JS
+@inject ISensorMapManager MapManager
 @implements IAsyncDisposable
 
 <PageTitle>Map</PageTitle>
@@ -48,8 +49,8 @@
         if (!LoadSensorsCommand.IsLoading && !_mapInitialized && _sensors is not null)
         {
             _mapInitialized = true;
-            await JS.InvokeVoidAsync("sensorMap.init", "sensor-map");
-            await JS.InvokeVoidAsync("sensorMap.addSensors", _sensors);
+            await MapManager.InitializeAsync("sensor-map");
+            await MapManager.AddSensorsAsync(_sensors);
         }
     }
 
@@ -60,7 +61,7 @@
 
         if (_mapInitialized)
         {
-            await JS.InvokeVoidAsync("sensorMap.dispose");
+            await MapManager.DisposeAsync();
         }
     }
 }
