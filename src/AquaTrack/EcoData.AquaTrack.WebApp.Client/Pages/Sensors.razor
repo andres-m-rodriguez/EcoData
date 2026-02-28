@@ -16,33 +16,22 @@
     <MudPaper Elevation="1" Class="pa-4 mb-4">
         <MudGrid>
             <MudItem xs="12" sm="6" md="4">
-                <MudTextField @bind-Value="_searchText"
-                              Label="Search"
-                              Placeholder="Search by name, ID, or municipality..."
-                              Adornment="Adornment.Start"
-                              AdornmentIcon="@Icons.Material.Filled.Search"
-                              Immediate="true"
-                              DebounceInterval="300"
-                              OnDebounceIntervalElapsed="OnSearchChanged"
-                              Clearable="true"
-                              OnClearButtonClick="OnSearchCleared" />
+                <MudTextField @bind-Value="_searchText" Label="Search"
+                              Placeholder="Search by name, ID, or municipality..." Adornment="Adornment.Start"
+                              AdornmentIcon="@Icons.Material.Filled.Search" Immediate="true" DebounceInterval="300"
+                              OnDebounceIntervalElapsed="OnSearchChanged" Clearable="true" OnClearButtonClick="OnSearchCleared" />
             </MudItem>
             <MudItem xs="12" sm="6" md="3">
-                <MudSelect @bind-Value="_statusFilter"
-                           Label="Status"
-                           AnchorOrigin="Origin.BottomCenter"
-                           T="StatusFilter">
+                <MudSelect Value="_statusFilter" ValueChanged="OnStatusFilterChanged" Label="Status"
+                           AnchorOrigin="Origin.BottomCenter" T="StatusFilter">
                     <MudSelectItem Value="StatusFilter.All">All</MudSelectItem>
                     <MudSelectItem Value="StatusFilter.Active">Active</MudSelectItem>
                     <MudSelectItem Value="StatusFilter.Inactive">Inactive</MudSelectItem>
                 </MudSelect>
             </MudItem>
             <MudItem xs="12" sm="12" md="5" Class="d-flex align-center justify-end">
-                <MudButton Variant="Variant.Outlined"
-                           Color="Color.Primary"
-                           StartIcon="@Icons.Material.Filled.Refresh"
-                           OnClick="OnRefreshClicked"
-                           Disabled="LoadSensorsCommand.IsLoading">
+                <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Refresh"
+                           OnClick="OnRefreshClicked" Disabled="LoadSensorsCommand.IsLoading">
                     Refresh
                 </MudButton>
             </MudItem>
@@ -50,20 +39,27 @@
     </MudPaper>
 
     <MudPaper Elevation="1">
-        <MudTable Items="@_pagedSensors"
-                  Loading="@LoadSensorsCommand.IsLoading"
-                  LoadingProgressColor="Color.Primary"
-                  Hover="true"
-                  Striped="true"
-                  Dense="true"
-                  FixedHeader="true"
-                  Height="calc(100vh - 340px)">
+        <MudTable Items="@_pagedSensors" Loading="@LoadSensorsCommand.IsLoading" LoadingProgressColor="Color.Primary"
+                  Hover="true" Striped="true" Dense="true" FixedHeader="true" Height="calc(100vh - 340px)">
             <HeaderContent>
-                <MudTh><MudTableSortLabel SortBy="@(new Func<SensorDtoForList, object>(x => x.Name))">Name</MudTableSortLabel></MudTh>
-                <MudTh><MudTableSortLabel SortBy="@(new Func<SensorDtoForList, object>(x => x.ExternalId))">External ID</MudTableSortLabel></MudTh>
-                <MudTh><MudTableSortLabel SortBy="@(new Func<SensorDtoForList, object>(x => x.Municipality ?? string.Empty))">Municipality</MudTableSortLabel></MudTh>
+                <MudTh>
+                    <MudTableSortLabel SortBy="@(new Func<SensorDtoForList, object>(x => x.Name))">Name
+                    </MudTableSortLabel>
+                </MudTh>
+                <MudTh>
+                    <MudTableSortLabel SortBy="@(new Func<SensorDtoForList, object>(x => x.ExternalId))">External ID
+                    </MudTableSortLabel>
+                </MudTh>
+                <MudTh>
+                    <MudTableSortLabel
+                        SortBy="@(new Func<SensorDtoForList, object>(x => x.Municipality ?? string.Empty))">Municipality
+                    </MudTableSortLabel>
+                </MudTh>
                 <MudTh>Location</MudTh>
-                <MudTh><MudTableSortLabel SortBy="@(new Func<SensorDtoForList, object>(x => x.IsActive))">Status</MudTableSortLabel></MudTh>
+                <MudTh>
+                    <MudTableSortLabel SortBy="@(new Func<SensorDtoForList, object>(x => x.IsActive))">Status
+                    </MudTableSortLabel>
+                </MudTh>
                 <MudTh Style="width: 100px;">Actions</MudTh>
             </HeaderContent>
             <RowTemplate>
@@ -77,54 +73,51 @@
                 <MudTd DataLabel="Location">
                     <MudTooltip Text="@($"Lat: {context.Latitude:F6}, Lon: {context.Longitude:F6}")">
                         <MudIcon Icon="@Icons.Material.Filled.LocationOn" Size="Size.Small" Color="Color.Primary" />
-                        <MudText Typo="Typo.caption" Class="ml-1">@context.Latitude.ToString("F4"), @context.Longitude.ToString("F4")</MudText>
-                    </MudTooltip>
-                </MudTd>
-                <MudTd DataLabel="Status">
-                    @if (context.IsActive)
-                    {
-                        <MudChip T="string" Color="Color.Success" Size="Size.Small" Variant="Variant.Filled">Active</MudChip>
-                    }
-                    else
-                    {
-                        <MudChip T="string" Color="Color.Default" Size="Size.Small" Variant="Variant.Outlined">Inactive</MudChip>
-                    }
-                </MudTd>
-                <MudTd DataLabel="Actions">
-                    <MudTooltip Text="View on Map">
-                        <MudIconButton Icon="@Icons.Material.Filled.Map"
-                                       Color="Color.Primary"
-                                       Size="Size.Small"
-                                       OnClick="@(() => NavigateToMap(context))" />
-                    </MudTooltip>
-                </MudTd>
-            </RowTemplate>
-            <NoRecordsContent>
-                <MudText Class="pa-4">No sensors found matching your criteria.</MudText>
-            </NoRecordsContent>
-            <PagerContent>
-                <MudTablePager PageSizeOptions="@(new[] { 10, 25, 50, 100 })"
-                               RowsPerPageString="Sensors per page:" />
-            </PagerContent>
-        </MudTable>
-    </MudPaper>
+                        <MudText Typo="Typo.caption" Class="ml-1">@context.Latitude.ToString("F4"),
+                            @context.Longitude.ToString("F4")</MudText>
+                        </MudTooltip>
+                    </MudTd>
+                    <MudTd DataLabel="Status">
+                        @if (context.IsActive)
+                        {
+                            <MudChip T="string" Color="Color.Success" Size="Size.Small" Variant="Variant.Filled">Active
+                            </MudChip>
+                        }
+                        else
+                        {
+                            <MudChip T="string" Color="Color.Default" Size="Size.Small" Variant="Variant.Outlined">Inactive
+                            </MudChip>
+                        }
+                    </MudTd>
+                    <MudTd DataLabel="Actions">
+                        <MudTooltip Text="View on Map">
+                            <MudIconButton Icon="@Icons.Material.Filled.Map" Color="Color.Primary" Size="Size.Small"
+                                           OnClick="@(() => NavigateToMap(context))" />
+                        </MudTooltip>
+                    </MudTd>
+                </RowTemplate>
+                <NoRecordsContent>
+                    <MudText Class="pa-4">No sensors found matching your criteria.</MudText>
+                </NoRecordsContent>
+                <PagerContent>
+                    <MudTablePager PageSizeOptions="@(new[] { 10, 25, 50, 100 })" RowsPerPageString="Sensors per page:" />
+                </PagerContent>
+            </MudTable>
+        </MudPaper>
 
-    <MudPaper Elevation="0" Class="pa-2 mt-2 d-flex justify-space-between align-center">
-        <MudText Typo="Typo.caption" Color="Color.Secondary">
-            Total: @_filteredSensors.Count sensors
-        </MudText>
-        @if (_hasMoreSensors)
-        {
-            <MudButton Variant="Variant.Text"
-                       Color="Color.Primary"
-                       Size="Size.Small"
-                       OnClick="LoadMoreSensors"
-                       Disabled="LoadSensorsCommand.IsLoading">
-                Load More
-            </MudButton>
-        }
-    </MudPaper>
-</MudContainer>
+        <MudPaper Elevation="0" Class="pa-2 mt-2 d-flex justify-space-between align-center">
+            <MudText Typo="Typo.caption" Color="Color.Secondary">
+                Total: @_filteredSensors.Count sensors
+            </MudText>
+            @if (_hasMoreSensors)
+            {
+                <MudButton Variant="Variant.Text" Color="Color.Primary" Size="Size.Small" OnClick="LoadMoreSensors"
+                           Disabled="LoadSensorsCommand.IsLoading">
+                    Load More
+                </MudButton>
+            }
+        </MudPaper>
+    </MudContainer>
 
 @code {
     private readonly CancellationTokenSource _cts = new();
@@ -219,6 +212,13 @@
     private void OnSearchCleared()
     {
         _searchText = string.Empty;
+        ApplyFilters();
+        StateHasChanged();
+    }
+
+    private void OnStatusFilterChanged(StatusFilter value)
+    {
+        _statusFilter = value;
         ApplyFilters();
         StateHasChanged();
     }
