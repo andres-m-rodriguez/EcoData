@@ -1,0 +1,249 @@
+@page "/sensors"
+@using EcoData.AquaTrack.Contracts.Dtos
+@using EcoData.AquaTrack.Contracts.Parameters
+@using EcoData.AquaTrack.Application.Client
+@using BlazingSingularity
+@using BlazingSingularity.Commands
+@inject ISensorHttpClient SensorClient
+@inject NavigationManager Navigation
+@implements IDisposable
+
+<PageTitle>Sensors</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pa-4">
+    <MudText Typo="Typo.h4" Class="mb-4">Sensors</MudText>
+
+    <MudPaper Elevation="1" Class="pa-4 mb-4">
+        <MudGrid>
+            <MudItem xs="12" sm="6" md="4">
+                <MudTextField @bind-Value="_searchText" Label="Search"
+                              Placeholder="Search by name, ID, or municipality..." Adornment="Adornment.Start"
+                              AdornmentIcon="@Icons.Material.Filled.Search" Immediate="true" DebounceInterval="300"
+                              OnDebounceIntervalElapsed="OnSearchChanged" Clearable="true" OnClearButtonClick="OnSearchCleared" />
+            </MudItem>
+            <MudItem xs="12" sm="6" md="3">
+                <MudSelect Value="_statusFilter" ValueChanged="OnStatusFilterChanged" Label="Status"
+                           AnchorOrigin="Origin.BottomCenter" T="StatusFilter">
+                    <MudSelectItem Value="StatusFilter.All">All</MudSelectItem>
+                    <MudSelectItem Value="StatusFilter.Active">Active</MudSelectItem>
+                    <MudSelectItem Value="StatusFilter.Inactive">Inactive</MudSelectItem>
+                </MudSelect>
+            </MudItem>
+            <MudItem xs="12" sm="12" md="5" Class="d-flex align-center justify-end">
+                <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Refresh"
+                           OnClick="OnRefreshClicked" Disabled="LoadSensorsCommand.IsLoading">
+                    Refresh
+                </MudButton>
+            </MudItem>
+        </MudGrid>
+    </MudPaper>
+
+    <MudPaper Elevation="1">
+        <MudTable Items="@_pagedSensors" Loading="@LoadSensorsCommand.IsLoading" LoadingProgressColor="Color.Primary"
+                  Hover="true" Striped="true" Dense="true" FixedHeader="true" Height="calc(100vh - 340px)">
+            <HeaderContent>
+                <MudTh>
+                    <MudTableSortLabel SortBy="@(new Func<SensorDtoForList, object>(x => x.Name))">Name
+                    </MudTableSortLabel>
+                </MudTh>
+                <MudTh>
+                    <MudTableSortLabel SortBy="@(new Func<SensorDtoForList, object>(x => x.ExternalId))">External ID
+                    </MudTableSortLabel>
+                </MudTh>
+                <MudTh>
+                    <MudTableSortLabel
+                        SortBy="@(new Func<SensorDtoForList, object>(x => x.Municipality ?? string.Empty))">Municipality
+                    </MudTableSortLabel>
+                </MudTh>
+                <MudTh>Location</MudTh>
+                <MudTh>
+                    <MudTableSortLabel SortBy="@(new Func<SensorDtoForList, object>(x => x.IsActive))">Status
+                    </MudTableSortLabel>
+                </MudTh>
+                <MudTh Style="width: 100px;">Actions</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="Name">
+                    <MudText Typo="Typo.body2" Class="font-weight-medium">@context.Name</MudText>
+                </MudTd>
+                <MudTd DataLabel="External ID">
+                    <MudText Typo="Typo.body2" Color="Color.Secondary">@context.ExternalId</MudText>
+                </MudTd>
+                <MudTd DataLabel="Municipality">@(context.Municipality ?? "-")</MudTd>
+                <MudTd DataLabel="Location">
+                    <MudTooltip Text="@($"Lat: {context.Latitude:F6}, Lon: {context.Longitude:F6}")">
+                        <MudIcon Icon="@Icons.Material.Filled.LocationOn" Size="Size.Small" Color="Color.Primary" />
+                        <MudText Typo="Typo.caption" Class="ml-1">@context.Latitude.ToString("F4"),
+                            @context.Longitude.ToString("F4")</MudText>
+                        </MudTooltip>
+                    </MudTd>
+                    <MudTd DataLabel="Status">
+                        @if (context.IsActive)
+                        {
+                            <MudChip T="string" Color="Color.Success" Size="Size.Small" Variant="Variant.Filled">Active
+                            </MudChip>
+                        }
+                        else
+                        {
+                            <MudChip T="string" Color="Color.Default" Size="Size.Small" Variant="Variant.Outlined">Inactive
+                            </MudChip>
+                        }
+                    </MudTd>
+                    <MudTd DataLabel="Actions">
+                        <MudTooltip Text="View on Map">
+                            <MudIconButton Icon="@Icons.Material.Filled.Map" Color="Color.Primary" Size="Size.Small"
+                                           OnClick="@(() => NavigateToMap(context))" />
+                        </MudTooltip>
+                    </MudTd>
+                </RowTemplate>
+                <NoRecordsContent>
+                    <MudText Class="pa-4">No sensors found matching your criteria.</MudText>
+                </NoRecordsContent>
+                <PagerContent>
+                    <MudTablePager PageSizeOptions="@(new[] { 10, 25, 50, 100 })" RowsPerPageString="Sensors per page:" />
+                </PagerContent>
+            </MudTable>
+        </MudPaper>
+
+        <MudPaper Elevation="0" Class="pa-2 mt-2 d-flex justify-space-between align-center">
+            <MudText Typo="Typo.caption" Color="Color.Secondary">
+                Total: @_filteredSensors.Count sensors
+            </MudText>
+            @if (_hasMoreSensors)
+            {
+                <MudButton Variant="Variant.Text" Color="Color.Primary" Size="Size.Small" OnClick="LoadMoreSensors"
+                           Disabled="LoadSensorsCommand.IsLoading">
+                    Load More
+                </MudButton>
+            }
+        </MudPaper>
+    </MudContainer>
+
+@code {
+    private readonly CancellationTokenSource _cts = new();
+    private List<SensorDtoForList> _allSensors = [];
+    private List<SensorDtoForList> _filteredSensors = [];
+    private IEnumerable<SensorDtoForList> _pagedSensors = [];
+
+    private string _searchText = string.Empty;
+    private StatusFilter _statusFilter = StatusFilter.All;
+    private Guid? _lastCursor;
+    private bool _hasMoreSensors;
+    private const int PageSize = 100;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadSensorsCommand.ExecuteAsync();
+    }
+
+    [RelayCommand]
+    private async Task LoadSensors()
+    {
+        _allSensors.Clear();
+        _lastCursor = null;
+        _hasMoreSensors = false;
+
+        await LoadSensorBatchAsync();
+        ApplyFilters();
+    }
+
+    private async Task LoadSensorBatchAsync()
+    {
+        var parameters = new SensorParameters(
+            PageSize: PageSize,
+            Cursor: _lastCursor
+        );
+
+        var batchCount = 0;
+        SensorDtoForList? lastSensor = null;
+
+        await foreach (var sensor in SensorClient.GetSensorsAsync(parameters, _cts.Token))
+        {
+            _allSensors.Add(sensor);
+            lastSensor = sensor;
+            batchCount++;
+        }
+
+        _hasMoreSensors = batchCount == PageSize;
+        _lastCursor = lastSensor?.Id;
+    }
+
+    private async Task LoadMoreSensors()
+    {
+        await LoadSensorBatchAsync();
+        ApplyFilters();
+        StateHasChanged();
+    }
+
+    private void ApplyFilters()
+    {
+        var filtered = _allSensors.AsEnumerable();
+
+        // Apply status filter
+        filtered = _statusFilter switch
+        {
+            StatusFilter.Active => filtered.Where(s => s.IsActive),
+            StatusFilter.Inactive => filtered.Where(s => !s.IsActive),
+            _ => filtered
+        };
+
+        // Apply search filter
+        if (!string.IsNullOrWhiteSpace(_searchText))
+        {
+            var searchLower = _searchText.ToLowerInvariant();
+            filtered = filtered.Where(s =>
+                s.Name.Contains(_searchText, StringComparison.OrdinalIgnoreCase) ||
+                s.ExternalId.Contains(_searchText, StringComparison.OrdinalIgnoreCase) ||
+                (s.Municipality?.Contains(_searchText, StringComparison.OrdinalIgnoreCase) ?? false)
+            );
+        }
+
+        _filteredSensors = filtered.ToList();
+        _pagedSensors = _filteredSensors;
+    }
+
+    private void OnSearchChanged(string value)
+    {
+        _searchText = value;
+        ApplyFilters();
+        StateHasChanged();
+    }
+
+    private void OnSearchCleared()
+    {
+        _searchText = string.Empty;
+        ApplyFilters();
+        StateHasChanged();
+    }
+
+    private void OnStatusFilterChanged(StatusFilter value)
+    {
+        _statusFilter = value;
+        ApplyFilters();
+        StateHasChanged();
+    }
+
+    private async Task OnRefreshClicked()
+    {
+        await LoadSensorsCommand.ExecuteAsync();
+    }
+
+    private void NavigateToMap(SensorDtoForList sensor)
+    {
+        // Navigate to map page - the map could potentially be enhanced to zoom to specific sensor
+        Navigation.NavigateTo("/map");
+    }
+
+    public void Dispose()
+    {
+        _cts.Cancel();
+        _cts.Dispose();
+    }
+
+    private enum StatusFilter
+    {
+        All,
+        Active,
+        Inactive
+    }
+}

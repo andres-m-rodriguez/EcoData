@@ -16,6 +16,7 @@
     <MudDrawer @bind-Open="_drawerOpen" ClipMode="DrawerClipMode.Always" Elevation="2">
         <MudNavMenu>
             <MudNavLink Href="/" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Home">Home</MudNavLink>
+            <MudNavLink Href="/sensors" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Sensors">Sensors</MudNavLink>
             <MudNavLink Href="/map" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Map">Map</MudNavLink>
             <MudNavLink Href="/counter" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Analytics">Counter</MudNavLink>
         </MudNavMenu>
