@@ -45,12 +45,14 @@ public sealed class SensorRepository(IDbContextFactory<AquaTrackDbContext> conte
             .Where(s => s.SourceId == dataSourceId)
             .Select(s => new SensorDtoForList(
                 s.Id,
+                s.SourceId,
                 s.ExternalId,
                 s.Name,
                 s.Latitude,
                 s.Longitude,
                 s.Municipality,
-                s.IsActive
+                s.IsActive,
+                s.DataSource!.Name
             ))
             .ToListAsync(cancellationToken);
     }
@@ -101,12 +103,14 @@ public sealed class SensorRepository(IDbContextFactory<AquaTrackDbContext> conte
             .Take(parameters.PageSize + 1)
             .Select(static s => new SensorDtoForList(
                 s.Id,
+                s.SourceId,
                 s.ExternalId,
                 s.Name,
                 s.Latitude,
                 s.Longitude,
                 s.Municipality,
-                s.IsActive
+                s.IsActive,
+                s.DataSource!.Name
             ))
             .AsAsyncEnumerable()
             .WithCancellation(cancellationToken))

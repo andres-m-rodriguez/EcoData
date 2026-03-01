@@ -37,5 +37,6 @@ app.MapRazorComponents<App>()
     .AddAdditionalAssemblies(typeof(EcoData.AquaTrack.WebApp.Client._Imports).Assembly);
 
 app.MapSensorEndpoints();
+app.MapDataSourceEndpoints();
 
 app.Run();
