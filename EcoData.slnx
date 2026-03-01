@@ -12,4 +12,11 @@
     <Project Path="src/AquaTrack/EcoData.AquaTrack.Seeder/EcoData.AquaTrack.Seeder.csproj" />
     <Project Path="src/AquaTrack/EcoData.AquaTrack.Ingestion/EcoData.AquaTrack.Ingestion.csproj" />
   </Folder>
+  <Folder Name="/Locations/">
+    <Project Path="src/Locations/EcoData.Locations.Contracts/EcoData.Locations.Contracts.csproj" />
+    <Project Path="src/Locations/EcoData.Locations.Database/EcoData.Locations.Database.csproj" />
+    <Project Path="src/Locations/EcoData.Locations.DataAccess/EcoData.Locations.DataAccess.csproj" />
+    <Project Path="src/Locations/EcoData.Locations.Api/EcoData.Locations.Api.csproj" />
+    <Project Path="src/Locations/EcoData.Locations.Seeder/EcoData.Locations.Seeder.csproj" />
+  </Folder>
 </Solution>

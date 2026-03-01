@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="NetTopologySuite.IO.GeoJSON" Version="4.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\EcoData.Locations.Contracts\EcoData.Locations.Contracts.csproj" />
+    <ProjectReference Include="..\EcoData.Locations.Database\EcoData.Locations.Database.csproj" />
+  </ItemGroup>
+
+</Project>

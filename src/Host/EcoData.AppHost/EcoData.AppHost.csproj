@@ -8,6 +8,7 @@
     <ProjectReference Include="..\..\AquaTrack\EcoData.AquaTrack.WebApp\EcoData.AquaTrack.WebApp.csproj" />
     <ProjectReference Include="..\..\AquaTrack\EcoData.AquaTrack.Seeder\EcoData.AquaTrack.Seeder.csproj" />
     <ProjectReference Include="..\..\AquaTrack\EcoData.AquaTrack.Ingestion\EcoData.AquaTrack.Ingestion.csproj" />
+    <ProjectReference Include="..\..\Locations\EcoData.Locations.Seeder\EcoData.Locations.Seeder.csproj" />
   </ItemGroup>
 
   <PropertyGroup>
