@@ -36,6 +36,7 @@ window.sensorMap = {
                 <div style="min-width: 150px;">
                     <strong>${sensor.name}</strong><br/>
                     <small>ID: ${sensor.externalId}</small><br/>
+                    ${sensor.dataSourceName ? `<small>Source: ${sensor.dataSourceName}</small><br/>` : ''}
                     ${sensor.municipality ? `<small>Municipality: ${sensor.municipality}</small><br/>` : ''}
                     <small>Status: ${sensor.isActive ? 'Active' : 'Inactive'}</small>
                 </div>

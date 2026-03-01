@@ -2,12 +2,14 @@ namespace EcoData.AquaTrack.Contracts.Dtos;
 
 public sealed record SensorDtoForList(
     Guid Id,
+    Guid SourceId,
     string ExternalId,
     string Name,
     decimal Latitude,
     decimal Longitude,
     string? Municipality,
-    bool IsActive
+    bool IsActive,
+    string DataSourceName
 );
 
 public sealed record SensorDtoForDetail(

@@ -6,12 +6,53 @@
 @using BlazingSingularity
 @using BlazingSingularity.Commands
 @inject ISensorHttpClient SensorClient
+@inject IDataSourceHttpClient DataSourceClient
 @inject ISensorMapManager MapManager
 @implements IAsyncDisposable
 
 <PageTitle>Map</PageTitle>
 
 <div class="map-page">
+    <div class="map-filter-panel">
+        <MudPaper Elevation="2" Class="pa-3">
+            <MudText Typo="Typo.subtitle1" Class="mb-2">
+                <MudIcon Icon="@Icons.Material.Filled.FilterList" Size="Size.Small" Class="mr-1" />
+                Data Sources
+            </MudText>
+            @if (LoadDataSourcesCommand.IsLoading)
+            {
+                <MudProgressLinear Indeterminate="true" Color="Color.Primary" Class="mb-2" />
+            }
+            else if (_dataSources is not null && _dataSources.Count > 0)
+            {
+                <MudStack Spacing="1">
+                    @foreach (var dataSource in _dataSources)
+                    {
+                        <MudCheckBox T="bool"
+                                     Value="@IsDataSourceSelected(dataSource.Id)"
+                                     ValueChanged="@((bool value) => OnDataSourceSelectionChanged(dataSource.Id, value))"
+                                     Label="@dataSource.Name"
+                                     Color="Color.Primary"
+                                     Dense="true"
+                                     Class="ma-0" />
+                    }
+                </MudStack>
+                <MudDivider Class="my-2" />
+                <MudStack Row="true" Spacing="1">
+                    <MudButton Variant="Variant.Text" Size="Size.Small" Color="Color.Primary" OnClick="SelectAllDataSources">
+                        Select All
+                    </MudButton>
+                    <MudButton Variant="Variant.Text" Size="Size.Small" Color="Color.Secondary" OnClick="ClearAllDataSources">
+                        Clear
+                    </MudButton>
+                </MudStack>
+            }
+            else
+            {
+                <MudText Typo="Typo.body2" Color="Color.Secondary">No data sources available</MudText>
+            }
+        </MudPaper>
+    </div>
     <div class="map-container">
         @if (LoadSensorsCommand.IsLoading)
         {
@@ -26,11 +67,24 @@
 @code {
     private readonly CancellationTokenSource _cts = new();
     private List<SensorDtoForList>? _sensors;
+    private IReadOnlyList<DataSourceDtoForList>? _dataSources;
+    private HashSet<Guid> _selectedDataSourceIds = new();
     private bool _mapInitialized;
 
     protected override async Task OnInitializedAsync()
     {
-        await LoadSensorsCommand.ExecuteAsync();
+        await Task.WhenAll(
+            LoadDataSourcesCommand.ExecuteAsync(),
+            LoadSensorsCommand.ExecuteAsync()
+        );
+    }
+
+    [RelayCommand]
+    private async Task LoadDataSources()
+    {
+        _dataSources = await DataSourceClient.GetDataSourcesAsync(_cts.Token);
+        // Select all data sources by default
+        _selectedDataSourceIds = _dataSources.Select(ds => ds.Id).ToHashSet();
     }
 
     [RelayCommand]
@@ -50,8 +104,51 @@
         {
             _mapInitialized = true;
             await MapManager.InitializeAsync("sensor-map");
-            await MapManager.AddSensorsAsync(_sensors);
+            await UpdateMapSensorsAsync();
         }
+    }
+
+    private bool IsDataSourceSelected(Guid dataSourceId)
+    {
+        return _selectedDataSourceIds.Contains(dataSourceId);
+    }
+
+    private async Task OnDataSourceSelectionChanged(Guid dataSourceId, bool isSelected)
+    {
+        if (isSelected)
+        {
+            _selectedDataSourceIds.Add(dataSourceId);
+        }
+        else
+        {
+            _selectedDataSourceIds.Remove(dataSourceId);
+        }
+
+        await UpdateMapSensorsAsync();
+    }
+
+    private async Task SelectAllDataSources()
+    {
+        if (_dataSources is null) return;
+        _selectedDataSourceIds = _dataSources.Select(ds => ds.Id).ToHashSet();
+        await UpdateMapSensorsAsync();
+    }
+
+    private async Task ClearAllDataSources()
+    {
+        _selectedDataSourceIds.Clear();
+        await UpdateMapSensorsAsync();
+    }
+
+    private async Task UpdateMapSensorsAsync()
+    {
+        if (!_mapInitialized || _sensors is null) return;
+
+        var filteredSensors = _sensors
+            .Where(s => _selectedDataSourceIds.Contains(s.SourceId))
+            .ToList();
+
+        await MapManager.AddSensorsAsync(filteredSensors);
     }
 
     public async ValueTask DisposeAsync()
