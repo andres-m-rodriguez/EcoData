@@ -1,0 +1,174 @@
+@page "/register"
+@using EcoData.Identity.Application.Client
+@using EcoData.Identity.Contracts.Requests
+@using BlazingSingularity
+@using BlazingSingularity.Commands
+@inject IAuthHttpClient AuthClient
+@inject NavigationManager Navigation
+
+<PageTitle>Register</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.Small" Class="d-flex align-center" Style="min-height: 80vh;">
+    <MudPaper Elevation="3" Class="pa-8 w-100">
+        <MudStack Spacing="4">
+            <MudText Typo="Typo.h4" Align="Align.Center" Class="mb-2">Request Access</MudText>
+            <MudText Typo="Typo.body2" Align="Align.Center" Color="Color.Secondary" Class="mb-4">
+                Create an account to access EcoData. Your request will be reviewed by an administrator.
+            </MudText>
+
+            @if (_registrationComplete)
+            {
+                <MudAlert Severity="Severity.Success" Variant="Variant.Filled">
+                    <MudText Typo="Typo.body1" Class="mb-2">
+                        <strong>Registration submitted!</strong>
+                    </MudText>
+                    <MudText Typo="Typo.body2">
+                        Your access request has been submitted and is pending approval.
+                        You will be able to sign in once an administrator approves your request.
+                    </MudText>
+                </MudAlert>
+
+                <MudButton Variant="Variant.Outlined"
+                           Color="Color.Primary"
+                           FullWidth="true"
+                           Href="/login">
+                    Return to Login
+                </MudButton>
+            }
+            else
+            {
+                @if (!string.IsNullOrEmpty(_errorMessage))
+                {
+                    <MudAlert Severity="Severity.Error" Variant="Variant.Filled" Dense="true" Class="mb-2">
+                        @_errorMessage
+                    </MudAlert>
+                }
+
+                <EditForm Model="_model" OnValidSubmit="() => RegisterCommand.ExecuteAsync()">
+                    <DataAnnotationsValidator />
+
+                    <MudStack Spacing="3">
+                        <MudTextField @bind-Value="_model.DisplayName"
+                                      Label="Display Name"
+                                      Placeholder="Enter your name"
+                                      Adornment="Adornment.Start"
+                                      AdornmentIcon="@Icons.Material.Filled.Person"
+                                      Variant="Variant.Outlined"
+                                      Required="true"
+                                      RequiredError="Display name is required"
+                                      Disabled="RegisterCommand.IsLoading" />
+
+                        <MudTextField @bind-Value="_model.Email"
+                                      Label="Email"
+                                      Placeholder="Enter your email"
+                                      InputType="InputType.Email"
+                                      Adornment="Adornment.Start"
+                                      AdornmentIcon="@Icons.Material.Filled.Email"
+                                      Variant="Variant.Outlined"
+                                      Required="true"
+                                      RequiredError="Email is required"
+                                      Disabled="RegisterCommand.IsLoading" />
+
+                        <MudTextField @bind-Value="_model.Password"
+                                      Label="Password"
+                                      Placeholder="Create a password"
+                                      InputType="@(_showPassword ? InputType.Text : InputType.Password)"
+                                      Adornment="Adornment.End"
+                                      AdornmentIcon="@(_showPassword ? Icons.Material.Filled.VisibilityOff : Icons.Material.Filled.Visibility)"
+                                      OnAdornmentClick="() => _showPassword = !_showPassword"
+                                      AdornmentAriaLabel="Toggle password visibility"
+                                      Variant="Variant.Outlined"
+                                      Required="true"
+                                      RequiredError="Password is required"
+                                      HelperText="At least 8 characters with uppercase, lowercase, and a number"
+                                      Disabled="RegisterCommand.IsLoading" />
+
+                        <MudTextField @bind-Value="_model.ConfirmPassword"
+                                      Label="Confirm Password"
+                                      Placeholder="Confirm your password"
+                                      InputType="@(_showConfirmPassword ? InputType.Text : InputType.Password)"
+                                      Adornment="Adornment.End"
+                                      AdornmentIcon="@(_showConfirmPassword ? Icons.Material.Filled.VisibilityOff : Icons.Material.Filled.Visibility)"
+                                      OnAdornmentClick="() => _showConfirmPassword = !_showConfirmPassword"
+                                      AdornmentAriaLabel="Toggle password visibility"
+                                      Variant="Variant.Outlined"
+                                      Required="true"
+                                      RequiredError="Please confirm your password"
+                                      Disabled="RegisterCommand.IsLoading" />
+
+                        <MudButton ButtonType="ButtonType.Submit"
+                                   Variant="Variant.Filled"
+                                   Color="Color.Primary"
+                                   FullWidth="true"
+                                   Size="Size.Large"
+                                   Disabled="RegisterCommand.IsLoading"
+                                   Class="mt-2">
+                            @if (RegisterCommand.IsLoading)
+                            {
+                                <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
+                                <span>Submitting...</span>
+                            }
+                            else
+                            {
+                                <span>Request Access</span>
+                            }
+                        </MudButton>
+                    </MudStack>
+                </EditForm>
+
+                <MudDivider Class="my-4" />
+
+                <MudText Typo="Typo.body2" Align="Align.Center">
+                    Already have an account?
+                    <MudLink Href="/login" Color="Color.Primary">Sign In</MudLink>
+                </MudText>
+            }
+        </MudStack>
+    </MudPaper>
+</MudContainer>
+
+@code {
+    private readonly RegisterModel _model = new();
+    private bool _showPassword;
+    private bool _showConfirmPassword;
+    private bool _registrationComplete;
+    private string? _errorMessage;
+
+    [RelayCommand]
+    private async Task Register()
+    {
+        if (_model.Password != _model.ConfirmPassword)
+        {
+            _errorMessage = "Passwords do not match";
+            return;
+        }
+
+        _errorMessage = null;
+
+        var request = new RegisterRequest(
+            _model.Email,
+            _model.DisplayName,
+            _model.Password,
+            _model.ConfirmPassword
+        );
+
+        var result = await AuthClient.RegisterAsync(request);
+
+        if (result.Success)
+        {
+            _registrationComplete = true;
+        }
+        else
+        {
+            _errorMessage = result.Error;
+        }
+    }
+
+    private sealed class RegisterModel
+    {
+        public string DisplayName { get; set; } = string.Empty;
+        public string Email { get; set; } = string.Empty;
+        public string Password { get; set; } = string.Empty;
+        public string ConfirmPassword { get; set; } = string.Empty;
+    }
+}

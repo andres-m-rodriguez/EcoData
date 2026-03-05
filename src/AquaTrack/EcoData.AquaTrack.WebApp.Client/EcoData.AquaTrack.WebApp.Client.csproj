@@ -18,6 +18,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\EcoData.AquaTrack.Application.Client\EcoData.AquaTrack.Application.Client.csproj" />
+    <ProjectReference Include="..\..\Identity\EcoData.Identity.Application.Client\EcoData.Identity.Application.Client.csproj" />
   </ItemGroup>
 
 </Project>
