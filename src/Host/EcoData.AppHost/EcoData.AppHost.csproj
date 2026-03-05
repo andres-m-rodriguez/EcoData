@@ -1,7 +1,7 @@
-<Project Sdk="Aspire.AppHost.Sdk/13.3.0-preview.1.26112.3">
+<Project Sdk="Aspire.AppHost.Sdk/13.1.2">
 
   <ItemGroup>
-    <PackageReference Include="Aspire.Hosting.PostgreSQL" Version="13.3.0-preview.1.26112.3" />
+    <PackageReference Include="Aspire.Hosting.PostgreSQL" Version="13.1.2" />
   </ItemGroup>
 
   <ItemGroup>

@@ -11,6 +11,7 @@
     <Project Path="src/Identity/EcoData.Identity.Contracts/EcoData.Identity.Contracts.csproj" />
     <Project Path="src/Identity/EcoData.Identity.DataAccess/EcoData.Identity.DataAccess.csproj" />
     <Project Path="src/Identity/EcoData.Identity.Application/EcoData.Identity.Application.csproj" />
+    <Project Path="src/Identity/EcoData.Identity.Application.Client/EcoData.Identity.Application.Client.csproj" />
     <Project Path="src/Identity/EcoData.Identity.Api/EcoData.Identity.Api.csproj" />
   </Folder>
   <Folder Name="/AquaTrack/">
