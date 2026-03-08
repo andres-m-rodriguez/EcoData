@@ -44,7 +44,11 @@ public sealed class CursorPaginationState<TItem, TParams>(Func<TItem, Guid> keyS
                 {
                     var cursorToFetch = _lastCursor;
                     var baseParams = parametersFactory();
-                    var parameters = CreateParametersWithCursor(baseParams, cursorToFetch);
+
+                    // Use larger page size for first fetch (2x), then normal size
+                    var isFirstFetch = cursorToFetch is null;
+                    var pageSize = isFirstFetch ? baseParams.PageSize * 2 : baseParams.PageSize;
+                    var parameters = CreateParametersWithCursor(baseParams, cursorToFetch, pageSize);
 
                     var fetchedCount = 0;
                     await foreach (var item in fetchAsync(parameters, request.CancellationToken))
@@ -123,11 +127,8 @@ public sealed class CursorPaginationState<TItem, TParams>(Func<TItem, Guid> keyS
         }
     }
 
-    private static TParams CreateParametersWithCursor(TParams baseParams, Guid? cursor)
+    private static TParams CreateParametersWithCursor(TParams baseParams, Guid? cursor, int pageSize)
     {
-        if (cursor == baseParams.Cursor)
-            return baseParams;
-
         var type = typeof(TParams);
         var constructor = type.GetConstructors().FirstOrDefault();
 
@@ -152,6 +153,10 @@ public sealed class CursorPaginationState<TItem, TParams>(Func<TItem, Guid> keyS
             if (param.Name?.Equals("cursor", StringComparison.OrdinalIgnoreCase) == true)
             {
                 args[i] = cursor;
+            }
+            else if (param.Name?.Equals("pageSize", StringComparison.OrdinalIgnoreCase) == true)
+            {
+                args[i] = pageSize;
             }
             else if (prop is not null)
             {
