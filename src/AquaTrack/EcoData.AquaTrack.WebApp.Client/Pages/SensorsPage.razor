@@ -2,7 +2,6 @@
 @using EcoData.AquaTrack.Contracts.Dtos
 @using EcoData.AquaTrack.Contracts.Parameters
 @using EcoData.AquaTrack.Application.Client
-@using EcoData.Common.Pagination.Blazor
 @using BlazingSingularity.Signals
 @using EcoData.AquaTrack.WebApp.Client.Components
 @inject ISensorHttpClient SensorClient
@@ -10,7 +9,7 @@
 
 <PageTitle>Sensors - AquaTrack</PageTitle>
 
-<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pa-4">
+<div class="sensors-page">
     <div class="search-bar">
         <MudTextField @bind-Value="SearchText"
                       Placeholder="Search sensors..."
@@ -39,18 +38,10 @@
     </div>
 
     <MudPaper Elevation="1" Class="sensor-list-container">
-        <EcoDataVirtualizedList @ref="_list"
-                                TItem="SensorDtoForList"
-                                TParams="SensorParameters"
-                                ItemsProvider="SensorClient.GetSensorsAsync"
-                                ParametersFactory="CreateParameters"
-                                KeySelector="s => s.Id"
-                                HasActiveFilters="_ => HasActiveFilters"
-                                OnClearFilters="ClearFilters">
-            <ItemTemplate Context="sensor">
-                <SensorListItem Sensor="sensor" OnMapClick="NavigateToMap" />
-            </ItemTemplate>
-            <SkeletonTemplate>
+        @if (_isLoading)
+        {
+            @for (var i = 0; i < 8; i++)
+            {
                 <div class="sensor-skeleton">
                     <div class="skeleton-primary">
                         <MudSkeleton Width="180px" Height="16px" />
@@ -61,17 +52,12 @@
                     <MudSkeleton Width="60px" Height="24px" Class="rounded-pill" />
                     <MudSkeleton SkeletonType="SkeletonType.Circle" Width="32px" Height="32px" />
                 </div>
-            </SkeletonTemplate>
-            <EmptyTemplate>
-                <MudStack AlignItems="AlignItems.Center" Class="pa-8">
-                    <MudIcon Icon="@Icons.Material.Filled.Sensors" Size="Size.Large" Color="Color.Secondary" />
-                    <MudText Typo="Typo.h6" Color="Color.Secondary" Class="mt-2">No sensors yet</MudText>
-                    <MudText Typo="Typo.body2" Color="Color.Secondary">
-                        Sensors will appear here once data is ingested.
-                    </MudText>
-                </MudStack>
-            </EmptyTemplate>
-            <FilteredEmptyTemplate Context="clearFilters">
+            }
+        }
+        else if (_sensors.Count == 0)
+        {
+            @if (HasActiveFilters)
+            {
                 <MudStack AlignItems="AlignItems.Center" Class="pa-8">
                     <MudIcon Icon="@Icons.Material.Filled.SearchOff" Size="Size.Large" Color="Color.Secondary" />
                     <MudText Typo="Typo.h6" Color="Color.Secondary" Class="mt-2">No sensors found</MudText>
@@ -81,18 +67,56 @@
                     <MudButton Variant="Variant.Outlined"
                                Color="Color.Primary"
                                StartIcon="@Icons.Material.Filled.FilterAltOff"
-                               OnClick="clearFilters"
+                               OnClick="ClearFilters"
                                Class="mt-3">
                         Clear Filters
                     </MudButton>
                 </MudStack>
-            </FilteredEmptyTemplate>
-        </EcoDataVirtualizedList>
+            }
+            else
+            {
+                <MudStack AlignItems="AlignItems.Center" Class="pa-8">
+                    <MudIcon Icon="@Icons.Material.Filled.Sensors" Size="Size.Large" Color="Color.Secondary" />
+                    <MudText Typo="Typo.h6" Color="Color.Secondary" Class="mt-2">No sensors yet</MudText>
+                    <MudText Typo="Typo.body2" Color="Color.Secondary">
+                        Sensors will appear here once data is ingested.
+                    </MudText>
+                </MudStack>
+            }
+        }
+        else
+        {
+            <div class="sensor-list">
+                @foreach (var sensor in _sensors)
+                {
+                    <SensorListItem Sensor="sensor" OnMapClick="NavigateToMap" />
+                }
+                @if (_hasMore)
+                {
+                    <div class="load-more">
+                        <MudButton Variant="Variant.Text"
+                                   Color="Color.Primary"
+                                   OnClick="LoadMoreAsync"
+                                   Disabled="_isLoadingMore">
+                            @if (_isLoadingMore)
+                            {
+                                <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
+                            }
+                            Load More
+                        </MudButton>
+                    </div>
+                }
+            </div>
+        }
     </MudPaper>
-</MudContainer>
+</div>
 
 @code {
-    private EcoDataVirtualizedList<SensorDtoForList, SensorParameters>? _list;
+    private List<SensorDtoForList> _sensors = [];
+    private bool _isLoading = true;
+    private bool _isLoadingMore;
+    private bool _hasMore = true;
+    private Guid? _cursor;
 
     [Signal]
     private string? _searchText;
@@ -102,30 +126,70 @@
 
     private bool HasActiveFilters => !string.IsNullOrWhiteSpace(SearchText) || StatusFilter != SensorStatusFilter.All;
 
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
         SearchTextSignal.OnChange(async _ => await RefreshAsync());
         StatusFilterSignal.OnChange(async _ => await RefreshAsync());
+        await LoadDataAsync();
     }
 
-    private SensorParameters CreateParameters() => new()
+    private async Task LoadDataAsync()
     {
-        PageSize = 50,
-        Search = string.IsNullOrWhiteSpace(SearchText) ? null : SearchText,
-        IsActive = StatusFilter switch
+        _isLoading = true;
+        StateHasChanged();
+
+        _sensors.Clear();
+        _cursor = null;
+        _hasMore = true;
+
+        await FetchPageAsync();
+
+        _isLoading = false;
+        StateHasChanged();
+    }
+
+    private async Task LoadMoreAsync()
+    {
+        if (_isLoadingMore || !_hasMore) return;
+
+        _isLoadingMore = true;
+        StateHasChanged();
+
+        await FetchPageAsync();
+
+        _isLoadingMore = false;
+        StateHasChanged();
+    }
+
+    private async Task FetchPageAsync()
+    {
+        var parameters = new SensorParameters
         {
-            SensorStatusFilter.Active => true,
-            SensorStatusFilter.Inactive => false,
-            _ => null
+            PageSize = 50,
+            Cursor = _cursor,
+            Search = string.IsNullOrWhiteSpace(SearchText) ? null : SearchText,
+            IsActive = StatusFilter switch
+            {
+                SensorStatusFilter.Active => true,
+                SensorStatusFilter.Inactive => false,
+                _ => null
+            }
+        };
+
+        var count = 0;
+        await foreach (var sensor in SensorClient.GetSensorsAsync(parameters, CancellationToken.None))
+        {
+            _sensors.Add(sensor);
+            _cursor = sensor.Id;
+            count++;
         }
-    };
+
+        _hasMore = count >= parameters.PageSize;
+    }
 
     private async Task RefreshAsync()
     {
-        if (_list is not null)
-        {
-            await _list.RefreshAsync();
-        }
+        await LoadDataAsync();
     }
 
     private void ClearFilters()
