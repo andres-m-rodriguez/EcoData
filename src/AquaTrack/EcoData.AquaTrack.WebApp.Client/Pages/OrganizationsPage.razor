@@ -1,0 +1,268 @@
+@page "/organizations"
+@using Microsoft.AspNetCore.Components.Web.Virtualization
+@using EcoData.AquaTrack.Contracts.Dtos
+@using EcoData.AquaTrack.Contracts.Parameters
+@using EcoData.AquaTrack.Application.Client
+@using EcoData.Common.Pagination.Blazor
+@using BlazingSingularity.Signals
+@using EcoData.AquaTrack.WebApp.Client.Components
+@using EcoData.AquaTrack.WebApp.Client.Services
+@inject IOrganizationHttpClient OrganizationClient
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+@inject AuthStateService AuthState
+@implements IDisposable
+
+<PageTitle>Organizations - AquaTrack</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pa-4">
+    <div class="header-bar">
+        <MudTextField @bind-Value="SearchText"
+                      Placeholder="Search organizations..."
+                      Adornment="Adornment.Start"
+                      AdornmentIcon="@Icons.Material.Filled.Search"
+                      Immediate="true"
+                      DebounceInterval="300"
+                      Clearable="true"
+                      Margin="Margin.Dense"
+                      Class="search-input" />
+        @if (IsAdmin)
+        {
+            <MudButton Variant="Variant.Filled"
+                       Color="Color.Primary"
+                       StartIcon="@Icons.Material.Filled.Add"
+                       OnClick="OpenCreateDialog">
+                Add Organization
+            </MudButton>
+        }
+    </div>
+
+    <MudPaper Elevation="1" Class="organization-list-container" Style="height: calc(100vh - 200px); overflow-y: auto; border-radius: 12px;">
+        @if (_isLoading)
+        {
+            @for (var i = 0; i < 8; i++)
+            {
+                <div class="organization-skeleton">
+                    <MudSkeleton Width="180px" Height="16px" />
+                    <MudSkeleton Width="100px" Height="14px" Class="hide-mobile" />
+                    <MudSkeleton SkeletonType="SkeletonType.Circle" Width="32px" Height="32px" />
+                </div>
+            }
+        }
+        else
+        {
+            <Virtualize @ref="_virtualize"
+                        TItem="OrganizationDtoForList"
+                        ItemsProvider="LoadItemsAsync"
+                        ItemSize="65"
+                        OverscanCount="5"
+                        Context="organization">
+                <ItemContent>
+                    <OrganizationListItem Organization="organization"
+                                          ShowActions="IsAdmin"
+                                          OnEdit="OpenEditDialog"
+                                          OnDelete="ConfirmDelete" />
+                </ItemContent>
+                <Placeholder>
+                    <div style="height: 65px;"></div>
+                </Placeholder>
+                <EmptyContent>
+                    <MudStack AlignItems="AlignItems.Center" Class="pa-8">
+                        <MudIcon Icon="@Icons.Material.Filled.Business" Size="Size.Large" Color="Color.Secondary" />
+                        <MudText Typo="Typo.h6" Color="Color.Secondary" Class="mt-2">No organizations found</MudText>
+                        <MudText Typo="Typo.body2" Color="Color.Secondary">
+                            @if (HasActiveFilters)
+                            {
+                                <span>No organizations match your search criteria.</span>
+                            }
+                            else
+                            {
+                                <span>Get started by adding your first organization.</span>
+                            }
+                        </MudText>
+                        @if (HasActiveFilters)
+                        {
+                            <MudButton Variant="Variant.Outlined"
+                                       Color="Color.Primary"
+                                       StartIcon="@Icons.Material.Filled.FilterAltOff"
+                                       OnClick="ClearFilters"
+                                       Class="mt-3">
+                                Clear Filters
+                            </MudButton>
+                        }
+                        else if (IsAdmin)
+                        {
+                            <MudButton Variant="Variant.Filled"
+                                       Color="Color.Primary"
+                                       StartIcon="@Icons.Material.Filled.Add"
+                                       OnClick="OpenCreateDialog"
+                                       Class="mt-3">
+                                Add Organization
+                            </MudButton>
+                        }
+                    </MudStack>
+                </EmptyContent>
+            </Virtualize>
+        }
+    </MudPaper>
+</MudContainer>
+
+@code {
+    private Virtualize<OrganizationDtoForList>? _virtualize;
+    private readonly CursorPaginationState<OrganizationDtoForList, OrganizationParameters> _paginationState = new(o => o.Id);
+    private CancellationTokenSource? _refreshCts;
+    private bool _isLoading = true;
+
+    [Signal]
+    private string? _searchText;
+
+    private bool IsAdmin => AuthState.CurrentUser?.Role == "Admin";
+    private bool HasActiveFilters => !string.IsNullOrWhiteSpace(SearchText);
+
+    protected override void OnInitialized()
+    {
+        SearchTextSignal.OnChange(async _ => await RefreshDataAsync());
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await RefreshDataAsync();
+        }
+    }
+
+    private async Task RefreshDataAsync()
+    {
+        _refreshCts?.Cancel();
+        _refreshCts = new CancellationTokenSource();
+        var token = _refreshCts.Token;
+
+        try
+        {
+            _isLoading = true;
+            StateHasChanged();
+
+            _paginationState.Reset();
+
+            var request = new ItemsProviderRequest(0, 50, token);
+            await LoadItemsAsync(request);
+
+            _isLoading = false;
+            StateHasChanged();
+
+            if (_virtualize is not null)
+            {
+                await _virtualize.RefreshDataAsync();
+            }
+        }
+        catch (TaskCanceledException)
+        {
+        }
+    }
+
+    private ValueTask<ItemsProviderResult<OrganizationDtoForList>> LoadItemsAsync(ItemsProviderRequest request)
+    {
+        return _paginationState.ProvideItemsAsync(
+            request,
+            () => new OrganizationParameters
+            {
+                PageSize = 50,
+                Search = string.IsNullOrWhiteSpace(SearchText) ? null : SearchText
+            },
+            (parameters, ct) => OrganizationClient.GetOrganizationsAsync(parameters, ct));
+    }
+
+    private void ClearFilters()
+    {
+        SearchText = null;
+    }
+
+    private async Task OpenCreateDialog()
+    {
+        var options = new DialogOptions { CloseOnEscapeKey = true, MaxWidth = MaxWidth.Small, FullWidth = true };
+        var dialog = await DialogService.ShowAsync<OrganizationDialog>("Add Organization", options);
+        var result = await dialog.Result;
+
+        if (result is { Canceled: false, Data: string name })
+        {
+            try
+            {
+                await OrganizationClient.CreateAsync(new OrganizationDtoForCreate(name));
+                Snackbar.Add("Organization created successfully", Severity.Success);
+                await RefreshDataAsync();
+            }
+            catch
+            {
+                Snackbar.Add("Failed to create organization", Severity.Error);
+            }
+        }
+    }
+
+    private async Task OpenEditDialog(OrganizationDtoForList organization)
+    {
+        var parameters = new DialogParameters<OrganizationDialog>
+        {
+            { x => x.Name, organization.Name },
+            { x => x.IsEdit, true }
+        };
+        var options = new DialogOptions { CloseOnEscapeKey = true, MaxWidth = MaxWidth.Small, FullWidth = true };
+        var dialog = await DialogService.ShowAsync<OrganizationDialog>("Edit Organization", parameters, options);
+        var result = await dialog.Result;
+
+        if (result is { Canceled: false, Data: string name })
+        {
+            try
+            {
+                await OrganizationClient.UpdateAsync(organization.Id, new OrganizationDtoForUpdate(name));
+                Snackbar.Add("Organization updated successfully", Severity.Success);
+                await RefreshDataAsync();
+            }
+            catch
+            {
+                Snackbar.Add("Failed to update organization", Severity.Error);
+            }
+        }
+    }
+
+    private async Task ConfirmDelete(OrganizationDtoForList organization)
+    {
+        var parameters = new DialogParameters<ConfirmDialog>
+        {
+            { x => x.ContentText, $"Are you sure you want to delete \"{organization.Name}\"? This action cannot be undone." },
+            { x => x.ButtonText, "Delete" },
+            { x => x.Color, Color.Error }
+        };
+        var options = new DialogOptions { CloseOnEscapeKey = true, MaxWidth = MaxWidth.ExtraSmall };
+        var dialog = await DialogService.ShowAsync<ConfirmDialog>("Delete Organization", parameters, options);
+        var result = await dialog.Result;
+
+        if (result is { Canceled: false })
+        {
+            try
+            {
+                var deleted = await OrganizationClient.DeleteAsync(organization.Id);
+                if (deleted)
+                {
+                    Snackbar.Add("Organization deleted successfully", Severity.Success);
+                    await RefreshDataAsync();
+                }
+                else
+                {
+                    Snackbar.Add("Failed to delete organization", Severity.Error);
+                }
+            }
+            catch
+            {
+                Snackbar.Add("Failed to delete organization", Severity.Error);
+            }
+        }
+    }
+
+    public void Dispose()
+    {
+        _refreshCts?.Cancel();
+        _refreshCts?.Dispose();
+        _paginationState.Dispose();
+    }
+}

@@ -19,6 +19,11 @@ public static class DependencyInjection
             configureClient?.Invoke(client);
         });
 
+        services.AddHttpClient<IOrganizationHttpClient, OrganizationHttpClient>(client =>
+        {
+            configureClient?.Invoke(client);
+        });
+
         return services;
     }
 

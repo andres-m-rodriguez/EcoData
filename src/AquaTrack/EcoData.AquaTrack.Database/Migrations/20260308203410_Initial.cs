@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace EcoData.AquaTrack.Database.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialCreate : Migration
+    public partial class Initial : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -27,6 +27,20 @@ namespace EcoData.AquaTrack.Database.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("pk_data_sources", x => x.id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "organizations",
+                columns: table => new
+                {
+                    id = table.Column<Guid>(type: "uuid", nullable: false),
+                    name = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
+                    created_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    updated_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("pk_organizations", x => x.id);
                 });
 
             migrationBuilder.CreateTable(
@@ -62,7 +76,8 @@ namespace EcoData.AquaTrack.Database.Migrations
                     longitude = table.Column<decimal>(type: "numeric(9,6)", precision: 9, scale: 6, nullable: false),
                     municipality = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: true),
                     is_active = table.Column<bool>(type: "boolean", nullable: false),
-                    created_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false)
+                    created_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    organization_id = table.Column<Guid>(type: "uuid", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -73,6 +88,11 @@ namespace EcoData.AquaTrack.Database.Migrations
                         principalTable: "data_sources",
                         principalColumn: "id",
                         onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "fk_sensors_organizations_organization_id",
+                        column: x => x.organization_id,
+                        principalTable: "organizations",
+                        principalColumn: "id");
                 });
 
             migrationBuilder.CreateTable(
@@ -138,6 +158,12 @@ namespace EcoData.AquaTrack.Database.Migrations
                 columns: new[] { "data_source_id", "ingested_at" });
 
             migrationBuilder.CreateIndex(
+                name: "ix_organizations_name",
+                table: "organizations",
+                column: "name",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
                 name: "ix_readings_recorded_at",
                 table: "readings",
                 column: "recorded_at");
@@ -151,6 +177,11 @@ namespace EcoData.AquaTrack.Database.Migrations
                 name: "ix_readings_sensor_id_recorded_at",
                 table: "readings",
                 columns: new[] { "sensor_id", "recorded_at" });
+
+            migrationBuilder.CreateIndex(
+                name: "ix_sensors_organization_id",
+                table: "sensors",
+                column: "organization_id");
 
             migrationBuilder.CreateIndex(
                 name: "ix_sensors_source_id_external_id",
@@ -176,6 +207,9 @@ namespace EcoData.AquaTrack.Database.Migrations
 
             migrationBuilder.DropTable(
                 name: "data_sources");
+
+            migrationBuilder.DropTable(
+                name: "organizations");
         }
     }
 }
