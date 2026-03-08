@@ -10,7 +10,7 @@ public sealed class CursorPaginationState<TItem, TParams>(Func<TItem, Guid> keyS
     private readonly Func<TItem, Guid> _keySelector = keySelector;
     private readonly List<TItem> _cachedItems = [];
     private readonly SemaphoreSlim _fetchLock = new(1, 1);
-    private readonly HashSet<Guid> _activeFetches = [];
+    private readonly HashSet<Guid> _fetchedCursors = [];
     private Guid? _lastCursor;
     private bool _hasMoreItems = true;
     private bool _disposed;
@@ -46,35 +46,31 @@ public sealed class CursorPaginationState<TItem, TParams>(Func<TItem, Guid> keyS
                 if (!_hasMoreItems || _cachedItems.Count >= endIndex)
                     break;
 
-                // Prevent duplicate fetches for the same cursor
-                var cursorKey = _lastCursor ?? Guid.Empty;
-                if (!_activeFetches.Add(cursorKey))
-                {
-                    // Another fetch with this cursor is already in progress
+                // Get cursor to fetch - must be done inside lock
+                var cursorToFetch = _lastCursor;
+                var cursorKey = cursorToFetch ?? Guid.Empty;
+
+                // Skip if we've already fetched this cursor
+                if (_fetchedCursors.Contains(cursorKey))
                     break;
+
+                var baseParams = parametersFactory();
+                var parameters = CreateParametersWithCursor(baseParams, cursorToFetch);
+
+                var fetchedCount = 0;
+                await foreach (var item in fetchAsync(parameters, request.CancellationToken))
+                {
+                    _cachedItems.Add(item);
+                    _lastCursor = _keySelector(item);
+                    fetchedCount++;
                 }
 
-                try
-                {
-                    var baseParams = parametersFactory();
-                    var parameters = CreateParametersWithCursor(baseParams, _lastCursor);
+                // Mark this cursor as fetched
+                _fetchedCursors.Add(cursorKey);
 
-                    var fetchedCount = 0;
-                    await foreach (var item in fetchAsync(parameters, request.CancellationToken))
-                    {
-                        _cachedItems.Add(item);
-                        _lastCursor = _keySelector(item);
-                        fetchedCount++;
-                    }
-
-                    if (fetchedCount == 0)
-                    {
-                        _hasMoreItems = false;
-                    }
-                }
-                finally
+                if (fetchedCount == 0)
                 {
-                    _activeFetches.Remove(cursorKey);
+                    _hasMoreItems = false;
                 }
             }
             finally
@@ -96,7 +92,7 @@ public sealed class CursorPaginationState<TItem, TParams>(Func<TItem, Guid> keyS
         _cachedItems.Clear();
         _lastCursor = null;
         _hasMoreItems = true;
-        _activeFetches.Clear();
+        _fetchedCursors.Clear();
     }
 
     public void UpdateItem(TItem updatedItem)

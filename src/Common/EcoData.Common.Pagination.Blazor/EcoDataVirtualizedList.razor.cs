@@ -15,8 +15,8 @@ public partial class EcoDataVirtualizedList<TItem, TParams> : ComponentBase, IDi
 {
     private Virtualize<TItem>? _virtualize;
     private CursorPaginationState<TItem, TParams> _paginationState = null!;
-    private CancellationTokenSource? _refreshCts;
     private bool _isLoading = true;
+    private bool _isRefreshing;
     private bool _disposed;
 
     /// <summary>
@@ -119,10 +119,11 @@ public partial class EcoDataVirtualizedList<TItem, TParams> : ComponentBase, IDi
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
 
-        _refreshCts?.Cancel();
-        _refreshCts = new CancellationTokenSource();
-        var token = _refreshCts.Token;
+        // Prevent concurrent refreshes
+        if (_isRefreshing)
+            return;
 
+        _isRefreshing = true;
         try
         {
             _isLoading = true;
@@ -130,23 +131,23 @@ public partial class EcoDataVirtualizedList<TItem, TParams> : ComponentBase, IDi
 
             _paginationState.Reset();
 
-            // Pre-fetch initial items
-            var request = new ItemsProviderRequest(0, ParametersFactory().PageSize, token);
+            // Pre-fetch initial items so we know if list is empty
+            var pageSize = ParametersFactory().PageSize;
+            var request = new ItemsProviderRequest(0, pageSize, CancellationToken.None);
             await LoadItemsAsync(request);
-
-            token.ThrowIfCancellationRequested();
 
             _isLoading = false;
             StateHasChanged();
 
+            // Virtualize will request additional items as needed
             if (_virtualize is not null)
             {
                 await _virtualize.RefreshDataAsync();
             }
         }
-        catch (OperationCanceledException)
+        finally
         {
-            // Refresh was cancelled, ignore
+            _isRefreshing = false;
         }
     }
 
@@ -203,8 +204,6 @@ public partial class EcoDataVirtualizedList<TItem, TParams> : ComponentBase, IDi
     {
         if (!_disposed)
         {
-            _refreshCts?.Cancel();
-            _refreshCts?.Dispose();
             _paginationState.Dispose();
             _disposed = true;
         }
