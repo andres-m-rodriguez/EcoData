@@ -7,9 +7,9 @@ public sealed class Organization
 {
     public required Guid Id { get; set; }
     public required string Name { get; set; }
-    public string? ProfilePictureUrl { get; set; }
-    public string? AboutUs { get; set; }
-    public string? WebsiteUrl { get; set; }
+    public required string? ProfilePictureUrl { get; set; }
+    public required string? AboutUs { get; set; }
+    public required string? WebsiteUrl { get; set; }
     public required DateTimeOffset CreatedAt { get; set; }
     public required DateTimeOffset UpdatedAt { get; set; }
 
