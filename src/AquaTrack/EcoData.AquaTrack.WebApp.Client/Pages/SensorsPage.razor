@@ -4,8 +4,10 @@
 @using EcoData.AquaTrack.Application.Client
 @using BlazingSingularity.Signals
 @using EcoData.AquaTrack.WebApp.Client.Components
+@using Microsoft.AspNetCore.Components.Web.Virtualization
 @inject ISensorHttpClient SensorClient
 @inject NavigationManager Navigation
+@implements IDisposable
 
 <PageTitle>Sensors - AquaTrack</PageTitle>
 
@@ -38,23 +40,7 @@
     </div>
 
     <MudPaper Elevation="1" Class="sensor-list-container">
-        @if (_isLoading)
-        {
-            @for (var i = 0; i < 8; i++)
-            {
-                <div class="sensor-skeleton">
-                    <div class="skeleton-primary">
-                        <MudSkeleton Width="180px" Height="16px" />
-                        <MudSkeleton Width="100px" Height="12px" Class="mt-1" />
-                    </div>
-                    <MudSkeleton Width="120px" Height="14px" Class="hide-mobile" />
-                    <MudSkeleton Width="140px" Height="14px" Class="hide-mobile hide-tablet" />
-                    <MudSkeleton Width="60px" Height="24px" Class="rounded-pill" />
-                    <MudSkeleton SkeletonType="SkeletonType.Circle" Width="32px" Height="32px" />
-                </div>
-            }
-        }
-        else if (_sensors.Count == 0)
+        @if (_isEmpty)
         {
             @if (HasActiveFilters)
             {
@@ -86,37 +72,39 @@
         }
         else
         {
-            <div class="sensor-list">
-                @foreach (var sensor in _sensors)
-                {
+            <Virtualize @ref="_virtualize"
+                        ItemsProvider="LoadItemsAsync"
+                        ItemSize="65"
+                        OverscanCount="3"
+                        Context="sensor">
+                <ItemContent>
                     <SensorListItem Sensor="sensor" OnMapClick="NavigateToMap" />
-                }
-                @if (_hasMore)
-                {
-                    <div class="load-more">
-                        <MudButton Variant="Variant.Text"
-                                   Color="Color.Primary"
-                                   OnClick="LoadMoreAsync"
-                                   Disabled="_isLoadingMore">
-                            @if (_isLoadingMore)
-                            {
-                                <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
-                            }
-                            Load More
-                        </MudButton>
+                </ItemContent>
+                <Placeholder>
+                    <div class="sensor-skeleton">
+                        <div class="skeleton-primary">
+                            <MudSkeleton Width="180px" Height="16px" />
+                            <MudSkeleton Width="100px" Height="12px" Class="mt-1" />
+                        </div>
+                        <MudSkeleton Width="120px" Height="14px" Class="hide-mobile" />
+                        <MudSkeleton Width="140px" Height="14px" Class="hide-mobile hide-tablet" />
+                        <MudSkeleton Width="60px" Height="24px" Class="rounded-pill" />
+                        <MudSkeleton SkeletonType="SkeletonType.Circle" Width="32px" Height="32px" />
                     </div>
-                }
-            </div>
+                </Placeholder>
+            </Virtualize>
         }
     </MudPaper>
 </div>
 
 @code {
-    private List<SensorDtoForList> _sensors = [];
-    private bool _isLoading = true;
-    private bool _isLoadingMore;
-    private bool _hasMore = true;
-    private Guid? _cursor;
+    private Virtualize<SensorDtoForList>? _virtualize;
+    private readonly List<SensorDtoForList> _cachedItems = [];
+    private readonly SemaphoreSlim _fetchLock = new(1, 1);
+    private Guid? _lastCursor;
+    private bool _hasMoreItems = true;
+    private bool _isEmpty;
+    private int _generation;
 
     [Signal]
     private string? _searchText;
@@ -126,70 +114,93 @@
 
     private bool HasActiveFilters => !string.IsNullOrWhiteSpace(SearchText) || StatusFilter != SensorStatusFilter.All;
 
-    protected override async Task OnInitializedAsync()
+    protected override void OnInitialized()
     {
         SearchTextSignal.OnChange(async _ => await RefreshAsync());
         StatusFilterSignal.OnChange(async _ => await RefreshAsync());
-        await LoadDataAsync();
     }
 
-    private async Task LoadDataAsync()
+    private async ValueTask<ItemsProviderResult<SensorDtoForList>> LoadItemsAsync(ItemsProviderRequest request)
     {
-        _isLoading = true;
-        StateHasChanged();
+        var startIndex = request.StartIndex;
+        var endIndex = startIndex + request.Count;
+        var currentGeneration = _generation;
 
-        _sensors.Clear();
-        _cursor = null;
-        _hasMore = true;
-
-        await FetchPageAsync();
-
-        _isLoading = false;
-        StateHasChanged();
-    }
-
-    private async Task LoadMoreAsync()
-    {
-        if (_isLoadingMore || !_hasMore) return;
-
-        _isLoadingMore = true;
-        StateHasChanged();
-
-        await FetchPageAsync();
-
-        _isLoadingMore = false;
-        StateHasChanged();
-    }
-
-    private async Task FetchPageAsync()
-    {
-        var parameters = new SensorParameters
+        if (_hasMoreItems && _cachedItems.Count < endIndex)
         {
-            PageSize = 50,
-            Cursor = _cursor,
-            Search = string.IsNullOrWhiteSpace(SearchText) ? null : SearchText,
-            IsActive = StatusFilter switch
+            await _fetchLock.WaitAsync(request.CancellationToken);
+            try
             {
-                SensorStatusFilter.Active => true,
-                SensorStatusFilter.Inactive => false,
-                _ => null
-            }
-        };
+                if (_generation != currentGeneration)
+                    return CreateResult(startIndex, request.Count);
 
-        var count = 0;
-        await foreach (var sensor in SensorClient.GetSensorsAsync(parameters, CancellationToken.None))
-        {
-            _sensors.Add(sensor);
-            _cursor = sensor.Id;
-            count++;
+                while (_hasMoreItems && _cachedItems.Count < endIndex)
+                {
+                    var parameters = new SensorParameters
+                    {
+                        PageSize = 50,
+                        Cursor = _lastCursor,
+                        Search = string.IsNullOrWhiteSpace(SearchText) ? null : SearchText,
+                        IsActive = StatusFilter switch
+                        {
+                            SensorStatusFilter.Active => true,
+                            SensorStatusFilter.Inactive => false,
+                            _ => null
+                        }
+                    };
+
+                    var fetchedCount = 0;
+                    await foreach (var sensor in SensorClient.GetSensorsAsync(parameters, request.CancellationToken))
+                    {
+                        _cachedItems.Add(sensor);
+                        _lastCursor = sensor.Id;
+                        fetchedCount++;
+                    }
+
+                    if (fetchedCount < parameters.PageSize)
+                    {
+                        _hasMoreItems = false;
+                    }
+                }
+            }
+            finally
+            {
+                _fetchLock.Release();
+            }
         }
 
-        _hasMore = count >= parameters.PageSize;
+        var result = CreateResult(startIndex, request.Count);
+
+        if (startIndex == 0 && result.TotalItemCount == 0 && !_isEmpty)
+        {
+            _isEmpty = true;
+            StateHasChanged();
+        }
+
+        return result;
+    }
+
+    private ItemsProviderResult<SensorDtoForList> CreateResult(int startIndex, int count)
+    {
+        var items = _cachedItems.Skip(startIndex).Take(count).ToList();
+        var totalCount = _hasMoreItems ? _cachedItems.Count + 1 : _cachedItems.Count;
+        return new ItemsProviderResult<SensorDtoForList>(items, totalCount);
     }
 
     private async Task RefreshAsync()
     {
-        await LoadDataAsync();
+        _generation++;
+        _cachedItems.Clear();
+        _lastCursor = null;
+        _hasMoreItems = true;
+        _isEmpty = false;
+
+        if (_virtualize is not null)
+        {
+            await _virtualize.RefreshDataAsync();
+        }
+
+        StateHasChanged();
     }
 
     private void ClearFilters()
@@ -201,6 +212,11 @@
     private void NavigateToMap(SensorDtoForList sensor)
     {
         Navigation.NavigateTo($"/map?lat={sensor.Latitude}&lon={sensor.Longitude}");
+    }
+
+    public void Dispose()
+    {
+        _fetchLock.Dispose();
     }
 
     public enum SensorStatusFilter
