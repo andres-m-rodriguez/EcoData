@@ -1,0 +1,53 @@
+@using EcoData.AquaTrack.Contracts.Dtos
+
+<div class="sensor-row" @onclick="HandleClick">
+    <div class="sensor-primary">
+        <div class="sensor-name">@Sensor.Name</div>
+        <div class="sensor-id">@Sensor.ExternalId</div>
+    </div>
+    <div class="sensor-municipality hide-mobile">@(Sensor.Municipality ?? "-")</div>
+    <div class="sensor-location hide-mobile">
+        @Sensor.Latitude.ToString("F4"), @Sensor.Longitude.ToString("F4")
+    </div>
+    <div class="sensor-status">
+        @if (Sensor.IsActive)
+        {
+            <span class="status-badge active">Active</span>
+        }
+        else
+        {
+            <span class="status-badge inactive">Inactive</span>
+        }
+    </div>
+    <div class="sensor-actions" @onclick:stopPropagation="true">
+        <MudMenu Icon="@Icons.Material.Filled.MoreVert"
+                 Size="Size.Small"
+                 AnchorOrigin="Origin.BottomRight"
+                 TransformOrigin="Origin.TopRight">
+            <MudMenuItem Icon="@Icons.Material.Outlined.Map" OnClick="@HandleMapClick">
+                View on Map
+            </MudMenuItem>
+        </MudMenu>
+    </div>
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public required SensorDtoForList Sensor { get; set; }
+
+    [Parameter]
+    public EventCallback<SensorDtoForList> OnMapClick { get; set; }
+
+    [Parameter]
+    public EventCallback<SensorDtoForList> OnClick { get; set; }
+
+    private async Task HandleMapClick()
+    {
+        await OnMapClick.InvokeAsync(Sensor);
+    }
+
+    private async Task HandleClick()
+    {
+        await OnClick.InvokeAsync(Sensor);
+    }
+}

@@ -3,6 +3,20 @@
     <Project Path="src/Host/EcoData.AppHost/EcoData.AppHost.csproj" />
     <Project Path="src/Host/EcoData.ServiceDefaults/EcoData.ServiceDefaults.csproj" />
   </Folder>
+  <Folder Name="/Common/">
+    <Project Path="src/Common/EcoData.Common.Http.Helpers/EcoData.Common.Http.Helpers.csproj" />
+    <Project Path="src/Common/EcoData.Common.Pagination/EcoData.Common.Pagination.csproj" />
+    <Project Path="src/Common/EcoData.Common.Pagination.Blazor/EcoData.Common.Pagination.Blazor.csproj" />
+    <Project Path="src/Common/EcoData.Common.Results/EcoData.Common.Results.csproj" />
+  </Folder>
+  <Folder Name="/Identity/">
+    <Project Path="src/Identity/EcoData.Identity.Database/EcoData.Identity.Database.csproj" />
+    <Project Path="src/Identity/EcoData.Identity.Contracts/EcoData.Identity.Contracts.csproj" />
+    <Project Path="src/Identity/EcoData.Identity.DataAccess/EcoData.Identity.DataAccess.csproj" />
+    <Project Path="src/Identity/EcoData.Identity.Application/EcoData.Identity.Application.csproj" />
+    <Project Path="src/Identity/EcoData.Identity.Application.Client/EcoData.Identity.Application.Client.csproj" />
+    <Project Path="src/Identity/EcoData.Identity.Api/EcoData.Identity.Api.csproj" />
+  </Folder>
   <Folder Name="/AquaTrack/">
     <Project Path="src/AquaTrack/EcoData.AquaTrack.WebApp/EcoData.AquaTrack.WebApp.csproj" />
     <Project Path="src/AquaTrack/EcoData.AquaTrack.WebApp.Client/EcoData.AquaTrack.WebApp.Client.csproj" />
