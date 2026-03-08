@@ -5,21 +5,9 @@
 }
 
 .sensor-list-container {
-    max-height: calc(100vh - 200px);
-    overflow-y: auto;
+    height: calc(100vh - 200px);
+    overflow: hidden;
     border-radius: 12px;
-}
-
-.sensor-list {
-    display: flex;
-    flex-direction: column;
-}
-
-.load-more {
-    display: flex;
-    justify-content: center;
-    padding: 16px;
-    border-top: 1px solid #f0f0f0;
 }
 
 .search-bar {
