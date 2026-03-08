@@ -10,7 +10,6 @@ public sealed class CursorPaginationState<TItem, TParams>(Func<TItem, Guid> keyS
     private readonly Func<TItem, Guid> _keySelector = keySelector;
     private readonly List<TItem> _cachedItems = [];
     private readonly SemaphoreSlim _fetchLock = new(1, 1);
-    private readonly HashSet<Guid> _fetchedCursors = [];
     private Guid? _lastCursor;
     private bool _hasMoreItems = true;
     private bool _disposed;
@@ -30,47 +29,35 @@ public sealed class CursorPaginationState<TItem, TParams>(Func<TItem, Guid> keyS
         var endIndex = startIndex + request.Count;
         var currentGeneration = _generation;
 
-        while (_hasMoreItems && _cachedItems.Count < endIndex)
+        // Only fetch if we need more items
+        if (_hasMoreItems && _cachedItems.Count < endIndex)
         {
-            // Check if generation changed (Reset was called)
-            if (_generation != currentGeneration)
-                break;
-
             await _fetchLock.WaitAsync(request.CancellationToken);
             try
             {
-                // Re-check after acquiring lock
+                // Re-check conditions after acquiring lock
                 if (_generation != currentGeneration)
-                    break;
+                    return CreateResult(startIndex, request.Count);
 
-                if (!_hasMoreItems || _cachedItems.Count >= endIndex)
-                    break;
-
-                // Get cursor to fetch - must be done inside lock
-                var cursorToFetch = _lastCursor;
-                var cursorKey = cursorToFetch ?? Guid.Empty;
-
-                // Skip if we've already fetched this cursor
-                if (_fetchedCursors.Contains(cursorKey))
-                    break;
-
-                var baseParams = parametersFactory();
-                var parameters = CreateParametersWithCursor(baseParams, cursorToFetch);
-
-                var fetchedCount = 0;
-                await foreach (var item in fetchAsync(parameters, request.CancellationToken))
+                // Fetch pages until we have enough items
+                while (_hasMoreItems && _cachedItems.Count < endIndex)
                 {
-                    _cachedItems.Add(item);
-                    _lastCursor = _keySelector(item);
-                    fetchedCount++;
-                }
+                    var cursorToFetch = _lastCursor;
+                    var baseParams = parametersFactory();
+                    var parameters = CreateParametersWithCursor(baseParams, cursorToFetch);
 
-                // Mark this cursor as fetched
-                _fetchedCursors.Add(cursorKey);
+                    var fetchedCount = 0;
+                    await foreach (var item in fetchAsync(parameters, request.CancellationToken))
+                    {
+                        _cachedItems.Add(item);
+                        _lastCursor = _keySelector(item);
+                        fetchedCount++;
+                    }
 
-                if (fetchedCount == 0)
-                {
-                    _hasMoreItems = false;
+                    if (fetchedCount == 0)
+                    {
+                        _hasMoreItems = false;
+                    }
                 }
             }
             finally
@@ -79,10 +66,13 @@ public sealed class CursorPaginationState<TItem, TParams>(Func<TItem, Guid> keyS
             }
         }
 
-        var availableItems = _cachedItems.Skip(startIndex).Take(request.Count).ToList();
+        return CreateResult(startIndex, request.Count);
+    }
 
+    private ItemsProviderResult<TItem> CreateResult(int startIndex, int count)
+    {
+        var availableItems = _cachedItems.Skip(startIndex).Take(count).ToList();
         var totalCount = _hasMoreItems ? _cachedItems.Count + 1 : _cachedItems.Count;
-
         return new ItemsProviderResult<TItem>(availableItems, totalCount);
     }
 
@@ -92,7 +82,6 @@ public sealed class CursorPaginationState<TItem, TParams>(Func<TItem, Guid> keyS
         _cachedItems.Clear();
         _lastCursor = null;
         _hasMoreItems = true;
-        _fetchedCursors.Clear();
     }
 
     public void UpdateItem(TItem updatedItem)

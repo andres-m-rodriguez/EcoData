@@ -15,8 +15,7 @@ public partial class EcoDataVirtualizedList<TItem, TParams> : ComponentBase, IDi
 {
     private Virtualize<TItem>? _virtualize;
     private CursorPaginationState<TItem, TParams> _paginationState = null!;
-    private bool _isLoading = true;
-    private bool _isRefreshing;
+    private bool _isEmpty;
     private bool _disposed;
 
     /// <summary>
@@ -104,14 +103,6 @@ public partial class EcoDataVirtualizedList<TItem, TParams> : ComponentBase, IDi
         _paginationState = new CursorPaginationState<TItem, TParams>(KeySelector);
     }
 
-    protected override async Task OnAfterRenderAsync(bool firstRender)
-    {
-        if (firstRender)
-        {
-            await RefreshAsync();
-        }
-    }
-
     /// <summary>
     /// Refreshes the list by resetting pagination state and reloading data.
     /// </summary>
@@ -119,35 +110,13 @@ public partial class EcoDataVirtualizedList<TItem, TParams> : ComponentBase, IDi
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
 
-        // Prevent concurrent refreshes
-        if (_isRefreshing)
-            return;
+        _isEmpty = false;
+        _paginationState.Reset();
+        StateHasChanged();
 
-        _isRefreshing = true;
-        try
+        if (_virtualize is not null)
         {
-            _isLoading = true;
-            StateHasChanged();
-
-            _paginationState.Reset();
-
-            // Pre-fetch initial items so we know if list is empty
-            var pageSize = ParametersFactory().PageSize;
-            var request = new ItemsProviderRequest(0, pageSize, CancellationToken.None);
-            await LoadItemsAsync(request);
-
-            _isLoading = false;
-            StateHasChanged();
-
-            // Virtualize will request additional items as needed
-            if (_virtualize is not null)
-            {
-                await _virtualize.RefreshDataAsync();
-            }
-        }
-        finally
-        {
-            _isRefreshing = false;
+            await _virtualize.RefreshDataAsync();
         }
     }
 
@@ -187,12 +156,21 @@ public partial class EcoDataVirtualizedList<TItem, TParams> : ComponentBase, IDi
         return result;
     }
 
-    private ValueTask<ItemsProviderResult<TItem>> LoadItemsAsync(ItemsProviderRequest request)
+    private async ValueTask<ItemsProviderResult<TItem>> LoadItemsAsync(ItemsProviderRequest request)
     {
-        return _paginationState.ProvideItemsAsync(
+        var result = await _paginationState.ProvideItemsAsync(
             request,
             ParametersFactory,
             ItemsProvider);
+
+        // Detect empty state after first fetch
+        if (request.StartIndex == 0 && result.TotalItemCount == 0 && !_isEmpty)
+        {
+            _isEmpty = true;
+            StateHasChanged();
+        }
+
+        return result;
     }
 
     private async Task ClearFiltersAsync()
