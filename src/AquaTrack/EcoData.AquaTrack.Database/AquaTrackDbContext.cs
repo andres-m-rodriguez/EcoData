@@ -10,6 +10,7 @@ public sealed class AquaTrackDbContext(DbContextOptions<AquaTrackDbContext> opti
     public DbSet<Reading> Readings => Set<Reading>();
     public DbSet<Alert> Alerts => Set<Alert>();
     public DbSet<IngestionLog> IngestionLogs => Set<IngestionLog>();
+    public DbSet<Organization> Organizations => Set<Organization>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -18,5 +19,6 @@ public sealed class AquaTrackDbContext(DbContextOptions<AquaTrackDbContext> opti
         modelBuilder.ApplyConfiguration(new Reading.EntityConfiguration());
         modelBuilder.ApplyConfiguration(new Alert.EntityConfiguration());
         modelBuilder.ApplyConfiguration(new IngestionLog.EntityConfiguration());
+        modelBuilder.ApplyConfiguration(new Organization.EntityConfiguration());
     }
 }

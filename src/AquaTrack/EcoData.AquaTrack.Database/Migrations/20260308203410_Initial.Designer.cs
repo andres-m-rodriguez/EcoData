@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace EcoData.AquaTrack.Database.Migrations
 {
     [DbContext(typeof(AquaTrackDbContext))]
-    [Migration("20260225232403_InitialCreate")]
-    partial class InitialCreate
+    [Migration("20260308203410_Initial")]
+    partial class Initial
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -153,6 +153,37 @@ namespace EcoData.AquaTrack.Database.Migrations
                     b.ToTable("ingestion_logs", (string)null);
                 });
 
+            modelBuilder.Entity("EcoData.AquaTrack.Database.Models.Organization", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("name");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id")
+                        .HasName("pk_organizations");
+
+                    b.HasIndex("Name")
+                        .IsUnique()
+                        .HasDatabaseName("ix_organizations_name");
+
+                    b.ToTable("organizations", (string)null);
+                });
+
             modelBuilder.Entity("EcoData.AquaTrack.Database.Models.Reading", b =>
                 {
                     b.Property<Guid>("Id")
@@ -245,12 +276,19 @@ namespace EcoData.AquaTrack.Database.Migrations
                         .HasColumnType("character varying(300)")
                         .HasColumnName("name");
 
+                    b.Property<Guid?>("OrganizationId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("organization_id");
+
                     b.Property<Guid>("SourceId")
                         .HasColumnType("uuid")
                         .HasColumnName("source_id");
 
                     b.HasKey("Id")
                         .HasName("pk_sensors");
+
+                    b.HasIndex("OrganizationId")
+                        .HasDatabaseName("ix_sensors_organization_id");
 
                     b.HasIndex("SourceId", "ExternalId")
                         .IsUnique()
@@ -297,6 +335,11 @@ namespace EcoData.AquaTrack.Database.Migrations
 
             modelBuilder.Entity("EcoData.AquaTrack.Database.Models.Sensor", b =>
                 {
+                    b.HasOne("EcoData.AquaTrack.Database.Models.Organization", null)
+                        .WithMany("Sensors")
+                        .HasForeignKey("OrganizationId")
+                        .HasConstraintName("fk_sensors_organizations_organization_id");
+
                     b.HasOne("EcoData.AquaTrack.Database.Models.DataSource", "DataSource")
                         .WithMany("Sensors")
                         .HasForeignKey("SourceId")
@@ -308,6 +351,11 @@ namespace EcoData.AquaTrack.Database.Migrations
                 });
 
             modelBuilder.Entity("EcoData.AquaTrack.Database.Models.DataSource", b =>
+                {
+                    b.Navigation("Sensors");
+                });
+
+            modelBuilder.Entity("EcoData.AquaTrack.Database.Models.Organization", b =>
                 {
                     b.Navigation("Sensors");
                 });
