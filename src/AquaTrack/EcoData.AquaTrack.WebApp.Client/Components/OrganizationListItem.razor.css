@@ -1,0 +1,49 @@
+.organization-row {
+    display: grid;
+    grid-template-columns: 2fr 1fr 48px;
+    align-items: center;
+    padding: 16px 24px;
+    border-bottom: 1px solid #f0f0f0;
+    transition: background 0.15s ease;
+    cursor: pointer;
+}
+
+.organization-row:last-child {
+    border-bottom: none;
+}
+
+.organization-row:hover {
+    background: #fafbfc;
+}
+
+/* Mobile */
+@media (max-width: 600px) {
+    .organization-row {
+        grid-template-columns: 1fr 48px;
+        padding: 12px 16px;
+    }
+
+    .hide-mobile {
+        display: none;
+    }
+}
+
+.organization-primary {
+    display: flex;
+    align-items: center;
+}
+
+.organization-name {
+    font-weight: 500;
+    color: #262626;
+}
+
+.organization-created {
+    font-size: 13px;
+    color: #4D4D4D;
+}
+
+.organization-actions {
+    display: flex;
+    justify-content: flex-end;
+}

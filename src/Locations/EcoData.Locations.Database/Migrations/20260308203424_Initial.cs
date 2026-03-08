@@ -7,7 +7,7 @@ using NetTopologySuite.Geometries;
 namespace EcoData.Locations.Database.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialCreate : Migration
+    public partial class Initial : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)

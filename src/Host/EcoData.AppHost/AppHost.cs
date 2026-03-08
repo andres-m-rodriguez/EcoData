@@ -16,24 +16,23 @@ var locationsDb = postgres.AddDatabase("locations")
 var identityDb = postgres.AddDatabase("identity")
     .WithDropDatabaseCommand();
 
-var aquatrackSeeder = builder.AddProject<Projects.EcoData_AquaTrack_Seeder>("aquatrack-seeder")
+var seeder = builder.AddProject<Projects.EcoData_Seeder>("seeder")
     .WithReference(aquatrackDb)
-    .WaitFor(aquatrackDb);
-
-var locationsSeeder = builder.AddProject<Projects.EcoData_Locations_Seeder>("locations-seeder")
+    .WithReference(identityDb)
     .WithReference(locationsDb)
+    .WaitFor(aquatrackDb)
+    .WaitFor(identityDb)
     .WaitFor(locationsDb);
 
 var ingestion = builder.AddProject<Projects.EcoData_AquaTrack_Ingestion>("aquatrack-ingestion")
     .WithReference(aquatrackDb)
-    .WaitFor(aquatrackSeeder);
+    .WaitFor(seeder);
 
 builder.AddProject<Projects.EcoData_AquaTrack_WebApp>("aquatrack-webapp")
     .WithExternalHttpEndpoints()
     .WithReference(aquatrackDb)
     .WithReference(locationsDb)
     .WithReference(identityDb)
-    .WaitFor(aquatrackSeeder)
-    .WaitFor(locationsSeeder);
+    .WaitFor(seeder);
 
 builder.Build().Run();
