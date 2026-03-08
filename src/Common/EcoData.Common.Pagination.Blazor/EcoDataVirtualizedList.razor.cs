@@ -131,8 +131,10 @@ public partial class EcoDataVirtualizedList<TItem, TParams> : ComponentBase, IDi
             _paginationState.Reset();
 
             // Pre-fetch initial items
-            var request = new ItemsProviderRequest(0, 50, token);
+            var request = new ItemsProviderRequest(0, ParametersFactory().PageSize, token);
             await LoadItemsAsync(request);
+
+            token.ThrowIfCancellationRequested();
 
             _isLoading = false;
             StateHasChanged();
@@ -142,7 +144,7 @@ public partial class EcoDataVirtualizedList<TItem, TParams> : ComponentBase, IDi
                 await _virtualize.RefreshDataAsync();
             }
         }
-        catch (TaskCanceledException)
+        catch (OperationCanceledException)
         {
             // Refresh was cancelled, ignore
         }
