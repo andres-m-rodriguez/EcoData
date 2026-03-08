@@ -4,168 +4,127 @@ using Microsoft.AspNetCore.Components.Web.Virtualization;
 
 namespace EcoData.Common.Pagination.Blazor;
 
-/// <summary>
-/// A virtualized list component that encapsulates cursor-based pagination state and provides
-/// a consistent UI for loading, empty, and filtered-empty states.
-/// </summary>
-/// <typeparam name="TItem">The type of items in the list.</typeparam>
-/// <typeparam name="TParams">The type of pagination parameters.</typeparam>
-public partial class EcoDataVirtualizedList<TItem, TParams> : ComponentBase, IDisposable
+public partial class EcoDataVirtualizedList<TItem, TParams> : ComponentBase
     where TParams : CursorParameters
 {
-    private Virtualize<TItem>? _virtualize;
-    private CursorPaginationState<TItem, TParams> _paginationState = null!;
+    private readonly List<TItem> _cachedItems = [];
+    private Guid? _lastCursor;
+    private bool _hasMoreItems = true;
     private bool _isEmpty;
-    private bool _disposed;
+    private int _generation;
 
-    /// <summary>
-    /// Template for rendering each item in the list.
-    /// </summary>
     [Parameter, EditorRequired]
     public RenderFragment<TItem> ItemTemplate { get; set; } = null!;
 
-    /// <summary>
-    /// Optional template for rendering skeleton loading items.
-    /// If not provided, a default skeleton is used.
-    /// </summary>
     [Parameter]
     public RenderFragment? SkeletonTemplate { get; set; }
 
-    /// <summary>
-    /// Template to display when the list is empty and no filters are active.
-    /// </summary>
     [Parameter]
     public RenderFragment? EmptyTemplate { get; set; }
 
-    /// <summary>
-    /// Template to display when the list is empty due to active filters.
-    /// The context provides a callback to clear filters.
-    /// </summary>
     [Parameter]
     public RenderFragment<Func<Task>>? FilteredEmptyTemplate { get; set; }
 
-    /// <summary>
-    /// Function that provides items asynchronously based on parameters.
-    /// </summary>
     [Parameter, EditorRequired]
     public Func<TParams, CancellationToken, IAsyncEnumerable<TItem>> ItemsProvider { get; set; } = null!;
 
-    /// <summary>
-    /// Factory function that creates pagination parameters.
-    /// </summary>
     [Parameter, EditorRequired]
     public Func<TParams> ParametersFactory { get; set; } = null!;
 
-    /// <summary>
-    /// Function that extracts the unique key (Guid) from an item.
-    /// </summary>
     [Parameter, EditorRequired]
     public Func<TItem, Guid> KeySelector { get; set; } = null!;
 
-    /// <summary>
-    /// Optional function that determines if any filters are currently active.
-    /// Used to decide whether to show EmptyTemplate or FilteredEmptyTemplate.
-    /// </summary>
     [Parameter]
     public Func<TParams, bool>? HasActiveFilters { get; set; }
 
-    /// <summary>
-    /// Callback invoked when the user requests to clear filters.
-    /// </summary>
     [Parameter]
     public EventCallback OnClearFilters { get; set; }
 
-    /// <summary>
-    /// The height in pixels of each item. Used by the virtualizer.
-    /// </summary>
     [Parameter]
     public float ItemSize { get; set; } = 65;
 
-    /// <summary>
-    /// The number of items to render outside the visible viewport.
-    /// </summary>
     [Parameter]
-    public int OverscanCount { get; set; } = 5;
+    public int OverscanCount { get; set; } = 3;
 
-    /// <summary>
-    /// The number of skeleton items to show during initial loading.
-    /// </summary>
-    [Parameter]
-    public int SkeletonCount { get; set; } = 8;
+    public IReadOnlyList<TItem> CachedItems => _cachedItems;
 
-    /// <summary>
-    /// Gets the cached items from the pagination state.
-    /// </summary>
-    public IReadOnlyList<TItem> CachedItems => _paginationState.CachedItems;
-
-    protected override void OnInitialized()
+    public void Refresh()
     {
-        _paginationState = new CursorPaginationState<TItem, TParams>(KeySelector);
-    }
-
-    /// <summary>
-    /// Refreshes the list by resetting pagination state and reloading data.
-    /// </summary>
-    public async Task RefreshAsync()
-    {
-        ObjectDisposedException.ThrowIf(_disposed, this);
-
+        _generation++;
+        _cachedItems.Clear();
+        _lastCursor = null;
+        _hasMoreItems = true;
         _isEmpty = false;
-        _paginationState.Reset();
-
-        if (_virtualize is not null)
-        {
-            await _virtualize.RefreshDataAsync();
-        }
-
         StateHasChanged();
     }
 
-    /// <summary>
-    /// Updates an item in the cache by its key.
-    /// </summary>
-    /// <param name="updatedItem">The updated item.</param>
     public void UpdateItem(TItem updatedItem)
     {
-        _paginationState.UpdateItem(updatedItem);
-        StateHasChanged();
-    }
-
-    /// <summary>
-    /// Updates an item in the cache using an updater function.
-    /// </summary>
-    /// <param name="id">The key of the item to update.</param>
-    /// <param name="updater">A function that returns the updated item.</param>
-    public void UpdateItem(Guid id, Func<TItem, TItem> updater)
-    {
-        _paginationState.UpdateItem(id, updater);
-        StateHasChanged();
-    }
-
-    /// <summary>
-    /// Removes an item from the cache by its key.
-    /// </summary>
-    /// <param name="id">The key of the item to remove.</param>
-    /// <returns>True if the item was removed; otherwise, false.</returns>
-    public bool RemoveItem(Guid id)
-    {
-        var result = _paginationState.RemoveItem(id);
-        if (result)
+        var id = KeySelector(updatedItem);
+        var index = _cachedItems.FindIndex(item => KeySelector(item).Equals(id));
+        if (index >= 0)
         {
+            _cachedItems[index] = updatedItem;
             StateHasChanged();
         }
-        return result;
+    }
+
+    public void UpdateItem(Guid id, Func<TItem, TItem> updater)
+    {
+        var index = _cachedItems.FindIndex(item => KeySelector(item).Equals(id));
+        if (index >= 0)
+        {
+            _cachedItems[index] = updater(_cachedItems[index]);
+            StateHasChanged();
+        }
+    }
+
+    public bool RemoveItem(Guid id)
+    {
+        var index = _cachedItems.FindIndex(item => KeySelector(item).Equals(id));
+        if (index >= 0)
+        {
+            _cachedItems.RemoveAt(index);
+            StateHasChanged();
+            return true;
+        }
+        return false;
     }
 
     private async ValueTask<ItemsProviderResult<TItem>> LoadItemsAsync(ItemsProviderRequest request)
     {
-        var result = await _paginationState.ProvideItemsAsync(
-            request,
-            ParametersFactory,
-            ItemsProvider);
+        var startIndex = request.StartIndex;
+        var endIndex = startIndex + request.Count;
+        var currentGeneration = _generation;
 
-        // Detect empty state after first fetch
-        if (request.StartIndex == 0 && result.TotalItemCount == 0 && !_isEmpty)
+        while (_hasMoreItems && _cachedItems.Count < endIndex)
+        {
+            if (_generation != currentGeneration)
+                return CreateResult(startIndex, request.Count);
+
+            var parameters = ParametersFactory();
+            var paramsWithCursor = CreateParametersWithCursor(parameters, _lastCursor);
+
+            var fetchedCount = 0;
+            await foreach (var item in ItemsProvider(paramsWithCursor, request.CancellationToken))
+            {
+                if (_generation != currentGeneration)
+                    return CreateResult(startIndex, request.Count);
+
+                _cachedItems.Add(item);
+                _lastCursor = KeySelector(item);
+                fetchedCount++;
+            }
+
+            if (fetchedCount < parameters.PageSize)
+            {
+                _hasMoreItems = false;
+            }
+        }
+
+        var result = CreateResult(startIndex, request.Count);
+
+        if (startIndex == 0 && result.TotalItemCount == 0 && !_isEmpty)
         {
             _isEmpty = true;
             StateHasChanged();
@@ -174,17 +133,51 @@ public partial class EcoDataVirtualizedList<TItem, TParams> : ComponentBase, IDi
         return result;
     }
 
+    private ItemsProviderResult<TItem> CreateResult(int startIndex, int count)
+    {
+        var items = _cachedItems.Skip(startIndex).Take(count).ToList();
+        var totalCount = _hasMoreItems ? _cachedItems.Count + 1 : _cachedItems.Count;
+        return new ItemsProviderResult<TItem>(items, totalCount);
+    }
+
     private async Task ClearFiltersAsync()
     {
         await OnClearFilters.InvokeAsync();
     }
 
-    public void Dispose()
+    private static TParams CreateParametersWithCursor(TParams baseParams, Guid? cursor)
     {
-        if (!_disposed)
+        var type = typeof(TParams);
+        var constructor = type.GetConstructors().FirstOrDefault()
+            ?? throw new InvalidOperationException($"Type {type.Name} must have a public constructor.");
+
+        var ctorParams = constructor.GetParameters();
+        var args = new object?[ctorParams.Length];
+
+        for (var i = 0; i < ctorParams.Length; i++)
         {
-            _paginationState.Dispose();
-            _disposed = true;
+            var param = ctorParams[i];
+            var prop = type.GetProperty(
+                param.Name!,
+                System.Reflection.BindingFlags.Public
+                    | System.Reflection.BindingFlags.Instance
+                    | System.Reflection.BindingFlags.IgnoreCase
+            );
+
+            if (param.Name?.Equals("cursor", StringComparison.OrdinalIgnoreCase) == true)
+            {
+                args[i] = cursor;
+            }
+            else if (prop is not null)
+            {
+                args[i] = prop.GetValue(baseParams);
+            }
+            else
+            {
+                args[i] = param.HasDefaultValue ? param.DefaultValue : null;
+            }
         }
+
+        return (TParams)constructor.Invoke(args);
     }
 }
