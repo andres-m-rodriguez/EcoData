@@ -1,0 +1,58 @@
+@using EcoData.AquaTrack.Contracts.Dtos
+
+<div class="organization-row" @onclick="HandleClick">
+    <div class="organization-primary">
+        <div class="organization-name">@Organization.Name</div>
+    </div>
+    <div class="organization-created hide-mobile">
+        @Organization.CreatedAt.ToString("MMM d, yyyy")
+    </div>
+    <div class="organization-actions" @onclick:stopPropagation="true">
+        @if (ShowActions)
+        {
+            <MudMenu Icon="@Icons.Material.Filled.MoreVert"
+                     Size="Size.Small"
+                     AnchorOrigin="Origin.BottomRight"
+                     TransformOrigin="Origin.TopRight">
+                <MudMenuItem Icon="@Icons.Material.Outlined.Edit" OnClick="@HandleEditClick">
+                    Edit
+                </MudMenuItem>
+                <MudMenuItem Icon="@Icons.Material.Outlined.Delete" OnClick="@HandleDeleteClick">
+                    Delete
+                </MudMenuItem>
+            </MudMenu>
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public required OrganizationDtoForList Organization { get; set; }
+
+    [Parameter]
+    public bool ShowActions { get; set; }
+
+    [Parameter]
+    public EventCallback<OrganizationDtoForList> OnClick { get; set; }
+
+    [Parameter]
+    public EventCallback<OrganizationDtoForList> OnEdit { get; set; }
+
+    [Parameter]
+    public EventCallback<OrganizationDtoForList> OnDelete { get; set; }
+
+    private async Task HandleClick()
+    {
+        await OnClick.InvokeAsync(Organization);
+    }
+
+    private async Task HandleEditClick()
+    {
+        await OnEdit.InvokeAsync(Organization);
+    }
+
+    private async Task HandleDeleteClick()
+    {
+        await OnDelete.InvokeAsync(Organization);
+    }
+}

@@ -54,6 +54,7 @@ app.MapRazorComponents<App>()
 
 app.MapSensorEndpoints();
 app.MapDataSourceEndpoints();
+app.MapOrganizationEndpoints();
 app.MapAuthEndpoints();
 
 app.Run();

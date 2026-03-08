@@ -13,8 +13,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace EcoData.Locations.Database.Migrations
 {
     [DbContext(typeof(LocationsDbContext))]
-    [Migration("20260228185931_InitialCreate")]
-    partial class InitialCreate
+    [Migration("20260308203424_Initial")]
+    partial class Initial
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
