@@ -1,6 +1,12 @@
 .eco-virtualized-list-container {
     height: 100%;
     overflow-y: auto;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+.eco-virtualized-list-container::-webkit-scrollbar {
+    display: none;
 }
 
 .eco-skeleton-item {

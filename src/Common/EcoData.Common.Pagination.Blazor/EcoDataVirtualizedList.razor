@@ -3,27 +3,7 @@
 @typeparam TParams where TParams : CursorParameters
 
 <div class="eco-virtualized-list-container">
-    @if (_isLoading)
-    {
-        @if (SkeletonTemplate is not null)
-        {
-            @for (var i = 0; i < SkeletonCount; i++)
-            {
-                @SkeletonTemplate
-            }
-        }
-        else
-        {
-            @for (var i = 0; i < SkeletonCount; i++)
-            {
-                <div class="eco-skeleton-item" style="height: @(ItemSize)px;">
-                    <MudSkeleton Width="60%" Height="16px" />
-                    <MudSkeleton Width="40%" Height="14px" Class="mt-1" />
-                </div>
-            }
-        }
-    }
-    else if (_paginationState.CachedItems.Count == 0)
+    @if (_isEmpty)
     {
         @if (HasActiveFilters?.Invoke(ParametersFactory()) == true && FilteredEmptyTemplate is not null)
         {
@@ -43,7 +23,7 @@
     }
     else
     {
-        <Virtualize @ref="_virtualize"
+        <Virtualize @key="_generation"
                     TItem="TItem"
                     ItemsProvider="LoadItemsAsync"
                     ItemSize="ItemSize"
@@ -53,7 +33,17 @@
                 @ItemTemplate(item)
             </ItemContent>
             <Placeholder>
-                <div style="height: @(ItemSize)px;"></div>
+                @if (SkeletonTemplate is not null)
+                {
+                    @SkeletonTemplate
+                }
+                else
+                {
+                    <div class="eco-skeleton-item" style="height: @(ItemSize)px;">
+                        <MudSkeleton Width="60%" Height="16px" />
+                        <MudSkeleton Width="40%" Height="14px" Class="mt-1" />
+                    </div>
+                }
             </Placeholder>
         </Virtualize>
     }

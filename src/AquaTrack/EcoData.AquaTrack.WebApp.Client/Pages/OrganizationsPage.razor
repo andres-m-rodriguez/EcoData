@@ -35,7 +35,7 @@
         }
     </div>
 
-    <MudPaper Elevation="1" Class="organization-list-container" Style="height: calc(100vh - 200px); border-radius: 12px;">
+    <MudPaper Elevation="1" Class="organization-list-container">
         <EcoDataVirtualizedList @ref="_list"
                                 TItem="OrganizationDtoForList"
                                 TParams="OrganizationParameters"
@@ -107,7 +107,7 @@
 
     protected override void OnInitialized()
     {
-        SearchTextSignal.OnChange(async _ => await RefreshAsync());
+        SearchTextSignal.OnChange(_ => RefreshList());
     }
 
     private OrganizationParameters CreateParameters() => new()
@@ -116,12 +116,9 @@
         Search = string.IsNullOrWhiteSpace(SearchText) ? null : SearchText
     };
 
-    private async Task RefreshAsync()
+    private void RefreshList()
     {
-        if (_list is not null)
-        {
-            await _list.RefreshAsync();
-        }
+        _list?.Refresh();
     }
 
     private void ClearFilters()
@@ -141,7 +138,7 @@
             {
                 await OrganizationClient.CreateAsync(new OrganizationDtoForCreate(name));
                 Snackbar.Add("Organization created successfully", Severity.Success);
-                await RefreshAsync();
+                RefreshList();
             }
             catch
             {
@@ -167,7 +164,7 @@
             {
                 await OrganizationClient.UpdateAsync(organization.Id, new OrganizationDtoForUpdate(name));
                 Snackbar.Add("Organization updated successfully", Severity.Success);
-                await RefreshAsync();
+                RefreshList();
             }
             catch
             {
@@ -196,7 +193,7 @@
                 if (deleted)
                 {
                     Snackbar.Add("Organization deleted successfully", Severity.Success);
-                    await RefreshAsync();
+                    RefreshList();
                 }
                 else
                 {
