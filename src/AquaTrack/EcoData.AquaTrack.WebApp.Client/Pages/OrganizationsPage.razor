@@ -1,5 +1,4 @@
 @page "/organizations"
-@using Microsoft.AspNetCore.Components.Web.Virtualization
 @using EcoData.AquaTrack.Contracts.Dtos
 @using EcoData.AquaTrack.Contracts.Parameters
 @using EcoData.AquaTrack.Application.Client
@@ -11,7 +10,6 @@
 @inject IDialogService DialogService
 @inject ISnackbar Snackbar
 @inject AuthStateService AuthState
-@implements IDisposable
 
 <PageTitle>Organizations - AquaTrack</PageTitle>
 
@@ -37,81 +35,69 @@
         }
     </div>
 
-    <MudPaper Elevation="1" Class="organization-list-container" Style="height: calc(100vh - 200px); overflow-y: auto; border-radius: 12px;">
-        @if (_isLoading)
-        {
-            @for (var i = 0; i < 8; i++)
-            {
+    <MudPaper Elevation="1" Class="organization-list-container" Style="height: calc(100vh - 200px); border-radius: 12px;">
+        <EcoDataVirtualizedList @ref="_list"
+                                TItem="OrganizationDtoForList"
+                                TParams="OrganizationParameters"
+                                ItemsProvider="OrganizationClient.GetOrganizationsAsync"
+                                ParametersFactory="CreateParameters"
+                                KeySelector="o => o.Id"
+                                HasActiveFilters="_ => HasActiveFilters"
+                                OnClearFilters="ClearFilters">
+            <ItemTemplate Context="organization">
+                <OrganizationListItem Organization="organization"
+                                      ShowActions="IsAdmin"
+                                      OnEdit="OpenEditDialog"
+                                      OnDelete="ConfirmDelete" />
+            </ItemTemplate>
+            <SkeletonTemplate>
                 <div class="organization-skeleton">
                     <MudSkeleton Width="180px" Height="16px" />
                     <MudSkeleton Width="100px" Height="14px" Class="hide-mobile" />
                     <MudSkeleton SkeletonType="SkeletonType.Circle" Width="32px" Height="32px" />
                 </div>
-            }
-        }
-        else
-        {
-            <Virtualize @ref="_virtualize"
-                        TItem="OrganizationDtoForList"
-                        ItemsProvider="LoadItemsAsync"
-                        ItemSize="65"
-                        OverscanCount="5"
-                        Context="organization">
-                <ItemContent>
-                    <OrganizationListItem Organization="organization"
-                                          ShowActions="IsAdmin"
-                                          OnEdit="OpenEditDialog"
-                                          OnDelete="ConfirmDelete" />
-                </ItemContent>
-                <Placeholder>
-                    <div style="height: 65px;"></div>
-                </Placeholder>
-                <EmptyContent>
-                    <MudStack AlignItems="AlignItems.Center" Class="pa-8">
-                        <MudIcon Icon="@Icons.Material.Filled.Business" Size="Size.Large" Color="Color.Secondary" />
-                        <MudText Typo="Typo.h6" Color="Color.Secondary" Class="mt-2">No organizations found</MudText>
-                        <MudText Typo="Typo.body2" Color="Color.Secondary">
-                            @if (HasActiveFilters)
-                            {
-                                <span>No organizations match your search criteria.</span>
-                            }
-                            else
-                            {
-                                <span>Get started by adding your first organization.</span>
-                            }
-                        </MudText>
-                        @if (HasActiveFilters)
-                        {
-                            <MudButton Variant="Variant.Outlined"
-                                       Color="Color.Primary"
-                                       StartIcon="@Icons.Material.Filled.FilterAltOff"
-                                       OnClick="ClearFilters"
-                                       Class="mt-3">
-                                Clear Filters
-                            </MudButton>
-                        }
-                        else if (IsAdmin)
-                        {
-                            <MudButton Variant="Variant.Filled"
-                                       Color="Color.Primary"
-                                       StartIcon="@Icons.Material.Filled.Add"
-                                       OnClick="OpenCreateDialog"
-                                       Class="mt-3">
-                                Add Organization
-                            </MudButton>
-                        }
-                    </MudStack>
-                </EmptyContent>
-            </Virtualize>
-        }
+            </SkeletonTemplate>
+            <EmptyTemplate>
+                <MudStack AlignItems="AlignItems.Center" Class="pa-8">
+                    <MudIcon Icon="@Icons.Material.Filled.Business" Size="Size.Large" Color="Color.Secondary" />
+                    <MudText Typo="Typo.h6" Color="Color.Secondary" Class="mt-2">No organizations yet</MudText>
+                    <MudText Typo="Typo.body2" Color="Color.Secondary">
+                        Get started by adding your first organization.
+                    </MudText>
+                    @if (IsAdmin)
+                    {
+                        <MudButton Variant="Variant.Filled"
+                                   Color="Color.Primary"
+                                   StartIcon="@Icons.Material.Filled.Add"
+                                   OnClick="OpenCreateDialog"
+                                   Class="mt-3">
+                            Add Organization
+                        </MudButton>
+                    }
+                </MudStack>
+            </EmptyTemplate>
+            <FilteredEmptyTemplate Context="clearFilters">
+                <MudStack AlignItems="AlignItems.Center" Class="pa-8">
+                    <MudIcon Icon="@Icons.Material.Filled.SearchOff" Size="Size.Large" Color="Color.Secondary" />
+                    <MudText Typo="Typo.h6" Color="Color.Secondary" Class="mt-2">No organizations found</MudText>
+                    <MudText Typo="Typo.body2" Color="Color.Secondary">
+                        No organizations match your search criteria.
+                    </MudText>
+                    <MudButton Variant="Variant.Outlined"
+                               Color="Color.Primary"
+                               StartIcon="@Icons.Material.Filled.FilterAltOff"
+                               OnClick="clearFilters"
+                               Class="mt-3">
+                        Clear Filters
+                    </MudButton>
+                </MudStack>
+            </FilteredEmptyTemplate>
+        </EcoDataVirtualizedList>
     </MudPaper>
 </MudContainer>
 
 @code {
-    private Virtualize<OrganizationDtoForList>? _virtualize;
-    private readonly CursorPaginationState<OrganizationDtoForList, OrganizationParameters> _paginationState = new(o => o.Id);
-    private CancellationTokenSource? _refreshCts;
-    private bool _isLoading = true;
+    private EcoDataVirtualizedList<OrganizationDtoForList, OrganizationParameters>? _list;
 
     [Signal]
     private string? _searchText;
@@ -121,56 +107,21 @@
 
     protected override void OnInitialized()
     {
-        SearchTextSignal.OnChange(async _ => await RefreshDataAsync());
+        SearchTextSignal.OnChange(async _ => await RefreshAsync());
     }
 
-    protected override async Task OnAfterRenderAsync(bool firstRender)
+    private OrganizationParameters CreateParameters() => new()
     {
-        if (firstRender)
-        {
-            await RefreshDataAsync();
-        }
-    }
+        PageSize = 50,
+        Search = string.IsNullOrWhiteSpace(SearchText) ? null : SearchText
+    };
 
-    private async Task RefreshDataAsync()
+    private async Task RefreshAsync()
     {
-        _refreshCts?.Cancel();
-        _refreshCts = new CancellationTokenSource();
-        var token = _refreshCts.Token;
-
-        try
+        if (_list is not null)
         {
-            _isLoading = true;
-            StateHasChanged();
-
-            _paginationState.Reset();
-
-            var request = new ItemsProviderRequest(0, 50, token);
-            await LoadItemsAsync(request);
-
-            _isLoading = false;
-            StateHasChanged();
-
-            if (_virtualize is not null)
-            {
-                await _virtualize.RefreshDataAsync();
-            }
+            await _list.RefreshAsync();
         }
-        catch (TaskCanceledException)
-        {
-        }
-    }
-
-    private ValueTask<ItemsProviderResult<OrganizationDtoForList>> LoadItemsAsync(ItemsProviderRequest request)
-    {
-        return _paginationState.ProvideItemsAsync(
-            request,
-            () => new OrganizationParameters
-            {
-                PageSize = 50,
-                Search = string.IsNullOrWhiteSpace(SearchText) ? null : SearchText
-            },
-            (parameters, ct) => OrganizationClient.GetOrganizationsAsync(parameters, ct));
     }
 
     private void ClearFilters()
@@ -190,7 +141,7 @@
             {
                 await OrganizationClient.CreateAsync(new OrganizationDtoForCreate(name));
                 Snackbar.Add("Organization created successfully", Severity.Success);
-                await RefreshDataAsync();
+                await RefreshAsync();
             }
             catch
             {
@@ -216,7 +167,7 @@
             {
                 await OrganizationClient.UpdateAsync(organization.Id, new OrganizationDtoForUpdate(name));
                 Snackbar.Add("Organization updated successfully", Severity.Success);
-                await RefreshDataAsync();
+                await RefreshAsync();
             }
             catch
             {
@@ -245,7 +196,7 @@
                 if (deleted)
                 {
                     Snackbar.Add("Organization deleted successfully", Severity.Success);
-                    await RefreshDataAsync();
+                    await RefreshAsync();
                 }
                 else
                 {
@@ -257,12 +208,5 @@
                 Snackbar.Add("Failed to delete organization", Severity.Error);
             }
         }
-    }
-
-    public void Dispose()
-    {
-        _refreshCts?.Cancel();
-        _refreshCts?.Dispose();
-        _paginationState.Dispose();
     }
 }
