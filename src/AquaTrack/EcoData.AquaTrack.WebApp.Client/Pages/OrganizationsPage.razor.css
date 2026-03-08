@@ -46,6 +46,12 @@
     margin-top: 32px;
 }
 
+.skeleton-primary {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
 /* Mobile */
 @media (max-width: 600px) {
     .header-bar {
