@@ -15,9 +15,18 @@ public static class OrganizationEndpoints
 
         group.MapGet("/", GetOrganizations).WithName("GetOrganizations");
         group.MapGet("/{id:guid}", GetOrganizationById).WithName("GetOrganizationById");
-        group.MapPost("/", CreateOrganization).WithName("CreateOrganization").RequireAuthorization("Admin");
-        group.MapPut("/{id:guid}", UpdateOrganization).WithName("UpdateOrganization").RequireAuthorization("Admin");
-        group.MapDelete("/{id:guid}", DeleteOrganization).WithName("DeleteOrganization").RequireAuthorization("Admin");
+        group
+            .MapPost("/", CreateOrganization)
+            .WithName("CreateOrganization")
+            .RequireAuthorization("Admin");
+        group
+            .MapPut("/{id:guid}", UpdateOrganization)
+            .WithName("UpdateOrganization")
+            .RequireAuthorization("Admin");
+        group
+            .MapDelete("/{id:guid}", DeleteOrganization)
+            .WithName("DeleteOrganization")
+            .RequireAuthorization("Admin");
 
         return app;
     }

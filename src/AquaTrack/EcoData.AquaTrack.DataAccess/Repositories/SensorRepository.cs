@@ -72,7 +72,7 @@ public sealed class SensorRepository(IDbContextFactory<AquaTrackDbContext> conte
     {
         await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
 
-        var query = context.Sensors.AsNoTracking().AsQueryable();
+        var query = context.Sensors.AsQueryable();
 
         if (parameters.IsActive.HasValue)
         {
@@ -88,9 +88,8 @@ public sealed class SensorRepository(IDbContextFactory<AquaTrackDbContext> conte
         {
             var search = parameters.Search.Trim().ToLower();
             query = query.Where(s =>
-                s.Name.ToLower().Contains(search)
-                || (s.Municipality != null && s.Municipality.ToLower().Contains(search))
-            );
+                s.Name.ToLower().Contains(search) ||
+                (s.Municipality != null && s.Municipality.ToLower().Contains(search)));
         }
 
         if (parameters.Cursor.HasValue)

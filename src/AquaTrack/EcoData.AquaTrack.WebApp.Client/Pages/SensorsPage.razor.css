@@ -1,11 +1,7 @@
-/* Hide scrollbar but keep scroll functionality */
-::deep .sensor-list-container {
-    scrollbar-width: none;
-    -ms-overflow-style: none;
-}
-
-::deep .sensor-list-container::-webkit-scrollbar {
-    display: none;
+.sensor-list-container {
+    height: calc(100vh - 200px);
+    overflow: hidden;
+    border-radius: 12px;
 }
 
 .search-bar {
