@@ -1,7 +1,25 @@
+.sensors-page {
+    padding: 16px;
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
 .sensor-list-container {
-    height: calc(100vh - 200px);
-    overflow: hidden;
+    max-height: calc(100vh - 200px);
+    overflow-y: auto;
     border-radius: 12px;
+}
+
+.sensor-list {
+    display: flex;
+    flex-direction: column;
+}
+
+.load-more {
+    display: flex;
+    justify-content: center;
+    padding: 16px;
+    border-top: 1px solid #f0f0f0;
 }
 
 .search-bar {
