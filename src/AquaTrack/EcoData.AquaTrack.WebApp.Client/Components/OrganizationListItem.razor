@@ -2,6 +2,18 @@
 
 <div class="organization-row" @onclick="HandleClick">
     <div class="organization-primary">
+        @if (!string.IsNullOrWhiteSpace(Organization.ProfilePictureUrl))
+        {
+            <MudAvatar Size="Size.Medium" Class="mr-3">
+                <MudImage Src="@Organization.ProfilePictureUrl" Alt="@Organization.Name" />
+            </MudAvatar>
+        }
+        else
+        {
+            <MudAvatar Size="Size.Medium" Color="Color.Primary" Class="mr-3">
+                <MudIcon Icon="@Icons.Material.Filled.Business" />
+            </MudAvatar>
+        }
         <div class="organization-name">@Organization.Name</div>
     </div>
     <div class="organization-created hide-mobile">

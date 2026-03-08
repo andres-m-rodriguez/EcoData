@@ -10,6 +10,7 @@
 @inject IDialogService DialogService
 @inject ISnackbar Snackbar
 @inject AuthStateService AuthState
+@inject NavigationManager Navigation
 
 <PageTitle>Organizations - AquaTrack</PageTitle>
 
@@ -47,12 +48,16 @@
             <ItemTemplate Context="organization">
                 <OrganizationListItem Organization="organization"
                                       ShowActions="IsAdmin"
-                                      OnEdit="OpenEditDialog"
+                                      OnClick="NavigateToDetails"
+                                      OnEdit="NavigateToEdit"
                                       OnDelete="ConfirmDelete" />
             </ItemTemplate>
             <SkeletonTemplate>
                 <div class="organization-skeleton">
-                    <MudSkeleton Width="180px" Height="16px" />
+                    <div class="skeleton-primary">
+                        <MudSkeleton SkeletonType="SkeletonType.Circle" Width="40px" Height="40px" />
+                        <MudSkeleton Width="180px" Height="16px" />
+                    </div>
                     <MudSkeleton Width="100px" Height="14px" Class="hide-mobile" />
                     <MudSkeleton SkeletonType="SkeletonType.Circle" Width="32px" Height="32px" />
                 </div>
@@ -147,30 +152,14 @@
         }
     }
 
-    private async Task OpenEditDialog(OrganizationDtoForList organization)
+    private void NavigateToDetails(OrganizationDtoForList organization)
     {
-        var parameters = new DialogParameters<OrganizationDialog>
-        {
-            { x => x.Name, organization.Name },
-            { x => x.IsEdit, true }
-        };
-        var options = new DialogOptions { CloseOnEscapeKey = true, MaxWidth = MaxWidth.Small, FullWidth = true };
-        var dialog = await DialogService.ShowAsync<OrganizationDialog>("Edit Organization", parameters, options);
-        var result = await dialog.Result;
+        Navigation.NavigateTo($"/organizations/{organization.Id}");
+    }
 
-        if (result is { Canceled: false, Data: string name })
-        {
-            try
-            {
-                await OrganizationClient.UpdateAsync(organization.Id, new OrganizationDtoForUpdate(name));
-                Snackbar.Add("Organization updated successfully", Severity.Success);
-                RefreshList();
-            }
-            catch
-            {
-                Snackbar.Add("Failed to update organization", Severity.Error);
-            }
-        }
+    private void NavigateToEdit(OrganizationDtoForList organization)
+    {
+        Navigation.NavigateTo($"/organizations/{organization.Id}/edit");
     }
 
     private async Task ConfirmDelete(OrganizationDtoForList organization)

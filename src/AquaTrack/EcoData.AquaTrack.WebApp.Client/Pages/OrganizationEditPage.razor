@@ -1,0 +1,231 @@
+@page "/organizations/{Id:guid}/edit"
+@using EcoData.AquaTrack.Contracts.Dtos
+@using EcoData.AquaTrack.Application.Client
+@using EcoData.AquaTrack.WebApp.Client.Services
+@inject IOrganizationHttpClient OrganizationClient
+@inject NavigationManager Navigation
+@inject ISnackbar Snackbar
+@inject AuthStateService AuthState
+
+<PageTitle>Edit Organization - AquaTrack</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.Small" Class="pa-4">
+    @if (_isLoading)
+    {
+        <MudPaper Elevation="1" Class="pa-6">
+            <MudSkeleton Width="200px" Height="32px" />
+            <MudSkeleton Width="100%" Height="56px" Class="mt-4" />
+            <MudSkeleton Width="100%" Height="56px" Class="mt-4" />
+            <MudSkeleton Width="100%" Height="120px" Class="mt-4" />
+            <MudSkeleton Width="100%" Height="56px" Class="mt-4" />
+        </MudPaper>
+    }
+    else if (_organization is null)
+    {
+        <MudPaper Elevation="1" Class="pa-6">
+            <MudStack AlignItems="AlignItems.Center">
+                <MudIcon Icon="@Icons.Material.Filled.Error" Size="Size.Large" Color="Color.Error" />
+                <MudText Typo="Typo.h6" Color="Color.Error" Class="mt-2">Organization not found</MudText>
+                <MudButton Variant="Variant.Outlined"
+                           Color="Color.Primary"
+                           StartIcon="@Icons.Material.Filled.ArrowBack"
+                           OnClick="NavigateBack"
+                           Class="mt-3">
+                    Back to Organizations
+                </MudButton>
+            </MudStack>
+        </MudPaper>
+    }
+    else if (!IsAdmin)
+    {
+        <MudPaper Elevation="1" Class="pa-6">
+            <MudStack AlignItems="AlignItems.Center">
+                <MudIcon Icon="@Icons.Material.Filled.Lock" Size="Size.Large" Color="Color.Warning" />
+                <MudText Typo="Typo.h6" Color="Color.Warning" Class="mt-2">Access Denied</MudText>
+                <MudText Typo="Typo.body2" Color="Color.Secondary">
+                    You don't have permission to edit organizations.
+                </MudText>
+                <MudButton Variant="Variant.Outlined"
+                           Color="Color.Primary"
+                           StartIcon="@Icons.Material.Filled.ArrowBack"
+                           OnClick="NavigateBack"
+                           Class="mt-3">
+                    Back to Organizations
+                </MudButton>
+            </MudStack>
+        </MudPaper>
+    }
+    else
+    {
+        <MudPaper Elevation="1" Class="pa-6">
+            <MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-4">
+                <MudIconButton Icon="@Icons.Material.Filled.ArrowBack"
+                               OnClick="NavigateToDetails" />
+                <MudText Typo="Typo.h5">Edit Organization</MudText>
+            </MudStack>
+
+            <EditForm Model="_form" OnValidSubmit="SaveAsync">
+                <DataAnnotationsValidator />
+
+                <MudStack Spacing="3">
+                    <MudTextField @bind-Value="_form.Name"
+                                  Label="Name"
+                                  Required="true"
+                                  RequiredError="Name is required"
+                                  MaxLength="200"
+                                  Counter="200"
+                                  Immediate="true" />
+
+                    <MudTextField @bind-Value="_form.ProfilePictureUrl"
+                                  Label="Profile Picture URL"
+                                  Placeholder="https://example.com/logo.png"
+                                  MaxLength="500"
+                                  HelperText="URL to the organization's logo or profile picture" />
+
+                    @if (!string.IsNullOrWhiteSpace(_form.ProfilePictureUrl))
+                    {
+                        <MudStack Row="true" AlignItems="AlignItems.Center">
+                            <MudText Typo="Typo.body2" Color="Color.Secondary">Preview:</MudText>
+                            <MudAvatar Size="Size.Large">
+                                <MudImage Src="@_form.ProfilePictureUrl" Alt="Preview" />
+                            </MudAvatar>
+                        </MudStack>
+                    }
+
+                    <MudTextField @bind-Value="_form.WebsiteUrl"
+                                  Label="Website URL"
+                                  Placeholder="https://example.com"
+                                  MaxLength="500"
+                                  HelperText="Organization's website (optional)" />
+
+                    <MudTextField @bind-Value="_form.AboutUs"
+                                  Label="About Us"
+                                  Lines="5"
+                                  MaxLength="2000"
+                                  Counter="2000"
+                                  HelperText="Description of the organization" />
+
+                    <MudStack Row="true" Justify="Justify.FlexEnd" Spacing="2" Class="mt-4">
+                        <MudButton Variant="Variant.Text"
+                                   Color="Color.Default"
+                                   OnClick="NavigateToDetails"
+                                   Disabled="_isSaving">
+                            Cancel
+                        </MudButton>
+                        <MudButton Variant="Variant.Filled"
+                                   Color="Color.Primary"
+                                   ButtonType="ButtonType.Submit"
+                                   Disabled="_isSaving">
+                            @if (_isSaving)
+                            {
+                                <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
+                            }
+                            Save Changes
+                        </MudButton>
+                    </MudStack>
+                </MudStack>
+            </EditForm>
+        </MudPaper>
+    }
+</MudContainer>
+
+@code {
+    [Parameter]
+    public Guid Id { get; set; }
+
+    private OrganizationDtoForDetail? _organization;
+    private OrganizationEditForm _form = new();
+    private bool _isLoading = true;
+    private bool _isSaving;
+
+    private bool IsAdmin => AuthState.CurrentUser?.Role == "Admin";
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadOrganizationAsync();
+    }
+
+    private async Task LoadOrganizationAsync()
+    {
+        _isLoading = true;
+        _organization = await OrganizationClient.GetByIdAsync(Id);
+
+        if (_organization is not null)
+        {
+            _form = new OrganizationEditForm
+            {
+                Name = _organization.Name,
+                ProfilePictureUrl = _organization.ProfilePictureUrl,
+                AboutUs = _organization.AboutUs,
+                WebsiteUrl = _organization.WebsiteUrl
+            };
+        }
+
+        _isLoading = false;
+    }
+
+    private async Task SaveAsync()
+    {
+        if (_isSaving) return;
+
+        _isSaving = true;
+
+        try
+        {
+            var dto = new OrganizationDtoForUpdate(
+                _form.Name!,
+                _form.ProfilePictureUrl,
+                _form.AboutUs,
+                _form.WebsiteUrl
+            );
+
+            var result = await OrganizationClient.UpdateAsync(Id, dto);
+
+            if (result is not null)
+            {
+                Snackbar.Add("Organization updated successfully", Severity.Success);
+                Navigation.NavigateTo($"/organizations/{Id}");
+            }
+            else
+            {
+                Snackbar.Add("Failed to update organization", Severity.Error);
+            }
+        }
+        catch
+        {
+            Snackbar.Add("Failed to update organization", Severity.Error);
+        }
+        finally
+        {
+            _isSaving = false;
+        }
+    }
+
+    private void NavigateBack()
+    {
+        Navigation.NavigateTo("/organizations");
+    }
+
+    private void NavigateToDetails()
+    {
+        Navigation.NavigateTo($"/organizations/{Id}");
+    }
+
+    private sealed class OrganizationEditForm
+    {
+        [System.ComponentModel.DataAnnotations.Required(ErrorMessage = "Name is required")]
+        [System.ComponentModel.DataAnnotations.StringLength(200, ErrorMessage = "Name cannot exceed 200 characters")]
+        public string? Name { get; set; }
+
+        [System.ComponentModel.DataAnnotations.StringLength(500, ErrorMessage = "URL cannot exceed 500 characters")]
+        [System.ComponentModel.DataAnnotations.Url(ErrorMessage = "Please enter a valid URL")]
+        public string? ProfilePictureUrl { get; set; }
+
+        [System.ComponentModel.DataAnnotations.StringLength(2000, ErrorMessage = "About Us cannot exceed 2000 characters")]
+        public string? AboutUs { get; set; }
+
+        [System.ComponentModel.DataAnnotations.StringLength(500, ErrorMessage = "URL cannot exceed 500 characters")]
+        [System.ComponentModel.DataAnnotations.Url(ErrorMessage = "Please enter a valid URL")]
+        public string? WebsiteUrl { get; set; }
+    }
+}
