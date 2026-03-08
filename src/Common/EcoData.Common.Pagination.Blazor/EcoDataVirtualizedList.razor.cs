@@ -15,7 +15,6 @@ public partial class EcoDataVirtualizedList<TItem, TParams> : ComponentBase, IDi
 {
     private Virtualize<TItem>? _virtualize;
     private CursorPaginationState<TItem, TParams> _paginationState = null!;
-    private bool _isLoading = true;
     private bool _isEmpty;
     private bool _disposed;
 
@@ -111,15 +110,15 @@ public partial class EcoDataVirtualizedList<TItem, TParams> : ComponentBase, IDi
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
 
-        _isLoading = true;
         _isEmpty = false;
         _paginationState.Reset();
-        StateHasChanged();
 
         if (_virtualize is not null)
         {
             await _virtualize.RefreshDataAsync();
         }
+
+        StateHasChanged();
     }
 
     /// <summary>
@@ -165,11 +164,10 @@ public partial class EcoDataVirtualizedList<TItem, TParams> : ComponentBase, IDi
             ParametersFactory,
             ItemsProvider);
 
-        // Handle state after first fetch
-        if (request.StartIndex == 0 && _isLoading)
+        // Detect empty state after first fetch
+        if (request.StartIndex == 0 && result.TotalItemCount == 0 && !_isEmpty)
         {
-            _isLoading = false;
-            _isEmpty = result.TotalItemCount == 0;
+            _isEmpty = true;
             StateHasChanged();
         }
 
