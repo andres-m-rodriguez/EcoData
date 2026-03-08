@@ -4,7 +4,10 @@
     <Project Path="src/Host/EcoData.ServiceDefaults/EcoData.ServiceDefaults.csproj" />
   </Folder>
   <Folder Name="/Common/">
+    <Project Path="src/Common/EcoData.Common.Http.Helpers/EcoData.Common.Http.Helpers.csproj" />
     <Project Path="src/Common/EcoData.Common.Pagination/EcoData.Common.Pagination.csproj" />
+    <Project Path="src/Common/EcoData.Common.Pagination.Blazor/EcoData.Common.Pagination.Blazor.csproj" />
+    <Project Path="src/Common/EcoData.Common.Results/EcoData.Common.Results.csproj" />
   </Folder>
   <Folder Name="/Identity/">
     <Project Path="src/Identity/EcoData.Identity.Database/EcoData.Identity.Database.csproj" />

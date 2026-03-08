@@ -12,6 +12,7 @@
   <ItemGroup>
     <PackageReference Include="BlazingSingularity" Version="1.0.0-beta.3" />
     <PackageReference Include="BlazorStaticNavigation" Version="1.0.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.Authorization" Version="10.0.0" />
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="10.0.3" />
     <PackageReference Include="MudBlazor" Version="9.0.0" />
   </ItemGroup>
@@ -19,6 +20,7 @@
   <ItemGroup>
     <ProjectReference Include="..\EcoData.AquaTrack.Application.Client\EcoData.AquaTrack.Application.Client.csproj" />
     <ProjectReference Include="..\..\Identity\EcoData.Identity.Application.Client\EcoData.Identity.Application.Client.csproj" />
+    <ProjectReference Include="..\..\Common\EcoData.Common.Pagination.Blazor\EcoData.Common.Pagination.Blazor.csproj" />
   </ItemGroup>
 
 </Project>

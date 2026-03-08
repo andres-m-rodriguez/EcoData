@@ -1,0 +1,13 @@
+/* Override active nav link styling */
+::deep .mud-nav-link.active {
+    color: var(--mud-palette-text-primary) !important;
+    background-color: rgba(0, 0, 0, 0.06);
+}
+
+::deep .mud-nav-link.active:hover {
+    background-color: rgba(0, 0, 0, 0.08);
+}
+
+::deep .mud-nav-link.active .mud-nav-link-icon {
+    color: var(--mud-palette-text-primary) !important;
+}
