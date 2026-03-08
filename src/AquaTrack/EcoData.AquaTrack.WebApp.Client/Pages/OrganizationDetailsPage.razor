@@ -3,6 +3,7 @@
 @using EcoData.AquaTrack.Application.Client
 @using EcoData.AquaTrack.WebApp.Client.Services
 @using EcoData.AquaTrack.WebApp.Client.Components
+@using BlazingSingularity.Commands
 @inject IOrganizationHttpClient OrganizationClient
 @inject NavigationManager Navigation
 @inject IDialogService DialogService
@@ -12,7 +13,7 @@
 <PageTitle>@(_organization?.Name ?? "Organization") - AquaTrack</PageTitle>
 
 <MudContainer MaxWidth="MaxWidth.Medium" Class="pa-4">
-    @if (_isLoading)
+    @if (LoadCommand.IsLoading)
     {
         <MudPaper Elevation="1" Class="pa-6">
             <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="4">
@@ -112,20 +113,18 @@
     public Guid Id { get; set; }
 
     private OrganizationDtoForDetail? _organization;
-    private bool _isLoading = true;
 
     private bool IsAdmin => AuthState.CurrentUser?.Role == "Admin";
 
     protected override async Task OnInitializedAsync()
     {
-        await LoadOrganizationAsync();
+        await LoadCommand.ExecuteAsync();
     }
 
-    private async Task LoadOrganizationAsync()
+    [RelayCommand]
+    private async Task Load()
     {
-        _isLoading = true;
         _organization = await OrganizationClient.GetByIdAsync(Id);
-        _isLoading = false;
     }
 
     private void NavigateBack()

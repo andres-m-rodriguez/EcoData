@@ -2,6 +2,7 @@
 @using EcoData.AquaTrack.Contracts.Dtos
 @using EcoData.AquaTrack.Application.Client
 @using EcoData.AquaTrack.WebApp.Client.Services
+@using BlazingSingularity.Commands
 @inject IOrganizationHttpClient OrganizationClient
 @inject NavigationManager Navigation
 @inject ISnackbar Snackbar
@@ -10,7 +11,7 @@
 <PageTitle>Edit Organization - AquaTrack</PageTitle>
 
 <MudContainer MaxWidth="MaxWidth.Small" Class="pa-4">
-    @if (_isLoading)
+    @if (LoadCommand.IsLoading)
     {
         <MudPaper Elevation="1" Class="pa-6">
             <MudSkeleton Width="200px" Height="32px" />
@@ -64,67 +65,74 @@
                 <MudText Typo="Typo.h5">Edit Organization</MudText>
             </MudStack>
 
-            <EditForm Model="_form" OnValidSubmit="SaveAsync">
-                <DataAnnotationsValidator />
+            @if (!string.IsNullOrEmpty(_errorMessage))
+            {
+                <MudAlert Severity="Severity.Error" Variant="Variant.Filled" Dense="true" Class="mb-4">
+                    @_errorMessage
+                </MudAlert>
+            }
 
-                <MudStack Spacing="3">
-                    <MudTextField @bind-Value="_form.Name"
-                                  Label="Name"
-                                  Required="true"
-                                  RequiredError="Name is required"
-                                  MaxLength="200"
-                                  Counter="200"
-                                  Immediate="true" />
+            <MudStack Spacing="3">
+                <MudTextField @bind-Value="_name"
+                              Label="Name"
+                              Required="true"
+                              RequiredError="Name is required"
+                              MaxLength="200"
+                              Counter="200"
+                              Immediate="true"
+                              Disabled="SaveCommand.IsLoading" />
 
-                    <MudTextField @bind-Value="_form.ProfilePictureUrl"
-                                  Label="Profile Picture URL"
-                                  Placeholder="https://example.com/logo.png"
-                                  MaxLength="500"
-                                  HelperText="URL to the organization's logo or profile picture" />
+                <MudTextField @bind-Value="_profilePictureUrl"
+                              Label="Profile Picture URL"
+                              Placeholder="https://example.com/logo.png"
+                              MaxLength="500"
+                              HelperText="URL to the organization's logo or profile picture"
+                              Disabled="SaveCommand.IsLoading" />
 
-                    @if (!string.IsNullOrWhiteSpace(_form.ProfilePictureUrl))
-                    {
-                        <MudStack Row="true" AlignItems="AlignItems.Center">
-                            <MudText Typo="Typo.body2" Color="Color.Secondary">Preview:</MudText>
-                            <MudAvatar Size="Size.Large">
-                                <MudImage Src="@_form.ProfilePictureUrl" Alt="Preview" />
-                            </MudAvatar>
-                        </MudStack>
-                    }
-
-                    <MudTextField @bind-Value="_form.WebsiteUrl"
-                                  Label="Website URL"
-                                  Placeholder="https://example.com"
-                                  MaxLength="500"
-                                  HelperText="Organization's website (optional)" />
-
-                    <MudTextField @bind-Value="_form.AboutUs"
-                                  Label="About Us"
-                                  Lines="5"
-                                  MaxLength="2000"
-                                  Counter="2000"
-                                  HelperText="Description of the organization" />
-
-                    <MudStack Row="true" Justify="Justify.FlexEnd" Spacing="2" Class="mt-4">
-                        <MudButton Variant="Variant.Text"
-                                   Color="Color.Default"
-                                   OnClick="NavigateToDetails"
-                                   Disabled="_isSaving">
-                            Cancel
-                        </MudButton>
-                        <MudButton Variant="Variant.Filled"
-                                   Color="Color.Primary"
-                                   ButtonType="ButtonType.Submit"
-                                   Disabled="_isSaving">
-                            @if (_isSaving)
-                            {
-                                <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
-                            }
-                            Save Changes
-                        </MudButton>
+                @if (!string.IsNullOrWhiteSpace(_profilePictureUrl))
+                {
+                    <MudStack Row="true" AlignItems="AlignItems.Center">
+                        <MudText Typo="Typo.body2" Color="Color.Secondary">Preview:</MudText>
+                        <MudAvatar Size="Size.Large">
+                            <MudImage Src="@_profilePictureUrl" Alt="Preview" />
+                        </MudAvatar>
                     </MudStack>
+                }
+
+                <MudTextField @bind-Value="_websiteUrl"
+                              Label="Website URL"
+                              Placeholder="https://example.com"
+                              MaxLength="500"
+                              HelperText="Organization's website (optional)"
+                              Disabled="SaveCommand.IsLoading" />
+
+                <MudTextField @bind-Value="_aboutUs"
+                              Label="About Us"
+                              Lines="5"
+                              MaxLength="2000"
+                              Counter="2000"
+                              HelperText="Description of the organization"
+                              Disabled="SaveCommand.IsLoading" />
+
+                <MudStack Row="true" Justify="Justify.FlexEnd" Spacing="2" Class="mt-4">
+                    <MudButton Variant="Variant.Text"
+                               Color="Color.Default"
+                               OnClick="NavigateToDetails"
+                               Disabled="SaveCommand.IsLoading">
+                        Cancel
+                    </MudButton>
+                    <MudButton Variant="Variant.Filled"
+                               Color="Color.Primary"
+                               OnClick="() => SaveCommand.ExecuteAsync()"
+                               Disabled="SaveCommand.IsLoading || string.IsNullOrWhiteSpace(_name)">
+                        @if (SaveCommand.IsLoading)
+                        {
+                            <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
+                        }
+                        Save Changes
+                    </MudButton>
                 </MudStack>
-            </EditForm>
+            </MudStack>
         </MudPaper>
     }
 </MudContainer>
@@ -134,49 +142,51 @@
     public Guid Id { get; set; }
 
     private OrganizationDtoForDetail? _organization;
-    private OrganizationEditForm _form = new();
-    private bool _isLoading = true;
-    private bool _isSaving;
+    private string _name = string.Empty;
+    private string? _profilePictureUrl;
+    private string? _aboutUs;
+    private string? _websiteUrl;
+    private string? _errorMessage;
 
     private bool IsAdmin => AuthState.CurrentUser?.Role == "Admin";
 
     protected override async Task OnInitializedAsync()
     {
-        await LoadOrganizationAsync();
+        await LoadCommand.ExecuteAsync();
     }
 
-    private async Task LoadOrganizationAsync()
+    [RelayCommand]
+    private async Task Load()
     {
-        _isLoading = true;
         _organization = await OrganizationClient.GetByIdAsync(Id);
 
         if (_organization is not null)
         {
-            _form = new OrganizationEditForm
-            {
-                Name = _organization.Name,
-                ProfilePictureUrl = _organization.ProfilePictureUrl,
-                AboutUs = _organization.AboutUs,
-                WebsiteUrl = _organization.WebsiteUrl
-            };
+            _name = _organization.Name;
+            _profilePictureUrl = _organization.ProfilePictureUrl;
+            _aboutUs = _organization.AboutUs;
+            _websiteUrl = _organization.WebsiteUrl;
         }
-
-        _isLoading = false;
     }
 
-    private async Task SaveAsync()
+    [RelayCommand]
+    private async Task Save()
     {
-        if (_isSaving) return;
+        _errorMessage = null;
 
-        _isSaving = true;
+        if (string.IsNullOrWhiteSpace(_name))
+        {
+            _errorMessage = "Name is required";
+            return;
+        }
 
         try
         {
             var dto = new OrganizationDtoForUpdate(
-                _form.Name!,
-                _form.ProfilePictureUrl,
-                _form.AboutUs,
-                _form.WebsiteUrl
+                _name,
+                _profilePictureUrl,
+                _aboutUs,
+                _websiteUrl
             );
 
             var result = await OrganizationClient.UpdateAsync(Id, dto);
@@ -188,16 +198,12 @@
             }
             else
             {
-                Snackbar.Add("Failed to update organization", Severity.Error);
+                _errorMessage = "Failed to update organization";
             }
         }
         catch
         {
-            Snackbar.Add("Failed to update organization", Severity.Error);
-        }
-        finally
-        {
-            _isSaving = false;
+            _errorMessage = "Failed to update organization";
         }
     }
 
@@ -209,23 +215,5 @@
     private void NavigateToDetails()
     {
         Navigation.NavigateTo($"/organizations/{Id}");
-    }
-
-    private sealed class OrganizationEditForm
-    {
-        [System.ComponentModel.DataAnnotations.Required(ErrorMessage = "Name is required")]
-        [System.ComponentModel.DataAnnotations.StringLength(200, ErrorMessage = "Name cannot exceed 200 characters")]
-        public string? Name { get; set; }
-
-        [System.ComponentModel.DataAnnotations.StringLength(500, ErrorMessage = "URL cannot exceed 500 characters")]
-        [System.ComponentModel.DataAnnotations.Url(ErrorMessage = "Please enter a valid URL")]
-        public string? ProfilePictureUrl { get; set; }
-
-        [System.ComponentModel.DataAnnotations.StringLength(2000, ErrorMessage = "About Us cannot exceed 2000 characters")]
-        public string? AboutUs { get; set; }
-
-        [System.ComponentModel.DataAnnotations.StringLength(500, ErrorMessage = "URL cannot exceed 500 characters")]
-        [System.ComponentModel.DataAnnotations.Url(ErrorMessage = "Please enter a valid URL")]
-        public string? WebsiteUrl { get; set; }
     }
 }
