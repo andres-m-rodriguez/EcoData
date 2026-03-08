@@ -1,11 +1,7 @@
-/* Hide scrollbar but keep scroll functionality */
-::deep .organization-list-container {
-    scrollbar-width: none;
-    -ms-overflow-style: none;
-}
-
-::deep .organization-list-container::-webkit-scrollbar {
-    display: none;
+.organization-list-container {
+    height: calc(100vh - 200px);
+    overflow: hidden;
+    border-radius: 12px;
 }
 
 .header-bar {
