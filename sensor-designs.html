@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sensor List Design Options</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #ffffff;
+            color: #262626;
+            padding: 40px;
+            line-height: 1.5;
+        }
+
+        h1 {
+            margin-bottom: 40px;
+            color: #262626;
+        }
+
+        h2 {
+            margin: 40px 0 20px;
+            color: #262626;
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .section {
+            margin-bottom: 60px;
+            padding: 24px;
+            background: #F9F9FB;
+            border-radius: 12px;
+        }
+
+        .secondary {
+            color: #4D4D4D;
+        }
+
+        /* Shared styles */
+        .status-active {
+            background: #d4edda;
+            color: #155724;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .status-inactive {
+            background: #e9ecef;
+            color: #6c757d;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .action-btn {
+            background: none;
+            border: 1px solid #0078d4;
+            color: #0078d4;
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+        }
+
+        .action-btn:hover {
+            background: #0078d4;
+            color: white;
+        }
+
+        /* ========================================
+           APPROACH 1: Separated Row Cards
+           ======================================== */
+        .approach-1 .sensor-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .approach-1 .sensor-row {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1.5fr 1.5fr 100px 80px;
+            align-items: center;
+            padding: 16px 20px;
+            background: white;
+            border-radius: 8px;
+            border: 1px solid #e8e8e8;
+            transition: all 0.15s ease;
+        }
+
+        .approach-1 .sensor-row:hover {
+            border-color: #0078d4;
+            box-shadow: 0 2px 8px rgba(0, 120, 212, 0.1);
+        }
+
+        .approach-1 .sensor-name {
+            font-weight: 600;
+        }
+
+        .approach-1 .sensor-id {
+            color: #4D4D4D;
+            font-size: 13px;
+        }
+
+        /* ========================================
+           APPROACH 2: Left Accent Border
+           ======================================== */
+        .approach-2 .sensor-list {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .approach-2 .sensor-row {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1.5fr 1.5fr 100px 80px;
+            align-items: center;
+            padding: 14px 20px;
+            background: white;
+            border-left: 3px solid transparent;
+            transition: all 0.15s ease;
+        }
+
+        .approach-2 .sensor-row:hover {
+            background: #f8f9fa;
+            border-left-color: #0078d4;
+        }
+
+        .approach-2 .sensor-row.active {
+            border-left-color: #28a745;
+        }
+
+        .approach-2 .sensor-row.inactive {
+            border-left-color: #6c757d;
+        }
+
+        .approach-2 .sensor-name {
+            font-weight: 600;
+        }
+
+        /* ========================================
+           APPROACH 3: Compact Cards with Icon
+           ======================================== */
+        .approach-3 .sensor-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .approach-3 .sensor-row {
+            display: grid;
+            grid-template-columns: 48px 2fr 1fr 1.5fr 100px 80px;
+            align-items: center;
+            padding: 12px 16px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+            transition: all 0.15s ease;
+        }
+
+        .approach-3 .sensor-row:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            transform: translateY(-1px);
+        }
+
+        .approach-3 .sensor-icon {
+            width: 40px;
+            height: 40px;
+            background: #e3f2fd;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #0078d4;
+            font-size: 18px;
+        }
+
+        .approach-3 .sensor-info .sensor-name {
+            font-weight: 600;
+            margin-bottom: 2px;
+        }
+
+        .approach-3 .sensor-info .sensor-id {
+            font-size: 12px;
+            color: #4D4D4D;
+        }
+
+        /* ========================================
+           APPROACH 4: Minimal with Dividers
+           ======================================== */
+        .approach-4 .sensor-list {
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .approach-4 .sensor-row {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1.5fr 1.5fr 100px 80px;
+            align-items: center;
+            padding: 16px 24px;
+            border-bottom: 1px solid #f0f0f0;
+            transition: background 0.15s ease;
+        }
+
+        .approach-4 .sensor-row:last-child {
+            border-bottom: none;
+        }
+
+        .approach-4 .sensor-row:hover {
+            background: #fafbfc;
+        }
+
+        .approach-4 .sensor-name {
+            font-weight: 500;
+        }
+
+        .approach-4 .sensor-meta {
+            font-size: 12px;
+            color: #4D4D4D;
+            margin-top: 2px;
+        }
+
+        /* ========================================
+           APPROACH 5: Full Cards (2 column info)
+           ======================================== */
+        .approach-5 .sensor-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .approach-5 .sensor-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 24px;
+            background: white;
+            border-radius: 12px;
+            border: 1px solid #eee;
+            transition: all 0.2s ease;
+        }
+
+        .approach-5 .sensor-row:hover {
+            border-color: #0078d4;
+            box-shadow: 0 4px 16px rgba(0, 120, 212, 0.12);
+        }
+
+        .approach-5 .sensor-main {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .approach-5 .sensor-avatar {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, #0078d4, #106ebe);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: 16px;
+        }
+
+        .approach-5 .sensor-details h3 {
+            font-size: 15px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .approach-5 .sensor-details .meta {
+            font-size: 13px;
+            color: #4D4D4D;
+        }
+
+        .approach-5 .sensor-stats {
+            display: flex;
+            gap: 32px;
+            align-items: center;
+        }
+
+        .approach-5 .stat {
+            text-align: center;
+        }
+
+        .approach-5 .stat-label {
+            font-size: 11px;
+            color: #4D4D4D;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .approach-5 .stat-value {
+            font-size: 14px;
+            font-weight: 500;
+            margin-top: 2px;
+        }
+
+        .approach-5 .sensor-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        /* ========================================
+           APPROACH 6: Zebra Striped Modern
+           ======================================== */
+        .approach-6 .sensor-list {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid #e8e8e8;
+        }
+
+        .approach-6 .sensor-row {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1.5fr 1.5fr 100px 80px;
+            align-items: center;
+            padding: 18px 24px;
+            transition: all 0.15s ease;
+        }
+
+        .approach-6 .sensor-row:nth-child(even) {
+            background: #F9F9FB;
+        }
+
+        .approach-6 .sensor-row:hover {
+            background: #e8f4fc;
+        }
+
+        .approach-6 .sensor-name {
+            font-weight: 600;
+        }
+
+        .approach-6 .location {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 13px;
+            color: #4D4D4D;
+        }
+
+        .approach-6 .location-icon {
+            color: #0078d4;
+        }
+    </style>
+</head>
+<body>
+    <h1>Sensor List Design Approaches</h1>
+
+    <!-- APPROACH 1 -->
+    <div class="section">
+        <h2>Approach 1: Separated Row Cards</h2>
+        <p class="secondary" style="margin-bottom: 16px;">Each sensor is a distinct card with border, gap between rows</p>
+
+        <div class="approach-1">
+            <div class="sensor-list">
+                <div class="sensor-row">
+                    <div class="sensor-name">Downtown Water Quality Monitor</div>
+                    <div class="sensor-id">SN-2024-0142</div>
+                    <div>Oslo Municipality</div>
+                    <div>59.9139, 10.7522</div>
+                    <div><span class="status-active">Active</span></div>
+                    <div><button class="action-btn">View</button></div>
+                </div>
+                <div class="sensor-row">
+                    <div class="sensor-name">Harbor Inlet Sensor</div>
+                    <div class="sensor-id">SN-2024-0089</div>
+                    <div>Bergen Municipality</div>
+                    <div>60.3913, 5.3221</div>
+                    <div><span class="status-active">Active</span></div>
+                    <div><button class="action-btn">View</button></div>
+                </div>
+                <div class="sensor-row">
+                    <div class="sensor-name">River Delta Monitor</div>
+                    <div class="sensor-id">SN-2023-0321</div>
+                    <div>Trondheim</div>
+                    <div>63.4305, 10.3951</div>
+                    <div><span class="status-inactive">Inactive</span></div>
+                    <div><button class="action-btn">View</button></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- APPROACH 2 -->
+    <div class="section">
+        <h2>Approach 2: Left Accent Border</h2>
+        <p class="secondary" style="margin-bottom: 16px;">Color-coded left border indicates status, minimal separation</p>
+
+        <div class="approach-2">
+            <div class="sensor-list">
+                <div class="sensor-row active">
+                    <div class="sensor-name">Downtown Water Quality Monitor</div>
+                    <div class="secondary">SN-2024-0142</div>
+                    <div>Oslo Municipality</div>
+                    <div>59.9139, 10.7522</div>
+                    <div><span class="status-active">Active</span></div>
+                    <div><button class="action-btn">View</button></div>
+                </div>
+                <div class="sensor-row active">
+                    <div class="sensor-name">Harbor Inlet Sensor</div>
+                    <div class="secondary">SN-2024-0089</div>
+                    <div>Bergen Municipality</div>
+                    <div>60.3913, 5.3221</div>
+                    <div><span class="status-active">Active</span></div>
+                    <div><button class="action-btn">View</button></div>
+                </div>
+                <div class="sensor-row inactive">
+                    <div class="sensor-name">River Delta Monitor</div>
+                    <div class="secondary">SN-2023-0321</div>
+                    <div>Trondheim</div>
+                    <div>63.4305, 10.3951</div>
+                    <div><span class="status-inactive">Inactive</span></div>
+                    <div><button class="action-btn">View</button></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- APPROACH 3 -->
+    <div class="section">
+        <h2>Approach 3: Compact Cards with Icon</h2>
+        <p class="secondary" style="margin-bottom: 16px;">Each row has a sensor icon, subtle shadow, slight lift on hover</p>
+
+        <div class="approach-3">
+            <div class="sensor-list">
+                <div class="sensor-row">
+                    <div class="sensor-icon">S</div>
+                    <div class="sensor-info">
+                        <div class="sensor-name">Downtown Water Quality Monitor</div>
+                        <div class="sensor-id">SN-2024-0142</div>
+                    </div>
+                    <div>Oslo Municipality</div>
+                    <div class="secondary">59.9139, 10.7522</div>
+                    <div><span class="status-active">Active</span></div>
+                    <div><button class="action-btn">View</button></div>
+                </div>
+                <div class="sensor-row">
+                    <div class="sensor-icon">S</div>
+                    <div class="sensor-info">
+                        <div class="sensor-name">Harbor Inlet Sensor</div>
+                        <div class="sensor-id">SN-2024-0089</div>
+                    </div>
+                    <div>Bergen Municipality</div>
+                    <div class="secondary">60.3913, 5.3221</div>
+                    <div><span class="status-active">Active</span></div>
+                    <div><button class="action-btn">View</button></div>
+                </div>
+                <div class="sensor-row">
+                    <div class="sensor-icon">S</div>
+                    <div class="sensor-info">
+                        <div class="sensor-name">River Delta Monitor</div>
+                        <div class="sensor-id">SN-2023-0321</div>
+                    </div>
+                    <div>Trondheim</div>
+                    <div class="secondary">63.4305, 10.3951</div>
+                    <div><span class="status-inactive">Inactive</span></div>
+                    <div><button class="action-btn">View</button></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- APPROACH 4 -->
+    <div class="section">
+        <h2>Approach 4: Minimal with Dividers</h2>
+        <p class="secondary" style="margin-bottom: 16px;">Clean table-like look with subtle dividers, contained in one card</p>
+
+        <div class="approach-4">
+            <div class="sensor-list">
+                <div class="sensor-row">
+                    <div>
+                        <div class="sensor-name">Downtown Water Quality Monitor</div>
+                        <div class="sensor-meta">SN-2024-0142</div>
+                    </div>
+                    <div>Oslo</div>
+                    <div class="secondary">Oslo Municipality</div>
+                    <div class="secondary">59.9139, 10.7522</div>
+                    <div><span class="status-active">Active</span></div>
+                    <div><button class="action-btn">View</button></div>
+                </div>
+                <div class="sensor-row">
+                    <div>
+                        <div class="sensor-name">Harbor Inlet Sensor</div>
+                        <div class="sensor-meta">SN-2024-0089</div>
+                    </div>
+                    <div>Bergen</div>
+                    <div class="secondary">Bergen Municipality</div>
+                    <div class="secondary">60.3913, 5.3221</div>
+                    <div><span class="status-active">Active</span></div>
+                    <div><button class="action-btn">View</button></div>
+                </div>
+                <div class="sensor-row">
+                    <div>
+                        <div class="sensor-name">River Delta Monitor</div>
+                        <div class="sensor-meta">SN-2023-0321</div>
+                    </div>
+                    <div>Trondheim</div>
+                    <div class="secondary">Trondheim</div>
+                    <div class="secondary">63.4305, 10.3951</div>
+                    <div><span class="status-inactive">Inactive</span></div>
+                    <div><button class="action-btn">View</button></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- APPROACH 5 -->
+    <div class="section">
+        <h2>Approach 5: Full Cards (Rich Info)</h2>
+        <p class="secondary" style="margin-bottom: 16px;">Larger cards with avatar, grouped stats - more visual hierarchy</p>
+
+        <div class="approach-5">
+            <div class="sensor-list">
+                <div class="sensor-row">
+                    <div class="sensor-main">
+                        <div class="sensor-avatar">DW</div>
+                        <div class="sensor-details">
+                            <h3>Downtown Water Quality Monitor</h3>
+                            <div class="meta">SN-2024-0142 &bull; Oslo Municipality</div>
+                        </div>
+                    </div>
+                    <div class="sensor-stats">
+                        <div class="stat">
+                            <div class="stat-label">Location</div>
+                            <div class="stat-value">59.91, 10.75</div>
+                        </div>
+                        <div class="stat">
+                            <div class="stat-label">Status</div>
+                            <div class="stat-value"><span class="status-active">Active</span></div>
+                        </div>
+                    </div>
+                    <div class="sensor-actions">
+                        <button class="action-btn">View on Map</button>
+                    </div>
+                </div>
+                <div class="sensor-row">
+                    <div class="sensor-main">
+                        <div class="sensor-avatar">HI</div>
+                        <div class="sensor-details">
+                            <h3>Harbor Inlet Sensor</h3>
+                            <div class="meta">SN-2024-0089 &bull; Bergen Municipality</div>
+                        </div>
+                    </div>
+                    <div class="sensor-stats">
+                        <div class="stat">
+                            <div class="stat-label">Location</div>
+                            <div class="stat-value">60.39, 5.32</div>
+                        </div>
+                        <div class="stat">
+                            <div class="stat-label">Status</div>
+                            <div class="stat-value"><span class="status-active">Active</span></div>
+                        </div>
+                    </div>
+                    <div class="sensor-actions">
+                        <button class="action-btn">View on Map</button>
+                    </div>
+                </div>
+                <div class="sensor-row">
+                    <div class="sensor-main">
+                        <div class="sensor-avatar">RD</div>
+                        <div class="sensor-details">
+                            <h3>River Delta Monitor</h3>
+                            <div class="meta">SN-2023-0321 &bull; Trondheim</div>
+                        </div>
+                    </div>
+                    <div class="sensor-stats">
+                        <div class="stat">
+                            <div class="stat-label">Location</div>
+                            <div class="stat-value">63.43, 10.40</div>
+                        </div>
+                        <div class="stat">
+                            <div class="stat-label">Status</div>
+                            <div class="stat-value"><span class="status-inactive">Inactive</span></div>
+                        </div>
+                    </div>
+                    <div class="sensor-actions">
+                        <button class="action-btn">View on Map</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- APPROACH 6 -->
+    <div class="section">
+        <h2>Approach 6: Zebra Striped Modern</h2>
+        <p class="secondary" style="margin-bottom: 16px;">Alternating row backgrounds, contained in single card, clean and scannable</p>
+
+        <div class="approach-6">
+            <div class="sensor-list">
+                <div class="sensor-row">
+                    <div class="sensor-name">Downtown Water Quality Monitor</div>
+                    <div class="secondary">SN-2024-0142</div>
+                    <div>Oslo Municipality</div>
+                    <div class="location"><span class="location-icon">&#x1F4CD;</span> 59.9139, 10.7522</div>
+                    <div><span class="status-active">Active</span></div>
+                    <div><button class="action-btn">View</button></div>
+                </div>
+                <div class="sensor-row">
+                    <div class="sensor-name">Harbor Inlet Sensor</div>
+                    <div class="secondary">SN-2024-0089</div>
+                    <div>Bergen Municipality</div>
+                    <div class="location"><span class="location-icon">&#x1F4CD;</span> 60.3913, 5.3221</div>
+                    <div><span class="status-active">Active</span></div>
+                    <div><button class="action-btn">View</button></div>
+                </div>
+                <div class="sensor-row">
+                    <div class="sensor-name">River Delta Monitor</div>
+                    <div class="secondary">SN-2023-0321</div>
+                    <div>Trondheim</div>
+                    <div class="location"><span class="location-icon">&#x1F4CD;</span> 63.4305, 10.3951</div>
+                    <div><span class="status-inactive">Inactive</span></div>
+                    <div><button class="action-btn">View</button></div>
+                </div>
+                <div class="sensor-row">
+                    <div class="sensor-name">Coastal Monitoring Station</div>
+                    <div class="secondary">SN-2024-0201</div>
+                    <div>Stavanger</div>
+                    <div class="location"><span class="location-icon">&#x1F4CD;</span> 58.9700, 5.7331</div>
+                    <div><span class="status-active">Active</span></div>
+                    <div><button class="action-btn">View</button></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>

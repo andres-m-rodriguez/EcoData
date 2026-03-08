@@ -13,12 +13,12 @@ public static class AppThemes
             Tertiary = "#106ebe",
             AppbarBackground = "#0078d4",
             AppbarText = "#ffffff",
-            DrawerBackground = "#faf9f8",
-            DrawerText = "#323130",
-            Background = "#f3f2f1",
+            DrawerBackground = "#F9F9FB",
+            DrawerText = "#262626",
+            Background = "#ffffff",
             Surface = "#ffffff",
-            TextPrimary = "#323130",
-            TextSecondary = "#605e5c"
+            TextPrimary = "#262626",
+            TextSecondary = "#4D4D4D"
         },
         PaletteDark = new PaletteDark
         {
