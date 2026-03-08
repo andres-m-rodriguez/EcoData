@@ -58,7 +58,8 @@ public sealed class CursorPaginationState<TItem, TParams>(Func<TItem, Guid> keyS
                         fetchedCount++;
                     }
 
-                    if (fetchedCount == 0)
+                    // No more items if we got fewer than requested
+                    if (fetchedCount < pageSize)
                     {
                         _hasMoreItems = false;
                     }
