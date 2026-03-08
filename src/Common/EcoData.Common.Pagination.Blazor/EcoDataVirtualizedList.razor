@@ -3,7 +3,24 @@
 @typeparam TParams where TParams : CursorParameters
 
 <div class="eco-virtualized-list-container">
-    @if (_isEmpty)
+    @if (_isLoading)
+    {
+        @for (var i = 0; i < SkeletonCount; i++)
+        {
+            @if (SkeletonTemplate is not null)
+            {
+                @SkeletonTemplate
+            }
+            else
+            {
+                <div class="eco-skeleton-item" style="height: @(ItemSize)px;">
+                    <MudSkeleton Width="60%" Height="16px" />
+                    <MudSkeleton Width="40%" Height="14px" Class="mt-1" />
+                </div>
+            }
+        }
+    }
+    else if (_isEmpty)
     {
         @if (HasActiveFilters?.Invoke(ParametersFactory()) == true && FilteredEmptyTemplate is not null)
         {
