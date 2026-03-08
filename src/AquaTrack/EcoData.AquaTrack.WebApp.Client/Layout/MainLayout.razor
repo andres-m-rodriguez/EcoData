@@ -1,29 +1,96 @@
 @inherits LayoutComponentBase
+@using BlazingSingularity
+@using BlazingSingularity.Commands
+@using BlazorStaticNavigation
+@using EcoData.AquaTrack.WebApp.Client.Pages
+@using EcoData.AquaTrack.WebApp.Client.Services
 @using EcoData.AquaTrack.WebApp.Client.Themes
+@inject AuthStateService AuthState
+@inject ClientAuthStateProvider AuthStateProvider
+@inject NavigationManager Navigation
+@implements IDisposable
 
-<MudThemeProvider Theme="AppThemes.Azure" />
+<MudThemeProvider Theme="AppThemes.Azure" IsDarkMode="_isDarkMode" />
 <MudPopoverProvider />
 <MudDialogProvider />
 <MudSnackbarProvider />
 
 <MudLayout>
-    <MudAppBar Color="Color.Primary" Fixed="true" Dense="true">
-        <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="ToggleDrawer" />
+    <MudAppBar Elevation="0"
+               Style="background-color: var(--mud-palette-drawer-background); color: var(--mud-palette-text-primary);" Fixed="true">
+        <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start"
+                       OnClick="ToggleDrawer" />
         <MudText Typo="Typo.h6" Class="ml-2">AquaTrack</MudText>
         <MudSpacer />
+        <MudHidden Breakpoint="Breakpoint.SmAndDown">
+            <MudIconButton Icon="@(_isDarkMode ? Icons.Material.Filled.LightMode : Icons.Material.Filled.DarkMode)"
+                           Color="Color.Inherit" OnClick="ToggleTheme" />
+        </MudHidden>
     </MudAppBar>
 
-    <MudDrawer @bind-Open="_drawerOpen" ClipMode="DrawerClipMode.Always" Elevation="2">
-        <MudNavMenu>
-            <MudNavLink Href="/" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Home">Home</MudNavLink>
-            <MudNavLink Href="/sensors" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Sensors">Sensors</MudNavLink>
-            <MudNavLink Href="/map" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Map">Map</MudNavLink>
-            <MudNavLink Href="/counter" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Analytics">Counter</MudNavLink>
+    <MudDrawer @bind-Open="_drawerOpen" ClipMode="DrawerClipMode.Docked" Variant="DrawerVariant.Responsive"
+               Elevation="1">
+        <MudHidden Breakpoint="Breakpoint.SmAndDown" Invert="true">
+            <MudToolBar Dense="true">
+                <MudIconButton Icon="@Icons.Material.Filled.Close" Color="Color.Inherit" OnClick="ToggleDrawer"
+                               Edge="Edge.Start" />
+                <MudSpacer />
+                <MudIconButton Icon="@Icons.Material.Outlined.Notifications" Color="Color.Inherit" />
+                <MudIconButton Icon="@(_isDarkMode ? Icons.Material.Filled.LightMode : Icons.Material.Filled.DarkMode)"
+                               Color="Color.Inherit" OnClick="ToggleTheme" Edge="Edge.End" />
+            </MudToolBar>
+        </MudHidden>
+
+        <MudNavMenu Class="pt-4">
+            <MudNavLink Href="@HomePage.Path" Match="NavLinkMatch.All" Icon="@Icons.Material.Outlined.Home">
+                Dashboard
+            </MudNavLink>
+            <MudNavLink Href="@SensorsPage.Path" Icon="@Icons.Material.Outlined.Sensors">Sensors</MudNavLink>
+            <MudNavLink Href="@SensorMapPage.Path" Icon="@Icons.Material.Outlined.Map">Map</MudNavLink>
+            @if (AuthState.CurrentUser?.Role == "Admin")
+            {
+                <MudNavLink Href="@CounterPage.Path" Icon="@Icons.Material.Outlined.Analytics">Counter</MudNavLink>
+            }
         </MudNavMenu>
+
+        <MudSpacer />
+
+        <MudDivider />
+        <MudList T="string" Dense="true">
+            @if (AuthState.IsAuthenticated)
+            {
+                <MudListItem>
+                    <ChildContent>
+                        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="3">
+                            <MudAvatar Color="Color.Tertiary" Variant="Variant.Filled" Size="Size.Small">
+                                @GetUserInitial()
+                            </MudAvatar>
+                            <MudStack Spacing="0">
+                                <MudText Typo="Typo.body2">@AuthState.CurrentUser?.DisplayName</MudText>
+                                <MudText Typo="Typo.caption" Color="Color.Secondary">@AuthState.CurrentUser?.Role</MudText>
+                            </MudStack>
+                        </MudStack>
+                    </ChildContent>
+                </MudListItem>
+                <MudListItem OnClick="LogoutAsync" Icon="@Icons.Material.Outlined.Logout">
+                    <ChildContent>
+                        <MudText Typo="Typo.body2">Sign Out</MudText>
+                    </ChildContent>
+                </MudListItem>
+            }
+            else
+            {
+                <MudListItem Href="@LoginPage.Path" Icon="@Icons.Material.Outlined.Login">
+                    <ChildContent>
+                        <MudText Typo="Typo.body2">Sign In</MudText>
+                    </ChildContent>
+                </MudListItem>
+            }
+        </MudList>
     </MudDrawer>
 
-    <MudMainContent Class="pt-12">
-        <MudContainer MaxWidth="MaxWidth.False" Class="pa-0">
+    <MudMainContent>
+        <MudContainer MaxWidth="MaxWidth.False" Class="py-6 px-4">
             @Body
         </MudContainer>
     </MudMainContent>
@@ -31,9 +98,42 @@
 
 @code {
     private bool _drawerOpen = true;
+    private bool _isDarkMode;
 
-    private void ToggleDrawer()
+    private void ToggleDrawer() => _drawerOpen = !_drawerOpen;
+    private void ToggleTheme() => _isDarkMode = !_isDarkMode;
+
+    protected override async Task OnInitializedAsync()
     {
-        _drawerOpen = !_drawerOpen;
+        AuthState.SetAuthStateProvider(AuthStateProvider);
+        AuthState.OnAuthStateChanged += HandleAuthStateChanged;
+        await AuthState.InitializeAsync();
+    }
+
+    private void HandleAuthStateChanged()
+    {
+        InvokeAsync(StateHasChanged);
+    }
+
+    private string GetUserInitial()
+    {
+        var name = AuthState.CurrentUser?.DisplayName;
+        return string.IsNullOrEmpty(name) ? "?" : name[0].ToString().ToUpper();
+    }
+
+    [RelayCommand]
+    private async Task Logout()
+    {
+        await AuthState.LogoutAsync();
+    }
+
+    private async Task LogoutAsync()
+    {
+        await LogoutCommand.ExecuteAsync();
+    }
+
+    public void Dispose()
+    {
+        AuthState.OnAuthStateChanged -= HandleAuthStateChanged;
     }
 }

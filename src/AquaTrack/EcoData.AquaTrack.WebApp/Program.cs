@@ -1,11 +1,11 @@
 using EcoData.AquaTrack.Api;
-using EcoData.AquaTrack.Database.Extensions;
 using EcoData.AquaTrack.DataAccess.Extensions;
+using EcoData.AquaTrack.Database.Extensions;
 using EcoData.AquaTrack.WebApp.Components;
 using EcoData.Identity.Api;
 using EcoData.Identity.Application.Extensions;
-using EcoData.Identity.Database.Extensions;
 using EcoData.Identity.DataAccess.Extensions;
+using EcoData.Identity.Database.Extensions;
 using MudBlazor.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -14,8 +14,7 @@ builder.AddServiceDefaults();
 builder.AddAquaTrackDatabase();
 builder.AddIdentityDatabase();
 
-builder.Services.AddRazorComponents()
-    .AddInteractiveWebAssemblyComponents();
+builder.Services.AddRazorComponents().AddInteractiveWebAssemblyComponents();
 
 builder.Services.AddMudServices();
 builder.Services.AddAquaTrackDataAccess();
@@ -24,8 +23,10 @@ builder.Services.AddIdentityApplication();
 
 builder.Services.AddAuthorization(options =>
 {
-    options.AddPolicy("Admin", policy =>
-        policy.RequireClaim(System.Security.Claims.ClaimTypes.Role, "Admin"));
+    options.AddPolicy(
+        "Admin",
+        policy => policy.RequireClaim(System.Security.Claims.ClaimTypes.Role, "Admin")
+    );
 });
 
 var app = builder.Build();

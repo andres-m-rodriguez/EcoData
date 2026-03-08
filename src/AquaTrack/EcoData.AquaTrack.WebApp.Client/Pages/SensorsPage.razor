@@ -1,0 +1,194 @@
+@page "/sensors"
+@using Microsoft.AspNetCore.Components.Web.Virtualization
+@using EcoData.AquaTrack.Contracts.Dtos
+@using EcoData.AquaTrack.Contracts.Parameters
+@using EcoData.AquaTrack.Application.Client
+@using EcoData.Common.Pagination.Blazor
+@using BlazingSingularity.Signals
+@using EcoData.AquaTrack.WebApp.Client.Components
+@inject ISensorHttpClient SensorClient
+@inject NavigationManager Navigation
+@implements IDisposable
+
+<PageTitle>Sensors - AquaTrack</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pa-4">
+    <div class="search-bar">
+        <MudTextField @bind-Value="SearchText"
+                      Placeholder="Search sensors..."
+                      Adornment="Adornment.Start"
+                      AdornmentIcon="@Icons.Material.Filled.Search"
+                      Immediate="true"
+                      DebounceInterval="300"
+                      Clearable="true"
+                      Margin="Margin.Dense"
+                      Class="search-input" />
+        <MudSelect @bind-Value="StatusFilter"
+                   AnchorOrigin="Origin.BottomCenter"
+                   Margin="Margin.Dense"
+                   Class="status-filter">
+            <MudSelectItem Value="SensorStatusFilter.All">All</MudSelectItem>
+            <MudSelectItem Value="SensorStatusFilter.Active">Active</MudSelectItem>
+            <MudSelectItem Value="SensorStatusFilter.Inactive">Inactive</MudSelectItem>
+        </MudSelect>
+        @if (HasActiveFilters)
+        {
+            <MudIconButton Icon="@Icons.Material.Filled.FilterAltOff"
+                           Color="Color.Secondary"
+                           Size="Size.Small"
+                           OnClick="ClearFilters" />
+        }
+    </div>
+
+    <MudPaper Elevation="1" Class="sensor-list-container" Style="height: calc(100vh - 200px); overflow-y: auto; border-radius: 12px;">
+        @if (_isLoading)
+        {
+            @for (var i = 0; i < 8; i++)
+            {
+                <div class="sensor-skeleton">
+                    <div class="skeleton-primary">
+                        <MudSkeleton Width="180px" Height="16px" />
+                        <MudSkeleton Width="100px" Height="12px" Class="mt-1" />
+                    </div>
+                    <MudSkeleton Width="120px" Height="14px" Class="hide-mobile" />
+                    <MudSkeleton Width="140px" Height="14px" Class="hide-mobile hide-tablet" />
+                    <MudSkeleton Width="60px" Height="24px" Class="rounded-pill" />
+                    <MudSkeleton SkeletonType="SkeletonType.Circle" Width="32px" Height="32px" />
+                </div>
+            }
+        }
+        else
+        {
+            <Virtualize @ref="_virtualize"
+                        TItem="SensorDtoForList"
+                        ItemsProvider="LoadItemsAsync"
+                        ItemSize="65"
+                        OverscanCount="5"
+                        Context="sensor">
+                <ItemContent>
+                    <SensorListItem Sensor="sensor" OnMapClick="NavigateToMap" />
+                </ItemContent>
+                <Placeholder>
+                    <div style="height: 65px;"></div>
+                </Placeholder>
+                <EmptyContent>
+                    <MudStack AlignItems="AlignItems.Center" Class="pa-8">
+                        <MudIcon Icon="@Icons.Material.Filled.SearchOff" Size="Size.Large" Color="Color.Secondary" />
+                        <MudText Typo="Typo.h6" Color="Color.Secondary" Class="mt-2">No sensors found</MudText>
+                        <MudText Typo="Typo.body2" Color="Color.Secondary">
+                            No sensors match your current filter criteria.
+                        </MudText>
+                        <MudButton Variant="Variant.Outlined"
+                                   Color="Color.Primary"
+                                   StartIcon="@Icons.Material.Filled.FilterAltOff"
+                                   OnClick="ClearFilters"
+                                   Class="mt-3">
+                            Clear Filters
+                        </MudButton>
+                    </MudStack>
+                </EmptyContent>
+            </Virtualize>
+        }
+    </MudPaper>
+</MudContainer>
+
+@code {
+    private Virtualize<SensorDtoForList>? _virtualize;
+    private readonly CursorPaginationState<SensorDtoForList, SensorParameters> _paginationState = new(s => s.Id);
+    private CancellationTokenSource? _refreshCts;
+    private bool _isLoading = true;
+
+    [Signal]
+    private string? _searchText;
+
+    [Signal]
+    private SensorStatusFilter _statusFilter = SensorStatusFilter.All;
+
+    private bool HasActiveFilters => !string.IsNullOrWhiteSpace(SearchText) || StatusFilter != SensorStatusFilter.All;
+
+    protected override void OnInitialized()
+    {
+        SearchTextSignal.OnChange(async _ => await RefreshDataAsync());
+        StatusFilterSignal.OnChange(async _ => await RefreshDataAsync());
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await RefreshDataAsync();
+        }
+    }
+
+    private async Task RefreshDataAsync()
+    {
+        _refreshCts?.Cancel();
+        _refreshCts = new CancellationTokenSource();
+        var token = _refreshCts.Token;
+
+        try
+        {
+            _isLoading = true;
+            StateHasChanged();
+
+            _paginationState.Reset();
+
+            var request = new ItemsProviderRequest(0, 50, token);
+            await LoadItemsAsync(request);
+
+            _isLoading = false;
+            StateHasChanged();
+
+            if (_virtualize is not null)
+            {
+                await _virtualize.RefreshDataAsync();
+            }
+        }
+        catch (TaskCanceledException)
+        {
+        }
+    }
+
+    private ValueTask<ItemsProviderResult<SensorDtoForList>> LoadItemsAsync(ItemsProviderRequest request)
+    {
+        return _paginationState.ProvideItemsAsync(
+            request,
+            () => new SensorParameters
+            {
+                PageSize = 50,
+                Search = string.IsNullOrWhiteSpace(SearchText) ? null : SearchText,
+                IsActive = StatusFilter switch
+                {
+                    SensorStatusFilter.Active => true,
+                    SensorStatusFilter.Inactive => false,
+                    _ => null
+                }
+            },
+            (parameters, ct) => SensorClient.GetSensorsAsync(parameters, ct));
+    }
+
+    private void ClearFilters()
+    {
+        SearchText = null;
+        StatusFilter = SensorStatusFilter.All;
+    }
+
+    private void NavigateToMap(SensorDtoForList sensor)
+    {
+        Navigation.NavigateTo($"/map?lat={sensor.Latitude}&lon={sensor.Longitude}");
+    }
+
+    public void Dispose()
+    {
+        _refreshCts?.Cancel();
+        _refreshCts?.Dispose();
+        _paginationState.Dispose();
+    }
+
+    public enum SensorStatusFilter
+    {
+        All,
+        Active,
+        Inactive
+    }
+}

@@ -1,3 +1,5 @@
+using EcoData.Common.Pagination;
+
 namespace EcoData.AquaTrack.Contracts.Parameters;
 
 public sealed record SensorParameters(
@@ -6,4 +8,4 @@ public sealed record SensorParameters(
     string? Search = null,
     bool? IsActive = null,
     Guid? DataSourceId = null
-);
+) : CursorParameters(PageSize, Cursor);

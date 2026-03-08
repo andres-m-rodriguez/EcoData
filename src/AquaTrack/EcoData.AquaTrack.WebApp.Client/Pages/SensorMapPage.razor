@@ -10,9 +10,21 @@
 @inject ISensorMapManager MapManager
 @implements IAsyncDisposable
 
-<PageTitle>Map</PageTitle>
+<PageTitle>Map - AquaTrack</PageTitle>
 
 <div class="map-page">
+    <div class="map-title-bar">
+        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+            <MudIcon Icon="@Icons.Material.Filled.Map" Size="Size.Small" />
+            <MudText Typo="Typo.subtitle1">Sensor Map</MudText>
+            @if (_sensors is not null)
+            {
+                <MudChip T="string" Size="Size.Small" Color="Color.Primary" Variant="Variant.Filled">
+                    @GetFilteredSensorCount() sensors
+                </MudChip>
+            }
+        </MudStack>
+    </div>
     <div class="map-filter-panel">
         <MudPaper Elevation="2" Class="pa-3">
             <MudText Typo="Typo.subtitle1" Class="mb-2">
@@ -56,8 +68,11 @@
     <div class="map-container">
         @if (LoadSensorsCommand.IsLoading)
         {
-            <MudOverlay Visible="true" DarkBackground="false">
-                <MudProgressCircular Indeterminate="true" Color="Color.Primary" />
+            <MudOverlay Visible="true" DarkBackground="true" LightBackground="false" Absolute="true" Class="map-loading-overlay">
+                <MudStack AlignItems="AlignItems.Center" Spacing="2">
+                    <MudProgressCircular Indeterminate="true" Color="Color.Primary" />
+                    <MudText Typo="Typo.body2">Loading sensors...</MudText>
+                </MudStack>
             </MudOverlay>
         }
         <div id="sensor-map" class="map"></div>
@@ -111,6 +126,12 @@
     private bool IsDataSourceSelected(Guid dataSourceId)
     {
         return _selectedDataSourceIds.Contains(dataSourceId);
+    }
+
+    private int GetFilteredSensorCount()
+    {
+        if (_sensors is null) return 0;
+        return _sensors.Count(s => _selectedDataSourceIds.Contains(s.SourceId));
     }
 
     private async Task OnDataSourceSelectionChanged(Guid dataSourceId, bool isSelected)

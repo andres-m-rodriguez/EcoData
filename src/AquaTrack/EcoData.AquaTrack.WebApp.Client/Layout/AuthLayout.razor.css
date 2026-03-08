@@ -1,0 +1,28 @@
+.auth-page {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 2rem;
+    background: linear-gradient(135deg, var(--mud-palette-primary-lighten) 0%, var(--mud-palette-background) 100%);
+}
+
+.auth-container {
+    width: 100%;
+    max-width: 400px;
+}
+
+.auth-header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+::deep .auth-logo {
+    width: 64px;
+    height: 64px;
+    border-radius: 16px;
+}
+
+.text-secondary {
+    color: var(--mud-palette-text-secondary);
+}

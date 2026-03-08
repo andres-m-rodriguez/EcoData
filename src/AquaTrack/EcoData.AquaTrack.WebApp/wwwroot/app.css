@@ -131,3 +131,43 @@ h1:focus {
     background-color: var(--mud-palette-lines-default);
     border-radius: 3px;
 }
+
+/* ==========================================================================
+   Map Title Bar Overlay
+   ========================================================================== */
+.map-title-bar {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    z-index: 1000;
+    background-color: var(--mud-palette-surface);
+    padding: 8px 16px;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* ==========================================================================
+   Map Loading Overlay
+   ========================================================================== */
+.map-loading-overlay {
+    z-index: 1001;
+}
+
+/* ==========================================================================
+   Dashboard Stat Cards
+   ========================================================================== */
+.stat-card {
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+
+.stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
+}
+
+/* ==========================================================================
+   Breadcrumb Adjustments
+   ========================================================================== */
+.mud-breadcrumbs {
+    padding-left: 0 !important;
+}

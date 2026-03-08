@@ -24,6 +24,16 @@ public sealed class QueryStringBuilder
         return this;
     }
 
+    public QueryStringBuilder Add(string key, decimal? value)
+    {
+        if (value.HasValue)
+        {
+            _parameters.Add($"{key}={value.Value}");
+        }
+
+        return this;
+    }
+
     public QueryStringBuilder Add(string key, Guid? value)
     {
         if (value.HasValue)
