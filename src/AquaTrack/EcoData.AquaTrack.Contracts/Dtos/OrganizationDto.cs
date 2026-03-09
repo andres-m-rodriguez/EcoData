@@ -4,6 +4,9 @@ public sealed record OrganizationDtoForList(
     Guid Id,
     string Name,
     string? ProfilePictureUrl,
+    string? CardPictureUrl,
+    string? AboutUs,
+    string? WebsiteUrl,
     DateTimeOffset CreatedAt
 );
 
@@ -11,6 +14,7 @@ public sealed record OrganizationDtoForDetail(
     Guid Id,
     string Name,
     string? ProfilePictureUrl,
+    string? CardPictureUrl,
     string? AboutUs,
     string? WebsiteUrl,
     DateTimeOffset CreatedAt,
@@ -20,6 +24,7 @@ public sealed record OrganizationDtoForDetail(
 public sealed record OrganizationDtoForCreate(
     string Name,
     string? ProfilePictureUrl = null,
+    string? CardPictureUrl = null,
     string? AboutUs = null,
     string? WebsiteUrl = null
 );
@@ -27,6 +32,7 @@ public sealed record OrganizationDtoForCreate(
 public sealed record OrganizationDtoForUpdate(
     string Name,
     string? ProfilePictureUrl = null,
+    string? CardPictureUrl = null,
     string? AboutUs = null,
     string? WebsiteUrl = null
 );
