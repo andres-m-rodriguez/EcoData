@@ -99,6 +99,22 @@
                     </MudStack>
                 }
 
+                <MudTextField @bind-Value="_cardPictureUrl"
+                              Label="Card Picture URL"
+                              Placeholder="https://example.com/banner.png"
+                              MaxLength="500"
+                              HelperText="Banner image displayed on organization cards"
+                              Disabled="SaveCommand.IsLoading" />
+
+                @if (!string.IsNullOrWhiteSpace(_cardPictureUrl))
+                {
+                    <MudStack>
+                        <MudText Typo="Typo.body2" Color="Color.Secondary">Card Preview:</MudText>
+                        <MudImage Src="@_cardPictureUrl" Alt="Card Preview"
+                                  Style="max-width: 100%; height: 120px; object-fit: cover; border-radius: 8px;" />
+                    </MudStack>
+                }
+
                 <MudTextField @bind-Value="_websiteUrl"
                               Label="Website URL"
                               Placeholder="https://example.com"
@@ -144,6 +160,7 @@
     private OrganizationDtoForDetail? _organization;
     private string _name = string.Empty;
     private string? _profilePictureUrl;
+    private string? _cardPictureUrl;
     private string? _aboutUs;
     private string? _websiteUrl;
     private string? _errorMessage;
@@ -164,6 +181,7 @@
         {
             _name = _organization.Name;
             _profilePictureUrl = _organization.ProfilePictureUrl;
+            _cardPictureUrl = _organization.CardPictureUrl;
             _aboutUs = _organization.AboutUs;
             _websiteUrl = _organization.WebsiteUrl;
         }
@@ -185,6 +203,7 @@
             var dto = new OrganizationDtoForUpdate(
                 _name,
                 _profilePictureUrl,
+                _cardPictureUrl,
                 _aboutUs,
                 _websiteUrl
             );

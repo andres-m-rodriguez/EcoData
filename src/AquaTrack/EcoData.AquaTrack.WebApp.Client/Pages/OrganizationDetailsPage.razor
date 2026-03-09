@@ -12,108 +12,131 @@
 
 <PageTitle>@(_organization?.Name ?? "Organization") - AquaTrack</PageTitle>
 
-<MudContainer MaxWidth="MaxWidth.Medium" Class="pa-4">
-    @if (LoadCommand.IsLoading)
-    {
-        <MudPaper Elevation="1" Class="pa-6">
-            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="4">
-                <MudSkeleton SkeletonType="SkeletonType.Circle" Width="100px" Height="100px" />
-                <MudStack Spacing="2" Style="flex: 1;">
-                    <MudSkeleton Width="200px" Height="32px" />
-                    <MudSkeleton Width="150px" Height="20px" />
-                </MudStack>
-            </MudStack>
-            <MudSkeleton Width="100%" Height="100px" Class="mt-4" />
-        </MudPaper>
-    }
-    else if (_organization is null)
-    {
-        <MudPaper Elevation="1" Class="pa-6">
-            <MudStack AlignItems="AlignItems.Center">
-                <MudIcon Icon="@Icons.Material.Filled.Error" Size="Size.Large" Color="Color.Error" />
-                <MudText Typo="Typo.h6" Color="Color.Error" Class="mt-2">Organization not found</MudText>
-                <MudButton Variant="Variant.Outlined"
-                           Color="Color.Primary"
-                           StartIcon="@Icons.Material.Filled.ArrowBack"
-                           OnClick="NavigateBack"
-                           Class="mt-3">
-                    Back to Organizations
-                </MudButton>
-            </MudStack>
-        </MudPaper>
-    }
-    else
-    {
-        <MudPaper Elevation="1" Class="pa-6">
-            <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Start">
-                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="4">
-                    @if (!string.IsNullOrWhiteSpace(_organization.ProfilePictureUrl))
+@if (LoadCommand.IsLoading)
+{
+    <div class="page-wrapper">
+        <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="100px" Width="80%" Class="banner-skeleton" />
+        <div class="header-row">
+            <MudSkeleton SkeletonType="SkeletonType.Circle" Width="48px" Height="48px" />
+            <MudSkeleton Width="200px" Height="24px" />
+        </div>
+    </div>
+}
+else if (_organization is null)
+{
+    <MudStack AlignItems="AlignItems.Center" Class="pa-8">
+        <MudIcon Icon="@Icons.Material.Filled.Error" Size="Size.Large" Color="Color.Error" />
+        <MudText Typo="Typo.h6" Color="Color.Error">Organization not found</MudText>
+        <MudButton Variant="Variant.Text" StartIcon="@Icons.Material.Filled.ArrowBack" OnClick="NavigateBack">
+            Back
+        </MudButton>
+    </MudStack>
+}
+else
+{
+    <div class="page-wrapper">
+        @* Banner *@
+        <div class="banner">
+            @if (!string.IsNullOrWhiteSpace(_organization.CardPictureUrl))
+            {
+                <img src="@_organization.CardPictureUrl" alt="" />
+            }
+            <MudIconButton Icon="@Icons.Material.Filled.ArrowBack" Class="back-btn" OnClick="NavigateBack" />
+        </div>
+
+        @* Header: Avatar + Name + Actions *@
+        <div class="header-row">
+            <div class="header-left">
+                @if (!string.IsNullOrWhiteSpace(_organization.ProfilePictureUrl))
+                {
+                    <MudAvatar Size="Size.Large">
+                        <MudImage Src="@_organization.ProfilePictureUrl" Alt="@_organization.Name" />
+                    </MudAvatar>
+                }
+                else
+                {
+                    <MudAvatar Size="Size.Large" Color="Color.Primary">
+                        <MudIcon Icon="@Icons.Material.Filled.Business" />
+                    </MudAvatar>
+                }
+                <div>
+                    <MudText Typo="Typo.h6">@_organization.Name</MudText>
+                    @if (!string.IsNullOrWhiteSpace(_organization.WebsiteUrl))
                     {
-                        <MudAvatar Size="Size.Large" Style="width: 100px; height: 100px;">
-                            <MudImage Src="@_organization.ProfilePictureUrl" Alt="@_organization.Name" />
-                        </MudAvatar>
+                        <MudLink Href="@_organization.WebsiteUrl" Target="_blank" Typo="Typo.caption">
+                            @GetDisplayUrl(_organization.WebsiteUrl)
+                        </MudLink>
+                    }
+                </div>
+            </div>
+            @if (IsAdmin)
+            {
+                <div class="header-actions">
+                    <MudIconButton Icon="@Icons.Material.Outlined.Edit" Size="Size.Small" OnClick="NavigateToEdit" />
+                    <MudIconButton Icon="@Icons.Material.Outlined.Delete" Size="Size.Small" Color="Color.Error" OnClick="ConfirmDelete" />
+                </div>
+            }
+        </div>
+
+        @* Tabs *@
+        <MudTabs Elevation="0" Rounded="true" ApplyEffectsToContainer="true" Class="tabs">
+            <MudTabPanel Text="About Us">
+                <div class="tab-content">
+                    @if (!string.IsNullOrWhiteSpace(_organization.AboutUs))
+                    {
+                        <MudText Typo="Typo.body2">@_organization.AboutUs</MudText>
                     }
                     else
                     {
-                        <MudAvatar Size="Size.Large" Color="Color.Primary" Style="width: 100px; height: 100px;">
-                            <MudIcon Icon="@Icons.Material.Filled.Business" Size="Size.Large" />
-                        </MudAvatar>
+                        <MudText Typo="Typo.body2" Color="Color.Secondary">No description available.</MudText>
                     }
-                    <MudStack Spacing="1">
-                        <MudText Typo="Typo.h4">@_organization.Name</MudText>
-                        <MudText Typo="Typo.body2" Color="Color.Secondary">
-                            Created @_organization.CreatedAt.ToString("MMMM d, yyyy")
-                        </MudText>
+                    <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mt-2">
+                        Created @_organization.CreatedAt.ToString("MMM d, yyyy")
+                    </MudText>
+                </div>
+            </MudTabPanel>
+            <MudTabPanel Text="Sensors">
+                <div class="tab-content">
+                    <MudList T="string" Dense="true">
+                        <MudListItem Icon="@Icons.Material.Outlined.Sensors">
+                            Water Quality Sensor #1 - Active
+                        </MudListItem>
+                        <MudListItem Icon="@Icons.Material.Outlined.Sensors">
+                            Temperature Sensor #2 - Active
+                        </MudListItem>
+                        <MudListItem Icon="@Icons.Material.Outlined.Sensors">
+                            pH Level Sensor #3 - Inactive
+                        </MudListItem>
+                    </MudList>
+                </div>
+            </MudTabPanel>
+            <MudTabPanel Text="Our Team">
+                <div class="tab-content">
+                    <MudStack Row="true" Spacing="4" Class="team-list">
+                        <MudStack AlignItems="AlignItems.Center" Spacing="1">
+                            <MudAvatar Color="Color.Primary">JD</MudAvatar>
+                            <MudText Typo="Typo.caption">John Doe</MudText>
+                        </MudStack>
+                        <MudStack AlignItems="AlignItems.Center" Spacing="1">
+                            <MudAvatar Color="Color.Secondary">JS</MudAvatar>
+                            <MudText Typo="Typo.caption">Jane Smith</MudText>
+                        </MudStack>
+                        <MudStack AlignItems="AlignItems.Center" Spacing="1">
+                            <MudAvatar Color="Color.Tertiary">MJ</MudAvatar>
+                            <MudText Typo="Typo.caption">Mike Johnson</MudText>
+                        </MudStack>
                     </MudStack>
-                </MudStack>
-
-                @if (IsAdmin)
-                {
-                    <MudStack Row="true" Spacing="2">
-                        <MudButton Variant="Variant.Outlined"
-                                   Color="Color.Primary"
-                                   StartIcon="@Icons.Material.Filled.Edit"
-                                   OnClick="NavigateToEdit">
-                            Edit
-                        </MudButton>
-                        <MudIconButton Icon="@Icons.Material.Filled.Delete"
-                                       Color="Color.Error"
-                                       OnClick="ConfirmDelete" />
-                    </MudStack>
-                }
-            </MudStack>
-
-            @if (!string.IsNullOrWhiteSpace(_organization.WebsiteUrl))
-            {
-                <MudStack Row="true" AlignItems="AlignItems.Center" Class="mt-4">
-                    <MudIcon Icon="@Icons.Material.Filled.Language" Size="Size.Small" Color="Color.Secondary" />
-                    <MudLink Href="@_organization.WebsiteUrl" Target="_blank" Typo="Typo.body1">
-                        @_organization.WebsiteUrl
-                    </MudLink>
-                </MudStack>
-            }
-
-            @if (!string.IsNullOrWhiteSpace(_organization.AboutUs))
-            {
-                <MudDivider Class="my-4" />
-                <MudText Typo="Typo.h6" Class="mb-2">About</MudText>
-                <MudText Typo="Typo.body1" Style="white-space: pre-wrap;">@_organization.AboutUs</MudText>
-            }
-
-            <MudDivider Class="my-4" />
-            <MudText Typo="Typo.caption" Color="Color.Secondary">
-                Last updated @_organization.UpdatedAt.ToString("MMMM d, yyyy 'at' h:mm tt")
-            </MudText>
-        </MudPaper>
-    }
-</MudContainer>
+                </div>
+            </MudTabPanel>
+        </MudTabs>
+    </div>
+}
 
 @code {
     [Parameter]
     public Guid Id { get; set; }
 
     private OrganizationDtoForDetail? _organization;
-
     private bool IsAdmin => AuthState.CurrentUser?.Role == "Admin";
 
     protected override async Task OnInitializedAsync()
@@ -127,14 +150,14 @@
         _organization = await OrganizationClient.GetByIdAsync(Id);
     }
 
-    private void NavigateBack()
-    {
-        Navigation.NavigateTo("/organizations");
-    }
+    private void NavigateBack() => Navigation.NavigateTo("/organizations");
+    private void NavigateToEdit() => Navigation.NavigateTo($"/organizations/{Id}/edit");
 
-    private void NavigateToEdit()
+    private static string GetDisplayUrl(string url)
     {
-        Navigation.NavigateTo($"/organizations/{Id}/edit");
+        if (Uri.TryCreate(url, UriKind.Absolute, out var uri))
+            return uri.Host;
+        return url;
     }
 
     private async Task ConfirmDelete()
@@ -143,32 +166,23 @@
 
         var parameters = new DialogParameters<ConfirmDialog>
         {
-            { x => x.ContentText, $"Are you sure you want to delete \"{_organization.Name}\"? This action cannot be undone." },
+            { x => x.ContentText, $"Are you sure you want to delete \"{_organization.Name}\"?" },
             { x => x.ButtonText, "Delete" },
             { x => x.Color, Color.Error }
         };
-        var options = new DialogOptions { CloseOnEscapeKey = true, MaxWidth = MaxWidth.ExtraSmall };
-        var dialog = await DialogService.ShowAsync<ConfirmDialog>("Delete Organization", parameters, options);
+        var dialog = await DialogService.ShowAsync<ConfirmDialog>("Delete", parameters);
         var result = await dialog.Result;
 
         if (result is { Canceled: false })
         {
-            try
+            if (await OrganizationClient.DeleteAsync(Id))
             {
-                var deleted = await OrganizationClient.DeleteAsync(Id);
-                if (deleted)
-                {
-                    Snackbar.Add("Organization deleted successfully", Severity.Success);
-                    Navigation.NavigateTo("/organizations");
-                }
-                else
-                {
-                    Snackbar.Add("Failed to delete organization", Severity.Error);
-                }
+                Snackbar.Add("Deleted", Severity.Success);
+                Navigation.NavigateTo("/organizations");
             }
-            catch
+            else
             {
-                Snackbar.Add("Failed to delete organization", Severity.Error);
+                Snackbar.Add("Failed to delete", Severity.Error);
             }
         }
     }
