@@ -1,5 +1,6 @@
 @page "/organizations"
 @using EcoData.AquaTrack.Contracts.Dtos
+@using EcoData.AquaTrack.Contracts.Errors
 @using EcoData.AquaTrack.Contracts.Parameters
 @using EcoData.AquaTrack.Application.Client
 @using BlazingSingularity.Signals
@@ -239,24 +240,17 @@
 
         if (result is { Canceled: false })
         {
-            try
-            {
-                var deleted = await OrganizationClient.DeleteAsync(organization.Id);
-                if (deleted)
+            var deleteResult = await OrganizationClient.DeleteAsync(organization.Id);
+            deleteResult.Switch(
+                _ =>
                 {
                     Snackbar.Add("Organization deleted successfully", Severity.Success);
                     _organizations.Remove(organization);
                     StateHasChanged();
-                }
-                else
-                {
-                    Snackbar.Add("Failed to delete organization", Severity.Error);
-                }
-            }
-            catch
-            {
-                Snackbar.Add("Failed to delete organization", Severity.Error);
-            }
+                },
+                _ => Snackbar.Add("Organization not found", Severity.Error),
+                error => Snackbar.Add($"Failed to delete: {error.Message}", Severity.Error)
+            );
         }
     }
 }

@@ -1,7 +1,10 @@
+using System.Net;
 using System.Net.Http.Json;
 using EcoData.AquaTrack.Contracts.Dtos;
+using EcoData.AquaTrack.Contracts.Errors;
 using EcoData.AquaTrack.Contracts.Parameters;
 using EcoData.Common.Http.Helpers;
+using OneOf;
 
 namespace EcoData.AquaTrack.Application.Client;
 
@@ -24,33 +27,38 @@ public sealed class OrganizationHttpClient(HttpClient httpClient) : IOrganizatio
         )!;
     }
 
-    public async Task<OrganizationDtoForDetail?> GetByIdAsync(
+    public async Task<OneOf<OrganizationDtoForDetail, NotFoundError>> GetByIdAsync(
         Guid id,
         CancellationToken cancellationToken = default
     )
     {
         var response = await httpClient.GetAsync($"api/organizations/{id}", cancellationToken);
 
-        if (!response.IsSuccessStatusCode)
-        {
-            return null;
-        }
+        if (response.StatusCode == HttpStatusCode.NotFound)
+            return new NotFoundError();
 
-        return await response.Content.ReadFromJsonAsync<OrganizationDtoForDetail>(cancellationToken);
+        var result = await response.Content.ReadFromJsonAsync<OrganizationDtoForDetail>(cancellationToken);
+        return result!;
     }
 
-    public async Task<OrganizationDtoForCreated> CreateAsync(
+    public async Task<OneOf<OrganizationDtoForCreated, ValidationError, ApiError>> CreateAsync(
         OrganizationDtoForCreate dto,
         CancellationToken cancellationToken = default
     )
     {
         var response = await httpClient.PostAsJsonAsync("api/organizations", dto, cancellationToken);
-        response.EnsureSuccessStatusCode();
 
-        return (await response.Content.ReadFromJsonAsync<OrganizationDtoForCreated>(cancellationToken))!;
+        if (response.StatusCode == HttpStatusCode.BadRequest)
+            return await response.Content.ReadFromJsonAsync<ValidationError>(cancellationToken) ?? new ValidationError();
+
+        if (!response.IsSuccessStatusCode)
+            return new ApiError((int)response.StatusCode, await response.Content.ReadAsStringAsync(cancellationToken));
+
+        var result = await response.Content.ReadFromJsonAsync<OrganizationDtoForCreated>(cancellationToken);
+        return result!;
     }
 
-    public async Task<OrganizationDtoForDetail?> UpdateAsync(
+    public async Task<OneOf<OrganizationDtoForDetail, NotFoundError, ValidationError, ApiError>> UpdateAsync(
         Guid id,
         OrganizationDtoForUpdate dto,
         CancellationToken cancellationToken = default
@@ -58,17 +66,32 @@ public sealed class OrganizationHttpClient(HttpClient httpClient) : IOrganizatio
     {
         var response = await httpClient.PutAsJsonAsync($"api/organizations/{id}", dto, cancellationToken);
 
-        if (!response.IsSuccessStatusCode)
-        {
-            return null;
-        }
+        if (response.StatusCode == HttpStatusCode.NotFound)
+            return new NotFoundError();
 
-        return await response.Content.ReadFromJsonAsync<OrganizationDtoForDetail>(cancellationToken);
+        if (response.StatusCode == HttpStatusCode.BadRequest)
+            return await response.Content.ReadFromJsonAsync<ValidationError>(cancellationToken) ?? new ValidationError();
+
+        if (!response.IsSuccessStatusCode)
+            return new ApiError((int)response.StatusCode, await response.Content.ReadAsStringAsync(cancellationToken));
+
+        var result = await response.Content.ReadFromJsonAsync<OrganizationDtoForDetail>(cancellationToken);
+        return result!;
     }
 
-    public async Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken = default)
+    public async Task<OneOf<Success, NotFoundError, ApiError>> DeleteAsync(
+        Guid id,
+        CancellationToken cancellationToken = default
+    )
     {
         var response = await httpClient.DeleteAsync($"api/organizations/{id}", cancellationToken);
-        return response.IsSuccessStatusCode;
+
+        if (response.StatusCode == HttpStatusCode.NotFound)
+            return new NotFoundError();
+
+        if (!response.IsSuccessStatusCode)
+            return new ApiError((int)response.StatusCode, await response.Content.ReadAsStringAsync(cancellationToken));
+
+        return new Success();
     }
 }
