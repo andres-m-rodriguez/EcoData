@@ -150,7 +150,10 @@ public sealed class SensorRepository(IDbContextFactory<AquaTrackDbContext> conte
             Longitude = dto.Longitude,
             Municipality = dto.Municipality,
             IsActive = dto.IsActive,
+            ReportingMode = ReportingMode.Pull,
+            SensorTypeId = null,
             CreatedAt = now,
+            UpdatedAt = now,
         }).ToList();
 
         context.Sensors.AddRange(entities);

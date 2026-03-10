@@ -1,4 +1,5 @@
 using EcoData.AquaTrack.Api;
+using EcoData.AquaTrack.Api.Authentication;
 using EcoData.AquaTrack.DataAccess.Extensions;
 using EcoData.AquaTrack.Database.Extensions;
 using EcoData.AquaTrack.WebApp.Components;
@@ -20,6 +21,9 @@ builder.Services.AddMudServices();
 builder.Services.AddAquaTrackDataAccess();
 builder.Services.AddIdentityDataAccess();
 builder.Services.AddIdentityApplication();
+
+builder.Services.AddAuthentication()
+    .AddApiKeyAuthentication();
 
 builder.Services.AddAuthorization(options =>
 {
@@ -53,8 +57,12 @@ app.MapRazorComponents<App>()
     .AddAdditionalAssemblies(typeof(EcoData.AquaTrack.WebApp.Client._Imports).Assembly);
 
 app.MapSensorEndpoints();
+app.MapSensorHealthEndpoints();
 app.MapDataSourceEndpoints();
 app.MapOrganizationEndpoints();
+app.MapApiKeyEndpoints();
+app.MapPushEndpoints();
+app.MapReferenceDataEndpoints();
 app.MapAuthEndpoints();
 
 app.Run();

@@ -13,11 +13,18 @@ public sealed class Sensor
     public required decimal Longitude { get; set; }
     public required string? Municipality { get; set; }
     public required bool IsActive { get; set; }
+    public required ReportingMode ReportingMode { get; set; }
+    public required Guid? SensorTypeId { get; set; }
     public required DateTimeOffset CreatedAt { get; set; }
+    public required DateTimeOffset UpdatedAt { get; set; }
 
     public DataSource? DataSource { get; set; }
+    public SensorType? SensorType { get; set; }
     public ICollection<Reading> Readings { get; set; } = [];
     public ICollection<Alert> Alerts { get; set; } = [];
+    public SensorHealthConfig? HealthConfig { get; set; }
+    public SensorHealthStatus? HealthStatus { get; set; }
+    public ICollection<SensorHealthAlert> HealthAlerts { get; set; } = [];
 
     public sealed class EntityConfiguration : IEntityTypeConfiguration<Sensor>
     {
@@ -37,6 +44,11 @@ public sealed class Sensor
 
             builder.Property(static e => e.Municipality).HasMaxLength(100);
 
+            builder.Property(static e => e.ReportingMode)
+                .HasConversion<string>()
+                .HasMaxLength(10)
+                .IsRequired();
+
             builder.HasIndex(static e => new { e.SourceId, e.ExternalId }).IsUnique();
 
             builder
@@ -47,6 +59,24 @@ public sealed class Sensor
 
             builder
                 .HasMany(static e => e.Alerts)
+                .WithOne(static e => e.Sensor)
+                .HasForeignKey(static e => e.SensorId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            builder
+                .HasOne(static e => e.HealthConfig)
+                .WithOne(static e => e.Sensor)
+                .HasForeignKey<SensorHealthConfig>(static e => e.SensorId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            builder
+                .HasOne(static e => e.HealthStatus)
+                .WithOne(static e => e.Sensor)
+                .HasForeignKey<SensorHealthStatus>(static e => e.SensorId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            builder
+                .HasMany(static e => e.HealthAlerts)
                 .WithOne(static e => e.Sensor)
                 .HasForeignKey(static e => e.SensorId)
                 .OnDelete(DeleteBehavior.Cascade);
