@@ -3,6 +3,7 @@ using EcoData.AquaTrack.DataAccess.Interfaces;
 using EcoData.Identity.Contracts.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Routing;
 
 namespace EcoData.AquaTrack.Api;
@@ -18,7 +19,7 @@ public static class ApiKeyEndpoints
         group
             .MapGet(
                 "/",
-                async (
+                async Task<Results<Ok<IReadOnlyList<ApiKeyDtoForList>>, NotFound<string>>> (
                     Guid organizationId,
                     IApiKeyRepository repository,
                     IOrganizationRepository organizationRepository,
@@ -28,11 +29,11 @@ public static class ApiKeyEndpoints
                     var organization = await organizationRepository.GetByIdAsync(organizationId, ct);
                     if (organization is null)
                     {
-                        return Results.NotFound("Organization not found");
+                        return TypedResults.NotFound("Organization not found");
                     }
 
                     var keys = await repository.GetByOrganizationAsync(organizationId, ct);
-                    return Results.Ok(keys);
+                    return TypedResults.Ok(keys);
                 }
             )
             .WithName("GetApiKeys");
@@ -40,15 +41,20 @@ public static class ApiKeyEndpoints
         group
             .MapGet(
                 "/{id:guid}",
-                async (Guid organizationId, Guid id, IApiKeyRepository repository, CancellationToken ct) =>
+                async Task<Results<Ok<ApiKeyDtoForDetail>, NotFound>> (
+                    Guid organizationId,
+                    Guid id,
+                    IApiKeyRepository repository,
+                    CancellationToken ct
+                ) =>
                 {
                     var key = await repository.GetByIdAsync(id, ct);
                     if (key is null || key.OrganizationId != organizationId)
                     {
-                        return Results.NotFound();
+                        return TypedResults.NotFound();
                     }
 
-                    return Results.Ok(key);
+                    return TypedResults.Ok(key);
                 }
             )
             .WithName("GetApiKeyById");
@@ -56,7 +62,7 @@ public static class ApiKeyEndpoints
         group
             .MapPost(
                 "/",
-                async (
+                async Task<Results<Created<ApiKeyDtoForCreated>, NotFound<string>>> (
                     Guid organizationId,
                     ApiKeyDtoForCreate dto,
                     IApiKeyRepository repository,
@@ -67,11 +73,11 @@ public static class ApiKeyEndpoints
                     var organization = await organizationRepository.GetByIdAsync(organizationId, ct);
                     if (organization is null)
                     {
-                        return Results.NotFound("Organization not found");
+                        return TypedResults.NotFound("Organization not found");
                     }
 
                     var created = await repository.CreateAsync(organizationId, dto, ct);
-                    return Results.Created(
+                    return TypedResults.Created(
                         $"/api/organizations/{organizationId}/api-keys/{created.Id}",
                         created
                     );
@@ -82,16 +88,21 @@ public static class ApiKeyEndpoints
         group
             .MapDelete(
                 "/{id:guid}",
-                async (Guid organizationId, Guid id, IApiKeyRepository repository, CancellationToken ct) =>
+                async Task<Results<NoContent, NotFound>> (
+                    Guid organizationId,
+                    Guid id,
+                    IApiKeyRepository repository,
+                    CancellationToken ct
+                ) =>
                 {
                     var key = await repository.GetByIdAsync(id, ct);
                     if (key is null || key.OrganizationId != organizationId)
                     {
-                        return Results.NotFound();
+                        return TypedResults.NotFound();
                     }
 
                     var revoked = await repository.RevokeAsync(id, ct);
-                    return revoked ? Results.NoContent() : Results.NotFound();
+                    return revoked ? TypedResults.NoContent() : TypedResults.NotFound();
                 }
             )
             .WithName("RevokeApiKey");

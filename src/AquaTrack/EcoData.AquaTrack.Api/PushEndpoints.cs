@@ -4,6 +4,7 @@ using EcoData.Identity.Contracts.Authorization;
 using EcoData.Identity.Contracts.Claims;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Routing;
 
 namespace EcoData.AquaTrack.Api;
@@ -19,7 +20,7 @@ public static class PushEndpoints
         group
             .MapPost(
                 "/readings",
-                async (
+                async Task<Results<Ok<ReadingBatchResult>, UnauthorizedHttpResult, NotFound<string>>> (
                     ReadingBatchDtoForCreate batch,
                     HttpContext httpContext,
                     ISensorRepository sensorRepository,
@@ -31,13 +32,13 @@ public static class PushEndpoints
                     var token = new RequestClaimToken(httpContext.User);
                     if (token.OrganizationId is null)
                     {
-                        return Results.Unauthorized();
+                        return TypedResults.Unauthorized();
                     }
 
                     var sensor = await sensorRepository.GetByIdAsync(batch.SensorId, ct);
                     if (sensor is null)
                     {
-                        return Results.NotFound($"Sensor {batch.SensorId} not found");
+                        return TypedResults.NotFound($"Sensor {batch.SensorId} not found");
                     }
 
                     var errors = new List<string>();
@@ -66,7 +67,7 @@ public static class PushEndpoints
                         await healthRepository.RecordReadingAsync(batch.SensorId, maxRecordedAt, ct);
                     }
 
-                    return Results.Ok(
+                    return TypedResults.Ok(
                         new ReadingBatchResult(batch.Readings.Count, accepted, errors.Count, errors)
                     );
                 }
@@ -76,7 +77,7 @@ public static class PushEndpoints
         group
             .MapPost(
                 "/readings/batch",
-                async (
+                async Task<Results<Ok<ReadingBatchResult>, UnauthorizedHttpResult>> (
                     MultipleSensorReadingBatch multipleBatch,
                     HttpContext httpContext,
                     ISensorRepository sensorRepository,
@@ -88,7 +89,7 @@ public static class PushEndpoints
                     var token = new RequestClaimToken(httpContext.User);
                     if (token.OrganizationId is null)
                     {
-                        return Results.Unauthorized();
+                        return TypedResults.Unauthorized();
                     }
 
                     var totalAccepted = 0;
@@ -130,7 +131,7 @@ public static class PushEndpoints
                     }
 
                     var totalSubmitted = multipleBatch.Batches.Sum(b => b.Readings.Count);
-                    return Results.Ok(
+                    return TypedResults.Ok(
                         new ReadingBatchResult(totalSubmitted, totalAccepted, totalRejected, allErrors)
                     );
                 }
@@ -140,7 +141,7 @@ public static class PushEndpoints
         group
             .MapPost(
                 "/heartbeat/{sensorId:guid}",
-                async (
+                async Task<Results<Ok<HeartbeatResult>, UnauthorizedHttpResult, NotFound<string>>> (
                     Guid sensorId,
                     HttpContext httpContext,
                     ISensorRepository sensorRepository,
@@ -151,24 +152,19 @@ public static class PushEndpoints
                     var token = new RequestClaimToken(httpContext.User);
                     if (token.OrganizationId is null)
                     {
-                        return Results.Unauthorized();
+                        return TypedResults.Unauthorized();
                     }
 
                     var sensor = await sensorRepository.GetByIdAsync(sensorId, ct);
                     if (sensor is null)
                     {
-                        return Results.NotFound($"Sensor {sensorId} not found");
+                        return TypedResults.NotFound($"Sensor {sensorId} not found");
                     }
 
                     await healthRepository.RecordReadingAsync(sensorId, DateTimeOffset.UtcNow, ct);
 
-                    return Results.Ok(
-                        new
-                        {
-                            Message = "Heartbeat received",
-                            SensorId = sensorId,
-                            Timestamp = DateTimeOffset.UtcNow,
-                        }
+                    return TypedResults.Ok(
+                        new HeartbeatResult("Heartbeat received", sensorId, DateTimeOffset.UtcNow)
                     );
                 }
             )
@@ -177,3 +173,5 @@ public static class PushEndpoints
         return app;
     }
 }
+
+public record HeartbeatResult(string Message, Guid SensorId, DateTimeOffset Timestamp);
