@@ -14,6 +14,7 @@ public sealed class Organization
     public required DateTimeOffset CreatedAt { get; set; }
     public required DateTimeOffset UpdatedAt { get; set; }
 
+    public ICollection<DataSource> DataSources { get; set; } = [];
     public ICollection<Sensor> Sensors { get; set; } = [];
     public ICollection<ApiKey> ApiKeys { get; set; } = [];
 

@@ -2,8 +2,8 @@ namespace EcoData.AquaTrack.Contracts.Dtos;
 
 public sealed record SensorDtoForList(
     Guid Id,
+    Guid OrganizationId,
     Guid? SourceId,
-    Guid? OrganizationId,
     string ExternalId,
     string Name,
     decimal Latitude,
@@ -15,8 +15,8 @@ public sealed record SensorDtoForList(
 
 public sealed record SensorDtoForDetail(
     Guid Id,
+    Guid OrganizationId,
     Guid? SourceId,
-    Guid? OrganizationId,
     string ExternalId,
     string Name,
     decimal Latitude,
@@ -28,7 +28,7 @@ public sealed record SensorDtoForDetail(
 );
 
 public sealed record SensorDtoForCreate(
-    Guid SourceId,
+    Guid? SourceId,
     string ExternalId,
     string Name,
     decimal Latitude,
