@@ -33,4 +33,7 @@
     <Project Path="src/Locations/EcoData.Locations.DataAccess/EcoData.Locations.DataAccess.csproj" />
     <Project Path="src/Locations/EcoData.Locations.Api/EcoData.Locations.Api.csproj" />
   </Folder>
+  <Folder Name="/Tests/">
+    <Project Path="tests/EcoData.AquaTrack.IntegrationTests/EcoData.AquaTrack.IntegrationTests.csproj" />
+  </Folder>
 </Solution>
