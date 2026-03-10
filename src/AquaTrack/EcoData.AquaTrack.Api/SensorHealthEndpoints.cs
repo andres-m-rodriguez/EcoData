@@ -4,6 +4,7 @@ using EcoData.AquaTrack.DataAccess.Interfaces;
 using EcoData.Identity.Contracts.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Routing;
 
 namespace EcoData.AquaTrack.Api;
@@ -49,10 +50,14 @@ public static class SensorHealthEndpoints
         sensorGroup
             .MapGet(
                 "/",
-                async (Guid sensorId, ISensorHealthRepository repository, CancellationToken ct) =>
+                async Task<Results<Ok<SensorHealthStatusDtoForDetail>, NotFound>> (
+                    Guid sensorId,
+                    ISensorHealthRepository repository,
+                    CancellationToken ct
+                ) =>
                 {
                     var status = await repository.GetStatusByIdAsync(sensorId, ct);
-                    return status is null ? Results.NotFound() : Results.Ok(status);
+                    return status is null ? TypedResults.NotFound() : TypedResults.Ok(status);
                 }
             )
             .WithName("GetSensorHealth");
@@ -60,10 +65,14 @@ public static class SensorHealthEndpoints
         sensorGroup
             .MapGet(
                 "/config",
-                async (Guid sensorId, ISensorHealthRepository repository, CancellationToken ct) =>
+                async Task<Results<Ok<SensorHealthConfigDtoForDetail>, NotFound>> (
+                    Guid sensorId,
+                    ISensorHealthRepository repository,
+                    CancellationToken ct
+                ) =>
                 {
                     var config = await repository.GetConfigByIdAsync(sensorId, ct);
-                    return config is null ? Results.NotFound() : Results.Ok(config);
+                    return config is null ? TypedResults.NotFound() : TypedResults.Ok(config);
                 }
             )
             .WithName("GetSensorHealthConfig");
@@ -71,7 +80,7 @@ public static class SensorHealthEndpoints
         sensorGroup
             .MapPut(
                 "/config",
-                async (
+                async Task<Results<Ok<SensorHealthConfigDtoForDetail>, NotFound<string>>> (
                     Guid sensorId,
                     SensorHealthConfigDtoForCreate dto,
                     ISensorHealthRepository repository,
@@ -82,11 +91,11 @@ public static class SensorHealthEndpoints
                     var sensor = await sensorRepository.GetByIdAsync(sensorId, ct);
                     if (sensor is null)
                     {
-                        return Results.NotFound("Sensor not found");
+                        return TypedResults.NotFound("Sensor not found");
                     }
 
                     var config = await repository.UpsertConfigAsync(sensorId, dto, ct);
-                    return Results.Ok(config);
+                    return TypedResults.Ok(config);
                 }
             )
             .WithName("UpsertSensorHealthConfig")

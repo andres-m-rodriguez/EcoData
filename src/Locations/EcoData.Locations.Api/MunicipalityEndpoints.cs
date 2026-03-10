@@ -1,8 +1,10 @@
 using System.Text.Json;
+using EcoData.Locations.Contracts.Dtos;
 using EcoData.Locations.Contracts.Parameters;
 using EcoData.Locations.DataAccess.Interfaces;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Routing;
 
 namespace EcoData.Locations.Api;
@@ -27,10 +29,14 @@ public static class MunicipalityEndpoints
         group
             .MapGet(
                 "/{id:guid}",
-                async (Guid id, IMunicipalityRepository repository, CancellationToken ct) =>
+                async Task<Results<Ok<MunicipalityDtoForDetail>, NotFound>> (
+                    Guid id,
+                    IMunicipalityRepository repository,
+                    CancellationToken ct
+                ) =>
                 {
                     var municipality = await repository.GetByIdAsync(id, ct);
-                    return municipality is not null ? Results.Ok(municipality) : Results.NotFound();
+                    return municipality is not null ? TypedResults.Ok(municipality) : TypedResults.NotFound();
                 }
             )
             .WithName("GetMunicipalityById");
@@ -38,10 +44,14 @@ public static class MunicipalityEndpoints
         group
             .MapGet(
                 "/geojson-id/{geoJsonId}",
-                async (string geoJsonId, IMunicipalityRepository repository, CancellationToken ct) =>
+                async Task<Results<Ok<MunicipalityDtoForDetail>, NotFound>> (
+                    string geoJsonId,
+                    IMunicipalityRepository repository,
+                    CancellationToken ct
+                ) =>
                 {
                     var municipality = await repository.GetByGeoJsonIdAsync(geoJsonId, ct);
-                    return municipality is not null ? Results.Ok(municipality) : Results.NotFound();
+                    return municipality is not null ? TypedResults.Ok(municipality) : TypedResults.NotFound();
                 }
             )
             .WithName("GetMunicipalityByGeoJsonId");
@@ -49,7 +59,7 @@ public static class MunicipalityEndpoints
         group
             .MapGet(
                 "/by-point",
-                async (
+                async Task<Results<Ok<MunicipalityDtoForDetail>, NotFound>> (
                     decimal latitude,
                     decimal longitude,
                     IMunicipalityRepository repository,
@@ -57,7 +67,7 @@ public static class MunicipalityEndpoints
                 ) =>
                 {
                     var municipality = await repository.GetByPointAsync(latitude, longitude, ct);
-                    return municipality is not null ? Results.Ok(municipality) : Results.NotFound();
+                    return municipality is not null ? TypedResults.Ok(municipality) : TypedResults.NotFound();
                 }
             )
             .WithName("GetMunicipalityByPoint");
@@ -65,13 +75,17 @@ public static class MunicipalityEndpoints
         group
             .MapGet(
                 "/geojson/state/{stateCode}",
-                async (string stateCode, IMunicipalityRepository repository, CancellationToken ct) =>
+                async Task<Results<JsonHttpResult<object>, NotFound>> (
+                    string stateCode,
+                    IMunicipalityRepository repository,
+                    CancellationToken ct
+                ) =>
                 {
                     var municipalities = await repository.GetGeoJsonByStateCodeAsync(stateCode, ct);
 
                     if (municipalities.Count == 0)
                     {
-                        return Results.NotFound();
+                        return TypedResults.NotFound();
                     }
 
                     var features = municipalities
@@ -93,7 +107,7 @@ public static class MunicipalityEndpoints
 
                     var featureCollection = new { type = "FeatureCollection", features = features };
 
-                    return Results.Json(featureCollection);
+                    return TypedResults.Json<object>(featureCollection);
                 }
             )
             .WithName("GetMunicipalitiesGeoJsonByStateCode");

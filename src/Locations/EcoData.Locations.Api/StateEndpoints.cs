@@ -1,7 +1,9 @@
+using EcoData.Locations.Contracts.Dtos;
 using EcoData.Locations.Contracts.Parameters;
 using EcoData.Locations.DataAccess.Interfaces;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Routing;
 
 namespace EcoData.Locations.Api;
@@ -26,10 +28,14 @@ public static class StateEndpoints
         group
             .MapGet(
                 "/{id:guid}",
-                async (Guid id, IStateRepository repository, CancellationToken ct) =>
+                async Task<Results<Ok<StateDtoForDetail>, NotFound>> (
+                    Guid id,
+                    IStateRepository repository,
+                    CancellationToken ct
+                ) =>
                 {
                     var state = await repository.GetByIdAsync(id, ct);
-                    return state is not null ? Results.Ok(state) : Results.NotFound();
+                    return state is not null ? TypedResults.Ok(state) : TypedResults.NotFound();
                 }
             )
             .WithName("GetStateById");
@@ -37,10 +43,14 @@ public static class StateEndpoints
         group
             .MapGet(
                 "/code/{code}",
-                async (string code, IStateRepository repository, CancellationToken ct) =>
+                async Task<Results<Ok<StateDtoForDetail>, NotFound>> (
+                    string code,
+                    IStateRepository repository,
+                    CancellationToken ct
+                ) =>
                 {
                     var state = await repository.GetByCodeAsync(code, ct);
-                    return state is not null ? Results.Ok(state) : Results.NotFound();
+                    return state is not null ? TypedResults.Ok(state) : TypedResults.NotFound();
                 }
             )
             .WithName("GetStateByCode");

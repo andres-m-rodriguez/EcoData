@@ -4,6 +4,7 @@ using EcoData.AquaTrack.DataAccess.Interfaces;
 using EcoData.Identity.Contracts.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Routing;
 
 namespace EcoData.AquaTrack.Api;
@@ -28,10 +29,14 @@ public static class OrganizationEndpoints
         group
             .MapGet(
                 "/{id:guid}",
-                async (Guid id, IOrganizationRepository repository, CancellationToken ct) =>
+                async Task<Results<Ok<OrganizationDtoForDetail>, NotFound>> (
+                    Guid id,
+                    IOrganizationRepository repository,
+                    CancellationToken ct
+                ) =>
                 {
                     var organization = await repository.GetByIdAsync(id, ct);
-                    return organization is null ? Results.NotFound() : Results.Ok(organization);
+                    return organization is null ? TypedResults.NotFound() : TypedResults.Ok(organization);
                 }
             )
             .WithName("GetOrganizationById");
@@ -39,7 +44,7 @@ public static class OrganizationEndpoints
         group
             .MapPost(
                 "/",
-                async (
+                async Task<Results<Created<OrganizationDtoForCreated>, Conflict<string>>> (
                     OrganizationDtoForCreate dto,
                     IOrganizationRepository repository,
                     CancellationToken ct
@@ -48,11 +53,11 @@ public static class OrganizationEndpoints
                     var exists = await repository.ExistsAsync(dto.Name, ct);
                     if (exists)
                     {
-                        return Results.Conflict("An organization with this name already exists.");
+                        return TypedResults.Conflict("An organization with this name already exists.");
                     }
 
                     var created = await repository.CreateAsync(dto, ct);
-                    return Results.Created($"/api/organizations/{created.Id}", created);
+                    return TypedResults.Created($"/api/organizations/{created.Id}", created);
                 }
             )
             .WithName("CreateOrganization")
@@ -61,7 +66,7 @@ public static class OrganizationEndpoints
         group
             .MapPut(
                 "/{id:guid}",
-                async (
+                async Task<Results<Ok<OrganizationDtoForDetail>, NotFound>> (
                     Guid id,
                     OrganizationDtoForUpdate dto,
                     IOrganizationRepository repository,
@@ -69,7 +74,7 @@ public static class OrganizationEndpoints
                 ) =>
                 {
                     var updated = await repository.UpdateAsync(id, dto, ct);
-                    return updated is null ? Results.NotFound() : Results.Ok(updated);
+                    return updated is null ? TypedResults.NotFound() : TypedResults.Ok(updated);
                 }
             )
             .WithName("UpdateOrganization")
@@ -78,10 +83,14 @@ public static class OrganizationEndpoints
         group
             .MapDelete(
                 "/{id:guid}",
-                async (Guid id, IOrganizationRepository repository, CancellationToken ct) =>
+                async Task<Results<NoContent, NotFound>> (
+                    Guid id,
+                    IOrganizationRepository repository,
+                    CancellationToken ct
+                ) =>
                 {
                     var deleted = await repository.DeleteAsync(id, ct);
-                    return deleted ? Results.NoContent() : Results.NotFound();
+                    return deleted ? TypedResults.NoContent() : TypedResults.NotFound();
                 }
             )
             .WithName("DeleteOrganization")

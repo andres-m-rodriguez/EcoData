@@ -1,6 +1,8 @@
+using EcoData.AquaTrack.Contracts.Dtos;
 using EcoData.AquaTrack.DataAccess.Interfaces;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Routing;
 
 namespace EcoData.AquaTrack.Api;
@@ -21,10 +23,14 @@ public static class ReferenceDataEndpoints
         sensorTypesGroup
             .MapGet(
                 "/{id:guid}",
-                async (Guid id, ISensorTypeRepository repository, CancellationToken ct) =>
+                async Task<Results<Ok<SensorTypeDtoForDetail>, NotFound>> (
+                    Guid id,
+                    ISensorTypeRepository repository,
+                    CancellationToken ct
+                ) =>
                 {
                     var sensorType = await repository.GetByIdAsync(id, ct);
-                    return sensorType is null ? Results.NotFound() : Results.Ok(sensorType);
+                    return sensorType is null ? TypedResults.NotFound() : TypedResults.Ok(sensorType);
                 }
             )
             .WithName("GetSensorTypeById");
@@ -39,7 +45,7 @@ public static class ReferenceDataEndpoints
                     var parameters = sensorTypeId.HasValue
                         ? await repository.GetBySensorTypeAsync(sensorTypeId.Value, ct)
                         : await repository.GetAllAsync(ct);
-                    return Results.Ok(parameters);
+                    return TypedResults.Ok(parameters);
                 }
             )
             .WithName("GetParameters");
@@ -47,10 +53,14 @@ public static class ReferenceDataEndpoints
         parametersGroup
             .MapGet(
                 "/{id:guid}",
-                async (Guid id, IParameterRepository repository, CancellationToken ct) =>
+                async Task<Results<Ok<ParameterDtoForDetail>, NotFound>> (
+                    Guid id,
+                    IParameterRepository repository,
+                    CancellationToken ct
+                ) =>
                 {
                     var parameter = await repository.GetByIdAsync(id, ct);
-                    return parameter is null ? Results.NotFound() : Results.Ok(parameter);
+                    return parameter is null ? TypedResults.NotFound() : TypedResults.Ok(parameter);
                 }
             )
             .WithName("GetParameterById");
