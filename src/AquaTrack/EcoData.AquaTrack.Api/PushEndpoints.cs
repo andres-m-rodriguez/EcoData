@@ -1,6 +1,6 @@
 using System.Security.Claims;
-using EcoData.AquaTrack.Api.Authentication;
 using EcoData.AquaTrack.Contracts.Dtos;
+using EcoData.Identity.Contracts.Authorization;
 using EcoData.AquaTrack.DataAccess.Interfaces;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -14,11 +14,7 @@ public static class PushEndpoints
     {
         var group = app.MapGroup("/api/push")
             .WithTags("Push API")
-            .RequireAuthorization(policy =>
-                policy
-                    .AddAuthenticationSchemes(ApiKeyAuthenticationOptions.DefaultScheme)
-                    .RequireAuthenticatedUser()
-            );
+            .RequireAuthorization(PolicyNames.ApiKey);
 
         group.MapPost("/readings", SubmitReadings).WithName("SubmitReadings");
         group.MapPost("/readings/batch", SubmitReadingsBatch).WithName("SubmitReadingsBatch");
