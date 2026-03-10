@@ -131,7 +131,7 @@
     private int GetFilteredSensorCount()
     {
         if (_sensors is null) return 0;
-        return _sensors.Count(s => _selectedDataSourceIds.Contains(s.SourceId));
+        return _sensors.Count(s => s.SourceId.HasValue && _selectedDataSourceIds.Contains(s.SourceId.Value));
     }
 
     private async Task OnDataSourceSelectionChanged(Guid dataSourceId, bool isSelected)
@@ -166,7 +166,7 @@
         if (!_mapInitialized || _sensors is null) return;
 
         var filteredSensors = _sensors
-            .Where(s => _selectedDataSourceIds.Contains(s.SourceId))
+            .Where(s => s.SourceId.HasValue && _selectedDataSourceIds.Contains(s.SourceId.Value))
             .ToList();
 
         await MapManager.AddSensorsAsync(filteredSensors);

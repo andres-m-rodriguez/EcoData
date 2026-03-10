@@ -33,7 +33,7 @@ public sealed class SensorRepository(IDbContextFactory<AquaTrackDbContext> conte
                 s.Municipality,
                 s.IsActive,
                 s.CreatedAt,
-                s.DataSource!.Name
+                s.DataSource != null ? s.DataSource.Name : null
             ))
             .FirstOrDefaultAsync(cancellationToken);
     }
@@ -52,7 +52,7 @@ public sealed class SensorRepository(IDbContextFactory<AquaTrackDbContext> conte
                 s.Longitude,
                 s.Municipality,
                 s.IsActive,
-                s.DataSource!.Name
+                s.DataSource != null ? s.DataSource.Name : null
             ))
             .ToListAsync(cancellationToken);
     }
@@ -109,7 +109,7 @@ public sealed class SensorRepository(IDbContextFactory<AquaTrackDbContext> conte
                 s.Longitude,
                 s.Municipality,
                 s.IsActive,
-                s.DataSource!.Name
+                s.DataSource != null ? s.DataSource.Name : null
             ))
             .AsAsyncEnumerable()
             .WithCancellation(cancellationToken))
@@ -137,23 +137,43 @@ public sealed class SensorRepository(IDbContextFactory<AquaTrackDbContext> conte
         ICollection<SensorDtoForCreate> dtos,
         CancellationToken cancellationToken = default)
     {
+        if (dtos.Count == 0)
+        {
+            return [];
+        }
+
         await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
         var now = DateTimeOffset.UtcNow;
 
-        var entities = dtos.Select(dto => new Sensor
+        // Get unique source IDs and fetch their organization IDs
+        var sourceIds = dtos.Where(d => d.SourceId.HasValue).Select(d => d.SourceId!.Value).Distinct().ToList();
+        var sourceToOrg = await context.DataSources
+            .Where(ds => sourceIds.Contains(ds.Id))
+            .ToDictionaryAsync(ds => ds.Id, ds => ds.OrganizationId, cancellationToken);
+
+        var entities = dtos.Select(dto =>
         {
-            Id = Guid.CreateVersion7(),
-            SourceId = dto.SourceId,
-            ExternalId = dto.ExternalId,
-            Name = dto.Name,
-            Latitude = dto.Latitude,
-            Longitude = dto.Longitude,
-            Municipality = dto.Municipality,
-            IsActive = dto.IsActive,
-            ReportingMode = ReportingMode.Pull,
-            SensorTypeId = null,
-            CreatedAt = now,
-            UpdatedAt = now,
+            if (!dto.SourceId.HasValue || !sourceToOrg.TryGetValue(dto.SourceId.Value, out var organizationId))
+            {
+                throw new InvalidOperationException($"DataSource {dto.SourceId} not found");
+            }
+
+            return new Sensor
+            {
+                Id = Guid.CreateVersion7(),
+                OrganizationId = organizationId,
+                SourceId = dto.SourceId,
+                ExternalId = dto.ExternalId,
+                Name = dto.Name,
+                Latitude = dto.Latitude,
+                Longitude = dto.Longitude,
+                Municipality = dto.Municipality,
+                IsActive = dto.IsActive,
+                ReportingMode = ReportingMode.Pull,
+                SensorTypeId = null,
+                CreatedAt = now,
+                UpdatedAt = now,
+            };
         }).ToList();
 
         context.Sensors.AddRange(entities);
