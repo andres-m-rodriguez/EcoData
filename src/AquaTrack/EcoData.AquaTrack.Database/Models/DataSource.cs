@@ -6,6 +6,7 @@ namespace EcoData.AquaTrack.Database.Models;
 public sealed class DataSource
 {
     public required Guid Id { get; set; }
+    public required Guid OrganizationId { get; set; }
     public required string Name { get; set; }
     public required DataSourceType Type { get; set; }
     public required string? BaseUrl { get; set; }
@@ -14,6 +15,7 @@ public sealed class DataSource
     public required bool IsActive { get; set; }
     public required DateTimeOffset CreatedAt { get; set; }
 
+    public Organization? Organization { get; set; }
     public ICollection<Sensor> Sensors { get; set; } = [];
 
     public sealed class EntityConfiguration : IEntityTypeConfiguration<DataSource>
@@ -37,10 +39,16 @@ public sealed class DataSource
             builder.Property(static e => e.ApiKey).HasMaxLength(500);
 
             builder
+                .HasOne(static e => e.Organization)
+                .WithMany(static e => e.DataSources)
+                .HasForeignKey(static e => e.OrganizationId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            builder
                 .HasMany(static e => e.Sensors)
                 .WithOne(static e => e.DataSource)
                 .HasForeignKey(static e => e.SourceId)
-                .OnDelete(DeleteBehavior.Restrict);
+                .OnDelete(DeleteBehavior.SetNull);
         }
     }
 }

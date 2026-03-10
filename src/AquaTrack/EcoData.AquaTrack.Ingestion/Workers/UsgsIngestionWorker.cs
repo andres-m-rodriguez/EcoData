@@ -7,6 +7,7 @@ using Microsoft.Extensions.Logging;
 namespace EcoData.AquaTrack.Ingestion.Workers;
 
 public sealed class UsgsIngestionWorker(
+    IOrganizationRepository organizationRepository,
     IDataSourceRepository dataSourceRepository,
     ISensorRepository sensorRepository,
     IReadingRepository readingRepository,
@@ -16,6 +17,7 @@ public sealed class UsgsIngestionWorker(
     ILogger<UsgsIngestionWorker> logger
 ) : BackgroundService
 {
+    private const string UsgsOrganizationName = "USGS";
     private const string UsgsDataSourceName = "USGS Puerto Rico";
     private static readonly TimeSpan DefaultInterval = TimeSpan.FromMinutes(15);
 
@@ -27,9 +29,12 @@ public sealed class UsgsIngestionWorker(
         {
             try
             {
+                var organization = await organizationRepository.GetByNameAsync(UsgsOrganizationName, stoppingToken)
+                    ?? await organizationRepository.CreateAsync(new OrganizationDtoForCreate(UsgsOrganizationName), stoppingToken);
+
                 var dataSource = await dataSourceRepository.GetByNameAsync(UsgsDataSourceName, stoppingToken)
                     ?? await dataSourceRepository.CreateAsync(new DataSourceDtoForCreate(
-                        UsgsDataSourceName, "Public", "https://waterservices.usgs.gov/nwis/", null, 900, true
+                        organization.Id, UsgsDataSourceName, "Public", "https://waterservices.usgs.gov/nwis/", null, 900, true
                     ), stoppingToken);
 
                 var lastLog = await ingestionLogRepository.GetLatestAsync(dataSource.Id, stoppingToken);
