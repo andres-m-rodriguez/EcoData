@@ -1,7 +1,6 @@
 .sensor-list-container {
     height: calc(100vh - 200px);
     overflow: hidden;
-    border-radius: 12px;
 }
 
 .sensor-skeleton {

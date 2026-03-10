@@ -4,35 +4,6 @@
     gap: 24px;
 }
 
-.organization-card-skeleton {
-    background: var(--mud-palette-surface);
-    border-radius: 12px;
-    overflow: hidden;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-}
-
-.skeleton-content {
-    padding: 16px;
-    position: relative;
-}
-
-::deep .skeleton-avatar {
-    position: absolute;
-    top: -28px;
-    left: 16px;
-    border: 3px solid var(--mud-palette-surface);
-}
-
-.empty-state-container {
-    border-radius: 12px;
-}
-
-.load-more-container {
-    display: flex;
-    justify-content: center;
-    margin-top: 32px;
-}
-
 /* Mobile */
 @media (max-width: 600px) {
     .organizations-grid {
