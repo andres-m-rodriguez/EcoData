@@ -9,4 +9,34 @@ public interface ISensorHttpClient
         SensorParameters parameters,
         CancellationToken cancellationToken = default
     );
+
+    IAsyncEnumerable<SensorDtoForList> GetByOrganizationAsync(
+        Guid organizationId,
+        CancellationToken cancellationToken = default
+    );
+
+    Task<SensorDtoForDetail?> GetByIdAsync(
+        Guid organizationId,
+        Guid sensorId,
+        CancellationToken cancellationToken = default
+    );
+
+    Task<SensorDtoForCreated?> CreateForOrganizationAsync(
+        Guid organizationId,
+        SensorDtoForOrganizationCreate dto,
+        CancellationToken cancellationToken = default
+    );
+
+    Task<SensorDtoForDetail?> UpdateAsync(
+        Guid organizationId,
+        Guid sensorId,
+        SensorDtoForOrganizationCreate dto,
+        CancellationToken cancellationToken = default
+    );
+
+    Task<bool> DeleteAsync(
+        Guid organizationId,
+        Guid sensorId,
+        CancellationToken cancellationToken = default
+    );
 }

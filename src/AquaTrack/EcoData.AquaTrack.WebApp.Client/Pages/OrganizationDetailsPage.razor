@@ -6,6 +6,7 @@
 @using EcoData.AquaTrack.WebApp.Client.Components
 @using BlazingSingularity.Commands
 @inject IOrganizationHttpClient OrganizationClient
+@inject ISensorHttpClient SensorClient
 @inject NavigationManager Navigation
 @inject IDialogService DialogService
 @inject ISnackbar Snackbar
@@ -98,17 +99,54 @@ else
             </MudTabPanel>
             <MudTabPanel Text="Sensors">
                 <div class="tab-content">
-                    <MudList T="string" Dense="true">
-                        <MudListItem Icon="@Icons.Material.Outlined.Sensors">
-                            Water Quality Sensor #1 - Active
-                        </MudListItem>
-                        <MudListItem Icon="@Icons.Material.Outlined.Sensors">
-                            Temperature Sensor #2 - Active
-                        </MudListItem>
-                        <MudListItem Icon="@Icons.Material.Outlined.Sensors">
-                            pH Level Sensor #3 - Inactive
-                        </MudListItem>
-                    </MudList>
+                    @if (IsAdmin)
+                    {
+                        <MudButton Variant="Variant.Filled"
+                                   Color="Color.Primary"
+                                   StartIcon="@Icons.Material.Filled.Add"
+                                   Size="Size.Small"
+                                   Class="mb-3"
+                                   OnClick="NavigateToCreateSensor">
+                            Add Sensor
+                        </MudButton>
+                    }
+                    @if (LoadSensorsCommand.IsLoading)
+                    {
+                        <MudProgressLinear Indeterminate="true" Color="Color.Primary" />
+                    }
+                    else if (_sensors is null || _sensors.Count == 0)
+                    {
+                        <MudText Typo="Typo.body2" Color="Color.Secondary">No sensors found.</MudText>
+                    }
+                    else
+                    {
+                        <MudList T="SensorDtoForList" Dense="true">
+                            @foreach (var sensor in _sensors)
+                            {
+                                <MudListItem Icon="@Icons.Material.Outlined.Sensors"
+                                             IconColor="@(sensor.IsActive ? Color.Success : Color.Default)">
+                                    <div class="d-flex align-center justify-space-between" style="width: 100%;">
+                                        <div>
+                                            <MudText Typo="Typo.body2">@sensor.Name</MudText>
+                                            <MudText Typo="Typo.caption" Color="Color.Secondary">
+                                                @sensor.ExternalId
+                                                @if (!string.IsNullOrWhiteSpace(sensor.Municipality))
+                                                {
+                                                    <text> · @sensor.Municipality</text>
+                                                }
+                                            </MudText>
+                                        </div>
+                                        <MudChip T="string"
+                                                 Size="Size.Small"
+                                                 Color="@(sensor.IsActive ? Color.Success : Color.Default)"
+                                                 Variant="Variant.Outlined">
+                                            @(sensor.IsActive ? "Active" : "Inactive")
+                                        </MudChip>
+                                    </div>
+                                </MudListItem>
+                            }
+                        </MudList>
+                    }
                 </div>
             </MudTabPanel>
             <MudTabPanel Text="Our Team">
@@ -138,11 +176,15 @@ else
     public Guid Id { get; set; }
 
     private OrganizationDtoForDetail? _organization;
+    private List<SensorDtoForList>? _sensors;
     private bool IsAdmin => AuthState.CurrentUser?.Role == "Admin";
 
     protected override async Task OnInitializedAsync()
     {
-        await LoadCommand.ExecuteAsync();
+        await Task.WhenAll(
+            LoadCommand.ExecuteAsync(),
+            LoadSensorsCommand.ExecuteAsync()
+        );
     }
 
     [RelayCommand]
@@ -155,8 +197,19 @@ else
         );
     }
 
+    [RelayCommand]
+    private async Task LoadSensors()
+    {
+        _sensors = [];
+        await foreach (var sensor in SensorClient.GetByOrganizationAsync(Id))
+        {
+            _sensors.Add(sensor);
+        }
+    }
+
     private void NavigateBack() => Navigation.NavigateTo("/organizations");
     private void NavigateToEdit() => Navigation.NavigateTo($"/organizations/{Id}/edit");
+    private void NavigateToCreateSensor() => Navigation.NavigateTo($"/organizations/{Id}/sensors/create");
 
     private static string GetDisplayUrl(string url)
     {

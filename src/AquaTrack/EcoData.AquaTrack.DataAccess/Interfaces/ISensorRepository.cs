@@ -28,4 +28,26 @@ public interface ISensorRepository
         ICollection<SensorDtoForCreate> dtos,
         CancellationToken cancellationToken = default
     );
+
+    IAsyncEnumerable<SensorDtoForList> GetByOrganizationAsync(
+        Guid organizationId,
+        CancellationToken cancellationToken = default
+    );
+
+    Task<SensorDtoForCreated> CreateForOrganizationAsync(
+        Guid organizationId,
+        SensorDtoForOrganizationCreate dto,
+        CancellationToken cancellationToken = default
+    );
+
+    Task<SensorDtoForDetail?> UpdateAsync(
+        Guid id,
+        SensorDtoForOrganizationCreate dto,
+        CancellationToken cancellationToken = default
+    );
+
+    Task<bool> DeleteAsync(
+        Guid id,
+        CancellationToken cancellationToken = default
+    );
 }

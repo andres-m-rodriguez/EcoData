@@ -26,6 +26,9 @@
     <ProjectReference Include="..\..\Identity\EcoData.Identity.DataAccess\EcoData.Identity.DataAccess.csproj" />
     <ProjectReference Include="..\..\Identity\EcoData.Identity.Application\EcoData.Identity.Application.csproj" />
     <ProjectReference Include="..\..\Identity\EcoData.Identity.Api\EcoData.Identity.Api.csproj" />
+    <ProjectReference Include="..\..\Locations\EcoData.Locations.Database\EcoData.Locations.Database.csproj" />
+    <ProjectReference Include="..\..\Locations\EcoData.Locations.DataAccess\EcoData.Locations.DataAccess.csproj" />
+    <ProjectReference Include="..\..\Locations\EcoData.Locations.Api\EcoData.Locations.Api.csproj" />
   </ItemGroup>
 
 </Project>

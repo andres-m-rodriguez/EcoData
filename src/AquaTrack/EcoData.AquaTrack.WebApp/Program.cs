@@ -8,6 +8,9 @@ using EcoData.Identity.Api;
 using EcoData.Identity.Application.Extensions;
 using EcoData.Identity.DataAccess.Extensions;
 using EcoData.Identity.Database.Extensions;
+using EcoData.Locations.Api;
+using EcoData.Locations.DataAccess.Extensions;
+using EcoData.Locations.Database.Extensions;
 using MudBlazor.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -15,6 +18,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.AddServiceDefaults();
 builder.AddAquaTrackDatabase();
 builder.AddIdentityDatabase();
+builder.AddLocationsDatabase();
 
 builder.Services.AddRazorComponents().AddInteractiveWebAssemblyComponents();
 
@@ -22,9 +26,9 @@ builder.Services.AddMudServices();
 builder.Services.AddAquaTrackDataAccess();
 builder.Services.AddIdentityDataAccess();
 builder.Services.AddIdentityApplication();
+builder.Services.AddLocationsDataAccess();
 
-builder.Services.AddAuthentication()
-    .AddApiKeyAuthentication();
+builder.Services.AddAuthentication().AddApiKeyAuthentication();
 
 builder.Services.AddAquaTrackAuthorization();
 
@@ -59,5 +63,7 @@ app.MapApiKeyEndpoints();
 app.MapPushEndpoints();
 app.MapReferenceDataEndpoints();
 app.MapAuthEndpoints();
+app.MapStateEndpoints();
+app.MapMunicipalityEndpoints();
 
 app.Run();
