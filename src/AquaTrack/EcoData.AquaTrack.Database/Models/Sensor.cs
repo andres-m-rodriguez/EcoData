@@ -6,7 +6,7 @@ namespace EcoData.AquaTrack.Database.Models;
 public sealed class Sensor
 {
     public required Guid Id { get; set; }
-    public required Guid SourceId { get; set; }
+    public required Guid? SourceId { get; set; }
     public required string ExternalId { get; set; }
     public required string Name { get; set; }
     public required decimal Latitude { get; set; }
@@ -15,10 +15,12 @@ public sealed class Sensor
     public required bool IsActive { get; set; }
     public required ReportingMode ReportingMode { get; set; }
     public required Guid? SensorTypeId { get; set; }
+    public required Guid? OrganizationId { get; set; }
     public required DateTimeOffset CreatedAt { get; set; }
     public required DateTimeOffset UpdatedAt { get; set; }
 
     public DataSource? DataSource { get; set; }
+    public Organization? Organization { get; set; }
     public SensorType? SensorType { get; set; }
     public ICollection<Reading> Readings { get; set; } = [];
     public ICollection<Alert> Alerts { get; set; } = [];
@@ -44,7 +46,8 @@ public sealed class Sensor
 
             builder.Property(static e => e.Municipality).HasMaxLength(100);
 
-            builder.Property(static e => e.ReportingMode)
+            builder
+                .Property(static e => e.ReportingMode)
                 .HasConversion<string>()
                 .HasMaxLength(10)
                 .IsRequired();
@@ -80,6 +83,12 @@ public sealed class Sensor
                 .WithOne(static e => e.Sensor)
                 .HasForeignKey(static e => e.SensorId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            builder
+                .HasOne(static e => e.Organization)
+                .WithMany(static e => e.Sensors)
+                .HasForeignKey(static e => e.OrganizationId)
+                .OnDelete(DeleteBehavior.SetNull);
         }
     }
 }
