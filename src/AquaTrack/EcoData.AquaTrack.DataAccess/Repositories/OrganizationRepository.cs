@@ -69,6 +69,16 @@ public sealed class OrganizationRepository(IDbContextFactory<AquaTrackDbContext>
             .FirstOrDefaultAsync(cancellationToken);
     }
 
+    public async Task<OrganizationDtoForCreated?> GetByNameAsync(string name, CancellationToken cancellationToken = default)
+    {
+        await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
+
+        return await context.Organizations
+            .Where(o => o.Name == name)
+            .Select(o => new OrganizationDtoForCreated(o.Id, o.Name))
+            .FirstOrDefaultAsync(cancellationToken);
+    }
+
     public async Task<bool> ExistsAsync(string name, CancellationToken cancellationToken = default)
     {
         await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
