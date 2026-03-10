@@ -150,7 +150,7 @@
     private string? _errorMessage;
 
     private bool IsAdmin => AuthState.CurrentUser?.Role == "Admin";
-    private bool IsFormValid => !string.IsNullOrWhiteSpace(_externalId) && !string.IsNullOrWhiteSpace(_name);
+    private bool IsFormValid => !string.IsNullOrWhiteSpace(_externalId) && !string.IsNullOrWhiteSpace(_name) && _selectedMunicipality is not null;
 
     protected override async Task OnInitializedAsync()
     {
@@ -235,7 +235,7 @@
             _name.Trim(),
             _latitude,
             _longitude,
-            _selectedMunicipality?.Id,
+            _selectedMunicipality!.Id,
             _isActive
         );
 

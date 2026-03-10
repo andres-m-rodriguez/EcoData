@@ -8,7 +8,7 @@ public sealed record SensorDtoForList(
     string Name,
     decimal Latitude,
     decimal Longitude,
-    Guid? MunicipalityId,
+    Guid MunicipalityId,
     bool IsActive,
     string? DataSourceName
 );
@@ -21,7 +21,7 @@ public sealed record SensorDtoForDetail(
     string Name,
     decimal Latitude,
     decimal Longitude,
-    Guid? MunicipalityId,
+    Guid MunicipalityId,
     bool IsActive,
     DateTimeOffset CreatedAt,
     string? DataSourceName
@@ -33,7 +33,7 @@ public sealed record SensorDtoForCreate(
     string Name,
     decimal Latitude,
     decimal Longitude,
-    Guid? MunicipalityId,
+    Guid MunicipalityId,
     bool IsActive
 );
 
@@ -44,6 +44,6 @@ public sealed record SensorDtoForOrganizationCreate(
     string Name,
     decimal Latitude,
     decimal Longitude,
-    Guid? MunicipalityId,
+    Guid MunicipalityId,
     bool IsActive
 );
