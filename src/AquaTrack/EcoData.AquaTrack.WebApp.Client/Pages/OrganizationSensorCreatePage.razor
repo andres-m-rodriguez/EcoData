@@ -11,6 +11,7 @@
 @inject NavigationManager Navigation
 @inject ISnackbar Snackbar
 @inject AuthStateService AuthState
+@inject BackButtonService BackButton
 
 <PageTitle>Add Sensor - AquaTrack</PageTitle>
 
@@ -30,10 +31,6 @@
             <MudStack AlignItems="AlignItems.Center">
                 <MudIcon Icon="@Icons.Material.Filled.Error" Size="Size.Large" Color="Color.Error" />
                 <MudText Typo="Typo.h6" Color="Color.Error" Class="mt-2">Organization not found</MudText>
-                <MudButton Variant="Variant.Outlined" Color="Color.Primary"             StartIcon="@Icons.Material.Filled.ArrowBack"
-                           OnClick="NavigateBack"        Class="mt-3">
-                    Back to Organizations
-                </MudButton>
             </MudStack>
         </MudPaper>
     }
@@ -46,20 +43,13 @@
                 <MudText Typo="Typo.body2" Color="Color.Secondary">
                     You don't have permission to add sensors.
                 </MudText>
-                <MudButton Variant="Variant.Outlined"                  Color="Color.Primary"                        StartIcon="@Icons.Material.Filled.ArrowBack"
-                           OnClick="NavigateToOrganization"                   Class="mt-3">
-                    Back to Organization
-                </MudButton>
             </MudStack>
         </MudPaper>
     }
     else
     {
         <MudPaper Elevation="1" Class="pa-6">
-            <MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-4">
-                <MudIconButton Icon="@Icons.Material.Filled.ArrowBack"             OnClick="NavigateToOrganization" />
-                <MudText Typo="Typo.h5">Add Sensor</MudText>
-            </MudStack>
+            <MudText Typo="Typo.h5" Class="mb-4">Add Sensor</MudText>
 
             <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-4">
                 Adding sensor to <strong>@_organization.Name</strong>
@@ -116,7 +106,7 @@
                            Disabled="CreateCommand.IsLoading" />
 
                 <MudStack Row="true" Justify="Justify.FlexEnd" Spacing="2" Class="mt-4">
-                    <MudButton Variant="Variant.Text"                               Color="Color.Default"                               OnClick="NavigateToOrganization"
+                    <MudButton Variant="Variant.Text" Color="Color.Default" OnClick="NavigateToSensors"
                                Disabled="CreateCommand.IsLoading">
                         Cancel
                     </MudButton>
@@ -154,6 +144,7 @@
 
     protected override async Task OnInitializedAsync()
     {
+        BackButton.SetPath($"/organizations/{OrganizationId}/sensors");
         await LoadCommand.ExecuteAsync();
     }
 
@@ -244,7 +235,7 @@
         if (result is not null)
         {
             Snackbar.Add("Sensor created successfully", Severity.Success);
-            Navigation.NavigateTo($"/organizations/{OrganizationId}");
+            Navigation.NavigateTo($"/organizations/{OrganizationId}/sensors");
         }
         else
         {
@@ -252,6 +243,5 @@
         }
     }
 
-    private void NavigateBack() => Navigation.NavigateTo("/organizations");
-    private void NavigateToOrganization() => Navigation.NavigateTo($"/organizations/{OrganizationId}");
+    private void NavigateToSensors() => Navigation.NavigateTo($"/organizations/{OrganizationId}/sensors");
 }
