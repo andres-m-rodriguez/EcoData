@@ -8,6 +8,7 @@
 @inject NavigationManager Navigation
 @inject ISnackbar Snackbar
 @inject AuthStateService AuthState
+@inject BackButtonService BackButton
 
 <PageTitle>Edit Organization - AquaTrack</PageTitle>
 
@@ -28,13 +29,6 @@
             <MudStack AlignItems="AlignItems.Center">
                 <MudIcon Icon="@Icons.Material.Filled.Error" Size="Size.Large" Color="Color.Error" />
                 <MudText Typo="Typo.h6" Color="Color.Error" Class="mt-2">Organization not found</MudText>
-                <MudButton Variant="Variant.Outlined"
-                           Color="Color.Primary"
-                           StartIcon="@Icons.Material.Filled.ArrowBack"
-                           OnClick="NavigateBack"
-                           Class="mt-3">
-                    Back to Organizations
-                </MudButton>
             </MudStack>
         </MudPaper>
     }
@@ -47,24 +41,13 @@
                 <MudText Typo="Typo.body2" Color="Color.Secondary">
                     You don't have permission to edit organizations.
                 </MudText>
-                <MudButton Variant="Variant.Outlined"
-                           Color="Color.Primary"
-                           StartIcon="@Icons.Material.Filled.ArrowBack"
-                           OnClick="NavigateBack"
-                           Class="mt-3">
-                    Back to Organizations
-                </MudButton>
             </MudStack>
         </MudPaper>
     }
     else
     {
         <MudPaper Elevation="1" Class="pa-6">
-            <MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-4">
-                <MudIconButton Icon="@Icons.Material.Filled.ArrowBack"
-                               OnClick="NavigateToDetails" />
-                <MudText Typo="Typo.h5">Edit Organization</MudText>
-            </MudStack>
+            <MudText Typo="Typo.h5" Class="mb-4">Edit Organization</MudText>
 
             @if (!string.IsNullOrEmpty(_errorMessage))
             {
@@ -170,6 +153,7 @@
 
     protected override async Task OnInitializedAsync()
     {
+        BackButton.SetPath($"/organizations/{Id}");
         await LoadCommand.ExecuteAsync();
     }
 
@@ -224,13 +208,5 @@
         );
     }
 
-    private void NavigateBack()
-    {
-        Navigation.NavigateTo("/organizations");
-    }
-
-    private void NavigateToDetails()
-    {
-        Navigation.NavigateTo($"/organizations/{Id}");
-    }
+    private void NavigateToDetails() => Navigation.NavigateTo($"/organizations/{Id}");
 }
