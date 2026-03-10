@@ -9,14 +9,14 @@
 
 @if (ShowFilters)
 {
-    <SearchBar @bind-Value="SearchText"
-               Placeholder="Search sensors..."
-               ShowFilterButton="true"
-               HasActiveFilters="HasNonSearchFilters"
-               OnFilterClick="OpenFilterDialog" />
+    <SearchHeader @bind-Value="SearchText"
+                  Placeholder="Search sensors..."
+                  ShowFilterButton="true"
+                  HasActiveFilters="HasNonSearchFilters"
+                  OnFilterClick="OpenFilterDialog" />
 }
 
-<MudPaper Elevation="@Elevation" Class="sensor-list-container">
+<MudPaper Elevation="@Elevation" Class="sensor-list-container rounded-lg">
     @if (_isInitialLoading)
     {
         @for (var i = 0; i < 8; i++)

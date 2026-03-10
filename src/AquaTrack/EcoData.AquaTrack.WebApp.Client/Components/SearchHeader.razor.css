@@ -1,0 +1,29 @@
+.search-wrapper {
+    flex: 1;
+    min-width: 200px;
+}
+
+.search-wrapper ::deep .search-bar-wrapper {
+    margin: 0;
+    padding: 0;
+}
+
+.actions-wrapper {
+    display: flex;
+    gap: 8px;
+}
+
+/* Mobile */
+@media (max-width: 600px) {
+    .search-wrapper {
+        width: 100%;
+    }
+
+    .actions-wrapper {
+        width: 100%;
+    }
+
+    .actions-wrapper ::deep .mud-button {
+        width: 100%;
+    }
+}

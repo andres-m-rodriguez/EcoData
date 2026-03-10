@@ -15,38 +15,37 @@
 
 <PageTitle>Organizations - AquaTrack</PageTitle>
 
-<MudStack Row="true" AlignItems="AlignItems.Center" Spacing="3" Class="mb-4">
-    <div style="flex: 1;">
-        <SearchBar @bind-Value="SearchText"
-                   Placeholder="Search organizations..."
-                   EnableSticky="false" />
-    </div>
-    @if (IsAdmin)
-    {
-        <MudButton Variant="Variant.Filled"
-                   Color="Color.Primary"
-                   StartIcon="@Icons.Material.Filled.Add"
-                   OnClick="OpenCreateDialog">
-            Add Organization
-        </MudButton>
-    }
-</MudStack>
+<SearchHeader @bind-Value="SearchText"
+              Placeholder="Search organizations..."
+              EnableSticky="false">
+    <Actions>
+        @if (IsAdmin)
+        {
+            <MudButton Variant="Variant.Filled"
+                       Color="Color.Primary"
+                       StartIcon="@Icons.Material.Filled.Add"
+                       OnClick="OpenCreateDialog">
+                Add Organization
+            </MudButton>
+        }
+    </Actions>
+</SearchHeader>
 
 @if (LoadCommand.IsLoading)
 {
     <div class="organizations-grid">
         @for (var i = 0; i < 6; i++)
         {
-            <div class="organization-card-skeleton">
+            <MudCard Elevation="1">
                 <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="120px" />
-                <div class="skeleton-content">
-                    <MudSkeleton SkeletonType="SkeletonType.Circle" Width="56px" Height="56px" Class="skeleton-avatar" />
+                <MudCardContent>
+                    <MudSkeleton SkeletonType="SkeletonType.Circle" Width="56px" Height="56px" />
                     <MudSkeleton Width="70%" Height="20px" Class="mt-4" />
                     <MudSkeleton Width="100%" Height="14px" Class="mt-2" />
                     <MudSkeleton Width="80%" Height="14px" Class="mt-1" />
                     <MudSkeleton Width="40%" Height="14px" Class="mt-3" />
-                </div>
-            </div>
+                </MudCardContent>
+            </MudCard>
         }
     </div>
 }
@@ -54,8 +53,8 @@ else if (_organizations.Count == 0)
 {
     @if (HasActiveFilters)
     {
-        <MudPaper Elevation="1" Class="empty-state-container">
-            <MudStack AlignItems="AlignItems.Center" Class="pa-8">
+        <MudPaper Elevation="1" Class="pa-8 rounded-lg">
+            <MudStack AlignItems="AlignItems.Center">
                 <MudIcon Icon="@Icons.Material.Filled.SearchOff" Size="Size.Large" Color="Color.Secondary" />
                 <MudText Typo="Typo.h6" Color="Color.Secondary" Class="mt-2">No organizations found</MudText>
                 <MudText Typo="Typo.body2" Color="Color.Secondary">
@@ -73,8 +72,8 @@ else if (_organizations.Count == 0)
     }
     else
     {
-        <MudPaper Elevation="1" Class="empty-state-container">
-            <MudStack AlignItems="AlignItems.Center" Class="pa-8">
+        <MudPaper Elevation="1" Class="pa-8 rounded-lg">
+            <MudStack AlignItems="AlignItems.Center">
                 <MudIcon Icon="@Icons.Material.Filled.Business" Size="Size.Large" Color="Color.Secondary" />
                 <MudText Typo="Typo.h6" Color="Color.Secondary" Class="mt-2">No organizations yet</MudText>
                 <MudText Typo="Typo.body2" Color="Color.Secondary">
@@ -108,7 +107,7 @@ else
     </div>
     @if (_hasMore)
     {
-        <div class="load-more-container">
+        <div class="d-flex justify-center mt-8">
             <MudButton Variant="Variant.Outlined"
                        Color="Color.Primary"
                        OnClick="() => LoadMoreCommand.ExecuteAsync()"
