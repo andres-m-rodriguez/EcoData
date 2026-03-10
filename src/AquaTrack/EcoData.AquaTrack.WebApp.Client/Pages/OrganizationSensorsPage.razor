@@ -7,12 +7,12 @@
 @inject IOrganizationHttpClient OrganizationClient
 @inject NavigationManager Navigation
 @inject AuthStateService AuthState
+@inject BackButtonService BackButton
 
 <PageTitle>Sensors - @(_organization?.Name ?? "Organization") - AquaTrack</PageTitle>
 
 <div class="sensors-page">
     <div class="page-header">
-        <MudIconButton Icon="@Icons.Material.Filled.ArrowBack" OnClick="NavigateBack" />
         @if (_organization is not null)
         {
             <MudText Typo="Typo.h6">@_organization.Name - Sensors</MudText>
@@ -46,6 +46,7 @@
 
     protected override async Task OnInitializedAsync()
     {
+        BackButton.SetPath($"/organizations/{OrganizationId}");
         await LoadCommand.ExecuteAsync();
     }
 
@@ -59,7 +60,6 @@
         );
     }
 
-    private void NavigateBack() => Navigation.NavigateTo($"/organizations/{OrganizationId}");
     private void NavigateToCreateSensor() => Navigation.NavigateTo($"/organizations/{OrganizationId}/sensors/create");
 
     private void NavigateToMap(SensorDtoForList sensor)
