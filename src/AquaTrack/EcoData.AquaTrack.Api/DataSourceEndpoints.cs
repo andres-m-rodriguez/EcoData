@@ -1,4 +1,3 @@
-using EcoData.AquaTrack.Contracts.Dtos;
 using EcoData.AquaTrack.DataAccess.Interfaces;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -12,13 +11,11 @@ public static class DataSourceEndpoints
     {
         var group = app.MapGroup("/api/datasources").WithTags("DataSources");
 
-        group.MapGet("/", GetDataSources).WithName("GetDataSources");
+        group
+            .MapGet("/", (IDataSourceRepository repository, CancellationToken ct) =>
+                repository.GetAllAsync(ct))
+            .WithName("GetDataSources");
 
         return app;
     }
-
-    private static async Task<IReadOnlyList<DataSourceDtoForList>> GetDataSources(
-        IDataSourceRepository repository,
-        CancellationToken ct
-    ) => await repository.GetAllAsync(ct);
 }
