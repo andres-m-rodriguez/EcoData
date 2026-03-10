@@ -11,6 +11,7 @@ public sealed class UsgsIngestionWorker(
     ISensorRepository sensorRepository,
     IReadingRepository readingRepository,
     IIngestionLogRepository ingestionLogRepository,
+    ISensorHealthRepository healthRepository,
     IUsgsApiClient usgsApiClient,
     ILogger<UsgsIngestionWorker> logger
 ) : BackgroundService
@@ -116,6 +117,16 @@ public sealed class UsgsIngestionWorker(
                     await ingestionLogRepository.CreateAsync(
                         new IngestionLogDtoForCreate(dataSource.Id, readingsToAdd.Count, maxRecordedAt),
                         stoppingToken);
+
+                    // Update health status for sensors that received readings
+                    var sensorLastReadings = readingsToAdd
+                        .GroupBy(r => r.SensorId)
+                        .ToDictionary(g => g.Key, g => g.Max(r => r.RecordedAt));
+
+                    foreach (var (sensorId, lastReading) in sensorLastReadings)
+                    {
+                        await healthRepository.RecordReadingAsync(sensorId, lastReading, stoppingToken);
+                    }
 
                     logger.LogInformation("Ingested {Count} readings, last recorded at {LastRecordedAt}",
                         readingsToAdd.Count, maxRecordedAt);
