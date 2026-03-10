@@ -89,25 +89,22 @@ public static class SensorEndpoints
                         return TypedResults.NotFound("Organization not found");
                     }
 
-                    if (dto.MunicipalityId.HasValue)
+                    var actualMunicipality = await municipalityRepository.GetByPointAsync(
+                        dto.Latitude,
+                        dto.Longitude,
+                        ct
+                    );
+
+                    if (actualMunicipality is null || actualMunicipality.Id != dto.MunicipalityId)
                     {
-                        var actualMunicipality = await municipalityRepository.GetByPointAsync(
-                            dto.Latitude,
-                            dto.Longitude,
-                            ct
+                        var expectedMunicipality = await municipalityRepository.GetByIdAsync(dto.MunicipalityId, ct);
+                        var expectedName = expectedMunicipality?.Name ?? "Unknown";
+                        var actualName = actualMunicipality?.Name ?? "none";
+
+                        return TypedResults.BadRequest(
+                            $"Coordinates ({dto.Latitude}, {dto.Longitude}) are not within municipality '{expectedName}'. " +
+                            $"Actual municipality: '{actualName}'."
                         );
-
-                        if (actualMunicipality is null || actualMunicipality.Id != dto.MunicipalityId.Value)
-                        {
-                            var expectedMunicipality = await municipalityRepository.GetByIdAsync(dto.MunicipalityId.Value, ct);
-                            var expectedName = expectedMunicipality?.Name ?? "Unknown";
-                            var actualName = actualMunicipality?.Name ?? "none";
-
-                            return TypedResults.BadRequest(
-                                $"Coordinates ({dto.Latitude}, {dto.Longitude}) are not within municipality '{expectedName}'. " +
-                                $"Actual municipality: '{actualName}'."
-                            );
-                        }
                     }
 
                     var created = await repository.CreateForOrganizationAsync(organizationId, dto, ct);
@@ -137,25 +134,22 @@ public static class SensorEndpoints
                         return TypedResults.NotFound();
                     }
 
-                    if (dto.MunicipalityId.HasValue)
+                    var actualMunicipality = await municipalityRepository.GetByPointAsync(
+                        dto.Latitude,
+                        dto.Longitude,
+                        ct
+                    );
+
+                    if (actualMunicipality is null || actualMunicipality.Id != dto.MunicipalityId)
                     {
-                        var actualMunicipality = await municipalityRepository.GetByPointAsync(
-                            dto.Latitude,
-                            dto.Longitude,
-                            ct
+                        var expectedMunicipality = await municipalityRepository.GetByIdAsync(dto.MunicipalityId, ct);
+                        var expectedName = expectedMunicipality?.Name ?? "Unknown";
+                        var actualName = actualMunicipality?.Name ?? "none";
+
+                        return TypedResults.BadRequest(
+                            $"Coordinates ({dto.Latitude}, {dto.Longitude}) are not within municipality '{expectedName}'. " +
+                            $"Actual municipality: '{actualName}'."
                         );
-
-                        if (actualMunicipality is null || actualMunicipality.Id != dto.MunicipalityId.Value)
-                        {
-                            var expectedMunicipality = await municipalityRepository.GetByIdAsync(dto.MunicipalityId.Value, ct);
-                            var expectedName = expectedMunicipality?.Name ?? "Unknown";
-                            var actualName = actualMunicipality?.Name ?? "none";
-
-                            return TypedResults.BadRequest(
-                                $"Coordinates ({dto.Latitude}, {dto.Longitude}) are not within municipality '{expectedName}'. " +
-                                $"Actual municipality: '{actualName}'."
-                            );
-                        }
                     }
 
                     var updated = await repository.UpdateAsync(id, dto, ct);

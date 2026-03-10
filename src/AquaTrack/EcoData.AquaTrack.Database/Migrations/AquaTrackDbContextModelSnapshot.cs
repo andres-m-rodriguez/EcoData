@@ -405,7 +405,7 @@ namespace EcoData.AquaTrack.Database.Migrations
                         .HasColumnType("numeric(9,6)")
                         .HasColumnName("longitude");
 
-                    b.Property<Guid?>("MunicipalityId")
+                    b.Property<Guid>("MunicipalityId")
                         .HasColumnType("uuid")
                         .HasColumnName("municipality_id");
 
