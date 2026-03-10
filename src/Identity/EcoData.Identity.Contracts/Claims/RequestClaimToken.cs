@@ -5,9 +5,12 @@ namespace EcoData.Identity.Contracts.Claims;
 
 public readonly record struct RequestClaimToken
 {
+    public const string OrganizationIdClaimType = "OrganizationId";
+
     public RequestClaimToken(IEnumerable<Claim> claims)
     {
         Guid? userId = null;
+        Guid? organizationId = null;
         var displayName = string.Empty;
         var email = string.Empty;
         var role = string.Empty;
@@ -28,10 +31,15 @@ public readonly record struct RequestClaimToken
                 case ClaimTypes.Role:
                     role = claim.Value;
                     break;
+                case OrganizationIdClaimType:
+                    if (Guid.TryParse(claim.Value, out var orgId))
+                        organizationId = orgId;
+                    break;
             }
         }
 
         UserId = userId;
+        OrganizationId = organizationId;
         DisplayName = displayName;
         Email = email;
         Role = role;
@@ -41,6 +49,7 @@ public readonly record struct RequestClaimToken
         : this(principal.Claims) { }
 
     public Guid? UserId { get; }
+    public Guid? OrganizationId { get; }
     public string DisplayName { get; }
     public string Email { get; }
     public string Role { get; }
