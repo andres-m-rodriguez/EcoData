@@ -18,11 +18,8 @@ public static class SensorEndpoints
         group
             .MapGet(
                 "/",
-                (
-                    [AsParameters] SensorParameters parameters,
-                    ISensorRepository repository,
-                    CancellationToken ct
-                ) => repository.GetSensorsAsync(parameters, ct)
+                ([AsParameters] SensorParameters parameters, ISensorRepository repository, CancellationToken ct) =>
+                    repository.GetSensorsAsync(parameters, ct)
             )
             .WithName("GetSensors");
 
@@ -40,18 +37,13 @@ public static class SensorEndpoints
                     CancellationToken ct
                 ) =>
                 {
-                    var organization = await organizationRepository.GetByIdAsync(
-                        organizationId,
-                        ct
-                    );
+                    var organization = await organizationRepository.GetByIdAsync(organizationId, ct);
                     if (organization is null)
                     {
                         return TypedResults.NotFound("Organization not found");
                     }
 
-                    var sensors = await repository
-                        .GetByOrganizationAsync(organizationId, ct)
-                        .ToListAsync(ct);
+                    var sensors = await repository.GetByOrganizationAsync(organizationId, ct).ToListAsync(ct);
                     return TypedResults.Ok(sensors);
                 }
             )
@@ -89,20 +81,13 @@ public static class SensorEndpoints
                     CancellationToken ct
                 ) =>
                 {
-                    var organization = await organizationRepository.GetByIdAsync(
-                        organizationId,
-                        ct
-                    );
+                    var organization = await organizationRepository.GetByIdAsync(organizationId, ct);
                     if (organization is null)
                     {
                         return TypedResults.NotFound("Organization not found");
                     }
 
-                    var created = await repository.CreateForOrganizationAsync(
-                        organizationId,
-                        dto,
-                        ct
-                    );
+                    var created = await repository.CreateForOrganizationAsync(organizationId, dto, ct);
                     return TypedResults.Created(
                         $"/api/organizations/{organizationId}/sensors/{created.Id}",
                         created
