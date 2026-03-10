@@ -2,6 +2,7 @@ using EcoData.AquaTrack.Contracts.Dtos;
 using EcoData.AquaTrack.Contracts.Parameters;
 using EcoData.AquaTrack.DataAccess.Interfaces;
 using EcoData.Identity.Contracts.Authorization;
+using EcoData.Locations.DataAccess.Interfaces;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
@@ -73,11 +74,12 @@ public static class SensorEndpoints
         orgGroup
             .MapPost(
                 "/",
-                async Task<Results<Created<SensorDtoForCreated>, NotFound<string>>> (
+                async Task<Results<Created<SensorDtoForCreated>, NotFound<string>, BadRequest<string>>> (
                     Guid organizationId,
                     SensorDtoForOrganizationCreate dto,
                     ISensorRepository repository,
                     IOrganizationRepository organizationRepository,
+                    IMunicipalityRepository municipalityRepository,
                     CancellationToken ct
                 ) =>
                 {
@@ -85,6 +87,27 @@ public static class SensorEndpoints
                     if (organization is null)
                     {
                         return TypedResults.NotFound("Organization not found");
+                    }
+
+                    if (dto.MunicipalityId.HasValue)
+                    {
+                        var actualMunicipality = await municipalityRepository.GetByPointAsync(
+                            dto.Latitude,
+                            dto.Longitude,
+                            ct
+                        );
+
+                        if (actualMunicipality is null || actualMunicipality.Id != dto.MunicipalityId.Value)
+                        {
+                            var expectedMunicipality = await municipalityRepository.GetByIdAsync(dto.MunicipalityId.Value, ct);
+                            var expectedName = expectedMunicipality?.Name ?? "Unknown";
+                            var actualName = actualMunicipality?.Name ?? "none";
+
+                            return TypedResults.BadRequest(
+                                $"Coordinates ({dto.Latitude}, {dto.Longitude}) are not within municipality '{expectedName}'. " +
+                                $"Actual municipality: '{actualName}'."
+                            );
+                        }
                     }
 
                     var created = await repository.CreateForOrganizationAsync(organizationId, dto, ct);
@@ -99,11 +122,12 @@ public static class SensorEndpoints
         orgGroup
             .MapPut(
                 "/{id:guid}",
-                async Task<Results<Ok<SensorDtoForDetail>, NotFound>> (
+                async Task<Results<Ok<SensorDtoForDetail>, NotFound, BadRequest<string>>> (
                     Guid organizationId,
                     Guid id,
                     SensorDtoForOrganizationCreate dto,
                     ISensorRepository repository,
+                    IMunicipalityRepository municipalityRepository,
                     CancellationToken ct
                 ) =>
                 {
@@ -111,6 +135,27 @@ public static class SensorEndpoints
                     if (existing is null || existing.OrganizationId != organizationId)
                     {
                         return TypedResults.NotFound();
+                    }
+
+                    if (dto.MunicipalityId.HasValue)
+                    {
+                        var actualMunicipality = await municipalityRepository.GetByPointAsync(
+                            dto.Latitude,
+                            dto.Longitude,
+                            ct
+                        );
+
+                        if (actualMunicipality is null || actualMunicipality.Id != dto.MunicipalityId.Value)
+                        {
+                            var expectedMunicipality = await municipalityRepository.GetByIdAsync(dto.MunicipalityId.Value, ct);
+                            var expectedName = expectedMunicipality?.Name ?? "Unknown";
+                            var actualName = actualMunicipality?.Name ?? "none";
+
+                            return TypedResults.BadRequest(
+                                $"Coordinates ({dto.Latitude}, {dto.Longitude}) are not within municipality '{expectedName}'. " +
+                                $"Actual municipality: '{actualName}'."
+                            );
+                        }
                     }
 
                     var updated = await repository.UpdateAsync(id, dto, ct);

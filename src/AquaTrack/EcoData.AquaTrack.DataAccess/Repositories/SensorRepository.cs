@@ -40,7 +40,7 @@ public sealed class SensorRepository(IDbContextFactory<AquaTrackDbContext> conte
                 s.Name,
                 s.Latitude,
                 s.Longitude,
-                s.Municipality,
+                s.MunicipalityId,
                 s.IsActive,
                 s.CreatedAt,
                 s.DataSource != null ? s.DataSource.Name : null
@@ -64,7 +64,7 @@ public sealed class SensorRepository(IDbContextFactory<AquaTrackDbContext> conte
                 s.Name,
                 s.Latitude,
                 s.Longitude,
-                s.Municipality,
+                s.MunicipalityId,
                 s.IsActive,
                 s.DataSource != null ? s.DataSource.Name : null
             ))
@@ -101,10 +101,7 @@ public sealed class SensorRepository(IDbContextFactory<AquaTrackDbContext> conte
         if (!string.IsNullOrWhiteSpace(parameters.Search))
         {
             var search = parameters.Search.Trim().ToLower();
-            query = query.Where(s =>
-                s.Name.ToLower().Contains(search)
-                || (s.Municipality != null && s.Municipality.ToLower().Contains(search))
-            );
+            query = query.Where(s => s.Name.ToLower().Contains(search));
         }
 
         if (parameters.Cursor.HasValue)
@@ -112,23 +109,25 @@ public sealed class SensorRepository(IDbContextFactory<AquaTrackDbContext> conte
             query = query.Where(s => s.Id > parameters.Cursor.Value);
         }
 
-        await foreach (var sensor in query
-            .OrderBy(s => s.Id)
-            .Take(parameters.PageSize + 1)
-            .Select(static s => new SensorDtoForList(
-                s.Id,
-                s.OrganizationId,
-                s.SourceId,
-                s.ExternalId,
-                s.Name,
-                s.Latitude,
-                s.Longitude,
-                s.Municipality,
-                s.IsActive,
-                s.DataSource != null ? s.DataSource.Name : null
-            ))
-            .AsAsyncEnumerable()
-            .WithCancellation(cancellationToken))
+        await foreach (
+            var sensor in query
+                .OrderBy(s => s.Id)
+                .Take(parameters.PageSize + 1)
+                .Select(static s => new SensorDtoForList(
+                    s.Id,
+                    s.OrganizationId,
+                    s.SourceId,
+                    s.ExternalId,
+                    s.Name,
+                    s.Latitude,
+                    s.Longitude,
+                    s.MunicipalityId,
+                    s.IsActive,
+                    s.DataSource != null ? s.DataSource.Name : null
+                ))
+                .AsAsyncEnumerable()
+                .WithCancellation(cancellationToken)
+        )
         {
             yield return sensor;
         }
@@ -164,35 +163,42 @@ public sealed class SensorRepository(IDbContextFactory<AquaTrackDbContext> conte
         var now = DateTimeOffset.UtcNow;
 
         // Get unique source IDs and fetch their organization IDs
-        var sourceIds = dtos.Where(d => d.SourceId.HasValue).Select(d => d.SourceId!.Value).Distinct().ToList();
-        var sourceToOrg = await context.DataSources
-            .Where(ds => sourceIds.Contains(ds.Id))
+        var sourceIds = dtos.Where(d => d.SourceId.HasValue)
+            .Select(d => d.SourceId!.Value)
+            .Distinct()
+            .ToList();
+        var sourceToOrg = await context
+            .DataSources.Where(ds => sourceIds.Contains(ds.Id))
             .ToDictionaryAsync(ds => ds.Id, ds => ds.OrganizationId, cancellationToken);
 
         var entities = dtos.Select(dto =>
-        {
-            if (!dto.SourceId.HasValue || !sourceToOrg.TryGetValue(dto.SourceId.Value, out var organizationId))
             {
-                throw new InvalidOperationException($"DataSource {dto.SourceId} not found");
-            }
+                if (
+                    !dto.SourceId.HasValue
+                    || !sourceToOrg.TryGetValue(dto.SourceId.Value, out var organizationId)
+                )
+                {
+                    throw new InvalidOperationException($"DataSource {dto.SourceId} not found");
+                }
 
-            return new Sensor
-            {
-                Id = Guid.CreateVersion7(),
-                OrganizationId = organizationId,
-                SourceId = dto.SourceId,
-                ExternalId = dto.ExternalId,
-                Name = dto.Name,
-                Latitude = dto.Latitude,
-                Longitude = dto.Longitude,
-                Municipality = dto.Municipality,
-                IsActive = dto.IsActive,
-                ReportingMode = ReportingMode.Pull,
-                SensorTypeId = null,
-                CreatedAt = now,
-                UpdatedAt = now,
-            };
-        }).ToList();
+                return new Sensor
+                {
+                    Id = Guid.CreateVersion7(),
+                    OrganizationId = organizationId,
+                    SourceId = dto.SourceId,
+                    ExternalId = dto.ExternalId,
+                    Name = dto.Name,
+                    Latitude = dto.Latitude,
+                    Longitude = dto.Longitude,
+                    MunicipalityId = dto.MunicipalityId,
+                    IsActive = dto.IsActive,
+                    ReportingMode = ReportingMode.Pull,
+                    SensorTypeId = null,
+                    CreatedAt = now,
+                    UpdatedAt = now,
+                };
+            })
+            .ToList();
 
         context.Sensors.AddRange(entities);
         await context.SaveChangesAsync(cancellationToken);
@@ -215,23 +221,25 @@ public sealed class SensorRepository(IDbContextFactory<AquaTrackDbContext> conte
     {
         await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
 
-        await foreach (var sensor in context
-            .Sensors.Where(s => s.OrganizationId == organizationId)
-            .OrderBy(s => s.Name)
-            .Select(static s => new SensorDtoForList(
-                s.Id,
-                s.OrganizationId,
-                s.SourceId,
-                s.ExternalId,
-                s.Name,
-                s.Latitude,
-                s.Longitude,
-                s.Municipality,
-                s.IsActive,
-                s.DataSource != null ? s.DataSource.Name : null
-            ))
-            .AsAsyncEnumerable()
-            .WithCancellation(cancellationToken))
+        await foreach (
+            var sensor in context
+                .Sensors.Where(s => s.OrganizationId == organizationId)
+                .OrderBy(s => s.Name)
+                .Select(static s => new SensorDtoForList(
+                    s.Id,
+                    s.OrganizationId,
+                    s.SourceId,
+                    s.ExternalId,
+                    s.Name,
+                    s.Latitude,
+                    s.Longitude,
+                    s.MunicipalityId,
+                    s.IsActive,
+                    s.DataSource != null ? s.DataSource.Name : null
+                ))
+                .AsAsyncEnumerable()
+                .WithCancellation(cancellationToken)
+        )
         {
             yield return sensor;
         }
@@ -255,7 +263,7 @@ public sealed class SensorRepository(IDbContextFactory<AquaTrackDbContext> conte
             Name = dto.Name,
             Latitude = dto.Latitude,
             Longitude = dto.Longitude,
-            Municipality = dto.Municipality,
+            MunicipalityId = dto.MunicipalityId,
             IsActive = dto.IsActive,
             ReportingMode = ReportingMode.Push,
             SensorTypeId = null,
@@ -287,7 +295,7 @@ public sealed class SensorRepository(IDbContextFactory<AquaTrackDbContext> conte
         entity.Name = dto.Name;
         entity.Latitude = dto.Latitude;
         entity.Longitude = dto.Longitude;
-        entity.Municipality = dto.Municipality;
+        entity.MunicipalityId = dto.MunicipalityId;
         entity.IsActive = dto.IsActive;
         entity.UpdatedAt = DateTimeOffset.UtcNow;
 
@@ -301,7 +309,7 @@ public sealed class SensorRepository(IDbContextFactory<AquaTrackDbContext> conte
             entity.Name,
             entity.Latitude,
             entity.Longitude,
-            entity.Municipality,
+            entity.MunicipalityId,
             entity.IsActive,
             entity.CreatedAt,
             null

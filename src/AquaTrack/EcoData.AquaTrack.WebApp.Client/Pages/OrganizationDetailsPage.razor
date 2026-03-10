@@ -130,10 +130,6 @@ else
                                             <MudText Typo="Typo.body2">@sensor.Name</MudText>
                                             <MudText Typo="Typo.caption" Color="Color.Secondary">
                                                 @sensor.ExternalId
-                                                @if (!string.IsNullOrWhiteSpace(sensor.Municipality))
-                                                {
-                                                    <text> · @sensor.Municipality</text>
-                                                }
                                             </MudText>
                                         </div>
                                         <MudChip T="string"
