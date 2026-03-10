@@ -14,6 +14,7 @@ builder.Services.AddHttpClient<IUsgsApiClient, UsgsApiClient>(client =>
     client.BaseAddress = new Uri("https://waterservices.usgs.gov/nwis/iv/");
 });
 builder.Services.AddHostedService<UsgsIngestionWorker>();
+builder.Services.AddHostedService<SensorHealthMonitorWorker>();
 
 var host = builder.Build();
 host.Run();

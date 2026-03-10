@@ -11,6 +11,12 @@ public sealed class AquaTrackDbContext(DbContextOptions<AquaTrackDbContext> opti
     public DbSet<Alert> Alerts => Set<Alert>();
     public DbSet<IngestionLog> IngestionLogs => Set<IngestionLog>();
     public DbSet<Organization> Organizations => Set<Organization>();
+    public DbSet<SensorHealthConfig> SensorHealthConfigs => Set<SensorHealthConfig>();
+    public DbSet<SensorHealthStatus> SensorHealthStatuses => Set<SensorHealthStatus>();
+    public DbSet<SensorHealthAlert> SensorHealthAlerts => Set<SensorHealthAlert>();
+    public DbSet<ApiKey> ApiKeys => Set<ApiKey>();
+    public DbSet<SensorType> SensorTypes => Set<SensorType>();
+    public DbSet<Parameter> Parameters => Set<Parameter>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -20,5 +26,11 @@ public sealed class AquaTrackDbContext(DbContextOptions<AquaTrackDbContext> opti
         modelBuilder.ApplyConfiguration(new Alert.EntityConfiguration());
         modelBuilder.ApplyConfiguration(new IngestionLog.EntityConfiguration());
         modelBuilder.ApplyConfiguration(new Organization.EntityConfiguration());
+        modelBuilder.ApplyConfiguration(new SensorHealthConfig.EntityConfiguration());
+        modelBuilder.ApplyConfiguration(new SensorHealthStatus.EntityConfiguration());
+        modelBuilder.ApplyConfiguration(new SensorHealthAlert.EntityConfiguration());
+        modelBuilder.ApplyConfiguration(new ApiKey.EntityConfiguration());
+        modelBuilder.ApplyConfiguration(new SensorType.EntityConfiguration());
+        modelBuilder.ApplyConfiguration(new Parameter.EntityConfiguration());
     }
 }

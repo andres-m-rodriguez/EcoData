@@ -15,6 +15,7 @@ public sealed class Organization
     public required DateTimeOffset UpdatedAt { get; set; }
 
     public ICollection<Sensor> Sensors { get; set; } = [];
+    public ICollection<ApiKey> ApiKeys { get; set; } = [];
 
     public sealed class EntityConfiguration : IEntityTypeConfiguration<Organization>
     {
@@ -31,6 +32,12 @@ public sealed class Organization
             builder.Property(static e => e.UpdatedAt).IsRequired();
 
             builder.HasIndex(static e => e.Name).IsUnique();
+
+            builder
+                .HasMany(static e => e.ApiKeys)
+                .WithOne(static e => e.Organization)
+                .HasForeignKey(static e => e.OrganizationId)
+                .OnDelete(DeleteBehavior.Cascade);
         }
     }
 }

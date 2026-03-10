@@ -1,3 +1,5 @@
+using System.Security.Claims;
+using EcoData.Identity.Contracts.Authorization;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace EcoData.Identity.Application.Client;
@@ -23,5 +25,18 @@ public static class DependencyInjection
     )
     {
         return services.AddIdentityClient(client => client.BaseAddress = baseAddress);
+    }
+
+    public static IServiceCollection AddIdentityAuthorization(this IServiceCollection services)
+    {
+        services.AddAuthorizationCore(options =>
+        {
+            options.AddPolicy(
+                PolicyNames.Admin,
+                policy => policy.RequireClaim(ClaimTypes.Role, "Admin")
+            );
+        });
+
+        return services;
     }
 }

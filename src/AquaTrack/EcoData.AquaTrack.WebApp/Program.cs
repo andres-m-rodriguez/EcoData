@@ -1,4 +1,6 @@
 using EcoData.AquaTrack.Api;
+using EcoData.AquaTrack.Api.Authentication;
+using EcoData.AquaTrack.Api.Authorization;
 using EcoData.AquaTrack.DataAccess.Extensions;
 using EcoData.AquaTrack.Database.Extensions;
 using EcoData.AquaTrack.WebApp.Components;
@@ -21,13 +23,10 @@ builder.Services.AddAquaTrackDataAccess();
 builder.Services.AddIdentityDataAccess();
 builder.Services.AddIdentityApplication();
 
-builder.Services.AddAuthorization(options =>
-{
-    options.AddPolicy(
-        "Admin",
-        policy => policy.RequireClaim(System.Security.Claims.ClaimTypes.Role, "Admin")
-    );
-});
+builder.Services.AddAuthentication()
+    .AddApiKeyAuthentication();
+
+builder.Services.AddAquaTrackAuthorization();
 
 var app = builder.Build();
 
@@ -53,8 +52,12 @@ app.MapRazorComponents<App>()
     .AddAdditionalAssemblies(typeof(EcoData.AquaTrack.WebApp.Client._Imports).Assembly);
 
 app.MapSensorEndpoints();
+app.MapSensorHealthEndpoints();
 app.MapDataSourceEndpoints();
 app.MapOrganizationEndpoints();
+app.MapApiKeyEndpoints();
+app.MapPushEndpoints();
+app.MapReferenceDataEndpoints();
 app.MapAuthEndpoints();
 
 app.Run();
