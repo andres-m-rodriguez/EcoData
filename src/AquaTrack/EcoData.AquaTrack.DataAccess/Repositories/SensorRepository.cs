@@ -71,15 +71,7 @@ public sealed class SensorRepository(IDbContextFactory<AquaTrackDbContext> conte
             .ToListAsync(cancellationToken);
     }
 
-    public IAsyncEnumerable<SensorDtoForList> GetSensorsAsync(
-        SensorParameters parameters,
-        CancellationToken cancellationToken = default
-    )
-    {
-        return GetSensorsInternalAsync(parameters, cancellationToken);
-    }
-
-    private async IAsyncEnumerable<SensorDtoForList> GetSensorsInternalAsync(
+    public async IAsyncEnumerable<SensorDtoForList> GetSensorsAsync(
         SensorParameters parameters,
         [EnumeratorCancellation] CancellationToken cancellationToken = default
     )
@@ -96,6 +88,11 @@ public sealed class SensorRepository(IDbContextFactory<AquaTrackDbContext> conte
         if (parameters.DataSourceId.HasValue)
         {
             query = query.Where(s => s.SourceId == parameters.DataSourceId.Value);
+        }
+
+        if (parameters.OrganizationId.HasValue)
+        {
+            query = query.Where(s => s.OrganizationId == parameters.OrganizationId.Value);
         }
 
         if (!string.IsNullOrWhiteSpace(parameters.Search))
@@ -204,45 +201,6 @@ public sealed class SensorRepository(IDbContextFactory<AquaTrackDbContext> conte
         await context.SaveChangesAsync(cancellationToken);
 
         return entities.Select(e => new SensorDtoForCreated(e.Id, e.ExternalId)).ToList();
-    }
-
-    public IAsyncEnumerable<SensorDtoForList> GetByOrganizationAsync(
-        Guid organizationId,
-        CancellationToken cancellationToken = default
-    )
-    {
-        return GetByOrganizationInternalAsync(organizationId, cancellationToken);
-    }
-
-    private async IAsyncEnumerable<SensorDtoForList> GetByOrganizationInternalAsync(
-        Guid organizationId,
-        [EnumeratorCancellation] CancellationToken cancellationToken = default
-    )
-    {
-        await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
-
-        await foreach (
-            var sensor in context
-                .Sensors.Where(s => s.OrganizationId == organizationId)
-                .OrderBy(s => s.Name)
-                .Select(static s => new SensorDtoForList(
-                    s.Id,
-                    s.OrganizationId,
-                    s.SourceId,
-                    s.ExternalId,
-                    s.Name,
-                    s.Latitude,
-                    s.Longitude,
-                    s.MunicipalityId,
-                    s.IsActive,
-                    s.DataSource != null ? s.DataSource.Name : null
-                ))
-                .AsAsyncEnumerable()
-                .WithCancellation(cancellationToken)
-        )
-        {
-            yield return sensor;
-        }
     }
 
     public async Task<SensorDtoForCreated> CreateForOrganizationAsync(

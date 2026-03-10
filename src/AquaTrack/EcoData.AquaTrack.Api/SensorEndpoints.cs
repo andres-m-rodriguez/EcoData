@@ -30,28 +30,6 @@ public static class SensorEndpoints
 
         orgGroup
             .MapGet(
-                "/",
-                async Task<Results<Ok<List<SensorDtoForList>>, NotFound<string>>> (
-                    Guid organizationId,
-                    ISensorRepository repository,
-                    IOrganizationRepository organizationRepository,
-                    CancellationToken ct
-                ) =>
-                {
-                    var organization = await organizationRepository.GetByIdAsync(organizationId, ct);
-                    if (organization is null)
-                    {
-                        return TypedResults.NotFound("Organization not found");
-                    }
-
-                    var sensors = await repository.GetByOrganizationAsync(organizationId, ct).ToListAsync(ct);
-                    return TypedResults.Ok(sensors);
-                }
-            )
-            .WithName("GetOrganizationSensors");
-
-        orgGroup
-            .MapGet(
                 "/{id:guid}",
                 async Task<Results<Ok<SensorDtoForDetail>, NotFound>> (
                     Guid organizationId,

@@ -10,11 +10,6 @@ public interface ISensorHttpClient
         CancellationToken cancellationToken = default
     );
 
-    IAsyncEnumerable<SensorDtoForList> GetByOrganizationAsync(
-        Guid organizationId,
-        CancellationToken cancellationToken = default
-    );
-
     Task<SensorDtoForDetail?> GetByIdAsync(
         Guid organizationId,
         Guid sensorId,

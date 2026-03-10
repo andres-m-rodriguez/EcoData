@@ -18,17 +18,6 @@ public sealed class SensorHttpClient(HttpClient httpClient) : ISensorHttpClient
         )!;
     }
 
-    public IAsyncEnumerable<SensorDtoForList> GetByOrganizationAsync(
-        Guid organizationId,
-        CancellationToken cancellationToken = default
-    )
-    {
-        return httpClient.GetFromJsonAsAsyncEnumerable<SensorDtoForList>(
-            $"api/organizations/{organizationId}/sensors",
-            cancellationToken
-        )!;
-    }
-
     public async Task<SensorDtoForDetail?> GetByIdAsync(
         Guid organizationId,
         Guid sensorId,
@@ -130,6 +119,11 @@ public sealed class SensorHttpClient(HttpClient httpClient) : ISensorHttpClient
         if (parameters.DataSourceId.HasValue)
         {
             queryParams.Add($"dataSourceId={parameters.DataSourceId.Value}");
+        }
+
+        if (parameters.OrganizationId.HasValue)
+        {
+            queryParams.Add($"organizationId={parameters.OrganizationId.Value}");
         }
 
         return queryParams.Count > 0 ? $"?{string.Join("&", queryParams)}" : string.Empty;

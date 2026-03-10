@@ -29,11 +29,6 @@ public interface ISensorRepository
         CancellationToken cancellationToken = default
     );
 
-    IAsyncEnumerable<SensorDtoForList> GetByOrganizationAsync(
-        Guid organizationId,
-        CancellationToken cancellationToken = default
-    );
-
     Task<SensorDtoForCreated> CreateForOrganizationAsync(
         Guid organizationId,
         SensorDtoForOrganizationCreate dto,
