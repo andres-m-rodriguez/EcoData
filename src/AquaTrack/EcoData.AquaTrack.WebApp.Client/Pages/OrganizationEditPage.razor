@@ -1,5 +1,6 @@
 @page "/organizations/{Id:guid}/edit"
 @using EcoData.AquaTrack.Contracts.Dtos
+@using EcoData.AquaTrack.Contracts.Errors
 @using EcoData.AquaTrack.Application.Client
 @using EcoData.AquaTrack.WebApp.Client.Services
 @using BlazingSingularity.Commands
@@ -175,16 +176,19 @@
     [RelayCommand]
     private async Task Load()
     {
-        _organization = await OrganizationClient.GetByIdAsync(Id);
-
-        if (_organization is not null)
-        {
-            _name = _organization.Name;
-            _profilePictureUrl = _organization.ProfilePictureUrl;
-            _cardPictureUrl = _organization.CardPictureUrl;
-            _aboutUs = _organization.AboutUs;
-            _websiteUrl = _organization.WebsiteUrl;
-        }
+        var result = await OrganizationClient.GetByIdAsync(Id);
+        result.Switch(
+            organization =>
+            {
+                _organization = organization;
+                _name = organization.Name;
+                _profilePictureUrl = organization.ProfilePictureUrl;
+                _cardPictureUrl = organization.CardPictureUrl;
+                _aboutUs = organization.AboutUs;
+                _websiteUrl = organization.WebsiteUrl;
+            },
+            _ => _organization = null
+        );
     }
 
     [RelayCommand]
@@ -198,32 +202,26 @@
             return;
         }
 
-        try
-        {
-            var dto = new OrganizationDtoForUpdate(
-                _name,
-                _profilePictureUrl,
-                _cardPictureUrl,
-                _aboutUs,
-                _websiteUrl
-            );
+        var dto = new OrganizationDtoForUpdate(
+            _name,
+            _profilePictureUrl,
+            _cardPictureUrl,
+            _aboutUs,
+            _websiteUrl
+        );
 
-            var result = await OrganizationClient.UpdateAsync(Id, dto);
+        var result = await OrganizationClient.UpdateAsync(Id, dto);
 
-            if (result is not null)
+        result.Switch(
+            _ =>
             {
                 Snackbar.Add("Organization updated successfully", Severity.Success);
                 Navigation.NavigateTo($"/organizations/{Id}");
-            }
-            else
-            {
-                _errorMessage = "Failed to update organization";
-            }
-        }
-        catch
-        {
-            _errorMessage = "Failed to update organization";
-        }
+            },
+            _ => _errorMessage = "Organization not found",
+            validationError => _errorMessage = validationError.Errors.FirstOrDefault()?.ErrorMessage ?? "Validation failed",
+            apiError => _errorMessage = apiError.Message ?? "Failed to update organization"
+        );
     }
 
     private void NavigateBack()

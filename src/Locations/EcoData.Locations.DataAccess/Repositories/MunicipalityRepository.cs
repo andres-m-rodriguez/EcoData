@@ -77,7 +77,6 @@ public sealed class MunicipalityRepository(IDbContextFactory<LocationsDbContext>
         await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
 
         return await context.Municipalities
-            .Include(m => m.State)
             .Where(m => m.Id == id)
             .Select(m => new MunicipalityDtoForDetail(
                 m.Id,
@@ -101,7 +100,6 @@ public sealed class MunicipalityRepository(IDbContextFactory<LocationsDbContext>
         await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
 
         return await context.Municipalities
-            .Include(m => m.State)
             .Where(m => m.GeoJsonId == geoJsonId)
             .Select(m => new MunicipalityDtoForDetail(
                 m.Id,
@@ -128,7 +126,6 @@ public sealed class MunicipalityRepository(IDbContextFactory<LocationsDbContext>
         var point = new Point((double)longitude, (double)latitude) { SRID = 4326 };
 
         return await context.Municipalities
-            .Include(m => m.State)
             .Where(m => m.Boundary != null && m.Boundary.Contains(point))
             .Select(m => new MunicipalityDtoForDetail(
                 m.Id,
