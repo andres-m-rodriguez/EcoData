@@ -5,25 +5,24 @@
 namespace EcoData.AquaTrack.Database.Migrations
 {
     /// <inheritdoc />
-    public partial class AddStateToSensor : Migration
+    public partial class AddOrganizationCardPictureUrl : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.AddColumn<string>(
-                name: "state",
-                table: "sensors",
-                type: "character varying(50)",
-                maxLength: 50,
-                nullable: true);
+                name: "card_picture_url",
+                table: "organizations",
+                type: "character varying(500)",
+                maxLength: 500,
+                nullable: true
+            );
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropColumn(
-                name: "state",
-                table: "sensors");
+            migrationBuilder.DropColumn(name: "card_picture_url", table: "organizations");
         }
     }
 }

@@ -35,6 +35,9 @@ namespace EcoData.AquaTrack.Database.Migrations
                 {
                     id = table.Column<Guid>(type: "uuid", nullable: false),
                     name = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
+                    profile_picture_url = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: true),
+                    about_us = table.Column<string>(type: "character varying(2000)", maxLength: 2000, nullable: true),
+                    website_url = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: true),
                     created_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
                     updated_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false)
                 },

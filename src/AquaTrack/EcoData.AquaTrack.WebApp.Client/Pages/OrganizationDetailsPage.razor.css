@@ -1,0 +1,71 @@
+.page-wrapper {
+    width: 80vw;
+    margin: 0 auto;
+}
+
+.banner {
+    position: relative;
+    height: 30vh;
+    background: linear-gradient(135deg, #e3f2fd, #bbdefb);
+    border-radius: 8px;
+    overflow: hidden;
+    margin-bottom: 12px;
+}
+
+.banner img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+::deep .back-btn {
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    background: rgba(255,255,255,0.9);
+}
+
+.header-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+}
+
+.header-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.header-actions {
+    display: flex;
+    gap: 4px;
+}
+
+.about {
+    color: #555;
+    line-height: 1.5;
+    margin-bottom: 12px;
+}
+
+.meta {
+    color: #888;
+}
+
+.banner-skeleton {
+    border-radius: 8px;
+    margin-bottom: 12px;
+}
+
+.tabs {
+    margin-top: 8px;
+}
+
+.tab-content {
+    padding: 12px 0;
+}
+
+.team-list {
+    padding: 8px 0;
+}

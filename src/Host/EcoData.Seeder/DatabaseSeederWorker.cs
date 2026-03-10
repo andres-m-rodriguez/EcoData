@@ -44,7 +44,10 @@ public sealed class DatabaseSeederWorker(
         }
     }
 
-    private async Task MigrateAquaTrackAsync(IServiceProvider services, CancellationToken stoppingToken)
+    private async Task MigrateAquaTrackAsync(
+        IServiceProvider services,
+        CancellationToken stoppingToken
+    )
     {
         var context = services.GetRequiredService<AquaTrackDbContext>();
         logger.LogInformation("Applying AquaTrack database migrations...");
@@ -52,7 +55,10 @@ public sealed class DatabaseSeederWorker(
         logger.LogInformation("AquaTrack database migrations applied.");
     }
 
-    private async Task MigrateIdentityAsync(IServiceProvider services, CancellationToken stoppingToken)
+    private async Task MigrateIdentityAsync(
+        IServiceProvider services,
+        CancellationToken stoppingToken
+    )
     {
         var context = services.GetRequiredService<IdentityDbContext>();
         logger.LogInformation("Applying Identity database migrations...");
@@ -60,7 +66,10 @@ public sealed class DatabaseSeederWorker(
         logger.LogInformation("Identity database migrations applied.");
     }
 
-    private async Task MigrateLocationsAsync(IServiceProvider services, CancellationToken stoppingToken)
+    private async Task MigrateLocationsAsync(
+        IServiceProvider services,
+        CancellationToken stoppingToken
+    )
     {
         var context = services.GetRequiredService<LocationsDbContext>();
         logger.LogInformation("Applying Locations database migrations...");
@@ -68,13 +77,18 @@ public sealed class DatabaseSeederWorker(
         logger.LogInformation("Locations database migrations applied.");
     }
 
-    private async Task SeedAdminUserAsync(IServiceProvider services, CancellationToken stoppingToken)
+    private async Task SeedAdminUserAsync(
+        IServiceProvider services,
+        CancellationToken stoppingToken
+    )
     {
         var context = services.GetRequiredService<IdentityDbContext>();
 
         const string adminEmail = "admin@gmail.com";
-        var existingAdmin = await context.Users
-            .FirstOrDefaultAsync(u => u.Email == adminEmail, stoppingToken);
+        var existingAdmin = await context.Users.FirstOrDefaultAsync(
+            u => u.Email == adminEmail,
+            stoppingToken
+        );
 
         if (existingAdmin is not null)
         {
@@ -97,7 +111,7 @@ public sealed class DatabaseSeederWorker(
             Role = UserRole.Admin,
             SecurityStamp = Guid.NewGuid().ToString(),
             ConcurrencyStamp = Guid.NewGuid().ToString(),
-            CreatedAt = now
+            CreatedAt = now,
         };
 
         var passwordHasher = new PasswordHasher<User>();
@@ -109,7 +123,10 @@ public sealed class DatabaseSeederWorker(
         logger.LogInformation("Admin user created: {Email}", adminEmail);
     }
 
-    private async Task SeedLocationsAsync(IServiceProvider services, CancellationToken stoppingToken)
+    private async Task SeedLocationsAsync(
+        IServiceProvider services,
+        CancellationToken stoppingToken
+    )
     {
         var context = services.GetRequiredService<LocationsDbContext>();
 
@@ -117,8 +134,10 @@ public sealed class DatabaseSeederWorker(
         const string puertoRicoStateCode = "PR";
         const string puertoRicoStateName = "Puerto Rico";
 
-        var existingState = await context.States
-            .FirstOrDefaultAsync(s => s.Code == puertoRicoStateCode, stoppingToken);
+        var existingState = await context.States.FirstOrDefaultAsync(
+            s => s.Code == puertoRicoStateCode,
+            stoppingToken
+        );
 
         if (existingState is not null)
         {
@@ -148,7 +167,7 @@ public sealed class DatabaseSeederWorker(
             Code = puertoRicoStateCode,
             FipsCode = puertoRicoStateFips,
             Boundary = null,
-            CreatedAt = now
+            CreatedAt = now,
         };
 
         context.States.Add(state);
@@ -210,7 +229,7 @@ public sealed class DatabaseSeederWorker(
                     Boundary = boundary,
                     CentroidLatitude = centroidLat,
                     CentroidLongitude = centroidLon,
-                    CreatedAt = now
+                    CreatedAt = now,
                 };
 
                 municipalities.Add(municipality);
@@ -219,7 +238,10 @@ public sealed class DatabaseSeederWorker(
             context.Municipalities.AddRange(municipalities);
             await context.SaveChangesAsync(stoppingToken);
 
-            logger.LogInformation("Seeded {Count} municipalities for Puerto Rico", municipalities.Count);
+            logger.LogInformation(
+                "Seeded {Count} municipalities for Puerto Rico",
+                municipalities.Count
+            );
         }
     }
 }

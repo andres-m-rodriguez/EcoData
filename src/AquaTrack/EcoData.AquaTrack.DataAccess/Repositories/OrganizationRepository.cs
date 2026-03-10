@@ -37,6 +37,10 @@ public sealed class OrganizationRepository(IDbContextFactory<AquaTrackDbContext>
             .Select(o => new OrganizationDtoForList(
                 o.Id,
                 o.Name,
+                o.ProfilePictureUrl,
+                o.CardPictureUrl,
+                o.AboutUs,
+                o.WebsiteUrl,
                 o.CreatedAt
             ))
             .AsAsyncEnumerable()
@@ -55,6 +59,10 @@ public sealed class OrganizationRepository(IDbContextFactory<AquaTrackDbContext>
             .Select(o => new OrganizationDtoForDetail(
                 o.Id,
                 o.Name,
+                o.ProfilePictureUrl,
+                o.CardPictureUrl,
+                o.AboutUs,
+                o.WebsiteUrl,
                 o.CreatedAt,
                 o.UpdatedAt
             ))
@@ -80,6 +88,10 @@ public sealed class OrganizationRepository(IDbContextFactory<AquaTrackDbContext>
         {
             Id = Guid.CreateVersion7(),
             Name = dto.Name,
+            ProfilePictureUrl = dto.ProfilePictureUrl,
+            CardPictureUrl = dto.CardPictureUrl,
+            AboutUs = dto.AboutUs,
+            WebsiteUrl = dto.WebsiteUrl,
             CreatedAt = now,
             UpdatedAt = now
         };
@@ -107,6 +119,10 @@ public sealed class OrganizationRepository(IDbContextFactory<AquaTrackDbContext>
         }
 
         entity.Name = dto.Name;
+        entity.ProfilePictureUrl = dto.ProfilePictureUrl;
+        entity.CardPictureUrl = dto.CardPictureUrl;
+        entity.AboutUs = dto.AboutUs;
+        entity.WebsiteUrl = dto.WebsiteUrl;
         entity.UpdatedAt = DateTimeOffset.UtcNow;
 
         await context.SaveChangesAsync(cancellationToken);
@@ -114,6 +130,10 @@ public sealed class OrganizationRepository(IDbContextFactory<AquaTrackDbContext>
         return new OrganizationDtoForDetail(
             entity.Id,
             entity.Name,
+            entity.ProfilePictureUrl,
+            entity.CardPictureUrl,
+            entity.AboutUs,
+            entity.WebsiteUrl,
             entity.CreatedAt,
             entity.UpdatedAt
         );
