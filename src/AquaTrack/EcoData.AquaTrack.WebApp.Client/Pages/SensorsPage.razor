@@ -5,9 +5,7 @@
 
 <PageTitle>Sensors - AquaTrack</PageTitle>
 
-<div class="sensors-page">
-    <SensorList OnMapClick="NavigateToMap" />
-</div>
+<SensorList OnMapClick="NavigateToMap" />
 
 @code {
     private void NavigateToMap(SensorDtoForList sensor)
