@@ -1,6 +1,7 @@
 using EcoData.AquaTrack.Contracts.Dtos;
 using EcoData.AquaTrack.DataAccess.Interfaces;
 using EcoData.AquaTrack.Ingestion.Services;
+using EcoData.Locations.DataAccess.Interfaces;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
@@ -13,6 +14,7 @@ public sealed class UsgsIngestionWorker(
     IReadingRepository readingRepository,
     IIngestionLogRepository ingestionLogRepository,
     ISensorHealthRepository healthRepository,
+    IMunicipalityRepository municipalityRepository,
     IUsgsApiClient usgsApiClient,
     ILogger<UsgsIngestionWorker> logger
 ) : BackgroundService
@@ -71,9 +73,19 @@ public sealed class UsgsIngestionWorker(
                     }
 
                     var location = series.SourceInfo.GeoLocation.GeogLocation;
+                    var municipality = await municipalityRepository.GetByPointAsync(
+                        location.Latitude, location.Longitude, stoppingToken);
+
+                    if (municipality is null)
+                    {
+                        logger.LogWarning("Skipping sensor {SiteCode} - no municipality found for coordinates ({Lat}, {Lon})",
+                            siteCode, location.Latitude, location.Longitude);
+                        continue;
+                    }
+
                     sensorsToAdd.Add(new SensorDtoForCreate(
                         dataSource.Id, siteCode, series.SourceInfo.SiteName,
-                        location.Latitude, location.Longitude, null, true
+                        location.Latitude, location.Longitude, municipality.Id, true
                     ));
                 }
 
