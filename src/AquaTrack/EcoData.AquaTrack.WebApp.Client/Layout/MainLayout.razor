@@ -48,10 +48,6 @@
             <MudNavLink Href="@SensorsPage.Path" Icon="@Icons.Material.Outlined.Sensors">Sensors</MudNavLink>
             <MudNavLink Href="@OrganizationsPage.Path" Icon="@Icons.Material.Outlined.Business">Organizations</MudNavLink>
             <MudNavLink Href="@SensorMapPage.Path" Icon="@Icons.Material.Outlined.Map">Map</MudNavLink>
-            @if (AuthState.CurrentUser?.Role == "Admin")
-            {
-                <MudNavLink Href="@CounterPage.Path" Icon="@Icons.Material.Outlined.Analytics">Counter</MudNavLink>
-            }
         </MudNavMenu>
 
         <MudSpacer />

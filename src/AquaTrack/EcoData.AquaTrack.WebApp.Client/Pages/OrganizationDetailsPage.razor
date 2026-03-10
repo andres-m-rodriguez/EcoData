@@ -1,5 +1,6 @@
 @page "/organizations/{Id:guid}"
 @using EcoData.AquaTrack.Contracts.Dtos
+@using EcoData.AquaTrack.Contracts.Errors
 @using EcoData.AquaTrack.Application.Client
 @using EcoData.AquaTrack.WebApp.Client.Services
 @using EcoData.AquaTrack.WebApp.Client.Components
@@ -147,7 +148,11 @@ else
     [RelayCommand]
     private async Task Load()
     {
-        _organization = await OrganizationClient.GetByIdAsync(Id);
+        var result = await OrganizationClient.GetByIdAsync(Id);
+        result.Switch(
+            organization => _organization = organization,
+            _ => _organization = null
+        );
     }
 
     private void NavigateBack() => Navigation.NavigateTo("/organizations");
@@ -171,19 +176,20 @@ else
             { x => x.Color, Color.Error }
         };
         var dialog = await DialogService.ShowAsync<ConfirmDialog>("Delete", parameters);
-        var result = await dialog.Result;
+        var dialogResult = await dialog.Result;
 
-        if (result is { Canceled: false })
+        if (dialogResult is { Canceled: false })
         {
-            if (await OrganizationClient.DeleteAsync(Id))
-            {
-                Snackbar.Add("Deleted", Severity.Success);
-                Navigation.NavigateTo("/organizations");
-            }
-            else
-            {
-                Snackbar.Add("Failed to delete", Severity.Error);
-            }
+            var result = await OrganizationClient.DeleteAsync(Id);
+            result.Switch(
+                _ =>
+                {
+                    Snackbar.Add("Deleted", Severity.Success);
+                    Navigation.NavigateTo("/organizations");
+                },
+                _ => Snackbar.Add("Organization not found", Severity.Error),
+                error => Snackbar.Add($"Failed to delete: {error.Message}", Severity.Error)
+            );
         }
     }
 }

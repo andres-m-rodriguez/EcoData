@@ -1,5 +1,7 @@
 using EcoData.AquaTrack.Contracts.Dtos;
+using EcoData.AquaTrack.Contracts.Errors;
 using EcoData.AquaTrack.Contracts.Parameters;
+using OneOf;
 
 namespace EcoData.AquaTrack.Application.Client;
 
@@ -10,18 +12,24 @@ public interface IOrganizationHttpClient
         CancellationToken cancellationToken = default
     );
 
-    Task<OrganizationDtoForDetail?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
+    Task<OneOf<OrganizationDtoForDetail, NotFoundError>> GetByIdAsync(
+        Guid id,
+        CancellationToken cancellationToken = default
+    );
 
-    Task<OrganizationDtoForCreated> CreateAsync(
+    Task<OneOf<OrganizationDtoForCreated, ValidationError, ApiError>> CreateAsync(
         OrganizationDtoForCreate dto,
         CancellationToken cancellationToken = default
     );
 
-    Task<OrganizationDtoForDetail?> UpdateAsync(
+    Task<OneOf<OrganizationDtoForDetail, NotFoundError, ValidationError, ApiError>> UpdateAsync(
         Guid id,
         OrganizationDtoForUpdate dto,
         CancellationToken cancellationToken = default
     );
 
-    Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken = default);
+    Task<OneOf<Success, NotFoundError, ApiError>> DeleteAsync(
+        Guid id,
+        CancellationToken cancellationToken = default
+    );
 }

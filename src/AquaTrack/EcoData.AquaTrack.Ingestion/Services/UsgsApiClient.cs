@@ -22,21 +22,13 @@ public sealed class UsgsApiClient(
 
         logger.LogInformation("Fetching USGS data from {Url}", url);
 
-        try
-        {
-            var response = await httpClient.GetFromJsonAsync<UsgsResponse>(url, cancellationToken);
+        var response = await httpClient.GetFromJsonAsync<UsgsResponse>(url, cancellationToken);
 
-            if (response?.Value.TimeSeries is { } timeSeries)
-            {
-                logger.LogInformation("Retrieved {Count} time series from USGS", timeSeries.Count);
-            }
-
-            return response;
-        }
-        catch (HttpRequestException ex)
+        if (response?.Value.TimeSeries is { } timeSeries)
         {
-            logger.LogError(ex, "Failed to fetch data from USGS API");
-            throw;
+            logger.LogInformation("Retrieved {Count} time series from USGS", timeSeries.Count);
         }
+
+        return response;
     }
 }

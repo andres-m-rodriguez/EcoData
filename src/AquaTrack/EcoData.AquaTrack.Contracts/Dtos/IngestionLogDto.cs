@@ -1,6 +1,6 @@
 namespace EcoData.AquaTrack.Contracts.Dtos;
 
-public sealed record IngestionLogDto(
+public sealed record IngestionLogDtoForDetail(
     Guid Id,
     Guid DataSourceId,
     DateTimeOffset IngestedAt,

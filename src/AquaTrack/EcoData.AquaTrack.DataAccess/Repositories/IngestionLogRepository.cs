@@ -9,14 +9,14 @@ namespace EcoData.AquaTrack.DataAccess.Repositories;
 public sealed class IngestionLogRepository(IDbContextFactory<AquaTrackDbContext> contextFactory)
     : IIngestionLogRepository
 {
-    public async Task<IngestionLogDto?> GetLatestAsync(Guid dataSourceId, CancellationToken cancellationToken = default)
+    public async Task<IngestionLogDtoForDetail?> GetLatestAsync(Guid dataSourceId, CancellationToken cancellationToken = default)
     {
         await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
 
         return await context.IngestionLogs
             .Where(l => l.DataSourceId == dataSourceId)
             .OrderByDescending(l => l.IngestedAt)
-            .Select(l => new IngestionLogDto(
+            .Select(l => new IngestionLogDtoForDetail(
                 l.Id,
                 l.DataSourceId,
                 l.IngestedAt,
