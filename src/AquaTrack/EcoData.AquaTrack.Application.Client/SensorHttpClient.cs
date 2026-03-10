@@ -18,6 +18,80 @@ public sealed class SensorHttpClient(HttpClient httpClient) : ISensorHttpClient
         )!;
     }
 
+    public async Task<SensorDtoForDetail?> GetByIdAsync(
+        Guid organizationId,
+        Guid sensorId,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var response = await httpClient.GetAsync(
+            $"api/organizations/{organizationId}/sensors/{sensorId}",
+            cancellationToken
+        );
+
+        if (!response.IsSuccessStatusCode)
+        {
+            return null;
+        }
+
+        return await response.Content.ReadFromJsonAsync<SensorDtoForDetail>(cancellationToken);
+    }
+
+    public async Task<SensorDtoForCreated?> CreateForOrganizationAsync(
+        Guid organizationId,
+        SensorDtoForOrganizationCreate dto,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var response = await httpClient.PostAsJsonAsync(
+            $"api/organizations/{organizationId}/sensors",
+            dto,
+            cancellationToken
+        );
+
+        if (!response.IsSuccessStatusCode)
+        {
+            return null;
+        }
+
+        return await response.Content.ReadFromJsonAsync<SensorDtoForCreated>(cancellationToken);
+    }
+
+    public async Task<SensorDtoForDetail?> UpdateAsync(
+        Guid organizationId,
+        Guid sensorId,
+        SensorDtoForOrganizationCreate dto,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var response = await httpClient.PutAsJsonAsync(
+            $"api/organizations/{organizationId}/sensors/{sensorId}",
+            dto,
+            cancellationToken
+        );
+
+        if (!response.IsSuccessStatusCode)
+        {
+            return null;
+        }
+
+        return await response.Content.ReadFromJsonAsync<SensorDtoForDetail>(cancellationToken);
+    }
+
+    public async Task<bool> DeleteAsync(
+        Guid organizationId,
+        Guid sensorId,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var response = await httpClient.DeleteAsync(
+            $"api/organizations/{organizationId}/sensors/{sensorId}",
+            cancellationToken
+        );
+
+        return response.IsSuccessStatusCode;
+    }
+
     private static string BuildQueryString(SensorParameters parameters)
     {
         var queryParams = new List<string>();
@@ -45,6 +119,11 @@ public sealed class SensorHttpClient(HttpClient httpClient) : ISensorHttpClient
         if (parameters.DataSourceId.HasValue)
         {
             queryParams.Add($"dataSourceId={parameters.DataSourceId.Value}");
+        }
+
+        if (parameters.OrganizationId.HasValue)
+        {
+            queryParams.Add($"organizationId={parameters.OrganizationId.Value}");
         }
 
         return queryParams.Count > 0 ? $"?{string.Join("&", queryParams)}" : string.Empty;

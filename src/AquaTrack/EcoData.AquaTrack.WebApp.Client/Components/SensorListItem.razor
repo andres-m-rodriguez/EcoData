@@ -5,7 +5,7 @@
         <div class="sensor-name">@Sensor.Name</div>
         <div class="sensor-id">@Sensor.ExternalId</div>
     </div>
-    <div class="sensor-municipality hide-mobile">@(Sensor.Municipality ?? "-")</div>
+    <div class="sensor-municipality hide-mobile">@Sensor.MunicipalityId</div>
     <div class="sensor-location hide-mobile">
         @Sensor.Latitude.ToString("F4"), @Sensor.Longitude.ToString("F4")
     </div>

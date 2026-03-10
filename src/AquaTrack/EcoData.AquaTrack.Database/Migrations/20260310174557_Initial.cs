@@ -150,7 +150,7 @@ namespace EcoData.AquaTrack.Database.Migrations
                     name = table.Column<string>(type: "character varying(300)", maxLength: 300, nullable: false),
                     latitude = table.Column<decimal>(type: "numeric(9,6)", precision: 9, scale: 6, nullable: false),
                     longitude = table.Column<decimal>(type: "numeric(9,6)", precision: 9, scale: 6, nullable: false),
-                    municipality = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: true),
+                    municipality_id = table.Column<Guid>(type: "uuid", nullable: false),
                     is_active = table.Column<bool>(type: "boolean", nullable: false),
                     reporting_mode = table.Column<string>(type: "character varying(10)", maxLength: 10, nullable: false),
                     sensor_type_id = table.Column<Guid>(type: "uuid", nullable: true),
@@ -402,6 +402,11 @@ namespace EcoData.AquaTrack.Database.Migrations
                 table: "sensor_types",
                 column: "code",
                 unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "ix_sensors_municipality_id",
+                table: "sensors",
+                column: "municipality_id");
 
             migrationBuilder.CreateIndex(
                 name: "ix_sensors_organization_id_external_id",
