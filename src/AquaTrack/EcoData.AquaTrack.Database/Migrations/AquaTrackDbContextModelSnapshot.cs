@@ -172,6 +172,10 @@ namespace EcoData.AquaTrack.Database.Migrations
                         .HasColumnType("character varying(200)")
                         .HasColumnName("name");
 
+                    b.Property<Guid>("OrganizationId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("organization_id");
+
                     b.Property<int>("PullIntervalSeconds")
                         .HasColumnType("integer")
                         .HasColumnName("pull_interval_seconds");
@@ -184,6 +188,9 @@ namespace EcoData.AquaTrack.Database.Migrations
 
                     b.HasKey("Id")
                         .HasName("pk_data_sources");
+
+                    b.HasIndex("OrganizationId")
+                        .HasDatabaseName("ix_data_sources_organization_id");
 
                     b.ToTable("data_sources", (string)null);
                 });
@@ -409,7 +416,7 @@ namespace EcoData.AquaTrack.Database.Migrations
                         .HasColumnType("character varying(300)")
                         .HasColumnName("name");
 
-                    b.Property<Guid?>("OrganizationId")
+                    b.Property<Guid>("OrganizationId")
                         .HasColumnType("uuid")
                         .HasColumnName("organization_id");
 
@@ -423,7 +430,7 @@ namespace EcoData.AquaTrack.Database.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("sensor_type_id");
 
-                    b.Property<Guid>("SourceId")
+                    b.Property<Guid?>("SourceId")
                         .HasColumnType("uuid")
                         .HasColumnName("source_id");
 
@@ -434,15 +441,15 @@ namespace EcoData.AquaTrack.Database.Migrations
                     b.HasKey("Id")
                         .HasName("pk_sensors");
 
-                    b.HasIndex("OrganizationId")
-                        .HasDatabaseName("ix_sensors_organization_id");
-
                     b.HasIndex("SensorTypeId")
                         .HasDatabaseName("ix_sensors_sensor_type_id");
 
-                    b.HasIndex("SourceId", "ExternalId")
+                    b.HasIndex("SourceId")
+                        .HasDatabaseName("ix_sensors_source_id");
+
+                    b.HasIndex("OrganizationId", "ExternalId")
                         .IsUnique()
-                        .HasDatabaseName("ix_sensors_source_id_external_id");
+                        .HasDatabaseName("ix_sensors_organization_id_external_id");
 
                     b.ToTable("sensors", (string)null);
                 });
@@ -651,6 +658,18 @@ namespace EcoData.AquaTrack.Database.Migrations
                     b.Navigation("Organization");
                 });
 
+            modelBuilder.Entity("EcoData.AquaTrack.Database.Models.DataSource", b =>
+                {
+                    b.HasOne("EcoData.AquaTrack.Database.Models.Organization", "Organization")
+                        .WithMany("DataSources")
+                        .HasForeignKey("OrganizationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_data_sources_organizations_organization_id");
+
+                    b.Navigation("Organization");
+                });
+
             modelBuilder.Entity("EcoData.AquaTrack.Database.Models.IngestionLog", b =>
                 {
                     b.HasOne("EcoData.AquaTrack.Database.Models.DataSource", "DataSource")
@@ -689,9 +708,11 @@ namespace EcoData.AquaTrack.Database.Migrations
 
             modelBuilder.Entity("EcoData.AquaTrack.Database.Models.Sensor", b =>
                 {
-                    b.HasOne("EcoData.AquaTrack.Database.Models.Organization", null)
+                    b.HasOne("EcoData.AquaTrack.Database.Models.Organization", "Organization")
                         .WithMany("Sensors")
                         .HasForeignKey("OrganizationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
                         .HasConstraintName("fk_sensors_organizations_organization_id");
 
                     b.HasOne("EcoData.AquaTrack.Database.Models.SensorType", "SensorType")
@@ -703,11 +724,12 @@ namespace EcoData.AquaTrack.Database.Migrations
                     b.HasOne("EcoData.AquaTrack.Database.Models.DataSource", "DataSource")
                         .WithMany("Sensors")
                         .HasForeignKey("SourceId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired()
+                        .OnDelete(DeleteBehavior.SetNull)
                         .HasConstraintName("fk_sensors_data_sources_source_id");
 
                     b.Navigation("DataSource");
+
+                    b.Navigation("Organization");
 
                     b.Navigation("SensorType");
                 });
@@ -756,6 +778,8 @@ namespace EcoData.AquaTrack.Database.Migrations
             modelBuilder.Entity("EcoData.AquaTrack.Database.Models.Organization", b =>
                 {
                     b.Navigation("ApiKeys");
+
+                    b.Navigation("DataSources");
 
                     b.Navigation("Sensors");
                 });
