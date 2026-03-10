@@ -74,62 +74,39 @@ else
             {
                 <div class="header-actions">
                     <MudIconButton Icon="@Icons.Material.Outlined.Edit" Size="Size.Small" OnClick="NavigateToEdit" />
-                    <MudIconButton Icon="@Icons.Material.Outlined.Delete" Size="Size.Small" Color="Color.Error" OnClick="ConfirmDelete" />
+                    <MudIconButton Icon="@Icons.Material.Outlined.Delete" Size="Size.Small" Color="Color.Error"
+                                   OnClick="ConfirmDelete" />
                 </div>
             }
         </div>
 
-        @* Tabs *@
-        <MudTabs Elevation="0" Rounded="true" ApplyEffectsToContainer="true" Class="tabs">
-            <MudTabPanel Text="About Us">
-                <div class="tab-content">
-                    @if (!string.IsNullOrWhiteSpace(_organization.AboutUs))
-                    {
-                        <MudText Typo="Typo.body2">@_organization.AboutUs</MudText>
-                    }
-                    else
-                    {
-                        <MudText Typo="Typo.body2" Color="Color.Secondary">No description available.</MudText>
-                    }
-                    <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mt-2">
-                        Created @_organization.CreatedAt.ToString("MMM d, yyyy")
-                    </MudText>
-                </div>
-            </MudTabPanel>
-            <MudTabPanel Text="Sensors">
-                <div class="tab-content">
-                    <MudList T="string" Dense="true">
-                        <MudListItem Icon="@Icons.Material.Outlined.Sensors">
-                            Water Quality Sensor #1 - Active
-                        </MudListItem>
-                        <MudListItem Icon="@Icons.Material.Outlined.Sensors">
-                            Temperature Sensor #2 - Active
-                        </MudListItem>
-                        <MudListItem Icon="@Icons.Material.Outlined.Sensors">
-                            pH Level Sensor #3 - Inactive
-                        </MudListItem>
-                    </MudList>
-                </div>
-            </MudTabPanel>
-            <MudTabPanel Text="Our Team">
-                <div class="tab-content">
-                    <MudStack Row="true" Spacing="4" Class="team-list">
-                        <MudStack AlignItems="AlignItems.Center" Spacing="1">
-                            <MudAvatar Color="Color.Primary">JD</MudAvatar>
-                            <MudText Typo="Typo.caption">John Doe</MudText>
-                        </MudStack>
-                        <MudStack AlignItems="AlignItems.Center" Spacing="1">
-                            <MudAvatar Color="Color.Secondary">JS</MudAvatar>
-                            <MudText Typo="Typo.caption">Jane Smith</MudText>
-                        </MudStack>
-                        <MudStack AlignItems="AlignItems.Center" Spacing="1">
-                            <MudAvatar Color="Color.Tertiary">MJ</MudAvatar>
-                            <MudText Typo="Typo.caption">Mike Johnson</MudText>
-                        </MudStack>
-                    </MudStack>
-                </div>
-            </MudTabPanel>
-        </MudTabs>
+        @* About Us *@
+        <MudPaper Elevation="1" Class="pa-4 mt-4">
+            <MudText Typo="Typo.subtitle1" Class="mb-2">About Us</MudText>
+            @if (!string.IsNullOrWhiteSpace(_organization.AboutUs))
+            {
+                <MudText Typo="Typo.body2">@_organization.AboutUs</MudText>
+            }
+            else
+            {
+                <MudText Typo="Typo.body2" Color="Color.Secondary">No description available.</MudText>
+            }
+            <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mt-2">
+                Created @_organization.CreatedAt.ToString("MMM d, yyyy")
+            </MudText>
+        </MudPaper>
+
+        @* Action Buttons *@
+        <MudStack Row="true" Spacing="2" Class="mt-4">
+            <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Outlined.Sensors"
+                       OnClick="NavigateToSensors">
+                Sensors
+            </MudButton>
+            <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Outlined.Group"
+                       Disabled="true">
+                Our Team
+            </MudButton>
+        </MudStack>
     </div>
 }
 
@@ -157,6 +134,7 @@ else
 
     private void NavigateBack() => Navigation.NavigateTo("/organizations");
     private void NavigateToEdit() => Navigation.NavigateTo($"/organizations/{Id}/edit");
+    private void NavigateToSensors() => Navigation.NavigateTo($"/organizations/{Id}/sensors");
 
     private static string GetDisplayUrl(string url)
     {

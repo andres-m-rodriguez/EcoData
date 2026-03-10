@@ -287,6 +287,7 @@ public sealed class SensorHealthRepository(IDbContextFactory<AquaTrackDbContext>
     {
         await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
         var now = DateTimeOffset.UtcNow;
+        var readingTimeUtc = readingTime.ToUniversalTime();
 
         var existing = await context.SensorHealthStatuses
             .FirstOrDefaultAsync(s => s.SensorId == sensorId, cancellationToken);
@@ -297,7 +298,7 @@ public sealed class SensorHealthRepository(IDbContextFactory<AquaTrackDbContext>
             {
                 Id = Guid.CreateVersion7(),
                 SensorId = sensorId,
-                LastReadingAt = readingTime,
+                LastReadingAt = readingTimeUtc,
                 LastHeartbeatAt = null,
                 Status = SensorHealthStatusType.Healthy,
                 ConsecutiveFailures = 0,
@@ -309,7 +310,7 @@ public sealed class SensorHealthRepository(IDbContextFactory<AquaTrackDbContext>
         else
         {
             context.SensorHealthStatuses.Attach(existing);
-            existing.LastReadingAt = readingTime;
+            existing.LastReadingAt = readingTimeUtc;
             existing.Status = SensorHealthStatusType.Healthy;
             existing.ConsecutiveFailures = 0;
             existing.LastErrorMessage = null;

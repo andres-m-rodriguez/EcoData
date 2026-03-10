@@ -1,0 +1,257 @@
+@page "/organizations/{OrganizationId:guid}/sensors/create"
+@using EcoData.AquaTrack.Contracts.Dtos
+@using EcoData.AquaTrack.Application.Client
+@using EcoData.AquaTrack.WebApp.Client.Services
+@using EcoData.Locations.Contracts.Dtos
+@using EcoData.Locations.Contracts.Parameters
+@using BlazingSingularity.Commands
+@inject ISensorHttpClient SensorClient
+@inject IOrganizationHttpClient OrganizationClient
+@inject ILocationHttpClient LocationClient
+@inject NavigationManager Navigation
+@inject ISnackbar Snackbar
+@inject AuthStateService AuthState
+
+<PageTitle>Add Sensor - AquaTrack</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.Small" Class="pa-4">
+    @if (LoadCommand.IsLoading)
+    {
+        <MudPaper Elevation="1" Class="pa-6">
+            <MudSkeleton Width="200px" Height="32px" />
+            <MudSkeleton Width="100%" Height="56px" Class="mt-4" />
+            <MudSkeleton Width="100%" Height="56px" Class="mt-4" />
+            <MudSkeleton Width="100%" Height="56px" Class="mt-4" />
+        </MudPaper>
+    }
+    else if (_organization is null)
+    {
+        <MudPaper Elevation="1" Class="pa-6">
+            <MudStack AlignItems="AlignItems.Center">
+                <MudIcon Icon="@Icons.Material.Filled.Error" Size="Size.Large" Color="Color.Error" />
+                <MudText Typo="Typo.h6" Color="Color.Error" Class="mt-2">Organization not found</MudText>
+                <MudButton Variant="Variant.Outlined" Color="Color.Primary"             StartIcon="@Icons.Material.Filled.ArrowBack"
+                           OnClick="NavigateBack"        Class="mt-3">
+                    Back to Organizations
+                </MudButton>
+            </MudStack>
+        </MudPaper>
+    }
+    else if (!IsAdmin)
+    {
+        <MudPaper Elevation="1" Class="pa-6">
+            <MudStack AlignItems="AlignItems.Center">
+                <MudIcon Icon="@Icons.Material.Filled.Lock" Size="Size.Large" Color="Color.Warning" />
+                <MudText Typo="Typo.h6" Color="Color.Warning" Class="mt-2">Access Denied</MudText>
+                <MudText Typo="Typo.body2" Color="Color.Secondary">
+                    You don't have permission to add sensors.
+                </MudText>
+                <MudButton Variant="Variant.Outlined"                  Color="Color.Primary"                        StartIcon="@Icons.Material.Filled.ArrowBack"
+                           OnClick="NavigateToOrganization"                   Class="mt-3">
+                    Back to Organization
+                </MudButton>
+            </MudStack>
+        </MudPaper>
+    }
+    else
+    {
+        <MudPaper Elevation="1" Class="pa-6">
+            <MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-4">
+                <MudIconButton Icon="@Icons.Material.Filled.ArrowBack"             OnClick="NavigateToOrganization" />
+                <MudText Typo="Typo.h5">Add Sensor</MudText>
+            </MudStack>
+
+            <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-4">
+                Adding sensor to <strong>@_organization.Name</strong>
+            </MudText>
+
+            @if (!string.IsNullOrEmpty(_errorMessage))
+            {
+                <MudAlert Severity="Severity.Error" Variant="Variant.Filled" Dense="true" Class="mb-4">
+                    @_errorMessage
+                </MudAlert>
+            }
+
+            <MudStack Spacing="3">
+                <MudTextField @bind-Value="_externalId"                     Label="External ID"                              Required="true"
+                              RequiredError="External ID is required" MaxLength="100"                  HelperText="Unique identifier for this sensor"
+                              Disabled="CreateCommand.IsLoading" />
+
+                <MudTextField @bind-Value="_name"                       Label="Name"          Required="true"                   RequiredError="Name is required"
+                              MaxLength="300"                    HelperText="Display name for the sensor"                              Disabled="CreateCommand.IsLoading" />
+
+                <MudStack Row="true" Spacing="2">
+                    <MudNumericField @bind-Value="_latitude"                                Label="Latitude"                          Required="true"                    Min="-90"              Max="90"
+                                     Step="0.000001M"                         Format="F6"                   HelperText="-90 to 90"             Disabled="CreateCommand.IsLoading"
+                                     Style="flex: 1;" />
+
+                    <MudNumericField @bind-Value="_longitude"                             Label="Longitude"                       Required="true"                 Min="-180"           Max="180"
+                                     Step="0.000001M"                      Format="F6"                HelperText="-180 to 180"          Disabled="CreateCommand.IsLoading"
+                                     Style="flex: 1;" />
+                </MudStack>
+
+                <MudSelect T="StateDtoForList"                   Label="State"    Value="_selectedState"                           ValueChanged="OnStateChanged"
+                           ToStringFunc="@(s => s?.Name ?? string.Empty)"                           Disabled="CreateCommand.IsLoading || _states is null"
+                           HelperText="Select the state/territory">
+                    @if (_states is not null)
+                    {
+                        @foreach (var state in _states)
+                        {
+                            <MudSelectItem Value="@state">@state.Name</MudSelectItem>
+                        }
+                    }
+                </MudSelect>
+
+                <MudAutocomplete T="MunicipalityDtoForList"
+                                 Label="Municipality"
+                                 Value="_selectedMunicipality"
+                                 ValueChanged="OnMunicipalityChanged"
+                                 SearchFunc="SearchMunicipalities"
+                                 ToStringFunc="@(m => m?.Name ?? string.Empty)"
+                                 Disabled="CreateCommand.IsLoading || _selectedState is null"
+                                 HelperText="@(_selectedState is null ? "Select a state first" : "Search for a municipality")"
+                                 ResetValueOnEmptyText="true" />
+
+                <MudSwitch @bind-Value="_isActive"                           Label="Active"                           Color="Color.Primary"
+                           Disabled="CreateCommand.IsLoading" />
+
+                <MudStack Row="true" Justify="Justify.FlexEnd" Spacing="2" Class="mt-4">
+                    <MudButton Variant="Variant.Text"                               Color="Color.Default"                               OnClick="NavigateToOrganization"
+                               Disabled="CreateCommand.IsLoading">
+                        Cancel
+                    </MudButton>
+                    <MudButton Variant="Variant.Filled"                               Color="Color.Primary"                               OnClick="() => CreateCommand.ExecuteAsync()"
+                               Disabled="CreateCommand.IsLoading || !IsFormValid">
+                        @if (CreateCommand.IsLoading)
+                        {
+                            <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
+                        }
+                        Create Sensor
+                    </MudButton>
+                </MudStack>
+            </MudStack>
+        </MudPaper>
+    }
+</MudContainer>
+
+@code {
+    [Parameter]
+    public Guid OrganizationId { get; set; }
+
+    private OrganizationDtoForDetail? _organization;
+    private List<StateDtoForList>? _states;
+    private StateDtoForList? _selectedState;
+    private MunicipalityDtoForList? _selectedMunicipality;
+    private string _externalId = string.Empty;
+    private string _name = string.Empty;
+    private decimal _latitude;
+    private decimal _longitude;
+    private bool _isActive = true;
+    private string? _errorMessage;
+
+    private bool IsAdmin => AuthState.CurrentUser?.Role == "Admin";
+    private bool IsFormValid => !string.IsNullOrWhiteSpace(_externalId) && !string.IsNullOrWhiteSpace(_name) && _selectedMunicipality is not null;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadCommand.ExecuteAsync();
+    }
+
+    [RelayCommand]
+    private async Task Load()
+    {
+        var orgTask = OrganizationClient.GetByIdAsync(OrganizationId);
+        var statesTask = LoadStatesAsync();
+
+        await Task.WhenAll(orgTask, statesTask);
+
+        var result = await orgTask;
+        result.Switch(
+            organization => _organization = organization,
+            _ => _organization = null
+        );
+    }
+
+    private async Task LoadStatesAsync()
+    {
+        _states = [];
+        await foreach (var state in LocationClient.GetStatesAsync(new StateParameters(PageSize: 100)))
+        {
+            _states.Add(state);
+        }
+    }
+
+    private void OnStateChanged(StateDtoForList? state)
+    {
+        _selectedState = state;
+        _selectedMunicipality = null;
+    }
+
+    private void OnMunicipalityChanged(MunicipalityDtoForList? municipality)
+    {
+        _selectedMunicipality = municipality;
+    }
+
+    private async Task<IEnumerable<MunicipalityDtoForList>> SearchMunicipalities(string? search, CancellationToken ct)
+    {
+        if (_selectedState is null)
+        {
+            return [];
+        }
+
+        var parameters = new MunicipalityParameters(
+            PageSize: 20,
+            Search: search,
+            StateCode: _selectedState.Code
+        );
+
+        var results = new List<MunicipalityDtoForList>();
+        await foreach (var municipality in LocationClient.GetMunicipalitiesAsync(parameters, ct))
+        {
+            results.Add(municipality);
+        }
+        return results;
+    }
+
+    [RelayCommand]
+    private async Task Create()
+    {
+        _errorMessage = null;
+
+        if (string.IsNullOrWhiteSpace(_externalId))
+        {
+            _errorMessage = "External ID is required";
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(_name))
+        {
+            _errorMessage = "Name is required";
+            return;
+        }
+
+        var dto = new SensorDtoForOrganizationCreate(
+            _externalId.Trim(),
+            _name.Trim(),
+            _latitude,
+            _longitude,
+            _selectedMunicipality!.Id,
+            _isActive
+        );
+
+        var result = await SensorClient.CreateForOrganizationAsync(OrganizationId, dto);
+
+        if (result is not null)
+        {
+            Snackbar.Add("Sensor created successfully", Severity.Success);
+            Navigation.NavigateTo($"/organizations/{OrganizationId}");
+        }
+        else
+        {
+            _errorMessage = "Failed to create sensor";
+        }
+    }
+
+    private void NavigateBack() => Navigation.NavigateTo("/organizations");
+    private void NavigateToOrganization() => Navigation.NavigateTo($"/organizations/{OrganizationId}");
+}

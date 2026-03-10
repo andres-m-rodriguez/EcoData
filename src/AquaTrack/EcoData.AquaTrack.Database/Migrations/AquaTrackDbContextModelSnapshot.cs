@@ -405,10 +405,9 @@ namespace EcoData.AquaTrack.Database.Migrations
                         .HasColumnType("numeric(9,6)")
                         .HasColumnName("longitude");
 
-                    b.Property<string>("Municipality")
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)")
-                        .HasColumnName("municipality");
+                    b.Property<Guid>("MunicipalityId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("municipality_id");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -440,6 +439,9 @@ namespace EcoData.AquaTrack.Database.Migrations
 
                     b.HasKey("Id")
                         .HasName("pk_sensors");
+
+                    b.HasIndex("MunicipalityId")
+                        .HasDatabaseName("ix_sensors_municipality_id");
 
                     b.HasIndex("SensorTypeId")
                         .HasDatabaseName("ix_sensors_sensor_type_id");
