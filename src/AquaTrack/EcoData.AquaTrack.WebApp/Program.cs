@@ -1,5 +1,6 @@
 using EcoData.AquaTrack.Api;
 using EcoData.AquaTrack.Api.Authentication;
+using EcoData.AquaTrack.Api.Authorization;
 using EcoData.AquaTrack.DataAccess.Extensions;
 using EcoData.AquaTrack.Database.Extensions;
 using EcoData.AquaTrack.WebApp.Components;
@@ -25,13 +26,7 @@ builder.Services.AddIdentityApplication();
 builder.Services.AddAuthentication()
     .AddApiKeyAuthentication();
 
-builder.Services.AddAuthorization(options =>
-{
-    options.AddPolicy(
-        "Admin",
-        policy => policy.RequireClaim(System.Security.Claims.ClaimTypes.Role, "Admin")
-    );
-});
+builder.Services.AddAquaTrackAuthorization();
 
 var app = builder.Build();
 

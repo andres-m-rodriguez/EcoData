@@ -17,7 +17,7 @@ builder.Services.AddScoped<ClientAuthStateProvider>();
 builder.Services.AddScoped<AuthenticationStateProvider>(sp =>
     sp.GetRequiredService<ClientAuthStateProvider>()
 );
-builder.Services.AddAuthorizationCore();
+builder.Services.AddIdentityAuthorization();
 
 builder.Services.AddMudServices();
 
