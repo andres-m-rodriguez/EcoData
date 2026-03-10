@@ -10,6 +10,7 @@ public interface IOrganizationRepository
         CancellationToken cancellationToken = default
     );
     Task<OrganizationDtoForDetail?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
+    Task<OrganizationDtoForCreated?> GetByNameAsync(string name, CancellationToken cancellationToken = default);
     Task<bool> ExistsAsync(string name, CancellationToken cancellationToken = default);
     Task<OrganizationDtoForCreated> CreateAsync(OrganizationDtoForCreate dto, CancellationToken cancellationToken = default);
     Task<OrganizationDtoForDetail?> UpdateAsync(Guid id, OrganizationDtoForUpdate dto, CancellationToken cancellationToken = default);

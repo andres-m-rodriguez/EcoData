@@ -25,6 +25,7 @@ public sealed class DataSourceRepository(IDbContextFactory<AquaTrackDbContext> c
             .Where(ds => ds.Id == id)
             .Select(ds => new DataSourceDtoForList(
                 ds.Id,
+                ds.OrganizationId,
                 ds.Name,
                 ds.Type.ToString(),
                 ds.BaseUrl,
@@ -42,6 +43,7 @@ public sealed class DataSourceRepository(IDbContextFactory<AquaTrackDbContext> c
         return await context.DataSources
             .Select(ds => new DataSourceDtoForList(
                 ds.Id,
+                ds.OrganizationId,
                 ds.Name,
                 ds.Type.ToString(),
                 ds.BaseUrl,
@@ -60,6 +62,7 @@ public sealed class DataSourceRepository(IDbContextFactory<AquaTrackDbContext> c
         var entity = new DataSource
         {
             Id = Guid.CreateVersion7(),
+            OrganizationId = dto.OrganizationId,
             Name = dto.Name,
             Type = Enum.Parse<DataSourceType>(dto.Type),
             BaseUrl = dto.BaseUrl,

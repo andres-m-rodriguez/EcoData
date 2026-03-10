@@ -2,6 +2,7 @@ namespace EcoData.AquaTrack.Contracts.Dtos;
 
 public sealed record DataSourceDtoForList(
     Guid Id,
+    Guid OrganizationId,
     string Name,
     string Type,
     string? BaseUrl,
@@ -12,6 +13,7 @@ public sealed record DataSourceDtoForList(
 );
 
 public sealed record DataSourceDtoForCreate(
+    Guid OrganizationId,
     string Name,
     string Type,
     string? BaseUrl,
