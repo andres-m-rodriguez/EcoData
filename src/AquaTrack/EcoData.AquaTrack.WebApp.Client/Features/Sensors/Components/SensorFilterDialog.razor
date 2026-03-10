@@ -1,0 +1,44 @@
+@using static EcoData.AquaTrack.WebApp.Client.Features.Sensors.Components.SensorList
+
+<MudDialog>
+    <TitleContent>
+        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+            <MudIcon Icon="@Icons.Material.Filled.FilterList" />
+            <MudText Typo="Typo.h6">Filters</MudText>
+        </MudStack>
+    </TitleContent>
+    <DialogContent>
+        <MudStack Spacing="4" Class="pt-2">
+            <MudSelect T="SensorStatusFilter" Label="Status" @bind-Value="StatusFilter"
+                       Variant="Variant.Outlined" AnchorOrigin="Origin.BottomCenter">
+                <MudSelectItem Value="SensorStatusFilter.All">All Sensors</MudSelectItem>
+                <MudSelectItem Value="SensorStatusFilter.Active">Active Only</MudSelectItem>
+                <MudSelectItem Value="SensorStatusFilter.Inactive">Inactive Only</MudSelectItem>
+            </MudSelect>
+        </MudStack>
+    </DialogContent>
+    <DialogActions>
+        <MudButton Variant="Variant.Text" Color="Color.Default" OnClick="Clear">Clear</MudButton>
+        <MudSpacer />
+        <MudButton Variant="Variant.Text" OnClick="Cancel">Cancel</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="Apply">Apply</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter]
+    private IMudDialogInstance MudDialog { get; set; } = null!;
+
+    [Parameter]
+    public SensorStatusFilter StatusFilter { get; set; }
+
+    private void Cancel() => MudDialog.Cancel();
+
+    private void Clear()
+    {
+        StatusFilter = SensorStatusFilter.All;
+        MudDialog.Close(DialogResult.Ok(StatusFilter));
+    }
+
+    private void Apply() => MudDialog.Close(DialogResult.Ok(StatusFilter));
+}

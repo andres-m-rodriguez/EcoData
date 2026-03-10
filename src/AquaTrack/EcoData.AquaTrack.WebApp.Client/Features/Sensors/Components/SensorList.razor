@@ -5,24 +5,26 @@
 @using BlazingSingularity.Signals
 @using Microsoft.AspNetCore.Components.Web.Virtualization
 @inject ISensorHttpClient SensorClient
+@inject IDialogService DialogService
+@inject IJSRuntime JS
+@implements IAsyncDisposable
 
 @if (ShowFilters)
 {
-    <div class="search-bar">
-        <MudTextField @bind-Value="SearchText" Placeholder="Search sensors..." Adornment="Adornment.Start"
-                      AdornmentIcon="@Icons.Material.Filled.Search" Immediate="true" DebounceInterval="300" Clearable="true"
-                      Margin="Margin.Dense" Class="search-input" />
-        <MudSelect @bind-Value="StatusFilter" AnchorOrigin="Origin.BottomCenter" Margin="Margin.Dense"
-                   Class="status-filter">
-            <MudSelectItem Value="SensorStatusFilter.All">All</MudSelectItem>
-            <MudSelectItem Value="SensorStatusFilter.Active">Active</MudSelectItem>
-            <MudSelectItem Value="SensorStatusFilter.Inactive">Inactive</MudSelectItem>
-        </MudSelect>
-        @if (HasActiveFilters)
-        {
-            <MudIconButton Icon="@Icons.Material.Filled.FilterAltOff" Color="Color.Secondary" Size="Size.Small"
-                           OnClick="ClearFilters" />
-        }
+    <div class="search-bar-wrapper @(_isSticky ? "is-sticky" : "")" @ref="_searchBarRef">
+        <div class="search-pill">
+            <MudIcon Icon="@Icons.Material.Filled.Search" Class="search-icon" />
+            <input type="text" class="search-input" placeholder="Search..." @bind="SearchText" @bind:event="oninput" />
+            <div class="divider"></div>
+            <button type="button" class="filter-btn @(HasNonSearchFilters ? "active" : "")" @onclick="OpenFilterDialog">
+                <MudIcon Icon="@Icons.Material.Filled.Tune" Size="Size.Small" />
+                <span>Filter</span>
+                @if (HasNonSearchFilters)
+                {
+                    <span class="filter-badge">1</span>
+                }
+            </button>
+        </div>
     </div>
 }
 
@@ -99,6 +101,10 @@
     private bool _isEmpty;
     private bool _isInitialLoading = true;
     private int _generation;
+    private ElementReference _searchBarRef;
+    private bool _isSticky;
+    private DotNetObjectReference<SensorList>? _dotNetRef;
+    private IJSObjectReference? _jsModule;
 
     [Signal]
     private string? _searchText;
@@ -128,6 +134,7 @@
     public EventCallback<SensorDtoForList> OnSensorClick { get; set; }
 
     private bool HasActiveFilters => !string.IsNullOrWhiteSpace(SearchText) || StatusFilter != SensorStatusFilter.All;
+    private bool HasNonSearchFilters => StatusFilter != SensorStatusFilter.All;
 
     protected override async Task OnInitializedAsync()
     {
@@ -135,6 +142,49 @@
         StatusFilterSignal.OnChange(_ => Refresh());
 
         await LoadInitialDataAsync();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && ShowFilters)
+        {
+            _dotNetRef = DotNetObjectReference.Create(this);
+            _jsModule = await JS.InvokeAsync<IJSObjectReference>("import", "./js/stickySearch.js");
+            await _jsModule.InvokeVoidAsync("initStickySearch", _searchBarRef, _dotNetRef);
+        }
+    }
+
+    [JSInvokable]
+    public void SetSticky(bool isSticky)
+    {
+        if (_isSticky != isSticky)
+        {
+            _isSticky = isSticky;
+            StateHasChanged();
+        }
+    }
+
+    private async Task OpenFilterDialog()
+    {
+        var parameters = new DialogParameters<SensorFilterDialog>
+        {
+            { x => x.StatusFilter, StatusFilter }
+        };
+
+        var options = new DialogOptions
+        {
+            CloseOnEscapeKey = true,
+            MaxWidth = MaxWidth.ExtraSmall,
+            FullWidth = true
+        };
+
+        var dialog = await DialogService.ShowAsync<SensorFilterDialog>("Filters", parameters, options);
+        var result = await dialog.Result;
+
+        if (result is { Canceled: false, Data: SensorStatusFilter filter })
+        {
+            StatusFilter = filter;
+        }
     }
 
     private SensorParameters BuildParameters(Guid? cursor = null)
@@ -240,6 +290,16 @@
     private async Task HandleClick(SensorDtoForList sensor)
     {
         await OnSensorClick.InvokeAsync(sensor);
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (_jsModule is not null)
+        {
+            await _jsModule.InvokeVoidAsync("destroyStickySearch");
+            await _jsModule.DisposeAsync();
+        }
+        _dotNetRef?.Dispose();
     }
 
     public enum SensorStatusFilter
