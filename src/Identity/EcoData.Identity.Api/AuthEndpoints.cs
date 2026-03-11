@@ -24,10 +24,15 @@ public static class AuthEndpoints
                 {
                     var result = await authService.RegisterAsync(request, ct);
 
-                    return result.Match<Results<Ok<UserInfo>, BadRequest<IReadOnlyList<string>>, Conflict<string>>>(
+                    return result.Match<
+                        Results<Ok<UserInfo>, BadRequest<IReadOnlyList<string>>, Conflict<string>>
+                    >(
                         userInfo => TypedResults.Ok(userInfo),
                         _ => TypedResults.Conflict("An account with this email already exists"),
-                        _ => TypedResults.Conflict("A registration request with this email is already pending"),
+                        _ =>
+                            TypedResults.Conflict(
+                                "A registration request with this email is already pending"
+                            ),
                         validationFailed => TypedResults.BadRequest(validationFailed.Errors)
                     );
                 }
@@ -41,7 +46,14 @@ public static class AuthEndpoints
                 {
                     var result = await authService.LoginAsync(request, ct);
 
-                    return result.Match<Results<Ok<UserInfo>, BadRequest<IReadOnlyList<string>>, UnauthorizedHttpResult, StatusCodeHttpResult>>(
+                    return result.Match<
+                        Results<
+                            Ok<UserInfo>,
+                            BadRequest<IReadOnlyList<string>>,
+                            UnauthorizedHttpResult,
+                            StatusCodeHttpResult
+                        >
+                    >(
                         userInfo => TypedResults.Ok(userInfo),
                         _ => TypedResults.Unauthorized(),
                         _ => TypedResults.StatusCode(423), // Locked
@@ -83,42 +95,6 @@ public static class AuthEndpoints
                 ) => authService.GetUsersAsync(parameters, ct)
             )
             .WithName("GetUsers")
-            .RequireAuthorization(PolicyNames.Admin);
-
-        group
-            .MapGet(
-                "/access-requests",
-                (
-                    [AsParameters] AccessRequestParameters parameters,
-                    IAuthService authService,
-                    CancellationToken ct
-                ) => authService.GetAccessRequestsAsync(parameters, ct)
-            )
-            .WithName("GetAccessRequests")
-            .RequireAuthorization(PolicyNames.Admin);
-
-        group
-            .MapPut(
-                "/access-requests/{id:guid}/status",
-                async (
-                    Guid id,
-                    UpdateAccessRequestStatusRequest request,
-                    ClaimsPrincipal user,
-                    IAuthService authService,
-                    CancellationToken ct
-                ) =>
-                {
-                    var result = await authService.UpdateAccessRequestStatusAsync(id, request, user, ct);
-
-                    return result.Match<Results<Ok<AccessRequestResponse>, NotFound, BadRequest<IReadOnlyList<string>>, Conflict<string>>>(
-                        response => TypedResults.Ok(response),
-                        _ => TypedResults.NotFound(),
-                        _ => TypedResults.Conflict("This access request has already been processed"),
-                        validationFailed => TypedResults.BadRequest(validationFailed.Errors)
-                    );
-                }
-            )
-            .WithName("UpdateAccessRequestStatus")
             .RequireAuthorization(PolicyNames.Admin);
 
         return app;

@@ -9,6 +9,8 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\EcoData.AquaTrack.Contracts\EcoData.AquaTrack.Contracts.csproj" />
+    <ProjectReference Include="..\..\Common\EcoData.Common.Http.Helpers\EcoData.Common.Http.Helpers.csproj" />
+    <ProjectReference Include="..\..\Identity\EcoData.Identity.Contracts\EcoData.Identity.Contracts.csproj" />
     <ProjectReference Include="..\..\Locations\EcoData.Locations.Contracts\EcoData.Locations.Contracts.csproj" />
   </ItemGroup>
 </Project>

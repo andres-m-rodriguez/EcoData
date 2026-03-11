@@ -6,7 +6,9 @@ public sealed record RegisterRequest(
     string Email,
     string DisplayName,
     string Password,
-    string ConfirmPassword
+    string ConfirmPassword,
+    Guid OrganizationId,
+    string OrganizationName
 );
 
 public sealed class RegisterRequestValidator : AbstractValidator<RegisterRequest>
@@ -40,5 +42,13 @@ public sealed class RegisterRequestValidator : AbstractValidator<RegisterRequest
         RuleFor(static x => x.ConfirmPassword)
             .Equal(static x => x.Password)
             .WithMessage("Passwords do not match");
+
+        RuleFor(static x => x.OrganizationId).NotEmpty().WithMessage("Organization is required");
+
+        RuleFor(static x => x.OrganizationName)
+            .NotEmpty()
+            .WithMessage("Organization name is required")
+            .MaximumLength(200)
+            .WithMessage("Organization name must be 200 characters or less");
     }
 }

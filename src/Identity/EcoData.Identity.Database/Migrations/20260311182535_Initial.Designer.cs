@@ -12,7 +12,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace EcoData.Identity.Database.Migrations
 {
     [DbContext(typeof(IdentityDbContext))]
-    [Migration("20260308234106_Initial")]
+    [Migration("20260311182535_Initial")]
     partial class Initial
     {
         /// <inheritdoc />
@@ -54,6 +54,16 @@ namespace EcoData.Identity.Database.Migrations
                         .HasColumnType("character varying(500)")
                         .HasColumnName("password_hash");
 
+                    b.Property<Guid>("RequestedOrganizationId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("requested_organization_id");
+
+                    b.Property<string>("RequestedOrganizationName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("requested_organization_name");
+
                     b.Property<string>("ReviewNotes")
                         .HasMaxLength(1000)
                         .HasColumnType("character varying(1000)")
@@ -79,6 +89,9 @@ namespace EcoData.Identity.Database.Migrations
                     b.HasIndex("Email")
                         .IsUnique()
                         .HasDatabaseName("ix_access_requests_email");
+
+                    b.HasIndex("RequestedOrganizationId")
+                        .HasDatabaseName("ix_access_requests_requested_organization_id");
 
                     b.HasIndex("ReviewedById")
                         .HasDatabaseName("ix_access_requests_reviewed_by_id");
@@ -123,6 +136,11 @@ namespace EcoData.Identity.Database.Migrations
                     b.Property<bool>("EmailConfirmed")
                         .HasColumnType("boolean")
                         .HasColumnName("email_confirmed");
+
+                    b.Property<string>("GlobalRole")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("global_role");
 
                     b.Property<bool>("LockoutEnabled")
                         .HasColumnType("boolean")

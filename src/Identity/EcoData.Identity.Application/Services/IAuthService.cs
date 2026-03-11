@@ -8,11 +8,35 @@ namespace EcoData.Identity.Application.Services;
 
 public interface IAuthService
 {
-    Task<RegisterResult> RegisterAsync(RegisterRequest request, CancellationToken cancellationToken = default);
-    Task<LoginResult> LoginAsync(LoginRequest request, CancellationToken cancellationToken = default);
+    Task<RegisterResult> RegisterAsync(
+        RegisterRequest request,
+        CancellationToken cancellationToken = default
+    );
+    Task<LoginResult> LoginAsync(
+        LoginRequest request,
+        CancellationToken cancellationToken = default
+    );
     Task LogoutAsync(CancellationToken cancellationToken = default);
-    Task<UserInfo?> GetCurrentUserAsync(ClaimsPrincipal? principal, CancellationToken cancellationToken = default);
-    IAsyncEnumerable<UserInfo> GetUsersAsync(UserParameters parameters, CancellationToken cancellationToken = default);
-    IAsyncEnumerable<AccessRequestResponse> GetAccessRequestsAsync(AccessRequestParameters parameters, CancellationToken cancellationToken = default);
-    Task<UpdateAccessRequestResult> UpdateAccessRequestStatusAsync(Guid id, UpdateAccessRequestStatusRequest request, ClaimsPrincipal principal, CancellationToken cancellationToken = default);
+    Task<UserInfo?> GetCurrentUserAsync(
+        ClaimsPrincipal? principal,
+        CancellationToken cancellationToken = default
+    );
+    IAsyncEnumerable<UserInfo> GetUsersAsync(
+        UserParameters parameters,
+        CancellationToken cancellationToken = default
+    );
+    IAsyncEnumerable<AccessRequestResponse> GetAccessRequestsAsync(
+        AccessRequestParameters parameters,
+        CancellationToken cancellationToken = default
+    );
+    Task<UpdateAccessRequestResult> UpdateAccessRequestStatusAsync(
+        Guid id,
+        UpdateAccessRequestStatusRequest request,
+        ClaimsPrincipal principal,
+        CancellationToken cancellationToken = default
+    );
+    Task<AccessRequestResponse?> GetAccessRequestByIdAsync(
+        Guid id,
+        CancellationToken cancellationToken = default
+    );
 }
