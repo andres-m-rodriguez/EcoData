@@ -3,6 +3,7 @@ using EcoData.AquaTrack.Contracts.Dtos;
 using EcoData.AquaTrack.Contracts.Parameters;
 using EcoData.AquaTrack.DataAccess.Interfaces;
 using EcoData.Identity.Contracts.Authorization;
+using EcoData.Identity.Contracts.Claims;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
@@ -52,13 +53,13 @@ public static class OrganizationEndpoints
                     CancellationToken ct
                 ) =>
                 {
-                    var userIdClaim = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-                    if (userIdClaim is null || !Guid.TryParse(userIdClaim, out var userId))
+                    var token = new RequestClaimToken(user);
+                    if (!token.IsAuthenticated)
                     {
                         return Results.Ok(new OrganizationPermissionsDto(null, []));
                     }
 
-                    var membership = await memberRepository.GetOrganizationMembershipAsync(userId, id, ct);
+                    var membership = await memberRepository.GetOrganizationMembershipAsync(token.UserId.Value, id, ct);
                     if (membership is null)
                     {
                         return Results.Ok(new OrganizationPermissionsDto(null, []));
@@ -95,35 +96,51 @@ public static class OrganizationEndpoints
         group
             .MapPut(
                 "/{id:guid}",
-                async Task<Results<Ok<OrganizationDtoForDetail>, NotFound>> (
+                async Task<Results<Ok<OrganizationDtoForDetail>, NotFound, ForbidHttpResult>> (
                     Guid id,
                     OrganizationDtoForUpdate dto,
+                    ClaimsPrincipal user,
                     IOrganizationRepository repository,
+                    IPermissionService permissionService,
                     CancellationToken ct
                 ) =>
                 {
+                    var token = new RequestClaimToken(user);
+                    if (!token.IsAuthenticated || !await permissionService.HasPermissionAsync(token.UserId.Value, id, "org:update", ct))
+                    {
+                        return TypedResults.Forbid();
+                    }
+
                     var updated = await repository.UpdateAsync(id, dto, ct);
                     return updated is null ? TypedResults.NotFound() : TypedResults.Ok(updated);
                 }
             )
             .WithName("UpdateOrganization")
-            .RequireAuthorization(PolicyNames.Admin);
+            .RequireAuthorization();
 
         group
             .MapDelete(
                 "/{id:guid}",
-                async Task<Results<NoContent, NotFound>> (
+                async Task<Results<NoContent, NotFound, ForbidHttpResult>> (
                     Guid id,
+                    ClaimsPrincipal user,
                     IOrganizationRepository repository,
+                    IPermissionService permissionService,
                     CancellationToken ct
                 ) =>
                 {
+                    var token = new RequestClaimToken(user);
+                    if (!token.IsAuthenticated || !await permissionService.HasPermissionAsync(token.UserId.Value, id, "org:delete", ct))
+                    {
+                        return TypedResults.Forbid();
+                    }
+
                     var deleted = await repository.DeleteAsync(id, ct);
                     return deleted ? TypedResults.NoContent() : TypedResults.NotFound();
                 }
             )
             .WithName("DeleteOrganization")
-            .RequireAuthorization(PolicyNames.Admin);
+            .RequireAuthorization();
 
         return app;
     }
