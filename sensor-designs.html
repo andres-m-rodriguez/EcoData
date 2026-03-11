@@ -1,641 +1,416 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sensor List Design Options</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>AquaTrack — Organization</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: 'Geist', sans-serif; background: #f9f9f8; color: #1a1a1a; margin: 0; }
+    .mono { font-family: 'Geist Mono', monospace; }
 
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: #ffffff;
-            color: #262626;
-            padding: 40px;
-            line-height: 1.5;
-        }
+    /* Sidebar */
+    .sidebar { width: 220px; min-height: 100vh; background: #fff; border-right: 1px solid #e8e8e6; display: flex; flex-direction: column; position: fixed; top: 0; left: 0; }
+    .sidebar-logo { padding: 20px 20px 16px; border-bottom: 1px solid #e8e8e6; display: flex; align-items: center; gap: 10px; }
+    .sidebar-logo-icon { width: 28px; height: 28px; background: #0ea5e9; border-radius: 7px; display: flex; align-items: center; justify-content: center; color: white; font-size: 13px; }
+    .sidebar-logo-text { font-weight: 600; font-size: 15px; color: #111; letter-spacing: -0.3px; }
+    .nav-item { display: flex; align-items: center; gap: 10px; padding: 8px 16px; margin: 2px 8px; border-radius: 7px; font-size: 13.5px; color: #666; cursor: pointer; transition: all 0.15s; text-decoration: none; }
+    .nav-item:hover { background: #f4f4f3; color: #111; }
+    .nav-item.active { background: #f0f7ff; color: #0ea5e9; font-weight: 500; }
+    .nav-item i { width: 16px; font-size: 13px; }
+    .nav-section { padding: 16px 8px 4px; }
+    .nav-label { font-size: 10.5px; font-weight: 500; color: #aaa; letter-spacing: 0.06em; text-transform: uppercase; padding: 0 10px; }
+    .sidebar-footer { margin-top: auto; padding: 16px; border-top: 1px solid #e8e8e6; }
+    .user-row { display: flex; align-items: center; gap: 10px; padding: 8px; border-radius: 8px; cursor: pointer; transition: background 0.15s; }
+    .user-row:hover { background: #f4f4f3; }
+    .avatar { width: 30px; height: 30px; background: #0ea5e9; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 12px; font-weight: 600; flex-shrink: 0; }
 
-        h1 {
-            margin-bottom: 40px;
-            color: #262626;
-        }
+    /* Main */
+    .main { margin-left: 220px; min-height: 100vh; }
 
-        h2 {
-            margin: 40px 0 20px;
-            color: #262626;
-            font-size: 18px;
-            font-weight: 600;
-        }
+    /* Banner */
+    .banner-wrap { position: relative; height: 200px; overflow: hidden; }
+    .banner-img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .banner-overlay { position: absolute; inset: 0; background: linear-gradient(to bottom, transparent 40%, rgba(249,249,248,0.95) 100%); }
+    .banner-actions { position: absolute; top: 16px; right: 20px; display: flex; gap: 8px; }
+    .banner-btn { display: flex; align-items: center; gap: 6px; background: rgba(255,255,255,0.9); backdrop-filter: blur(8px); border: 1px solid rgba(255,255,255,0.6); border-radius: 8px; padding: 6px 12px; font-size: 12.5px; font-weight: 500; color: #333; cursor: pointer; transition: all 0.15s; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+    .banner-btn:hover { background: white; box-shadow: 0 2px 8px rgba(0,0,0,0.12); }
+    .banner-btn.danger { color: #dc2626; }
+    .banner-btn.danger:hover { background: #fef2f2; }
 
-        .section {
-            margin-bottom: 60px;
-            padding: 24px;
-            background: #F9F9FB;
-            border-radius: 12px;
-        }
+    /* Profile section */
+    .profile-section { padding: 0 32px; margin-top: -28px; position: relative; z-index: 10; }
+    .profile-row { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; }
+    .profile-left { display: flex; align-items: flex-end; gap: 16px; }
+    .org-avatar { width: 72px; height: 72px; border-radius: 16px; border: 3px solid #f9f9f8; box-shadow: 0 2px 12px rgba(0,0,0,0.12); object-fit: cover; background: #e5e7eb; flex-shrink: 0; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+    .org-avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .org-meta { padding-bottom: 4px; }
+    .org-name { font-size: 22px; font-weight: 600; color: #111; letter-spacing: -0.5px; line-height: 1.2; }
+    .org-url { font-size: 13px; color: #0ea5e9; margin-top: 2px; }
+    .org-created { font-size: 12px; color: #999; margin-top: 4px; }
 
-        .secondary {
-            color: #4D4D4D;
-        }
+    /* Stats bar */
+    .stats-bar { display: flex; gap: 0; border: 1px solid #e8e8e6; border-radius: 10px; overflow: hidden; background: white; margin: 20px 32px 0; }
+    .stat-item { flex: 1; padding: 14px 20px; border-right: 1px solid #e8e8e6; }
+    .stat-item:last-child { border-right: none; }
+    .stat-label { font-size: 11px; color: #999; font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px; }
+    .stat-value { font-size: 22px; font-weight: 600; color: #111; letter-spacing: -0.5px; }
+    .stat-sub { font-size: 11.5px; color: #888; margin-top: 2px; }
 
-        /* Shared styles */
-        .status-active {
-            background: #d4edda;
-            color: #155724;
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 500;
-        }
+    /* About card */
+    .about-card { margin: 20px 32px 0; background: white; border: 1px solid #e8e8e6; border-radius: 10px; padding: 18px 20px; font-size: 13.5px; color: #555; line-height: 1.6; }
 
-        .status-inactive {
-            background: #e9ecef;
-            color: #6c757d;
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 500;
-        }
+    /* Tabs */
+    .tabs-row { display: flex; gap: 0; margin: 24px 32px 0; border-bottom: 1px solid #e8e8e6; }
+    .tab { display: flex; align-items: center; gap: 7px; padding: 10px 16px; font-size: 13.5px; font-weight: 500; color: #888; cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; transition: all 0.15s; }
+    .tab:hover { color: #333; }
+    .tab.active { color: #111; border-bottom-color: #111; }
+    .tab-count { background: #f0f0ef; color: #666; font-size: 11px; font-weight: 600; padding: 1px 7px; border-radius: 20px; }
+    .tab.active .tab-count { background: #111; color: white; }
 
-        .action-btn {
-            background: none;
-            border: 1px solid #0078d4;
-            color: #0078d4;
-            padding: 6px 12px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 13px;
-        }
+    /* Content area */
+    .content { padding: 24px 32px 40px; }
 
-        .action-btn:hover {
-            background: #0078d4;
-            color: white;
-        }
+    /* Search + add bar */
+    .toolbar { display: flex; align-items: center; gap: 10px; margin-bottom: 20px; }
+    .search-wrap { display: flex; align-items: center; gap: 10px; background: white; border: 1px solid #e8e8e6; border-radius: 8px; padding: 0 14px; flex: 1; transition: border-color 0.15s; }
+    .search-wrap:focus-within { border-color: #0ea5e9; box-shadow: 0 0 0 3px rgba(14,165,233,0.08); }
+    .search-wrap input { border: none; background: transparent; padding: 9px 0; font-size: 13.5px; width: 100%; color: #111; font-family: 'Geist', sans-serif; outline: none; }
+    .search-wrap input::placeholder { color: #bbb; }
+    .add-btn { display: flex; align-items: center; gap: 7px; background: #111; color: white; border: none; border-radius: 8px; padding: 9px 16px; font-size: 13.5px; font-weight: 500; cursor: pointer; transition: background 0.15s; white-space: nowrap; font-family: 'Geist', sans-serif; }
+    .add-btn:hover { background: #222; }
 
-        /* ========================================
-           APPROACH 1: Separated Row Cards
-           ======================================== */
-        .approach-1 .sensor-list {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
+    /* Sensor grid */
+    .sensor-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; }
+    .sensor-card { background: white; border: 1px solid #e8e8e6; border-radius: 10px; padding: 16px 18px; cursor: pointer; transition: all 0.15s; position: relative; }
+    .sensor-card:hover { border-color: #ccc; box-shadow: 0 2px 12px rgba(0,0,0,0.06); transform: translateY(-1px); }
+    .sensor-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 12px; }
+    .sensor-icon { width: 34px; height: 34px; background: #f0f9ff; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #0ea5e9; font-size: 14px; }
+    .status-dot { width: 8px; height: 8px; border-radius: 50%; margin-top: 4px; }
+    .status-dot.online { background: #22c55e; box-shadow: 0 0 0 3px rgba(34,197,94,0.15); }
+    .status-dot.offline { background: #d1d5db; }
+    .status-dot.warning { background: #f59e0b; box-shadow: 0 0 0 3px rgba(245,158,11,0.15); }
+    .sensor-name { font-size: 14px; font-weight: 600; color: #111; letter-spacing: -0.2px; }
+    .sensor-id { font-size: 11.5px; color: #aaa; margin-top: 2px; font-family: 'Geist Mono', monospace; }
+    .sensor-readings { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+    .reading-chip { background: #f4f4f3; border-radius: 6px; padding: 4px 9px; font-size: 11.5px; color: #555; display: flex; align-items: center; gap: 5px; }
+    .reading-chip span { color: #111; font-weight: 600; }
+    .sensor-footer { margin-top: 12px; padding-top: 12px; border-top: 1px solid #f0f0ef; display: flex; align-items: center; justify-content: space-between; }
+    .sensor-location { font-size: 12px; color: #aaa; display: flex; align-items: center; gap: 5px; }
+    .sensor-updated { font-size: 11px; color: #bbb; font-family: 'Geist Mono', monospace; }
 
-        .approach-1 .sensor-row {
-            display: grid;
-            grid-template-columns: 2fr 1fr 1.5fr 1.5fr 100px 80px;
-            align-items: center;
-            padding: 16px 20px;
-            background: white;
-            border-radius: 8px;
-            border: 1px solid #e8e8e8;
-            transition: all 0.15s ease;
-        }
+    /* Team grid */
+    .team-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; }
+    .team-card { background: white; border: 1px solid #e8e8e6; border-radius: 10px; padding: 20px 18px; text-align: center; cursor: pointer; transition: all 0.15s; }
+    .team-card:hover { border-color: #ccc; box-shadow: 0 2px 12px rgba(0,0,0,0.06); }
+    .team-avatar { width: 48px; height: 48px; border-radius: 50%; margin: 0 auto 12px; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 600; color: white; }
+    .team-name { font-size: 14px; font-weight: 600; color: #111; }
+    .team-role { font-size: 12px; color: #999; margin-top: 3px; }
+    .team-joined { font-size: 11px; color: #bbb; margin-top: 6px; font-family: 'Geist Mono', monospace; }
+    .role-badge { display: inline-flex; align-items: center; gap: 4px; margin-top: 8px; background: #f4f4f3; border-radius: 20px; padding: 3px 10px; font-size: 11px; color: #555; font-weight: 500; }
+    .role-badge.admin { background: #fef3c7; color: #92400e; }
 
-        .approach-1 .sensor-row:hover {
-            border-color: #0078d4;
-            box-shadow: 0 2px 8px rgba(0, 120, 212, 0.1);
-        }
+    /* Fade in animation */
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    .fade-up { animation: fadeUp 0.3s ease forwards; }
+    .delay-1 { animation-delay: 0.05s; opacity: 0; }
+    .delay-2 { animation-delay: 0.1s; opacity: 0; }
+    .delay-3 { animation-delay: 0.15s; opacity: 0; }
+    .delay-4 { animation-delay: 0.2s; opacity: 0; }
 
-        .approach-1 .sensor-name {
-            font-weight: 600;
-        }
-
-        .approach-1 .sensor-id {
-            color: #4D4D4D;
-            font-size: 13px;
-        }
-
-        /* ========================================
-           APPROACH 2: Left Accent Border
-           ======================================== */
-        .approach-2 .sensor-list {
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
-        }
-
-        .approach-2 .sensor-row {
-            display: grid;
-            grid-template-columns: 2fr 1fr 1.5fr 1.5fr 100px 80px;
-            align-items: center;
-            padding: 14px 20px;
-            background: white;
-            border-left: 3px solid transparent;
-            transition: all 0.15s ease;
-        }
-
-        .approach-2 .sensor-row:hover {
-            background: #f8f9fa;
-            border-left-color: #0078d4;
-        }
-
-        .approach-2 .sensor-row.active {
-            border-left-color: #28a745;
-        }
-
-        .approach-2 .sensor-row.inactive {
-            border-left-color: #6c757d;
-        }
-
-        .approach-2 .sensor-name {
-            font-weight: 600;
-        }
-
-        /* ========================================
-           APPROACH 3: Compact Cards with Icon
-           ======================================== */
-        .approach-3 .sensor-list {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-
-        .approach-3 .sensor-row {
-            display: grid;
-            grid-template-columns: 48px 2fr 1fr 1.5fr 100px 80px;
-            align-items: center;
-            padding: 12px 16px;
-            background: white;
-            border-radius: 10px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.06);
-            transition: all 0.15s ease;
-        }
-
-        .approach-3 .sensor-row:hover {
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-            transform: translateY(-1px);
-        }
-
-        .approach-3 .sensor-icon {
-            width: 40px;
-            height: 40px;
-            background: #e3f2fd;
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #0078d4;
-            font-size: 18px;
-        }
-
-        .approach-3 .sensor-info .sensor-name {
-            font-weight: 600;
-            margin-bottom: 2px;
-        }
-
-        .approach-3 .sensor-info .sensor-id {
-            font-size: 12px;
-            color: #4D4D4D;
-        }
-
-        /* ========================================
-           APPROACH 4: Minimal with Dividers
-           ======================================== */
-        .approach-4 .sensor-list {
-            background: white;
-            border-radius: 8px;
-            overflow: hidden;
-        }
-
-        .approach-4 .sensor-row {
-            display: grid;
-            grid-template-columns: 2fr 1fr 1.5fr 1.5fr 100px 80px;
-            align-items: center;
-            padding: 16px 24px;
-            border-bottom: 1px solid #f0f0f0;
-            transition: background 0.15s ease;
-        }
-
-        .approach-4 .sensor-row:last-child {
-            border-bottom: none;
-        }
-
-        .approach-4 .sensor-row:hover {
-            background: #fafbfc;
-        }
-
-        .approach-4 .sensor-name {
-            font-weight: 500;
-        }
-
-        .approach-4 .sensor-meta {
-            font-size: 12px;
-            color: #4D4D4D;
-            margin-top: 2px;
-        }
-
-        /* ========================================
-           APPROACH 5: Full Cards (2 column info)
-           ======================================== */
-        .approach-5 .sensor-list {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-        }
-
-        .approach-5 .sensor-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 20px 24px;
-            background: white;
-            border-radius: 12px;
-            border: 1px solid #eee;
-            transition: all 0.2s ease;
-        }
-
-        .approach-5 .sensor-row:hover {
-            border-color: #0078d4;
-            box-shadow: 0 4px 16px rgba(0, 120, 212, 0.12);
-        }
-
-        .approach-5 .sensor-main {
-            display: flex;
-            align-items: center;
-            gap: 16px;
-        }
-
-        .approach-5 .sensor-avatar {
-            width: 48px;
-            height: 48px;
-            background: linear-gradient(135deg, #0078d4, #106ebe);
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-weight: 600;
-            font-size: 16px;
-        }
-
-        .approach-5 .sensor-details h3 {
-            font-size: 15px;
-            font-weight: 600;
-            margin-bottom: 4px;
-        }
-
-        .approach-5 .sensor-details .meta {
-            font-size: 13px;
-            color: #4D4D4D;
-        }
-
-        .approach-5 .sensor-stats {
-            display: flex;
-            gap: 32px;
-            align-items: center;
-        }
-
-        .approach-5 .stat {
-            text-align: center;
-        }
-
-        .approach-5 .stat-label {
-            font-size: 11px;
-            color: #4D4D4D;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .approach-5 .stat-value {
-            font-size: 14px;
-            font-weight: 500;
-            margin-top: 2px;
-        }
-
-        .approach-5 .sensor-actions {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        /* ========================================
-           APPROACH 6: Zebra Striped Modern
-           ======================================== */
-        .approach-6 .sensor-list {
-            background: white;
-            border-radius: 12px;
-            overflow: hidden;
-            border: 1px solid #e8e8e8;
-        }
-
-        .approach-6 .sensor-row {
-            display: grid;
-            grid-template-columns: 2fr 1fr 1.5fr 1.5fr 100px 80px;
-            align-items: center;
-            padding: 18px 24px;
-            transition: all 0.15s ease;
-        }
-
-        .approach-6 .sensor-row:nth-child(even) {
-            background: #F9F9FB;
-        }
-
-        .approach-6 .sensor-row:hover {
-            background: #e8f4fc;
-        }
-
-        .approach-6 .sensor-name {
-            font-weight: 600;
-        }
-
-        .approach-6 .location {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            font-size: 13px;
-            color: #4D4D4D;
-        }
-
-        .approach-6 .location-icon {
-            color: #0078d4;
-        }
-    </style>
+    #sensors-tab { display: block; }
+    #team-tab { display: none; }
+  </style>
 </head>
 <body>
-    <h1>Sensor List Design Approaches</h1>
 
-    <!-- APPROACH 1 -->
-    <div class="section">
-        <h2>Approach 1: Separated Row Cards</h2>
-        <p class="secondary" style="margin-bottom: 16px;">Each sensor is a distinct card with border, gap between rows</p>
-
-        <div class="approach-1">
-            <div class="sensor-list">
-                <div class="sensor-row">
-                    <div class="sensor-name">Downtown Water Quality Monitor</div>
-                    <div class="sensor-id">SN-2024-0142</div>
-                    <div>Oslo Municipality</div>
-                    <div>59.9139, 10.7522</div>
-                    <div><span class="status-active">Active</span></div>
-                    <div><button class="action-btn">View</button></div>
-                </div>
-                <div class="sensor-row">
-                    <div class="sensor-name">Harbor Inlet Sensor</div>
-                    <div class="sensor-id">SN-2024-0089</div>
-                    <div>Bergen Municipality</div>
-                    <div>60.3913, 5.3221</div>
-                    <div><span class="status-active">Active</span></div>
-                    <div><button class="action-btn">View</button></div>
-                </div>
-                <div class="sensor-row">
-                    <div class="sensor-name">River Delta Monitor</div>
-                    <div class="sensor-id">SN-2023-0321</div>
-                    <div>Trondheim</div>
-                    <div>63.4305, 10.3951</div>
-                    <div><span class="status-inactive">Inactive</span></div>
-                    <div><button class="action-btn">View</button></div>
-                </div>
-            </div>
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="sidebar-logo-icon"><i class="fa fa-water"></i></div>
+      <span class="sidebar-logo-text">AquaTrack</span>
+    </div>
+    <div class="nav-section">
+      <div class="nav-label">Menu</div>
+    </div>
+    <a class="nav-item"><i class="fa fa-house"></i> Dashboard</a>
+    <a class="nav-item"><i class="fa fa-satellite-dish"></i> Sensors</a>
+    <a class="nav-item active"><i class="fa fa-building"></i> Organizations</a>
+    <a class="nav-item"><i class="fa fa-map"></i> Map</a>
+    <div class="sidebar-footer">
+      <div class="user-row">
+        <div class="avatar">A</div>
+        <div>
+          <div style="font-size:13px;font-weight:500;color:#111;">Admin</div>
+          <div style="font-size:11.5px;color:#999;">Admin</div>
         </div>
+      </div>
+      <a class="nav-item" style="margin-top:4px;color:#dc2626;"><i class="fa fa-right-from-bracket"></i> Sign Out</a>
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <main class="main">
+
+    <!-- Banner -->
+    <div class="banner-wrap fade-up">
+      <img class="banner-img" src="https://images.unsplash.com/photo-1541888946425-d81bb19240f5?w=1200&q=80" alt="Banner"/>
+      <div class="banner-overlay"></div>
+      <div class="banner-actions">
+        <button class="banner-btn"><i class="fa fa-pen" style="font-size:11px;"></i> Edit</button>
+        <button class="banner-btn danger"><i class="fa fa-trash" style="font-size:11px;"></i> Delete</button>
+      </div>
     </div>
 
-    <!-- APPROACH 2 -->
-    <div class="section">
-        <h2>Approach 2: Left Accent Border</h2>
-        <p class="secondary" style="margin-bottom: 16px;">Color-coded left border indicates status, minimal separation</p>
-
-        <div class="approach-2">
-            <div class="sensor-list">
-                <div class="sensor-row active">
-                    <div class="sensor-name">Downtown Water Quality Monitor</div>
-                    <div class="secondary">SN-2024-0142</div>
-                    <div>Oslo Municipality</div>
-                    <div>59.9139, 10.7522</div>
-                    <div><span class="status-active">Active</span></div>
-                    <div><button class="action-btn">View</button></div>
-                </div>
-                <div class="sensor-row active">
-                    <div class="sensor-name">Harbor Inlet Sensor</div>
-                    <div class="secondary">SN-2024-0089</div>
-                    <div>Bergen Municipality</div>
-                    <div>60.3913, 5.3221</div>
-                    <div><span class="status-active">Active</span></div>
-                    <div><button class="action-btn">View</button></div>
-                </div>
-                <div class="sensor-row inactive">
-                    <div class="sensor-name">River Delta Monitor</div>
-                    <div class="secondary">SN-2023-0321</div>
-                    <div>Trondheim</div>
-                    <div>63.4305, 10.3951</div>
-                    <div><span class="status-inactive">Inactive</span></div>
-                    <div><button class="action-btn">View</button></div>
-                </div>
-            </div>
+    <!-- Profile -->
+    <div class="profile-section fade-up delay-1">
+      <div class="profile-row">
+        <div class="profile-left">
+          <div class="org-avatar">
+            <img src="https://upload.wikimedia.org/wikipedia/en/thumb/6/6c/Inter_American_University_of_Puerto_Rico_seal.svg/200px-Inter_American_University_of_Puerto_Rico_seal.svg.png" alt="Logo"/>
+          </div>
+          <div class="org-meta">
+            <div class="org-name">Inter Metro</div>
+            <div class="org-url"><i class="fa fa-link" style="font-size:11px;margin-right:4px;"></i>metro.inter.edu</div>
+            <div class="org-created"><i class="fa fa-calendar-alt" style="font-size:11px;margin-right:4px;"></i>Created Mar 10, 2026</div>
+          </div>
         </div>
+      </div>
     </div>
 
-    <!-- APPROACH 3 -->
-    <div class="section">
-        <h2>Approach 3: Compact Cards with Icon</h2>
-        <p class="secondary" style="margin-bottom: 16px;">Each row has a sensor icon, subtle shadow, slight lift on hover</p>
-
-        <div class="approach-3">
-            <div class="sensor-list">
-                <div class="sensor-row">
-                    <div class="sensor-icon">S</div>
-                    <div class="sensor-info">
-                        <div class="sensor-name">Downtown Water Quality Monitor</div>
-                        <div class="sensor-id">SN-2024-0142</div>
-                    </div>
-                    <div>Oslo Municipality</div>
-                    <div class="secondary">59.9139, 10.7522</div>
-                    <div><span class="status-active">Active</span></div>
-                    <div><button class="action-btn">View</button></div>
-                </div>
-                <div class="sensor-row">
-                    <div class="sensor-icon">S</div>
-                    <div class="sensor-info">
-                        <div class="sensor-name">Harbor Inlet Sensor</div>
-                        <div class="sensor-id">SN-2024-0089</div>
-                    </div>
-                    <div>Bergen Municipality</div>
-                    <div class="secondary">60.3913, 5.3221</div>
-                    <div><span class="status-active">Active</span></div>
-                    <div><button class="action-btn">View</button></div>
-                </div>
-                <div class="sensor-row">
-                    <div class="sensor-icon">S</div>
-                    <div class="sensor-info">
-                        <div class="sensor-name">River Delta Monitor</div>
-                        <div class="sensor-id">SN-2023-0321</div>
-                    </div>
-                    <div>Trondheim</div>
-                    <div class="secondary">63.4305, 10.3951</div>
-                    <div><span class="status-inactive">Inactive</span></div>
-                    <div><button class="action-btn">View</button></div>
-                </div>
-            </div>
-        </div>
+    <!-- Stats bar -->
+    <div class="stats-bar fade-up delay-2">
+      <div class="stat-item">
+        <div class="stat-label">Sensors</div>
+        <div class="stat-value">12</div>
+        <div class="stat-sub">4 online now</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-label">Team Members</div>
+        <div class="stat-value">8</div>
+        <div class="stat-sub">2 admins</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-label">Readings Today</div>
+        <div class="stat-value">1,842</div>
+        <div class="stat-sub">↑ 12% vs yesterday</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-label">Avg. pH</div>
+        <div class="stat-value">7.4</div>
+        <div class="stat-sub">Normal range</div>
+      </div>
     </div>
 
-    <!-- APPROACH 4 -->
-    <div class="section">
-        <h2>Approach 4: Minimal with Dividers</h2>
-        <p class="secondary" style="margin-bottom: 16px;">Clean table-like look with subtle dividers, contained in one card</p>
-
-        <div class="approach-4">
-            <div class="sensor-list">
-                <div class="sensor-row">
-                    <div>
-                        <div class="sensor-name">Downtown Water Quality Monitor</div>
-                        <div class="sensor-meta">SN-2024-0142</div>
-                    </div>
-                    <div>Oslo</div>
-                    <div class="secondary">Oslo Municipality</div>
-                    <div class="secondary">59.9139, 10.7522</div>
-                    <div><span class="status-active">Active</span></div>
-                    <div><button class="action-btn">View</button></div>
-                </div>
-                <div class="sensor-row">
-                    <div>
-                        <div class="sensor-name">Harbor Inlet Sensor</div>
-                        <div class="sensor-meta">SN-2024-0089</div>
-                    </div>
-                    <div>Bergen</div>
-                    <div class="secondary">Bergen Municipality</div>
-                    <div class="secondary">60.3913, 5.3221</div>
-                    <div><span class="status-active">Active</span></div>
-                    <div><button class="action-btn">View</button></div>
-                </div>
-                <div class="sensor-row">
-                    <div>
-                        <div class="sensor-name">River Delta Monitor</div>
-                        <div class="sensor-meta">SN-2023-0321</div>
-                    </div>
-                    <div>Trondheim</div>
-                    <div class="secondary">Trondheim</div>
-                    <div class="secondary">63.4305, 10.3951</div>
-                    <div><span class="status-inactive">Inactive</span></div>
-                    <div><button class="action-btn">View</button></div>
-                </div>
-            </div>
-        </div>
+    <!-- About -->
+    <div class="about-card fade-up delay-2">
+      <span style="font-weight:500;color:#111;font-size:13px;">About</span>
+      <span style="margin-left:12px;">The Inter American University of Puerto Rico — monitoring lagoon and coastal water quality across campus sites.</span>
     </div>
 
-    <!-- APPROACH 5 -->
-    <div class="section">
-        <h2>Approach 5: Full Cards (Rich Info)</h2>
-        <p class="secondary" style="margin-bottom: 16px;">Larger cards with avatar, grouped stats - more visual hierarchy</p>
-
-        <div class="approach-5">
-            <div class="sensor-list">
-                <div class="sensor-row">
-                    <div class="sensor-main">
-                        <div class="sensor-avatar">DW</div>
-                        <div class="sensor-details">
-                            <h3>Downtown Water Quality Monitor</h3>
-                            <div class="meta">SN-2024-0142 &bull; Oslo Municipality</div>
-                        </div>
-                    </div>
-                    <div class="sensor-stats">
-                        <div class="stat">
-                            <div class="stat-label">Location</div>
-                            <div class="stat-value">59.91, 10.75</div>
-                        </div>
-                        <div class="stat">
-                            <div class="stat-label">Status</div>
-                            <div class="stat-value"><span class="status-active">Active</span></div>
-                        </div>
-                    </div>
-                    <div class="sensor-actions">
-                        <button class="action-btn">View on Map</button>
-                    </div>
-                </div>
-                <div class="sensor-row">
-                    <div class="sensor-main">
-                        <div class="sensor-avatar">HI</div>
-                        <div class="sensor-details">
-                            <h3>Harbor Inlet Sensor</h3>
-                            <div class="meta">SN-2024-0089 &bull; Bergen Municipality</div>
-                        </div>
-                    </div>
-                    <div class="sensor-stats">
-                        <div class="stat">
-                            <div class="stat-label">Location</div>
-                            <div class="stat-value">60.39, 5.32</div>
-                        </div>
-                        <div class="stat">
-                            <div class="stat-label">Status</div>
-                            <div class="stat-value"><span class="status-active">Active</span></div>
-                        </div>
-                    </div>
-                    <div class="sensor-actions">
-                        <button class="action-btn">View on Map</button>
-                    </div>
-                </div>
-                <div class="sensor-row">
-                    <div class="sensor-main">
-                        <div class="sensor-avatar">RD</div>
-                        <div class="sensor-details">
-                            <h3>River Delta Monitor</h3>
-                            <div class="meta">SN-2023-0321 &bull; Trondheim</div>
-                        </div>
-                    </div>
-                    <div class="sensor-stats">
-                        <div class="stat">
-                            <div class="stat-label">Location</div>
-                            <div class="stat-value">63.43, 10.40</div>
-                        </div>
-                        <div class="stat">
-                            <div class="stat-label">Status</div>
-                            <div class="stat-value"><span class="status-inactive">Inactive</span></div>
-                        </div>
-                    </div>
-                    <div class="sensor-actions">
-                        <button class="action-btn">View on Map</button>
-                    </div>
-                </div>
-            </div>
-        </div>
+    <!-- Tabs -->
+    <div class="tabs-row fade-up delay-3">
+      <div class="tab active" id="tab-sensors" onclick="switchTab('sensors')">
+        <i class="fa fa-satellite-dish" style="font-size:12px;"></i>
+        Sensors
+        <span class="tab-count">12</span>
+      </div>
+      <div class="tab" id="tab-team" onclick="switchTab('team')">
+        <i class="fa fa-users" style="font-size:12px;"></i>
+        Our Team
+        <span class="tab-count">8</span>
+      </div>
     </div>
 
-    <!-- APPROACH 6 -->
-    <div class="section">
-        <h2>Approach 6: Zebra Striped Modern</h2>
-        <p class="secondary" style="margin-bottom: 16px;">Alternating row backgrounds, contained in single card, clean and scannable</p>
-
-        <div class="approach-6">
-            <div class="sensor-list">
-                <div class="sensor-row">
-                    <div class="sensor-name">Downtown Water Quality Monitor</div>
-                    <div class="secondary">SN-2024-0142</div>
-                    <div>Oslo Municipality</div>
-                    <div class="location"><span class="location-icon">&#x1F4CD;</span> 59.9139, 10.7522</div>
-                    <div><span class="status-active">Active</span></div>
-                    <div><button class="action-btn">View</button></div>
-                </div>
-                <div class="sensor-row">
-                    <div class="sensor-name">Harbor Inlet Sensor</div>
-                    <div class="secondary">SN-2024-0089</div>
-                    <div>Bergen Municipality</div>
-                    <div class="location"><span class="location-icon">&#x1F4CD;</span> 60.3913, 5.3221</div>
-                    <div><span class="status-active">Active</span></div>
-                    <div><button class="action-btn">View</button></div>
-                </div>
-                <div class="sensor-row">
-                    <div class="sensor-name">River Delta Monitor</div>
-                    <div class="secondary">SN-2023-0321</div>
-                    <div>Trondheim</div>
-                    <div class="location"><span class="location-icon">&#x1F4CD;</span> 63.4305, 10.3951</div>
-                    <div><span class="status-inactive">Inactive</span></div>
-                    <div><button class="action-btn">View</button></div>
-                </div>
-                <div class="sensor-row">
-                    <div class="sensor-name">Coastal Monitoring Station</div>
-                    <div class="secondary">SN-2024-0201</div>
-                    <div>Stavanger</div>
-                    <div class="location"><span class="location-icon">&#x1F4CD;</span> 58.9700, 5.7331</div>
-                    <div><span class="status-active">Active</span></div>
-                    <div><button class="action-btn">View</button></div>
-                </div>
-            </div>
+    <!-- Sensors tab -->
+    <div class="content fade-up delay-4" id="sensors-tab">
+      <div class="toolbar">
+        <div class="search-wrap">
+          <i class="fa fa-search" style="color:#ccc;font-size:13px;"></i>
+          <input placeholder="Search sensors…"/>
         </div>
+        <button class="add-btn"><i class="fa fa-plus" style="font-size:11px;"></i> Add Sensor</button>
+      </div>
+
+      <div class="sensor-grid">
+        <!-- Sensor cards -->
+        <div class="sensor-card">
+          <div class="sensor-header">
+            <div class="sensor-icon"><i class="fa fa-droplet"></i></div>
+            <div class="status-dot online"></div>
+          </div>
+          <div class="sensor-name">Laguna Node A1</div>
+          <div class="sensor-id">SN-0041-A</div>
+          <div class="sensor-readings">
+            <div class="reading-chip">pH <span>7.2</span></div>
+            <div class="reading-chip">Temp <span>28°C</span></div>
+            <div class="reading-chip">DO <span>6.8</span></div>
+          </div>
+          <div class="sensor-footer">
+            <div class="sensor-location"><i class="fa fa-location-dot" style="font-size:10px;"></i> Laguna San José</div>
+            <div class="sensor-updated">2m ago</div>
+          </div>
+        </div>
+
+        <div class="sensor-card">
+          <div class="sensor-header">
+            <div class="sensor-icon"><i class="fa fa-droplet"></i></div>
+            <div class="status-dot online"></div>
+          </div>
+          <div class="sensor-name">Coastal Monitor B3</div>
+          <div class="sensor-id">SN-0087-B</div>
+          <div class="sensor-readings">
+            <div class="reading-chip">pH <span>7.6</span></div>
+            <div class="reading-chip">Temp <span>29°C</span></div>
+            <div class="reading-chip">Turbidity <span>3.1</span></div>
+          </div>
+          <div class="sensor-footer">
+            <div class="sensor-location"><i class="fa fa-location-dot" style="font-size:10px;"></i> Bahía de San Juan</div>
+            <div class="sensor-updated">5m ago</div>
+          </div>
+        </div>
+
+        <div class="sensor-card">
+          <div class="sensor-header">
+            <div class="sensor-icon"><i class="fa fa-droplet"></i></div>
+            <div class="status-dot warning"></div>
+          </div>
+          <div class="sensor-name">River Inlet C2</div>
+          <div class="sensor-id">SN-0103-C</div>
+          <div class="sensor-readings">
+            <div class="reading-chip">pH <span>6.1</span></div>
+            <div class="reading-chip">Temp <span>31°C</span></div>
+            <div class="reading-chip">DO <span>4.2</span></div>
+          </div>
+          <div class="sensor-footer">
+            <div class="sensor-location"><i class="fa fa-location-dot" style="font-size:10px;"></i> Río Piedras</div>
+            <div class="sensor-updated">8m ago</div>
+          </div>
+        </div>
+
+        <div class="sensor-card">
+          <div class="sensor-header">
+            <div class="sensor-icon"><i class="fa fa-droplet"></i></div>
+            <div class="status-dot offline"></div>
+          </div>
+          <div class="sensor-name">Wetland Probe D7</div>
+          <div class="sensor-id">SN-0119-D</div>
+          <div class="sensor-readings">
+            <div class="reading-chip">pH <span>—</span></div>
+            <div class="reading-chip">Temp <span>—</span></div>
+          </div>
+          <div class="sensor-footer">
+            <div class="sensor-location"><i class="fa fa-location-dot" style="font-size:10px;"></i> Piñones</div>
+            <div class="sensor-updated">3h ago</div>
+          </div>
+        </div>
+
+        <div class="sensor-card">
+          <div class="sensor-header">
+            <div class="sensor-icon"><i class="fa fa-droplet"></i></div>
+            <div class="status-dot online"></div>
+          </div>
+          <div class="sensor-name">Estuary Node E1</div>
+          <div class="sensor-id">SN-0134-E</div>
+          <div class="sensor-readings">
+            <div class="reading-chip">Salinity <span>32‰</span></div>
+            <div class="reading-chip">Temp <span>27°C</span></div>
+          </div>
+          <div class="sensor-footer">
+            <div class="sensor-location"><i class="fa fa-location-dot" style="font-size:10px;"></i> Punta Salinas</div>
+            <div class="sensor-updated">1m ago</div>
+          </div>
+        </div>
+
+        <div class="sensor-card">
+          <div class="sensor-header">
+            <div class="sensor-icon"><i class="fa fa-droplet"></i></div>
+            <div class="status-dot online"></div>
+          </div>
+          <div class="sensor-name">Deep Buoy F4</div>
+          <div class="sensor-id">SN-0156-F</div>
+          <div class="sensor-readings">
+            <div class="reading-chip">Depth <span>12m</span></div>
+            <div class="reading-chip">Temp <span>25°C</span></div>
+            <div class="reading-chip">DO <span>7.1</span></div>
+          </div>
+          <div class="sensor-footer">
+            <div class="sensor-location"><i class="fa fa-location-dot" style="font-size:10px;"></i> Offshore SJU</div>
+            <div class="sensor-updated">just now</div>
+          </div>
+        </div>
+      </div>
     </div>
+
+    <!-- Team tab -->
+    <div class="content fade-up delay-4" id="team-tab" style="display:none;">
+      <div class="toolbar">
+        <div class="search-wrap">
+          <i class="fa fa-search" style="color:#ccc;font-size:13px;"></i>
+          <input placeholder="Search members…"/>
+        </div>
+        <button class="add-btn"><i class="fa fa-plus" style="font-size:11px;"></i> Add Member</button>
+      </div>
+
+      <div class="team-grid">
+        <div class="team-card">
+          <div class="team-avatar" style="background:#0ea5e9;">A</div>
+          <div class="team-name">Andres Rivera</div>
+          <div class="team-role">Full Stack Developer</div>
+          <div class="role-badge admin"><i class="fa fa-shield-halved" style="font-size:10px;"></i> Admin</div>
+          <div class="team-joined">Joined Mar 2026</div>
+        </div>
+        <div class="team-card">
+          <div class="team-avatar" style="background:#8b5cf6;">M</div>
+          <div class="team-name">María González</div>
+          <div class="team-role">Environmental Scientist</div>
+          <div class="role-badge admin"><i class="fa fa-shield-halved" style="font-size:10px;"></i> Admin</div>
+          <div class="team-joined">Joined Jan 2026</div>
+        </div>
+        <div class="team-card">
+          <div class="team-avatar" style="background:#22c55e;">C</div>
+          <div class="team-name">Carlos Pérez</div>
+          <div class="team-role">Field Technician</div>
+          <div class="role-badge">Member</div>
+          <div class="team-joined">Joined Feb 2026</div>
+        </div>
+        <div class="team-card">
+          <div class="team-avatar" style="background:#f59e0b;">L</div>
+          <div class="team-name">Laura Díaz</div>
+          <div class="team-role">Data Analyst</div>
+          <div class="role-badge">Member</div>
+          <div class="team-joined">Joined Feb 2026</div>
+        </div>
+        <div class="team-card">
+          <div class="team-avatar" style="background:#ef4444;">R</div>
+          <div class="team-name">Roberto Soto</div>
+          <div class="team-role">IoT Engineer</div>
+          <div class="role-badge">Member</div>
+          <div class="team-joined">Joined Mar 2026</div>
+        </div>
+        <div class="team-card">
+          <div class="team-avatar" style="background:#14b8a6;">S</div>
+          <div class="team-name">Sofia Ortiz</div>
+          <div class="team-role">Researcher</div>
+          <div class="role-badge">Member</div>
+          <div class="team-joined">Joined Mar 2026</div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <script>
+    function switchTab(tab) {
+      document.getElementById('sensors-tab').style.display = tab === 'sensors' ? 'block' : 'none';
+      document.getElementById('team-tab').style.display = tab === 'team' ? 'block' : 'none';
+      document.getElementById('tab-sensors').className = 'tab' + (tab === 'sensors' ? ' active' : '');
+      document.getElementById('tab-team').className = 'tab' + (tab === 'team' ? ' active' : '');
+    }
+  </script>
 
 </body>
 </html>

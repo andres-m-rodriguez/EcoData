@@ -1,10 +1,12 @@
 @page "/organizations/{Id:guid}"
 @using EcoData.AquaTrack.Contracts.Dtos
 @using EcoData.AquaTrack.Contracts.Errors
+@using EcoData.AquaTrack.Contracts.Parameters
 @using EcoData.AquaTrack.Application.Client
 @using EcoData.AquaTrack.WebApp.Client.Services
 @using BlazingSingularity.Commands
 @inject IOrganizationHttpClient OrganizationClient
+@inject ISensorHttpClient SensorClient
 @inject NavigationManager Navigation
 @inject IDialogService DialogService
 @inject ISnackbar Snackbar
@@ -15,95 +17,184 @@
 
 @if (LoadCommand.IsLoading)
 {
-    <div class="page-wrapper">
-        <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="100px" Class="banner rounded-lg mb-3" />
-        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="3" Class="mb-3">
-            <MudSkeleton SkeletonType="SkeletonType.Circle" Width="48px" Height="48px" />
-            <MudSkeleton Width="200px" Height="24px" />
+    <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="200px" Class="rounded-b-xl" />
+    <MudContainer MaxWidth="MaxWidth.Large" Class="mt-n8 position-relative">
+        <MudStack Row="true" AlignItems="AlignItems.End" Spacing="4">
+            <MudSkeleton SkeletonType="SkeletonType.Rectangle" Width="72px" Height="72px" Class="rounded-xl" />
+            <MudStack Spacing="1">
+                <MudSkeleton Width="180px" Height="28px" />
+                <MudSkeleton Width="120px" Height="16px" />
+            </MudStack>
         </MudStack>
-    </div>
+        <MudGrid Class="mt-5">
+            @for (var i = 0; i < 4; i++)
+            {
+                <MudItem xs="6" md="3">
+                    <MudPaper Class="pa-4">
+                        <MudSkeleton Width="60px" Height="12px" />
+                        <MudSkeleton Width="40px" Height="28px" Class="mt-2" />
+                        <MudSkeleton Width="80px" Height="12px" Class="mt-1" />
+                    </MudPaper>
+                </MudItem>
+            }
+        </MudGrid>
+    </MudContainer>
 }
 else if (_organization is null)
 {
-    <MudStack AlignItems="AlignItems.Center" Class="pa-8">
-        <MudIcon Icon="@Icons.Material.Filled.Error" Size="Size.Large" Color="Color.Error" />
-        <MudText Typo="Typo.h6" Color="Color.Error">Organization not found</MudText>
-    </MudStack>
+    <MudContainer MaxWidth="MaxWidth.Small" Class="py-8">
+        <MudPaper Elevation="0" Class="pa-8 rounded-lg text-center" Style="background: var(--mud-palette-background-gray)">
+            <MudIcon Icon="@Icons.Material.Filled.Error" Size="Size.Large" Color="Color.Error" />
+            <MudText Typo="Typo.h6" Color="Color.Error" Class="mt-2">Organization not found</MudText>
+        </MudPaper>
+    </MudContainer>
 }
 else
 {
-    <div class="page-wrapper">
-        @* Banner *@
-        <div class="banner rounded-lg mb-3">
-            @if (!string.IsNullOrWhiteSpace(_organization.CardPictureUrl))
-            {
-                <img src="@_organization.CardPictureUrl" alt="" />
-            }
-        </div>
-
-        @* Header: Avatar + Name + Actions *@
-        <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="mb-3">
-            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="3">
-                @if (!string.IsNullOrWhiteSpace(_organization.ProfilePictureUrl))
-                {
-                    <MudAvatar Size="Size.Large">
-                        <MudImage Src="@_organization.ProfilePictureUrl" Alt="@_organization.Name" />
-                    </MudAvatar>
-                }
-                else
-                {
-                    <MudAvatar Size="Size.Large" Color="Color.Primary">
-                        <MudIcon Icon="@Icons.Material.Filled.Business" />
-                    </MudAvatar>
-                }
-                <div>
-                    <MudText Typo="Typo.h6">@_organization.Name</MudText>
-                    @if (!string.IsNullOrWhiteSpace(_organization.WebsiteUrl))
-                    {
-                        <MudLink Href="@_organization.WebsiteUrl" Target="_blank" Typo="Typo.caption">
-                            @GetDisplayUrl(_organization.WebsiteUrl)
-                        </MudLink>
-                    }
-                </div>
+    @* Banner *@
+    <div class="banner-wrap">
+        @if (!string.IsNullOrWhiteSpace(_organization.CardPictureUrl))
+        {
+            <MudImage Src="@_organization.CardPictureUrl" Alt="" Class="banner-img" ObjectFit="ObjectFit.Cover" />
+        }
+        <div class="banner-overlay"></div>
+        @if (IsAdmin)
+        {
+            <MudStack Row="true" Spacing="2" Class="banner-actions">
+                <MudButton Variant="Variant.Filled" Size="Size.Small" StartIcon="@Icons.Material.Outlined.Edit"
+                           Class="banner-btn" OnClick="NavigateToEdit">
+                    Edit
+                </MudButton>
+                <MudButton Variant="Variant.Filled" Size="Size.Small" StartIcon="@Icons.Material.Outlined.Delete"
+                           Class="banner-btn banner-btn-danger" OnClick="ConfirmDelete">
+                    Delete
+                </MudButton>
             </MudStack>
-            @if (IsAdmin)
-            {
-                <MudStack Row="true" Spacing="1">
-                    <MudIconButton Icon="@Icons.Material.Outlined.Edit" Size="Size.Small" OnClick="NavigateToEdit" />
-                    <MudIconButton Icon="@Icons.Material.Outlined.Delete" Size="Size.Small" Color="Color.Error"
-                                   OnClick="ConfirmDelete" />
-                </MudStack>
-            }
-        </MudStack>
+        }
+    </div>
 
-        @* About Us *@
-        <MudPaper Elevation="1" Class="pa-4 mt-4 rounded-lg">
-            <MudText Typo="Typo.subtitle1" Class="mb-2">About Us</MudText>
-            @if (!string.IsNullOrWhiteSpace(_organization.AboutUs))
+    <MudContainer MaxWidth="MaxWidth.Large" Class="mt-n8 position-relative">
+        @* Profile Section *@
+        <MudStack Row="true" AlignItems="AlignItems.End" Spacing="3">
+            @if (!string.IsNullOrWhiteSpace(_organization.ProfilePictureUrl))
             {
-                <MudText Typo="Typo.body2">@_organization.AboutUs</MudText>
+                <MudAvatar Size="Size.Large" Class="org-avatar">
+                    <MudImage Src="@_organization.ProfilePictureUrl" Alt="@_organization.Name" ObjectFit="ObjectFit.Cover" />
+                </MudAvatar>
             }
             else
             {
-                <MudText Typo="Typo.body2" Color="Color.Secondary">No description available.</MudText>
+                <MudAvatar Size="Size.Large" Color="Color.Primary" Class="org-avatar">
+                    <MudIcon Icon="@Icons.Material.Filled.Business" />
+                </MudAvatar>
             }
-            <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mt-2">
-                Created @_organization.CreatedAt.ToString("MMM d, yyyy")
-            </MudText>
-        </MudPaper>
-
-        @* Action Buttons *@
-        <MudStack Row="true" Spacing="2" Class="mt-4">
-            <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Outlined.Sensors"
-                       OnClick="NavigateToSensors">
-                Sensors
-            </MudButton>
-            <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Outlined.Group"
-                       Disabled="true">
-                Our Team
-            </MudButton>
+            <MudStack Spacing="0" Class="pb-1">
+                <MudText Typo="Typo.h5" Class="fw-bold">@_organization.Name</MudText>
+                @if (!string.IsNullOrWhiteSpace(_organization.WebsiteUrl))
+                {
+                    <MudLink Href="@_organization.WebsiteUrl" Target="_blank" Color="Color.Primary" Typo="Typo.body2">
+                        <MudIcon Icon="@Icons.Material.Outlined.Link" Size="Size.Small" Class="mr-1" />
+                        @GetDisplayUrl(_organization.WebsiteUrl)
+                    </MudLink>
+                }
+                <MudText Typo="Typo.caption" Color="Color.Secondary" Class="d-flex align-center mt-1">
+                    <MudIcon Icon="@Icons.Material.Outlined.CalendarMonth" Size="Size.Small" Class="mr-1" />
+                    Created @_organization.CreatedAt.ToString("MMM d, yyyy")
+                </MudText>
+            </MudStack>
         </MudStack>
-    </div>
+
+        @* Stats Bar *@
+        <MudGrid Spacing="0" Class="mt-5">
+            <MudItem xs="6">
+                <MudPaper Class="stat-item stat-first" Elevation="0">
+                    <MudText Typo="Typo.overline" Color="Color.Secondary">Sensors</MudText>
+                    <MudText Typo="Typo.h4" Class="fw-bold">@_sensorCount</MudText>
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">@_sensors.Count(s => s.IsActive) online now
+                    </MudText>
+                </MudPaper>
+            </MudItem>
+            <MudItem xs="6">
+                <MudPaper Class="stat-item stat-last" Elevation="0">
+                    <MudText Typo="Typo.overline" Color="Color.Secondary">Team Members</MudText>
+                    <MudText Typo="Typo.h4" Class="fw-bold">@TeamMembers.Count</MudText>
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">@TeamMembers.Count(m => m.IsAdmin) admins</MudText>
+                </MudPaper>
+            </MudItem>
+        </MudGrid>
+
+        @* About Card *@
+        @if (!string.IsNullOrWhiteSpace(_organization.AboutUs))
+        {
+            <MudPaper Elevation="0" Class="pa-4 mt-5 rounded-lg about-card">
+                <MudText Typo="Typo.subtitle2" Class="d-inline fw-bold">About</MudText>
+                <MudText Typo="Typo.body2" Color="Color.Secondary" Class="d-inline ml-3">
+                    @_organization.AboutUs
+                </MudText>
+            </MudPaper>
+        }
+
+        @* Tabs *@
+        <div class="mt-6">
+            <Tabs>
+                <Tab Title="Sensors" Icon="@Icons.Material.Outlined.Sensors" Badge="@_sensorCount.ToString()">
+                    @if (_sensorCount == 0)
+                    {
+                        <MudPaper Elevation="0" Class="pa-6 rounded-lg text-center">
+                            <MudIcon Icon="@Icons.Material.Outlined.Sensors" Size="Size.Large" Color="Color.Secondary" />
+                            <MudText Typo="Typo.body1" Color="Color.Secondary" Class="mt-2">No sensors yet</MudText>
+                        </MudPaper>
+                    }
+                    else
+                    {
+                        <MudPaper Elevation="0" Class="rounded-lg" Style="border: 1px solid var(--mud-palette-lines-default)">
+                            @foreach (var sensor in _sensors)
+                            {
+                                <SensorListItem Sensor="sensor" OnClick="NavigateToSensor" />
+                            }
+                        </MudPaper>
+                        @if (_sensorCount > 4)
+                        {
+                            <MudStack Row Justify="Justify.FlexEnd" Class="mt-3">
+                                <MudButton Variant="Variant.Text" Color="Color.Primary"
+                                           EndIcon="@Icons.Material.Filled.ArrowForward"                        OnClick="NavigateToSensors">
+                                    View all
+                                </MudButton>
+                            </MudStack>
+                        }
+                    }
+                </Tab>
+                <Tab Title="Our Team" Icon="@Icons.Material.Outlined.Group" Badge="@TeamMembers.Count.ToString()">
+                    <MudGrid Spacing="3">
+                        @foreach (var member in TeamMembers.Take(10))
+                        {
+                            <MudItem xs="6" sm="4" md="3" lg="2">
+                                <MudCard Elevation="0" Class="team-card text-center">
+                                    <MudCardContent Class="pa-3">
+                                        <MudAvatar Style="@($"background-color: {member.Color}; color: white;")">
+                                            @member.Name[0]
+                                        </MudAvatar>
+                                        <MudText Typo="Typo.body2" Class="mt-2 fw-bold text-truncate">@member.Name</MudText>
+                                        <MudText Typo="Typo.caption" Color="Color.Secondary" Class="text-truncate">@member.Role
+                                        </MudText>
+                                    </MudCardContent>
+                                </MudCard>
+                            </MudItem>
+                        }
+                    </MudGrid>
+                    @if (TeamMembers.Count > 10)
+                    {
+                        <MudStack Row Justify="Justify.FlexEnd" Class="mt-3">
+                            <MudButton Variant="Variant.Text" Color="Color.Primary"
+                                       EndIcon="@Icons.Material.Filled.ArrowForward" OnClick="NavigateToTeam">
+                                View all @TeamMembers.Count members
+                            </MudButton>
+                        </MudStack>
+                    }
+                </Tab>
+            </Tabs>
+        </div>
+    </MudContainer>
 }
 
 @code {
@@ -111,7 +202,23 @@ else
     public Guid Id { get; set; }
 
     private OrganizationDtoForDetail? _organization;
+    private List<SensorDtoForList> _sensors = [];
+    private int _sensorCount;
+
     private bool IsAdmin => AuthState.CurrentUser?.Role == "Admin";
+
+    // Hardcoded team members
+    private static readonly List<TeamMember> TeamMembers =
+    [
+        new("Andres Rivera", "Full Stack Developer", true, "Mar 2026", "#0ea5e9"),
+        new("Maria Gonzalez", "Environmental Scientist", true, "Jan 2026", "#8b5cf6"),
+        new("Carlos Perez", "Field Technician", false, "Feb 2026", "#22c55e"),
+        new("Laura Diaz", "Data Analyst", false, "Feb 2026", "#f59e0b"),
+        new("Roberto Soto", "IoT Engineer", false, "Mar 2026", "#ef4444"),
+        new("Sofia Ortiz", "Researcher", false, "Mar 2026", "#14b8a6"),
+        new("Miguel Torres", "Lab Technician", false, "Mar 2026", "#6366f1"),
+        new("Ana Ruiz", "Project Coordinator", false, "Mar 2026", "#ec4899")
+    ];
 
     protected override async Task OnInitializedAsync()
     {
@@ -127,10 +234,23 @@ else
             organization => _organization = organization,
             _ => _organization = null
         );
+
+        if (_organization is not null)
+        {
+            _sensorCount = await SensorClient.GetCountByOrganizationAsync(Id);
+
+            var parameters = new SensorParameters(PageSize: 4, OrganizationId: Id);
+            await foreach (var sensor in SensorClient.GetSensorsAsync(parameters))
+            {
+                _sensors.Add(sensor);
+            }
+        }
     }
 
     private void NavigateToEdit() => Navigation.NavigateTo($"/organizations/{Id}/edit");
     private void NavigateToSensors() => Navigation.NavigateTo($"/organizations/{Id}/sensors");
+    private void NavigateToTeam() => Navigation.NavigateTo($"/organizations/{Id}/team");
+    private void NavigateToSensor(SensorDtoForList sensor) => Navigation.NavigateTo($"/sensors/{sensor.Id}");
 
     private static string GetDisplayUrl(string url)
     {
@@ -166,4 +286,6 @@ else
             );
         }
     }
+
+    private record TeamMember(string Name, string Role, bool IsAdmin, string JoinedDate, string Color);
 }
