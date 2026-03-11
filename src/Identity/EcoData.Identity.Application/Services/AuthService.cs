@@ -130,9 +130,7 @@ public sealed class AuthService(
             user.Email!,
             user.DisplayName,
             user.Role.ToString(),
-            user.GlobalRole.HasValue
-                ? (Contracts.Authorization.GlobalRole)user.GlobalRole.Value
-                : null,
+            user.GlobalRole.HasValue ? (Contracts.Authorization.GlobalRole)user.GlobalRole.Value : null,
             user.CreatedAt
         );
     }
@@ -163,9 +161,7 @@ public sealed class AuthService(
             user.Email!,
             user.DisplayName,
             user.Role.ToString(),
-            user.GlobalRole.HasValue
-                ? (Contracts.Authorization.GlobalRole)user.GlobalRole.Value
-                : null,
+            user.GlobalRole.HasValue ? (Contracts.Authorization.GlobalRole)user.GlobalRole.Value : null,
             user.CreatedAt
         );
     }
@@ -200,23 +196,19 @@ public sealed class AuthService(
             query = query.Where(u => u.Id > parameters.Cursor.Value);
         }
 
-        await foreach (
-            var user in query
-                .OrderBy(u => u.Id)
-                .Take(parameters.PageSize + 1)
-                .Select(u => new UserInfo(
-                    u.Id,
-                    u.Email!,
-                    u.DisplayName,
-                    u.Role.ToString(),
-                    u.GlobalRole.HasValue
-                        ? (Contracts.Authorization.GlobalRole)u.GlobalRole.Value
-                        : null,
-                    u.CreatedAt
-                ))
-                .AsAsyncEnumerable()
-                .WithCancellation(cancellationToken)
-        )
+        await foreach (var user in query
+            .OrderBy(u => u.Id)
+            .Take(parameters.PageSize + 1)
+            .Select(u => new UserInfo(
+                u.Id,
+                u.Email!,
+                u.DisplayName,
+                u.Role.ToString(),
+                u.GlobalRole.HasValue ? (Contracts.Authorization.GlobalRole)u.GlobalRole.Value : null,
+                u.CreatedAt
+            ))
+            .AsAsyncEnumerable()
+            .WithCancellation(cancellationToken))
         {
             yield return user;
         }
