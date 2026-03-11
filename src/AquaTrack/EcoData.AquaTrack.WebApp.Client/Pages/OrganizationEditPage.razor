@@ -1,7 +1,7 @@
 @page "/organizations/{Id:guid}/edit"
 @using EcoData.AquaTrack.Contracts.Dtos
-@using EcoData.AquaTrack.Contracts.Errors
 @using EcoData.AquaTrack.Application.Client
+@using EcoData.AquaTrack.WebApp.Client.Components
 @using EcoData.AquaTrack.WebApp.Client.Services
 @using BlazingSingularity.Commands
 @inject IOrganizationHttpClient OrganizationClient
@@ -15,7 +15,7 @@
 <MudContainer MaxWidth="MaxWidth.Small" Class="pa-4">
     @if (LoadCommand.IsLoading)
     {
-        <MudPaper Elevation="1" Class="pa-6">
+        <MudPaper Elevation="1" Class="pa-6 rounded-lg">
             <MudSkeleton Width="200px" Height="32px" />
             <MudSkeleton Width="100%" Height="56px" Class="mt-4" />
             <MudSkeleton Width="100%" Height="56px" Class="mt-4" />
@@ -25,7 +25,7 @@
     }
     else if (_organization is null)
     {
-        <MudPaper Elevation="1" Class="pa-6">
+        <MudPaper Elevation="1" Class="pa-6 rounded-lg">
             <MudStack AlignItems="AlignItems.Center">
                 <MudIcon Icon="@Icons.Material.Filled.Error" Size="Size.Large" Color="Color.Error" />
                 <MudText Typo="Typo.h6" Color="Color.Error" Class="mt-2">Organization not found</MudText>
@@ -34,7 +34,7 @@
     }
     else if (!IsAdmin)
     {
-        <MudPaper Elevation="1" Class="pa-6">
+        <MudPaper Elevation="1" Class="pa-6 rounded-lg">
             <MudStack AlignItems="AlignItems.Center">
                 <MudIcon Icon="@Icons.Material.Filled.Lock" Size="Size.Large" Color="Color.Warning" />
                 <MudText Typo="Typo.h6" Color="Color.Warning" Class="mt-2">Access Denied</MudText>
@@ -46,93 +46,15 @@
     }
     else
     {
-        <MudPaper Elevation="1" Class="pa-6">
+        <MudPaper Elevation="1" Class="pa-6 rounded-lg">
             <MudText Typo="Typo.h5" Class="mb-4">Edit Organization</MudText>
 
-            @if (!string.IsNullOrEmpty(_errorMessage))
-            {
-                <MudAlert Severity="Severity.Error" Variant="Variant.Filled" Dense="true" Class="mb-4">
-                    @_errorMessage
-                </MudAlert>
-            }
-
-            <MudStack Spacing="3">
-                <MudTextField @bind-Value="_name"
-                              Label="Name"
-                              Required="true"
-                              RequiredError="Name is required"
-                              MaxLength="200"
-                              Counter="200"
-                              Immediate="true"
-                              Disabled="SaveCommand.IsLoading" />
-
-                <MudTextField @bind-Value="_profilePictureUrl"
-                              Label="Profile Picture URL"
-                              Placeholder="https://example.com/logo.png"
-                              MaxLength="500"
-                              HelperText="URL to the organization's logo or profile picture"
-                              Disabled="SaveCommand.IsLoading" />
-
-                @if (!string.IsNullOrWhiteSpace(_profilePictureUrl))
-                {
-                    <MudStack Row="true" AlignItems="AlignItems.Center">
-                        <MudText Typo="Typo.body2" Color="Color.Secondary">Preview:</MudText>
-                        <MudAvatar Size="Size.Large">
-                            <MudImage Src="@_profilePictureUrl" Alt="Preview" />
-                        </MudAvatar>
-                    </MudStack>
-                }
-
-                <MudTextField @bind-Value="_cardPictureUrl"
-                              Label="Card Picture URL"
-                              Placeholder="https://example.com/banner.png"
-                              MaxLength="500"
-                              HelperText="Banner image displayed on organization cards"
-                              Disabled="SaveCommand.IsLoading" />
-
-                @if (!string.IsNullOrWhiteSpace(_cardPictureUrl))
-                {
-                    <MudStack>
-                        <MudText Typo="Typo.body2" Color="Color.Secondary">Card Preview:</MudText>
-                        <MudImage Src="@_cardPictureUrl" Alt="Card Preview"
-                                  Style="max-width: 100%; height: 120px; object-fit: cover; border-radius: 8px;" />
-                    </MudStack>
-                }
-
-                <MudTextField @bind-Value="_websiteUrl"
-                              Label="Website URL"
-                              Placeholder="https://example.com"
-                              MaxLength="500"
-                              HelperText="Organization's website (optional)"
-                              Disabled="SaveCommand.IsLoading" />
-
-                <MudTextField @bind-Value="_aboutUs"
-                              Label="About Us"
-                              Lines="5"
-                              MaxLength="2000"
-                              Counter="2000"
-                              HelperText="Description of the organization"
-                              Disabled="SaveCommand.IsLoading" />
-
-                <MudStack Row="true" Justify="Justify.FlexEnd" Spacing="2" Class="mt-4">
-                    <MudButton Variant="Variant.Text"
-                               Color="Color.Default"
-                               OnClick="NavigateToDetails"
-                               Disabled="SaveCommand.IsLoading">
-                        Cancel
-                    </MudButton>
-                    <MudButton Variant="Variant.Filled"
-                               Color="Color.Primary"
-                               OnClick="() => SaveCommand.ExecuteAsync()"
-                               Disabled="SaveCommand.IsLoading || string.IsNullOrWhiteSpace(_name)">
-                        @if (SaveCommand.IsLoading)
-                        {
-                            <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
-                        }
-                        Save Changes
-                    </MudButton>
-                </MudStack>
-            </MudStack>
+            <OrganizationForm Model="_model"
+                              SubmitButtonText="Save Changes"
+                              ErrorMessage="@_errorMessage"
+                              IsLoading="SaveCommand.IsLoading"
+                              OnSubmit="HandleSubmit"
+                              OnCancel="NavigateToDetails" />
         </MudPaper>
     }
 </MudContainer>
@@ -142,11 +64,7 @@
     public Guid Id { get; set; }
 
     private OrganizationDtoForDetail? _organization;
-    private string _name = string.Empty;
-    private string? _profilePictureUrl;
-    private string? _cardPictureUrl;
-    private string? _aboutUs;
-    private string? _websiteUrl;
+    private readonly OrganizationForm.OrganizationFormModel _model = new();
     private string? _errorMessage;
 
     private bool IsAdmin => AuthState.CurrentUser?.Role == "Admin";
@@ -165,14 +83,19 @@
             organization =>
             {
                 _organization = organization;
-                _name = organization.Name;
-                _profilePictureUrl = organization.ProfilePictureUrl;
-                _cardPictureUrl = organization.CardPictureUrl;
-                _aboutUs = organization.AboutUs;
-                _websiteUrl = organization.WebsiteUrl;
+                _model.Name = organization.Name;
+                _model.ProfilePictureUrl = organization.ProfilePictureUrl;
+                _model.CardPictureUrl = organization.CardPictureUrl;
+                _model.AboutUs = organization.AboutUs;
+                _model.WebsiteUrl = organization.WebsiteUrl;
             },
             _ => _organization = null
         );
+    }
+
+    private async Task HandleSubmit(OrganizationForm.OrganizationFormModel model)
+    {
+        await SaveCommand.ExecuteAsync();
     }
 
     [RelayCommand]
@@ -180,18 +103,18 @@
     {
         _errorMessage = null;
 
-        if (string.IsNullOrWhiteSpace(_name))
+        if (string.IsNullOrWhiteSpace(_model.Name))
         {
             _errorMessage = "Name is required";
             return;
         }
 
         var dto = new OrganizationDtoForUpdate(
-            _name,
-            _profilePictureUrl,
-            _cardPictureUrl,
-            _aboutUs,
-            _websiteUrl
+            _model.Name,
+            _model.ProfilePictureUrl,
+            _model.CardPictureUrl,
+            _model.AboutUs,
+            _model.WebsiteUrl
         );
 
         var result = await OrganizationClient.UpdateAsync(Id, dto);
