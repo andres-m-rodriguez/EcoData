@@ -1,21 +1,17 @@
+using EcoData.AquaTrack.Contracts.Dtos;
+
 namespace EcoData.AquaTrack.DataAccess.Interfaces;
 
 public interface IOrganizationMemberRepository
 {
-    Task<IReadOnlyList<OrganizationMembershipDto>> GetByUserAsync(
+    Task<IReadOnlyList<OrganizationMembershipDto>> GetAllOrganizationMembershipsAsync(
         Guid userId,
         CancellationToken cancellationToken = default
     );
 
-    Task<OrganizationMembershipDto?> GetByUserAndOrganizationAsync(
+    Task<OrganizationMembershipDto?> GetOrganizationMembershipAsync(
         Guid userId,
         Guid organizationId,
         CancellationToken cancellationToken = default
     );
 }
-
-public record OrganizationMembershipDto(
-    Guid OrganizationId,
-    string RoleName,
-    IReadOnlyList<string> Permissions
-);
