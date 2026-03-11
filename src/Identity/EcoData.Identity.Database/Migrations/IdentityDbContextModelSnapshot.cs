@@ -51,6 +51,16 @@ namespace EcoData.Identity.Database.Migrations
                         .HasColumnType("character varying(500)")
                         .HasColumnName("password_hash");
 
+                    b.Property<Guid>("RequestedOrganizationId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("requested_organization_id");
+
+                    b.Property<string>("RequestedOrganizationName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("requested_organization_name");
+
                     b.Property<string>("ReviewNotes")
                         .HasMaxLength(1000)
                         .HasColumnType("character varying(1000)")
@@ -76,6 +86,9 @@ namespace EcoData.Identity.Database.Migrations
                     b.HasIndex("Email")
                         .IsUnique()
                         .HasDatabaseName("ix_access_requests_email");
+
+                    b.HasIndex("RequestedOrganizationId")
+                        .HasDatabaseName("ix_access_requests_requested_organization_id");
 
                     b.HasIndex("ReviewedById")
                         .HasDatabaseName("ix_access_requests_reviewed_by_id");
