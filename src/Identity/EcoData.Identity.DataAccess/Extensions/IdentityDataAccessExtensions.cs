@@ -9,6 +9,7 @@ public static class IdentityDataAccessExtensions
     public static IServiceCollection AddIdentityDataAccess(this IServiceCollection services)
     {
         services.AddScoped<IAccessRequestRepository, AccessRequestRepository>();
+        services.AddScoped<IUserLookupRepository, UserLookupRepository>();
 
         return services;
     }

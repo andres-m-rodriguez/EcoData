@@ -9,6 +9,7 @@
   <ItemGroup>
     <ProjectReference Include="..\EcoData.AquaTrack.Contracts\EcoData.AquaTrack.Contracts.csproj" />
     <ProjectReference Include="..\EcoData.AquaTrack.Database\EcoData.AquaTrack.Database.csproj" />
+    <ProjectReference Include="..\..\Identity\EcoData.Identity.DataAccess\EcoData.Identity.DataAccess.csproj" />
   </ItemGroup>
 
 </Project>

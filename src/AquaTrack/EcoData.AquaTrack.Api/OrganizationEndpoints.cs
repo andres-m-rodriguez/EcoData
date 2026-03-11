@@ -49,7 +49,7 @@ public static class OrganizationEndpoints
                 async (
                     Guid id,
                     ClaimsPrincipal user,
-                    IOrganizationMemberRepository memberRepository,
+                    IOrganizationMembershipRepository membershipRepository,
                     CancellationToken ct
                 ) =>
                 {
@@ -59,7 +59,7 @@ public static class OrganizationEndpoints
                         return Results.Ok(new OrganizationPermissionsDto(null, []));
                     }
 
-                    var membership = await memberRepository.GetOrganizationMembershipAsync(token.UserId.Value, id, ct);
+                    var membership = await membershipRepository.GetAsync(token.UserId.Value, id, ct);
                     if (membership is null)
                     {
                         return Results.Ok(new OrganizationPermissionsDto(null, []));

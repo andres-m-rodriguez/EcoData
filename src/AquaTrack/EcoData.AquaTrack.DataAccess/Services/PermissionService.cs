@@ -2,7 +2,7 @@ using EcoData.AquaTrack.DataAccess.Interfaces;
 
 namespace EcoData.AquaTrack.DataAccess.Services;
 
-public sealed class PermissionService(IOrganizationMemberRepository memberRepository)
+public sealed class PermissionService(IOrganizationMembershipRepository membershipRepository)
     : IPermissionService
 {
     public async Task<bool> HasPermissionAsync(
@@ -12,11 +12,7 @@ public sealed class PermissionService(IOrganizationMemberRepository memberReposi
         CancellationToken cancellationToken = default
     )
     {
-        var membership = await memberRepository.GetOrganizationMembershipAsync(
-            userId,
-            organizationId,
-            cancellationToken
-        );
+        var membership = await membershipRepository.GetAsync(userId, organizationId, cancellationToken);
 
         if (membership is null)
         {
