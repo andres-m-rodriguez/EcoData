@@ -1,4 +1,5 @@
 using EcoData.Identity.Application.Client;
+using EcoData.Identity.Contracts.Authorization;
 using EcoData.Identity.Contracts.Requests;
 using EcoData.Identity.Contracts.Responses;
 
@@ -13,6 +14,7 @@ public sealed class AuthStateService(IAuthHttpClient authClient)
     public UserInfo? CurrentUser => _currentUser;
     public bool IsAuthenticated => _currentUser is not null;
     public bool IsInitialized => _isInitialized;
+    public bool IsGlobalAdmin => _currentUser?.GlobalRole == GlobalRole.GlobalAdmin;
 
     public event Action? OnAuthStateChanged;
 

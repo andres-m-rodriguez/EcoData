@@ -1,3 +1,5 @@
+using EcoData.Identity.Contracts.Authorization;
+
 namespace EcoData.Identity.Contracts.Responses;
 
 public sealed record UserInfo(
@@ -5,5 +7,6 @@ public sealed record UserInfo(
     string Email,
     string DisplayName,
     string Role,
+    GlobalRole? GlobalRole,
     DateTimeOffset CreatedAt
 );

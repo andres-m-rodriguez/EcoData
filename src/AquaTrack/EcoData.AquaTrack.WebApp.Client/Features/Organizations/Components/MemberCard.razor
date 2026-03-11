@@ -1,0 +1,60 @@
+@using MudBlazor
+
+<MudCard Outlined Class="text-center cursor-pointer" @onclick="HandleClick" Elevation="@_elevation"
+         @onmouseenter="OnMouseEnter" @onmouseleave="OnMouseLeave">
+    <MudCardContent Class="pa-3">
+        @if (!string.IsNullOrWhiteSpace(AvatarUrl))
+        {
+            <MudAvatar>
+                <MudImage Src="@AvatarUrl" Alt="@DisplayName" ObjectFit="ObjectFit.Cover" />
+            </MudAvatar>
+        }
+        else
+        {
+            <MudAvatar Color="@GetAvatarColor(DisplayName)">
+                @GetInitial(DisplayName)
+            </MudAvatar>
+        }
+        <MudText Typo="Typo.body2" Class="mt-2 text-truncate" Style="font-weight: 600;">@DisplayName</MudText>
+        <MudText Typo="Typo.caption" Color="Color.Secondary" Class="text-truncate">@RoleName</MudText>
+    </MudCardContent>
+</MudCard>
+
+@code {
+    [Parameter]
+    public string DisplayName { get; set; } = string.Empty;
+
+    [Parameter]
+    public string RoleName { get; set; } = string.Empty;
+
+    [Parameter]
+    public string? AvatarUrl { get; set; }
+
+    [Parameter]
+    public EventCallback OnClick { get; set; }
+
+    private int _elevation = 0;
+
+    private void OnMouseEnter() => _elevation = 2;
+    private void OnMouseLeave() => _elevation = 0;
+
+    private async Task HandleClick()
+    {
+        if (OnClick.HasDelegate)
+        {
+            await OnClick.InvokeAsync();
+        }
+    }
+
+    private static char GetInitial(string name)
+    {
+        return string.IsNullOrWhiteSpace(name) ? '?' : char.ToUpper(name[0]);
+    }
+
+    private static Color GetAvatarColor(string name)
+    {
+        var colors = new[] { Color.Primary, Color.Secondary, Color.Tertiary, Color.Info, Color.Success, Color.Warning, Color.Error };
+        var hash = name.GetHashCode();
+        return colors[Math.Abs(hash) % colors.Length];
+    }
+}

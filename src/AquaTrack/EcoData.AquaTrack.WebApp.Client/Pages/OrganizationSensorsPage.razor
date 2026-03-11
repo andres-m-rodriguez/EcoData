@@ -1,52 +1,40 @@
 @page "/organizations/{OrganizationId:guid}/sensors"
+@using EcoData.AquaTrack.Contracts
 @using EcoData.AquaTrack.Contracts.Dtos
 @using EcoData.AquaTrack.Application.Client
 @using EcoData.AquaTrack.WebApp.Client.Services
 @using EcoData.AquaTrack.WebApp.Client.Features.Sensors.Components
+@using EcoData.AquaTrack.WebApp.Client.Features.Organizations.Authorization
 @using BlazingSingularity.Commands
 @inject IOrganizationHttpClient OrganizationClient
-@inject NavigationManager Navigation
+@inject INavigationService Navigation
 @inject AuthStateService AuthState
-@inject BackButtonService BackButton
 
 <PageTitle>Sensors - @(_organization?.Name ?? "Organization") - AquaTrack</PageTitle>
 
-<div class="sensors-page">
-    <div class="page-header">
-        @if (_organization is not null)
-        {
-            <MudText Typo="Typo.h6">@_organization.Name - Sensors</MudText>
-        }
-        else
-        {
-            <MudSkeleton Width="200px" Height="24px" />
-        }
-        @if (IsAdmin)
-        {
-            <MudSpacer />
+<SensorList OrganizationId="OrganizationId"
+            EmptyMessage="No sensors yet"
+            EmptySubMessage="Add sensors to start monitoring water quality."
+            OnMapClick="NavigateToMap">
+    <Actions>
+        <RequireOrganizationPermission Permission="@Permissions.Sensor.Create" OrganizationId="OrganizationId">
             <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add"
                        Size="Size.Small" OnClick="NavigateToCreateSensor">
                 Add Sensor
             </MudButton>
-        }
-    </div>
-
-    <SensorList OrganizationId="OrganizationId"
-                EmptyMessage="No sensors yet"
-                EmptySubMessage="Add sensors to start monitoring water quality."
-                OnMapClick="NavigateToMap" />
-</div>
+        </RequireOrganizationPermission>
+    </Actions>
+</SensorList>
 
 @code {
     [Parameter]
     public Guid OrganizationId { get; set; }
 
     private OrganizationDtoForDetail? _organization;
-    private bool IsAdmin => AuthState.CurrentUser?.Role == "Admin";
 
     protected override async Task OnInitializedAsync()
     {
-        BackButton.SetPath($"/organizations/{OrganizationId}");
+        Navigation.SetFallback($"/organizations/{OrganizationId}");
         await LoadCommand.ExecuteAsync();
     }
 
@@ -56,11 +44,12 @@
         var result = await OrganizationClient.GetByIdAsync(OrganizationId);
         result.Switch(
             organization => _organization = organization,
+            _ => _organization = null,
             _ => _organization = null
         );
     }
 
-    private void NavigateToCreateSensor() => Navigation.NavigateTo($"/organizations/{OrganizationId}/sensors/create");
+    private void NavigateToCreateSensor() => Navigation.NavigateTo($"/organizations/{OrganizationId}/sensors/create", trackReturn: true);
 
     private void NavigateToMap(SensorDtoForList sensor)
     {

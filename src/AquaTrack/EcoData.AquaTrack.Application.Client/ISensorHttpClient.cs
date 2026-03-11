@@ -10,6 +10,11 @@ public interface ISensorHttpClient
         CancellationToken cancellationToken = default
     );
 
+    Task<int> GetSensorCountAsync(
+        SensorParameters parameters,
+        CancellationToken cancellationToken = default
+    );
+
     Task<SensorDtoForDetail?> GetByIdAsync(
         Guid organizationId,
         Guid sensorId,
@@ -32,11 +37,6 @@ public interface ISensorHttpClient
     Task<bool> DeleteAsync(
         Guid organizationId,
         Guid sensorId,
-        CancellationToken cancellationToken = default
-    );
-
-    Task<int> GetCountByOrganizationAsync(
-        Guid organizationId,
         CancellationToken cancellationToken = default
     );
 }

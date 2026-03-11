@@ -1,0 +1,37 @@
+@using MudBlazor
+
+<div class="hero-banner" style="height: @(Height)px;">
+    @if (!string.IsNullOrWhiteSpace(ImageUrl))
+    {
+        <MudImage Src="@ImageUrl" Alt="" Class="hero-banner-img" ObjectFit="ObjectFit.Cover" />
+    }
+    <div class="hero-banner-overlay"></div>
+
+    @if (Actions is not null)
+    {
+        <div class="hero-banner-actions">
+            @Actions
+        </div>
+    }
+
+    @if (ChildContent is not null)
+    {
+        <div class="hero-banner-content">
+            @ChildContent
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter]
+    public string? ImageUrl { get; set; }
+
+    [Parameter]
+    public int Height { get; set; } = 200;
+
+    [Parameter]
+    public RenderFragment? Actions { get; set; }
+
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+}
