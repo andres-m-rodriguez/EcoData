@@ -61,18 +61,12 @@ else
         @if (IsAdmin)
         {
             <MudStack Row="true" Spacing="2" Class="banner-actions">
-                <MudButton Variant="Variant.Filled"
-                           Size="Size.Small"
-                           StartIcon="@Icons.Material.Outlined.Edit"
-                           Class="banner-btn"
-                           OnClick="NavigateToEdit">
+                <MudButton Variant="Variant.Filled" Size="Size.Small" StartIcon="@Icons.Material.Outlined.Edit"
+                           Class="banner-btn" OnClick="NavigateToEdit">
                     Edit
                 </MudButton>
-                <MudButton Variant="Variant.Filled"
-                           Size="Size.Small"
-                           StartIcon="@Icons.Material.Outlined.Delete"
-                           Class="banner-btn banner-btn-danger"
-                           OnClick="ConfirmDelete">
+                <MudButton Variant="Variant.Filled" Size="Size.Small" StartIcon="@Icons.Material.Outlined.Delete"
+                           Class="banner-btn banner-btn-danger" OnClick="ConfirmDelete">
                     Delete
                 </MudButton>
             </MudStack>
@@ -112,32 +106,19 @@ else
 
         @* Stats Bar *@
         <MudGrid Spacing="0" Class="mt-5">
-            <MudItem xs="6" md="3">
+            <MudItem xs="6">
                 <MudPaper Class="stat-item stat-first" Elevation="0">
                     <MudText Typo="Typo.overline" Color="Color.Secondary">Sensors</MudText>
-                    <MudText Typo="Typo.h4" Class="fw-bold">@_sensors.Count</MudText>
-                    <MudText Typo="Typo.caption" Color="Color.Secondary">@_sensors.Count(s => s.IsActive) online now</MudText>
+                    <MudText Typo="Typo.h4" Class="fw-bold">@_sensorCount</MudText>
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">@_sensors.Count(s => s.IsActive) online now
+                    </MudText>
                 </MudPaper>
             </MudItem>
-            <MudItem xs="6" md="3">
-                <MudPaper Class="stat-item" Elevation="0">
-                    <MudText Typo="Typo.overline" Color="Color.Secondary">Team Members</MudText>
-                    <MudText Typo="Typo.h4" Class="fw-bold">8</MudText>
-                    <MudText Typo="Typo.caption" Color="Color.Secondary">2 admins</MudText>
-                </MudPaper>
-            </MudItem>
-            <MudItem xs="6" md="3">
-                <MudPaper Class="stat-item" Elevation="0">
-                    <MudText Typo="Typo.overline" Color="Color.Secondary">Readings Today</MudText>
-                    <MudText Typo="Typo.h4" Class="fw-bold">1,842</MudText>
-                    <MudText Typo="Typo.caption" Color="Color.Secondary">↑ 12% vs yesterday</MudText>
-                </MudPaper>
-            </MudItem>
-            <MudItem xs="6" md="3">
+            <MudItem xs="6">
                 <MudPaper Class="stat-item stat-last" Elevation="0">
-                    <MudText Typo="Typo.overline" Color="Color.Secondary">Avg. pH</MudText>
-                    <MudText Typo="Typo.h4" Class="fw-bold">7.4</MudText>
-                    <MudText Typo="Typo.caption" Color="Color.Secondary">Normal range</MudText>
+                    <MudText Typo="Typo.overline" Color="Color.Secondary">Team Members</MudText>
+                    <MudText Typo="Typo.h4" Class="fw-bold">@TeamMembers.Count</MudText>
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">@TeamMembers.Count(m => m.IsAdmin) admins</MudText>
                 </MudPaper>
             </MudItem>
         </MudGrid>
@@ -153,67 +134,66 @@ else
             </MudPaper>
         }
 
-        @* Sensors Section *@
-        <MudStack Row="true" AlignItems="AlignItems.Center" Class="mt-6 mb-3">
-            <MudIcon Icon="@Icons.Material.Outlined.Sensors" Color="Color.Primary" />
-            <MudText Typo="Typo.h6" Class="fw-bold">Sensors</MudText>
-            <MudChip T="string" Size="Size.Small" Color="Color.Primary">@_sensors.Count</MudChip>
-            <MudSpacer />
-            @if (_sensors.Count > 10)
-            {
-                <MudButton Variant="Variant.Text" Color="Color.Primary" EndIcon="@Icons.Material.Filled.ArrowForward" OnClick="NavigateToSensors">
-                    View all
-                </MudButton>
-            }
-        </MudStack>
-
-        @if (_sensors.Count == 0)
-        {
-            <MudPaper Elevation="0" Class="pa-6 rounded-lg text-center" Style="background: var(--mud-palette-background-gray); border: 1px dashed var(--mud-palette-lines-default)">
-                <MudIcon Icon="@Icons.Material.Outlined.Sensors" Size="Size.Large" Color="Color.Secondary" />
-                <MudText Typo="Typo.body1" Color="Color.Secondary" Class="mt-2">No sensors yet</MudText>
-            </MudPaper>
-        }
-        else
-        {
-            <MudPaper Elevation="0" Class="rounded-lg" Style="border: 1px solid var(--mud-palette-lines-default)">
-                @foreach (var sensor in _sensors.Take(10))
-                {
-                    <SensorListItem Sensor="sensor" OnClick="NavigateToSensor" />
-                }
-            </MudPaper>
-        }
-
-        @* Team Section *@
-        <MudStack Row="true" AlignItems="AlignItems.Center" Class="mt-6 mb-3">
-            <MudIcon Icon="@Icons.Material.Outlined.Group" Color="Color.Info" />
-            <MudText Typo="Typo.h6" Class="fw-bold">Our Team</MudText>
-            <MudChip T="string" Size="Size.Small" Color="Color.Info">@TeamMembers.Count</MudChip>
-            <MudSpacer />
-            @if (TeamMembers.Count > 10)
-            {
-                <MudButton Variant="Variant.Text" Color="Color.Primary" EndIcon="@Icons.Material.Filled.ArrowForward" OnClick="NavigateToTeam">
-                    View all
-                </MudButton>
-            }
-        </MudStack>
-
-        <MudGrid Spacing="3">
-            @foreach (var member in TeamMembers.Take(10))
-            {
-                <MudItem xs="6" sm="4" md="3" lg="2">
-                    <MudCard Elevation="0" Class="team-card text-center">
-                        <MudCardContent Class="pa-3">
-                            <MudAvatar Style="@($"background-color: {member.Color}; color: white;")">
-                                @member.Name[0]
-                            </MudAvatar>
-                            <MudText Typo="Typo.body2" Class="mt-2 fw-bold text-truncate">@member.Name</MudText>
-                            <MudText Typo="Typo.caption" Color="Color.Secondary" Class="text-truncate">@member.Role</MudText>
-                        </MudCardContent>
-                    </MudCard>
-                </MudItem>
-            }
-        </MudGrid>
+        @* Tabs *@
+        <div class="mt-6">
+            <Tabs>
+                <Tab Title="Sensors" Icon="@Icons.Material.Outlined.Sensors" Badge="@_sensorCount.ToString()">
+                    @if (_sensorCount == 0)
+                    {
+                        <MudPaper Elevation="0" Class="pa-6 rounded-lg text-center">
+                            <MudIcon Icon="@Icons.Material.Outlined.Sensors" Size="Size.Large" Color="Color.Secondary" />
+                            <MudText Typo="Typo.body1" Color="Color.Secondary" Class="mt-2">No sensors yet</MudText>
+                        </MudPaper>
+                    }
+                    else
+                    {
+                        <MudPaper Elevation="0" Class="rounded-lg" Style="border: 1px solid var(--mud-palette-lines-default)">
+                            @foreach (var sensor in _sensors)
+                            {
+                                <SensorListItem Sensor="sensor" OnClick="NavigateToSensor" />
+                            }
+                        </MudPaper>
+                        @if (_sensorCount > 4)
+                        {
+                            <MudStack Row Justify="Justify.FlexEnd" Class="mt-3">
+                                <MudButton Variant="Variant.Text" Color="Color.Primary"
+                                           EndIcon="@Icons.Material.Filled.ArrowForward"                        OnClick="NavigateToSensors">
+                                    View all
+                                </MudButton>
+                            </MudStack>
+                        }
+                    }
+                </Tab>
+                <Tab Title="Our Team" Icon="@Icons.Material.Outlined.Group" Badge="@TeamMembers.Count.ToString()">
+                    <MudGrid Spacing="3">
+                        @foreach (var member in TeamMembers.Take(10))
+                        {
+                            <MudItem xs="6" sm="4" md="3" lg="2">
+                                <MudCard Elevation="0" Class="team-card text-center">
+                                    <MudCardContent Class="pa-3">
+                                        <MudAvatar Style="@($"background-color: {member.Color}; color: white;")">
+                                            @member.Name[0]
+                                        </MudAvatar>
+                                        <MudText Typo="Typo.body2" Class="mt-2 fw-bold text-truncate">@member.Name</MudText>
+                                        <MudText Typo="Typo.caption" Color="Color.Secondary" Class="text-truncate">@member.Role
+                                        </MudText>
+                                    </MudCardContent>
+                                </MudCard>
+                            </MudItem>
+                        }
+                    </MudGrid>
+                    @if (TeamMembers.Count > 10)
+                    {
+                        <MudStack Row Justify="Justify.FlexEnd" Class="mt-3">
+                            <MudButton Variant="Variant.Text" Color="Color.Primary"
+                                       EndIcon="@Icons.Material.Filled.ArrowForward" OnClick="NavigateToTeam">
+                                View all @TeamMembers.Count members
+                            </MudButton>
+                        </MudStack>
+                    }
+                </Tab>
+            </Tabs>
+        </div>
     </MudContainer>
 }
 
@@ -223,6 +203,7 @@ else
 
     private OrganizationDtoForDetail? _organization;
     private List<SensorDtoForList> _sensors = [];
+    private int _sensorCount;
 
     private bool IsAdmin => AuthState.CurrentUser?.Role == "Admin";
 
@@ -256,7 +237,9 @@ else
 
         if (_organization is not null)
         {
-            var parameters = new SensorParameters(PageSize: 50, OrganizationId: Id);
+            _sensorCount = await SensorClient.GetCountByOrganizationAsync(Id);
+
+            var parameters = new SensorParameters(PageSize: 4, OrganizationId: Id);
             await foreach (var sensor in SensorClient.GetSensorsAsync(parameters))
             {
                 _sensors.Add(sensor);

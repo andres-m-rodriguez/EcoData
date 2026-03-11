@@ -92,6 +92,17 @@ public sealed class SensorHttpClient(HttpClient httpClient) : ISensorHttpClient
         return response.IsSuccessStatusCode;
     }
 
+    public async Task<int> GetCountByOrganizationAsync(
+        Guid organizationId,
+        CancellationToken cancellationToken = default
+    )
+    {
+        return await httpClient.GetFromJsonAsync<int>(
+            $"api/organizations/{organizationId}/sensors/count",
+            cancellationToken
+        );
+    }
+
     private static string BuildQueryString(SensorParameters parameters)
     {
         var queryParams = new List<string>();

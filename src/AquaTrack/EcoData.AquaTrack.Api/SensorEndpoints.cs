@@ -30,6 +30,14 @@ public static class SensorEndpoints
 
         orgGroup
             .MapGet(
+                "/count",
+                async (Guid organizationId, ISensorRepository repository, CancellationToken ct) =>
+                    TypedResults.Ok(await repository.GetCountByOrganizationAsync(organizationId, ct))
+            )
+            .WithName("GetOrganizationSensorCount");
+
+        orgGroup
+            .MapGet(
                 "/{id:guid}",
                 async Task<Results<Ok<SensorDtoForDetail>, NotFound>> (
                     Guid organizationId,
