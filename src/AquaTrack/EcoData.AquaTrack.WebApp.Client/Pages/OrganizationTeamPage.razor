@@ -1,6 +1,8 @@
 @page "/organizations/{OrganizationId:guid}/members"
 @page "/organizations/{OrganizationId:guid}/team"
 @using EcoData.AquaTrack.Contracts
+@using EcoData.AquaTrack.WebApp.Client.Authorization
+@attribute [OrganizationPermission(Permissions.Organization.ManageMembers)]
 @using EcoData.AquaTrack.Contracts.Dtos
 @using EcoData.AquaTrack.Application.Client
 @using EcoData.AquaTrack.WebApp.Client.Services

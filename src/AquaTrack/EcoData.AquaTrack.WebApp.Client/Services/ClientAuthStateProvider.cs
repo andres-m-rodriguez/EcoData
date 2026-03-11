@@ -6,15 +6,18 @@ namespace EcoData.AquaTrack.WebApp.Client.Services;
 public sealed class ClientAuthStateProvider(AuthStateService authStateService)
     : AuthenticationStateProvider
 {
-    public override Task<AuthenticationState> GetAuthenticationStateAsync()
+    public override async Task<AuthenticationState> GetAuthenticationStateAsync()
     {
+        if (!authStateService.IsInitialized)
+        {
+            await authStateService.InitializeAsync();
+        }
+
         var user = authStateService.CurrentUser;
 
         if (user is null)
         {
-            return Task.FromResult(
-                new AuthenticationState(new ClaimsPrincipal(new ClaimsIdentity()))
-            );
+            return new AuthenticationState(new ClaimsPrincipal(new ClaimsIdentity()));
         }
 
         var claims = new List<Claim>
@@ -28,7 +31,7 @@ public sealed class ClientAuthStateProvider(AuthStateService authStateService)
         var identity = new ClaimsIdentity(claims, "cookie");
         var principal = new ClaimsPrincipal(identity);
 
-        return Task.FromResult(new AuthenticationState(principal));
+        return new AuthenticationState(principal);
     }
 
     public void NotifyAuthenticationStateChanged()

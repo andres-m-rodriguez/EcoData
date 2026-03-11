@@ -210,16 +210,4 @@ public sealed class OrganizationMemberRepository(
         return await context.OrganizationMembers
             .AnyAsync(m => m.OrganizationId == organizationId && m.UserId == userId, cancellationToken);
     }
-
-    public async Task<int> GetAdminCountAsync(
-        Guid organizationId,
-        CancellationToken cancellationToken = default
-    )
-    {
-        await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
-
-        return await context.OrganizationMembers
-            .Where(m => m.OrganizationId == organizationId && m.Role!.Name == "Admin")
-            .CountAsync(cancellationToken);
-    }
 }
