@@ -1,48 +1,38 @@
 using EcoData.AquaTrack.Contracts.Dtos;
+using EcoData.AquaTrack.Contracts.Errors;
+using OneOf;
 
-namespace EcoData.AquaTrack.DataAccess.Interfaces;
+namespace EcoData.AquaTrack.Application.Client;
 
-public interface IOrganizationMemberRepository
+public interface IOrganizationMemberHttpClient
 {
     IAsyncEnumerable<OrganizationMemberDto> GetAllAsync(
         Guid organizationId,
         CancellationToken cancellationToken = default
     );
 
-    Task<OrganizationMemberDto?> GetAsync(
+    Task<OneOf<OrganizationMemberDto, NotFoundError>> GetAsync(
         Guid organizationId,
         Guid userId,
         CancellationToken cancellationToken = default
     );
 
-    Task<OrganizationMemberDto?> CreateAsync(
+    Task<OneOf<OrganizationMemberDto, NotFoundError, ConflictError, ApiError>> CreateAsync(
         Guid organizationId,
-        Guid userId,
-        string roleName,
+        AddMemberRequest request,
         CancellationToken cancellationToken = default
     );
 
-    Task<OrganizationMemberDto?> UpdateAsync(
+    Task<OneOf<OrganizationMemberDto, NotFoundError, ValidationError, ApiError>> UpdateAsync(
         Guid organizationId,
         Guid userId,
-        string roleName,
+        UpdateMemberRoleRequest request,
         CancellationToken cancellationToken = default
     );
 
-    Task<bool> DeleteAsync(
+    Task<OneOf<Success, NotFoundError, ValidationError, ApiError>> DeleteAsync(
         Guid organizationId,
         Guid userId,
-        CancellationToken cancellationToken = default
-    );
-
-    Task<bool> ExistsAsync(
-        Guid organizationId,
-        Guid userId,
-        CancellationToken cancellationToken = default
-    );
-
-    Task<int> GetAdminCountAsync(
-        Guid organizationId,
         CancellationToken cancellationToken = default
     );
 }
