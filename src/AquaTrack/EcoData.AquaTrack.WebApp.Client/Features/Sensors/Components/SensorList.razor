@@ -1,34 +1,21 @@
 @using EcoData.AquaTrack.Contracts.Dtos
 @using EcoData.AquaTrack.Contracts.Parameters
 @using EcoData.AquaTrack.Application.Client
-@using EcoData.AquaTrack.WebApp.Client.Components
 @using BlazingSingularity.Signals
 @using Microsoft.AspNetCore.Components.Web.Virtualization
 @inject ISensorHttpClient SensorClient
 @inject IDialogService DialogService
-@inject IJSRuntime JS
-@implements IAsyncDisposable
 
 @if (ShowFilters)
 {
-    <div class="search-bar-wrapper @(_isSticky ? "is-sticky" : "")" @ref="_searchBarRef">
-        <div class="search-pill">
-            <MudIcon Icon="@Icons.Material.Filled.Search" Class="search-icon" />
-            <input type="text" class="search-input" placeholder="Search..." @bind="SearchText" @bind:event="oninput" />
-            <div class="divider"></div>
-            <button type="button" class="filter-btn @(HasNonSearchFilters ? "active" : "")" @onclick="OpenFilterDialog">
-                <MudIcon Icon="@Icons.Material.Filled.Tune" Size="Size.Small" />
-                <span>Filter</span>
-                @if (HasNonSearchFilters)
-                {
-                    <span class="filter-badge">1</span>
-                }
-            </button>
-        </div>
-    </div>
+    <SearchHeader @bind-Value="SearchText"
+                  Placeholder="Search sensors..."
+                  ShowFilterButton="true"
+                  HasActiveFilters="HasNonSearchFilters"
+                  OnFilterClick="OpenFilterDialog" />
 }
 
-<MudPaper Elevation="@Elevation" Class="sensor-list-container">
+<MudPaper Elevation="@Elevation" Class="sensor-list-container rounded-lg">
     @if (_isInitialLoading)
     {
         @for (var i = 0; i < 8; i++)
@@ -101,10 +88,6 @@
     private bool _isEmpty;
     private bool _isInitialLoading = true;
     private int _generation;
-    private ElementReference _searchBarRef;
-    private bool _isSticky;
-    private DotNetObjectReference<SensorList>? _dotNetRef;
-    private IJSObjectReference? _jsModule;
 
     [Signal]
     private string? _searchText;
@@ -142,26 +125,6 @@
         StatusFilterSignal.OnChange(_ => Refresh());
 
         await LoadInitialDataAsync();
-    }
-
-    protected override async Task OnAfterRenderAsync(bool firstRender)
-    {
-        if (firstRender && ShowFilters)
-        {
-            _dotNetRef = DotNetObjectReference.Create(this);
-            _jsModule = await JS.InvokeAsync<IJSObjectReference>("import", "./js/stickySearch.js");
-            await _jsModule.InvokeVoidAsync("initStickySearch", _searchBarRef, _dotNetRef);
-        }
-    }
-
-    [JSInvokable]
-    public void SetSticky(bool isSticky)
-    {
-        if (_isSticky != isSticky)
-        {
-            _isSticky = isSticky;
-            StateHasChanged();
-        }
     }
 
     private async Task OpenFilterDialog()
@@ -290,16 +253,6 @@
     private async Task HandleClick(SensorDtoForList sensor)
     {
         await OnSensorClick.InvokeAsync(sensor);
-    }
-
-    public async ValueTask DisposeAsync()
-    {
-        if (_jsModule is not null)
-        {
-            await _jsModule.InvokeVoidAsync("destroyStickySearch");
-            await _jsModule.DisposeAsync();
-        }
-        _dotNetRef?.Dispose();
     }
 
     public enum SensorStatusFilter

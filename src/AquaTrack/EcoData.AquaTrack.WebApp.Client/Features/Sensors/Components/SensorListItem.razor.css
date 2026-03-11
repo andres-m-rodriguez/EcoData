@@ -3,7 +3,7 @@
     grid-template-columns: 2fr 1.2fr 1.5fr 100px 48px;
     align-items: center;
     padding: 16px 24px;
-    border-bottom: 1px solid #f0f0f0;
+    border-bottom: 1px solid var(--mud-palette-lines-default);
     transition: background 0.15s ease;
     cursor: pointer;
 }
@@ -13,7 +13,7 @@
 }
 
 .sensor-row:hover {
-    background: #fafbfc;
+    background: var(--mud-palette-background-gray);
 }
 
 /* Tablet */
@@ -22,7 +22,7 @@
         grid-template-columns: 2fr 1.2fr 100px 48px;
     }
 
-    .sensor-location {
+    .hide-tablet {
         display: none;
     }
 }
@@ -47,43 +47,11 @@
 
 .sensor-name {
     font-weight: 500;
-    color: #262626;
-}
-
-.sensor-id {
-    font-size: 12px;
-    color: #4D4D4D;
-}
-
-.sensor-municipality {
-    color: #262626;
-}
-
-.sensor-location {
-    font-size: 13px;
-    color: #4D4D4D;
 }
 
 .sensor-status {
     display: flex;
     align-items: center;
-}
-
-.status-badge {
-    padding: 4px 12px;
-    border-radius: 20px;
-    font-size: 12px;
-    font-weight: 500;
-}
-
-.status-badge.active {
-    background: #d4edda;
-    color: #155724;
-}
-
-.status-badge.inactive {
-    background: #e9ecef;
-    color: #6c757d;
 }
 
 .sensor-actions {

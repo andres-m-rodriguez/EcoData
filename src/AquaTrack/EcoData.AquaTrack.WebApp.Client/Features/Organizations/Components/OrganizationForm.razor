@@ -1,0 +1,137 @@
+@using System.ComponentModel.DataAnnotations
+
+<MudStack Spacing="3">
+    @if (!string.IsNullOrEmpty(ErrorMessage))
+    {
+        <MudAlert Severity="Severity.Error" Variant="Variant.Filled" Dense="true">
+            @ErrorMessage
+        </MudAlert>
+    }
+
+    <MudTextField @bind-Value="Model.Name"
+                  Label="Name"
+                  Required="true"
+                  RequiredError="Name is required"
+                  MaxLength="200"
+                  Counter="200"
+                  Immediate="true"
+                  Disabled="IsLoading" />
+
+    <MudTextField @bind-Value="Model.ProfilePictureUrl"
+                  Label="Profile Picture URL"
+                  Placeholder="https://example.com/logo.png"
+                  MaxLength="500"
+                  HelperText="URL to the organization's logo or profile picture"
+                  Disabled="IsLoading" />
+
+    @if (!string.IsNullOrWhiteSpace(Model.ProfilePictureUrl))
+    {
+        <MudStack Row="true" AlignItems="AlignItems.Center">
+            <MudText Typo="Typo.body2" Color="Color.Secondary">Preview:</MudText>
+            <MudAvatar Size="Size.Large">
+                <MudImage Src="@Model.ProfilePictureUrl" Alt="Preview" />
+            </MudAvatar>
+        </MudStack>
+    }
+
+    <MudTextField @bind-Value="Model.CardPictureUrl"
+                  Label="Card Picture URL"
+                  Placeholder="https://example.com/banner.png"
+                  MaxLength="500"
+                  HelperText="Banner image displayed on organization cards"
+                  Disabled="IsLoading" />
+
+    @if (!string.IsNullOrWhiteSpace(Model.CardPictureUrl))
+    {
+        <MudStack>
+            <MudText Typo="Typo.body2" Color="Color.Secondary">Card Preview:</MudText>
+            <MudImage Src="@Model.CardPictureUrl" Alt="Card Preview" Class="card-preview" />
+        </MudStack>
+    }
+
+    <MudTextField @bind-Value="Model.WebsiteUrl"
+                  Label="Website URL"
+                  Placeholder="https://example.com"
+                  MaxLength="500"
+                  HelperText="Organization's website (optional)"
+                  Disabled="IsLoading" />
+
+    <MudTextField @bind-Value="Model.AboutUs"
+                  Label="About Us"
+                  Lines="5"
+                  MaxLength="2000"
+                  Counter="2000"
+                  HelperText="Description of the organization"
+                  Disabled="IsLoading" />
+
+    <MudStack Row="true" Justify="Justify.FlexEnd" Spacing="2" Class="mt-4">
+        <MudButton Variant="Variant.Text"
+                   Color="Color.Default"
+                   OnClick="HandleCancel"
+                   Disabled="IsLoading">
+            Cancel
+        </MudButton>
+        <MudButton Variant="Variant.Filled"
+                   Color="Color.Primary"
+                   OnClick="HandleSubmit"
+                   Disabled="IsLoading || string.IsNullOrWhiteSpace(Model.Name)">
+            @if (IsLoading)
+            {
+                <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
+            }
+            @SubmitButtonText
+        </MudButton>
+    </MudStack>
+</MudStack>
+
+@code {
+    [Parameter]
+    public OrganizationFormModel Model { get; set; } = new();
+
+    [Parameter]
+    public string SubmitButtonText { get; set; } = "Save";
+
+    [Parameter]
+    public string? ErrorMessage { get; set; }
+
+    [Parameter]
+    public bool IsLoading { get; set; }
+
+    [Parameter]
+    public EventCallback<OrganizationFormModel> OnSubmit { get; set; }
+
+    [Parameter]
+    public EventCallback OnCancel { get; set; }
+
+    private async Task HandleSubmit()
+    {
+        if (string.IsNullOrWhiteSpace(Model.Name))
+            return;
+
+        await OnSubmit.InvokeAsync(Model);
+    }
+
+    private async Task HandleCancel()
+    {
+        await OnCancel.InvokeAsync();
+    }
+
+    public class OrganizationFormModel
+    {
+        [Required(ErrorMessage = "Name is required")]
+        [MaxLength(200)]
+        public string Name { get; set; } = string.Empty;
+
+        [MaxLength(500)]
+        public string? ProfilePictureUrl { get; set; }
+
+        [MaxLength(500)]
+        public string? CardPictureUrl { get; set; }
+
+        [MaxLength(500)]
+        public string? WebsiteUrl { get; set; }
+
+        [MaxLength(2000)]
+        public string? AboutUs { get; set; }
+    }
+}
