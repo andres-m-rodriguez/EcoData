@@ -164,7 +164,7 @@ else
                     @if (IsAdmin)
                     {
                         <MudButton Variant="Variant.Filled"
-                                   Color="Color.Dark"
+                                   Color="Color.Primary"
                                    StartIcon="@Icons.Material.Filled.Add"
                                    OnClick="NavigateToAddSensor">
                             Add Sensor
@@ -285,7 +285,7 @@ else
 
         if (_organization is not null)
         {
-            var parameters = new SensorParameters(PageSize: 100, OrganizationId: Id);
+            var parameters = new SensorParameters(PageSize: 50, OrganizationId: Id);
             await foreach (var sensor in SensorClient.GetSensorsAsync(parameters))
             {
                 _sensors.Add(sensor);
