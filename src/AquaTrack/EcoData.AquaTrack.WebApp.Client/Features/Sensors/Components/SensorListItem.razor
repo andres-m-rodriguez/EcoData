@@ -1,23 +1,33 @@
 @using EcoData.AquaTrack.Contracts.Dtos
 
-<div class="sensor-row" @onclick="HandleClick">
-    <div class="sensor-primary">
-        <MudText Typo="Typo.body1" Class="sensor-name">@Sensor.Name</MudText>
-        <MudText Typo="Typo.caption" Color="Color.Secondary">@Sensor.ExternalId</MudText>
-    </div>
-    <MudText Typo="Typo.body2" Class="hide-mobile">@Sensor.MunicipalityId</MudText>
-    <MudText Typo="Typo.body2" Color="Color.Secondary" Class="hide-mobile hide-tablet">
-        @Sensor.Latitude.ToString("F4"), @Sensor.Longitude.ToString("F4")
-    </MudText>
-    <div class="sensor-status">
-        <MudChip T="string"
-                 Size="Size.Small"
-                 Color="@(Sensor.IsActive ? Color.Success : Color.Default)"
-                 Variant="Variant.Filled">
-            @(Sensor.IsActive ? "Active" : "Inactive")
-        </MudChip>
-    </div>
-    <div class="sensor-actions" @onclick:stopPropagation="true">
+<MudStack Row AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween"
+          Class="pa-3 cursor-pointer mud-ripple" Style="border-bottom: 1px solid var(--mud-palette-lines-default);"
+          @onclick="HandleClick">
+    <MudStack Spacing="0" Style="min-width: 0; flex: 1;">
+        <MudText Typo="Typo.body2" Class="mud-text-truncate">@Sensor.Name</MudText>
+        <MudHidden Breakpoint="Breakpoint.SmAndUp" Invert>
+            <MudText Typo="Typo.caption" Color="Color.Secondary">@Sensor.ExternalId</MudText>
+        </MudHidden>
+    </MudStack>
+
+    <MudHidden Breakpoint="Breakpoint.MdAndUp" Invert>
+        <MudText Typo="Typo.body2" Color="Color.Secondary" Style="flex: 0 0 120px;">@Sensor.MunicipalityId</MudText>
+    </MudHidden>
+
+    <MudHidden Breakpoint="Breakpoint.LgAndUp" Invert>
+        <MudText Typo="Typo.caption" Color="Color.Secondary" Style="flex: 0 0 180px;">
+            @Sensor.Latitude.ToString("F4"), @Sensor.Longitude.ToString("F4")
+        </MudText>
+    </MudHidden>
+
+    <MudChip T="string"
+             Size="Size.Small"
+             Color="@(Sensor.IsActive ? Color.Success : Color.Default)"
+             Variant="Variant.Filled">
+        @(Sensor.IsActive ? "Active" : "Inactive")
+    </MudChip>
+
+    <div @onclick:stopPropagation="true">
         <MudMenu Icon="@Icons.Material.Filled.MoreVert"
                  Size="Size.Small"
                  AnchorOrigin="Origin.BottomRight"
@@ -27,7 +37,7 @@
             </MudMenuItem>
         </MudMenu>
     </div>
-</div>
+</MudStack>
 
 @code {
     [Parameter, EditorRequired]
