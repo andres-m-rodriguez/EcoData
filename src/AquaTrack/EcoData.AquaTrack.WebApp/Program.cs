@@ -21,6 +21,7 @@ builder.AddIdentityDatabase();
 builder.AddLocationsDatabase();
 
 builder.Services.AddRazorComponents().AddInteractiveWebAssemblyComponents();
+builder.Services.AddCascadingAuthenticationState();
 
 builder.Services.AddMudServices();
 builder.Services.AddAquaTrackDataAccess();
@@ -28,7 +29,11 @@ builder.Services.AddIdentityDataAccess();
 builder.Services.AddIdentityApplication();
 builder.Services.AddLocationsDataAccess();
 
-builder.Services.AddAuthentication().AddApiKeyAuthentication();
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = Microsoft.AspNetCore.Identity.IdentityConstants.ApplicationScheme;
+    options.DefaultChallengeScheme = Microsoft.AspNetCore.Identity.IdentityConstants.ApplicationScheme;
+}).AddApiKeyAuthentication();
 
 builder.Services.AddAquaTrackAuthorization();
 

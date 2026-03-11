@@ -1,5 +1,7 @@
 @page "/organizations/{OrganizationId:guid}/sensors/create"
 @using EcoData.AquaTrack.Contracts
+@using EcoData.AquaTrack.WebApp.Client.Authorization
+@attribute [OrganizationPermission(Permissions.Sensor.Create)]
 @using EcoData.AquaTrack.Contracts.Dtos
 @using EcoData.AquaTrack.Application.Client
 @using EcoData.AquaTrack.WebApp.Client.Services
