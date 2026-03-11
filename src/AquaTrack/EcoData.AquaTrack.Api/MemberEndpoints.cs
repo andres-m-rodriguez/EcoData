@@ -119,14 +119,7 @@ public static class MemberEndpoints
         group
             .MapPut(
                 "/{userId:guid}",
-                async Task<
-                    Results<
-                        Ok<OrganizationMemberDto>,
-                        NotFound,
-                        BadRequest<string>,
-                        ForbidHttpResult
-                    >
-                > (
+                async Task<Results<Ok<OrganizationMemberDto>, NotFound, ForbidHttpResult>> (
                     Guid organizationId,
                     Guid userId,
                     UpdateMemberRoleRequest request,
@@ -150,21 +143,6 @@ public static class MemberEndpoints
                         return TypedResults.Forbid();
                     }
 
-                    var currentMember = await repository.GetAsync(organizationId, userId, ct);
-                    if (currentMember is null)
-                    {
-                        return TypedResults.NotFound();
-                    }
-
-                    if (currentMember.RoleName == "Admin" && request.Role != "Admin")
-                    {
-                        var adminCount = await repository.GetAdminCountAsync(organizationId, ct);
-                        if (adminCount <= 1)
-                        {
-                            return TypedResults.BadRequest("Cannot demote the last admin.");
-                        }
-                    }
-
                     var member = await repository.UpdateAsync(
                         organizationId,
                         userId,
@@ -184,7 +162,7 @@ public static class MemberEndpoints
         group
             .MapDelete(
                 "/{userId:guid}",
-                async Task<Results<NoContent, NotFound, BadRequest<string>, ForbidHttpResult>> (
+                async Task<Results<NoContent, NotFound, ForbidHttpResult>> (
                     Guid organizationId,
                     Guid userId,
                     ClaimsPrincipal user,
@@ -205,21 +183,6 @@ public static class MemberEndpoints
                     )
                     {
                         return TypedResults.Forbid();
-                    }
-
-                    var member = await repository.GetAsync(organizationId, userId, ct);
-                    if (member is null)
-                    {
-                        return TypedResults.NotFound();
-                    }
-
-                    if (member.RoleName == "Admin")
-                    {
-                        var adminCount = await repository.GetAdminCountAsync(organizationId, ct);
-                        if (adminCount <= 1)
-                        {
-                            return TypedResults.BadRequest("Cannot remove the last admin.");
-                        }
                     }
 
                     var deleted = await repository.DeleteAsync(organizationId, userId, ct);
