@@ -1,5 +1,6 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Security.Claims;
+using EcoData.Identity.Contracts.Authorization;
 
 namespace EcoData.Identity.Contracts.Claims;
 
@@ -57,5 +58,5 @@ public readonly record struct RequestClaimToken
     [MemberNotNullWhen(true, nameof(UserId))]
     public bool IsAuthenticated => UserId is not null;
 
-    public bool IsAdmin => string.Equals(Role, "Admin", StringComparison.OrdinalIgnoreCase);
+    public bool IsAdmin => string.Equals(Role, RoleNames.Admin, StringComparison.OrdinalIgnoreCase);
 }

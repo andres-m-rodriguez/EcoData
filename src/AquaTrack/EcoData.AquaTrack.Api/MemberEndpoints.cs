@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using EcoData.AquaTrack.Contracts.Dtos;
 using EcoData.AquaTrack.DataAccess.Interfaces;
+using EcoData.Identity.Contracts.Authorization;
 using EcoData.Identity.Contracts.Claims;
 using EcoData.Identity.DataAccess.Interfaces;
 using Microsoft.AspNetCore.Builder;
@@ -156,7 +157,7 @@ public static class MemberEndpoints
                         return TypedResults.NotFound();
                     }
 
-                    if (currentMember.RoleName == "Admin" && request.Role != "Admin")
+                    if (currentMember.RoleName == RoleNames.Admin && request.Role != RoleNames.Admin)
                     {
                         var adminCount = await repository.GetAdminCountAsync(organizationId, ct);
                         if (adminCount <= 1)
@@ -213,7 +214,7 @@ public static class MemberEndpoints
                         return TypedResults.NotFound();
                     }
 
-                    if (member.RoleName == "Admin")
+                    if (member.RoleName == RoleNames.Admin)
                     {
                         var adminCount = await repository.GetAdminCountAsync(organizationId, ct);
                         if (adminCount <= 1)
