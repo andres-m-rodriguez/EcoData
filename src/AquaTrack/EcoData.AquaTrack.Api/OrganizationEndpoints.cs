@@ -27,7 +27,8 @@ public static class OrganizationEndpoints
                     CancellationToken ct
                 ) => repository.GetOrganizationsAsync(parameters, ct)
             )
-            .WithName("GetOrganizations");
+            .WithName("GetOrganizations")
+            .AllowAnonymous();
 
         group
             .MapGet(

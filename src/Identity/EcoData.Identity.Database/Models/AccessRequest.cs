@@ -14,6 +14,8 @@ public sealed class AccessRequest
     public Guid? ReviewedById { get; set; }
     public DateTimeOffset? ReviewedAt { get; set; }
     public required DateTimeOffset CreatedAt { get; set; }
+    public required Guid RequestedOrganizationId { get; set; }
+    public required string RequestedOrganizationName { get; set; }
 
     public User? ReviewedBy { get; set; }
 
@@ -31,7 +33,8 @@ public sealed class AccessRequest
 
             builder.Property(static e => e.PasswordHash).HasMaxLength(500).IsRequired();
 
-            builder.Property(static e => e.Status)
+            builder
+                .Property(static e => e.Status)
                 .HasConversion<string>()
                 .HasMaxLength(50)
                 .IsRequired();
@@ -41,6 +44,13 @@ public sealed class AccessRequest
             builder.HasIndex(static e => e.Email).IsUnique();
 
             builder.HasIndex(static e => e.Status);
+
+            builder.Property(static e => e.RequestedOrganizationId).IsRequired();
+            builder
+                .Property(static e => e.RequestedOrganizationName)
+                .HasMaxLength(200)
+                .IsRequired();
+            builder.HasIndex(static e => e.RequestedOrganizationId);
 
             builder
                 .HasOne(static e => e.ReviewedBy)

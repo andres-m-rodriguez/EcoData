@@ -50,6 +50,11 @@ namespace EcoData.Identity.Database.Migrations
                         maxLength: 50,
                         nullable: false
                     ),
+                    global_role = table.Column<string>(
+                        type: "character varying(50)",
+                        maxLength: 50,
+                        nullable: true
+                    ),
                     created_at = table.Column<DateTimeOffset>(
                         type: "timestamp with time zone",
                         nullable: false
@@ -162,6 +167,12 @@ namespace EcoData.Identity.Database.Migrations
                     ),
                     created_at = table.Column<DateTimeOffset>(
                         type: "timestamp with time zone",
+                        nullable: false
+                    ),
+                    requested_organization_id = table.Column<Guid>(type: "uuid", nullable: false),
+                    requested_organization_name = table.Column<string>(
+                        type: "character varying(200)",
+                        maxLength: 200,
                         nullable: false
                     ),
                 },
@@ -292,6 +303,12 @@ namespace EcoData.Identity.Database.Migrations
                 table: "access_requests",
                 column: "email",
                 unique: true
+            );
+
+            migrationBuilder.CreateIndex(
+                name: "ix_access_requests_requested_organization_id",
+                table: "access_requests",
+                column: "requested_organization_id"
             );
 
             migrationBuilder.CreateIndex(

@@ -12,6 +12,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\EcoData.Identity.Application\EcoData.Identity.Application.csproj" />
+    <ProjectReference Include="..\..\AquaTrack\EcoData.AquaTrack.DataAccess\EcoData.AquaTrack.DataAccess.csproj" />
   </ItemGroup>
 
 </Project>

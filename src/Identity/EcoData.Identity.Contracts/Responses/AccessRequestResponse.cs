@@ -9,5 +9,8 @@ public sealed record AccessRequestResponse(
     Guid? ReviewedById,
     string? ReviewedByDisplayName,
     DateTimeOffset? ReviewedAt,
-    DateTimeOffset CreatedAt
+    DateTimeOffset CreatedAt,
+    Guid RequestedOrganizationId,
+    string RequestedOrganizationName,
+    Guid? CreatedUserId = null
 );
