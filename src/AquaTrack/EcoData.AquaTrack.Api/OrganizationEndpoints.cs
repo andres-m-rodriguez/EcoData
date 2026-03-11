@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Routing;
+using static EcoData.AquaTrack.Contracts.Permissions;
 
 namespace EcoData.AquaTrack.Api;
 
@@ -38,7 +39,9 @@ public static class OrganizationEndpoints
                 ) =>
                 {
                     var organization = await repository.GetByIdAsync(id, ct);
-                    return organization is null ? TypedResults.NotFound() : TypedResults.Ok(organization);
+                    return organization is null
+                        ? TypedResults.NotFound()
+                        : TypedResults.Ok(organization);
                 }
             )
             .WithName("GetOrganizationById");
@@ -59,13 +62,19 @@ public static class OrganizationEndpoints
                         return Results.Ok(new OrganizationPermissionsDto(null, []));
                     }
 
-                    var membership = await membershipRepository.GetAsync(token.UserId.Value, id, ct);
+                    var membership = await membershipRepository.GetAsync(
+                        token.UserId.Value,
+                        id,
+                        ct
+                    );
                     if (membership is null)
                     {
                         return Results.Ok(new OrganizationPermissionsDto(null, []));
                     }
 
-                    return Results.Ok(new OrganizationPermissionsDto(membership.RoleName, membership.Permissions));
+                    return Results.Ok(
+                        new OrganizationPermissionsDto(membership.RoleName, membership.Permissions)
+                    );
                 }
             )
             .WithName("GetMyOrganizationPermissions")
@@ -83,7 +92,9 @@ public static class OrganizationEndpoints
                     var exists = await repository.ExistsAsync(dto.Name, ct);
                     if (exists)
                     {
-                        return TypedResults.Conflict("An organization with this name already exists.");
+                        return TypedResults.Conflict(
+                            "An organization with this name already exists."
+                        );
                     }
 
                     var created = await repository.CreateAsync(dto, ct);
@@ -106,7 +117,15 @@ public static class OrganizationEndpoints
                 ) =>
                 {
                     var token = new RequestClaimToken(user);
-                    if (!token.IsAuthenticated || !await permissionService.HasPermissionAsync(token.UserId.Value, id, "org:update", ct))
+                    if (
+                        !token.IsAuthenticated
+                        || !await permissionService.HasPermissionAsync(
+                            token.UserId.Value,
+                            id,
+                            Organization.Update,
+                            ct
+                        )
+                    )
                     {
                         return TypedResults.Forbid();
                     }
@@ -130,7 +149,15 @@ public static class OrganizationEndpoints
                 ) =>
                 {
                     var token = new RequestClaimToken(user);
-                    if (!token.IsAuthenticated || !await permissionService.HasPermissionAsync(token.UserId.Value, id, "org:delete", ct))
+                    if (
+                        !token.IsAuthenticated
+                        || !await permissionService.HasPermissionAsync(
+                            token.UserId.Value,
+                            id,
+                            Organization.Delete,
+                            ct
+                        )
+                    )
                     {
                         return TypedResults.Forbid();
                     }

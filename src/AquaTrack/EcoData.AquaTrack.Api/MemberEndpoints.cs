@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using static EcoData.AquaTrack.Contracts.Permissions;
 using EcoData.AquaTrack.Contracts.Dtos;
 using EcoData.AquaTrack.DataAccess.Interfaces;
 using EcoData.Identity.Contracts.Claims;
@@ -74,7 +75,7 @@ public static class MemberEndpoints
                         || !await permissionService.HasPermissionAsync(
                             token.UserId.Value,
                             organizationId,
-                            "org:members:manage",
+                            Organization.ManageMembers,
                             ct
                         )
                     )
@@ -141,7 +142,7 @@ public static class MemberEndpoints
                         || !await permissionService.HasPermissionAsync(
                             token.UserId.Value,
                             organizationId,
-                            "org:members:manage",
+                            Organization.ManageMembers,
                             ct
                         )
                     )
@@ -198,7 +199,7 @@ public static class MemberEndpoints
                         || !await permissionService.HasPermissionAsync(
                             token.UserId.Value,
                             organizationId,
-                            "org:members:manage",
+                            Organization.ManageMembers,
                             ct
                         )
                     )

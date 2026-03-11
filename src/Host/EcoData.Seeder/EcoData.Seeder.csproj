@@ -16,6 +16,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\EcoData.ServiceDefaults\EcoData.ServiceDefaults.csproj" />
+    <ProjectReference Include="..\..\AquaTrack\EcoData.AquaTrack.Contracts\EcoData.AquaTrack.Contracts.csproj" />
     <ProjectReference Include="..\..\AquaTrack\EcoData.AquaTrack.Database\EcoData.AquaTrack.Database.csproj" />
     <ProjectReference Include="..\..\Identity\EcoData.Identity.Database\EcoData.Identity.Database.csproj" />
     <ProjectReference Include="..\..\Locations\EcoData.Locations.Database\EcoData.Locations.Database.csproj" />
