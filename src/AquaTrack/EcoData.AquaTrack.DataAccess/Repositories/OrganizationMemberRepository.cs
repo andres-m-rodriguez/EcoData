@@ -3,6 +3,7 @@ using EcoData.AquaTrack.Contracts.Dtos;
 using EcoData.AquaTrack.Database;
 using EcoData.AquaTrack.Database.Models;
 using EcoData.AquaTrack.DataAccess.Interfaces;
+using EcoData.Identity.Contracts.Authorization;
 using EcoData.Identity.DataAccess.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
@@ -219,7 +220,7 @@ public sealed class OrganizationMemberRepository(
         await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
 
         return await context.OrganizationMembers
-            .Where(m => m.OrganizationId == organizationId && m.Role!.Name == "Admin")
+            .Where(m => m.OrganizationId == organizationId && m.Role!.Name == RoleNames.Admin)
             .CountAsync(cancellationToken);
     }
 }
