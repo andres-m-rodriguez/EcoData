@@ -8,6 +8,7 @@ public sealed class User : IdentityUser<Guid>
 {
     public required string DisplayName { get; set; }
     public required UserRole Role { get; set; }
+    public required GlobalRole? GlobalRole { get; set; }
     public required DateTimeOffset CreatedAt { get; set; }
     public DateTimeOffset? UpdatedAt { get; set; }
 
@@ -23,6 +24,10 @@ public sealed class User : IdentityUser<Guid>
                 .HasConversion<string>()
                 .HasMaxLength(50)
                 .IsRequired();
+
+            builder.Property(static e => e.GlobalRole)
+                .HasConversion<string>()
+                .HasMaxLength(50);
         }
     }
 }

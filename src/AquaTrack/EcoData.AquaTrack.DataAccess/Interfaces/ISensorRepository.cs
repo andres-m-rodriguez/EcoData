@@ -50,4 +50,9 @@ public interface ISensorRepository
         Guid organizationId,
         CancellationToken cancellationToken = default
     );
+
+    IAsyncEnumerable<SensorDtoForList> GetByOrganizationAsync(
+        Guid organizationId,
+        CancellationToken cancellationToken = default
+    );
 }
