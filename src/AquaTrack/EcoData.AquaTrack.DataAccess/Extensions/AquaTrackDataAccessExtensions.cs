@@ -1,5 +1,6 @@
 using EcoData.AquaTrack.DataAccess.Interfaces;
 using EcoData.AquaTrack.DataAccess.Repositories;
+using EcoData.AquaTrack.DataAccess.Services;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace EcoData.AquaTrack.DataAccess.Extensions;
@@ -17,6 +18,8 @@ public static class AquaTrackDataAccessExtensions
         services.AddScoped<IApiKeyRepository, ApiKeyRepository>();
         services.AddScoped<ISensorTypeRepository, SensorTypeRepository>();
         services.AddScoped<IParameterRepository, ParameterRepository>();
+        services.AddScoped<IOrganizationMemberRepository, OrganizationMemberRepository>();
+        services.AddScoped<IPermissionService, PermissionService>();
 
         return services;
     }
