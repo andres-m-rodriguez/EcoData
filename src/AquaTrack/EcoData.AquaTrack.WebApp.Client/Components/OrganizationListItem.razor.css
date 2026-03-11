@@ -1,8 +1,8 @@
 .organization-card {
-    background: #fff;
+    background: var(--mud-palette-surface);
     border-radius: 12px;
     overflow: hidden;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    box-shadow: var(--mud-elevation-1);
     transition: box-shadow 0.2s ease, transform 0.2s ease;
     cursor: pointer;
     display: flex;
@@ -10,7 +10,7 @@
 }
 
 .organization-card:hover {
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    box-shadow: var(--mud-elevation-4);
     transform: translateY(-2px);
 }
 
@@ -28,11 +28,11 @@
 .card-banner-placeholder {
     width: 100%;
     height: 100%;
-    background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+    background: linear-gradient(135deg, var(--mud-palette-primary-lighten) 0%, var(--mud-palette-primary-lighten) 100%);
     display: flex;
     align-items: center;
     justify-content: center;
-    color: #1976d2;
+    color: var(--mud-palette-primary);
 }
 
 .profile-picture-container {
@@ -42,8 +42,8 @@
 }
 
 ::deep .profile-avatar {
-    border: 3px solid #fff;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    border: 3px solid var(--mud-palette-surface);
+    box-shadow: var(--mud-elevation-2);
 }
 
 .card-actions {
@@ -63,15 +63,11 @@
 }
 
 .organization-name {
-    font-size: 16px;
     font-weight: 600;
-    color: #262626;
     line-height: 1.3;
 }
 
 .organization-description {
-    font-size: 13px;
-    color: #666;
     line-height: 1.5;
     flex: 1;
 }
@@ -80,25 +76,13 @@
     display: flex;
     align-items: center;
     gap: 4px;
-    font-size: 13px;
     margin-top: auto;
 }
 
-.organization-website a {
-    color: #1976d2;
-    text-decoration: none;
+.organization-website ::deep .mud-link {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-}
-
-.organization-website a:hover {
-    text-decoration: underline;
-}
-
-::deep .website-icon {
-    color: #666;
-    flex-shrink: 0;
 }
 
 /* Mobile adjustments */
@@ -114,13 +98,5 @@
 
     .card-content {
         padding: 28px 12px 12px 12px;
-    }
-
-    .organization-name {
-        font-size: 15px;
-    }
-
-    .organization-description {
-        font-size: 12px;
     }
 }

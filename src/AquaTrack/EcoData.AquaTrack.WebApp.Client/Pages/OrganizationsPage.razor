@@ -24,7 +24,7 @@
             <MudButton Variant="Variant.Filled"
                        Color="Color.Primary"
                        StartIcon="@Icons.Material.Filled.Add"
-                       OnClick="OpenCreateDialog">
+                       OnClick="NavigateToCreate">
                 Add Organization
             </MudButton>
         }
@@ -84,7 +84,7 @@ else if (_organizations.Count == 0)
                     <MudButton Variant="Variant.Filled"
                                Color="Color.Primary"
                                StartIcon="@Icons.Material.Filled.Add"
-                               OnClick="OpenCreateDialog"
+                               OnClick="NavigateToCreate"
                                Class="mt-3">
                         Add Organization
                     </MudButton>
@@ -188,26 +188,7 @@ else
         SearchText = null;
     }
 
-    private async Task OpenCreateDialog()
-    {
-        var options = new DialogOptions { CloseOnEscapeKey = true, MaxWidth = MaxWidth.Small, FullWidth = true };
-        var dialog = await DialogService.ShowAsync<OrganizationDialog>("Add Organization", options);
-        var result = await dialog.Result;
-
-        if (result is { Canceled: false, Data: string name })
-        {
-            try
-            {
-                await OrganizationClient.CreateAsync(new OrganizationDtoForCreate(name));
-                Snackbar.Add("Organization created successfully", Severity.Success);
-                await LoadCommand.ExecuteAsync();
-            }
-            catch
-            {
-                Snackbar.Add("Failed to create organization", Severity.Error);
-            }
-        }
-    }
+    private void NavigateToCreate() => Navigation.NavigateTo("/organizations/create");
 
     private void NavigateToDetails(OrganizationDtoForList organization)
     {
