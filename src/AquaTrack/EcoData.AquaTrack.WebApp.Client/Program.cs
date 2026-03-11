@@ -1,6 +1,8 @@
 using EcoData.AquaTrack.Application.Client;
+using EcoData.AquaTrack.WebApp.Client.Authorization;
 using EcoData.AquaTrack.WebApp.Client.Services;
 using EcoData.Identity.Application.Client;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using MudBlazor.Services;
@@ -19,6 +21,9 @@ builder.Services.AddScoped<ClientAuthStateProvider>();
 builder.Services.AddScoped<AuthenticationStateProvider>(sp =>
     sp.GetRequiredService<ClientAuthStateProvider>()
 );
+// Register custom policy provider BEFORE AddAuthorizationCore (uses TryAddSingleton)
+builder.Services.AddSingleton<IAuthorizationPolicyProvider, OrganizationPermissionPolicyProvider>();
+builder.Services.AddScoped<IAuthorizationHandler, OrganizationPermissionHandler>();
 builder.Services.AddIdentityAuthorization();
 
 builder.Services.AddMudServices();
