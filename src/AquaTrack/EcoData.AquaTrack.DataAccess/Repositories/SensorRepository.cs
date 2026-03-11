@@ -298,4 +298,35 @@ public sealed class SensorRepository(IDbContextFactory<AquaTrackDbContext> conte
         await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
         return await context.Sensors.CountAsync(s => s.OrganizationId == organizationId, cancellationToken);
     }
+
+    public async IAsyncEnumerable<SensorDtoForList> GetByOrganizationAsync(
+        Guid organizationId,
+        [EnumeratorCancellation] CancellationToken cancellationToken = default
+    )
+    {
+        await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
+
+        await foreach (
+            var sensor in context
+                .Sensors.Where(s => s.OrganizationId == organizationId)
+                .OrderBy(s => s.Name)
+                .Select(static s => new SensorDtoForList(
+                    s.Id,
+                    s.OrganizationId,
+                    s.SourceId,
+                    s.ExternalId,
+                    s.Name,
+                    s.Latitude,
+                    s.Longitude,
+                    s.MunicipalityId,
+                    s.IsActive,
+                    s.DataSource != null ? s.DataSource.Name : null
+                ))
+                .AsAsyncEnumerable()
+                .WithCancellation(cancellationToken)
+        )
+        {
+            yield return sensor;
+        }
+    }
 }

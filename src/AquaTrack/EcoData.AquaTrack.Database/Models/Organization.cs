@@ -17,6 +17,7 @@ public sealed class Organization
     public ICollection<DataSource> DataSources { get; set; } = [];
     public ICollection<Sensor> Sensors { get; set; } = [];
     public ICollection<ApiKey> ApiKeys { get; set; } = [];
+    public ICollection<OrganizationMember> Members { get; set; } = [];
 
     public sealed class EntityConfiguration : IEntityTypeConfiguration<Organization>
     {

@@ -17,6 +17,7 @@ public sealed class AquaTrackDbContext(DbContextOptions<AquaTrackDbContext> opti
     public DbSet<ApiKey> ApiKeys => Set<ApiKey>();
     public DbSet<SensorType> SensorTypes => Set<SensorType>();
     public DbSet<Parameter> Parameters => Set<Parameter>();
+    public DbSet<OrganizationMember> OrganizationMembers => Set<OrganizationMember>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -32,5 +33,6 @@ public sealed class AquaTrackDbContext(DbContextOptions<AquaTrackDbContext> opti
         modelBuilder.ApplyConfiguration(new ApiKey.EntityConfiguration());
         modelBuilder.ApplyConfiguration(new SensorType.EntityConfiguration());
         modelBuilder.ApplyConfiguration(new Parameter.EntityConfiguration());
+        modelBuilder.ApplyConfiguration(new OrganizationMember.EntityConfiguration());
     }
 }
