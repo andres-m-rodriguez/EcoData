@@ -97,6 +97,26 @@ namespace EcoData.AquaTrack.Database.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "organization_roles",
+                columns: table => new
+                {
+                    id = table.Column<Guid>(type: "uuid", nullable: false),
+                    organization_id = table.Column<Guid>(type: "uuid", nullable: true),
+                    name = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
+                    created_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("pk_organization_roles", x => x.id);
+                    table.ForeignKey(
+                        name: "fk_organization_roles_organizations_organization_id",
+                        column: x => x.organization_id,
+                        principalTable: "organizations",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "parameters",
                 columns: table => new
                 {
@@ -178,6 +198,51 @@ namespace EcoData.AquaTrack.Database.Migrations
                         principalTable: "sensor_types",
                         principalColumn: "id",
                         onDelete: ReferentialAction.SetNull);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "organization_members",
+                columns: table => new
+                {
+                    id = table.Column<Guid>(type: "uuid", nullable: false),
+                    user_id = table.Column<Guid>(type: "uuid", nullable: false),
+                    organization_id = table.Column<Guid>(type: "uuid", nullable: false),
+                    role_id = table.Column<Guid>(type: "uuid", nullable: false),
+                    created_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("pk_organization_members", x => x.id);
+                    table.ForeignKey(
+                        name: "fk_organization_members_organization_roles_role_id",
+                        column: x => x.role_id,
+                        principalTable: "organization_roles",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "fk_organization_members_organizations_organization_id",
+                        column: x => x.organization_id,
+                        principalTable: "organizations",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "organization_role_permissions",
+                columns: table => new
+                {
+                    role_id = table.Column<Guid>(type: "uuid", nullable: false),
+                    permission = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("pk_organization_role_permissions", x => new { x.role_id, x.permission });
+                    table.ForeignKey(
+                        name: "fk_organization_role_permissions_organization_roles_role_id",
+                        column: x => x.role_id,
+                        principalTable: "organization_roles",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -334,6 +399,33 @@ namespace EcoData.AquaTrack.Database.Migrations
                 columns: new[] { "data_source_id", "ingested_at" });
 
             migrationBuilder.CreateIndex(
+                name: "ix_organization_members_organization_id",
+                table: "organization_members",
+                column: "organization_id");
+
+            migrationBuilder.CreateIndex(
+                name: "ix_organization_members_role_id",
+                table: "organization_members",
+                column: "role_id");
+
+            migrationBuilder.CreateIndex(
+                name: "ix_organization_members_user_id",
+                table: "organization_members",
+                column: "user_id");
+
+            migrationBuilder.CreateIndex(
+                name: "ix_organization_members_user_id_organization_id",
+                table: "organization_members",
+                columns: new[] { "user_id", "organization_id" },
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "ix_organization_roles_organization_id_name",
+                table: "organization_roles",
+                columns: new[] { "organization_id", "name" },
+                unique: true);
+
+            migrationBuilder.CreateIndex(
                 name: "ix_organizations_name",
                 table: "organizations",
                 column: "name",
@@ -438,6 +530,12 @@ namespace EcoData.AquaTrack.Database.Migrations
                 name: "ingestion_logs");
 
             migrationBuilder.DropTable(
+                name: "organization_members");
+
+            migrationBuilder.DropTable(
+                name: "organization_role_permissions");
+
+            migrationBuilder.DropTable(
                 name: "parameters");
 
             migrationBuilder.DropTable(
@@ -451,6 +549,9 @@ namespace EcoData.AquaTrack.Database.Migrations
 
             migrationBuilder.DropTable(
                 name: "sensor_health_statuses");
+
+            migrationBuilder.DropTable(
+                name: "organization_roles");
 
             migrationBuilder.DropTable(
                 name: "sensors");

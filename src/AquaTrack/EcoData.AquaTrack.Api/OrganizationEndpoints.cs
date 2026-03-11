@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using EcoData.AquaTrack.Contracts.Dtos;
 using EcoData.AquaTrack.Contracts.Parameters;
 using EcoData.AquaTrack.DataAccess.Interfaces;
@@ -40,6 +41,34 @@ public static class OrganizationEndpoints
                 }
             )
             .WithName("GetOrganizationById");
+
+        group
+            .MapGet(
+                "/{id:guid}/my-permissions",
+                async (
+                    Guid id,
+                    ClaimsPrincipal user,
+                    IOrganizationMemberRepository memberRepository,
+                    CancellationToken ct
+                ) =>
+                {
+                    var userIdClaim = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                    if (userIdClaim is null || !Guid.TryParse(userIdClaim, out var userId))
+                    {
+                        return Results.Ok(new OrganizationPermissionsDto(null, []));
+                    }
+
+                    var membership = await memberRepository.GetByUserAndOrganizationAsync(userId, id, ct);
+                    if (membership is null)
+                    {
+                        return Results.Ok(new OrganizationPermissionsDto(null, []));
+                    }
+
+                    return Results.Ok(new OrganizationPermissionsDto(membership.RoleName, membership.Permissions));
+                }
+            )
+            .WithName("GetMyOrganizationPermissions")
+            .RequireAuthorization();
 
         group
             .MapPost(

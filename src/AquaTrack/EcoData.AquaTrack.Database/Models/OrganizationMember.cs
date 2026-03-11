@@ -8,10 +8,11 @@ public sealed class OrganizationMember
     public required Guid Id { get; set; }
     public required Guid UserId { get; set; }
     public required Guid OrganizationId { get; set; }
-    public required OrganizationRole Role { get; set; }
+    public required Guid RoleId { get; set; }
     public required DateTimeOffset CreatedAt { get; set; }
 
     public Organization? Organization { get; set; }
+    public OrganizationRole? Role { get; set; }
 
     public sealed class EntityConfiguration : IEntityTypeConfiguration<OrganizationMember>
     {
@@ -22,12 +23,7 @@ public sealed class OrganizationMember
 
             builder.Property(static e => e.UserId).IsRequired();
             builder.Property(static e => e.OrganizationId).IsRequired();
-
-            builder.Property(static e => e.Role)
-                .HasConversion<string>()
-                .HasMaxLength(50)
-                .IsRequired();
-
+            builder.Property(static e => e.RoleId).IsRequired();
             builder.Property(static e => e.CreatedAt).IsRequired();
 
             // Unique constraint: user can only be in an organization once
@@ -36,12 +32,17 @@ public sealed class OrganizationMember
             // Index for querying by user
             builder.HasIndex(static e => e.UserId);
 
-            // Foreign key to Organization (same database)
             builder
                 .HasOne(static e => e.Organization)
                 .WithMany(static e => e.Members)
                 .HasForeignKey(static e => e.OrganizationId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            builder
+                .HasOne(static e => e.Role)
+                .WithMany(static e => e.Members)
+                .HasForeignKey(static e => e.RoleId)
+                .OnDelete(DeleteBehavior.Restrict);
 
             // Note: UserId references users table in Identity database
             // No FK constraint since it's a cross-database reference
