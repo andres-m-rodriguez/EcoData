@@ -12,7 +12,7 @@ public interface IOrganizationHttpClient
         CancellationToken cancellationToken = default
     );
 
-    Task<OneOf<OrganizationDtoForDetail, NotFoundError>> GetByIdAsync(
+    Task<OneOf<OrganizationDtoForDetail, NotFoundError, UnauthorizedError>> GetByIdAsync(
         Guid id,
         CancellationToken cancellationToken = default
     );

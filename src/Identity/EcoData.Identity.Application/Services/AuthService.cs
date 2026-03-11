@@ -62,6 +62,7 @@ public sealed class AuthService(
             accessRequest.Email,
             accessRequest.DisplayName,
             "Pending",
+            null,
             accessRequest.CreatedAt
         );
     }
@@ -111,6 +112,7 @@ public sealed class AuthService(
             user.Email!,
             user.DisplayName,
             user.Role.ToString(),
+            user.GlobalRole.HasValue ? (Contracts.Authorization.GlobalRole)user.GlobalRole.Value : null,
             user.CreatedAt
         );
     }
@@ -138,6 +140,7 @@ public sealed class AuthService(
             user.Email!,
             user.DisplayName,
             user.Role.ToString(),
+            user.GlobalRole.HasValue ? (Contracts.Authorization.GlobalRole)user.GlobalRole.Value : null,
             user.CreatedAt
         );
     }
@@ -172,11 +175,12 @@ public sealed class AuthService(
         await foreach (var user in query
             .OrderBy(u => u.Id)
             .Take(parameters.PageSize + 1)
-            .Select(static u => new UserInfo(
+            .Select(u => new UserInfo(
                 u.Id,
                 u.Email!,
                 u.DisplayName,
                 u.Role.ToString(),
+                u.GlobalRole.HasValue ? (Contracts.Authorization.GlobalRole)u.GlobalRole.Value : null,
                 u.CreatedAt
             ))
             .AsAsyncEnumerable()

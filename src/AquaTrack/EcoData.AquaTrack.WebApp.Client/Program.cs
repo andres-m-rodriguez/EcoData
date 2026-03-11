@@ -12,8 +12,9 @@ builder.Services.AddAquaTrackClient(baseAddress);
 builder.Services.AddIdentityClient(baseAddress);
 
 builder.Services.AddScoped<ISensorMapManager, SensorMapManager>();
-builder.Services.AddScoped<BackButtonService>();
+builder.Services.AddScoped<INavigationService, NavigationService>();
 builder.Services.AddScoped<AuthStateService>();
+builder.Services.AddScoped<PermissionContextService>();
 builder.Services.AddScoped<ClientAuthStateProvider>();
 builder.Services.AddScoped<AuthenticationStateProvider>(sp =>
     sp.GetRequiredService<ClientAuthStateProvider>()

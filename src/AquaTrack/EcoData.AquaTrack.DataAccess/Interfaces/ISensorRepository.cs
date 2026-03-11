@@ -19,6 +19,10 @@ public interface ISensorRepository
         SensorParameters parameters,
         CancellationToken cancellationToken = default
     );
+    Task<int> GetSensorCountAsync(
+        SensorParameters parameters,
+        CancellationToken cancellationToken = default
+    );
     Task<Dictionary<string, SensorDtoForCreated>> GetSensorsByExternalIdsAsync(
         Guid dataSourceId,
         ICollection<string> externalIds,
@@ -41,10 +45,7 @@ public interface ISensorRepository
         CancellationToken cancellationToken = default
     );
 
-    Task<bool> DeleteAsync(
-        Guid id,
-        CancellationToken cancellationToken = default
-    );
+    Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken = default);
 
     Task<int> GetCountByOrganizationAsync(
         Guid organizationId,

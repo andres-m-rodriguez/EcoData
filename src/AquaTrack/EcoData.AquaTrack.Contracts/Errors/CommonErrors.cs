@@ -14,3 +14,5 @@ public sealed record ApiError(int StatusCode, string? Message = null);
 public sealed record ConflictError(string Message);
 
 public sealed record Success;
+
+public sealed record UnauthorizedError;
