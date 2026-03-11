@@ -109,6 +109,7 @@ public sealed class DatabaseSeederWorker(
             EmailConfirmed = true,
             DisplayName = "Admin",
             Role = UserRole.Admin,
+            GlobalRole = GlobalRole.GlobalAdmin,
             SecurityStamp = Guid.NewGuid().ToString(),
             ConcurrencyStamp = Guid.NewGuid().ToString(),
             CreatedAt = now,
