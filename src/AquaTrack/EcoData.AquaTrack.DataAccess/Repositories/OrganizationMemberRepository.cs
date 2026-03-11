@@ -1,3 +1,4 @@
+using EcoData.AquaTrack.Contracts.Dtos;
 using EcoData.AquaTrack.Database;
 using EcoData.AquaTrack.DataAccess.Interfaces;
 using Microsoft.EntityFrameworkCore;
@@ -7,7 +8,7 @@ namespace EcoData.AquaTrack.DataAccess.Repositories;
 public sealed class OrganizationMemberRepository(IDbContextFactory<AquaTrackDbContext> contextFactory)
     : IOrganizationMemberRepository
 {
-    public async Task<IReadOnlyList<OrganizationMembershipDto>> GetByUserAsync(
+    public async Task<IReadOnlyList<OrganizationMembershipDto>> GetAllOrganizationMembershipsAsync(
         Guid userId,
         CancellationToken cancellationToken = default
     )
@@ -24,7 +25,7 @@ public sealed class OrganizationMemberRepository(IDbContextFactory<AquaTrackDbCo
             .ToListAsync(cancellationToken);
     }
 
-    public async Task<OrganizationMembershipDto?> GetByUserAndOrganizationAsync(
+    public async Task<OrganizationMembershipDto?> GetOrganizationMembershipAsync(
         Guid userId,
         Guid organizationId,
         CancellationToken cancellationToken = default

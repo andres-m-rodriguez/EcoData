@@ -58,7 +58,7 @@ public static class OrganizationEndpoints
                         return Results.Ok(new OrganizationPermissionsDto(null, []));
                     }
 
-                    var membership = await memberRepository.GetByUserAndOrganizationAsync(userId, id, ct);
+                    var membership = await memberRepository.GetOrganizationMembershipAsync(userId, id, ct);
                     if (membership is null)
                     {
                         return Results.Ok(new OrganizationPermissionsDto(null, []));
