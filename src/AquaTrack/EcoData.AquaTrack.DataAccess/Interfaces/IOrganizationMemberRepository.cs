@@ -40,9 +40,4 @@ public interface IOrganizationMemberRepository
         Guid userId,
         CancellationToken cancellationToken = default
     );
-
-    Task<int> GetAdminCountAsync(
-        Guid organizationId,
-        CancellationToken cancellationToken = default
-    );
 }

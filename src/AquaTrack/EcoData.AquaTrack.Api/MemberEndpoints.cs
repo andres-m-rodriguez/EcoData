@@ -1,7 +1,6 @@
 using System.Security.Claims;
 using EcoData.AquaTrack.Contracts.Dtos;
 using EcoData.AquaTrack.DataAccess.Interfaces;
-using EcoData.Identity.Contracts.Authorization;
 using EcoData.Identity.Contracts.Claims;
 using EcoData.Identity.DataAccess.Interfaces;
 using Microsoft.AspNetCore.Builder;
@@ -120,14 +119,7 @@ public static class MemberEndpoints
         group
             .MapPut(
                 "/{userId:guid}",
-                async Task<
-                    Results<
-                        Ok<OrganizationMemberDto>,
-                        NotFound,
-                        BadRequest<string>,
-                        ForbidHttpResult
-                    >
-                > (
+                async Task<Results<Ok<OrganizationMemberDto>, NotFound, ForbidHttpResult>> (
                     Guid organizationId,
                     Guid userId,
                     UpdateMemberRoleRequest request,
@@ -151,21 +143,6 @@ public static class MemberEndpoints
                         return TypedResults.Forbid();
                     }
 
-                    var currentMember = await repository.GetAsync(organizationId, userId, ct);
-                    if (currentMember is null)
-                    {
-                        return TypedResults.NotFound();
-                    }
-
-                    if (currentMember.RoleName == RoleNames.Admin && request.Role != RoleNames.Admin)
-                    {
-                        var adminCount = await repository.GetAdminCountAsync(organizationId, ct);
-                        if (adminCount <= 1)
-                        {
-                            return TypedResults.BadRequest("Cannot demote the last admin.");
-                        }
-                    }
-
                     var member = await repository.UpdateAsync(
                         organizationId,
                         userId,
@@ -185,7 +162,7 @@ public static class MemberEndpoints
         group
             .MapDelete(
                 "/{userId:guid}",
-                async Task<Results<NoContent, NotFound, BadRequest<string>, ForbidHttpResult>> (
+                async Task<Results<NoContent, NotFound, ForbidHttpResult>> (
                     Guid organizationId,
                     Guid userId,
                     ClaimsPrincipal user,
@@ -206,21 +183,6 @@ public static class MemberEndpoints
                     )
                     {
                         return TypedResults.Forbid();
-                    }
-
-                    var member = await repository.GetAsync(organizationId, userId, ct);
-                    if (member is null)
-                    {
-                        return TypedResults.NotFound();
-                    }
-
-                    if (member.RoleName == RoleNames.Admin)
-                    {
-                        var adminCount = await repository.GetAdminCountAsync(organizationId, ct);
-                        if (adminCount <= 1)
-                        {
-                            return TypedResults.BadRequest("Cannot remove the last admin.");
-                        }
                     }
 
                     var deleted = await repository.DeleteAsync(organizationId, userId, ct);
