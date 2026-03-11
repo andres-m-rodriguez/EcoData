@@ -1,5 +1,7 @@
 @page "/register"
 @layout AuthLayout
+@using EcoData.AquaTrack.Contracts.Dtos
+@using EcoData.AquaTrack.WebApp.Client.Features.Organizations.Components
 @using EcoData.AquaTrack.WebApp.Client.Layout
 @using EcoData.Identity.Application.Client
 @using EcoData.Identity.Contracts.Requests
@@ -18,7 +20,7 @@
                 <strong>Registration submitted!</strong>
             </MudText>
             <MudText Typo="Typo.body2">
-                Your access request has been submitted and is pending approval.
+                Your access request to join <strong>@_selectedOrganization?.Name</strong> has been submitted and is pending approval.
                 You will be able to sign in once an administrator approves your request.
             </MudText>
         </MudAlert>
@@ -57,6 +59,11 @@
                               Required="true"
                               RequiredError="Display name is required"
                               Disabled="RegisterCommand.IsLoading" />
+
+                <OrganizationSelect @bind-Value="_selectedOrganization"
+                                    HelperText="Select the organization you want to join"
+                                    Required="true"
+                                    Disabled="RegisterCommand.IsLoading" />
 
                 <MudTextField @bind-Value="_model.Email"
                               Label="Email"
@@ -127,6 +134,7 @@
 
 @code {
     private readonly RegisterModel _model = new();
+    private OrganizationDtoForList? _selectedOrganization;
     private bool _showPassword;
     private bool _showConfirmPassword;
     private bool _registrationComplete;
@@ -141,13 +149,21 @@
             return;
         }
 
+        if (_selectedOrganization is null)
+        {
+            _errorMessage = "Please select an organization";
+            return;
+        }
+
         _errorMessage = null;
 
         var request = new RegisterRequest(
             _model.Email,
             _model.DisplayName,
             _model.Password,
-            _model.ConfirmPassword
+            _model.ConfirmPassword,
+            _selectedOrganization.Id,
+            _selectedOrganization.Name
         );
 
         var result = await AuthClient.RegisterAsync(request);

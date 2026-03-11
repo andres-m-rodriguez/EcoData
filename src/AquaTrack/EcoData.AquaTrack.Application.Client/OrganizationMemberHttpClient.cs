@@ -6,7 +6,8 @@ using OneOf;
 
 namespace EcoData.AquaTrack.Application.Client;
 
-public sealed class OrganizationMemberHttpClient(HttpClient httpClient) : IOrganizationMemberHttpClient
+public sealed class OrganizationMemberHttpClient(HttpClient httpClient)
+    : IOrganizationMemberHttpClient
 {
     public IAsyncEnumerable<OrganizationMemberDto> GetAllAsync(
         Guid organizationId,
@@ -35,11 +36,15 @@ public sealed class OrganizationMemberHttpClient(HttpClient httpClient) : IOrgan
             return new NotFoundError();
         }
 
-        var result = await response.Content.ReadFromJsonAsync<OrganizationMemberDto>(cancellationToken);
+        var result = await response.Content.ReadFromJsonAsync<OrganizationMemberDto>(
+            cancellationToken
+        );
         return result!;
     }
 
-    public async Task<OneOf<OrganizationMemberDto, NotFoundError, ConflictError, ApiError>> CreateAsync(
+    public async Task<
+        OneOf<OrganizationMemberDto, NotFoundError, ConflictError, ApiError>
+    > CreateAsync(
         Guid organizationId,
         AddMemberRequest request,
         CancellationToken cancellationToken = default
@@ -64,14 +69,21 @@ public sealed class OrganizationMemberHttpClient(HttpClient httpClient) : IOrgan
 
         if (!response.IsSuccessStatusCode)
         {
-            return new ApiError((int)response.StatusCode, await response.Content.ReadAsStringAsync(cancellationToken));
+            return new ApiError(
+                (int)response.StatusCode,
+                await response.Content.ReadAsStringAsync(cancellationToken)
+            );
         }
 
-        var result = await response.Content.ReadFromJsonAsync<OrganizationMemberDto>(cancellationToken);
+        var result = await response.Content.ReadFromJsonAsync<OrganizationMemberDto>(
+            cancellationToken
+        );
         return result!;
     }
 
-    public async Task<OneOf<OrganizationMemberDto, NotFoundError, ValidationError, ApiError>> UpdateAsync(
+    public async Task<
+        OneOf<OrganizationMemberDto, NotFoundError, ValidationError, ApiError>
+    > UpdateAsync(
         Guid organizationId,
         Guid userId,
         UpdateMemberRoleRequest request,
@@ -97,10 +109,15 @@ public sealed class OrganizationMemberHttpClient(HttpClient httpClient) : IOrgan
 
         if (!response.IsSuccessStatusCode)
         {
-            return new ApiError((int)response.StatusCode, await response.Content.ReadAsStringAsync(cancellationToken));
+            return new ApiError(
+                (int)response.StatusCode,
+                await response.Content.ReadAsStringAsync(cancellationToken)
+            );
         }
 
-        var result = await response.Content.ReadFromJsonAsync<OrganizationMemberDto>(cancellationToken);
+        var result = await response.Content.ReadFromJsonAsync<OrganizationMemberDto>(
+            cancellationToken
+        );
         return result!;
     }
 
@@ -128,7 +145,10 @@ public sealed class OrganizationMemberHttpClient(HttpClient httpClient) : IOrgan
 
         if (!response.IsSuccessStatusCode)
         {
-            return new ApiError((int)response.StatusCode, await response.Content.ReadAsStringAsync(cancellationToken));
+            return new ApiError(
+                (int)response.StatusCode,
+                await response.Content.ReadAsStringAsync(cancellationToken)
+            );
         }
 
         return new Success();

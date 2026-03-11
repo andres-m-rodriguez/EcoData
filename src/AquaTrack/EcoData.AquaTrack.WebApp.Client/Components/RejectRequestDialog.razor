@@ -1,0 +1,39 @@
+@using BlazingSingularity.Signals
+
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6">Reject Request</MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudText Typo="Typo.body2" Class="mb-4">
+            Are you sure you want to reject the access request from <strong>@RequesterName</strong>?
+        </MudText>
+        <MudTextField @bind-Value="ReviewNotes"
+                      Label="Review Notes (Optional)"
+                      Placeholder="Add a reason for rejection..."
+                      Variant="Variant.Outlined"
+                      Lines="3"
+                      HelperText="This will be visible to administrators" />
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Cancel</MudButton>
+        <MudButton Color="Color.Error" Variant="Variant.Filled" OnClick="Submit">
+            Reject
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter]
+    private IMudDialogInstance MudDialog { get; set; } = null!;
+
+    [Parameter]
+    public string RequesterName { get; set; } = string.Empty;
+
+    [Signal]
+    private string? _reviewNotes;
+
+    private void Cancel() => MudDialog.Cancel();
+
+    private void Submit() => MudDialog.Close(DialogResult.Ok(ReviewNotes));
+}

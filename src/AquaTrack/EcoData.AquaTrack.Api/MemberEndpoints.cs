@@ -11,9 +11,8 @@ using static EcoData.AquaTrack.Contracts.Permissions;
 
 namespace EcoData.AquaTrack.Api;
 
-// TODO: When migrating to microservices, replace IUserLookupRepository with an HTTP/gRPC client.
-// The interface currently lives in Identity.DataAccess which won't be accessible from AquaTrack.
-// Define a new IUserLookupClient in AquaTrack or a shared contracts project.
+// TODO: When migrating to microservices, replace IUserLookupRepository with HTTP/gRPC client.
+// This interface currently lives in Identity.DataAccess which won't be accessible from AquaTrack.
 public static class MemberEndpoints
 {
     public static IEndpointRouteBuilder MapMemberEndpoints(this IEndpointRouteBuilder app)
