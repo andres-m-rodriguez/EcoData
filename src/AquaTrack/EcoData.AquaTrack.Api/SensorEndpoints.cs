@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using static EcoData.AquaTrack.Contracts.Permissions;
 using EcoData.AquaTrack.Contracts.Dtos;
 using EcoData.AquaTrack.Contracts.Parameters;
 using EcoData.AquaTrack.DataAccess.Interfaces;
@@ -50,7 +51,7 @@ public static class SensorEndpoints
                     }
 
                     var token = new RequestClaimToken(user);
-                    if (!token.IsAuthenticated || !await permissionService.HasPermissionAsync(token.UserId.Value, organizationId, "sensor:read", ct))
+                    if (!token.IsAuthenticated || !await permissionService.HasPermissionAsync(token.UserId.Value, organizationId, Sensor.Read, ct))
                     {
                         return TypedResults.Forbid();
                     }
@@ -74,7 +75,7 @@ public static class SensorEndpoints
                 ) =>
                 {
                     var token = new RequestClaimToken(user);
-                    if (!token.IsAuthenticated || !await permissionService.HasPermissionAsync(token.UserId.Value, organizationId, "sensor:read", ct))
+                    if (!token.IsAuthenticated || !await permissionService.HasPermissionAsync(token.UserId.Value, organizationId, Sensor.Read, ct))
                     {
                         return TypedResults.Forbid();
                     }
@@ -110,7 +111,7 @@ public static class SensorEndpoints
                     }
 
                     var token = new RequestClaimToken(user);
-                    if (!token.IsAuthenticated || !await permissionService.HasPermissionAsync(token.UserId.Value, organizationId, "sensor:create", ct))
+                    if (!token.IsAuthenticated || !await permissionService.HasPermissionAsync(token.UserId.Value, organizationId, Sensor.Create, ct))
                     {
                         return TypedResults.Forbid();
                     }
@@ -135,7 +136,7 @@ public static class SensorEndpoints
                 ) =>
                 {
                     var token = new RequestClaimToken(user);
-                    if (!token.IsAuthenticated || !await permissionService.HasPermissionAsync(token.UserId.Value, organizationId, "sensor:update", ct))
+                    if (!token.IsAuthenticated || !await permissionService.HasPermissionAsync(token.UserId.Value, organizationId, Sensor.Update, ct))
                     {
                         return TypedResults.Forbid();
                     }
@@ -170,7 +171,7 @@ public static class SensorEndpoints
                 ) =>
                 {
                     var token = new RequestClaimToken(user);
-                    if (!token.IsAuthenticated || !await permissionService.HasPermissionAsync(token.UserId.Value, organizationId, "sensor:delete", ct))
+                    if (!token.IsAuthenticated || !await permissionService.HasPermissionAsync(token.UserId.Value, organizationId, Sensor.Delete, ct))
                     {
                         return TypedResults.Forbid();
                     }
