@@ -3,7 +3,6 @@
 @using EcoData.AquaTrack.Contracts.Errors
 @using EcoData.AquaTrack.Application.Client
 @using EcoData.AquaTrack.WebApp.Client.Services
-@using EcoData.AquaTrack.WebApp.Client.Components
 @using BlazingSingularity.Commands
 @inject IOrganizationHttpClient OrganizationClient
 @inject NavigationManager Navigation
@@ -17,11 +16,11 @@
 @if (LoadCommand.IsLoading)
 {
     <div class="page-wrapper">
-        <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="100px" Width="80%" Class="banner-skeleton" />
-        <div class="header-row">
+        <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="100px" Class="banner rounded-lg mb-3" />
+        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="3" Class="mb-3">
             <MudSkeleton SkeletonType="SkeletonType.Circle" Width="48px" Height="48px" />
             <MudSkeleton Width="200px" Height="24px" />
-        </div>
+        </MudStack>
     </div>
 }
 else if (_organization is null)
@@ -35,7 +34,7 @@ else
 {
     <div class="page-wrapper">
         @* Banner *@
-        <div class="banner">
+        <div class="banner rounded-lg mb-3">
             @if (!string.IsNullOrWhiteSpace(_organization.CardPictureUrl))
             {
                 <img src="@_organization.CardPictureUrl" alt="" />
@@ -43,8 +42,8 @@ else
         </div>
 
         @* Header: Avatar + Name + Actions *@
-        <div class="header-row">
-            <div class="header-left">
+        <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="mb-3">
+            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="3">
                 @if (!string.IsNullOrWhiteSpace(_organization.ProfilePictureUrl))
                 {
                     <MudAvatar Size="Size.Large">
@@ -66,19 +65,19 @@ else
                         </MudLink>
                     }
                 </div>
-            </div>
+            </MudStack>
             @if (IsAdmin)
             {
-                <div class="header-actions">
+                <MudStack Row="true" Spacing="1">
                     <MudIconButton Icon="@Icons.Material.Outlined.Edit" Size="Size.Small" OnClick="NavigateToEdit" />
                     <MudIconButton Icon="@Icons.Material.Outlined.Delete" Size="Size.Small" Color="Color.Error"
                                    OnClick="ConfirmDelete" />
-                </div>
+                </MudStack>
             }
-        </div>
+        </MudStack>
 
         @* About Us *@
-        <MudPaper Elevation="1" Class="pa-4 mt-4">
+        <MudPaper Elevation="1" Class="pa-4 mt-4 rounded-lg">
             <MudText Typo="Typo.subtitle1" Class="mb-2">About Us</MudText>
             @if (!string.IsNullOrWhiteSpace(_organization.AboutUs))
             {

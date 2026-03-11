@@ -2,22 +2,20 @@
 
 <div class="sensor-row" @onclick="HandleClick">
     <div class="sensor-primary">
-        <div class="sensor-name">@Sensor.Name</div>
-        <div class="sensor-id">@Sensor.ExternalId</div>
+        <MudText Typo="Typo.body1" Class="sensor-name">@Sensor.Name</MudText>
+        <MudText Typo="Typo.caption" Color="Color.Secondary">@Sensor.ExternalId</MudText>
     </div>
-    <div class="sensor-municipality hide-mobile">@Sensor.MunicipalityId</div>
-    <div class="sensor-location hide-mobile">
+    <MudText Typo="Typo.body2" Class="hide-mobile">@Sensor.MunicipalityId</MudText>
+    <MudText Typo="Typo.body2" Color="Color.Secondary" Class="hide-mobile hide-tablet">
         @Sensor.Latitude.ToString("F4"), @Sensor.Longitude.ToString("F4")
-    </div>
+    </MudText>
     <div class="sensor-status">
-        @if (Sensor.IsActive)
-        {
-            <span class="status-badge active">Active</span>
-        }
-        else
-        {
-            <span class="status-badge inactive">Inactive</span>
-        }
+        <MudChip T="string"
+                 Size="Size.Small"
+                 Color="@(Sensor.IsActive ? Color.Success : Color.Default)"
+                 Variant="Variant.Filled">
+            @(Sensor.IsActive ? "Active" : "Inactive")
+        </MudChip>
     </div>
     <div class="sensor-actions" @onclick:stopPropagation="true">
         <MudMenu Icon="@Icons.Material.Filled.MoreVert"
