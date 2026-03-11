@@ -1,7 +1,9 @@
+using System.Security.Claims;
 using EcoData.AquaTrack.Contracts.Dtos;
 using EcoData.AquaTrack.Contracts.Parameters;
 using EcoData.AquaTrack.DataAccess.Interfaces;
 using EcoData.Identity.Contracts.Authorization;
+using EcoData.Identity.Contracts.Claims;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
@@ -42,6 +44,34 @@ public static class OrganizationEndpoints
             .WithName("GetOrganizationById");
 
         group
+            .MapGet(
+                "/{id:guid}/my-permissions",
+                async (
+                    Guid id,
+                    ClaimsPrincipal user,
+                    IOrganizationMemberRepository memberRepository,
+                    CancellationToken ct
+                ) =>
+                {
+                    var token = new RequestClaimToken(user);
+                    if (!token.IsAuthenticated)
+                    {
+                        return Results.Ok(new OrganizationPermissionsDto(null, []));
+                    }
+
+                    var membership = await memberRepository.GetOrganizationMembershipAsync(token.UserId.Value, id, ct);
+                    if (membership is null)
+                    {
+                        return Results.Ok(new OrganizationPermissionsDto(null, []));
+                    }
+
+                    return Results.Ok(new OrganizationPermissionsDto(membership.RoleName, membership.Permissions));
+                }
+            )
+            .WithName("GetMyOrganizationPermissions")
+            .RequireAuthorization();
+
+        group
             .MapPost(
                 "/",
                 async Task<Results<Created<OrganizationDtoForCreated>, Conflict<string>>> (
@@ -66,35 +96,51 @@ public static class OrganizationEndpoints
         group
             .MapPut(
                 "/{id:guid}",
-                async Task<Results<Ok<OrganizationDtoForDetail>, NotFound>> (
+                async Task<Results<Ok<OrganizationDtoForDetail>, NotFound, ForbidHttpResult>> (
                     Guid id,
                     OrganizationDtoForUpdate dto,
+                    ClaimsPrincipal user,
                     IOrganizationRepository repository,
+                    IPermissionService permissionService,
                     CancellationToken ct
                 ) =>
                 {
+                    var token = new RequestClaimToken(user);
+                    if (!token.IsAuthenticated || !await permissionService.HasPermissionAsync(token.UserId.Value, id, "org:update", ct))
+                    {
+                        return TypedResults.Forbid();
+                    }
+
                     var updated = await repository.UpdateAsync(id, dto, ct);
                     return updated is null ? TypedResults.NotFound() : TypedResults.Ok(updated);
                 }
             )
             .WithName("UpdateOrganization")
-            .RequireAuthorization(PolicyNames.Admin);
+            .RequireAuthorization();
 
         group
             .MapDelete(
                 "/{id:guid}",
-                async Task<Results<NoContent, NotFound>> (
+                async Task<Results<NoContent, NotFound, ForbidHttpResult>> (
                     Guid id,
+                    ClaimsPrincipal user,
                     IOrganizationRepository repository,
+                    IPermissionService permissionService,
                     CancellationToken ct
                 ) =>
                 {
+                    var token = new RequestClaimToken(user);
+                    if (!token.IsAuthenticated || !await permissionService.HasPermissionAsync(token.UserId.Value, id, "org:delete", ct))
+                    {
+                        return TypedResults.Forbid();
+                    }
+
                     var deleted = await repository.DeleteAsync(id, ct);
                     return deleted ? TypedResults.NoContent() : TypedResults.NotFound();
                 }
             )
             .WithName("DeleteOrganization")
-            .RequireAuthorization(PolicyNames.Admin);
+            .RequireAuthorization();
 
         return app;
     }

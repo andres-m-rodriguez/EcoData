@@ -1,7 +1,8 @@
+using System.Security.Claims;
 using EcoData.AquaTrack.Contracts.Dtos;
 using EcoData.AquaTrack.Contracts.Parameters;
 using EcoData.AquaTrack.DataAccess.Interfaces;
-using EcoData.Identity.Contracts.Authorization;
+using EcoData.Identity.Contracts.Claims;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
@@ -28,30 +29,33 @@ public static class SensorEndpoints
 
         var orgGroup = app.MapGroup("/api/organizations/{organizationId:guid}/sensors")
             .WithTags("Organization Sensors")
-            .RequireAuthorization(PolicyNames.Admin);
+            .RequireAuthorization();
 
         orgGroup
             .MapGet(
                 "/",
-                async Task<Results<Ok<List<SensorDtoForList>>, NotFound<string>>> (
+                async Task<Results<Ok<List<SensorDtoForList>>, NotFound<string>, ForbidHttpResult>> (
                     Guid organizationId,
+                    ClaimsPrincipal user,
                     ISensorRepository repository,
                     IOrganizationRepository organizationRepository,
+                    IPermissionService permissionService,
                     CancellationToken ct
                 ) =>
                 {
-                    var organization = await organizationRepository.GetByIdAsync(
-                        organizationId,
-                        ct
-                    );
+                    var organization = await organizationRepository.GetByIdAsync(organizationId, ct);
                     if (organization is null)
                     {
                         return TypedResults.NotFound("Organization not found");
                     }
 
-                    var sensors = await repository
-                        .GetByOrganizationAsync(organizationId, ct)
-                        .ToListAsync(ct);
+                    var token = new RequestClaimToken(user);
+                    if (!token.IsAuthenticated || !await permissionService.HasPermissionAsync(token.UserId.Value, organizationId, "sensor:read", ct))
+                    {
+                        return TypedResults.Forbid();
+                    }
+
+                    var sensors = await repository.GetByOrganizationAsync(organizationId, ct).ToListAsync(ct);
                     return TypedResults.Ok(sensors);
                 }
             )
@@ -60,13 +64,21 @@ public static class SensorEndpoints
         orgGroup
             .MapGet(
                 "/{id:guid}",
-                async Task<Results<Ok<SensorDtoForDetail>, NotFound>> (
+                async Task<Results<Ok<SensorDtoForDetail>, NotFound, ForbidHttpResult>> (
                     Guid organizationId,
                     Guid id,
+                    ClaimsPrincipal user,
                     ISensorRepository repository,
+                    IPermissionService permissionService,
                     CancellationToken ct
                 ) =>
                 {
+                    var token = new RequestClaimToken(user);
+                    if (!token.IsAuthenticated || !await permissionService.HasPermissionAsync(token.UserId.Value, organizationId, "sensor:read", ct))
+                    {
+                        return TypedResults.Forbid();
+                    }
+
                     var sensor = await repository.GetByIdAsync(id, ct);
                     if (sensor is null || sensor.OrganizationId != organizationId)
                     {
@@ -81,32 +93,30 @@ public static class SensorEndpoints
         orgGroup
             .MapPost(
                 "/",
-                async Task<Results<Created<SensorDtoForCreated>, NotFound<string>>> (
+                async Task<Results<Created<SensorDtoForCreated>, NotFound<string>, ForbidHttpResult>> (
                     Guid organizationId,
                     SensorDtoForOrganizationCreate dto,
+                    ClaimsPrincipal user,
                     ISensorRepository sensorRepository,
                     IOrganizationRepository organizationRepository,
+                    IPermissionService permissionService,
                     CancellationToken ct
                 ) =>
                 {
-                    var organization = await organizationRepository.GetByIdAsync(
-                        organizationId,
-                        ct
-                    );
+                    var organization = await organizationRepository.GetByIdAsync(organizationId, ct);
                     if (organization is null)
                     {
                         return TypedResults.NotFound("Organization not found");
                     }
 
-                    var created = await sensorRepository.CreateForOrganizationAsync(
-                        organizationId,
-                        dto,
-                        ct
-                    );
-                    return TypedResults.Created(
-                        $"/api/organizations/{organizationId}/sensors/{created.Id}",
-                        created
-                    );
+                    var token = new RequestClaimToken(user);
+                    if (!token.IsAuthenticated || !await permissionService.HasPermissionAsync(token.UserId.Value, organizationId, "sensor:create", ct))
+                    {
+                        return TypedResults.Forbid();
+                    }
+
+                    var created = await sensorRepository.CreateForOrganizationAsync(organizationId, dto, ct);
+                    return TypedResults.Created($"/api/organizations/{organizationId}/sensors/{created.Id}", created);
                 }
             )
             .WithName("CreateOrganizationSensor");
@@ -114,14 +124,22 @@ public static class SensorEndpoints
         orgGroup
             .MapPut(
                 "/{id:guid}",
-                async Task<Results<Ok<SensorDtoForDetail>, NotFound>> (
+                async Task<Results<Ok<SensorDtoForDetail>, NotFound, ForbidHttpResult>> (
                     Guid organizationId,
                     Guid id,
                     SensorDtoForOrganizationCreate dto,
+                    ClaimsPrincipal user,
                     ISensorRepository repository,
+                    IPermissionService permissionService,
                     CancellationToken ct
                 ) =>
                 {
+                    var token = new RequestClaimToken(user);
+                    if (!token.IsAuthenticated || !await permissionService.HasPermissionAsync(token.UserId.Value, organizationId, "sensor:update", ct))
+                    {
+                        return TypedResults.Forbid();
+                    }
+
                     var existing = await repository.GetByIdAsync(id, ct);
                     if (existing is null || existing.OrganizationId != organizationId)
                     {
@@ -142,13 +160,21 @@ public static class SensorEndpoints
         orgGroup
             .MapDelete(
                 "/{id:guid}",
-                async Task<Results<NoContent, NotFound>> (
+                async Task<Results<NoContent, NotFound, ForbidHttpResult>> (
                     Guid organizationId,
                     Guid id,
+                    ClaimsPrincipal user,
                     ISensorRepository repository,
+                    IPermissionService permissionService,
                     CancellationToken ct
                 ) =>
                 {
+                    var token = new RequestClaimToken(user);
+                    if (!token.IsAuthenticated || !await permissionService.HasPermissionAsync(token.UserId.Value, organizationId, "sensor:delete", ct))
+                    {
+                        return TypedResults.Forbid();
+                    }
+
                     var existing = await repository.GetByIdAsync(id, ct);
                     if (existing is null || existing.OrganizationId != organizationId)
                     {

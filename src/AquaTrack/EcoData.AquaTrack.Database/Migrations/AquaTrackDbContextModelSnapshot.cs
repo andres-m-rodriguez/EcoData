@@ -293,11 +293,9 @@ namespace EcoData.AquaTrack.Database.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("organization_id");
 
-                    b.Property<string>("Role")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)")
-                        .HasColumnName("role");
+                    b.Property<Guid>("RoleId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("role_id");
 
                     b.Property<Guid>("UserId")
                         .HasColumnType("uuid")
@@ -309,6 +307,9 @@ namespace EcoData.AquaTrack.Database.Migrations
                     b.HasIndex("OrganizationId")
                         .HasDatabaseName("ix_organization_members_organization_id");
 
+                    b.HasIndex("RoleId")
+                        .HasDatabaseName("ix_organization_members_role_id");
+
                     b.HasIndex("UserId")
                         .HasDatabaseName("ix_organization_members_user_id");
 
@@ -317,6 +318,54 @@ namespace EcoData.AquaTrack.Database.Migrations
                         .HasDatabaseName("ix_organization_members_user_id_organization_id");
 
                     b.ToTable("organization_members", (string)null);
+                });
+
+            modelBuilder.Entity("EcoData.AquaTrack.Database.Models.OrganizationRole", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("name");
+
+                    b.Property<Guid?>("OrganizationId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("organization_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_organization_roles");
+
+                    b.HasIndex("OrganizationId", "Name")
+                        .IsUnique()
+                        .HasDatabaseName("ix_organization_roles_organization_id_name");
+
+                    b.ToTable("organization_roles", (string)null);
+                });
+
+            modelBuilder.Entity("EcoData.AquaTrack.Database.Models.OrganizationRolePermission", b =>
+                {
+                    b.Property<Guid>("RoleId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("role_id");
+
+                    b.Property<string>("Permission")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("permission");
+
+                    b.HasKey("RoleId", "Permission")
+                        .HasName("pk_organization_role_permissions");
+
+                    b.ToTable("organization_role_permissions", (string)null);
                 });
 
             modelBuilder.Entity("EcoData.AquaTrack.Database.Models.Parameter", b =>
@@ -734,7 +783,39 @@ namespace EcoData.AquaTrack.Database.Migrations
                         .IsRequired()
                         .HasConstraintName("fk_organization_members_organizations_organization_id");
 
+                    b.HasOne("EcoData.AquaTrack.Database.Models.OrganizationRole", "Role")
+                        .WithMany("Members")
+                        .HasForeignKey("RoleId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_organization_members_organization_roles_role_id");
+
                     b.Navigation("Organization");
+
+                    b.Navigation("Role");
+                });
+
+            modelBuilder.Entity("EcoData.AquaTrack.Database.Models.OrganizationRole", b =>
+                {
+                    b.HasOne("EcoData.AquaTrack.Database.Models.Organization", "Organization")
+                        .WithMany()
+                        .HasForeignKey("OrganizationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .HasConstraintName("fk_organization_roles_organizations_organization_id");
+
+                    b.Navigation("Organization");
+                });
+
+            modelBuilder.Entity("EcoData.AquaTrack.Database.Models.OrganizationRolePermission", b =>
+                {
+                    b.HasOne("EcoData.AquaTrack.Database.Models.OrganizationRole", "Role")
+                        .WithMany("Permissions")
+                        .HasForeignKey("RoleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_organization_role_permissions_organization_roles_role_id");
+
+                    b.Navigation("Role");
                 });
 
             modelBuilder.Entity("EcoData.AquaTrack.Database.Models.Parameter", b =>
@@ -839,6 +920,13 @@ namespace EcoData.AquaTrack.Database.Migrations
                     b.Navigation("Members");
 
                     b.Navigation("Sensors");
+                });
+
+            modelBuilder.Entity("EcoData.AquaTrack.Database.Models.OrganizationRole", b =>
+                {
+                    b.Navigation("Members");
+
+                    b.Navigation("Permissions");
                 });
 
             modelBuilder.Entity("EcoData.AquaTrack.Database.Models.Sensor", b =>
