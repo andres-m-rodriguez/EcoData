@@ -1,0 +1,28 @@
+@using MudBlazor
+
+<MudPaper Outlined Class="pa-4">
+    @if (!string.IsNullOrEmpty(Icon))
+    {
+        <MudIcon Icon="@Icon" Size="Size.Small" Color="Color.Secondary" Class="mb-1" />
+    }
+    <MudText Typo="Typo.overline" Color="Color.Secondary">@Label</MudText>
+    <MudText Typo="Typo.h4" Style="font-weight: 600;">@Value</MudText>
+    @if (!string.IsNullOrEmpty(Subtitle))
+    {
+        <MudText Typo="Typo.caption" Color="Color.Secondary">@Subtitle</MudText>
+    }
+</MudPaper>
+
+@code {
+    [Parameter]
+    public string Label { get; set; } = string.Empty;
+
+    [Parameter]
+    public string Value { get; set; } = string.Empty;
+
+    [Parameter]
+    public string? Subtitle { get; set; }
+
+    [Parameter]
+    public string? Icon { get; set; }
+}

@@ -130,6 +130,58 @@ public sealed class SensorRepository(IDbContextFactory<AquaTrackDbContext> conte
         }
     }
 
+    public async Task<int> GetSensorCountAsync(
+        SensorParameters parameters,
+        CancellationToken cancellationToken = default
+    )
+    {
+        await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
+
+        var query = context.Sensors.AsQueryable();
+
+        if (parameters.IsActive.HasValue)
+        {
+            query = query.Where(s => s.IsActive == parameters.IsActive.Value);
+        }
+
+        if (parameters.DataSourceId.HasValue)
+        {
+            query = query.Where(s => s.SourceId == parameters.DataSourceId.Value);
+        }
+
+        if (parameters.OrganizationId.HasValue)
+        {
+            query = query.Where(s => s.OrganizationId == parameters.OrganizationId.Value);
+        }
+
+        if (!string.IsNullOrWhiteSpace(parameters.Search))
+        {
+            var search = parameters.Search.Trim().ToLower();
+            query = query.Where(s => s.Name.ToLower().Contains(search));
+        }
+
+        if (parameters.Cursor.HasValue)
+        {
+            query = query.Where(s => s.Id > parameters.Cursor.Value);
+        }
+
+        return await query
+            .OrderBy(s => s.Id)
+            .Select(static s => new SensorDtoForList(
+                s.Id,
+                s.OrganizationId,
+                s.SourceId,
+                s.ExternalId,
+                s.Name,
+                s.Latitude,
+                s.Longitude,
+                s.MunicipalityId,
+                s.IsActive,
+                s.DataSource != null ? s.DataSource.Name : null
+            ))
+            .CountAsync(cancellationToken);
+    }
+
     public async Task<Dictionary<string, SensorDtoForCreated>> GetSensorsByExternalIdsAsync(
         Guid dataSourceId,
         ICollection<string> externalIds,
@@ -296,7 +348,10 @@ public sealed class SensorRepository(IDbContextFactory<AquaTrackDbContext> conte
     )
     {
         await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
-        return await context.Sensors.CountAsync(s => s.OrganizationId == organizationId, cancellationToken);
+        return await context.Sensors.CountAsync(
+            s => s.OrganizationId == organizationId,
+            cancellationToken
+        );
     }
 
     public async IAsyncEnumerable<SensorDtoForList> GetByOrganizationAsync(

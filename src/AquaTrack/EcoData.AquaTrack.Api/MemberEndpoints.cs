@@ -1,5 +1,4 @@
 using System.Security.Claims;
-using static EcoData.AquaTrack.Contracts.Permissions;
 using EcoData.AquaTrack.Contracts.Dtos;
 using EcoData.AquaTrack.DataAccess.Interfaces;
 using EcoData.Identity.Contracts.Claims;
@@ -8,6 +7,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Routing;
+using static EcoData.AquaTrack.Contracts.Permissions;
 
 namespace EcoData.AquaTrack.Api;
 
@@ -31,7 +31,8 @@ public static class MemberEndpoints
                     CancellationToken ct
                 ) => repository.GetAllAsync(organizationId, ct)
             )
-            .WithName("GetOrganizationMembers");
+            .WithName("GetOrganizationMembers")
+            .AllowAnonymous();
 
         group
             .MapGet(

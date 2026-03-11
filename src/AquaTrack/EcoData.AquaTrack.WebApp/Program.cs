@@ -60,6 +60,7 @@ app.MapSensorHealthEndpoints();
 app.MapDataSourceEndpoints();
 app.MapOrganizationEndpoints();
 app.MapMemberEndpoints();
+app.MapPermissionEndpoints();
 app.MapApiKeyEndpoints();
 app.MapPushEndpoints();
 app.MapReferenceDataEndpoints();

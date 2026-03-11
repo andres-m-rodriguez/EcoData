@@ -27,7 +27,7 @@ public sealed class OrganizationHttpClient(HttpClient httpClient) : IOrganizatio
         )!;
     }
 
-    public async Task<OneOf<OrganizationDtoForDetail, NotFoundError>> GetByIdAsync(
+    public async Task<OneOf<OrganizationDtoForDetail, NotFoundError, UnauthorizedError>> GetByIdAsync(
         Guid id,
         CancellationToken cancellationToken = default
     )
@@ -36,6 +36,9 @@ public sealed class OrganizationHttpClient(HttpClient httpClient) : IOrganizatio
 
         if (response.StatusCode == HttpStatusCode.NotFound)
             return new NotFoundError();
+
+        if (response.StatusCode == HttpStatusCode.Unauthorized)
+            return new UnauthorizedError();
 
         var result = await response.Content.ReadFromJsonAsync<OrganizationDtoForDetail>(cancellationToken);
         return result!;
