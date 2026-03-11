@@ -7,7 +7,6 @@
 @using EcoData.AquaTrack.Application.Client
 @using EcoData.AquaTrack.WebApp.Client.Services
 @using EcoData.AquaTrack.WebApp.Client.Features.Organizations.Components
-@using EcoData.AquaTrack.WebApp.Client.Features.Organizations.Authorization
 @using BlazingSingularity.Commands
 @using BlazingSingularity.Signals
 @inject IOrganizationHttpClient OrganizationClient
@@ -15,20 +14,15 @@
 @inject INavigationService Navigation
 @inject IDialogService DialogService
 @inject ISnackbar Snackbar
-@inject AuthStateService AuthState
-@inject PermissionContextService PermissionContext
 
 <PageTitle>Members - @(_organization?.Name ?? "Organization") - AquaTrack</PageTitle>
 
 <SearchHeader @bind-Value="SearchText" Placeholder="Search members..." EnableSticky="true">
     <Actions>
-        <RequireOrganizationPermission Permission="@Permissions.Organization.ManageMembers"
-                                       OrganizationId="OrganizationId">
-            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.PersonAdd"
-                       OnClick="OpenAddMemberDialog">
-                Add Member
-            </MudButton>
-        </RequireOrganizationPermission>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.PersonAdd"
+                   OnClick="OpenAddMemberDialog">
+            Add Member
+        </MudButton>
     </Actions>
 </SearchHeader>
 
@@ -87,13 +81,10 @@ else if (FilteredMembers.Count == 0)
                 <MudText Typo="Typo.body2" Color="Color.Secondary">
                     Add members to this organization to get started.
                 </MudText>
-                <RequireOrganizationPermission Permission="@Permissions.Organization.ManageMembers"
-                                               OrganizationId="OrganizationId">
-                    <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.PersonAdd"
-                               OnClick="OpenAddMemberDialog" Class="mt-3">
-                        Add Member
-                    </MudButton>
-                </RequireOrganizationPermission>
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.PersonAdd"
+                           OnClick="OpenAddMemberDialog" Class="mt-3">
+                    Add Member
+                </MudButton>
             </MudStack>
         </MudPaper>
     }
@@ -103,7 +94,7 @@ else
     <MudPaper Elevation="0" Class="rounded-lg">
         @foreach (var member in FilteredMembers)
         {
-            <MemberListItem Member="member" ShowActions="_canManageMembers" OnChangeRole="OpenChangeRoleDialog"
+            <MemberListItem Member="member" ShowActions="true" OnChangeRole="OpenChangeRoleDialog"
                             OnRemove="ConfirmRemoveMember" />
         }
     </MudPaper>
@@ -115,7 +106,6 @@ else
 
     private OrganizationDtoForDetail? _organization;
     private List<OrganizationMemberDto> _members = [];
-    private bool _canManageMembers;
 
     [Signal]
     private string? _searchText;
@@ -154,11 +144,6 @@ else
             {
                 _members.Add(member);
             }
-
-            _canManageMembers = await PermissionContext.HasPermissionAsync(
-                OrganizationId,
-                Permissions.Organization.ManageMembers
-            );
         }
     }
 
