@@ -1,4 +1,5 @@
 using System.Text.Json;
+using P = EcoData.AquaTrack.Contracts.Permissions;
 using EcoData.AquaTrack.Database;
 using EcoData.AquaTrack.Database.Models;
 using EcoData.Identity.Database;
@@ -130,21 +131,21 @@ public sealed class DatabaseSeederWorker(
         var permissions = new List<OrganizationRolePermission>
         {
             // Viewer permissions
-            new() { RoleId = viewerRole.Id, Permission = "sensor:read" },
+            new() { RoleId = viewerRole.Id, Permission = P.Sensor.Read },
 
             // Contributor permissions
-            new() { RoleId = contributorRole.Id, Permission = "sensor:read" },
-            new() { RoleId = contributorRole.Id, Permission = "sensor:create" },
-            new() { RoleId = contributorRole.Id, Permission = "sensor:update" },
+            new() { RoleId = contributorRole.Id, Permission = P.Sensor.Read },
+            new() { RoleId = contributorRole.Id, Permission = P.Sensor.Create },
+            new() { RoleId = contributorRole.Id, Permission = P.Sensor.Update },
 
             // Admin permissions
-            new() { RoleId = adminRole.Id, Permission = "sensor:read" },
-            new() { RoleId = adminRole.Id, Permission = "sensor:create" },
-            new() { RoleId = adminRole.Id, Permission = "sensor:update" },
-            new() { RoleId = adminRole.Id, Permission = "sensor:delete" },
-            new() { RoleId = adminRole.Id, Permission = "org:update" },
-            new() { RoleId = adminRole.Id, Permission = "org:delete" },
-            new() { RoleId = adminRole.Id, Permission = "org:members:manage" },
+            new() { RoleId = adminRole.Id, Permission = P.Sensor.Read },
+            new() { RoleId = adminRole.Id, Permission = P.Sensor.Create },
+            new() { RoleId = adminRole.Id, Permission = P.Sensor.Update },
+            new() { RoleId = adminRole.Id, Permission = P.Sensor.Delete },
+            new() { RoleId = adminRole.Id, Permission = P.Organization.Update },
+            new() { RoleId = adminRole.Id, Permission = P.Organization.Delete },
+            new() { RoleId = adminRole.Id, Permission = P.Organization.ManageMembers },
         };
 
         context.OrganizationRolePermissions.AddRange(permissions);
