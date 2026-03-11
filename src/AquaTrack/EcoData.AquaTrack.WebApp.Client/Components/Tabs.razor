@@ -1,0 +1,65 @@
+<CascadingValue Value="this">
+    <div class="tabs-container">
+        <div class="tabs-header">
+            @foreach (var tab in _tabs)
+            {
+                var isActive = tab == ActiveTab;
+                <button class="tab-item @(isActive ? "active" : "")" @onclick="() => SelectTab(tab)">
+                    @if (!string.IsNullOrEmpty(tab.Icon))
+                    {
+                        <MudIcon Icon="@tab.Icon" Size="Size.Small" />
+                    }
+                    <span>@tab.Title</span>
+                    @if (tab.Badge is not null)
+                    {
+                        <span class="tab-badge">@tab.Badge</span>
+                    }
+                </button>
+            }
+        </div>
+        <div class="tabs-content">
+            @ChildContent
+        </div>
+    </div>
+</CascadingValue>
+
+@code {
+    private List<Tab> _tabs = [];
+
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+
+    [Parameter]
+    public int ActiveIndex { get; set; } = 0;
+
+    [Parameter]
+    public EventCallback<int> ActiveIndexChanged { get; set; }
+
+    public Tab? ActiveTab => _tabs.Count > ActiveIndex ? _tabs[ActiveIndex] : _tabs.FirstOrDefault();
+
+    public void AddTab(Tab tab)
+    {
+        if (!_tabs.Contains(tab))
+        {
+            _tabs.Add(tab);
+            StateHasChanged();
+        }
+    }
+
+    public void RemoveTab(Tab tab)
+    {
+        _tabs.Remove(tab);
+        StateHasChanged();
+    }
+
+    private async Task SelectTab(Tab tab)
+    {
+        var index = _tabs.IndexOf(tab);
+        if (index >= 0)
+        {
+            ActiveIndex = index;
+            await ActiveIndexChanged.InvokeAsync(index);
+            StateHasChanged();
+        }
+    }
+}

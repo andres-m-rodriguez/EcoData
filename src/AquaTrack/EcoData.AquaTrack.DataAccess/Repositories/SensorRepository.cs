@@ -289,4 +289,13 @@ public sealed class SensorRepository(IDbContextFactory<AquaTrackDbContext> conte
 
         return true;
     }
+
+    public async Task<int> GetCountByOrganizationAsync(
+        Guid organizationId,
+        CancellationToken cancellationToken = default
+    )
+    {
+        await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
+        return await context.Sensors.CountAsync(s => s.OrganizationId == organizationId, cancellationToken);
+    }
 }

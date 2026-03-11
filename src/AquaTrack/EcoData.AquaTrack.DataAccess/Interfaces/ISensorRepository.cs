@@ -45,4 +45,9 @@ public interface ISensorRepository
         Guid id,
         CancellationToken cancellationToken = default
     );
+
+    Task<int> GetCountByOrganizationAsync(
+        Guid organizationId,
+        CancellationToken cancellationToken = default
+    );
 }

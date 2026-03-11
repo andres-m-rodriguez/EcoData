@@ -34,4 +34,9 @@ public interface ISensorHttpClient
         Guid sensorId,
         CancellationToken cancellationToken = default
     );
+
+    Task<int> GetCountByOrganizationAsync(
+        Guid organizationId,
+        CancellationToken cancellationToken = default
+    );
 }
