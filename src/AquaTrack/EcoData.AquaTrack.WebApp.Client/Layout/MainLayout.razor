@@ -7,8 +7,7 @@
 @using EcoData.AquaTrack.WebApp.Client.Themes
 @inject AuthStateService AuthState
 @inject ClientAuthStateProvider AuthStateProvider
-@inject BackButtonService BackButton
-@inject NavigationManager Navigation
+@inject INavigationService Navigation
 @implements IDisposable
 
 <MudThemeProvider Theme="AppThemes.Azure" IsDarkMode="_isDarkMode" />
@@ -20,7 +19,7 @@
     <MudAppBar Elevation="0"
                Style="background-color: var(--mud-palette-drawer-background); color: var(--mud-palette-text-primary);" Fixed="true">
         <MudIconButton Icon="@Icons.Material.Filled.ArrowBack" Color="Color.Inherit" Edge="Edge.Start" Size="Size.Small"
-                       Disabled="@(!BackButton.IsVisible)" OnClick="NavigateBack" />
+                       Disabled="@(!Navigation.CanGoBack)" OnClick="NavigateBack" />
         <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit"
                        OnClick="ToggleDrawer" />
         <MudText Typo="Typo.h6">AquaTrack</MudText>
@@ -105,19 +104,14 @@
 
     private void NavigateBack()
     {
-        if (BackButton.Path is not null)
-        {
-            var path = BackButton.Path;
-            BackButton.ResetPath();
-            Navigation.NavigateTo(path);
-        }
+        Navigation.GoBack();
     }
 
     protected override async Task OnInitializedAsync()
     {
         AuthState.SetAuthStateProvider(AuthStateProvider);
         AuthState.OnAuthStateChanged += HandleAuthStateChanged;
-        BackButton.OnStateChanged += HandleBackButtonStateChanged;
+        Navigation.OnStateChanged += HandleNavigationStateChanged;
         await AuthState.InitializeAsync();
     }
 
@@ -126,7 +120,7 @@
         InvokeAsync(StateHasChanged);
     }
 
-    private void HandleBackButtonStateChanged()
+    private void HandleNavigationStateChanged()
     {
         InvokeAsync(StateHasChanged);
     }
@@ -151,6 +145,6 @@
     public void Dispose()
     {
         AuthState.OnAuthStateChanged -= HandleAuthStateChanged;
-        BackButton.OnStateChanged -= HandleBackButtonStateChanged;
+        Navigation.OnStateChanged -= HandleNavigationStateChanged;
     }
 }

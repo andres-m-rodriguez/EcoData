@@ -1,5 +1,4 @@
 using System.Security.Claims;
-using static EcoData.AquaTrack.Contracts.Permissions;
 using EcoData.AquaTrack.Contracts.Dtos;
 using EcoData.AquaTrack.Contracts.Parameters;
 using EcoData.AquaTrack.DataAccess.Interfaces;
@@ -8,6 +7,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Routing;
+using static EcoData.AquaTrack.Contracts.Permissions;
 
 namespace EcoData.AquaTrack.Api;
 
@@ -28,14 +28,25 @@ public static class SensorEndpoints
             )
             .WithName("GetSensors");
 
+        group
+            .MapGet(
+                "/count",
+                (
+                    [AsParameters] SensorParameters parameters,
+                    ISensorRepository repository,
+                    CancellationToken ct
+                ) => repository.GetSensorCountAsync(parameters, ct)
+            )
+            .WithName("GetSensorCount");
+
         var orgGroup = app.MapGroup("/api/organizations/{organizationId:guid}/sensors")
             .WithTags("Organization Sensors")
             .RequireAuthorization();
 
         orgGroup
             .MapGet(
-                "/",
-                async Task<Results<Ok<List<SensorDtoForList>>, NotFound<string>, ForbidHttpResult>> (
+                "/count",
+                async Task<Results<Ok<int>, NotFound<string>, ForbidHttpResult>> (
                     Guid organizationId,
                     ClaimsPrincipal user,
                     ISensorRepository repository,
@@ -44,19 +55,75 @@ public static class SensorEndpoints
                     CancellationToken ct
                 ) =>
                 {
-                    var organization = await organizationRepository.GetByIdAsync(organizationId, ct);
+                    var organization = await organizationRepository.GetByIdAsync(
+                        organizationId,
+                        ct
+                    );
                     if (organization is null)
                     {
                         return TypedResults.NotFound("Organization not found");
                     }
 
                     var token = new RequestClaimToken(user);
-                    if (!token.IsAuthenticated || !await permissionService.HasPermissionAsync(token.UserId.Value, organizationId, Sensor.Read, ct))
+                    if (
+                        !token.IsAuthenticated
+                        || !await permissionService.HasPermissionAsync(
+                            token.UserId.Value,
+                            organizationId,
+                            Sensor.Read,
+                            ct
+                        )
+                    )
                     {
                         return TypedResults.Forbid();
                     }
 
-                    var sensors = await repository.GetByOrganizationAsync(organizationId, ct).ToListAsync(ct);
+                    var count = await repository.GetCountByOrganizationAsync(organizationId, ct);
+                    return TypedResults.Ok(count);
+                }
+            )
+            .WithName("GetOrganizationSensorCount");
+
+        orgGroup
+            .MapGet(
+                "/",
+                async Task<
+                    Results<Ok<List<SensorDtoForList>>, NotFound<string>, ForbidHttpResult>
+                > (
+                    Guid organizationId,
+                    ClaimsPrincipal user,
+                    ISensorRepository repository,
+                    IOrganizationRepository organizationRepository,
+                    IPermissionService permissionService,
+                    CancellationToken ct
+                ) =>
+                {
+                    var organization = await organizationRepository.GetByIdAsync(
+                        organizationId,
+                        ct
+                    );
+                    if (organization is null)
+                    {
+                        return TypedResults.NotFound("Organization not found");
+                    }
+
+                    var token = new RequestClaimToken(user);
+                    if (
+                        !token.IsAuthenticated
+                        || !await permissionService.HasPermissionAsync(
+                            token.UserId.Value,
+                            organizationId,
+                            Sensor.Read,
+                            ct
+                        )
+                    )
+                    {
+                        return TypedResults.Forbid();
+                    }
+
+                    var sensors = await repository
+                        .GetByOrganizationAsync(organizationId, ct)
+                        .ToListAsync(ct);
                     return TypedResults.Ok(sensors);
                 }
             )
@@ -75,7 +142,15 @@ public static class SensorEndpoints
                 ) =>
                 {
                     var token = new RequestClaimToken(user);
-                    if (!token.IsAuthenticated || !await permissionService.HasPermissionAsync(token.UserId.Value, organizationId, Sensor.Read, ct))
+                    if (
+                        !token.IsAuthenticated
+                        || !await permissionService.HasPermissionAsync(
+                            token.UserId.Value,
+                            organizationId,
+                            Sensor.Read,
+                            ct
+                        )
+                    )
                     {
                         return TypedResults.Forbid();
                     }
@@ -94,7 +169,9 @@ public static class SensorEndpoints
         orgGroup
             .MapPost(
                 "/",
-                async Task<Results<Created<SensorDtoForCreated>, NotFound<string>, ForbidHttpResult>> (
+                async Task<
+                    Results<Created<SensorDtoForCreated>, NotFound<string>, ForbidHttpResult>
+                > (
                     Guid organizationId,
                     SensorDtoForOrganizationCreate dto,
                     ClaimsPrincipal user,
@@ -104,20 +181,38 @@ public static class SensorEndpoints
                     CancellationToken ct
                 ) =>
                 {
-                    var organization = await organizationRepository.GetByIdAsync(organizationId, ct);
+                    var organization = await organizationRepository.GetByIdAsync(
+                        organizationId,
+                        ct
+                    );
                     if (organization is null)
                     {
                         return TypedResults.NotFound("Organization not found");
                     }
 
                     var token = new RequestClaimToken(user);
-                    if (!token.IsAuthenticated || !await permissionService.HasPermissionAsync(token.UserId.Value, organizationId, Sensor.Create, ct))
+                    if (
+                        !token.IsAuthenticated
+                        || !await permissionService.HasPermissionAsync(
+                            token.UserId.Value,
+                            organizationId,
+                            Sensor.Create,
+                            ct
+                        )
+                    )
                     {
                         return TypedResults.Forbid();
                     }
 
-                    var created = await sensorRepository.CreateForOrganizationAsync(organizationId, dto, ct);
-                    return TypedResults.Created($"/api/organizations/{organizationId}/sensors/{created.Id}", created);
+                    var created = await sensorRepository.CreateForOrganizationAsync(
+                        organizationId,
+                        dto,
+                        ct
+                    );
+                    return TypedResults.Created(
+                        $"/api/organizations/{organizationId}/sensors/{created.Id}",
+                        created
+                    );
                 }
             )
             .WithName("CreateOrganizationSensor");
@@ -136,7 +231,15 @@ public static class SensorEndpoints
                 ) =>
                 {
                     var token = new RequestClaimToken(user);
-                    if (!token.IsAuthenticated || !await permissionService.HasPermissionAsync(token.UserId.Value, organizationId, Sensor.Update, ct))
+                    if (
+                        !token.IsAuthenticated
+                        || !await permissionService.HasPermissionAsync(
+                            token.UserId.Value,
+                            organizationId,
+                            Sensor.Update,
+                            ct
+                        )
+                    )
                     {
                         return TypedResults.Forbid();
                     }
@@ -171,7 +274,15 @@ public static class SensorEndpoints
                 ) =>
                 {
                     var token = new RequestClaimToken(user);
-                    if (!token.IsAuthenticated || !await permissionService.HasPermissionAsync(token.UserId.Value, organizationId, Sensor.Delete, ct))
+                    if (
+                        !token.IsAuthenticated
+                        || !await permissionService.HasPermissionAsync(
+                            token.UserId.Value,
+                            organizationId,
+                            Sensor.Delete,
+                            ct
+                        )
+                    )
                     {
                         return TypedResults.Forbid();
                     }

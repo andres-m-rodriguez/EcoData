@@ -1,17 +1,19 @@
 @page "/organizations/{OrganizationId:guid}/sensors/create"
+@using EcoData.AquaTrack.Contracts
 @using EcoData.AquaTrack.Contracts.Dtos
 @using EcoData.AquaTrack.Application.Client
 @using EcoData.AquaTrack.WebApp.Client.Services
+@using EcoData.AquaTrack.WebApp.Client.Features.Organizations.Authorization
 @using EcoData.Locations.Contracts.Dtos
 @using EcoData.Locations.Contracts.Parameters
 @using BlazingSingularity.Commands
 @inject ISensorHttpClient SensorClient
 @inject IOrganizationHttpClient OrganizationClient
 @inject ILocationHttpClient LocationClient
-@inject NavigationManager Navigation
+@inject INavigationService Navigation
 @inject ISnackbar Snackbar
 @inject AuthStateService AuthState
-@inject BackButtonService BackButton
+@inject PermissionContextService PermissionContext
 
 <PageTitle>Add Sensor - AquaTrack</PageTitle>
 
@@ -34,7 +36,7 @@
             </MudStack>
         </MudPaper>
     }
-    else if (!IsAdmin)
+    else if (!_canCreateSensor)
     {
         <MudPaper Elevation="1" Class="pa-6">
             <MudStack AlignItems="AlignItems.Center">
@@ -63,25 +65,25 @@
             }
 
             <MudStack Spacing="3">
-                <MudTextField @bind-Value="_externalId"                     Label="External ID"                              Required="true"
-                              RequiredError="External ID is required" MaxLength="100"                  HelperText="Unique identifier for this sensor"
+                <MudTextField @bind-Value="_externalId" Label="External ID" Required="true"
+                              RequiredError="External ID is required" MaxLength="100" HelperText="Unique identifier for this sensor"
                               Disabled="CreateCommand.IsLoading" />
 
-                <MudTextField @bind-Value="_name"                       Label="Name"          Required="true"                   RequiredError="Name is required"
-                              MaxLength="300"                    HelperText="Display name for the sensor"                              Disabled="CreateCommand.IsLoading" />
+                <MudTextField @bind-Value="_name" Label="Name" Required="true" RequiredError="Name is required"
+                              MaxLength="300" HelperText="Display name for the sensor" Disabled="CreateCommand.IsLoading" />
 
                 <MudStack Row="true" Spacing="2">
-                    <MudNumericField @bind-Value="_latitude"                                Label="Latitude"                          Required="true"                    Min="-90"              Max="90"
-                                     Step="0.000001M"                         Format="F6"                   HelperText="-90 to 90"             Disabled="CreateCommand.IsLoading"
+                    <MudNumericField @bind-Value="_latitude" Label="Latitude" Required="true" Min="-90" Max="90"
+                                     Step="0.000001M" Format="F6" HelperText="-90 to 90" Disabled="CreateCommand.IsLoading"
                                      Style="flex: 1;" />
 
-                    <MudNumericField @bind-Value="_longitude"                             Label="Longitude"                       Required="true"                 Min="-180"           Max="180"
-                                     Step="0.000001M"                      Format="F6"                HelperText="-180 to 180"          Disabled="CreateCommand.IsLoading"
+                    <MudNumericField @bind-Value="_longitude" Label="Longitude" Required="true" Min="-180" Max="180"
+                                     Step="0.000001M" Format="F6" HelperText="-180 to 180" Disabled="CreateCommand.IsLoading"
                                      Style="flex: 1;" />
                 </MudStack>
 
-                <MudSelect T="StateDtoForList"                   Label="State"    Value="_selectedState"                           ValueChanged="OnStateChanged"
-                           ToStringFunc="@(s => s?.Name ?? string.Empty)"                           Disabled="CreateCommand.IsLoading || _states is null"
+                <MudSelect T="StateDtoForList" Label="State" Value="_selectedState" ValueChanged="OnStateChanged"
+                           ToStringFunc="@(s => s?.Name ?? string.Empty)" Disabled="CreateCommand.IsLoading || _states is null"
                            HelperText="Select the state/territory">
                     @if (_states is not null)
                     {
@@ -92,17 +94,14 @@
                     }
                 </MudSelect>
 
-                <MudAutocomplete T="MunicipalityDtoForList"
-                                 Label="Municipality"
-                                 Value="_selectedMunicipality"
-                                 ValueChanged="OnMunicipalityChanged"
-                                 SearchFunc="SearchMunicipalities"
+                <MudAutocomplete T="MunicipalityDtoForList" Label="Municipality" Value="_selectedMunicipality"
+                                 ValueChanged="OnMunicipalityChanged" SearchFunc="SearchMunicipalities"
                                  ToStringFunc="@(m => m?.Name ?? string.Empty)"
                                  Disabled="CreateCommand.IsLoading || _selectedState is null"
                                  HelperText="@(_selectedState is null ? "Select a state first" : "Search for a municipality")"
                                  ResetValueOnEmptyText="true" />
 
-                <MudSwitch @bind-Value="_isActive"                           Label="Active"                           Color="Color.Primary"
+                <MudSwitch @bind-Value="_isActive" Label="Active" Color="Color.Primary"
                            Disabled="CreateCommand.IsLoading" />
 
                 <MudStack Row="true" Justify="Justify.FlexEnd" Spacing="2" Class="mt-4">
@@ -110,7 +109,7 @@
                                Disabled="CreateCommand.IsLoading">
                         Cancel
                     </MudButton>
-                    <MudButton Variant="Variant.Filled"                               Color="Color.Primary"                               OnClick="() => CreateCommand.ExecuteAsync()"
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="() => CreateCommand.ExecuteAsync()"
                                Disabled="CreateCommand.IsLoading || !IsFormValid">
                         @if (CreateCommand.IsLoading)
                         {
@@ -138,13 +137,14 @@
     private decimal _longitude;
     private bool _isActive = true;
     private string? _errorMessage;
+    private bool _canCreateSensor;
 
-    private bool IsAdmin => AuthState.CurrentUser?.Role == "Admin";
-    private bool IsFormValid => !string.IsNullOrWhiteSpace(_externalId) && !string.IsNullOrWhiteSpace(_name) && _selectedMunicipality is not null;
+    private bool IsFormValid => !string.IsNullOrWhiteSpace(_externalId) && !string.IsNullOrWhiteSpace(_name) &&
+_selectedMunicipality is not null;
 
     protected override async Task OnInitializedAsync()
     {
-        BackButton.SetPath($"/organizations/{OrganizationId}/sensors");
+        Navigation.SetFallback($"/organizations/{OrganizationId}/sensors");
         await LoadCommand.ExecuteAsync();
     }
 
@@ -153,14 +153,18 @@
     {
         var orgTask = OrganizationClient.GetByIdAsync(OrganizationId);
         var statesTask = LoadStatesAsync();
+        var permissionTask = PermissionContext.HasPermissionAsync(OrganizationId, Permissions.Sensor.Create);
 
-        await Task.WhenAll(orgTask, statesTask);
+        await Task.WhenAll(orgTask, statesTask, permissionTask);
 
         var result = await orgTask;
         result.Switch(
             organization => _organization = organization,
+            _ => _organization = null,
             _ => _organization = null
         );
+
+        _canCreateSensor = await permissionTask;
     }
 
     private async Task LoadStatesAsync()
@@ -243,5 +247,5 @@
         }
     }
 
-    private void NavigateToSensors() => Navigation.NavigateTo($"/organizations/{OrganizationId}/sensors");
+    private void NavigateToSensors() => Navigation.GoBack();
 }

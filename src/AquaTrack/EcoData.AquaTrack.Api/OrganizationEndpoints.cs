@@ -47,40 +47,6 @@ public static class OrganizationEndpoints
             .WithName("GetOrganizationById");
 
         group
-            .MapGet(
-                "/{id:guid}/my-permissions",
-                async (
-                    Guid id,
-                    ClaimsPrincipal user,
-                    IOrganizationMembershipRepository membershipRepository,
-                    CancellationToken ct
-                ) =>
-                {
-                    var token = new RequestClaimToken(user);
-                    if (!token.IsAuthenticated)
-                    {
-                        return Results.Ok(new OrganizationPermissionsDto(null, []));
-                    }
-
-                    var membership = await membershipRepository.GetAsync(
-                        token.UserId.Value,
-                        id,
-                        ct
-                    );
-                    if (membership is null)
-                    {
-                        return Results.Ok(new OrganizationPermissionsDto(null, []));
-                    }
-
-                    return Results.Ok(
-                        new OrganizationPermissionsDto(membership.RoleName, membership.Permissions)
-                    );
-                }
-            )
-            .WithName("GetMyOrganizationPermissions")
-            .RequireAuthorization();
-
-        group
             .MapPost(
                 "/",
                 async Task<Results<Created<OrganizationDtoForCreated>, Conflict<string>>> (

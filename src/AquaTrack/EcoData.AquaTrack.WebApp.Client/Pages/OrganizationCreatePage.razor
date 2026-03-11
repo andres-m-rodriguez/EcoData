@@ -4,10 +4,9 @@
 @using EcoData.AquaTrack.WebApp.Client.Services
 @using BlazingSingularity.Commands
 @inject IOrganizationHttpClient OrganizationClient
-@inject NavigationManager Navigation
+@inject INavigationService Navigation
 @inject ISnackbar Snackbar
 @inject AuthStateService AuthState
-@inject BackButtonService BackButton
 
 <PageTitle>Create Organization - AquaTrack</PageTitle>
 
@@ -43,11 +42,11 @@
     private readonly OrganizationForm.OrganizationFormModel _model = new();
     private string? _errorMessage;
 
-    private bool IsAdmin => AuthState.CurrentUser?.Role == "Admin";
+    private bool IsAdmin => AuthState.IsGlobalAdmin;
 
     protected override void OnInitialized()
     {
-        BackButton.SetPath("/organizations");
+        Navigation.SetFallback("/organizations");
     }
 
     private async Task HandleSubmit(OrganizationForm.OrganizationFormModel model)
@@ -87,5 +86,5 @@
         );
     }
 
-    private void NavigateBack() => Navigation.NavigateTo("/organizations");
+    private void NavigateBack() => Navigation.GoBack();
 }

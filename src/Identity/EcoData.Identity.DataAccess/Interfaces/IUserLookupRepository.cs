@@ -9,13 +9,9 @@ public interface IUserLookupRepository
         CancellationToken cancellationToken = default
     );
 
-    Task<UserLookupDto?> GetByIdAsync(
-        Guid userId,
-        CancellationToken cancellationToken = default
-    );
+    Task<UserLookupDto?> GetByIdAsync(Guid userId, CancellationToken cancellationToken = default);
 
-    Task<bool> ExistsAsync(
-        Guid userId,
-        CancellationToken cancellationToken = default
-    );
+    Task<bool> ExistsAsync(Guid userId, CancellationToken cancellationToken = default);
+
+    Task<bool> IsGlobalAdminAsync(Guid userId, CancellationToken cancellationToken = default);
 }

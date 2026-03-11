@@ -1,13 +1,15 @@
 @page "/organizations/{Id:guid}/edit"
+@using EcoData.AquaTrack.Contracts
 @using EcoData.AquaTrack.Contracts.Dtos
 @using EcoData.AquaTrack.Application.Client
 @using EcoData.AquaTrack.WebApp.Client.Services
+@using EcoData.AquaTrack.WebApp.Client.Features.Organizations.Authorization
 @using BlazingSingularity.Commands
 @inject IOrganizationHttpClient OrganizationClient
-@inject NavigationManager Navigation
+@inject INavigationService Navigation
 @inject ISnackbar Snackbar
 @inject AuthStateService AuthState
-@inject BackButtonService BackButton
+@inject PermissionContextService PermissionContext
 
 <PageTitle>Edit Organization - AquaTrack</PageTitle>
 
@@ -31,7 +33,7 @@
             </MudStack>
         </MudPaper>
     }
-    else if (!IsAdmin)
+    else if (!_canEdit)
     {
         <MudPaper Elevation="1" Class="pa-6 rounded-lg">
             <MudStack AlignItems="AlignItems.Center">
@@ -48,12 +50,8 @@
         <MudPaper Elevation="1" Class="pa-6 rounded-lg">
             <MudText Typo="Typo.h5" Class="mb-4">Edit Organization</MudText>
 
-            <OrganizationForm Model="_model"
-                              SubmitButtonText="Save Changes"
-                              ErrorMessage="@_errorMessage"
-                              IsLoading="SaveCommand.IsLoading"
-                              OnSubmit="HandleSubmit"
-                              OnCancel="NavigateToDetails" />
+            <OrganizationForm Model="_model" SubmitButtonText="Save Changes" ErrorMessage="@_errorMessage"
+                              IsLoading="SaveCommand.IsLoading" OnSubmit="HandleSubmit" OnCancel="NavigateToDetails" />
         </MudPaper>
     }
 </MudContainer>
@@ -65,12 +63,11 @@
     private OrganizationDtoForDetail? _organization;
     private readonly OrganizationForm.OrganizationFormModel _model = new();
     private string? _errorMessage;
-
-    private bool IsAdmin => AuthState.CurrentUser?.Role == "Admin";
+    private bool _canEdit;
 
     protected override async Task OnInitializedAsync()
     {
-        BackButton.SetPath($"/organizations/{Id}");
+        Navigation.SetFallback($"/organizations/{Id}");
         await LoadCommand.ExecuteAsync();
     }
 
@@ -88,8 +85,11 @@
                 _model.AboutUs = organization.AboutUs;
                 _model.WebsiteUrl = organization.WebsiteUrl;
             },
-            _ => _organization = null
+            _ => _organization = null,
+            unauthorized => _organization = null
         );
+
+        _canEdit = await PermissionContext.HasPermissionAsync(Id, Permissions.Organization.Update);
     }
 
     private async Task HandleSubmit(OrganizationForm.OrganizationFormModel model)
@@ -130,5 +130,5 @@
         );
     }
 
-    private void NavigateToDetails() => Navigation.NavigateTo($"/organizations/{Id}");
+    private void NavigateToDetails() => Navigation.GoBack();
 }

@@ -1,6 +1,7 @@
 using System.Net.Http.Json;
 using EcoData.AquaTrack.Contracts.Dtos;
 using EcoData.AquaTrack.Contracts.Parameters;
+using EcoData.Common.Http.Helpers;
 
 namespace EcoData.AquaTrack.Application.Client;
 
@@ -11,9 +12,37 @@ public sealed class SensorHttpClient(HttpClient httpClient) : ISensorHttpClient
         CancellationToken cancellationToken = default
     )
     {
-        var queryString = BuildQueryString(parameters);
+        var queryString = new QueryStringBuilder()
+            .Add("pageSize", parameters.PageSize != 20 ? parameters.PageSize : null)
+            .Add("cursor", parameters.Cursor)
+            .Add("search", parameters.Search)
+            .Add("isActive", parameters.IsActive)
+            .Add("dataSourceId", parameters.DataSourceId)
+            .Add("organizationId", parameters.OrganizationId)
+            .Build();
+
         return httpClient.GetFromJsonAsAsyncEnumerable<SensorDtoForList>(
             $"api/sensors{queryString}",
+            cancellationToken
+        )!;
+    }
+
+    public Task<int> GetSensorCountAsync(
+        SensorParameters parameters,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var queryString = new QueryStringBuilder()
+            .Add("pageSize", parameters.PageSize != 20 ? parameters.PageSize : null)
+            .Add("cursor", parameters.Cursor)
+            .Add("search", parameters.Search)
+            .Add("isActive", parameters.IsActive)
+            .Add("dataSourceId", parameters.DataSourceId)
+            .Add("organizationId", parameters.OrganizationId)
+            .Build();
+
+        return httpClient.GetFromJsonAsync<int>(
+            $"api/sensors/count{queryString}",
             cancellationToken
         )!;
     }
@@ -90,53 +119,5 @@ public sealed class SensorHttpClient(HttpClient httpClient) : ISensorHttpClient
         );
 
         return response.IsSuccessStatusCode;
-    }
-
-    public async Task<int> GetCountByOrganizationAsync(
-        Guid organizationId,
-        CancellationToken cancellationToken = default
-    )
-    {
-        return await httpClient.GetFromJsonAsync<int>(
-            $"api/organizations/{organizationId}/sensors/count",
-            cancellationToken
-        );
-    }
-
-    private static string BuildQueryString(SensorParameters parameters)
-    {
-        var queryParams = new List<string>();
-
-        if (parameters.PageSize != 20)
-        {
-            queryParams.Add($"pageSize={parameters.PageSize}");
-        }
-
-        if (parameters.Cursor.HasValue)
-        {
-            queryParams.Add($"cursor={parameters.Cursor.Value}");
-        }
-
-        if (!string.IsNullOrWhiteSpace(parameters.Search))
-        {
-            queryParams.Add($"search={Uri.EscapeDataString(parameters.Search)}");
-        }
-
-        if (parameters.IsActive.HasValue)
-        {
-            queryParams.Add($"isActive={parameters.IsActive.Value.ToString().ToLower()}");
-        }
-
-        if (parameters.DataSourceId.HasValue)
-        {
-            queryParams.Add($"dataSourceId={parameters.DataSourceId.Value}");
-        }
-
-        if (parameters.OrganizationId.HasValue)
-        {
-            queryParams.Add($"organizationId={parameters.OrganizationId.Value}");
-        }
-
-        return queryParams.Count > 0 ? $"?{string.Join("&", queryParams)}" : string.Empty;
     }
 }

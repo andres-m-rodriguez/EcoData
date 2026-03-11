@@ -1,0 +1,100 @@
+@using EcoData.AquaTrack.WebApp.Client.Services
+@implements IDisposable
+@inject AuthStateService AuthState
+@inject PermissionContextService PermissionContext
+
+@if (_isLoading)
+{
+    @if (Loading is not null)
+    {
+        @Loading
+    }
+}
+else if (_isAuthorized)
+{
+    @if (Authorized is not null)
+    {
+        @Authorized
+    }
+    else
+    {
+        @ChildContent
+    }
+}
+else if (NotAuthorized is not null)
+{
+    @NotAuthorized
+}
+
+@code {
+    [Parameter]
+    public string Permission { get; set; } = string.Empty;
+
+    [Parameter]
+    public Guid OrganizationId { get; set; }
+
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+
+    [Parameter]
+    public RenderFragment? Authorized { get; set; }
+
+    [Parameter]
+    public RenderFragment? NotAuthorized { get; set; }
+
+    [Parameter]
+    public RenderFragment? Loading { get; set; }
+
+    private bool _isLoading = true;
+    private bool _isAuthorized;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await CheckPermissionAsync();
+    }
+
+    protected override void OnInitialized()
+    {
+        AuthState.OnAuthStateChanged += OnAuthStateChanged;
+    }
+
+    private async void OnAuthStateChanged()
+    {
+        await CheckPermissionAsync();
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task CheckPermissionAsync()
+    {
+        _isLoading = true;
+        Console.Write("hello");
+        if (!AuthState.IsInitialized)
+        {
+            await AuthState.InitializeAsync();
+        }
+
+        if (AuthState.IsGlobalAdmin)
+        {
+            _isAuthorized = true;
+            _isLoading = false;
+            StateHasChanged
+            ();
+            return;
+        }
+
+        if (OrganizationId == Guid.Empty || string.IsNullOrEmpty(Permission))
+        {
+            _isAuthorized = false;
+            _isLoading = false;
+            return;
+        }
+
+        _isAuthorized = await PermissionContext.HasPermissionAsync(OrganizationId, Permission);
+        _isLoading = false;
+    }
+
+    public void Dispose()
+    {
+        AuthState.OnAuthStateChanged -= OnAuthStateChanged;
+    }
+}
