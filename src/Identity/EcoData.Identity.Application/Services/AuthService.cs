@@ -235,6 +235,7 @@ public sealed class AuthService(
                 EmailConfirmed = true,
                 DisplayName = accessRequest.DisplayName,
                 Role = UserRole.Viewer,
+                GlobalRole = null,
                 CreatedAt = DateTimeOffset.UtcNow
             };
 
