@@ -12,7 +12,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace EcoData.Identity.Database.Migrations
 {
     [DbContext(typeof(IdentityDbContext))]
-    [Migration("20260311182535_Initial")]
+    [Migration("20260312010206_Initial")]
     partial class Initial
     {
         /// <inheritdoc />
@@ -20,87 +20,10 @@ namespace EcoData.Identity.Database.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "10.0.1")
+                .HasAnnotation("ProductVersion", "10.0.4")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
-
-            modelBuilder.Entity("EcoData.Identity.Database.Models.AccessRequest", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasColumnName("id");
-
-                    b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("created_at");
-
-                    b.Property<string>("DisplayName")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("character varying(200)")
-                        .HasColumnName("display_name");
-
-                    b.Property<string>("Email")
-                        .IsRequired()
-                        .HasMaxLength(256)
-                        .HasColumnType("character varying(256)")
-                        .HasColumnName("email");
-
-                    b.Property<string>("PasswordHash")
-                        .IsRequired()
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)")
-                        .HasColumnName("password_hash");
-
-                    b.Property<Guid>("RequestedOrganizationId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("requested_organization_id");
-
-                    b.Property<string>("RequestedOrganizationName")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("character varying(200)")
-                        .HasColumnName("requested_organization_name");
-
-                    b.Property<string>("ReviewNotes")
-                        .HasMaxLength(1000)
-                        .HasColumnType("character varying(1000)")
-                        .HasColumnName("review_notes");
-
-                    b.Property<DateTimeOffset?>("ReviewedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("reviewed_at");
-
-                    b.Property<Guid?>("ReviewedById")
-                        .HasColumnType("uuid")
-                        .HasColumnName("reviewed_by_id");
-
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)")
-                        .HasColumnName("status");
-
-                    b.HasKey("Id")
-                        .HasName("pk_access_requests");
-
-                    b.HasIndex("Email")
-                        .IsUnique()
-                        .HasDatabaseName("ix_access_requests_email");
-
-                    b.HasIndex("RequestedOrganizationId")
-                        .HasDatabaseName("ix_access_requests_requested_organization_id");
-
-                    b.HasIndex("ReviewedById")
-                        .HasDatabaseName("ix_access_requests_reviewed_by_id");
-
-                    b.HasIndex("Status")
-                        .HasDatabaseName("ix_access_requests_status");
-
-                    b.ToTable("access_requests", (string)null);
-                });
 
             modelBuilder.Entity("EcoData.Identity.Database.Models.User", b =>
                 {
@@ -171,12 +94,6 @@ namespace EcoData.Identity.Database.Migrations
                     b.Property<bool>("PhoneNumberConfirmed")
                         .HasColumnType("boolean")
                         .HasColumnName("phone_number_confirmed");
-
-                    b.Property<string>("Role")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)")
-                        .HasColumnName("role");
 
                     b.Property<string>("SecurityStamp")
                         .HasColumnType("text")
@@ -368,17 +285,6 @@ namespace EcoData.Identity.Database.Migrations
                         .HasName("pk_user_tokens");
 
                     b.ToTable("user_tokens", (string)null);
-                });
-
-            modelBuilder.Entity("EcoData.Identity.Database.Models.AccessRequest", b =>
-                {
-                    b.HasOne("EcoData.Identity.Database.Models.User", "ReviewedBy")
-                        .WithMany()
-                        .HasForeignKey("ReviewedById")
-                        .OnDelete(DeleteBehavior.SetNull)
-                        .HasConstraintName("fk_access_requests_users_reviewed_by_id");
-
-                    b.Navigation("ReviewedBy");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<System.Guid>", b =>

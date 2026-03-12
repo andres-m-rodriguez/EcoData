@@ -8,14 +8,11 @@ namespace EcoData.Identity.Database;
 public sealed class IdentityDbContext(DbContextOptions<IdentityDbContext> options)
     : IdentityDbContext<User, IdentityRole<Guid>, Guid>(options)
 {
-    public DbSet<AccessRequest> AccessRequests => Set<AccessRequest>();
-
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
 
         builder.ApplyConfiguration(new User.EntityConfiguration());
-        builder.ApplyConfiguration(new AccessRequest.EntityConfiguration());
 
         // Configure ASP.NET Identity tables with snake_case names
         builder.Entity<IdentityRole<Guid>>(entity =>

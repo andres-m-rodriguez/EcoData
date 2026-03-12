@@ -278,6 +278,65 @@ namespace EcoData.AquaTrack.Database.Migrations
                     b.ToTable("organizations", (string)null);
                 });
 
+            modelBuilder.Entity("EcoData.AquaTrack.Database.Models.OrganizationAccessRequest", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<Guid>("OrganizationId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("organization_id");
+
+                    b.Property<string>("RequestMessage")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)")
+                        .HasColumnName("request_message");
+
+                    b.Property<string>("ReviewNotes")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)")
+                        .HasColumnName("review_notes");
+
+                    b.Property<DateTimeOffset?>("ReviewedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("reviewed_at");
+
+                    b.Property<Guid?>("ReviewedByUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("reviewed_by_user_id");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("status");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("user_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_organization_access_requests");
+
+                    b.HasIndex("OrganizationId")
+                        .HasDatabaseName("ix_organization_access_requests_organization_id");
+
+                    b.HasIndex("Status")
+                        .HasDatabaseName("ix_organization_access_requests_status");
+
+                    b.HasIndex("UserId", "OrganizationId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_organization_access_requests_user_id_organization_id");
+
+                    b.ToTable("organization_access_requests", (string)null);
+                });
+
             modelBuilder.Entity("EcoData.AquaTrack.Database.Models.OrganizationMember", b =>
                 {
                     b.Property<Guid>("Id")
@@ -772,6 +831,18 @@ namespace EcoData.AquaTrack.Database.Migrations
                         .HasConstraintName("fk_ingestion_logs_data_sources_data_source_id");
 
                     b.Navigation("DataSource");
+                });
+
+            modelBuilder.Entity("EcoData.AquaTrack.Database.Models.OrganizationAccessRequest", b =>
+                {
+                    b.HasOne("EcoData.AquaTrack.Database.Models.Organization", "Organization")
+                        .WithMany()
+                        .HasForeignKey("OrganizationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_organization_access_requests_organizations_organization_id");
+
+                    b.Navigation("Organization");
                 });
 
             modelBuilder.Entity("EcoData.AquaTrack.Database.Models.OrganizationMember", b =>
