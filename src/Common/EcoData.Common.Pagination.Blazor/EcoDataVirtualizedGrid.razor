@@ -1,0 +1,39 @@
+@using Microsoft.AspNetCore.Components.Web.Virtualization
+@typeparam TItem
+@typeparam TParams where TParams : CursorParameters
+
+@if (_isInitialLoading)
+{
+    @if (LoadingTemplate is not null)
+    {
+        @LoadingTemplate
+    }
+}
+else if (_isEmpty)
+{
+    @if (EmptyTemplate is not null)
+    {
+        @EmptyTemplate
+    }
+}
+else
+{
+    <div class="@GridClass" style="@GridStyle">
+        <Virtualize @ref="_virtualizeRef"
+                    @key="_generation"
+                    ItemsProvider="LoadItemsAsync"
+                    ItemSize="ItemSize"
+                    OverscanCount="OverscanCount"
+                    Context="item">
+            <ItemContent>
+                @ItemTemplate(item)
+            </ItemContent>
+            <Placeholder>
+                @if (PlaceholderTemplate is not null)
+                {
+                    @PlaceholderTemplate
+                }
+            </Placeholder>
+        </Virtualize>
+    </div>
+}
