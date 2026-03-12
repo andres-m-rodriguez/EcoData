@@ -1,10 +1,9 @@
 @page "/organizations"
 @using EcoData.AquaTrack.Contracts.Dtos
-@using EcoData.AquaTrack.Contracts.Errors
 @using EcoData.AquaTrack.Contracts.Parameters
 @using EcoData.AquaTrack.Application.Client
+@using EcoData.Common.Pagination.Blazor
 @using BlazingSingularity.Signals
-@using BlazingSingularity.Commands
 @using EcoData.AquaTrack.WebApp.Client.Services
 @using EcoData.AquaTrack.WebApp.Client.Features.Organizations.Components
 @inject IOrganizationHttpClient OrganizationClient
@@ -27,90 +26,87 @@
     </Actions>
 </SearchHeader>
 
-@if (LoadCommand.IsLoading)
-{
-    <div class="organizations-grid">
-        @for (var i = 0; i < 6; i++)
-        {
-            <MudCard Elevation="1">
-                <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="120px" />
-                <MudCardContent>
-                    <MudSkeleton SkeletonType="SkeletonType.Circle" Width="56px" Height="56px" />
-                    <MudSkeleton Width="70%" Height="20px" Class="mt-4" />
-                    <MudSkeleton Width="100%" Height="14px" Class="mt-2" />
-                    <MudSkeleton Width="80%" Height="14px" Class="mt-1" />
-                    <MudSkeleton Width="40%" Height="14px" Class="mt-3" />
-                </MudCardContent>
-            </MudCard>
-        }
-    </div>
-}
-else if (_organizations.Count == 0)
-{
-    @if (HasActiveFilters)
-    {
-        <MudPaper Elevation="1" Class="pa-8 rounded-lg">
-            <MudStack AlignItems="AlignItems.Center">
-                <MudIcon Icon="@Icons.Material.Filled.SearchOff" Size="Size.Large" Color="Color.Secondary" />
-                <MudText Typo="Typo.h6" Color="Color.Secondary" Class="mt-2">No organizations found</MudText>
-                <MudText Typo="Typo.body2" Color="Color.Secondary">
-                    No organizations match your search criteria.
-                </MudText>
-                <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.FilterAltOff"
-                           OnClick="ClearFilters" Class="mt-3">
-                    Clear Filters
-                </MudButton>
-            </MudStack>
-        </MudPaper>
-    }
-    else
-    {
-        <MudPaper Elevation="1" Class="pa-8 rounded-lg">
-            <MudStack AlignItems="AlignItems.Center">
-                <MudIcon Icon="@Icons.Material.Filled.Business" Size="Size.Large" Color="Color.Secondary" />
-                <MudText Typo="Typo.h6" Color="Color.Secondary" Class="mt-2">No organizations yet</MudText>
-                <MudText Typo="Typo.body2" Color="Color.Secondary">
-                    Get started by adding your first organization.
-                </MudText>
-                @if (IsAdmin)
-                {
-                    <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add"
-                               OnClick="NavigateToCreate" Class="mt-3">
-                        Add Organization
-                    </MudButton>
-                }
-            </MudStack>
-        </MudPaper>
-    }
-}
-else
-{
-    <div class="organizations-grid">
-        @foreach (var organization in _organizations)
-        {
-            <OrganizationListItem Organization="organization" ShowActions="IsAdmin" OnClick="NavigateToDetails"
-                                  OnEdit="NavigateToEdit" OnDelete="ConfirmDelete" />
-        }
-    </div>
-    @if (_hasMore)
-    {
-        <div class="d-flex justify-center mt-8">
-            <MudButton Variant="Variant.Outlined" Color="Color.Primary" OnClick="() => LoadMoreCommand.ExecuteAsync()"
-                       Disabled="LoadMoreCommand.IsLoading">
-                @if (LoadMoreCommand.IsLoading)
-                {
-                    <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
-                }
-                Load More
-            </MudButton>
+<EcoDataVirtualizedGrid @ref="_gridRef"
+                        TItem="OrganizationDtoForList"
+                        TParams="OrganizationParameters"
+                        ItemsProvider="(p, ct) => OrganizationClient.GetOrganizationsAsync(p, ct)"
+                        ParametersBuilder="CreateParameters"
+                        CursorSelector="org => org.Id"
+                        GridClass="organizations-grid"
+                        ItemSize="320"
+                        OverscanCount="6">
+    <LoadingTemplate>
+        <div class="organizations-grid">
+            @for (var i = 0; i < 6; i++)
+            {
+                <MudCard Elevation="1">
+                    <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="120px" />
+                    <MudCardContent>
+                        <MudSkeleton SkeletonType="SkeletonType.Circle" Width="56px" Height="56px" />
+                        <MudSkeleton Width="70%" Height="20px" Class="mt-4" />
+                        <MudSkeleton Width="100%" Height="14px" Class="mt-2" />
+                        <MudSkeleton Width="80%" Height="14px" Class="mt-1" />
+                        <MudSkeleton Width="40%" Height="14px" Class="mt-3" />
+                    </MudCardContent>
+                </MudCard>
+            }
         </div>
-    }
-}
+    </LoadingTemplate>
+    <EmptyTemplate>
+        @if (HasActiveFilters)
+        {
+            <MudPaper Elevation="1" Class="pa-8 rounded-lg">
+                <MudStack AlignItems="AlignItems.Center">
+                    <MudIcon Icon="@Icons.Material.Filled.SearchOff" Size="Size.Large" Color="Color.Secondary" />
+                    <MudText Typo="Typo.h6" Color="Color.Secondary" Class="mt-2">No organizations found</MudText>
+                    <MudText Typo="Typo.body2" Color="Color.Secondary">
+                        No organizations match your search criteria.
+                    </MudText>
+                    <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.FilterAltOff"
+                               OnClick="ClearFilters" Class="mt-3">
+                        Clear Filters
+                    </MudButton>
+                </MudStack>
+            </MudPaper>
+        }
+        else
+        {
+            <MudPaper Elevation="1" Class="pa-8 rounded-lg">
+                <MudStack AlignItems="AlignItems.Center">
+                    <MudIcon Icon="@Icons.Material.Filled.Business" Size="Size.Large" Color="Color.Secondary" />
+                    <MudText Typo="Typo.h6" Color="Color.Secondary" Class="mt-2">No organizations yet</MudText>
+                    <MudText Typo="Typo.body2" Color="Color.Secondary">
+                        Get started by adding your first organization.
+                    </MudText>
+                    @if (IsAdmin)
+                    {
+                        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add"
+                                   OnClick="NavigateToCreate" Class="mt-3">
+                            Add Organization
+                        </MudButton>
+                    }
+                </MudStack>
+            </MudPaper>
+        }
+    </EmptyTemplate>
+    <PlaceholderTemplate>
+        <MudCard Elevation="1">
+            <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="120px" />
+            <MudCardContent>
+                <MudSkeleton SkeletonType="SkeletonType.Circle" Width="56px" Height="56px" />
+                <MudSkeleton Width="70%" Height="20px" Class="mt-4" />
+                <MudSkeleton Width="100%" Height="14px" Class="mt-2" />
+            </MudCardContent>
+        </MudCard>
+    </PlaceholderTemplate>
+    <ItemTemplate Context="organization">
+        <OrganizationListItem Organization="organization" ShowActions="IsAdmin" OnClick="NavigateToDetails"
+                              OnEdit="NavigateToEdit" OnDelete="ConfirmDelete" />
+    </ItemTemplate>
+</EcoDataVirtualizedGrid>
 
 @code {
-    private List<OrganizationDtoForList> _organizations = [];
-    private bool _hasMore;
-    private Guid? _cursor;
+    private EcoDataVirtualizedGrid<OrganizationDtoForList, OrganizationParameters>? _gridRef;
 
     [Signal]
     private string? _searchText;
@@ -118,50 +114,16 @@ else
     private bool IsAdmin => AuthState.IsGlobalAdmin;
     private bool HasActiveFilters => !string.IsNullOrWhiteSpace(SearchText);
 
-    protected override async Task OnInitializedAsync()
+    protected override void OnInitialized()
     {
-        SearchTextSignal.OnChange(_ => InvokeAsync(async () =>
+        SearchTextSignal.OnChange(_ => InvokeAsync(() =>
         {
-            await LoadCommand.ExecuteAsync();
+            _gridRef?.Refresh();
             StateHasChanged();
         }));
-        await LoadCommand.ExecuteAsync();
     }
 
-    [RelayCommand]
-    private async Task Load()
-    {
-        _organizations.Clear();
-        _cursor = null;
-
-        var parameters = CreateParameters();
-        var count = 0;
-        await foreach (var org in OrganizationClient.GetOrganizationsAsync(parameters))
-        {
-            _organizations.Add(org);
-            _cursor = org.Id;
-            count++;
-        }
-        _hasMore = count >= parameters.PageSize;
-    }
-
-    [RelayCommand]
-    private async Task LoadMore()
-    {
-        if (!_hasMore) return;
-
-        var parameters = CreateParameters(_cursor);
-        var count = 0;
-        await foreach (var org in OrganizationClient.GetOrganizationsAsync(parameters))
-        {
-            _organizations.Add(org);
-            _cursor = org.Id;
-            count++;
-        }
-        _hasMore = count >= parameters.PageSize;
-    }
-
-    private OrganizationParameters CreateParameters(Guid? cursor = null) => new()
+    private OrganizationParameters CreateParameters(Guid? cursor) => new()
     {
         PageSize = 24,
         Search = string.IsNullOrWhiteSpace(SearchText) ? null : SearchText,
@@ -204,8 +166,7 @@ else
                 _ =>
                 {
                     Snackbar.Add("Organization deleted successfully", Severity.Success);
-                    _organizations.Remove(organization);
-                    StateHasChanged();
+                    _gridRef?.Refresh();
                 },
                 _ => Snackbar.Add("Organization not found", Severity.Error),
                 error => Snackbar.Add($"Failed to delete: {error.Message}", Severity.Error)
