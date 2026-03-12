@@ -110,6 +110,12 @@ public sealed class OrganizationAccessRequestRepository(
             query = query.Where(r => r.Status == status);
         }
 
+        if (!string.IsNullOrEmpty(parameters.Search))
+        {
+            var searchLower = parameters.Search.ToLower();
+            query = query.Where(r => r.Organization!.Name.ToLower().Contains(searchLower));
+        }
+
         if (parameters.Cursor.HasValue)
         {
             query = query.Where(r => r.Id.CompareTo(parameters.Cursor.Value) > 0);
@@ -339,6 +345,46 @@ public sealed class OrganizationAccessRequestRepository(
         await context.SaveChangesAsync(cancellationToken);
 
         return true;
+    }
+
+    public async Task<OrganizationAccessRequestDto?> CancelAsync(
+        Guid id,
+        CancellationToken cancellationToken = default
+    )
+    {
+        await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
+
+        var entity = await context.OrganizationAccessRequests
+            .AsTracking()
+            .Include(r => r.Organization)
+            .FirstOrDefaultAsync(r => r.Id == id, cancellationToken);
+
+        if (entity is null)
+        {
+            return null;
+        }
+
+        entity.Status = OrganizationAccessRequestStatus.Cancelled;
+
+        await context.SaveChangesAsync(cancellationToken);
+
+        var user = await userLookupRepository.GetByIdAsync(entity.UserId, cancellationToken);
+
+        return new OrganizationAccessRequestDto(
+            entity.Id,
+            entity.UserId,
+            user?.Email ?? "",
+            user?.DisplayName ?? "",
+            entity.OrganizationId,
+            entity.Organization!.Name,
+            entity.Status.ToString(),
+            entity.RequestMessage,
+            entity.ReviewNotes,
+            entity.ReviewedByUserId,
+            null,
+            entity.ReviewedAt,
+            entity.CreatedAt
+        );
     }
 
     public async Task<bool> ExistsPendingAsync(

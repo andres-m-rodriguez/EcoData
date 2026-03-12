@@ -77,7 +77,7 @@
                                 </MudText>
                             </MudAlert>
                         }
-                        @if (request.Status != "Pending" && request.ReviewedAt.HasValue)
+                        @if (request.Status is "Approved" or "Rejected" && request.ReviewedAt.HasValue)
                         {
                             <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mt-1">
                                 @(request.Status == "Approved" ? "Approved" : "Rejected") by @(request.ReviewedByDisplayName ?? "Unknown") on @FormatDate(request.ReviewedAt.Value)
@@ -109,6 +109,11 @@
                         case "Rejected":
                             <MudChip T="string" Color="Color.Error" Variant="Variant.Filled" Size="Size.Small">
                                 Rejected
+                            </MudChip>
+                            break;
+                        case "Cancelled":
+                            <MudChip T="string" Color="Color.Default" Variant="Variant.Filled" Size="Size.Small">
+                                Cancelled
                             </MudChip>
                             break;
                     }
