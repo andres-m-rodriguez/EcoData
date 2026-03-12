@@ -1,5 +1,6 @@
 using EcoData.AquaTrack.Contracts.Dtos;
 using EcoData.AquaTrack.Contracts.Errors;
+using EcoData.AquaTrack.Contracts.Parameters;
 using OneOf;
 
 namespace EcoData.AquaTrack.Application.Client;
@@ -8,6 +9,7 @@ public interface IOrganizationMemberHttpClient
 {
     IAsyncEnumerable<OrganizationMemberDto> GetAllAsync(
         Guid organizationId,
+        OrganizationMemberParameters parameters,
         CancellationToken cancellationToken = default
     );
 

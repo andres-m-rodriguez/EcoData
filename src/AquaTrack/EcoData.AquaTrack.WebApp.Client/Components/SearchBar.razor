@@ -4,11 +4,16 @@
 <div class="search-bar-wrapper @(_isSticky ? "is-sticky" : "")" @ref="_searchBarRef">
     <div class="search-bar">
         <MudIcon Icon="@Icons.Material.Filled.Search" Class="search-icon" />
-        <input type="text"
-               class="search-input"
-               placeholder="@Placeholder"
-               value="@Value"
-               @oninput="HandleInput" />
+        <MudTextField T="string"
+                      Value="@Value"
+                      ValueChanged="@ValueChanged"
+                      Placeholder="@Placeholder"
+                      Variant="Variant.Text"
+                      Margin="Margin.None"
+                      Underline="false"
+                      Immediate="true"
+                      DebounceInterval="300"
+                      Class="search-input" />
         @if (ShowFilterButton)
         {
             <div class="divider"></div>
@@ -72,12 +77,6 @@
             _isSticky = isSticky;
             StateHasChanged();
         }
-    }
-
-    private async Task HandleInput(ChangeEventArgs e)
-    {
-        var value = e.Value?.ToString();
-        await ValueChanged.InvokeAsync(value);
     }
 
     public async ValueTask DisposeAsync()

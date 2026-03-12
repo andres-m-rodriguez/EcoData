@@ -1,4 +1,5 @@
 using EcoData.AquaTrack.Contracts.Dtos;
+using EcoData.AquaTrack.Contracts.Parameters;
 
 namespace EcoData.AquaTrack.DataAccess.Interfaces;
 
@@ -6,6 +7,7 @@ public interface IOrganizationMemberRepository
 {
     IAsyncEnumerable<OrganizationMemberDto> GetAllAsync(
         Guid organizationId,
+        OrganizationMemberParameters parameters,
         CancellationToken cancellationToken = default
     );
 
