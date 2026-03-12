@@ -1,0 +1,117 @@
+@page "/organizations/my"
+@using EcoData.AquaTrack.Contracts.Dtos
+@using EcoData.AquaTrack.Application.Client
+@using EcoData.AquaTrack.WebApp.Client.Services
+@using EcoData.AquaTrack.WebApp.Client.Features.Organizations.Components
+@using BlazingSingularity.Commands
+@inject IOrganizationHttpClient OrganizationClient
+@inject INavigationService Navigation
+@inject AuthStateService AuthState
+
+<PageTitle>My Organizations - AquaTrack</PageTitle>
+
+<MudText Typo="Typo.h5" Class="mb-4">My Organizations</MudText>
+
+@if (!AuthState.IsAuthenticated)
+{
+    <MudPaper Elevation="1" Class="pa-8 rounded-lg">
+        <MudStack AlignItems="AlignItems.Center" Spacing="3">
+            <MudAvatar Size="Size.Large" Color="Color.Info" Variant="Variant.Outlined">
+                <MudIcon Icon="@Icons.Material.Outlined.Login" />
+            </MudAvatar>
+            <MudText Typo="Typo.h6" Align="Align.Center">Sign in to view your organizations</MudText>
+            <MudText Typo="Typo.body2" Color="Color.Secondary" Align="Align.Center">
+                Log in to see organizations you're a member of.
+            </MudText>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" Href="/login" Class="mt-2">
+                Sign In
+            </MudButton>
+        </MudStack>
+    </MudPaper>
+}
+else if (LoadMyOrganizationsCommand.IsLoading)
+{
+    <MudPaper Elevation="1" Class="rounded-lg">
+        @for (var i = 0; i < 5; i++)
+        {
+            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="3" Class="pa-4" Style="border-bottom: 1px solid var(--mud-palette-lines-default);">
+                <MudSkeleton SkeletonType="SkeletonType.Circle" Width="48px" Height="48px" />
+                <MudStack Spacing="1" Class="flex-grow-1">
+                    <MudSkeleton Width="50%" Height="20px" />
+                    <MudSkeleton Width="30%" Height="14px" />
+                </MudStack>
+            </MudStack>
+        }
+    </MudPaper>
+}
+else if (_myOrganizations.Count == 0)
+{
+    <MudPaper Elevation="1" Class="pa-8 rounded-lg">
+        <MudStack AlignItems="AlignItems.Center" Spacing="3">
+            <MudAvatar Size="Size.Large" Color="Color.Default" Variant="Variant.Outlined">
+                <MudIcon Icon="@Icons.Material.Outlined.Business" />
+            </MudAvatar>
+            <MudText Typo="Typo.h6" Align="Align.Center">No organizations yet</MudText>
+            <MudText Typo="Typo.body2" Color="Color.Secondary" Align="Align.Center">
+                You're not a member of any organizations. Discover organizations to join.
+            </MudText>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" Href="/organizations/discover" Class="mt-2"
+                       StartIcon="@Icons.Material.Filled.Explore">
+                Discover Organizations
+            </MudButton>
+        </MudStack>
+    </MudPaper>
+}
+else
+{
+    <MudPaper Elevation="1" Class="rounded-lg">
+        @foreach (var org in _myOrganizations)
+        {
+            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="3" Class="pa-4 cursor-pointer"
+                      Style="border-bottom: 1px solid var(--mud-palette-lines-default);"
+                      @onclick="() => NavigateToOrganization(org)">
+                <MudAvatar Size="Size.Medium" Color="Color.Primary" Variant="Variant.Filled">
+                    @if (!string.IsNullOrWhiteSpace(org.ProfilePictureUrl))
+                    {
+                        <MudImage Src="@org.ProfilePictureUrl" Alt="@org.Name" />
+                    }
+                    else
+                    {
+                        @org.Name[0]
+                    }
+                </MudAvatar>
+                <MudStack Spacing="0" Class="flex-grow-1">
+                    <MudText Typo="Typo.body1">@org.Name</MudText>
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">@org.RoleName</MudText>
+                </MudStack>
+                <MudIcon Icon="@Icons.Material.Filled.ChevronRight" Color="Color.Secondary" />
+            </MudStack>
+        }
+    </MudPaper>
+}
+
+@code {
+    private List<MyOrganizationDto> _myOrganizations = [];
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (AuthState.IsAuthenticated)
+        {
+            await LoadMyOrganizationsCommand.ExecuteAsync();
+        }
+    }
+
+    [RelayCommand]
+    private async Task LoadMyOrganizations()
+    {
+        await foreach (var org in OrganizationClient.GetMyOrganizationsAsync(CancellationToken.None))
+        {
+            _myOrganizations.Add(org);
+        }
+    }
+
+    private void NavigateToOrganization(MyOrganizationDto org)
+    {
+        Navigation.NavigateTo($"/organizations/{org.Id}");
+    }
+}

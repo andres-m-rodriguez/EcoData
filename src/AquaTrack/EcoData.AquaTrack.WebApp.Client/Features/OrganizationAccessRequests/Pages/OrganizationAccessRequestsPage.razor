@@ -13,7 +13,7 @@
 @inject IOrganizationBlockedUserHttpClient BlockedUserClient
 @inject IDialogService DialogService
 @inject ISnackbar Snackbar
-@inject NavigationManager Navigation
+@inject INavigationService Navigation
 
 <PageTitle>Access Requests - AquaTrack</PageTitle>
 
@@ -170,6 +170,7 @@
         if (_lastOrganizationId != OrganizationId)
         {
             _lastOrganizationId = OrganizationId;
+            Navigation.SetFallback($"/organizations/{OrganizationId}");
             _listRef?.Refresh();
         }
     }

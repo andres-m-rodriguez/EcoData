@@ -2,10 +2,12 @@
 @using EcoData.AquaTrack.Contracts.Dtos
 @using EcoData.AquaTrack.Application.Client
 @using EcoData.AquaTrack.WebApp.Client.Features.Organizations.Authorization
+@using EcoData.AquaTrack.WebApp.Client.Services
 @using BlazingSingularity.Commands
 @inject IOrganizationBlockedUserHttpClient BlockedUserClient
 @inject IDialogService DialogService
 @inject ISnackbar Snackbar
+@inject INavigationService Navigation
 
 <PageTitle>Blocked Users - AquaTrack</PageTitle>
 
@@ -97,6 +99,7 @@
 
     protected override async Task OnInitializedAsync()
     {
+        Navigation.SetFallback($"/organizations/{OrganizationId}");
         await LoadBlockedUsersCommand.ExecuteAsync();
     }
 

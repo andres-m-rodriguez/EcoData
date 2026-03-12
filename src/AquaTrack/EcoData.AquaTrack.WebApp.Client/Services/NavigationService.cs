@@ -1,6 +1,7 @@
+using System.Web;
+using BlazorStaticNavigation;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Routing;
-using Microsoft.JSInterop;
 
 namespace EcoData.AquaTrack.WebApp.Client.Services;
 
@@ -10,10 +11,12 @@ public interface INavigationService
     string CurrentPath { get; }
 
     void NavigateTo(string uri);
-    Task GoBackAsync(string? fallback = null);
+    void NavigateTo<TPage>() where TPage : INavigablePage<TPage>;
+    void NavigateTo<TPage, TParams>(TParams parameters) where TPage : INavigablePage<TPage, TParams>;
     void GoBack(string? fallback = null);
 
     void SetFallback(string path);
+    void SetFallback<TPage>() where TPage : INavigablePage<TPage>;
     bool CanGoBack { get; }
 
     event Action? OnStateChanged;
@@ -22,26 +25,26 @@ public interface INavigationService
 public sealed class NavigationService : INavigationService, IDisposable
 {
     private readonly NavigationManager _navigationManager;
-    private readonly IJSRuntime _jsRuntime;
-    private readonly List<string> _history = [];
     private string? _fallbackPath;
-    private bool _isNavigatingBack;
 
-    public NavigationService(NavigationManager navigationManager, IJSRuntime jsRuntime)
+    public NavigationService(NavigationManager navigationManager)
     {
         _navigationManager = navigationManager;
-        _jsRuntime = jsRuntime;
         _navigationManager.LocationChanged += OnLocationChanged;
-
-        // Initialize with current path
-        _history.Add(GetPathFromUri(_navigationManager.Uri));
     }
 
     public string CurrentUri => _navigationManager.Uri;
 
-    public string CurrentPath => GetPathFromUri(_navigationManager.Uri);
+    public string CurrentPath
+    {
+        get
+        {
+            var uri = new Uri(_navigationManager.Uri);
+            return uri.AbsolutePath;
+        }
+    }
 
-    public bool CanGoBack => _history.Count > 1 || _fallbackPath is not null;
+    public bool CanGoBack => _fallbackPath is not null && !CurrentPath.Equals(_fallbackPath, StringComparison.OrdinalIgnoreCase);
 
     public event Action? OnStateChanged;
 
@@ -50,28 +53,23 @@ public sealed class NavigationService : INavigationService, IDisposable
         _navigationManager.NavigateTo(uri);
     }
 
-    public async Task GoBackAsync(string? fallback = null)
+    public void NavigateTo<TPage>() where TPage : INavigablePage<TPage>
     {
-        if (_history.Count > 1)
-        {
-            // Use browser history for proper back/forward navigation
-            _isNavigatingBack = true;
-            await _jsRuntime.InvokeVoidAsync("history.back");
-        }
-        else
-        {
-            // Fall back to explicit navigation when no history exists
-            var fallbackPath = fallback ?? _fallbackPath;
-            if (fallbackPath is not null)
-            {
-                _navigationManager.NavigateTo(fallbackPath);
-            }
-        }
+        _navigationManager.NavigateTo(TPage.Path);
+    }
+
+    public void NavigateTo<TPage, TParams>(TParams parameters) where TPage : INavigablePage<TPage, TParams>
+    {
+        _navigationManager.NavigateTo(TPage.GetPathWithParameters(parameters));
     }
 
     public void GoBack(string? fallback = null)
     {
-        _ = GoBackAsync(fallback);
+        var target = fallback ?? _fallbackPath;
+        if (target is not null)
+        {
+            _navigationManager.NavigateTo(target);
+        }
     }
 
     public void SetFallback(string path)
@@ -80,35 +78,14 @@ public sealed class NavigationService : INavigationService, IDisposable
         OnStateChanged?.Invoke();
     }
 
-    private void OnLocationChanged(object? sender, LocationChangedEventArgs e)
+    public void SetFallback<TPage>() where TPage : INavigablePage<TPage>
     {
-        var newPath = GetPathFromUri(e.Location);
-
-        if (_isNavigatingBack)
-        {
-            // Remove the current page from history when navigating back
-            if (_history.Count > 0)
-            {
-                _history.RemoveAt(_history.Count - 1);
-            }
-            _isNavigatingBack = false;
-        }
-        else
-        {
-            // Add new path to history for forward navigation
-            _history.Add(newPath);
-        }
-
-        // Reset fallback on navigation
-        _fallbackPath = null;
-
-        OnStateChanged?.Invoke();
+        SetFallback(TPage.Path);
     }
 
-    private static string GetPathFromUri(string uri)
+    private void OnLocationChanged(object? sender, LocationChangedEventArgs e)
     {
-        var uriObj = new Uri(uri);
-        return uriObj.AbsolutePath;
+        OnStateChanged?.Invoke();
     }
 
     public void Dispose()

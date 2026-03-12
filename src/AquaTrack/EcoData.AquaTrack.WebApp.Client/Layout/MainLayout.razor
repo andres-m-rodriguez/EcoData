@@ -18,7 +18,7 @@
     <MudAppBar Elevation="0"
                Style="background-color: var(--mud-palette-drawer-background); color: var(--mud-palette-text-primary);" Fixed="true">
         <MudIconButton Icon="@Icons.Material.Filled.ArrowBack" Color="Color.Inherit" Edge="Edge.Start" Size="Size.Small"
-                       Disabled="@(!Navigation.CanGoBack)" OnClick="NavigateBackAsync" />
+                       Disabled="@(!Navigation.CanGoBack)" OnClick="NavigateBack" />
         <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit"
                        OnClick="ToggleDrawer" />
         <MudText Typo="Typo.h6">AquaTrack</MudText>
@@ -47,7 +47,11 @@
                 Dashboard
             </MudNavLink>
             <MudNavLink Href="@SensorsPage.Path" Icon="@Icons.Material.Outlined.Sensors">Sensors</MudNavLink>
-            <MudNavLink Href="@OrganizationsPage.Path" Icon="@Icons.Material.Outlined.Business">Organizations</MudNavLink>
+            <MudNavGroup Title="Organizations" Icon="@Icons.Material.Outlined.Business" Expanded="true">
+                <MudNavLink Href="/organizations/discover" Icon="@Icons.Material.Outlined.Explore">Discover</MudNavLink>
+                <MudNavLink Href="/organizations/my" Icon="@Icons.Material.Outlined.FolderShared">My Orgs</MudNavLink>
+                <MudNavLink Href="/organizations/settings" Icon="@Icons.Material.Outlined.Settings">Settings</MudNavLink>
+            </MudNavGroup>
             <MudNavLink Href="@SensorMapPage.Path" Icon="@Icons.Material.Outlined.Map">Map</MudNavLink>
         </MudNavMenu>
 
@@ -101,9 +105,9 @@
     private void ToggleDrawer() => _drawerOpen = !_drawerOpen;
     private void ToggleTheme() => _isDarkMode = !_isDarkMode;
 
-    private async Task NavigateBackAsync()
+    private void NavigateBack()
     {
-        await Navigation.GoBackAsync();
+        Navigation.GoBack();
     }
 
     protected override async Task OnInitializedAsync()

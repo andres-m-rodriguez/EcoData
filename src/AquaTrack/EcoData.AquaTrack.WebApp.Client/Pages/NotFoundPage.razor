@@ -1,5 +1,6 @@
 @page "/not-found"
-@inject NavigationManager Navigation
+@using EcoData.AquaTrack.WebApp.Client.Services
+@inject INavigationService Navigation
 
 <PageTitle>Page Not Found - AquaTrack</PageTitle>
 
@@ -36,8 +37,13 @@
 </MudContainer>
 
 @code {
+    protected override void OnInitialized()
+    {
+        Navigation.SetFallback("/");
+    }
+
     private void GoBack()
     {
-        Navigation.NavigateTo("/");
+        Navigation.GoBack();
     }
 }

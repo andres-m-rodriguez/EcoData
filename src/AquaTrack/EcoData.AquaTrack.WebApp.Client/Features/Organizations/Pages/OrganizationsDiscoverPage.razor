@@ -1,0 +1,166 @@
+@page "/organizations/discover"
+@using EcoData.AquaTrack.Contracts.Dtos
+@using EcoData.AquaTrack.Contracts.Parameters
+@using EcoData.AquaTrack.Application.Client
+@using EcoData.AquaTrack.WebApp.Client.Services
+@using EcoData.AquaTrack.WebApp.Client.Features.Organizations.Components
+@using EcoData.Common.Pagination.Blazor
+@using BlazingSingularity.Commands
+@inject IOrganizationHttpClient OrganizationClient
+@inject INavigationService Navigation
+
+<PageTitle>Discover Organizations - AquaTrack</PageTitle>
+
+<MudText Typo="Typo.h5" Class="mb-4">Discover Organizations</MudText>
+
+@* Top Organizations Carousel *@
+<MudText Typo="Typo.h6" Class="mb-3">Featured</MudText>
+<OrgFeaturedCarousel Organizations="_topOrganizations"
+                     Loading="LoadTopOrganizationsCommand.IsLoading"
+                     OnOrganizationClick="NavigateToOrganization"
+                     Class="mb-6" />
+
+@* Search Section *@
+<MudText Typo="Typo.h6" Class="mb-3">Browse All</MudText>
+<MudTextField @bind-Value="_searchText"
+              Placeholder="Search organizations..."
+              Variant="Variant.Outlined"
+              Adornment="Adornment.Start"
+              AdornmentIcon="@Icons.Material.Filled.Search"
+              Immediate="true"
+              DebounceInterval="300"
+              OnDebounceIntervalElapsed="OnSearchChanged"
+              Class="mb-4" />
+
+@* Organizations List *@
+<MudPaper Elevation="1" Class="rounded-lg">
+    <EcoDataVirtualizedList @ref="_virtualizedList"
+                            TItem="OrganizationDtoForList"
+                            TParams="OrganizationParameters"
+                            ItemsProvider="GetOrganizationsAsync"
+                            ParametersBuilder="BuildParameters"
+                            CursorSelector="org => org.Id"
+                            ItemSize="80"
+                            OverscanCount="3">
+        <LoadingTemplate>
+            @for (var i = 0; i < 5; i++)
+            {
+                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="3" Class="pa-4" Style="border-bottom: 1px solid var(--mud-palette-lines-default);">
+                    <MudSkeleton SkeletonType="SkeletonType.Circle" Width="48px" Height="48px" />
+                    <MudStack Spacing="1" Class="flex-grow-1">
+                        <MudSkeleton Width="50%" Height="20px" />
+                        <MudSkeleton Width="70%" Height="14px" />
+                    </MudStack>
+                </MudStack>
+            }
+        </LoadingTemplate>
+        <EmptyTemplate>
+            <MudStack AlignItems="AlignItems.Center" Class="pa-8">
+                <MudIcon Icon="@Icons.Material.Filled.SearchOff" Size="Size.Large" Color="Color.Secondary" />
+                <MudText Typo="Typo.h6" Color="Color.Secondary" Class="mt-2">No organizations found</MudText>
+                <MudText Typo="Typo.body2" Color="Color.Secondary">
+                    @if (!string.IsNullOrWhiteSpace(_searchText))
+                    {
+                        <text>No organizations match your search.</text>
+                    }
+                    else
+                    {
+                        <text>No organizations available yet.</text>
+                    }
+                </MudText>
+                @if (!string.IsNullOrWhiteSpace(_searchText))
+                {
+                    <MudButton Variant="Variant.Outlined" Color="Color.Primary" OnClick="ClearSearch" Class="mt-3">
+                        Clear Search
+                    </MudButton>
+                }
+            </MudStack>
+        </EmptyTemplate>
+        <PlaceholderTemplate>
+            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="3" Class="pa-4" Style="border-bottom: 1px solid var(--mud-palette-lines-default);">
+                <MudSkeleton SkeletonType="SkeletonType.Circle" Width="48px" Height="48px" />
+                <MudStack Spacing="1" Class="flex-grow-1">
+                    <MudSkeleton Width="50%" Height="20px" />
+                    <MudSkeleton Width="70%" Height="14px" />
+                </MudStack>
+            </MudStack>
+        </PlaceholderTemplate>
+        <ItemTemplate Context="org">
+            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="3" Class="pa-4 cursor-pointer"
+                      Style="border-bottom: 1px solid var(--mud-palette-lines-default);"
+                      @onclick="() => NavigateToOrganization(org)">
+                <MudAvatar Size="Size.Medium" Color="Color.Primary" Variant="Variant.Filled">
+                    @if (!string.IsNullOrWhiteSpace(org.ProfilePictureUrl))
+                    {
+                        <MudImage Src="@org.ProfilePictureUrl" Alt="@org.Name" />
+                    }
+                    else
+                    {
+                        @org.Name[0]
+                    }
+                </MudAvatar>
+                <MudStack Spacing="0" Class="flex-grow-1">
+                    <MudText Typo="Typo.body1">@org.Name</MudText>
+                    @if (!string.IsNullOrWhiteSpace(org.AboutUs))
+                    {
+                        <MudText Typo="Typo.caption" Color="Color.Secondary" Class="text-truncate" Style="max-width: 400px;">
+                            @org.AboutUs
+                        </MudText>
+                    }
+                </MudStack>
+                <MudIcon Icon="@Icons.Material.Filled.ChevronRight" Color="Color.Secondary" />
+            </MudStack>
+        </ItemTemplate>
+    </EcoDataVirtualizedList>
+</MudPaper>
+
+@code {
+    private List<OrganizationDtoForList> _topOrganizations = [];
+    private EcoDataVirtualizedList<OrganizationDtoForList, OrganizationParameters>? _virtualizedList;
+    private string? _searchText;
+
+    protected override async Task OnInitializedAsync()
+    {
+        Navigation.SetFallback("/organizations/my");
+        await LoadTopOrganizationsCommand.ExecuteAsync();
+    }
+
+    [RelayCommand]
+    private async Task LoadTopOrganizations()
+    {
+        var parameters = new OrganizationParameters(PageSize: 10);
+        await foreach (var org in OrganizationClient.GetOrganizationsAsync(parameters, CancellationToken.None))
+        {
+            _topOrganizations.Add(org);
+        }
+    }
+
+    private OrganizationParameters BuildParameters(Guid? cursor) => new(
+        PageSize: 20,
+        Cursor: cursor,
+        Search: string.IsNullOrWhiteSpace(_searchText) ? null : _searchText
+    );
+
+    private IAsyncEnumerable<OrganizationDtoForList> GetOrganizationsAsync(
+        OrganizationParameters parameters,
+        CancellationToken cancellationToken)
+    {
+        return OrganizationClient.GetOrganizationsAsync(parameters, cancellationToken);
+    }
+
+    private void OnSearchChanged(string _)
+    {
+        _virtualizedList?.Refresh();
+    }
+
+    private void ClearSearch()
+    {
+        _searchText = null;
+        _virtualizedList?.Refresh();
+    }
+
+    private void NavigateToOrganization(OrganizationDtoForList org)
+    {
+        Navigation.NavigateTo($"/organizations/{org.Id}");
+    }
+}
