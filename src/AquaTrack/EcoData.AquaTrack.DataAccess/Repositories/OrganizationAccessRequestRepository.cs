@@ -110,6 +110,12 @@ public sealed class OrganizationAccessRequestRepository(
             query = query.Where(r => r.Status == status);
         }
 
+        if (!string.IsNullOrEmpty(parameters.Search))
+        {
+            var searchLower = parameters.Search.ToLower();
+            query = query.Where(r => r.Organization!.Name.ToLower().Contains(searchLower));
+        }
+
         if (parameters.Cursor.HasValue)
         {
             query = query.Where(r => r.Id.CompareTo(parameters.Cursor.Value) > 0);

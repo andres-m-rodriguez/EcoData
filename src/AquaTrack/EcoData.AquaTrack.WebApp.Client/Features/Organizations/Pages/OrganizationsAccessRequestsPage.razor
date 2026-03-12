@@ -33,6 +33,47 @@
 }
 else
 {
+    @* Search and Filters *@
+    <MudPaper Elevation="1" Class="pa-4 rounded-lg mb-4">
+        <MudStack Spacing="3">
+            <MudTextField @bind-Value="_searchText"
+                          Placeholder="Search by organization name..."
+                          Variant="Variant.Outlined"
+                          Adornment="Adornment.Start"
+                          AdornmentIcon="@Icons.Material.Filled.Search"
+                          Immediate="true"
+                          DebounceInterval="300"
+                          OnDebounceIntervalElapsed="OnSearchChanged"
+                          Clearable="true"
+                          OnClearButtonClick="ClearSearch" />
+            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Wrap="Wrap.Wrap">
+                <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mr-2">Status:</MudText>
+                <MudChipSet T="string" SelectionMode="SelectionMode.SingleSelection" SelectedValue="_statusFilter" SelectedValueChanged="OnStatusFilterChanged">
+                    <MudChip Text="All" Value="@((string?)null)" Default="true"
+                             Variant="@(_statusFilter is null ? Variant.Filled : Variant.Outlined)"
+                             Color="Color.Default" />
+                    <MudChip Text="Pending" Value="@("Pending")"
+                             Variant="@(_statusFilter == "Pending" ? Variant.Filled : Variant.Outlined)"
+                             Color="Color.Warning" />
+                    <MudChip Text="Approved" Value="@("Approved")"
+                             Variant="@(_statusFilter == "Approved" ? Variant.Filled : Variant.Outlined)"
+                             Color="Color.Success" />
+                    <MudChip Text="Rejected" Value="@("Rejected")"
+                             Variant="@(_statusFilter == "Rejected" ? Variant.Filled : Variant.Outlined)"
+                             Color="Color.Error" />
+                </MudChipSet>
+                @if (HasActiveFilters)
+                {
+                    <MudButton Variant="Variant.Text" Color="Color.Secondary" Size="Size.Small"
+                               StartIcon="@Icons.Material.Filled.Clear" OnClick="ClearAllFilters">
+                        Clear Filters
+                    </MudButton>
+                }
+            </MudStack>
+        </MudStack>
+    </MudPaper>
+
+    @* Requests List *@
     <MudPaper Elevation="1" Class="rounded-lg">
         <EcoDataVirtualizedList @ref="_listRef"
                                 TItem="OrganizationAccessRequestDto"
@@ -58,15 +99,41 @@ else
             <EmptyTemplate>
                 <MudStack AlignItems="AlignItems.Center" Class="pa-8">
                     <MudIcon Icon="@Icons.Material.Filled.Inbox" Size="Size.Large" Color="Color.Secondary" />
-                    <MudText Typo="Typo.h6" Color="Color.Secondary" Class="mt-2">No access requests</MudText>
-                    <MudText Typo="Typo.body2" Color="Color.Secondary">
-                        You haven't requested access to any organizations yet.
+                    <MudText Typo="Typo.h6" Color="Color.Secondary" Class="mt-2">
+                        @if (HasActiveFilters)
+                        {
+                            <text>No matching requests</text>
+                        }
+                        else
+                        {
+                            <text>No access requests</text>
+                        }
                     </MudText>
-                    <MudButton Variant="Variant.Filled" Color="Color.Primary"
-                               StartIcon="@Icons.Material.Filled.Explore"
-                               Href="/organizations/discover" Class="mt-3">
-                        Discover Organizations
-                    </MudButton>
+                    <MudText Typo="Typo.body2" Color="Color.Secondary">
+                        @if (HasActiveFilters)
+                        {
+                            <text>Try adjusting your search or filters.</text>
+                        }
+                        else
+                        {
+                            <text>You haven't requested access to any organizations yet.</text>
+                        }
+                    </MudText>
+                    @if (HasActiveFilters)
+                    {
+                        <MudButton Variant="Variant.Outlined" Color="Color.Primary"
+                                   OnClick="ClearAllFilters" Class="mt-3">
+                            Clear Filters
+                        </MudButton>
+                    }
+                    else
+                    {
+                        <MudButton Variant="Variant.Filled" Color="Color.Primary"
+                                   StartIcon="@Icons.Material.Filled.Explore"
+                                   Href="/organizations/discover" Class="mt-3">
+                            Discover Organizations
+                        </MudButton>
+                    }
                 </MudStack>
             </EmptyTemplate>
             <PlaceholderTemplate>
@@ -148,6 +215,10 @@ else
 
 @code {
     private EcoDataVirtualizedList<OrganizationAccessRequestDto, OrganizationAccessRequestParameters>? _listRef;
+    private string? _searchText;
+    private string? _statusFilter;
+
+    private bool HasActiveFilters => !string.IsNullOrWhiteSpace(_searchText) || _statusFilter is not null;
 
     protected override void OnInitialized()
     {
@@ -156,8 +227,34 @@ else
 
     private OrganizationAccessRequestParameters CreateParameters(Guid? cursor) => new(
         PageSize: 20,
-        Cursor: cursor
+        Cursor: cursor,
+        Status: _statusFilter,
+        Search: string.IsNullOrWhiteSpace(_searchText) ? null : _searchText
     );
+
+    private void OnSearchChanged(string _)
+    {
+        _listRef?.Refresh();
+    }
+
+    private void ClearSearch()
+    {
+        _searchText = null;
+        _listRef?.Refresh();
+    }
+
+    private void OnStatusFilterChanged(string? status)
+    {
+        _statusFilter = status;
+        _listRef?.Refresh();
+    }
+
+    private void ClearAllFilters()
+    {
+        _searchText = null;
+        _statusFilter = null;
+        _listRef?.Refresh();
+    }
 
     private async Task CancelRequest(OrganizationAccessRequestDto request)
     {
