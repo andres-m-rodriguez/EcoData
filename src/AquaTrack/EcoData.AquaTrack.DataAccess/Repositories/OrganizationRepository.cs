@@ -115,6 +115,34 @@ public sealed class OrganizationRepository(IDbContextFactory<AquaTrackDbContext>
         };
 
         context.Organizations.Add(entity);
+
+        // Seed default roles for the organization
+        var defaultRoles = new[]
+        {
+            new OrganizationRole
+            {
+                Id = Guid.CreateVersion7(),
+                OrganizationId = entity.Id,
+                Name = "Owner",
+                CreatedAt = now,
+            },
+            new OrganizationRole
+            {
+                Id = Guid.CreateVersion7(),
+                OrganizationId = entity.Id,
+                Name = "Admin",
+                CreatedAt = now,
+            },
+            new OrganizationRole
+            {
+                Id = Guid.CreateVersion7(),
+                OrganizationId = entity.Id,
+                Name = "Viewer",
+                CreatedAt = now,
+            },
+        };
+        context.OrganizationRoles.AddRange(defaultRoles);
+
         await context.SaveChangesAsync(cancellationToken);
 
         return new OrganizationDtoForCreated(entity.Id, entity.Name);

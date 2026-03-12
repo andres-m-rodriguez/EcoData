@@ -111,11 +111,8 @@ public sealed class OrganizationMemberRepository(
         await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
 
         var role = await context
-            .OrganizationRoles.Where(r =>
-                r.Name == roleName
-                && (r.OrganizationId == organizationId || r.OrganizationId == null)
-            )
-            .OrderByDescending(r => r.OrganizationId)
+            .OrganizationRoles
+            .Where(r => r.Name == roleName && r.OrganizationId == organizationId)
             .FirstOrDefaultAsync(cancellationToken);
 
         if (role is null)
@@ -170,11 +167,8 @@ public sealed class OrganizationMemberRepository(
         }
 
         var role = await context
-            .OrganizationRoles.Where(r =>
-                r.Name == roleName
-                && (r.OrganizationId == organizationId || r.OrganizationId == null)
-            )
-            .OrderByDescending(r => r.OrganizationId)
+            .OrganizationRoles
+            .Where(r => r.Name == roleName && r.OrganizationId == organizationId)
             .FirstOrDefaultAsync(cancellationToken);
 
         if (role is null)
