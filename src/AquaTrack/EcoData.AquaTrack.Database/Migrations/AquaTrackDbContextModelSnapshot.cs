@@ -331,10 +331,50 @@ namespace EcoData.AquaTrack.Database.Migrations
                         .HasDatabaseName("ix_organization_access_requests_status");
 
                     b.HasIndex("UserId", "OrganizationId")
-                        .IsUnique()
                         .HasDatabaseName("ix_organization_access_requests_user_id_organization_id");
 
                     b.ToTable("organization_access_requests", (string)null);
+                });
+
+            modelBuilder.Entity("EcoData.AquaTrack.Database.Models.OrganizationBlockedUser", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTimeOffset>("BlockedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("blocked_at");
+
+                    b.Property<Guid>("BlockedByUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("blocked_by_user_id");
+
+                    b.Property<Guid>("OrganizationId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("organization_id");
+
+                    b.Property<string>("Reason")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("reason");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("user_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_organization_blocked_users");
+
+                    b.HasIndex("UserId")
+                        .HasDatabaseName("ix_organization_blocked_users_user_id");
+
+                    b.HasIndex("OrganizationId", "UserId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_organization_blocked_users_organization_id_user_id");
+
+                    b.ToTable("organization_blocked_users", (string)null);
                 });
 
             modelBuilder.Entity("EcoData.AquaTrack.Database.Models.OrganizationMember", b =>
@@ -841,6 +881,18 @@ namespace EcoData.AquaTrack.Database.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("fk_organization_access_requests_organizations_organization_id");
+
+                    b.Navigation("Organization");
+                });
+
+            modelBuilder.Entity("EcoData.AquaTrack.Database.Models.OrganizationBlockedUser", b =>
+                {
+                    b.HasOne("EcoData.AquaTrack.Database.Models.Organization", "Organization")
+                        .WithMany()
+                        .HasForeignKey("OrganizationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_organization_blocked_users_organizations_organization_id");
 
                     b.Navigation("Organization");
                 });
