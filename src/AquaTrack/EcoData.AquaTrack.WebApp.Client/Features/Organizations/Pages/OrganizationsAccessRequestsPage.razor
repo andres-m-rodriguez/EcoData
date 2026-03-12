@@ -254,6 +254,7 @@ else
 
     private void OnStatusFilterChanged(string? status)
     {
+        if (_statusFilter == status) return;
         _statusFilter = status;
         _listRef?.Refresh();
     }
