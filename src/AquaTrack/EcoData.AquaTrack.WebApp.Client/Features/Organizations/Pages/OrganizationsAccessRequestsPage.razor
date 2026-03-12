@@ -1,4 +1,4 @@
-@page "/organizations/settings"
+@page "/organizations/requests"
 @using EcoData.AquaTrack.Contracts.Dtos
 @using EcoData.AquaTrack.Contracts.Parameters
 @using EcoData.AquaTrack.Application.Client
@@ -10,9 +10,9 @@
 @inject INavigationService Navigation
 @inject AuthStateService AuthState
 
-<PageTitle>Organization Settings - AquaTrack</PageTitle>
+<PageTitle>Access Requests - AquaTrack</PageTitle>
 
-<MudText Typo="Typo.h5" Class="mb-4">Settings</MudText>
+<MudText Typo="Typo.h5" Class="mb-4">Access Requests</MudText>
 
 @if (!AuthState.IsAuthenticated)
 {
@@ -21,9 +21,9 @@
             <MudAvatar Size="Size.Large" Color="Color.Info" Variant="Variant.Outlined">
                 <MudIcon Icon="@Icons.Material.Outlined.Login" />
             </MudAvatar>
-            <MudText Typo="Typo.h6" Align="Align.Center">Sign in to view settings</MudText>
+            <MudText Typo="Typo.h6" Align="Align.Center">Sign in to view requests</MudText>
             <MudText Typo="Typo.body2" Color="Color.Secondary" Align="Align.Center">
-                Log in to manage your organization requests and settings.
+                Log in to manage your organization access requests.
             </MudText>
             <MudButton Variant="Variant.Filled" Color="Color.Primary" Href="/login" Class="mt-2">
                 Sign In
@@ -33,24 +33,6 @@
 }
 else
 {
-    @* Create Organization Section *@
-    <MudPaper Elevation="1" Class="pa-4 rounded-lg mb-4">
-        <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween">
-            <MudStack Spacing="0">
-                <MudText Typo="Typo.subtitle1">Create Organization</MudText>
-                <MudText Typo="Typo.body2" Color="Color.Secondary">
-                    Submit a request to register a new organization
-                </MudText>
-            </MudStack>
-            <MudButton Variant="Variant.Outlined" Color="Color.Primary"
-                       StartIcon="@Icons.Material.Filled.Add" Disabled="true">
-                Request
-            </MudButton>
-        </MudStack>
-    </MudPaper>
-
-    @* Pending Access Requests Section *@
-    <MudText Typo="Typo.h6" Class="mb-3">My Access Requests</MudText>
     <MudPaper Elevation="1" Class="rounded-lg">
         <EcoDataVirtualizedList @ref="_listRef"
                                 TItem="OrganizationAccessRequestDto"
