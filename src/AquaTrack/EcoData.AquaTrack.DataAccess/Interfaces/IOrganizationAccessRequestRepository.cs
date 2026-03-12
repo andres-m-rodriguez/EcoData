@@ -43,6 +43,11 @@ public interface IOrganizationAccessRequestRepository
         CancellationToken cancellationToken = default
     );
 
+    Task<OrganizationAccessRequestDto?> CancelAsync(
+        Guid id,
+        CancellationToken cancellationToken = default
+    );
+
     Task<bool> ExistsPendingAsync(
         Guid userId,
         Guid organizationId,
