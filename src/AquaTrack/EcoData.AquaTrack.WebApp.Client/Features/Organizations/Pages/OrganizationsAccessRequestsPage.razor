@@ -3,6 +3,7 @@
 @using EcoData.AquaTrack.Contracts.Parameters
 @using EcoData.AquaTrack.Application.Client
 @using EcoData.AquaTrack.WebApp.Client.Services
+@using EcoData.AquaTrack.WebApp.Client.Features.OrganizationAccessRequests.Dialogs
 @using EcoData.Common.Pagination.Blazor
 @inject IOrganizationAccessRequestHttpClient AccessRequestClient
 @inject IDialogService DialogService
@@ -36,16 +37,24 @@ else
     @* Search and Filters *@
     <MudPaper Elevation="1" Class="pa-4 rounded-lg mb-4">
         <MudStack Spacing="3">
-            <MudTextField @bind-Value="_searchText"
-                          Placeholder="Search by organization name..."
-                          Variant="Variant.Outlined"
-                          Adornment="Adornment.Start"
-                          AdornmentIcon="@Icons.Material.Filled.Search"
-                          Immediate="true"
-                          DebounceInterval="300"
-                          OnDebounceIntervalElapsed="OnSearchChanged"
-                          Clearable="true"
-                          OnClearButtonClick="ClearSearch" />
+            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                <MudTextField @bind-Value="_searchText"
+                              Placeholder="Search by organization name..."
+                              Variant="Variant.Outlined"
+                              Adornment="Adornment.Start"
+                              AdornmentIcon="@Icons.Material.Filled.Search"
+                              Immediate="true"
+                              DebounceInterval="300"
+                              OnDebounceIntervalElapsed="OnSearchChanged"
+                              Clearable="true"
+                              OnClearButtonClick="ClearSearch"
+                              Class="flex-grow-1" />
+                <MudButton Variant="Variant.Filled" Color="Color.Primary"
+                           StartIcon="@Icons.Material.Filled.Add"
+                           OnClick="OpenRequestDialog">
+                    New Request
+                </MudButton>
+            </MudStack>
             <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Wrap="Wrap.Wrap">
                 <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mr-2">Status:</MudText>
                 <MudChipSet T="string" SelectionMode="SelectionMode.SingleSelection" SelectedValue="_statusFilter" SelectedValueChanged="OnStatusFilterChanged">
@@ -254,6 +263,18 @@ else
         _searchText = null;
         _statusFilter = null;
         _listRef?.Refresh();
+    }
+
+    private async Task OpenRequestDialog()
+    {
+        var options = new DialogOptions { CloseOnEscapeKey = true, MaxWidth = MaxWidth.Small, FullWidth = true };
+        var dialog = await DialogService.ShowAsync<RequestAccessDialog>("Request Access", options);
+        var result = await dialog.Result;
+
+        if (result is { Canceled: false })
+        {
+            _listRef?.Refresh();
+        }
     }
 
     private async Task CancelRequest(OrganizationAccessRequestDto request)
