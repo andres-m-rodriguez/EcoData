@@ -117,6 +117,7 @@ public sealed class OrganizationAccessRequestHttpClient(HttpClient httpClient) :
         var query = new QueryStringBuilder()
             .AddCursorParameters(parameters)
             .Add("status", parameters.Status)
+            .Add("search", parameters.Search)
             .Build();
 
         return httpClient.GetFromJsonAsAsyncEnumerable<OrganizationAccessRequestDto>(
