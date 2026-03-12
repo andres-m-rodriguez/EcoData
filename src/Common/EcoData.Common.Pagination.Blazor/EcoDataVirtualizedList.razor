@@ -2,49 +2,31 @@
 @typeparam TItem
 @typeparam TParams where TParams : CursorParameters
 
-<div class="eco-virtualized-list-container">
-    @if (_isEmpty)
+@if (_isInitialLoading)
+{
+    @if (LoadingTemplate is not null)
     {
-        @if (HasActiveFilters?.Invoke(ParametersFactory()) == true && FilteredEmptyTemplate is not null)
-        {
-            @FilteredEmptyTemplate(ClearFiltersAsync)
-        }
-        else if (EmptyTemplate is not null)
-        {
-            @EmptyTemplate
-        }
-        else
-        {
-            <MudStack AlignItems="AlignItems.Center" Class="pa-8">
-                <MudIcon Icon="@Icons.Material.Filled.SearchOff" Size="Size.Large" Color="Color.Secondary" />
-                <MudText Typo="Typo.h6" Color="Color.Secondary" Class="mt-2">No items found</MudText>
-            </MudStack>
-        }
+        @LoadingTemplate
     }
-    else
+}
+else if (_isEmpty)
+{
+    @if (EmptyTemplate is not null)
     {
-        <Virtualize @key="_generation"
-                    TItem="TItem"
-                    ItemsProvider="LoadItemsAsync"
-                    ItemSize="ItemSize"
-                    OverscanCount="OverscanCount"
-                    Context="item">
-            <ItemContent>
-                @ItemTemplate(item)
-            </ItemContent>
-            <Placeholder>
-                @if (SkeletonTemplate is not null)
-                {
-                    @SkeletonTemplate
-                }
-                else
-                {
-                    <div class="eco-skeleton-item" style="height: @(ItemSize)px;">
-                        <MudSkeleton Width="60%" Height="16px" />
-                        <MudSkeleton Width="40%" Height="14px" Class="mt-1" />
-                    </div>
-                }
-            </Placeholder>
-        </Virtualize>
+        @EmptyTemplate
     }
-</div>
+}
+else
+{
+    <Virtualize @key="_generation" ItemsProvider="LoadItemsAsync" ItemSize="ItemSize" OverscanCount="OverscanCount" Context="item">
+        <ItemContent>
+            @ItemTemplate(item)
+        </ItemContent>
+        <Placeholder>
+            @if (PlaceholderTemplate is not null)
+            {
+                @PlaceholderTemplate
+            }
+        </Placeholder>
+    </Virtualize>
+}
