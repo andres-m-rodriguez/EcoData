@@ -1,23 +1,45 @@
-@using BlazingSingularity.Signals
+@using EcoData.AquaTrack.Contracts.Dtos
+@using EcoData.AquaTrack.Contracts.Requests
+@using EcoData.AquaTrack.Application.Client
+@using EcoData.AquaTrack.WebApp.Client.Features.Organizations.Components
+@using BlazingSingularity
+@using BlazingSingularity.Commands
+@inject IOrganizationAccessRequestHttpClient AccessRequestClient
+@inject ISnackbar Snackbar
 
 <MudDialog>
     <TitleContent>
         <MudText Typo="Typo.h6">Request Access</MudText>
     </TitleContent>
     <DialogContent>
-        <MudText Typo="Typo.body2" Class="mb-4">
-            Request access to <strong>@OrganizationName</strong>. An administrator will review your request.
-        </MudText>
-        <MudTextField @bind-Value="RequestMessage"
-                      Label="Message (Optional)"
-                      Placeholder="Why would you like to join this organization?"
-                      Variant="Variant.Outlined"
-                      Lines="3"
-                      HelperText="This will be visible to organization administrators" />
+        <MudForm @ref="_form" @bind-IsValid="_isValid">
+            <MudStack Spacing="4">
+                <MudText Typo="Typo.body2" Color="Color.Secondary">
+                    Select an organization to request access. An administrator will review your request.
+                </MudText>
+                <OrganizationSelect @bind-Value="_selectedOrganization"
+                                    Label="Organization"
+                                    Required="true"
+                                    RequiredError="Please select an organization" />
+                <MudTextField @bind-Value="_requestMessage"
+                              Label="Message (Optional)"
+                              Placeholder="Why would you like to join this organization?"
+                              Variant="Variant.Outlined"
+                              Lines="3"
+                              HelperText="This message will be visible to organization administrators" />
+            </MudStack>
+        </MudForm>
     </DialogContent>
     <DialogActions>
-        <MudButton OnClick="Cancel">Cancel</MudButton>
-        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Submit">
+        <MudButton OnClick="Cancel" Disabled="SubmitCommand.IsLoading">Cancel</MudButton>
+        <MudButton Color="Color.Primary"
+                   Variant="Variant.Filled"
+                   OnClick="@(() => SubmitCommand.ExecuteAsync())"
+                   Disabled="@(!_isValid || SubmitCommand.IsLoading)">
+            @if (SubmitCommand.IsLoading)
+            {
+                <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
+            }
             Submit Request
         </MudButton>
     </DialogActions>
@@ -27,13 +49,31 @@
     [CascadingParameter]
     private IMudDialogInstance MudDialog { get; set; } = null!;
 
-    [Parameter]
-    public string OrganizationName { get; set; } = string.Empty;
-
-    [Signal]
+    private MudForm _form = null!;
+    private bool _isValid;
+    private OrganizationDtoForList? _selectedOrganization;
     private string? _requestMessage;
 
     private void Cancel() => MudDialog.Cancel();
 
-    private void Submit() => MudDialog.Close(DialogResult.Ok(RequestMessage ?? ""));
+    [RelayCommand]
+    private async Task Submit()
+    {
+        await _form.ValidateAsync();
+        if (!_isValid || _selectedOrganization == null)
+            return;
+
+        var request = new CreateOrganizationAccessRequestRequest(_selectedOrganization.Id, _requestMessage);
+        var result = await AccessRequestClient.CreateAsync(_selectedOrganization.Id, request);
+
+        result.Switch(
+            _ =>
+            {
+                Snackbar.Add($"Access request submitted for {_selectedOrganization.Name}", Severity.Success);
+                MudDialog.Close(DialogResult.Ok(true));
+            },
+            conflict => Snackbar.Add("You already have a pending request for this organization", Severity.Warning),
+            error => Snackbar.Add($"Failed to submit request: {error.Message}", Severity.Error)
+        );
+    }
 }
