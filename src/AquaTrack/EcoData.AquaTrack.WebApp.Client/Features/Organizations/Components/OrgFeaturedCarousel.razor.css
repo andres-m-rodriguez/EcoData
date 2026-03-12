@@ -1,0 +1,76 @@
+.carousel-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.carousel-nav {
+    flex-shrink: 0;
+}
+
+.carousel-nav-placeholder {
+    flex-shrink: 0;
+    width: 40px;
+}
+
+.carousel-viewport {
+    flex: 1;
+    overflow: hidden;
+}
+
+.carousel-track {
+    --visible-count: 2;
+    --card-gap: 16px;
+    --card-width: calc((100% - (var(--visible-count) - 1) * var(--card-gap)) / var(--visible-count));
+
+    display: flex;
+    gap: var(--card-gap);
+    padding: 8px 0;
+    transition: transform 0.3s ease-in-out;
+    transform: translateX(calc(var(--carousel-index, 0) * (var(--card-width) + var(--card-gap)) * -1));
+}
+
+.carousel-item {
+    flex: 0 0 var(--card-width);
+}
+
+.carousel-skeleton {
+    width: 100%;
+    aspect-ratio: 1;
+    border-radius: 16px;
+}
+
+.empty-state {
+    padding: 24px;
+    border-radius: 16px;
+    border: 1px dashed var(--mud-palette-lines-default);
+}
+
+/* Responsive breakpoints */
+/* sm: 600px+ */
+@media (min-width: 600px) {
+    .carousel-track {
+        --visible-count: 3;
+    }
+}
+
+/* md: 960px+ */
+@media (min-width: 960px) {
+    .carousel-track {
+        --visible-count: 4;
+    }
+}
+
+/* lg: 1280px+ */
+@media (min-width: 1280px) {
+    .carousel-track {
+        --visible-count: 5;
+    }
+}
+
+/* xl: 1920px+ */
+@media (min-width: 1920px) {
+    .carousel-track {
+        --visible-count: 6;
+    }
+}
