@@ -12,7 +12,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace EcoData.AquaTrack.Database.Migrations
 {
     [DbContext(typeof(AquaTrackDbContext))]
-    [Migration("20260312050200_Initial")]
+    [Migration("20260312055204_Initial")]
     partial class Initial
     {
         /// <inheritdoc />
@@ -439,7 +439,7 @@ namespace EcoData.AquaTrack.Database.Migrations
                         .HasColumnType("character varying(100)")
                         .HasColumnName("name");
 
-                    b.Property<Guid?>("OrganizationId")
+                    b.Property<Guid>("OrganizationId")
                         .HasColumnType("uuid")
                         .HasColumnName("organization_id");
 
@@ -927,6 +927,7 @@ namespace EcoData.AquaTrack.Database.Migrations
                         .WithMany()
                         .HasForeignKey("OrganizationId")
                         .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
                         .HasConstraintName("fk_organization_roles_organizations_organization_id");
 
                     b.Navigation("Organization");

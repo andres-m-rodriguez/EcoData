@@ -1,7 +1,5 @@
 using System.Text.Json;
-using P = EcoData.AquaTrack.Contracts.Permissions;
 using EcoData.AquaTrack.Database;
-using EcoData.AquaTrack.Database.Models;
 using EcoData.Identity.Database;
 using EcoData.Identity.Database.Models;
 using EcoData.Locations.Database;
@@ -30,7 +28,6 @@ public sealed class DatabaseSeederWorker(
             await MigrateIdentityAsync(services, stoppingToken);
             await MigrateLocationsAsync(services, stoppingToken);
 
-            await SeedOrganizationRolesAsync(services, stoppingToken);
             await SeedAdminUserAsync(services, stoppingToken);
             await SeedLocationsAsync(services, stoppingToken);
 
@@ -78,80 +75,6 @@ public sealed class DatabaseSeederWorker(
         logger.LogInformation("Applying Locations database migrations...");
         await context.Database.MigrateAsync(stoppingToken);
         logger.LogInformation("Locations database migrations applied.");
-    }
-
-    private async Task SeedOrganizationRolesAsync(
-        IServiceProvider services,
-        CancellationToken stoppingToken
-    )
-    {
-        var context = services.GetRequiredService<AquaTrackDbContext>();
-
-        var existingRoles = await context.OrganizationRoles
-            .Where(r => r.OrganizationId == null)
-            .AnyAsync(stoppingToken);
-
-        if (existingRoles)
-        {
-            logger.LogInformation("Default organization roles already exist. Skipping...");
-            return;
-        }
-
-        logger.LogInformation("Seeding default organization roles...");
-
-        var now = DateTimeOffset.UtcNow;
-
-        var viewerRole = new OrganizationRole
-        {
-            Id = Guid.CreateVersion7(),
-            OrganizationId = null,
-            Name = "Viewer",
-            CreatedAt = now,
-        };
-
-        var contributorRole = new OrganizationRole
-        {
-            Id = Guid.CreateVersion7(),
-            OrganizationId = null,
-            Name = "Contributor",
-            CreatedAt = now,
-        };
-
-        var adminRole = new OrganizationRole
-        {
-            Id = Guid.CreateVersion7(),
-            OrganizationId = null,
-            Name = "Admin",
-            CreatedAt = now,
-        };
-
-        context.OrganizationRoles.AddRange(viewerRole, contributorRole, adminRole);
-        await context.SaveChangesAsync(stoppingToken);
-
-        var permissions = new List<OrganizationRolePermission>
-        {
-            // Viewer permissions
-            new() { RoleId = viewerRole.Id, Permission = P.Sensor.Read },
-
-            // Contributor permissions
-            new() { RoleId = contributorRole.Id, Permission = P.Sensor.Read },
-            new() { RoleId = contributorRole.Id, Permission = P.Sensor.Create },
-            new() { RoleId = contributorRole.Id, Permission = P.Sensor.Update },
-
-            // Admin permissions
-            new() { RoleId = adminRole.Id, Permission = P.Sensor.Read },
-            new() { RoleId = adminRole.Id, Permission = P.Sensor.Create },
-            new() { RoleId = adminRole.Id, Permission = P.Sensor.Update },
-            new() { RoleId = adminRole.Id, Permission = P.Sensor.Delete },
-            new() { RoleId = adminRole.Id, Permission = P.Organization.Update },
-            new() { RoleId = adminRole.Id, Permission = P.Organization.Delete },
-            new() { RoleId = adminRole.Id, Permission = P.Organization.ManageMembers },
-        };
-
-        context.OrganizationRolePermissions.AddRange(permissions);
-        await context.SaveChangesAsync(stoppingToken);
-
-        logger.LogInformation("Default organization roles seeded: Viewer, Contributor, Admin");
     }
 
     private async Task SeedAdminUserAsync(

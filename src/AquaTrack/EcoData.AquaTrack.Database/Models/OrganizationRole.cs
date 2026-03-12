@@ -6,7 +6,7 @@ namespace EcoData.AquaTrack.Database.Models;
 public sealed class OrganizationRole
 {
     public required Guid Id { get; set; }
-    public required Guid? OrganizationId { get; set; }
+    public required Guid OrganizationId { get; set; }
     public required string Name { get; set; }
     public required DateTimeOffset CreatedAt { get; set; }
 
@@ -24,7 +24,7 @@ public sealed class OrganizationRole
             builder.Property(static e => e.Name).HasMaxLength(100).IsRequired();
             builder.Property(static e => e.CreatedAt).IsRequired();
 
-            // Unique constraint: role name per org (or globally if org is null)
+            // Unique constraint: role name per org
             builder.HasIndex(static e => new { e.OrganizationId, e.Name }).IsUnique();
 
             builder
