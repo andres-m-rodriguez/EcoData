@@ -19,13 +19,15 @@
     @* Header *@
     <MudStack Spacing="0" Class="mb-6">
         <MudText Typo="Typo.caption" Color="Color.Secondary">Organizations</MudText>
-        <MudText Typo="Typo.h4">Welcome back@(AuthState.CurrentUser != null ? $",            {AuthState.CurrentUser.DisplayName.Split(' ')[0]}" : "")</MudText>
+        <MudText Typo="Typo.h4">Welcome back@(AuthState.CurrentUser != null ? $", {AuthState.CurrentUser.DisplayName.Split(' ')[0]}" : "")</MudText>
     </MudStack>
 
     @* Featured Organizations *@
     <MudText Typo="Typo.h6" Class="mb-3">Featured Organizations</MudText>
-    <OrgFeaturedCarousel Organizations="_featuredOrganizations"             Loading="LoadFeaturedOrganizationsCommand.IsLoading"
-                         OnOrganizationClick="NavigateToDetails"       Class="mb-6" />
+    <OrgFeaturedCarousel Organizations="_featuredOrganizations"
+                         Loading="LoadFeaturedOrganizationsCommand.IsLoading"
+                         OnOrganizationClick="NavigateToDetails"
+                         Class="mb-6" />
 
     @* Bottom Section: Two Columns *@
     <MudGrid Spacing="4">
@@ -79,15 +81,21 @@
             <MudPaper Elevation="0" Class="pa-5 rounded-lg" Style="min-height: 320px;">
                 <MudText Typo="Typo.h6" Class="mb-4">Get Started</MudText>
                 <MudStack Spacing="2">
-                    <ActionListItem Icon="@Icons.Material.Rounded.PersonAdd"                      IconColor="Color.Info"
-                                    Title="Request Access"                      Subtitle="Browse and request to join an existing organization"
+                    <ActionListItem Icon="@Icons.Material.Rounded.PersonAdd"
+                                    IconColor="Color.Info"
+                                    Title="Request Access"
+                                    Subtitle="Browse and request to join an existing organization"
                                     OnClick="OpenRequestAccessDialog" />
 
-                    <ActionListItem Icon="@Icons.Material.Rounded.AddBusiness"                      IconColor="Color.Success"
-                                    Title="Create Organization"                      Subtitle="Submit a request to register a new organization" />
+                    <ActionListItem Icon="@Icons.Material.Rounded.AddBusiness"
+                                    IconColor="Color.Success"
+                                    Title="Create Organization"
+                                    Subtitle="Submit a request to register a new organization" />
 
-                    <ActionListItem Icon="@Icons.Material.Rounded.Pending"                                    IconColor="Color.Warning"
-                                    Title="View Pending Requests"                                    Subtitle="Check the status of your submitted requests"
+                    <ActionListItem Icon="@Icons.Material.Rounded.Pending"
+                                    IconColor="Color.Warning"
+                                    Title="View Pending Requests"
+                                    Subtitle="Check the status of your submitted requests"
                                     OnClick="NavigateToMyRequests" />
                 </MudStack>
             </MudPaper>

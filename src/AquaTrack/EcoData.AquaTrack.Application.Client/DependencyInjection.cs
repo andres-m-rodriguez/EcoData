@@ -41,18 +41,12 @@ public static class DependencyInjection
             configureClient?.Invoke(client);
         });
 
-        services.AddHttpClient<
-            IOrganizationAccessRequestHttpClient,
-            OrganizationAccessRequestHttpClient
-        >(client =>
+        services.AddHttpClient<IOrganizationAccessRequestHttpClient, OrganizationAccessRequestHttpClient>(client =>
         {
             configureClient?.Invoke(client);
         });
 
-        services.AddHttpClient<
-            IOrganizationBlockedUserHttpClient,
-            OrganizationBlockedUserHttpClient
-        >(client =>
+        services.AddHttpClient<IOrganizationBlockedUserHttpClient, OrganizationBlockedUserHttpClient>(client =>
         {
             configureClient?.Invoke(client);
         });
