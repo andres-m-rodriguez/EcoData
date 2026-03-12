@@ -7,6 +7,7 @@
 @using EcoData.AquaTrack.WebApp.Client.Services
 @using EcoData.AquaTrack.WebApp.Client.Components
 @using EcoData.AquaTrack.WebApp.Client.Features.OrganizationAccessRequests.Dialogs
+@using EcoData.Common.Pagination.Blazor
 @using EcoData.Identity.Contracts.Parameters
 @using EcoData.Identity.Contracts.Responses
 @using BlazingSingularity.Signals
@@ -19,7 +20,7 @@
 
 <PageTitle>Access Requests - @(_organization?.Name ?? "Organization") - AquaTrack</PageTitle>
 
-<SearchHeader @bind-Value="SearchText" Placeholder="Search requests..." EnableSticky="true">
+<SearchHeader SearchSignal="SearchTextSignal" Placeholder="Search requests..." EnableSticky="true">
     <Actions>
         <MudSelect T="string" @bind-Value="StatusFilter" Label="Status" Variant="Variant.Outlined"
                    Dense="true" Style="min-width: 150px;">
@@ -31,7 +32,7 @@
     </Actions>
 </SearchHeader>
 
-@if (LoadCommand.IsLoading)
+@if (LoadOrganizationCommand.IsLoading)
 {
     <MudPaper Elevation="1" Class="rounded-lg">
         @for (var i = 0; i < 5; i++)
@@ -59,132 +60,143 @@ else if (_organization is null)
         </MudStack>
     </MudPaper>
 }
-else if (_requests.Count == 0)
-{
-    @if (HasActiveFilters)
-    {
-        <MudPaper Elevation="1" Class="pa-8 rounded-lg">
-            <MudStack AlignItems="AlignItems.Center">
-                <MudIcon Icon="@Icons.Material.Filled.SearchOff" Size="Size.Large" Color="Color.Secondary" />
-                <MudText Typo="Typo.h6" Color="Color.Secondary" Class="mt-2">No requests found</MudText>
-                <MudText Typo="Typo.body2" Color="Color.Secondary">
-                    No access requests match your search criteria.
-                </MudText>
-                <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.FilterAltOff"
-                           OnClick="ClearFilters" Class="mt-3">
-                    Clear Filters
-                </MudButton>
-            </MudStack>
-        </MudPaper>
-    }
-    else
-    {
-        <MudPaper Elevation="1" Class="pa-8 rounded-lg">
-            <MudStack AlignItems="AlignItems.Center">
-                <MudIcon Icon="@Icons.Material.Filled.HowToReg" Size="Size.Large" Color="Color.Secondary" />
-                <MudText Typo="Typo.h6" Color="Color.Secondary" Class="mt-2">No pending requests</MudText>
-                <MudText Typo="Typo.body2" Color="Color.Secondary">
-                    There are no access requests waiting for review.
-                </MudText>
-            </MudStack>
-        </MudPaper>
-    }
-}
 else
 {
     <MudPaper Elevation="1" Class="rounded-lg">
-        @foreach (var request in _requests)
-        {
-            <MudStack Row AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween"
-                      Class="pa-3 border-b">
-                <MudStack Row AlignItems="AlignItems.Center" Spacing="3" Class="flex-grow-1 overflow-hidden">
-                    <MudAvatar Color="Color.Primary" Size="Size.Medium">
-                        @request.DisplayName.FirstOrDefault()
-                    </MudAvatar>
-                    <MudStack Spacing="0" Class="overflow-hidden">
-                        <MudText Typo="Typo.body2" Class="mud-text-truncate">@request.DisplayName</MudText>
-                        <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mud-text-truncate">@request.Email</MudText>
-                        <MudHidden Breakpoint="Breakpoint.SmAndUp" Invert>
-                            <MudText Typo="Typo.caption" Color="Color.Secondary">
-                                @request.CreatedAt.LocalDateTime.ToString("MMM dd, yyyy")
-                            </MudText>
-                        </MudHidden>
+        <EcoDataVirtualizedList @ref="_virtualizedList" TItem="AccessRequestResponse" TParams="AccessRequestParameters"
+                                ItemsProvider="GetItemsAsync" ParametersBuilder="BuildParameters" CursorSelector="r => r.Id"
+                                ItemSize="65" OverscanCount="3">
+            <LoadingTemplate>
+                @for (var i = 0; i < 5; i++)
+                {
+                    <MudStack Row AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween"
+                              Class="pa-3 border-b">
+                        <MudStack Row AlignItems="AlignItems.Center" Spacing="3">
+                            <MudSkeleton SkeletonType="SkeletonType.Circle" Width="40px" Height="40px" />
+                            <MudStack Spacing="1">
+                                <MudSkeleton Width="150px" Height="14px" />
+                                <MudSkeleton Width="200px" Height="12px" />
+                            </MudStack>
+                        </MudStack>
+                        <MudSkeleton Width="70px" Height="24px" Class="rounded-pill" />
                     </MudStack>
+                }
+            </LoadingTemplate>
+            <EmptyTemplate>
+                @if (HasActiveFilters)
+                {
+                    <MudStack AlignItems="AlignItems.Center" Class="pa-8">
+                        <MudIcon Icon="@Icons.Material.Filled.SearchOff" Size="Size.Large" Color="Color.Secondary" />
+                        <MudText Typo="Typo.h6" Color="Color.Secondary" Class="mt-2">No requests found</MudText>
+                        <MudText Typo="Typo.body2" Color="Color.Secondary">
+                            No access requests match your search criteria.
+                        </MudText>
+                        <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.FilterAltOff"
+                                   OnClick="ClearFilters" Class="mt-3">
+                            Clear Filters
+                        </MudButton>
+                    </MudStack>
+                }
+                else
+                {
+                    <MudStack AlignItems="AlignItems.Center" Class="pa-8">
+                        <MudIcon Icon="@Icons.Material.Filled.HowToReg" Size="Size.Large" Color="Color.Secondary" />
+                        <MudText Typo="Typo.h6" Color="Color.Secondary" Class="mt-2">No pending requests</MudText>
+                        <MudText Typo="Typo.body2" Color="Color.Secondary">
+                            There are no access requests waiting for review.
+                        </MudText>
+                    </MudStack>
+                }
+            </EmptyTemplate>
+            <ItemTemplate Context="request">
+                <MudStack Row AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween"
+                          Class="pa-3 border-b">
+                    <MudStack Row AlignItems="AlignItems.Center" Spacing="3" Class="flex-grow-1 overflow-hidden">
+                        <MudAvatar Color="Color.Primary" Size="Size.Medium">
+                            @request.DisplayName.FirstOrDefault()
+                        </MudAvatar>
+                        <MudStack Spacing="0" Class="overflow-hidden">
+                            <MudText Typo="Typo.body2" Class="mud-text-truncate">@request.DisplayName</MudText>
+                            <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mud-text-truncate">@request.Email</MudText>
+                            <MudHidden Breakpoint="Breakpoint.SmAndUp" Invert>
+                                <MudText Typo="Typo.caption" Color="Color.Secondary">
+                                    @request.CreatedAt.LocalDateTime.ToString("MMM dd, yyyy")
+                                </MudText>
+                            </MudHidden>
+                        </MudStack>
+                    </MudStack>
+
+                    <MudChip T="string"
+                             Color="@GetStatusColor(request.Status)"
+                             Size="Size.Small"
+                             Variant="Variant.Filled">
+                        @request.Status
+                    </MudChip>
+
+                    @if (request.Status == "Pending")
+                    {
+                        <MudHidden Breakpoint="Breakpoint.SmAndUp" Invert>
+                            <MudButtonGroup Size="Size.Small" OverrideStyles="false">
+                                <MudButton Variant="Variant.Filled"
+                                           Color="Color.Success"
+                                           StartIcon="@Icons.Material.Filled.Check"
+                                           OnClick="@(() => ApproveRequest(request))">
+                                    Approve
+                                </MudButton>
+                                <MudButton Variant="Variant.Filled"
+                                           Color="Color.Error"
+                                           StartIcon="@Icons.Material.Filled.Close"
+                                           OnClick="@(() => RejectRequest(request))">
+                                    Reject
+                                </MudButton>
+                            </MudButtonGroup>
+                        </MudHidden>
+                        <MudHidden Breakpoint="Breakpoint.Xs" Invert>
+                            <MudMenu Icon="@Icons.Material.Filled.MoreVert" Size="Size.Small"
+                                     AnchorOrigin="Origin.BottomRight" TransformOrigin="Origin.TopRight">
+                                <MudMenuItem Icon="@Icons.Material.Filled.Check" IconColor="Color.Success"
+                                             OnClick="@(() => ApproveRequest(request))">
+                                    Approve
+                                </MudMenuItem>
+                                <MudMenuItem Icon="@Icons.Material.Filled.Close" IconColor="Color.Error"
+                                             OnClick="@(() => RejectRequest(request))">
+                                    Reject
+                                </MudMenuItem>
+                            </MudMenu>
+                        </MudHidden>
+                    }
+                    else if (!string.IsNullOrEmpty(request.ReviewNotes))
+                    {
+                        <MudTooltip Text="@request.ReviewNotes">
+                            <MudIconButton Icon="@Icons.Material.Filled.Notes" Size="Size.Small" />
+                        </MudTooltip>
+                    }
                 </MudStack>
-
-                <MudChip T="string"
-                         Color="@GetStatusColor(request.Status)"
-                         Size="Size.Small"
-                         Variant="Variant.Filled">
-                    @request.Status
-                </MudChip>
-
-                @if (request.Status == "Pending")
-                {
-                    <MudHidden Breakpoint="Breakpoint.SmAndUp" Invert>
-                        <MudButtonGroup Size="Size.Small" OverrideStyles="false">
-                            <MudButton Variant="Variant.Filled"
-                                       Color="Color.Success"
-                                       StartIcon="@Icons.Material.Filled.Check"
-                                       OnClick="@(() => ApproveRequest(request))">
-                                Approve
-                            </MudButton>
-                            <MudButton Variant="Variant.Filled"
-                                       Color="Color.Error"
-                                       StartIcon="@Icons.Material.Filled.Close"
-                                       OnClick="@(() => RejectRequest(request))">
-                                Reject
-                            </MudButton>
-                        </MudButtonGroup>
-                    </MudHidden>
-                    <MudHidden Breakpoint="Breakpoint.Xs" Invert>
-                        <MudMenu Icon="@Icons.Material.Filled.MoreVert" Size="Size.Small"
-                                 AnchorOrigin="Origin.BottomRight" TransformOrigin="Origin.TopRight">
-                            <MudMenuItem Icon="@Icons.Material.Filled.Check" IconColor="Color.Success"
-                                         OnClick="@(() => ApproveRequest(request))">
-                                Approve
-                            </MudMenuItem>
-                            <MudMenuItem Icon="@Icons.Material.Filled.Close" IconColor="Color.Error"
-                                         OnClick="@(() => RejectRequest(request))">
-                                Reject
-                            </MudMenuItem>
-                        </MudMenu>
-                    </MudHidden>
-                }
-                else if (!string.IsNullOrEmpty(request.ReviewNotes))
-                {
-                    <MudTooltip Text="@request.ReviewNotes">
-                        <MudIconButton Icon="@Icons.Material.Filled.Notes" Size="Size.Small" />
-                    </MudTooltip>
-                }
-            </MudStack>
-        }
+            </ItemTemplate>
+            <PlaceholderTemplate>
+                <MudStack Row AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween"
+                          Class="pa-3 border-b">
+                    <MudStack Row AlignItems="AlignItems.Center" Spacing="3">
+                        <MudSkeleton SkeletonType="SkeletonType.Circle" Width="40px" Height="40px" />
+                        <MudStack Spacing="1">
+                            <MudSkeleton Width="150px" Height="14px" />
+                            <MudSkeleton Width="200px" Height="12px" />
+                        </MudStack>
+                    </MudStack>
+                    <MudSkeleton Width="70px" Height="24px" Class="rounded-pill" />
+                </MudStack>
+            </PlaceholderTemplate>
+        </EcoDataVirtualizedList>
     </MudPaper>
-    @if (_hasMore)
-    {
-        <div class="d-flex justify-center mt-8">
-            <MudButton Variant="Variant.Outlined"
-                       Color="Color.Primary"
-                       OnClick="() => LoadMoreCommand.ExecuteAsync()"
-                       Disabled="LoadMoreCommand.IsLoading">
-                @if (LoadMoreCommand.IsLoading)
-                {
-                    <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
-                }
-                Load More
-            </MudButton>
-        </div>
-    }
 }
 
 @code {
+    private EcoDataVirtualizedList<AccessRequestResponse, AccessRequestParameters>? _virtualizedList;
+
     [Parameter]
     public Guid OrganizationId { get; set; }
 
     private OrganizationDtoForDetail? _organization;
-    private List<AccessRequestResponse> _requests = [];
-    private bool _hasMore;
-    private Guid? _cursor;
 
     [Signal]
     private string? _searchText;
@@ -197,21 +209,13 @@ else
     protected override async Task OnInitializedAsync()
     {
         Navigation.SetFallback($"/organizations/{OrganizationId}/team");
-        SearchTextSignal.OnChange(_ => InvokeAsync(async () =>
-        {
-            await LoadCommand.ExecuteAsync();
-            StateHasChanged();
-        }));
-        StatusFilterSignal.OnChange(_ => InvokeAsync(async () =>
-        {
-            await LoadCommand.ExecuteAsync();
-            StateHasChanged();
-        }));
-        await LoadCommand.ExecuteAsync();
+        SearchTextSignal.OnChange(_ => _virtualizedList?.Refresh());
+        StatusFilterSignal.OnChange(_ => _virtualizedList?.Refresh());
+        await LoadOrganizationCommand.ExecuteAsync();
     }
 
     [RelayCommand]
-    private async Task Load()
+    private async Task LoadOrganization()
     {
         var result = await OrganizationClient.GetByIdAsync(OrganizationId);
         result.Switch(
@@ -219,47 +223,19 @@ else
             _ => _organization = null,
             _ => _organization = null
         );
-
-        if (_organization is not null)
-        {
-            _requests.Clear();
-            _cursor = null;
-
-            var parameters = CreateParameters();
-            var count = 0;
-            await foreach (var request in AccessRequestClient.GetAllAsync(OrganizationId, parameters))
-            {
-                _requests.Add(request);
-                _cursor = request.Id;
-                count++;
-            }
-            _hasMore = count >= parameters.PageSize;
-        }
     }
 
-    [RelayCommand]
-    private async Task LoadMore()
-    {
-        if (!_hasMore) return;
+    private AccessRequestParameters BuildParameters(Guid? cursor) => new(
+        PageSize: 20,
+        Cursor: cursor,
+        Search: string.IsNullOrWhiteSpace(SearchText) ? null : SearchText,
+        Status: StatusFilter
+    );
 
-        var parameters = CreateParameters(_cursor);
-        var count = 0;
-        await foreach (var request in AccessRequestClient.GetAllAsync(OrganizationId, parameters))
-        {
-            _requests.Add(request);
-            _cursor = request.Id;
-            count++;
-        }
-        _hasMore = count >= parameters.PageSize;
+    private IAsyncEnumerable<AccessRequestResponse> GetItemsAsync(AccessRequestParameters parameters, CancellationToken cancellationToken)
+    {
+        return AccessRequestClient.GetAllAsync(OrganizationId, parameters, cancellationToken);
     }
-
-    private AccessRequestParameters CreateParameters(Guid? cursor = null) => new()
-    {
-        PageSize = 20,
-        Search = string.IsNullOrWhiteSpace(SearchText) ? null : SearchText,
-        Status = StatusFilter,
-        Cursor = cursor
-    };
 
     private void ClearFilters()
     {
@@ -291,15 +267,10 @@ else
         {
             var result = await AccessRequestClient.UpdateStatusAsync(OrganizationId, request.Id, true);
             result.Switch(
-                updatedRequest =>
+                _ =>
                 {
-                    var index = _requests.FindIndex(r => r.Id == request.Id);
-                    if (index >= 0)
-                    {
-                        _requests[index] = updatedRequest;
-                    }
                     Snackbar.Add($"{request.DisplayName} has been approved and added as a Viewer", Severity.Success);
-                    StateHasChanged();
+                    _virtualizedList?.Refresh();
                 },
                 _ => Snackbar.Add("Access request not found", Severity.Error),
                 conflict => Snackbar.Add(conflict.Message, Severity.Warning),
@@ -322,15 +293,10 @@ else
         {
             var result = await AccessRequestClient.UpdateStatusAsync(OrganizationId, request.Id, false, reviewNotes);
             result.Switch(
-                updatedRequest =>
+                _ =>
                 {
-                    var index = _requests.FindIndex(r => r.Id == request.Id);
-                    if (index >= 0)
-                    {
-                        _requests[index] = updatedRequest;
-                    }
                     Snackbar.Add($"Request from {request.DisplayName} has been rejected", Severity.Info);
-                    StateHasChanged();
+                    _virtualizedList?.Refresh();
                 },
                 _ => Snackbar.Add("Access request not found", Severity.Error),
                 conflict => Snackbar.Add(conflict.Message, Severity.Warning),

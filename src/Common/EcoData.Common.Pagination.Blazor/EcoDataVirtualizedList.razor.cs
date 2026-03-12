@@ -1,4 +1,3 @@
-using EcoData.Common.Pagination;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web.Virtualization;
 
@@ -11,84 +10,99 @@ public partial class EcoDataVirtualizedList<TItem, TParams> : ComponentBase
     private Guid? _lastCursor;
     private bool _hasMoreItems = true;
     private bool _isEmpty;
+    private bool _isInitialLoading = true;
     private int _generation;
 
+    /// <summary>
+    /// Function that provides items as an async enumerable given the parameters.
+    /// </summary>
     [Parameter, EditorRequired]
-    public RenderFragment<TItem> ItemTemplate { get; set; } = null!;
+    public required Func<
+        TParams,
+        CancellationToken,
+        IAsyncEnumerable<TItem>
+    > ItemsProvider { get; set; }
 
+    /// <summary>
+    /// Function that builds the parameters for a request, given an optional cursor.
+    /// </summary>
+    [Parameter, EditorRequired]
+    public required Func<Guid?, TParams> ParametersBuilder { get; set; }
+
+    /// <summary>
+    /// Function that extracts the cursor value from an item (typically the Id).
+    /// </summary>
+    [Parameter, EditorRequired]
+    public required Func<TItem, Guid> CursorSelector { get; set; }
+
+    /// <summary>
+    /// Template for rendering each item.
+    /// </summary>
+    [Parameter, EditorRequired]
+    public required RenderFragment<TItem> ItemTemplate { get; set; }
+
+    /// <summary>
+    /// Template shown while items are being loaded (placeholder rows).
+    /// </summary>
     [Parameter]
-    public RenderFragment? SkeletonTemplate { get; set; }
+    public RenderFragment? PlaceholderTemplate { get; set; }
 
+    /// <summary>
+    /// Template shown during initial loading (skeleton state).
+    /// </summary>
+    [Parameter]
+    public RenderFragment? LoadingTemplate { get; set; }
+
+    /// <summary>
+    /// Template shown when there are no items.
+    /// </summary>
     [Parameter]
     public RenderFragment? EmptyTemplate { get; set; }
 
-    [Parameter]
-    public RenderFragment<Func<Task>>? FilteredEmptyTemplate { get; set; }
-
-    [Parameter, EditorRequired]
-    public Func<TParams, CancellationToken, IAsyncEnumerable<TItem>> ItemsProvider { get; set; } = null!;
-
-    [Parameter, EditorRequired]
-    public Func<TParams> ParametersFactory { get; set; } = null!;
-
-    [Parameter, EditorRequired]
-    public Func<TItem, Guid> KeySelector { get; set; } = null!;
-
-    [Parameter]
-    public Func<TParams, bool>? HasActiveFilters { get; set; }
-
-    [Parameter]
-    public EventCallback OnClearFilters { get; set; }
-
+    /// <summary>
+    /// The size of each item in pixels for virtualization.
+    /// </summary>
     [Parameter]
     public float ItemSize { get; set; } = 65;
 
+    /// <summary>
+    /// Number of extra items to render before and after the visible range.
+    /// </summary>
     [Parameter]
     public int OverscanCount { get; set; } = 3;
 
-    public IReadOnlyList<TItem> CachedItems => _cachedItems;
+    /// <summary>
+    /// Whether the list is currently in initial loading state.
+    /// </summary>
+    public bool IsInitialLoading => _isInitialLoading;
 
-    public void Refresh()
+    /// <summary>
+    /// Whether the list is empty (no items after loading).
+    /// </summary>
+    public bool IsEmpty => _isEmpty;
+
+    protected override async Task OnInitializedAsync()
     {
-        _generation++;
-        _cachedItems.Clear();
-        _lastCursor = null;
-        _hasMoreItems = true;
-        _isEmpty = false;
-        StateHasChanged();
+        await LoadInitialDataAsync();
     }
 
-    public void UpdateItem(TItem updatedItem)
+    private async Task LoadInitialDataAsync()
     {
-        var id = KeySelector(updatedItem);
-        var index = _cachedItems.FindIndex(item => KeySelector(item).Equals(id));
-        if (index >= 0)
-        {
-            _cachedItems[index] = updatedItem;
-            StateHasChanged();
-        }
-    }
+        var parameters = ParametersBuilder(null);
 
-    public void UpdateItem(Guid id, Func<TItem, TItem> updater)
-    {
-        var index = _cachedItems.FindIndex(item => KeySelector(item).Equals(id));
-        if (index >= 0)
+        await foreach (var item in ItemsProvider(parameters, CancellationToken.None))
         {
-            _cachedItems[index] = updater(_cachedItems[index]);
-            StateHasChanged();
+            _cachedItems.Add(item);
+            _lastCursor = CursorSelector(item);
         }
-    }
 
-    public bool RemoveItem(Guid id)
-    {
-        var index = _cachedItems.FindIndex(item => KeySelector(item).Equals(id));
-        if (index >= 0)
+        if (_cachedItems.Count < parameters.PageSize)
         {
-            _cachedItems.RemoveAt(index);
-            StateHasChanged();
-            return true;
+            _hasMoreItems = false;
         }
-        return false;
+
+        _isEmpty = _cachedItems.Count == 0;
+        _isInitialLoading = false;
     }
 
     private async ValueTask<ItemsProviderResult<TItem>> LoadItemsAsync(ItemsProviderRequest request)
@@ -102,17 +116,16 @@ public partial class EcoDataVirtualizedList<TItem, TParams> : ComponentBase
             if (_generation != currentGeneration)
                 return CreateResult(startIndex, request.Count);
 
-            var parameters = ParametersFactory();
-            var paramsWithCursor = CreateParametersWithCursor(parameters, _lastCursor);
+            var parameters = ParametersBuilder(_lastCursor);
 
             var fetchedCount = 0;
-            await foreach (var item in ItemsProvider(paramsWithCursor, request.CancellationToken))
+            await foreach (var item in ItemsProvider(parameters, request.CancellationToken))
             {
                 if (_generation != currentGeneration)
                     return CreateResult(startIndex, request.Count);
 
                 _cachedItems.Add(item);
-                _lastCursor = KeySelector(item);
+                _lastCursor = CursorSelector(item);
                 fetchedCount++;
             }
 
@@ -122,15 +135,7 @@ public partial class EcoDataVirtualizedList<TItem, TParams> : ComponentBase
             }
         }
 
-        var result = CreateResult(startIndex, request.Count);
-
-        if (startIndex == 0 && result.TotalItemCount == 0 && !_isEmpty)
-        {
-            _isEmpty = true;
-            StateHasChanged();
-        }
-
-        return result;
+        return CreateResult(startIndex, request.Count);
     }
 
     private ItemsProviderResult<TItem> CreateResult(int startIndex, int count)
@@ -140,44 +145,29 @@ public partial class EcoDataVirtualizedList<TItem, TParams> : ComponentBase
         return new ItemsProviderResult<TItem>(items, totalCount);
     }
 
-    private async Task ClearFiltersAsync()
+    /// <summary>
+    /// Refreshes the list by clearing the cache and reloading from the beginning.
+    /// Call this when parameters change (e.g., filters, search text).
+    /// </summary>
+    public async Task RefreshAsync()
     {
-        await OnClearFilters.InvokeAsync();
+        _generation++;
+        _cachedItems.Clear();
+        _lastCursor = null;
+        _hasMoreItems = true;
+        _isEmpty = false;
+        _isInitialLoading = true;
+        StateHasChanged();
+
+        await LoadInitialDataAsync();
+        StateHasChanged();
     }
 
-    private static TParams CreateParametersWithCursor(TParams baseParams, Guid? cursor)
+    /// <summary>
+    /// Synchronous refresh that can be used from event handlers.
+    /// </summary>
+    public async void Refresh()
     {
-        var type = typeof(TParams);
-        var constructor = type.GetConstructors().FirstOrDefault()
-            ?? throw new InvalidOperationException($"Type {type.Name} must have a public constructor.");
-
-        var ctorParams = constructor.GetParameters();
-        var args = new object?[ctorParams.Length];
-
-        for (var i = 0; i < ctorParams.Length; i++)
-        {
-            var param = ctorParams[i];
-            var prop = type.GetProperty(
-                param.Name!,
-                System.Reflection.BindingFlags.Public
-                    | System.Reflection.BindingFlags.Instance
-                    | System.Reflection.BindingFlags.IgnoreCase
-            );
-
-            if (param.Name?.Equals("cursor", StringComparison.OrdinalIgnoreCase) == true)
-            {
-                args[i] = cursor;
-            }
-            else if (prop is not null)
-            {
-                args[i] = prop.GetValue(baseParams);
-            }
-            else
-            {
-                args[i] = param.HasDefaultValue ? param.DefaultValue : null;
-            }
-        }
-
-        return (TParams)constructor.Invoke(args);
+        await RefreshAsync();
     }
 }

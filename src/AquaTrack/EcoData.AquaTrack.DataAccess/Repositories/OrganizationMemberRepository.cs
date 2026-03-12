@@ -1,8 +1,9 @@
 using System.Runtime.CompilerServices;
 using EcoData.AquaTrack.Contracts.Dtos;
+using EcoData.AquaTrack.Contracts.Parameters;
+using EcoData.AquaTrack.DataAccess.Interfaces;
 using EcoData.AquaTrack.Database;
 using EcoData.AquaTrack.Database.Models;
-using EcoData.AquaTrack.DataAccess.Interfaces;
 using EcoData.Identity.DataAccess.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
@@ -15,19 +16,28 @@ public sealed class OrganizationMemberRepository(
 {
     public async IAsyncEnumerable<OrganizationMemberDto> GetAllAsync(
         Guid organizationId,
+        OrganizationMemberParameters parameters,
         [EnumeratorCancellation] CancellationToken cancellationToken = default
     )
     {
         await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
 
-        var members = await context.OrganizationMembers
-            .Where(m => m.OrganizationId == organizationId)
+        var query = context.OrganizationMembers.Where(m => m.OrganizationId == organizationId);
+
+        if (parameters.Cursor.HasValue)
+        {
+            query = query.Where(m => m.Id.CompareTo(parameters.Cursor.Value) > 0);
+        }
+
+        var members = await query
+            .OrderBy(m => m.Id)
+            .Take(parameters.PageSize)
             .Select(m => new
             {
                 m.Id,
                 m.UserId,
                 RoleName = m.Role!.Name,
-                m.CreatedAt
+                m.CreatedAt,
             })
             .ToListAsync(cancellationToken);
 
@@ -61,14 +71,16 @@ public sealed class OrganizationMemberRepository(
     {
         await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
 
-        var member = await context.OrganizationMembers
-            .Where(m => m.OrganizationId == organizationId && m.UserId == userId)
+        var member = await context
+            .OrganizationMembers.Where(m =>
+                m.OrganizationId == organizationId && m.UserId == userId
+            )
             .Select(m => new
             {
                 m.Id,
                 m.UserId,
                 RoleName = m.Role!.Name,
-                m.CreatedAt
+                m.CreatedAt,
             })
             .FirstOrDefaultAsync(cancellationToken);
 
@@ -98,8 +110,11 @@ public sealed class OrganizationMemberRepository(
     {
         await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
 
-        var role = await context.OrganizationRoles
-            .Where(r => r.Name == roleName && (r.OrganizationId == organizationId || r.OrganizationId == null))
+        var role = await context
+            .OrganizationRoles.Where(r =>
+                r.Name == roleName
+                && (r.OrganizationId == organizationId || r.OrganizationId == null)
+            )
             .OrderByDescending(r => r.OrganizationId)
             .FirstOrDefaultAsync(cancellationToken);
 
@@ -115,7 +130,7 @@ public sealed class OrganizationMemberRepository(
             OrganizationId = organizationId,
             UserId = userId,
             RoleId = role.Id,
-            CreatedAt = now
+            CreatedAt = now,
         };
 
         context.OrganizationMembers.Add(entity);
@@ -142,17 +157,23 @@ public sealed class OrganizationMemberRepository(
     {
         await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
 
-        var member = await context.OrganizationMembers
-            .AsTracking()
-            .FirstOrDefaultAsync(m => m.OrganizationId == organizationId && m.UserId == userId, cancellationToken);
+        var member = await context
+            .OrganizationMembers.AsTracking()
+            .FirstOrDefaultAsync(
+                m => m.OrganizationId == organizationId && m.UserId == userId,
+                cancellationToken
+            );
 
         if (member is null)
         {
             return null;
         }
 
-        var role = await context.OrganizationRoles
-            .Where(r => r.Name == roleName && (r.OrganizationId == organizationId || r.OrganizationId == null))
+        var role = await context
+            .OrganizationRoles.Where(r =>
+                r.Name == roleName
+                && (r.OrganizationId == organizationId || r.OrganizationId == null)
+            )
             .OrderByDescending(r => r.OrganizationId)
             .FirstOrDefaultAsync(cancellationToken);
 
@@ -184,9 +205,12 @@ public sealed class OrganizationMemberRepository(
     {
         await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
 
-        var member = await context.OrganizationMembers
-            .AsTracking()
-            .FirstOrDefaultAsync(m => m.OrganizationId == organizationId && m.UserId == userId, cancellationToken);
+        var member = await context
+            .OrganizationMembers.AsTracking()
+            .FirstOrDefaultAsync(
+                m => m.OrganizationId == organizationId && m.UserId == userId,
+                cancellationToken
+            );
 
         if (member is null)
         {
@@ -207,7 +231,9 @@ public sealed class OrganizationMemberRepository(
     {
         await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
 
-        return await context.OrganizationMembers
-            .AnyAsync(m => m.OrganizationId == organizationId && m.UserId == userId, cancellationToken);
+        return await context.OrganizationMembers.AnyAsync(
+            m => m.OrganizationId == organizationId && m.UserId == userId,
+            cancellationToken
+        );
     }
 }
