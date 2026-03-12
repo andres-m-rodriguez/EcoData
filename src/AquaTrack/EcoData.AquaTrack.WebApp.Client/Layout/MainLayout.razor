@@ -1,7 +1,6 @@
 @inherits LayoutComponentBase
 @using BlazingSingularity
 @using BlazingSingularity.Commands
-@using BlazorStaticNavigation
 @using EcoData.AquaTrack.WebApp.Client.Pages
 @using EcoData.AquaTrack.WebApp.Client.Services
 @using EcoData.AquaTrack.WebApp.Client.Themes
@@ -19,7 +18,7 @@
     <MudAppBar Elevation="0"
                Style="background-color: var(--mud-palette-drawer-background); color: var(--mud-palette-text-primary);" Fixed="true">
         <MudIconButton Icon="@Icons.Material.Filled.ArrowBack" Color="Color.Inherit" Edge="Edge.Start" Size="Size.Small"
-                       Disabled="@(!Navigation.CanGoBack)" OnClick="NavigateBack" />
+                       Disabled="@(!Navigation.CanGoBack)" OnClick="NavigateBackAsync" />
         <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit"
                        OnClick="ToggleDrawer" />
         <MudText Typo="Typo.h6">AquaTrack</MudText>
@@ -102,9 +101,9 @@
     private void ToggleDrawer() => _drawerOpen = !_drawerOpen;
     private void ToggleTheme() => _isDarkMode = !_isDarkMode;
 
-    private void NavigateBack()
+    private async Task NavigateBackAsync()
     {
-        Navigation.GoBack();
+        await Navigation.GoBackAsync();
     }
 
     protected override async Task OnInitializedAsync()
