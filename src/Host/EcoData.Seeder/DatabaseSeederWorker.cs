@@ -1,9 +1,10 @@
 using System.Text.Json;
-using EcoData.AquaTrack.Database;
 using EcoData.Identity.Database;
 using EcoData.Identity.Database.Models;
 using EcoData.Locations.Database;
 using EcoData.Locations.Database.Models;
+using EcoData.Organization.Database;
+using EcoData.Sensors.Database;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using NetTopologySuite.Geometries;
@@ -24,7 +25,8 @@ public sealed class DatabaseSeederWorker(
             await using var scope = serviceProvider.CreateAsyncScope();
             var services = scope.ServiceProvider;
 
-            await MigrateAquaTrackAsync(services, stoppingToken);
+            await MigrateOrganizationAsync(services, stoppingToken);
+            await MigrateSensorsAsync(services, stoppingToken);
             await MigrateIdentityAsync(services, stoppingToken);
             await MigrateLocationsAsync(services, stoppingToken);
 
@@ -44,15 +46,26 @@ public sealed class DatabaseSeederWorker(
         }
     }
 
-    private async Task MigrateAquaTrackAsync(
+    private async Task MigrateOrganizationAsync(
         IServiceProvider services,
         CancellationToken stoppingToken
     )
     {
-        var context = services.GetRequiredService<AquaTrackDbContext>();
-        logger.LogInformation("Applying AquaTrack database migrations...");
+        var context = services.GetRequiredService<OrganizationDbContext>();
+        logger.LogInformation("Applying Organization database migrations...");
         await context.Database.MigrateAsync(stoppingToken);
-        logger.LogInformation("AquaTrack database migrations applied.");
+        logger.LogInformation("Organization database migrations applied.");
+    }
+
+    private async Task MigrateSensorsAsync(
+        IServiceProvider services,
+        CancellationToken stoppingToken
+    )
+    {
+        var context = services.GetRequiredService<SensorsDbContext>();
+        logger.LogInformation("Applying Sensors database migrations...");
+        await context.Database.MigrateAsync(stoppingToken);
+        logger.LogInformation("Sensors database migrations applied.");
     }
 
     private async Task MigrateIdentityAsync(

@@ -1,9 +1,10 @@
 using Aspire.Hosting;
 using Aspire.Hosting.ApplicationModel;
 using Aspire.Hosting.Testing;
-using EcoData.AquaTrack.Application.Client;
 using EcoData.Identity.Application.Client;
 using EcoData.Identity.Contracts.Requests;
+using EcoData.Organization.Application.Client;
+using EcoData.Sensors.Application.Client;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 
@@ -71,10 +72,10 @@ public sealed class AquaTrackTestFixture : IAsyncLifetime
         await _app.StartAsync();
 
         await resourceNotificationService
-            .WaitForResourceAsync("aquatrack-webapp", KnownResourceStates.Running)
+            .WaitForResourceAsync("ecodata-webapp", KnownResourceStates.Running)
             .WaitAsync(TimeSpan.FromMinutes(5));
 
-        _httpClient = _app.CreateHttpClient("aquatrack-webapp");
+        _httpClient = _app.CreateHttpClient("ecodata-webapp");
 
         _authClient = new AuthHttpClient(_httpClient);
         _organizationClient = new OrganizationHttpClient(_httpClient);

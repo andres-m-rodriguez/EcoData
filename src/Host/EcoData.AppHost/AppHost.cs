@@ -24,12 +24,7 @@ var seeder = builder.AddProject<Projects.EcoData_Seeder>("seeder")
     .WaitFor(identityDb)
     .WaitFor(locationsDb);
 
-var ingestion = builder.AddProject<Projects.EcoData_AquaTrack_Ingestion>("aquatrack-ingestion")
-    .WithReference(aquatrackDb)
-    .WithReference(locationsDb)
-    .WaitFor(seeder);
-
-builder.AddProject<Projects.EcoData_AquaTrack_WebApp>("aquatrack-webapp")
+builder.AddProject<Projects.EcoData_WebApp>("ecodata-webapp")
     .WithExternalHttpEndpoints()
     .WithReference(aquatrackDb)
     .WithReference(locationsDb)

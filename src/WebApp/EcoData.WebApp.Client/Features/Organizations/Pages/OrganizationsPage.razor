@@ -1,0 +1,191 @@
+@page "/organizations"
+@using EcoData.Organization.Contracts.Dtos
+@using EcoData.Organization.Contracts.Parameters
+@using EcoData.Organization.Application.Client
+@using EcoData.WebApp.Client.Services
+@using EcoData.WebApp.Client.Features.OrganizationAccessRequests.Dialogs
+@using EcoData.WebApp.Client.Features.Organizations.Components
+@using EcoData.WebApp.Client.Features.Shared.Components
+@using EcoData.WebApp.Client.Pages
+@using BlazingSingularity.Commands
+@inject IOrganizationHttpClient OrganizationClient
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+@inject AuthStateService AuthState
+@inject NavigationManager Navigation
+
+<PageTitle>Organizations - EcoData</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="py-6">
+    @* Header *@
+    <MudStack Spacing="0" Class="mb-6">
+        <MudText Typo="Typo.caption" Color="Color.Secondary">Organizations</MudText>
+        <MudText Typo="Typo.h4">Welcome back@(AuthState.CurrentUser != null ? $", {AuthState.CurrentUser.DisplayName.Split(' ')[0]}" : "")</MudText>
+    </MudStack>
+
+    @* Featured Organizations *@
+    <MudText Typo="Typo.h6" Class="mb-3">Featured Organizations</MudText>
+    <OrgFeaturedCarousel Organizations="_featuredOrganizations"
+                         Loading="LoadFeaturedOrganizationsCommand.IsLoading"
+                         OnOrganizationClick="NavigateToDetails"
+                         Class="mb-6" />
+
+    @* Bottom Section: Two Columns *@
+    <MudGrid Spacing="4">
+        @* Left Column: My Organizations *@
+        <MudItem xs="12" md="7">
+            <MudPaper Elevation="0" Class="pa-5 rounded-lg" Style="min-height: 320px;">
+                <MudText Typo="Typo.h6" Class="mb-4">My Organizations</MudText>
+                @if (LoadMyOrganizationsCommand.IsLoading)
+                {
+                    <MudStack Spacing="2">
+                        @for (var i = 0; i < 3; i++)
+                        {
+                            <div class="d-flex align-center gap-3 pa-3">
+                                <MudSkeleton SkeletonType="SkeletonType.Circle" Width="40px" Height="40px" />
+                                <MudStack Spacing="1" Class="flex-grow-1">
+                                    <MudSkeleton Width="60%" Height="16px" />
+                                    <MudSkeleton Width="30%" Height="12px" />
+                                </MudStack>
+                            </div>
+                        }
+                    </MudStack>
+                }
+                else if (_showLoginPrompt)
+                {
+                    <MudStack AlignItems="AlignItems.Center" Justify="Justify.Center" Class="py-8">
+                        <MudAvatar Size="Size.Large" Color="Color.Info" Variant="Variant.Outlined">
+                            <MudIcon Icon="@Icons.Material.Outlined.Login" />
+                        </MudAvatar>
+                        <MudText Typo="Typo.body1" Color="Color.Secondary" Align="Align.Center" Class="mt-3">
+                            Please log in to see your organizations
+                        </MudText>
+                        <MudText Typo="Typo.body2" Color="Color.Secondary" Align="Align.Center">
+                            Sign in to view and manage your organization memberships
+                        </MudText>
+                        <MudButton Variant="Variant.Filled"
+                                   Color="Color.Primary"
+                                   StartIcon="@Icons.Material.Filled.Login"
+                                   Href="@LoginPage.Path"
+                                   Class="mt-3">
+                            Sign In
+                        </MudButton>
+                    </MudStack>
+                }
+                else if (_myOrganizations.Count == 0)
+                {
+                    <MudStack AlignItems="AlignItems.Center" Justify="Justify.Center" Class="py-8">
+                        <MudAvatar Size="Size.Large" Color="Color.Default" Variant="Variant.Outlined">
+                            <MudIcon Icon="@Icons.Material.Outlined.Groups" />
+                        </MudAvatar>
+                        <MudText Typo="Typo.body1" Color="Color.Secondary" Align="Align.Center" Class="mt-3">
+                            You haven't joined any organizations yet
+                        </MudText>
+                        <MudText Typo="Typo.body2" Color="Color.Secondary" Align="Align.Center">
+                            Browse available organizations and request access to get started
+                        </MudText>
+                    </MudStack>
+                }
+                else
+                {
+                    <MudStack Spacing="1">
+                        @foreach (var org in _myOrganizations)
+                        {
+                            <OrgListItem Organization="org" OnClick="() => NavigateToMyOrg(org)" />
+                        }
+                    </MudStack>
+                }
+            </MudPaper>
+        </MudItem>
+
+        @* Right Column: Actions Panel *@
+        <MudItem xs="12" md="5">
+            <MudPaper Elevation="0" Class="pa-5 rounded-lg" Style="min-height: 320px;">
+                <MudText Typo="Typo.h6" Class="mb-4">Get Started</MudText>
+                <MudStack Spacing="2">
+                    <ActionListItem Icon="@Icons.Material.Rounded.PersonAdd"
+                                    IconColor="Color.Info"
+                                    Title="Request Access"
+                                    Subtitle="Browse and request to join an existing organization"
+                                    OnClick="OpenRequestAccessDialog" />
+
+                    <ActionListItem Icon="@Icons.Material.Rounded.AddBusiness"
+                                    IconColor="Color.Success"
+                                    Title="Create Organization"
+                                    Subtitle="Submit a request to register a new organization" />
+
+                    <ActionListItem Icon="@Icons.Material.Rounded.Pending"
+                                    IconColor="Color.Warning"
+                                    Title="View Pending Requests"
+                                    Subtitle="Check the status of your submitted requests"
+                                    OnClick="NavigateToMyRequests" />
+                </MudStack>
+            </MudPaper>
+        </MudItem>
+    </MudGrid>
+
+    <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="mt-6"
+               EndIcon="@Icons.Material.Filled.ArrowForward">
+        Explore organizations
+    </MudButton>
+</MudContainer>
+
+@code {
+    private List<OrganizationDtoForList> _featuredOrganizations = [];
+    private List<MyOrganizationDto> _myOrganizations = [];
+    private bool _showLoginPrompt;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await Task.WhenAll(
+            LoadFeaturedOrganizationsCommand.ExecuteAsync(),
+            LoadMyOrganizationsCommand.ExecuteAsync()
+        );
+    }
+
+    [RelayCommand]
+    private async Task LoadFeaturedOrganizations()
+    {
+        var parameters = new OrganizationParameters { PageSize = 10 };
+        await foreach (var org in OrganizationClient.GetOrganizationsAsync(parameters, CancellationToken.None))
+        {
+            _featuredOrganizations.Add(org);
+        }
+    }
+
+    [RelayCommand]
+    private async Task LoadMyOrganizations()
+    {
+        if (!AuthState.IsAuthenticated)
+        {
+            _showLoginPrompt = true;
+            return;
+        }
+
+        await foreach (var org in OrganizationClient.GetMyOrganizationsAsync(CancellationToken.None))
+        {
+            _myOrganizations.Add(org);
+        }
+    }
+
+    private void NavigateToDetails(OrganizationDtoForList organization)
+    {
+        Navigation.NavigateTo($"/organizations/{organization.Id}");
+    }
+
+    private void NavigateToMyOrg(MyOrganizationDto organization)
+    {
+        Navigation.NavigateTo($"/organizations/{organization.Id}");
+    }
+
+    private void NavigateToMyRequests()
+    {
+        Navigation.NavigateTo("/my-requests");
+    }
+
+    private async Task OpenRequestAccessDialog()
+    {
+        var options = new DialogOptions { CloseOnEscapeKey = true, MaxWidth = MaxWidth.Small, FullWidth = true };
+        await DialogService.ShowAsync<RequestAccessDialog>("Request Access", options);
+    }
+}

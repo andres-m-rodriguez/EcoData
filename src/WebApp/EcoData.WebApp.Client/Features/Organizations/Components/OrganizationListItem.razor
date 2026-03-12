@@ -1,0 +1,113 @@
+@using EcoData.Organization.Contracts.Dtos
+
+<div class="organization-card" @onclick="HandleClick">
+    <div class="card-header">
+        @if (!string.IsNullOrWhiteSpace(Organization.CardPictureUrl))
+        {
+            <img src="@Organization.CardPictureUrl" alt="" class="card-banner" />
+        }
+        else
+        {
+            <div class="card-banner-placeholder">
+                <MudIcon Icon="@Icons.Material.Filled.Business" Size="Size.Large" />
+            </div>
+        }
+        <div class="profile-picture-container">
+            @if (!string.IsNullOrWhiteSpace(Organization.ProfilePictureUrl))
+            {
+                <MudAvatar Size="Size.Large" Class="profile-avatar">
+                    <MudImage Src="@Organization.ProfilePictureUrl" Alt="@Organization.Name" />
+                </MudAvatar>
+            }
+            else
+            {
+                <MudAvatar Size="Size.Large" Color="Color.Primary" Class="profile-avatar">
+                    <MudIcon Icon="@Icons.Material.Filled.Business" />
+                </MudAvatar>
+            }
+        </div>
+        @if (ShowActions)
+        {
+            <div class="card-actions" @onclick:stopPropagation="true">
+                <MudMenu Icon="@Icons.Material.Filled.MoreVert"
+                         Size="Size.Small"
+                         AnchorOrigin="Origin.BottomRight"
+                         TransformOrigin="Origin.TopRight">
+                    <MudMenuItem Icon="@Icons.Material.Outlined.Edit" OnClick="@HandleEditClick">
+                        Edit
+                    </MudMenuItem>
+                    <MudMenuItem Icon="@Icons.Material.Outlined.Delete" OnClick="@HandleDeleteClick">
+                        Delete
+                    </MudMenuItem>
+                </MudMenu>
+            </div>
+        }
+    </div>
+    <div class="card-content">
+        <MudText Typo="Typo.subtitle1" Class="organization-name">@Organization.Name</MudText>
+        @if (!string.IsNullOrWhiteSpace(Organization.AboutUs))
+        {
+            <MudText Typo="Typo.body2" Color="Color.Secondary" Class="organization-description">
+                @TruncateDescription(Organization.AboutUs)
+            </MudText>
+        }
+        @if (!string.IsNullOrWhiteSpace(Organization.WebsiteUrl))
+        {
+            <div class="organization-website" @onclick:stopPropagation="true">
+                <MudIcon Icon="@Icons.Material.Outlined.Link" Size="Size.Small" Color="Color.Secondary" />
+                <MudLink Href="@Organization.WebsiteUrl" Target="_blank">
+                    @GetDisplayUrl(Organization.WebsiteUrl)
+                </MudLink>
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public required OrganizationDtoForList Organization { get; set; }
+
+    [Parameter]
+    public bool ShowActions { get; set; }
+
+    [Parameter]
+    public EventCallback<OrganizationDtoForList> OnClick { get; set; }
+
+    [Parameter]
+    public EventCallback<OrganizationDtoForList> OnEdit { get; set; }
+
+    [Parameter]
+    public EventCallback<OrganizationDtoForList> OnDelete { get; set; }
+
+    private async Task HandleClick()
+    {
+        await OnClick.InvokeAsync(Organization);
+    }
+
+    private async Task HandleEditClick()
+    {
+        await OnEdit.InvokeAsync(Organization);
+    }
+
+    private async Task HandleDeleteClick()
+    {
+        await OnDelete.InvokeAsync(Organization);
+    }
+
+    private static string TruncateDescription(string description)
+    {
+        const int maxLength = 120;
+        if (description.Length <= maxLength)
+            return description;
+        return description[..maxLength].TrimEnd() + "...";
+    }
+
+    private static string GetDisplayUrl(string url)
+    {
+        if (Uri.TryCreate(url, UriKind.Absolute, out var uri))
+        {
+            return uri.Host;
+        }
+        return url;
+    }
+}
