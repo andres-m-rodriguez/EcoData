@@ -72,10 +72,10 @@ public sealed class AquaTrackTestFixture : IAsyncLifetime
         await _app.StartAsync();
 
         await resourceNotificationService
-            .WaitForResourceAsync("ecodata-webapp", KnownResourceStates.Running)
+            .WaitForResourceAsync("ecoportal", KnownResourceStates.Running)
             .WaitAsync(TimeSpan.FromMinutes(5));
 
-        _httpClient = _app.CreateHttpClient("ecodata-webapp");
+        _httpClient = _app.CreateHttpClient("ecoportal");
 
         _authClient = new AuthHttpClient(_httpClient);
         _organizationClient = new OrganizationHttpClient(_httpClient);
