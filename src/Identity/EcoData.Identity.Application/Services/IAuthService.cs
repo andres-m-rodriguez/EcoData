@@ -25,18 +25,4 @@ public interface IAuthService
         UserParameters parameters,
         CancellationToken cancellationToken = default
     );
-    IAsyncEnumerable<AccessRequestResponse> GetAccessRequestsAsync(
-        AccessRequestParameters parameters,
-        CancellationToken cancellationToken = default
-    );
-    Task<UpdateAccessRequestResult> UpdateAccessRequestStatusAsync(
-        Guid id,
-        UpdateAccessRequestStatusRequest request,
-        ClaimsPrincipal principal,
-        CancellationToken cancellationToken = default
-    );
-    Task<AccessRequestResponse?> GetAccessRequestByIdAsync(
-        Guid id,
-        CancellationToken cancellationToken = default
-    );
 }

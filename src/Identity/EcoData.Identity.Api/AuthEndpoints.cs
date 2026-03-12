@@ -29,10 +29,6 @@ public static class AuthEndpoints
                     >(
                         userInfo => TypedResults.Ok(userInfo),
                         _ => TypedResults.Conflict("An account with this email already exists"),
-                        _ =>
-                            TypedResults.Conflict(
-                                "A registration request with this email is already pending"
-                            ),
                         validationFailed => TypedResults.BadRequest(validationFailed.Errors)
                     );
                 }
@@ -57,7 +53,6 @@ public static class AuthEndpoints
                         userInfo => TypedResults.Ok(userInfo),
                         _ => TypedResults.Unauthorized(),
                         _ => TypedResults.StatusCode(423), // Locked
-                        _ => TypedResults.StatusCode(403), // Forbidden - account not approved
                         validationFailed => TypedResults.BadRequest(validationFailed.Errors)
                     );
                 }

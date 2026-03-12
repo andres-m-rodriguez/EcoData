@@ -19,9 +19,7 @@ public sealed class User : IdentityUser<Guid>
 
             builder.Property(static e => e.DisplayName).HasMaxLength(200).IsRequired();
 
-            builder.Property(static e => e.GlobalRole)
-                .HasConversion<string>()
-                .HasMaxLength(50);
+            builder.Property(static e => e.GlobalRole).HasConversion<string>().HasMaxLength(50);
         }
     }
 }

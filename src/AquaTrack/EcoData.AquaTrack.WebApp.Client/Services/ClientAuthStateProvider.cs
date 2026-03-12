@@ -25,7 +25,6 @@ public sealed class ClientAuthStateProvider(AuthStateService authStateService)
             new(ClaimTypes.NameIdentifier, user.Id.ToString()),
             new(ClaimTypes.Name, user.DisplayName),
             new(ClaimTypes.Email, user.Email),
-            new(ClaimTypes.Role, user.Role),
         };
 
         var identity = new ClaimsIdentity(claims, "cookie");

@@ -5,7 +5,6 @@ using EcoData.Identity.Contracts.Parameters;
 using EcoData.Identity.Contracts.Requests;
 using EcoData.Identity.Contracts.Responses;
 using EcoData.Identity.Contracts.Results;
-using EcoData.Identity.DataAccess.Interfaces;
 using EcoData.Identity.Database;
 using EcoData.Identity.Database.Models;
 using FluentValidation;
@@ -18,10 +17,8 @@ public sealed class AuthService(
     UserManager<User> userManager,
     SignInManager<User> signInManager,
     IDbContextFactory<IdentityDbContext> contextFactory,
-    IAccessRequestRepository accessRequestRepository,
     IValidator<RegisterRequest> registerValidator,
-    IValidator<LoginRequest> loginValidator,
-    IValidator<UpdateAccessRequestStatusRequest> updateStatusValidator
+    IValidator<LoginRequest> loginValidator
 ) : IAuthService
 {
     public async Task<RegisterResult> RegisterAsync(
@@ -43,37 +40,31 @@ public sealed class AuthService(
             return new EmailAlreadyExists();
         }
 
-        var existingRequest = await accessRequestRepository.GetByEmailAsync(
-            request.Email,
-            cancellationToken
-        );
-        if (existingRequest is not null)
-        {
-            return new PendingAccessRequest();
-        }
-
-        var passwordHasher = new PasswordHasher<AccessRequest>();
-        var accessRequest = new AccessRequest
+        var user = new User
         {
             Id = Guid.CreateVersion7(),
+            UserName = request.Email,
             Email = request.Email,
+            EmailConfirmed = true,
             DisplayName = request.DisplayName,
-            PasswordHash = passwordHasher.HashPassword(null!, request.Password),
-            Status = AccessRequestStatus.Pending,
+            GlobalRole = null,
             CreatedAt = DateTimeOffset.UtcNow,
-            RequestedOrganizationId = request.OrganizationId,
-            RequestedOrganizationName = request.OrganizationName,
         };
 
-        await accessRequestRepository.CreateAsync(accessRequest, cancellationToken);
+        var createResult = await userManager.CreateAsync(user, request.Password);
+        if (!createResult.Succeeded)
+        {
+            return new ValidationFailed(
+                createResult.Errors.Select(e => e.Description).ToList()
+            );
+        }
 
         return new UserInfo(
-            accessRequest.Id,
-            accessRequest.Email,
-            accessRequest.DisplayName,
-            "Pending",
-            null,
-            accessRequest.CreatedAt
+            user.Id,
+            user.Email,
+            user.DisplayName,
+            user.GlobalRole.HasValue ? (Contracts.Authorization.GlobalRole)user.GlobalRole.Value : null,
+            user.CreatedAt
         );
     }
 
@@ -93,14 +84,6 @@ public sealed class AuthService(
         var user = await userManager.FindByEmailAsync(request.Email);
         if (user is null)
         {
-            var pendingRequest = await accessRequestRepository.GetByEmailAsync(
-                request.Email,
-                cancellationToken
-            );
-            if (pendingRequest is not null && pendingRequest.Status == AccessRequestStatus.Pending)
-            {
-                return new AccountNotApproved();
-            }
             return new InvalidCredentials();
         }
 
@@ -129,7 +112,6 @@ public sealed class AuthService(
             user.Id,
             user.Email!,
             user.DisplayName,
-            user.Role.ToString(),
             user.GlobalRole.HasValue ? (Contracts.Authorization.GlobalRole)user.GlobalRole.Value : null,
             user.CreatedAt
         );
@@ -160,7 +142,6 @@ public sealed class AuthService(
             user.Id,
             user.Email!,
             user.DisplayName,
-            user.Role.ToString(),
             user.GlobalRole.HasValue ? (Contracts.Authorization.GlobalRole)user.GlobalRole.Value : null,
             user.CreatedAt
         );
@@ -203,7 +184,6 @@ public sealed class AuthService(
                 u.Id,
                 u.Email!,
                 u.DisplayName,
-                u.Role.ToString(),
                 u.GlobalRole.HasValue ? (Contracts.Authorization.GlobalRole)u.GlobalRole.Value : null,
                 u.CreatedAt
             ))
@@ -212,136 +192,5 @@ public sealed class AuthService(
         {
             yield return user;
         }
-    }
-
-    public IAsyncEnumerable<AccessRequestResponse> GetAccessRequestsAsync(
-        AccessRequestParameters parameters,
-        CancellationToken cancellationToken = default
-    )
-    {
-        return accessRequestRepository.GetAccessRequestsAsync(parameters, cancellationToken);
-    }
-
-    public async Task<UpdateAccessRequestResult> UpdateAccessRequestStatusAsync(
-        Guid id,
-        UpdateAccessRequestStatusRequest request,
-        ClaimsPrincipal principal,
-        CancellationToken cancellationToken = default
-    )
-    {
-        var validationResult = await updateStatusValidator.ValidateAsync(
-            request,
-            cancellationToken
-        );
-        if (!validationResult.IsValid)
-        {
-            return new ValidationFailed(
-                validationResult.Errors.Select(e => e.ErrorMessage).ToList()
-            );
-        }
-
-        var accessRequest = await accessRequestRepository.GetByIdAsync(id, cancellationToken);
-        if (accessRequest is null)
-        {
-            return new AccessRequestNotFound();
-        }
-
-        if (accessRequest.Status != AccessRequestStatus.Pending)
-        {
-            return new AccessRequestAlreadyProcessed();
-        }
-
-        var reviewer = await userManager.GetUserAsync(principal);
-
-        accessRequest.Status = request.Approved
-            ? AccessRequestStatus.Approved
-            : AccessRequestStatus.Rejected;
-        accessRequest.ReviewNotes = request.ReviewNotes;
-        accessRequest.ReviewedById = reviewer?.Id;
-        accessRequest.ReviewedAt = DateTimeOffset.UtcNow;
-
-        await accessRequestRepository.UpdateAsync(accessRequest, cancellationToken);
-
-        Guid? createdUserId = null;
-        if (request.Approved)
-        {
-            var user = new User
-            {
-                Id = Guid.CreateVersion7(),
-                UserName = accessRequest.Email,
-                Email = accessRequest.Email,
-                EmailConfirmed = true,
-                DisplayName = accessRequest.DisplayName,
-                Role = UserRole.Viewer,
-                GlobalRole = null,
-                CreatedAt = DateTimeOffset.UtcNow,
-            };
-
-            var passwordHasher = new PasswordHasher<AccessRequest>();
-            var verifyResult = passwordHasher.VerifyHashedPassword(
-                null!,
-                accessRequest.PasswordHash,
-                ""
-            );
-
-            // Create user with the stored password hash
-            var createResult = await userManager.CreateAsync(user);
-            if (createResult.Succeeded)
-            {
-                // Set the password hash directly since we already have it hashed
-                await using var context = await contextFactory.CreateDbContextAsync(
-                    cancellationToken
-                );
-                var dbUser = await context.Users.FirstAsync(
-                    u => u.Id == user.Id,
-                    cancellationToken
-                );
-                dbUser.PasswordHash = accessRequest.PasswordHash;
-                context.Users.Update(dbUser);
-                await context.SaveChangesAsync(cancellationToken);
-                createdUserId = user.Id;
-            }
-        }
-
-        return new AccessRequestResponse(
-            accessRequest.Id,
-            accessRequest.Email,
-            accessRequest.DisplayName,
-            accessRequest.Status.ToString(),
-            accessRequest.ReviewNotes,
-            accessRequest.ReviewedById,
-            reviewer?.DisplayName,
-            accessRequest.ReviewedAt,
-            accessRequest.CreatedAt,
-            accessRequest.RequestedOrganizationId,
-            accessRequest.RequestedOrganizationName,
-            createdUserId
-        );
-    }
-
-    public async Task<AccessRequestResponse?> GetAccessRequestByIdAsync(
-        Guid id,
-        CancellationToken cancellationToken = default
-    )
-    {
-        var accessRequest = await accessRequestRepository.GetByIdAsync(id, cancellationToken);
-        if (accessRequest is null)
-        {
-            return null;
-        }
-
-        return new AccessRequestResponse(
-            accessRequest.Id,
-            accessRequest.Email,
-            accessRequest.DisplayName,
-            accessRequest.Status.ToString(),
-            accessRequest.ReviewNotes,
-            accessRequest.ReviewedById,
-            null,
-            accessRequest.ReviewedAt,
-            accessRequest.CreatedAt,
-            accessRequest.RequestedOrganizationId,
-            accessRequest.RequestedOrganizationName
-        );
     }
 }

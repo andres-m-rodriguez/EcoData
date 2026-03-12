@@ -1,0 +1,39 @@
+@using BlazingSingularity.Signals
+
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6">Request Access</MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudText Typo="Typo.body2" Class="mb-4">
+            Request access to <strong>@OrganizationName</strong>. An administrator will review your request.
+        </MudText>
+        <MudTextField @bind-Value="RequestMessage"
+                      Label="Message (Optional)"
+                      Placeholder="Why would you like to join this organization?"
+                      Variant="Variant.Outlined"
+                      Lines="3"
+                      HelperText="This will be visible to organization administrators" />
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Cancel</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Submit">
+            Submit Request
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter]
+    private IMudDialogInstance MudDialog { get; set; } = null!;
+
+    [Parameter]
+    public string OrganizationName { get; set; } = string.Empty;
+
+    [Signal]
+    private string? _requestMessage;
+
+    private void Cancel() => MudDialog.Cancel();
+
+    private void Submit() => MudDialog.Close(DialogResult.Ok(RequestMessage ?? ""));
+}
