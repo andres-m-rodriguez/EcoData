@@ -18,20 +18,29 @@
     <Project Path="src/Identity/EcoData.Identity.Application.Client/EcoData.Identity.Application.Client.csproj" />
     <Project Path="src/Identity/EcoData.Identity.Api/EcoData.Identity.Api.csproj" />
   </Folder>
-  <Folder Name="/AquaTrack/">
-    <Project Path="src/AquaTrack/EcoData.AquaTrack.WebApp/EcoData.AquaTrack.WebApp.csproj" />
-    <Project Path="src/AquaTrack/EcoData.AquaTrack.WebApp.Client/EcoData.AquaTrack.WebApp.Client.csproj" />
-    <Project Path="src/AquaTrack/EcoData.AquaTrack.Contracts/EcoData.AquaTrack.Contracts.csproj" />
-    <Project Path="src/AquaTrack/EcoData.AquaTrack.Database/EcoData.AquaTrack.Database.csproj" />
-    <Project Path="src/AquaTrack/EcoData.AquaTrack.DataAccess/EcoData.AquaTrack.DataAccess.csproj" />
-    <Project Path="src/AquaTrack/EcoData.AquaTrack.Ingestion/EcoData.AquaTrack.Ingestion.csproj" />
-    <Project Path="src/AquaTrack/EcoData.AquaTrack.Api/EcoData.AquaTrack.Api.csproj" />
-  </Folder>
   <Folder Name="/Locations/">
     <Project Path="src/Locations/EcoData.Locations.Contracts/EcoData.Locations.Contracts.csproj" />
     <Project Path="src/Locations/EcoData.Locations.Database/EcoData.Locations.Database.csproj" />
     <Project Path="src/Locations/EcoData.Locations.DataAccess/EcoData.Locations.DataAccess.csproj" />
     <Project Path="src/Locations/EcoData.Locations.Api/EcoData.Locations.Api.csproj" />
+  </Folder>
+  <Folder Name="/Organization/">
+    <Project Path="src/Organization/EcoData.Organization.Database/EcoData.Organization.Database.csproj" />
+    <Project Path="src/Organization/EcoData.Organization.Contracts/EcoData.Organization.Contracts.csproj" />
+    <Project Path="src/Organization/EcoData.Organization.DataAccess/EcoData.Organization.DataAccess.csproj" />
+    <Project Path="src/Organization/EcoData.Organization.Api/EcoData.Organization.Api.csproj" />
+    <Project Path="src/Organization/EcoData.Organization.Application.Client/EcoData.Organization.Application.Client.csproj" />
+  </Folder>
+  <Folder Name="/Sensors/">
+    <Project Path="src/Sensors/EcoData.Sensors.Database/EcoData.Sensors.Database.csproj" />
+    <Project Path="src/Sensors/EcoData.Sensors.Contracts/EcoData.Sensors.Contracts.csproj" />
+    <Project Path="src/Sensors/EcoData.Sensors.DataAccess/EcoData.Sensors.DataAccess.csproj" />
+    <Project Path="src/Sensors/EcoData.Sensors.Api/EcoData.Sensors.Api.csproj" />
+    <Project Path="src/Sensors/EcoData.Sensors.Application.Client/EcoData.Sensors.Application.Client.csproj" />
+  </Folder>
+  <Folder Name="/WebApp/">
+    <Project Path="src/WebApp/EcoData.WebApp/EcoData.WebApp.csproj" />
+    <Project Path="src/WebApp/EcoData.WebApp.Client/EcoData.WebApp.Client.csproj" />
   </Folder>
   <Folder Name="/Tests/">
     <Project Path="tests/EcoData.AquaTrack.IntegrationTests/EcoData.AquaTrack.IntegrationTests.csproj" />

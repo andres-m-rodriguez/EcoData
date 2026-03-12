@@ -1,0 +1,195 @@
+@page "/"
+@using BlazorStaticNavigation
+
+<PageTitle>EcoData - Environmental Monitoring in Puerto Rico</PageTitle>
+
+<div class="landing-page">
+    <!-- Hero Section -->
+    <section class="hero-section">
+        <MudContainer MaxWidth="MaxWidth.ExtraLarge">
+            <div class="hero-content">
+                <div class="hero-text">
+                    <MudText Typo="Typo.h2" Class="hero-title">
+                        Monitoring Puerto Rico's Environment
+                    </MudText>
+                    <MudText Typo="Typo.h6" Color="Color.Secondary" Class="hero-subtitle">
+                        Real-time air and water quality data collected by students committed to protecting our island's natural resources.
+                    </MudText>
+                    <MudStack Row="true" Spacing="3" Class="hero-actions">
+                        <MudButton Variant="Variant.Filled"
+                                   Color="Color.Primary"
+                                   Size="Size.Large"
+                                   StartIcon="@Icons.Material.Filled.Map"
+                                   Href="@SensorMapPage.Path">
+                            Explore the Map
+                        </MudButton>
+                        <MudButton Variant="Variant.Outlined"
+                                   Color="Color.Primary"
+                                   Size="Size.Large"
+                                   StartIcon="@Icons.Material.Filled.Sensors"
+                                   Href="@SensorsPage.Path">
+                            View Sensors
+                        </MudButton>
+                    </MudStack>
+                </div>
+                <div class="hero-visual">
+                    <img src="images/puerto-rico-map.png" alt="Puerto Rico Sensor Network" class="hero-map" />
+                </div>
+            </div>
+        </MudContainer>
+    </section>
+
+    <!-- Mission Section -->
+    <section class="mission-section">
+        <MudContainer MaxWidth="MaxWidth.Large">
+            <MudStack Spacing="4">
+                <MudStack Spacing="1" Class="text-center">
+                    <MudText Typo="Typo.h4">Our Mission</MudText>
+                    <MudText Typo="Typo.body1" Color="Color.Secondary" Class="section-description">
+                        Empowering communities through environmental data
+                    </MudText>
+                </MudStack>
+                <MudGrid Justify="Justify.Center" Spacing="4">
+                    <MudItem xs="12" md="10">
+                        <MudPaper Elevation="0" Class="pa-6 mission-card">
+                            <MudStack Spacing="3">
+                                <MudText Typo="Typo.body1">
+                                    EcoData is a student-led initiative dedicated to monitoring and understanding the environmental health of Puerto Rico. We deploy and maintain a network of sensors across the island to collect critical data on air and water quality.
+                                </MudText>
+                                <MudText Typo="Typo.body1">
+                                    Our goal is to make environmental data accessible to researchers, policymakers, and communities, enabling informed decisions that protect our natural resources for future generations.
+                                </MudText>
+                                <MudStack Row="true" Spacing="2" Class="mt-2">
+                                    <MudButton Variant="Variant.Text"
+                                               Color="Color.Primary"
+                                               EndIcon="@Icons.Material.Filled.ArrowForward"
+                                               OnClick="ScrollToDataSources">
+                                        Learn More
+                                    </MudButton>
+                                    <MudButton Variant="Variant.Text"
+                                               Color="Color.Primary"
+                                               EndIcon="@Icons.Material.Filled.OpenInNew"
+                                               Href="@LoginPage.Path">
+                                        Request Access
+                                    </MudButton>
+                                </MudStack>
+                            </MudStack>
+                        </MudPaper>
+                    </MudItem>
+                </MudGrid>
+            </MudStack>
+        </MudContainer>
+    </section>
+
+    <!-- Data Sources Section -->
+    <section class="data-sources-section" id="data-sources">
+        <MudContainer MaxWidth="MaxWidth.Large">
+            <MudStack Spacing="4">
+                <MudStack Spacing="1" Class="text-center">
+                    <MudText Typo="Typo.h4">Data Sources</MudText>
+                    <MudText Typo="Typo.body1" Color="Color.Secondary" Class="section-description">
+                        Comprehensive environmental monitoring across Puerto Rico
+                    </MudText>
+                </MudStack>
+                <MudGrid Spacing="4">
+                    <MudItem xs="12" md="6">
+                        <MudPaper Elevation="0" Class="pa-6 data-source-card">
+                            <MudStack Spacing="3">
+                                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                                    <MudAvatar Color="Color.Primary" Variant="Variant.Filled" Size="Size.Medium">
+                                        <MudIcon Icon="@Icons.Material.Filled.Water" />
+                                    </MudAvatar>
+                                    <MudText Typo="Typo.h6">Water Quality Sensors</MudText>
+                                </MudStack>
+                                <MudText Typo="Typo.body2" Color="Color.Secondary">
+                                    Our water quality monitoring network tracks key indicators including pH levels, dissolved oxygen, turbidity, temperature, and conductivity across rivers, lakes, and coastal areas.
+                                </MudText>
+                                <MudStack Spacing="1">
+                                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+                                        <MudIcon Icon="@Icons.Material.Filled.Check" Size="Size.Small" Color="Color.Success" />
+                                        <MudText Typo="Typo.body2">Real-time measurements</MudText>
+                                    </MudStack>
+                                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+                                        <MudIcon Icon="@Icons.Material.Filled.Check" Size="Size.Small" Color="Color.Success" />
+                                        <MudText Typo="Typo.body2">Multiple parameters per station</MudText>
+                                    </MudStack>
+                                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+                                        <MudIcon Icon="@Icons.Material.Filled.Check" Size="Size.Small" Color="Color.Success" />
+                                        <MudText Typo="Typo.body2">Historical data analysis</MudText>
+                                    </MudStack>
+                                </MudStack>
+                            </MudStack>
+                        </MudPaper>
+                    </MudItem>
+                    <MudItem xs="12" md="6">
+                        <MudPaper Elevation="0" Class="pa-6 data-source-card">
+                            <MudStack Spacing="3">
+                                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                                    <MudAvatar Color="Color.Info" Variant="Variant.Filled" Size="Size.Medium">
+                                        <MudIcon Icon="@Icons.Material.Filled.Air" />
+                                    </MudAvatar>
+                                    <MudText Typo="Typo.h6">Air Quality Sensors</MudText>
+                                </MudStack>
+                                <MudText Typo="Typo.body2" Color="Color.Secondary">
+                                    Our air quality stations monitor particulate matter (PM2.5, PM10), ozone levels, carbon monoxide, and other atmospheric conditions that impact public health and the environment.
+                                </MudText>
+                                <MudStack Spacing="1">
+                                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+                                        <MudIcon Icon="@Icons.Material.Filled.Check" Size="Size.Small" Color="Color.Success" />
+                                        <MudText Typo="Typo.body2">EPA-standard measurements</MudText>
+                                    </MudStack>
+                                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+                                        <MudIcon Icon="@Icons.Material.Filled.Check" Size="Size.Small" Color="Color.Success" />
+                                        <MudText Typo="Typo.body2">Urban and rural coverage</MudText>
+                                    </MudStack>
+                                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+                                        <MudIcon Icon="@Icons.Material.Filled.Check" Size="Size.Small" Color="Color.Success" />
+                                        <MudText Typo="Typo.body2">Air quality index reporting</MudText>
+                                    </MudStack>
+                                </MudStack>
+                            </MudStack>
+                        </MudPaper>
+                    </MudItem>
+                </MudGrid>
+            </MudStack>
+        </MudContainer>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="cta-section">
+        <MudContainer MaxWidth="MaxWidth.Medium">
+            <MudPaper Elevation="0" Class="pa-8 cta-card text-center">
+                <MudStack Spacing="3" AlignItems="AlignItems.Center">
+                    <MudText Typo="Typo.h5">Ready to explore the data?</MudText>
+                    <MudText Typo="Typo.body1" Color="Color.Secondary">
+                        Access real-time environmental data from sensors across Puerto Rico.
+                    </MudText>
+                    <MudStack Row="true" Justify="Justify.Center" Spacing="2" Class="mt-2">
+                        <MudButton Variant="Variant.Filled"
+                                   Color="Color.Primary"
+                                   StartIcon="@Icons.Material.Filled.Map"
+                                   Href="@SensorMapPage.Path">
+                            Explore the Map
+                        </MudButton>
+                        <MudButton Variant="Variant.Outlined"
+                                   Color="Color.Primary"
+                                   StartIcon="@Icons.Material.Filled.Login"
+                                   Href="@LoginPage.Path">
+                            Request Access
+                        </MudButton>
+                    </MudStack>
+                </MudStack>
+            </MudPaper>
+        </MudContainer>
+    </section>
+</div>
+
+@code {
+    [Inject]
+    private IJSRuntime JS { get; set; } = default!;
+
+    private async Task ScrollToDataSources()
+    {
+        await JS.InvokeVoidAsync("eval", "document.getElementById('data-sources').scrollIntoView({ behavior: 'smooth' })");
+    }
+}
