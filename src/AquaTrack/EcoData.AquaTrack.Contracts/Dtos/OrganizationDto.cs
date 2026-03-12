@@ -37,7 +37,12 @@ public sealed record OrganizationDtoForUpdate(
     string? WebsiteUrl = null
 );
 
-public sealed record OrganizationDtoForCreated(
+public sealed record OrganizationDtoForCreated(Guid Id, string Name);
+
+public sealed record MyOrganizationDto(
     Guid Id,
-    string Name
+    string Name,
+    string? ProfilePictureUrl,
+    string? WebsiteUrl,
+    string RoleName
 );

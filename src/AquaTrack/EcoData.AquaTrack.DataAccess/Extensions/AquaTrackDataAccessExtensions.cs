@@ -21,6 +21,7 @@ public static class AquaTrackDataAccessExtensions
         services.AddScoped<IOrganizationMemberRepository, OrganizationMemberRepository>();
         services.AddScoped<IOrganizationMembershipRepository, OrganizationMembershipRepository>();
         services.AddScoped<IOrganizationAccessRequestRepository, OrganizationAccessRequestRepository>();
+        services.AddScoped<IOrganizationBlockedUserRepository, OrganizationBlockedUserRepository>();
         services.AddScoped<IPermissionService, PermissionService>();
 
         return services;

@@ -33,29 +33,34 @@ public sealed class OrganizationRepository(IDbContextFactory<AquaTrackDbContext>
 
         query = query.OrderBy(o => o.Id).Take(parameters.PageSize);
 
-        await foreach (var organization in query
-            .Select(o => new OrganizationDtoForList(
-                o.Id,
-                o.Name,
-                o.ProfilePictureUrl,
-                o.CardPictureUrl,
-                o.AboutUs,
-                o.WebsiteUrl,
-                o.CreatedAt
-            ))
-            .AsAsyncEnumerable()
-            .WithCancellation(cancellationToken))
+        await foreach (
+            var organization in query
+                .Select(o => new OrganizationDtoForList(
+                    o.Id,
+                    o.Name,
+                    o.ProfilePictureUrl,
+                    o.CardPictureUrl,
+                    o.AboutUs,
+                    o.WebsiteUrl,
+                    o.CreatedAt
+                ))
+                .AsAsyncEnumerable()
+                .WithCancellation(cancellationToken)
+        )
         {
             yield return organization;
         }
     }
 
-    public async Task<OrganizationDtoForDetail?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
+    public async Task<OrganizationDtoForDetail?> GetByIdAsync(
+        Guid id,
+        CancellationToken cancellationToken = default
+    )
     {
         await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
 
-        return await context.Organizations
-            .Where(o => o.Id == id)
+        return await context
+            .Organizations.Where(o => o.Id == id)
             .Select(o => new OrganizationDtoForDetail(
                 o.Id,
                 o.Name,
@@ -69,12 +74,15 @@ public sealed class OrganizationRepository(IDbContextFactory<AquaTrackDbContext>
             .FirstOrDefaultAsync(cancellationToken);
     }
 
-    public async Task<OrganizationDtoForCreated?> GetByNameAsync(string name, CancellationToken cancellationToken = default)
+    public async Task<OrganizationDtoForCreated?> GetByNameAsync(
+        string name,
+        CancellationToken cancellationToken = default
+    )
     {
         await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
 
-        return await context.Organizations
-            .Where(o => o.Name == name)
+        return await context
+            .Organizations.Where(o => o.Name == name)
             .Select(o => new OrganizationDtoForCreated(o.Id, o.Name))
             .FirstOrDefaultAsync(cancellationToken);
     }
@@ -83,13 +91,13 @@ public sealed class OrganizationRepository(IDbContextFactory<AquaTrackDbContext>
     {
         await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
 
-        return await context.Organizations
-            .AnyAsync(o => o.Name == name, cancellationToken);
+        return await context.Organizations.AnyAsync(o => o.Name == name, cancellationToken);
     }
 
     public async Task<OrganizationDtoForCreated> CreateAsync(
         OrganizationDtoForCreate dto,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default
+    )
     {
         await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
 
@@ -103,7 +111,7 @@ public sealed class OrganizationRepository(IDbContextFactory<AquaTrackDbContext>
             AboutUs = dto.AboutUs,
             WebsiteUrl = dto.WebsiteUrl,
             CreatedAt = now,
-            UpdatedAt = now
+            UpdatedAt = now,
         };
 
         context.Organizations.Add(entity);
@@ -115,12 +123,13 @@ public sealed class OrganizationRepository(IDbContextFactory<AquaTrackDbContext>
     public async Task<OrganizationDtoForDetail?> UpdateAsync(
         Guid id,
         OrganizationDtoForUpdate dto,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default
+    )
     {
         await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
 
-        var entity = await context.Organizations
-            .AsTracking()
+        var entity = await context
+            .Organizations.AsTracking()
             .FirstOrDefaultAsync(o => o.Id == id, cancellationToken);
 
         if (entity is null)
@@ -153,8 +162,8 @@ public sealed class OrganizationRepository(IDbContextFactory<AquaTrackDbContext>
     {
         await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
 
-        var entity = await context.Organizations
-            .AsTracking()
+        var entity = await context
+            .Organizations.AsTracking()
             .FirstOrDefaultAsync(o => o.Id == id, cancellationToken);
 
         if (entity is null)
@@ -166,5 +175,31 @@ public sealed class OrganizationRepository(IDbContextFactory<AquaTrackDbContext>
         await context.SaveChangesAsync(cancellationToken);
 
         return true;
+    }
+
+    public async IAsyncEnumerable<MyOrganizationDto> GetMyOrganizationsAsync(
+        Guid userId,
+        [EnumeratorCancellation] CancellationToken cancellationToken = default
+    )
+    {
+        await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
+
+        var query = context
+            .OrganizationMembers.AsNoTracking()
+            .Where(m => m.UserId == userId)
+            .Include(m => m.Organization)
+            .Include(m => m.Role)
+            .Select(m => new MyOrganizationDto(
+                m.Organization!.Id,
+                m.Organization.Name,
+                m.Organization.ProfilePictureUrl,
+                m.Organization.WebsiteUrl,
+                m.Role!.Name
+            ));
+
+        await foreach (var org in query.AsAsyncEnumerable().WithCancellation(cancellationToken))
+        {
+            yield return org;
+        }
     }
 }

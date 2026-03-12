@@ -122,6 +122,28 @@ namespace EcoData.AquaTrack.Database.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "organization_blocked_users",
+                columns: table => new
+                {
+                    id = table.Column<Guid>(type: "uuid", nullable: false),
+                    organization_id = table.Column<Guid>(type: "uuid", nullable: false),
+                    user_id = table.Column<Guid>(type: "uuid", nullable: false),
+                    blocked_by_user_id = table.Column<Guid>(type: "uuid", nullable: false),
+                    reason = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: true),
+                    blocked_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("pk_organization_blocked_users", x => x.id);
+                    table.ForeignKey(
+                        name: "fk_organization_blocked_users_organizations_organization_id",
+                        column: x => x.organization_id,
+                        principalTable: "organizations",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "organization_roles",
                 columns: table => new
                 {
@@ -436,8 +458,18 @@ namespace EcoData.AquaTrack.Database.Migrations
             migrationBuilder.CreateIndex(
                 name: "ix_organization_access_requests_user_id_organization_id",
                 table: "organization_access_requests",
-                columns: new[] { "user_id", "organization_id" },
+                columns: new[] { "user_id", "organization_id" });
+
+            migrationBuilder.CreateIndex(
+                name: "ix_organization_blocked_users_organization_id_user_id",
+                table: "organization_blocked_users",
+                columns: new[] { "organization_id", "user_id" },
                 unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "ix_organization_blocked_users_user_id",
+                table: "organization_blocked_users",
+                column: "user_id");
 
             migrationBuilder.CreateIndex(
                 name: "ix_organization_members_organization_id",
@@ -572,6 +604,9 @@ namespace EcoData.AquaTrack.Database.Migrations
 
             migrationBuilder.DropTable(
                 name: "organization_access_requests");
+
+            migrationBuilder.DropTable(
+                name: "organization_blocked_users");
 
             migrationBuilder.DropTable(
                 name: "organization_members");

@@ -46,6 +46,11 @@ public static class DependencyInjection
             configureClient?.Invoke(client);
         });
 
+        services.AddHttpClient<IOrganizationBlockedUserHttpClient, OrganizationBlockedUserHttpClient>(client =>
+        {
+            configureClient?.Invoke(client);
+        });
+
         return services;
     }
 

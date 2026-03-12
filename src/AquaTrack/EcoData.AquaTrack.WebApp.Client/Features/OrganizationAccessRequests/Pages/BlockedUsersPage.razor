@@ -1,0 +1,151 @@
+@page "/organizations/{OrganizationId:guid}/blocked-users"
+@using EcoData.AquaTrack.Contracts.Dtos
+@using EcoData.AquaTrack.Application.Client
+@using EcoData.AquaTrack.WebApp.Client.Features.Organizations.Authorization
+@using BlazingSingularity.Commands
+@inject IOrganizationBlockedUserHttpClient BlockedUserClient
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+
+<PageTitle>Blocked Users - AquaTrack</PageTitle>
+
+<RequireOrganizationPermission OrganizationId="OrganizationId" Permission="EcoData.AquaTrack.Contracts.Permissions.Organization.ManageMembers">
+    <Authorized>
+        <MudText Typo="Typo.h5" Class="mb-4">Blocked Users</MudText>
+
+        @if (LoadBlockedUsersCommand.IsLoading)
+        {
+            <MudPaper Elevation="1" Class="rounded-lg">
+                @for (var i = 0; i < 3; i++)
+                {
+                    <div class="pa-4" style="border-bottom: 1px solid var(--mud-palette-lines-default);">
+                        <MudStack Row AlignItems="AlignItems.Center" Spacing="3">
+                            <MudSkeleton SkeletonType="SkeletonType.Circle" Width="40px" Height="40px" />
+                            <MudStack Spacing="1" Class="flex-grow-1">
+                                <MudSkeleton Width="150px" Height="20px" />
+                                <MudSkeleton Width="200px" Height="14px" />
+                            </MudStack>
+                            <MudSkeleton Width="80px" Height="36px" />
+                        </MudStack>
+                    </div>
+                }
+            </MudPaper>
+        }
+        else if (_blockedUsers.Count == 0)
+        {
+            <MudPaper Elevation="1" Class="pa-8 rounded-lg">
+                <MudStack AlignItems="AlignItems.Center">
+                    <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Size="Size.Large" Color="Color.Success" />
+                    <MudText Typo="Typo.h6" Color="Color.Secondary" Class="mt-2">No blocked users</MudText>
+                    <MudText Typo="Typo.body2" Color="Color.Secondary">
+                        There are no blocked users for this organization.
+                    </MudText>
+                </MudStack>
+            </MudPaper>
+        }
+        else
+        {
+            <MudPaper Elevation="1" Class="rounded-lg">
+                @foreach (var blocked in _blockedUsers)
+                {
+                    <MudStack Row AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween"
+                              Class="pa-4 flex-wrap gap-4" Style="border-bottom: 1px solid var(--mud-palette-lines-default);">
+                        <MudStack Row AlignItems="AlignItems.Center" Spacing="3">
+                            <MudAvatar Color="Color.Error" Size="Size.Medium">
+                                @GetInitials(blocked.UserDisplayName)
+                            </MudAvatar>
+                            <MudStack Spacing="0">
+                                <MudText Typo="Typo.subtitle1">@blocked.UserDisplayName</MudText>
+                                <MudText Typo="Typo.body2" Color="Color.Secondary">
+                                    Blocked by @blocked.BlockedByDisplayName on @FormatDate(blocked.BlockedAt)
+                                </MudText>
+                                @if (!string.IsNullOrWhiteSpace(blocked.Reason))
+                                {
+                                    <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mt-1">
+                                        Reason: "@blocked.Reason"
+                                    </MudText>
+                                }
+                            </MudStack>
+                        </MudStack>
+                        <MudButton Variant="Variant.Outlined" Color="Color.Primary" Size="Size.Small"
+                                   OnClick="() => UnblockUser(blocked)">
+                            Unblock
+                        </MudButton>
+                    </MudStack>
+                }
+            </MudPaper>
+        }
+    </Authorized>
+    <NotAuthorized>
+        <MudPaper Elevation="1" Class="pa-8 rounded-lg">
+            <MudStack AlignItems="AlignItems.Center">
+                <MudIcon Icon="@Icons.Material.Filled.Lock" Size="Size.Large" Color="Color.Error" />
+                <MudText Typo="Typo.h6" Color="Color.Error" Class="mt-2">Access Denied</MudText>
+                <MudText Typo="Typo.body2" Color="Color.Secondary">
+                    You don't have permission to view blocked users for this organization.
+                </MudText>
+            </MudStack>
+        </MudPaper>
+    </NotAuthorized>
+</RequireOrganizationPermission>
+
+@code {
+    [Parameter]
+    public Guid OrganizationId { get; set; }
+
+    private List<OrganizationBlockedUserDto> _blockedUsers = [];
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadBlockedUsersCommand.ExecuteAsync();
+    }
+
+    [RelayCommand]
+    private async Task LoadBlockedUsers()
+    {
+        _blockedUsers.Clear();
+        await foreach (var blocked in BlockedUserClient.GetBlockedUsersAsync(OrganizationId))
+        {
+            _blockedUsers.Add(blocked);
+        }
+    }
+
+    private async Task UnblockUser(OrganizationBlockedUserDto blocked)
+    {
+        var parameters = new DialogParameters<ConfirmDialog>
+        {
+            { x => x.ContentText, $"Are you sure you want to unblock {blocked.UserDisplayName}? They will be able to request access again." },
+            { x => x.ButtonText, "Unblock" },
+            { x => x.Color, Color.Primary }
+        };
+        var options = new DialogOptions { CloseOnEscapeKey = true, MaxWidth = MaxWidth.ExtraSmall };
+        var dialog = await DialogService.ShowAsync<ConfirmDialog>("Unblock User", parameters, options);
+        var result = await dialog.Result;
+
+        if (result is { Canceled: false })
+        {
+            var unblockResult = await BlockedUserClient.UnblockUserAsync(OrganizationId, blocked.UserId);
+            unblockResult.Switch(
+                _ =>
+                {
+                    Snackbar.Add($"{blocked.UserDisplayName} has been unblocked", Severity.Success);
+                    _blockedUsers.Remove(blocked);
+                    StateHasChanged();
+                },
+                _ => Snackbar.Add("User not found in blocked list", Severity.Error),
+                error => Snackbar.Add($"Failed to unblock: {error.Message}", Severity.Error)
+            );
+        }
+    }
+
+    private static string GetInitials(string name)
+    {
+        if (string.IsNullOrWhiteSpace(name)) return "?";
+        var parts = name.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        if (parts.Length >= 2)
+            return $"{parts[0][0]}{parts[1][0]}".ToUpper();
+        return name[0].ToString().ToUpper();
+    }
+
+    private static string FormatDate(DateTimeOffset date) => date.LocalDateTime.ToString("MMM d, yyyy");
+}
