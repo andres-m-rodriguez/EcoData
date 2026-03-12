@@ -66,6 +66,7 @@ app.MapDataSourceEndpoints();
 app.MapOrganizationEndpoints();
 app.MapMemberEndpoints();
 app.MapOrganizationAccessRequestEndpoints();
+app.MapOrganizationBlockedUserEndpoints();
 app.MapPermissionEndpoints();
 app.MapApiKeyEndpoints();
 app.MapPushEndpoints();

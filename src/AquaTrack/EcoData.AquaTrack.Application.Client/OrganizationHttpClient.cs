@@ -27,10 +27,19 @@ public sealed class OrganizationHttpClient(HttpClient httpClient) : IOrganizatio
         )!;
     }
 
-    public async Task<OneOf<OrganizationDtoForDetail, NotFoundError, UnauthorizedError>> GetByIdAsync(
-        Guid id,
+    public IAsyncEnumerable<MyOrganizationDto> GetMyOrganizationsAsync(
         CancellationToken cancellationToken = default
     )
+    {
+        return httpClient.GetFromJsonAsAsyncEnumerable<MyOrganizationDto>(
+            "api/organizations/my",
+            cancellationToken
+        )!;
+    }
+
+    public async Task<
+        OneOf<OrganizationDtoForDetail, NotFoundError, UnauthorizedError>
+    > GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
         var response = await httpClient.GetAsync($"api/organizations/{id}", cancellationToken);
 
@@ -40,7 +49,9 @@ public sealed class OrganizationHttpClient(HttpClient httpClient) : IOrganizatio
         if (response.StatusCode == HttpStatusCode.Unauthorized)
             return new UnauthorizedError();
 
-        var result = await response.Content.ReadFromJsonAsync<OrganizationDtoForDetail>(cancellationToken);
+        var result = await response.Content.ReadFromJsonAsync<OrganizationDtoForDetail>(
+            cancellationToken
+        );
         return result!;
     }
 
@@ -49,36 +60,58 @@ public sealed class OrganizationHttpClient(HttpClient httpClient) : IOrganizatio
         CancellationToken cancellationToken = default
     )
     {
-        var response = await httpClient.PostAsJsonAsync("api/organizations", dto, cancellationToken);
+        var response = await httpClient.PostAsJsonAsync(
+            "api/organizations",
+            dto,
+            cancellationToken
+        );
 
         if (response.StatusCode == HttpStatusCode.BadRequest)
-            return await response.Content.ReadFromJsonAsync<ValidationError>(cancellationToken) ?? new ValidationError();
+            return await response.Content.ReadFromJsonAsync<ValidationError>(cancellationToken)
+                ?? new ValidationError();
 
         if (!response.IsSuccessStatusCode)
-            return new ApiError((int)response.StatusCode, await response.Content.ReadAsStringAsync(cancellationToken));
+            return new ApiError(
+                (int)response.StatusCode,
+                await response.Content.ReadAsStringAsync(cancellationToken)
+            );
 
-        var result = await response.Content.ReadFromJsonAsync<OrganizationDtoForCreated>(cancellationToken);
+        var result = await response.Content.ReadFromJsonAsync<OrganizationDtoForCreated>(
+            cancellationToken
+        );
         return result!;
     }
 
-    public async Task<OneOf<OrganizationDtoForDetail, NotFoundError, ValidationError, ApiError>> UpdateAsync(
+    public async Task<
+        OneOf<OrganizationDtoForDetail, NotFoundError, ValidationError, ApiError>
+    > UpdateAsync(
         Guid id,
         OrganizationDtoForUpdate dto,
         CancellationToken cancellationToken = default
     )
     {
-        var response = await httpClient.PutAsJsonAsync($"api/organizations/{id}", dto, cancellationToken);
+        var response = await httpClient.PutAsJsonAsync(
+            $"api/organizations/{id}",
+            dto,
+            cancellationToken
+        );
 
         if (response.StatusCode == HttpStatusCode.NotFound)
             return new NotFoundError();
 
         if (response.StatusCode == HttpStatusCode.BadRequest)
-            return await response.Content.ReadFromJsonAsync<ValidationError>(cancellationToken) ?? new ValidationError();
+            return await response.Content.ReadFromJsonAsync<ValidationError>(cancellationToken)
+                ?? new ValidationError();
 
         if (!response.IsSuccessStatusCode)
-            return new ApiError((int)response.StatusCode, await response.Content.ReadAsStringAsync(cancellationToken));
+            return new ApiError(
+                (int)response.StatusCode,
+                await response.Content.ReadAsStringAsync(cancellationToken)
+            );
 
-        var result = await response.Content.ReadFromJsonAsync<OrganizationDtoForDetail>(cancellationToken);
+        var result = await response.Content.ReadFromJsonAsync<OrganizationDtoForDetail>(
+            cancellationToken
+        );
         return result!;
     }
 
@@ -93,7 +126,10 @@ public sealed class OrganizationHttpClient(HttpClient httpClient) : IOrganizatio
             return new NotFoundError();
 
         if (!response.IsSuccessStatusCode)
-            return new ApiError((int)response.StatusCode, await response.Content.ReadAsStringAsync(cancellationToken));
+            return new ApiError(
+                (int)response.StatusCode,
+                await response.Content.ReadAsStringAsync(cancellationToken)
+            );
 
         return new Success();
     }

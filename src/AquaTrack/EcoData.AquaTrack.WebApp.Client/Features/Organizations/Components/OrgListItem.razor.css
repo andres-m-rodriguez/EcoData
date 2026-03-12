@@ -1,0 +1,17 @@
+.org-list-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+}
+
+.org-list-item:hover {
+    background-color: var(--mud-palette-action-default-hover);
+}
+
+.org-name {
+    font-weight: 500;
+}

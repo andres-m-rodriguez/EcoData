@@ -30,6 +30,7 @@ public static class OrganizationAccessRequestEndpoints
                     ClaimsPrincipal user,
                     IOrganizationAccessRequestRepository repository,
                     IOrganizationMemberRepository memberRepository,
+                    IOrganizationBlockedUserRepository blockedUserRepository,
                     CancellationToken ct
                 ) =>
                 {
@@ -37,6 +38,12 @@ public static class OrganizationAccessRequestEndpoints
                     if (!token.IsAuthenticated)
                     {
                         return TypedResults.Unauthorized();
+                    }
+
+                    var isBlocked = await blockedUserRepository.IsBlockedAsync(organizationId, token.UserId.Value, ct);
+                    if (isBlocked)
+                    {
+                        return TypedResults.Conflict("You are blocked from requesting access to this organization.");
                     }
 
                     var isMember = await memberRepository.ExistsAsync(organizationId, token.UserId.Value, ct);
