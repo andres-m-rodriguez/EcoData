@@ -10,6 +10,7 @@
 @using EcoData.AquaTrack.WebApp.Client.Services
 @inject IOrganizationAccessRequestHttpClient AccessRequestClient
 @inject IOrganizationHttpClient OrganizationClient
+@inject IOrganizationBlockedUserHttpClient BlockedUserClient
 @inject IDialogService DialogService
 @inject ISnackbar Snackbar
 @inject NavigationManager Navigation
@@ -224,17 +225,33 @@
         var dialog = await DialogService.ShowAsync<RejectRequestDialog>("Reject Request", parameters, options);
         var result = await dialog.Result;
 
-        if (result is { Canceled: false, Data: string reviewNotes })
+        if (result is { Canceled: false, Data: RejectRequestDialog.RejectRequestResult rejectResult })
         {
             var updateRequest = new UpdateOrganizationAccessRequestStatusRequest(
                 Approved: false,
-                ReviewNotes: string.IsNullOrWhiteSpace(reviewNotes) ? null : reviewNotes
+                ReviewNotes: string.IsNullOrWhiteSpace(rejectResult.ReviewNotes) ? null : rejectResult.ReviewNotes
             );
             var updateResult = await AccessRequestClient.UpdateStatusAsync(OrganizationId, request.Id, updateRequest);
             updateResult.Switch(
-                _ =>
+                async _ =>
                 {
-                    Snackbar.Add("Request rejected", Severity.Info);
+                    if (rejectResult.BlockUser)
+                    {
+                        var blockResult = await BlockedUserClient.BlockUserAsync(
+                            OrganizationId,
+                            request.UserId,
+                            rejectResult.ReviewNotes
+                        );
+                        blockResult.Switch(
+                            _ => Snackbar.Add($"Request rejected and {request.UserDisplayName} has been blocked", Severity.Info),
+                            _ => Snackbar.Add("Request rejected (user was already blocked)", Severity.Info),
+                            error => Snackbar.Add($"Request rejected but failed to block user: {error.Message}", Severity.Warning)
+                        );
+                    }
+                    else
+                    {
+                        Snackbar.Add("Request rejected", Severity.Info);
+                    }
                     _listRef?.Refresh();
                 },
                 _ => Snackbar.Add("Request not found", Severity.Error),

@@ -38,7 +38,7 @@ public sealed class OrganizationAccessRequest
 
             builder.Property(static e => e.ReviewNotes).HasMaxLength(1000);
 
-            builder.HasIndex(static e => new { e.UserId, e.OrganizationId }).IsUnique();
+            builder.HasIndex(static e => new { e.UserId, e.OrganizationId });
 
             builder.HasIndex(static e => e.Status);
 

@@ -32,6 +32,20 @@ public static class OrganizationEndpoints
 
         group
             .MapGet(
+                "/my",
+                (ClaimsPrincipal user, IOrganizationRepository repository, CancellationToken ct) =>
+                {
+                    var token = new RequestClaimToken(user);
+                    return token.IsAuthenticated
+                        ? repository.GetMyOrganizationsAsync(token.UserId!.Value, ct)
+                        : AsyncEnumerable.Empty<MyOrganizationDto>();
+                }
+            )
+            .WithName("GetMyOrganizations")
+            .RequireAuthorization();
+
+        group
+            .MapGet(
                 "/{id:guid}",
                 async Task<Results<Ok<OrganizationDtoForDetail>, NotFound>> (
                     Guid id,

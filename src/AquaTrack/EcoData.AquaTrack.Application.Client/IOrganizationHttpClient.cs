@@ -12,6 +12,10 @@ public interface IOrganizationHttpClient
         CancellationToken cancellationToken = default
     );
 
+    IAsyncEnumerable<MyOrganizationDto> GetMyOrganizationsAsync(
+        CancellationToken cancellationToken = default
+    );
+
     Task<OneOf<OrganizationDtoForDetail, NotFoundError, UnauthorizedError>> GetByIdAsync(
         Guid id,
         CancellationToken cancellationToken = default

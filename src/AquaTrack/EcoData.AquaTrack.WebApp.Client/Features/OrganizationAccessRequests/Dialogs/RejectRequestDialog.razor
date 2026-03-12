@@ -13,12 +13,18 @@
                       Placeholder="Add a reason for rejection..."
                       Variant="Variant.Outlined"
                       Lines="3"
-                      HelperText="This will be visible to administrators" />
+                      HelperText="This will be visible to administrators"
+                      Class="mb-4" />
+        <MudCheckBox @bind-Value="BlockUser" Color="Color.Error" Dense="true">
+            <MudText Typo="Typo.body2">
+                Also block this user from future requests
+            </MudText>
+        </MudCheckBox>
     </DialogContent>
     <DialogActions>
         <MudButton OnClick="Cancel">Cancel</MudButton>
         <MudButton Color="Color.Error" Variant="Variant.Filled" OnClick="Submit">
-            Reject
+            @(BlockUser ? "Reject & Block" : "Reject")
         </MudButton>
     </DialogActions>
 </MudDialog>
@@ -33,7 +39,12 @@
     [Signal]
     private string? _reviewNotes;
 
+    [Signal]
+    private bool _blockUser;
+
     private void Cancel() => MudDialog.Cancel();
 
-    private void Submit() => MudDialog.Close(DialogResult.Ok(ReviewNotes));
+    private void Submit() => MudDialog.Close(DialogResult.Ok(new RejectRequestResult(ReviewNotes, BlockUser)));
+
+    public sealed record RejectRequestResult(string? ReviewNotes, bool BlockUser);
 }
