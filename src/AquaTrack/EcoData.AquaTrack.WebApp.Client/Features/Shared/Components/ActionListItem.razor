@@ -1,0 +1,38 @@
+@using MudBlazor
+
+<div class="action-row @IconColorClass" @onclick="OnClick">
+    <div class="action-icon-box">
+        <MudIcon Icon="@Icon" />
+    </div>
+    <MudStack Spacing="0">
+        <MudText Typo="Typo.body1" Class="action-title">@Title</MudText>
+        <MudText Typo="Typo.body2" Color="Color.Secondary">@Subtitle</MudText>
+    </MudStack>
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public string Icon { get; set; } = string.Empty;
+
+    [Parameter, EditorRequired]
+    public string Title { get; set; } = string.Empty;
+
+    [Parameter]
+    public string? Subtitle { get; set; }
+
+    [Parameter]
+    public Color IconColor { get; set; } = Color.Default;
+
+    [Parameter]
+    public EventCallback OnClick { get; set; }
+
+    private string IconColorClass => IconColor switch
+    {
+        Color.Info => "color-info",
+        Color.Success => "color-success",
+        Color.Warning => "color-warning",
+        Color.Error => "color-error",
+        Color.Primary => "color-primary",
+        _ => "color-default"
+    };
+}

@@ -1,0 +1,55 @@
+.action-row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 12px;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+}
+
+.action-row:hover {
+    background-color: var(--mud-palette-action-default-hover);
+}
+
+.action-icon-box {
+    flex-shrink: 0;
+    width: 52px;
+    height: 52px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 12px;
+    background-color: var(--mud-palette-background-grey);
+    color: var(--mud-palette-text-secondary);
+}
+
+.action-title {
+    font-weight: 500;
+}
+
+/* Color variants */
+.color-info .action-icon-box {
+    background-color: var(--mud-palette-info-lighten);
+    color: var(--mud-palette-info);
+}
+
+.color-success .action-icon-box {
+    background-color: var(--mud-palette-success-lighten);
+    color: var(--mud-palette-success);
+}
+
+.color-warning .action-icon-box {
+    background-color: var(--mud-palette-warning-lighten);
+    color: var(--mud-palette-warning);
+}
+
+.color-error .action-icon-box {
+    background-color: var(--mud-palette-error-lighten);
+    color: var(--mud-palette-error);
+}
+
+.color-primary .action-icon-box {
+    background-color: var(--mud-palette-primary-lighten);
+    color: var(--mud-palette-primary);
+}

@@ -5,18 +5,8 @@ using OneOf;
 namespace EcoData.Identity.Contracts.Results;
 
 [GenerateOneOf]
-public partial class RegisterResult
-    : OneOfBase<UserInfo, EmailAlreadyExists, PendingAccessRequest, ValidationFailed>;
+public partial class RegisterResult : OneOfBase<UserInfo, EmailAlreadyExists, ValidationFailed>;
 
 [GenerateOneOf]
 public partial class LoginResult
-    : OneOfBase<UserInfo, InvalidCredentials, AccountLocked, AccountNotApproved, ValidationFailed>;
-
-[GenerateOneOf]
-public partial class UpdateAccessRequestResult
-    : OneOfBase<
-        AccessRequestResponse,
-        AccessRequestNotFound,
-        AccessRequestAlreadyProcessed,
-        ValidationFailed
-    >;
+    : OneOfBase<UserInfo, InvalidCredentials, AccountLocked, ValidationFailed>;

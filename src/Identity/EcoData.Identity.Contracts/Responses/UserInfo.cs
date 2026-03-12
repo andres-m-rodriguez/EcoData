@@ -6,7 +6,6 @@ public sealed record UserInfo(
     Guid Id,
     string Email,
     string DisplayName,
-    string Role,
     GlobalRole? GlobalRole,
     DateTimeOffset CreatedAt
 );
