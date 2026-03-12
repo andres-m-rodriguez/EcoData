@@ -15,7 +15,6 @@ public sealed class CustomUserClaimsPrincipalFactory(
         var identity = await base.GenerateClaimsAsync(user);
 
         identity.AddClaim(new Claim("DisplayName", user.DisplayName));
-        identity.AddClaim(new Claim(ClaimTypes.Role, user.Role.ToString()));
 
         return identity;
     }
