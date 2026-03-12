@@ -13,7 +13,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\WebApp\EcoData.WebApp\EcoData.WebApp.csproj" />
+    <ProjectReference Include="..\..\EcoPortal\EcoPortal.Server\EcoPortal.Server.csproj" />
     <ProjectReference Include="..\EcoData.Seeder\EcoData.Seeder.csproj" />
   </ItemGroup>
 

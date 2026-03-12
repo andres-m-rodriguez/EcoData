@@ -38,9 +38,9 @@
     <Project Path="src/Sensors/EcoData.Sensors.Api/EcoData.Sensors.Api.csproj" />
     <Project Path="src/Sensors/EcoData.Sensors.Application.Client/EcoData.Sensors.Application.Client.csproj" />
   </Folder>
-  <Folder Name="/WebApp/">
-    <Project Path="src/WebApp/EcoData.WebApp/EcoData.WebApp.csproj" />
-    <Project Path="src/WebApp/EcoData.WebApp.Client/EcoData.WebApp.Client.csproj" />
+  <Folder Name="/EcoPortal/">
+    <Project Path="src/EcoPortal/EcoPortal.Server/EcoPortal.Server.csproj" />
+    <Project Path="src/EcoPortal/EcoPortal.Client/EcoPortal.Client.csproj" />
   </Folder>
   <Folder Name="/Tests/">
     <Project Path="tests/EcoData.AquaTrack.IntegrationTests/EcoData.AquaTrack.IntegrationTests.csproj" />

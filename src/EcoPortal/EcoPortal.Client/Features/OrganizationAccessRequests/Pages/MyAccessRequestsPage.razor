@@ -1,0 +1,167 @@
+@page "/my-requests"
+@using EcoData.Organization.Contracts.Dtos
+@using EcoData.Organization.Contracts.Parameters
+@using EcoData.Organization.Application.Client
+@using EcoData.Common.Pagination.Blazor
+@using EcoPortal.Client.Services
+@inject IOrganizationAccessRequestHttpClient AccessRequestClient
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+@inject AuthStateService AuthState
+@inject NavigationManager Navigation
+
+<PageTitle>My Access Requests - EcoData</PageTitle>
+
+<MudText Typo="Typo.h5" Class="mb-4">My Access Requests</MudText>
+
+<MudPaper Elevation="1" Class="rounded-lg">
+    <EcoDataVirtualizedList @ref="_listRef"
+                            TItem="OrganizationAccessRequestDto"
+                            TParams="OrganizationAccessRequestParameters"
+                            ItemsProvider="(p, ct) => AccessRequestClient.GetMyRequestsAsync(p)"
+                            ParametersBuilder="CreateParameters"
+                            CursorSelector="r => r.Id"
+                            ItemSize="80"
+                            OverscanCount="3">
+        <LoadingTemplate>
+            @for (var i = 0; i < 5; i++)
+            {
+                <div class="pa-4" style="border-bottom: 1px solid var(--mud-palette-lines-default);">
+                    <MudSkeleton Width="60%" Height="20px" />
+                    <MudSkeleton Width="30%" Height="14px" Class="mt-2" />
+                </div>
+            }
+        </LoadingTemplate>
+        <EmptyTemplate>
+            <MudStack AlignItems="AlignItems.Center" Class="pa-8">
+                <MudIcon Icon="@Icons.Material.Filled.Inbox" Size="Size.Large" Color="Color.Secondary" />
+                <MudText Typo="Typo.h6" Color="Color.Secondary" Class="mt-2">No access requests</MudText>
+                <MudText Typo="Typo.body2" Color="Color.Secondary">
+                    You haven't requested access to any organizations yet.
+                </MudText>
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Search"
+                           OnClick="NavigateToBrowse" Class="mt-3">
+                    Browse Organizations
+                </MudButton>
+            </MudStack>
+        </EmptyTemplate>
+        <PlaceholderTemplate>
+            <div class="pa-4" style="border-bottom: 1px solid var(--mud-palette-lines-default);">
+                <MudSkeleton Width="60%" Height="20px" />
+                <MudSkeleton Width="30%" Height="14px" Class="mt-2" />
+            </div>
+        </PlaceholderTemplate>
+        <ItemTemplate Context="request">
+            <MudStack Row AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween"
+                      Class="pa-4 flex-wrap gap-4" Style="border-bottom: 1px solid var(--mud-palette-lines-default);">
+                <MudStack Row AlignItems="AlignItems.Center" Spacing="3">
+                    <MudAvatar Color="Color.Primary" Size="Size.Medium">
+                        <MudIcon Icon="@Icons.Material.Filled.Business" />
+                    </MudAvatar>
+                    <MudStack Spacing="0">
+                        <MudText Typo="Typo.subtitle1">@request.OrganizationName</MudText>
+                        <MudText Typo="Typo.body2" Color="Color.Secondary">
+                            Requested @FormatDate(request.CreatedAt)
+                        </MudText>
+                        @if (!string.IsNullOrWhiteSpace(request.RequestMessage))
+                        {
+                            <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mt-1">
+                                "@request.RequestMessage"
+                            </MudText>
+                        }
+                        @if (request.Status == "Rejected" && !string.IsNullOrWhiteSpace(request.ReviewNotes))
+                        {
+                            <MudAlert Severity="Severity.Info" Dense="true" Class="mt-2">
+                                <MudText Typo="Typo.caption">
+                                    <strong>Reviewer notes:</strong> @request.ReviewNotes
+                                </MudText>
+                            </MudAlert>
+                        }
+                        @if (request.Status is "Approved" or "Rejected" && request.ReviewedAt.HasValue)
+                        {
+                            <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mt-1">
+                                @(request.Status == "Approved" ? "Approved" : "Rejected") by @(request.ReviewedByDisplayName ?? "Unknown") on @FormatDate(request.ReviewedAt.Value)
+                            </MudText>
+                        }
+                    </MudStack>
+                </MudStack>
+                <MudStack Row AlignItems="AlignItems.Center" Spacing="2">
+                    @switch (request.Status)
+                    {
+                        case "Pending":
+                            <MudChip T="string" Color="Color.Warning" Variant="Variant.Filled" Size="Size.Small">
+                                Pending
+                            </MudChip>
+                            <MudButton Variant="Variant.Text" Color="Color.Error" Size="Size.Small"
+                                       OnClick="() => CancelRequest(request)">
+                                Cancel
+                            </MudButton>
+                            break;
+                        case "Approved":
+                            <MudChip T="string" Color="Color.Success" Variant="Variant.Filled" Size="Size.Small">
+                                Approved
+                            </MudChip>
+                            <MudButton Variant="Variant.Outlined" Color="Color.Primary" Size="Size.Small"
+                                       OnClick="() => NavigateToOrganization(request.OrganizationId)">
+                                View Organization
+                            </MudButton>
+                            break;
+                        case "Rejected":
+                            <MudChip T="string" Color="Color.Error" Variant="Variant.Filled" Size="Size.Small">
+                                Rejected
+                            </MudChip>
+                            break;
+                        case "Cancelled":
+                            <MudChip T="string" Color="Color.Default" Variant="Variant.Filled" Size="Size.Small">
+                                Cancelled
+                            </MudChip>
+                            break;
+                    }
+                </MudStack>
+            </MudStack>
+        </ItemTemplate>
+    </EcoDataVirtualizedList>
+</MudPaper>
+
+@code {
+    private EcoDataVirtualizedList<OrganizationAccessRequestDto, OrganizationAccessRequestParameters>? _listRef;
+
+    private OrganizationAccessRequestParameters CreateParameters(Guid? cursor) => new(
+        PageSize: 20,
+        Cursor: cursor
+    );
+
+    private async Task CancelRequest(OrganizationAccessRequestDto request)
+    {
+        var parameters = new DialogParameters<ConfirmDialog>
+        {
+            { x => x.ContentText, $"Are you sure you want to cancel your access request to \"{request.OrganizationName}\"?" },
+            { x => x.ButtonText, "Cancel Request" },
+            { x => x.Color, Color.Error }
+        };
+        var options = new DialogOptions { CloseOnEscapeKey = true, MaxWidth = MaxWidth.ExtraSmall };
+        var dialog = await DialogService.ShowAsync<ConfirmDialog>("Cancel Request", parameters, options);
+        var result = await dialog.Result;
+
+        if (result is { Canceled: false })
+        {
+            var cancelResult = await AccessRequestClient.CancelMyRequestAsync(request.Id);
+            cancelResult.Switch(
+                _ =>
+                {
+                    Snackbar.Add("Request cancelled successfully", Severity.Success);
+                    _listRef?.Refresh();
+                },
+                _ => Snackbar.Add("Request not found", Severity.Error),
+                validation => Snackbar.Add(validation.Errors.FirstOrDefault()?.ErrorMessage ?? "Cannot cancel request", Severity.Error),
+                error => Snackbar.Add($"Failed to cancel: {error.Message}", Severity.Error)
+            );
+        }
+    }
+
+    private void NavigateToBrowse() => Navigation.NavigateTo("/organizations");
+
+    private void NavigateToOrganization(Guid organizationId) => Navigation.NavigateTo($"/organizations/{organizationId}");
+
+    private static string FormatDate(DateTimeOffset date) => date.LocalDateTime.ToString("MMM d, yyyy");
+}
