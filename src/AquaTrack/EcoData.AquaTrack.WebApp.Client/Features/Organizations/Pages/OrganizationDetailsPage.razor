@@ -215,7 +215,7 @@ else
                 _sensors.Add(sensor);
             }
 
-            await foreach (var member in MemberClient.GetAllAsync(Id))
+            await foreach (var member in MemberClient.GetAllAsync(Id, new OrganizationMemberParameters()))
             {
                 _members.Add(member);
             }

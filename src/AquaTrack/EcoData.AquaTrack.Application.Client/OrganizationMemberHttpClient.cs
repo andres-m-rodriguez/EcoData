@@ -2,6 +2,9 @@ using System.Net;
 using System.Net.Http.Json;
 using EcoData.AquaTrack.Contracts.Dtos;
 using EcoData.AquaTrack.Contracts.Errors;
+using EcoData.AquaTrack.Contracts.Parameters;
+using EcoData.Common.Http.Helpers;
+using EcoData.Common.Pagination;
 using OneOf;
 
 namespace EcoData.AquaTrack.Application.Client;
@@ -11,11 +14,17 @@ public sealed class OrganizationMemberHttpClient(HttpClient httpClient)
 {
     public IAsyncEnumerable<OrganizationMemberDto> GetAllAsync(
         Guid organizationId,
+        OrganizationMemberParameters parameters,
         CancellationToken cancellationToken = default
     )
     {
+        var query = new QueryStringBuilder()
+            .AddCursorParameters(parameters)
+            .Add("search", parameters.Search)
+            .Build();
+
         return httpClient.GetFromJsonAsAsyncEnumerable<OrganizationMemberDto>(
-            $"api/organizations/{organizationId}/members",
+            $"api/organizations/{organizationId}/members{query}",
             cancellationToken
         )!;
     }

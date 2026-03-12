@@ -1,30 +1,31 @@
+@using BlazingSingularity.Signals
 @inject IJSRuntime JS
 @implements IAsyncDisposable
 
-<MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Class="mb-4 flex-wrap search-header">
-    <div class="search-wrapper">
-        <SearchBar @bind-Value="Value"
-                   Placeholder="@Placeholder"
-                   ShowFilterButton="ShowFilterButton"
-                   HasActiveFilters="HasActiveFilters"
-                   FilterCount="FilterCount"
-                   OnFilterClick="OnFilterClick"
-                   EnableSticky="EnableSticky" />
-    </div>
-    @if (Actions is not null)
-    {
-        <div class="actions-wrapper">
-            @Actions
+<div class="search-header-wrapper @(_isSticky ? "is-sticky" : "")" @ref="_headerRef">
+    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Class="flex-wrap search-header">
+        <div class="search-wrapper">
+            <SearchBar @bind-Value="SearchSignal.Value" Placeholder="@Placeholder" ShowFilterButton="ShowFilterButton"
+                       HasActiveFilters="HasActiveFilters" FilterCount="FilterCount" OnFilterClick="OnFilterClick"
+                       EnableSticky="false" />
         </div>
-    }
-</MudStack>
+        @if (Actions is not null)
+        {
+            <div class="actions-wrapper">
+                @Actions
+            </div>
+        }
+    </MudStack>
+</div>
 
 @code {
-    [Parameter]
-    public string? Value { get; set; }
+    private ElementReference _headerRef;
+    private bool _isSticky;
+    private DotNetObjectReference<SearchHeader>? _dotNetRef;
+    private IJSObjectReference? _jsModule;
 
-    [Parameter]
-    public EventCallback<string?> ValueChanged { get; set; }
+    [Parameter, EditorRequired]
+    public Signal<string?> SearchSignal { get; set; } = default!;
 
     [Parameter]
     public string Placeholder { get; set; } = "Search...";
@@ -47,8 +48,37 @@
     [Parameter]
     public RenderFragment? Actions { get; set; }
 
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && EnableSticky)
+        {
+            _dotNetRef = DotNetObjectReference.Create(this);
+            _jsModule = await JS.InvokeAsync<IJSObjectReference>("import", "./js/stickySearch.js");
+            await _jsModule.InvokeVoidAsync("initStickySearch", _headerRef, _dotNetRef);
+        }
+    }
+
+    [JSInvokable]
+    public void SetSticky(bool isSticky)
+    {
+        if (_isSticky != isSticky)
+        {
+            _isSticky = isSticky;
+            StateHasChanged();
+        }
+    }
+
     public async ValueTask DisposeAsync()
     {
-        // SearchBar handles its own disposal
+        if (_jsModule is not null)
+        {
+            try
+            {
+                await _jsModule.InvokeVoidAsync("destroyStickySearch");
+                await _jsModule.DisposeAsync();
+            }
+            catch (JSDisconnectedException) { }
+        }
+        _dotNetRef?.Dispose();
     }
 }

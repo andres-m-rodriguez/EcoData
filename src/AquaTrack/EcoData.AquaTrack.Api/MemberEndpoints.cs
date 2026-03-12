@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using EcoData.AquaTrack.Contracts.Dtos;
+using EcoData.AquaTrack.Contracts.Parameters;
 using EcoData.AquaTrack.DataAccess.Interfaces;
 using EcoData.Identity.Contracts.Claims;
 using EcoData.Identity.DataAccess.Interfaces;
@@ -26,9 +27,10 @@ public static class MemberEndpoints
                 "/",
                 (
                     Guid organizationId,
+                    [AsParameters] OrganizationMemberParameters parameters,
                     IOrganizationMemberRepository repository,
                     CancellationToken ct
-                ) => repository.GetAllAsync(organizationId, ct)
+                ) => repository.GetAllAsync(organizationId, parameters, ct)
             )
             .WithName("GetOrganizationMembers")
             .AllowAnonymous();
