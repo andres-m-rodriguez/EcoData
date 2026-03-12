@@ -185,7 +185,6 @@ public sealed class DatabaseSeederWorker(
             NormalizedEmail = adminEmail.ToUpperInvariant(),
             EmailConfirmed = true,
             DisplayName = "Admin",
-            Role = UserRole.Admin,
             GlobalRole = GlobalRole.GlobalAdmin,
             SecurityStamp = Guid.NewGuid().ToString(),
             ConcurrencyStamp = Guid.NewGuid().ToString(),

@@ -1,10 +1,9 @@
 using EcoData.Common.Pagination;
 
-namespace EcoData.Identity.Contracts.Parameters;
+namespace EcoData.AquaTrack.Contracts.Parameters;
 
-public sealed record AccessRequestParameters(
+public sealed record OrganizationAccessRequestParameters(
     int PageSize = 20,
     Guid? Cursor = null,
-    string? Search = null,
     string? Status = null
 ) : CursorParameters(PageSize, Cursor);

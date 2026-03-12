@@ -53,7 +53,6 @@ public static class IdentityApplicationExtensions
 
         services.AddScoped<IValidator<RegisterRequest>, RegisterRequestValidator>();
         services.AddScoped<IValidator<LoginRequest>, LoginRequestValidator>();
-        services.AddScoped<IValidator<UpdateAccessRequestStatusRequest>, UpdateAccessRequestStatusRequestValidator>();
 
         services.AddScoped<IAuthService, AuthService>();
 

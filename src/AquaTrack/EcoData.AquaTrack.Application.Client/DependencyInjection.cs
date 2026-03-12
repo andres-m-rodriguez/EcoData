@@ -31,17 +31,17 @@ public static class DependencyInjection
             }
         );
 
-        services.AddHttpClient<IAccessRequestHttpClient, AccessRequestHttpClient>(client =>
-        {
-            configureClient?.Invoke(client);
-        });
-
         services.AddHttpClient<ILocationHttpClient, LocationHttpClient>(client =>
         {
             configureClient?.Invoke(client);
         });
 
         services.AddHttpClient<IPermissionHttpClient, PermissionHttpClient>(client =>
+        {
+            configureClient?.Invoke(client);
+        });
+
+        services.AddHttpClient<IOrganizationAccessRequestHttpClient, OrganizationAccessRequestHttpClient>(client =>
         {
             configureClient?.Invoke(client);
         });
