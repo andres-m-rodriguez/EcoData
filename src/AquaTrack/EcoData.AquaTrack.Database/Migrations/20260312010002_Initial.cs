@@ -97,6 +97,31 @@ namespace EcoData.AquaTrack.Database.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "organization_access_requests",
+                columns: table => new
+                {
+                    id = table.Column<Guid>(type: "uuid", nullable: false),
+                    user_id = table.Column<Guid>(type: "uuid", nullable: false),
+                    organization_id = table.Column<Guid>(type: "uuid", nullable: false),
+                    status = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
+                    request_message = table.Column<string>(type: "character varying(1000)", maxLength: 1000, nullable: true),
+                    review_notes = table.Column<string>(type: "character varying(1000)", maxLength: 1000, nullable: true),
+                    reviewed_by_user_id = table.Column<Guid>(type: "uuid", nullable: true),
+                    reviewed_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
+                    created_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("pk_organization_access_requests", x => x.id);
+                    table.ForeignKey(
+                        name: "fk_organization_access_requests_organizations_organization_id",
+                        column: x => x.organization_id,
+                        principalTable: "organizations",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "organization_roles",
                 columns: table => new
                 {
@@ -399,6 +424,22 @@ namespace EcoData.AquaTrack.Database.Migrations
                 columns: new[] { "data_source_id", "ingested_at" });
 
             migrationBuilder.CreateIndex(
+                name: "ix_organization_access_requests_organization_id",
+                table: "organization_access_requests",
+                column: "organization_id");
+
+            migrationBuilder.CreateIndex(
+                name: "ix_organization_access_requests_status",
+                table: "organization_access_requests",
+                column: "status");
+
+            migrationBuilder.CreateIndex(
+                name: "ix_organization_access_requests_user_id_organization_id",
+                table: "organization_access_requests",
+                columns: new[] { "user_id", "organization_id" },
+                unique: true);
+
+            migrationBuilder.CreateIndex(
                 name: "ix_organization_members_organization_id",
                 table: "organization_members",
                 column: "organization_id");
@@ -528,6 +569,9 @@ namespace EcoData.AquaTrack.Database.Migrations
 
             migrationBuilder.DropTable(
                 name: "ingestion_logs");
+
+            migrationBuilder.DropTable(
+                name: "organization_access_requests");
 
             migrationBuilder.DropTable(
                 name: "organization_members");

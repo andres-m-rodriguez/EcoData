@@ -20,6 +20,7 @@ public sealed class AquaTrackDbContext(DbContextOptions<AquaTrackDbContext> opti
     public DbSet<OrganizationRole> OrganizationRoles => Set<OrganizationRole>();
     public DbSet<OrganizationRolePermission> OrganizationRolePermissions => Set<OrganizationRolePermission>();
     public DbSet<OrganizationMember> OrganizationMembers => Set<OrganizationMember>();
+    public DbSet<OrganizationAccessRequest> OrganizationAccessRequests => Set<OrganizationAccessRequest>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -38,5 +39,6 @@ public sealed class AquaTrackDbContext(DbContextOptions<AquaTrackDbContext> opti
         modelBuilder.ApplyConfiguration(new OrganizationRole.EntityConfiguration());
         modelBuilder.ApplyConfiguration(new OrganizationRolePermission.EntityConfiguration());
         modelBuilder.ApplyConfiguration(new OrganizationMember.EntityConfiguration());
+        modelBuilder.ApplyConfiguration(new OrganizationAccessRequest.EntityConfiguration());
     }
 }
