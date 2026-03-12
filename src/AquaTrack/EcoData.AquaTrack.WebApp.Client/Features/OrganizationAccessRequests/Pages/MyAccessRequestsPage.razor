@@ -8,7 +8,7 @@
 @inject IDialogService DialogService
 @inject ISnackbar Snackbar
 @inject AuthStateService AuthState
-@inject NavigationManager Navigation
+@inject INavigationService Navigation
 
 <PageTitle>My Access Requests - AquaTrack</PageTitle>
 
@@ -120,6 +120,11 @@
 
 @code {
     private EcoDataVirtualizedList<OrganizationAccessRequestDto, OrganizationAccessRequestParameters>? _listRef;
+
+    protected override void OnInitialized()
+    {
+        Navigation.SetFallback("/organizations");
+    }
 
     private OrganizationAccessRequestParameters CreateParameters(Guid? cursor) => new(
         PageSize: 20,

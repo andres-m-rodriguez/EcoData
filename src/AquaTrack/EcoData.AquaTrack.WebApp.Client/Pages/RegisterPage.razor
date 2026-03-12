@@ -1,12 +1,13 @@
 @page "/register"
 @layout AuthLayout
 @using EcoData.AquaTrack.WebApp.Client.Layout
+@using EcoData.AquaTrack.WebApp.Client.Services
 @using EcoData.Identity.Application.Client
 @using EcoData.Identity.Contracts.Requests
 @using BlazingSingularity
 @using BlazingSingularity.Commands
 @inject IAuthHttpClient AuthClient
-@inject NavigationManager Navigation
+@inject INavigationService Navigation
 
 <PageTitle>Register - AquaTrack</PageTitle>
 
