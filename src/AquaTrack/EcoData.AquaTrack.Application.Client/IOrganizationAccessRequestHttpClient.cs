@@ -18,5 +18,5 @@ public interface IOrganizationAccessRequestHttpClient
 
     IAsyncEnumerable<OrganizationAccessRequestDto> GetMyRequestsAsync(OrganizationAccessRequestParameters parameters, CancellationToken cancellationToken = default);
 
-    Task<OneOf<Success, NotFoundError, ValidationError, ApiError>> CancelMyRequestAsync(Guid id, CancellationToken cancellationToken = default);
+    Task<OneOf<OrganizationAccessRequestDto, NotFoundError, ValidationError, ApiError>> CancelMyRequestAsync(Guid id, CancellationToken cancellationToken = default);
 }

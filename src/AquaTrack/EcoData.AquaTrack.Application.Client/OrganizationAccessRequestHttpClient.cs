@@ -126,12 +126,12 @@ public sealed class OrganizationAccessRequestHttpClient(HttpClient httpClient) :
         )!;
     }
 
-    public async Task<OneOf<Success, NotFoundError, ValidationError, ApiError>> CancelMyRequestAsync(
+    public async Task<OneOf<OrganizationAccessRequestDto, NotFoundError, ValidationError, ApiError>> CancelMyRequestAsync(
         Guid id,
         CancellationToken cancellationToken = default
     )
     {
-        var response = await httpClient.DeleteAsync($"api/me/access-requests/{id}", cancellationToken);
+        var response = await httpClient.PostAsync($"api/me/access-requests/{id}/cancel", null, cancellationToken);
 
         if (response.StatusCode == HttpStatusCode.NotFound)
         {
@@ -149,6 +149,7 @@ public sealed class OrganizationAccessRequestHttpClient(HttpClient httpClient) :
             return new ApiError((int)response.StatusCode, await response.Content.ReadAsStringAsync(cancellationToken));
         }
 
-        return new Success();
+        var result = await response.Content.ReadFromJsonAsync<OrganizationAccessRequestDto>(cancellationToken);
+        return result!;
     }
 }

@@ -5,6 +5,7 @@
 @using EcoData.AquaTrack.WebApp.Client.Services
 @using EcoData.AquaTrack.WebApp.Client.Features.OrganizationAccessRequests.Dialogs
 @using EcoData.Common.Pagination.Blazor
+@using BlazingSingularity.Signals
 @inject IOrganizationAccessRequestHttpClient AccessRequestClient
 @inject IDialogService DialogService
 @inject ISnackbar Snackbar
@@ -34,56 +35,18 @@
 }
 else
 {
-    @* Search and Filters *@
-    <MudPaper Elevation="1" Class="pa-4 rounded-lg mb-4">
-        <MudStack Spacing="3">
-            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
-                <MudTextField @bind-Value="_searchText"
-                              Placeholder="Search by organization name..."
-                              Variant="Variant.Outlined"
-                              Adornment="Adornment.Start"
-                              AdornmentIcon="@Icons.Material.Filled.Search"
-                              Immediate="true"
-                              DebounceInterval="300"
-                              OnDebounceIntervalElapsed="OnSearchChanged"
-                              Clearable="true"
-                              OnClearButtonClick="ClearSearch"
-                              Class="flex-grow-1" />
-                <MudButton Variant="Variant.Filled" Color="Color.Primary"
-                           StartIcon="@Icons.Material.Filled.Add"
-                           OnClick="OpenRequestDialog">
-                    New Request
-                </MudButton>
-            </MudStack>
-            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Wrap="Wrap.Wrap">
-                <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mr-2">Status:</MudText>
-                <MudChipSet T="string" SelectionMode="SelectionMode.SingleSelection" SelectedValue="_statusFilter" SelectedValueChanged="OnStatusFilterChanged">
-                    <MudChip Text="All" Value="@((string?)null)" Default="true"
-                             Variant="@(_statusFilter is null ? Variant.Filled : Variant.Outlined)"
-                             Color="Color.Default" />
-                    <MudChip Text="Pending" Value="@("Pending")"
-                             Variant="@(_statusFilter == "Pending" ? Variant.Filled : Variant.Outlined)"
-                             Color="Color.Warning" />
-                    <MudChip Text="Approved" Value="@("Approved")"
-                             Variant="@(_statusFilter == "Approved" ? Variant.Filled : Variant.Outlined)"
-                             Color="Color.Success" />
-                    <MudChip Text="Rejected" Value="@("Rejected")"
-                             Variant="@(_statusFilter == "Rejected" ? Variant.Filled : Variant.Outlined)"
-                             Color="Color.Error" />
-                </MudChipSet>
-                @if (HasActiveFilters)
-                {
-                    <MudButton Variant="Variant.Text" Color="Color.Secondary" Size="Size.Small"
-                               StartIcon="@Icons.Material.Filled.Clear" OnClick="ClearAllFilters">
-                        Clear Filters
-                    </MudButton>
-                }
-            </MudStack>
-        </MudStack>
-    </MudPaper>
+    <SearchHeader SearchSignal="SearchTextSignal" Placeholder="Search by organization name..."
+                  ShowFilterButton="true" HasActiveFilters="HasStatusFilter" OnFilterClick="OpenFilterDialog">
+        <Actions>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary"
+                       StartIcon="@Icons.Material.Filled.Add"
+                       OnClick="OpenRequestDialog">
+                New Request
+            </MudButton>
+        </Actions>
+    </SearchHeader>
 
-    @* Requests List *@
-    <MudPaper Elevation="1" Class="rounded-lg">
+    <MudPaper Elevation="1" Class="rounded-lg mt-4">
         <EcoDataVirtualizedList @ref="_listRef"
                                 TItem="OrganizationAccessRequestDto"
                                 TParams="OrganizationAccessRequestParameters"
@@ -131,6 +94,7 @@ else
                     @if (HasActiveFilters)
                     {
                         <MudButton Variant="Variant.Outlined" Color="Color.Primary"
+                                   StartIcon="@Icons.Material.Filled.FilterAltOff"
                                    OnClick="ClearAllFilters" Class="mt-3">
                             Clear Filters
                         </MudButton>
@@ -214,6 +178,11 @@ else
                                     Rejected
                                 </MudChip>
                                 break;
+                            case "Cancelled":
+                                <MudChip T="string" Color="Color.Default" Variant="Variant.Filled" Size="Size.Small">
+                                    Cancelled
+                                </MudChip>
+                                break;
                         }
                     </MudStack>
                 </MudStack>
@@ -224,46 +193,57 @@ else
 
 @code {
     private EcoDataVirtualizedList<OrganizationAccessRequestDto, OrganizationAccessRequestParameters>? _listRef;
+
+    [Signal]
     private string? _searchText;
+
+    [Signal]
     private string? _statusFilter;
 
-    private bool HasActiveFilters => !string.IsNullOrWhiteSpace(_searchText) || _statusFilter is not null;
+    private bool HasActiveFilters => !string.IsNullOrWhiteSpace(SearchText) || StatusFilter is not null;
+    private bool HasStatusFilter => StatusFilter is not null;
 
     protected override void OnInitialized()
     {
         Navigation.SetFallback("/organizations/my");
+        SearchTextSignal.OnChange(_ => _listRef?.Refresh());
+        StatusFilterSignal.OnChange(_ => _listRef?.Refresh());
     }
 
     private OrganizationAccessRequestParameters CreateParameters(Guid? cursor) => new(
         PageSize: 20,
         Cursor: cursor,
-        Status: _statusFilter,
-        Search: string.IsNullOrWhiteSpace(_searchText) ? null : _searchText
+        Status: StatusFilter,
+        Search: string.IsNullOrWhiteSpace(SearchText) ? null : SearchText
     );
-
-    private void OnSearchChanged(string _)
-    {
-        _listRef?.Refresh();
-    }
-
-    private void ClearSearch()
-    {
-        _searchText = null;
-        _listRef?.Refresh();
-    }
-
-    private void OnStatusFilterChanged(string? status)
-    {
-        if (_statusFilter == status) return;
-        _statusFilter = status;
-        _listRef?.Refresh();
-    }
 
     private void ClearAllFilters()
     {
-        _searchText = null;
-        _statusFilter = null;
-        _listRef?.Refresh();
+        SearchText = null;
+        StatusFilter = null;
+    }
+
+    private async Task OpenFilterDialog()
+    {
+        var parameters = new DialogParameters<AccessRequestFilterDialog>
+        {
+            { x => x.StatusFilter, StatusFilter }
+        };
+
+        var options = new DialogOptions
+        {
+            CloseOnEscapeKey = true,
+            MaxWidth = MaxWidth.Small,
+            FullWidth = true
+        };
+
+        var dialog = await DialogService.ShowAsync<AccessRequestFilterDialog>("Filters", parameters, options);
+        var result = await dialog.Result;
+
+        if (result is { Canceled: false })
+        {
+            StatusFilter = result.Data as string;
+        }
     }
 
     private async Task OpenRequestDialog()
@@ -296,7 +276,7 @@ else
             cancelResult.Switch(
                 _ =>
                 {
-                    Snackbar.Add("Request cancelled successfully", Severity.Success);
+                    Snackbar.Add("Request cancelled", Severity.Success);
                     _listRef?.Refresh();
                 },
                 _ => Snackbar.Add("Request not found", Severity.Error),

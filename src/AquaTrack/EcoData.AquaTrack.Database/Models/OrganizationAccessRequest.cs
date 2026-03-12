@@ -29,7 +29,8 @@ public sealed class OrganizationAccessRequest
 
             builder.Property(static e => e.OrganizationId).IsRequired();
 
-            builder.Property(static e => e.Status)
+            builder
+                .Property(static e => e.Status)
                 .HasConversion<string>()
                 .HasMaxLength(50)
                 .IsRequired();
@@ -57,5 +58,6 @@ public enum OrganizationAccessRequestStatus
 {
     Pending = 0,
     Approved = 1,
-    Rejected = 2
+    Rejected = 2,
+    Cancelled = 3,
 }
