@@ -238,9 +238,9 @@ public static class OrganizationAccessRequestEndpoints
             .WithName("GetMyAccessRequests");
 
         meGroup
-            .MapDelete(
-                "/{id:guid}",
-                async Task<Results<NoContent, NotFound, BadRequest<string>, UnauthorizedHttpResult>> (
+            .MapPost(
+                "/{id:guid}/cancel",
+                async Task<Results<Ok<OrganizationAccessRequestDto>, NotFound, BadRequest<string>, UnauthorizedHttpResult>> (
                     Guid id,
                     ClaimsPrincipal user,
                     IOrganizationAccessRequestRepository repository,
@@ -264,8 +264,8 @@ public static class OrganizationAccessRequestEndpoints
                         return TypedResults.BadRequest("Only pending requests can be cancelled.");
                     }
 
-                    var deleted = await repository.DeleteAsync(id, ct);
-                    return deleted ? TypedResults.NoContent() : TypedResults.NotFound();
+                    var cancelled = await repository.CancelAsync(id, ct);
+                    return cancelled is not null ? TypedResults.Ok(cancelled) : TypedResults.NotFound();
                 }
             )
             .WithName("CancelMyAccessRequest");
