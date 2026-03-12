@@ -15,9 +15,7 @@ namespace EcoData.AquaTrack.Api;
 
 public static class OrganizationAccessRequestEndpoints
 {
-    public static IEndpointRouteBuilder MapOrganizationAccessRequestEndpoints(
-        this IEndpointRouteBuilder app
-    )
+    public static IEndpointRouteBuilder MapOrganizationAccessRequestEndpoints(this IEndpointRouteBuilder app)
     {
         var orgGroup = app.MapGroup("/api/organizations/{organizationId:guid}/access-requests")
             .WithTags("Organization Access Requests")
@@ -26,17 +24,11 @@ public static class OrganizationAccessRequestEndpoints
         orgGroup
             .MapPost(
                 "/",
-                async Task<
-                    Results<
-                        Created<OrganizationAccessRequestDto>,
-                        Conflict<string>,
-                        UnauthorizedHttpResult
-                    >
-                > (
+                async Task<Results<Created<OrganizationAccessRequestDto>, Conflict<string>, UnauthorizedHttpResult>> (
                     Guid organizationId,
                     CreateOrganizationAccessRequestRequest request,
                     ClaimsPrincipal user,
-                    IOrganizationAccessRequestRepository accessRequestRepository,
+                    IOrganizationAccessRequestRepository repository,
                     IOrganizationMemberRepository memberRepository,
                     IOrganizationBlockedUserRepository blockedUserRepository,
                     CancellationToken ct
@@ -48,41 +40,25 @@ public static class OrganizationAccessRequestEndpoints
                         return TypedResults.Unauthorized();
                     }
 
-                    var isBlocked = await blockedUserRepository.IsBlockedAsync(
-                        organizationId,
-                        token.UserId.Value,
-                        ct
-                    );
+                    var isBlocked = await blockedUserRepository.IsBlockedAsync(organizationId, token.UserId.Value, ct);
                     if (isBlocked)
-                        return TypedResults.Conflict(
-                            "You are blocked from requesting access to this organization."
-                        );
+                    {
+                        return TypedResults.Conflict("You are blocked from requesting access to this organization.");
+                    }
 
-                    var isMember = await memberRepository.ExistsAsync(
-                        organizationId,
-                        token.UserId.Value,
-                        ct
-                    );
+                    var isMember = await memberRepository.ExistsAsync(organizationId, token.UserId.Value, ct);
                     if (isMember)
                     {
-                        return TypedResults.Conflict(
-                            "You are already a member of this organization."
-                        );
+                        return TypedResults.Conflict("You are already a member of this organization.");
                     }
 
-                    var hasPending = await accessRequestRepository.ExistsPendingAsync(
-                        token.UserId.Value,
-                        organizationId,
-                        ct
-                    );
+                    var hasPending = await repository.ExistsPendingAsync(token.UserId.Value, organizationId, ct);
                     if (hasPending)
                     {
-                        return TypedResults.Conflict(
-                            "You already have a pending access request for this organization."
-                        );
+                        return TypedResults.Conflict("You already have a pending access request for this organization.");
                     }
 
-                    var accessRequest = await accessRequestRepository.CreateAsync(
+                    var accessRequest = await repository.CreateAsync(
                         token.UserId.Value,
                         organizationId,
                         request.RequestMessage,
@@ -104,7 +80,7 @@ public static class OrganizationAccessRequestEndpoints
                     Guid organizationId,
                     [AsParameters] OrganizationAccessRequestParameters parameters,
                     ClaimsPrincipal user,
-                    IOrganizationAccessRequestRepository accessRequestRepository,
+                    IOrganizationAccessRequestRepository repository,
                     IPermissionService permissionService,
                     CancellationToken ct
                 ) =>
@@ -123,13 +99,7 @@ public static class OrganizationAccessRequestEndpoints
                         return Results.Forbid();
                     }
 
-                    return Results.Ok(
-                        accessRequestRepository.GetByOrganizationAsync(
-                            organizationId,
-                            parameters,
-                            ct
-                        )
-                    );
+                    return Results.Ok(repository.GetByOrganizationAsync(organizationId, parameters, ct));
                 }
             )
             .WithName("GetOrganizationAccessRequests");
@@ -174,14 +144,7 @@ public static class OrganizationAccessRequestEndpoints
         orgGroup
             .MapPut(
                 "/{id:guid}/status",
-                async Task<
-                    Results<
-                        Ok<OrganizationAccessRequestDto>,
-                        NotFound,
-                        BadRequest<string>,
-                        ForbidHttpResult
-                    >
-                > (
+                async Task<Results<Ok<OrganizationAccessRequestDto>, NotFound, BadRequest<string>, ForbidHttpResult>> (
                     Guid organizationId,
                     Guid id,
                     UpdateOrganizationAccessRequestStatusRequest request,
@@ -212,9 +175,7 @@ public static class OrganizationAccessRequestEndpoints
                         return TypedResults.NotFound();
                     }
 
-                    if (
-                        existingRequest.Status != OrganizationAccessRequestStatus.Pending.ToString()
-                    )
+                    if (existingRequest.Status != OrganizationAccessRequestStatus.Pending.ToString())
                     {
                         return TypedResults.BadRequest("This request has already been processed.");
                     }
@@ -271,9 +232,7 @@ public static class OrganizationAccessRequestEndpoints
                         return Results.Unauthorized();
                     }
 
-                    return Results.Ok(
-                        repository.GetByUserAsync(token.UserId.Value, parameters, ct)
-                    );
+                    return Results.Ok(repository.GetByUserAsync(token.UserId.Value, parameters, ct));
                 }
             )
             .WithName("GetMyAccessRequests");
@@ -281,9 +240,7 @@ public static class OrganizationAccessRequestEndpoints
         meGroup
             .MapDelete(
                 "/{id:guid}",
-                async Task<
-                    Results<NoContent, NotFound, BadRequest<string>, UnauthorizedHttpResult>
-                > (
+                async Task<Results<NoContent, NotFound, BadRequest<string>, UnauthorizedHttpResult>> (
                     Guid id,
                     ClaimsPrincipal user,
                     IOrganizationAccessRequestRepository repository,
