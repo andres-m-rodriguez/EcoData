@@ -9,10 +9,10 @@ public sealed class OrganizationAccessRequest
     public required Guid UserId { get; set; }
     public required Guid OrganizationId { get; set; }
     public required OrganizationAccessRequestStatus Status { get; set; }
-    public string? RequestMessage { get; set; }
-    public string? ReviewNotes { get; set; }
-    public Guid? ReviewedByUserId { get; set; }
-    public DateTimeOffset? ReviewedAt { get; set; }
+    public required string? RequestMessage { get; set; }
+    public required string? ReviewNotes { get; set; }
+    public required Guid? ReviewedByUserId { get; set; }
+    public required DateTimeOffset? ReviewedAt { get; set; }
     public required DateTimeOffset CreatedAt { get; set; }
 
     public Organization? Organization { get; set; }
