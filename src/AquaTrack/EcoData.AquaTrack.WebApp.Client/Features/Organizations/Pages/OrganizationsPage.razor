@@ -6,6 +6,7 @@
 @using EcoData.AquaTrack.WebApp.Client.Features.OrganizationAccessRequests.Dialogs
 @using EcoData.AquaTrack.WebApp.Client.Features.Organizations.Components
 @using EcoData.AquaTrack.WebApp.Client.Features.Shared.Components
+@using EcoData.AquaTrack.WebApp.Client.Pages
 @using BlazingSingularity.Commands
 @inject IOrganizationHttpClient OrganizationClient
 @inject IDialogService DialogService
@@ -48,6 +49,27 @@
                                 </MudStack>
                             </div>
                         }
+                    </MudStack>
+                }
+                else if (_showLoginPrompt)
+                {
+                    <MudStack AlignItems="AlignItems.Center" Justify="Justify.Center" Class="py-8">
+                        <MudAvatar Size="Size.Large" Color="Color.Info" Variant="Variant.Outlined">
+                            <MudIcon Icon="@Icons.Material.Outlined.Login" />
+                        </MudAvatar>
+                        <MudText Typo="Typo.body1" Color="Color.Secondary" Align="Align.Center" Class="mt-3">
+                            Please log in to see your organizations
+                        </MudText>
+                        <MudText Typo="Typo.body2" Color="Color.Secondary" Align="Align.Center">
+                            Sign in to view and manage your organization memberships
+                        </MudText>
+                        <MudButton Variant="Variant.Filled"
+                                   Color="Color.Primary"
+                                   StartIcon="@Icons.Material.Filled.Login"
+                                   Href="@LoginPage.Path"
+                                   Class="mt-3">
+                            Sign In
+                        </MudButton>
                     </MudStack>
                 }
                 else if (_myOrganizations.Count == 0)
@@ -111,6 +133,7 @@
 @code {
     private List<OrganizationDtoForList> _featuredOrganizations = [];
     private List<MyOrganizationDto> _myOrganizations = [];
+    private bool _showLoginPrompt;
 
     protected override async Task OnInitializedAsync()
     {
@@ -133,6 +156,12 @@
     [RelayCommand]
     private async Task LoadMyOrganizations()
     {
+        if (!AuthState.IsAuthenticated)
+        {
+            _showLoginPrompt = true;
+            return;
+        }
+
         await foreach (var org in OrganizationClient.GetMyOrganizationsAsync(CancellationToken.None))
         {
             _myOrganizations.Add(org);
