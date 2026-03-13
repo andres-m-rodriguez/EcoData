@@ -4,6 +4,7 @@
 @using EcoData.Organization.Application.Client
 @using EcoData.Common.Pagination.Blazor
 @using EcoPortal.Client.Services
+@using EcoPortal.Client.Features.OrganizationAccessRequests.Dialogs
 @using BlazingSingularity.Signals
 @inject IOrganizationAccessRequestHttpClient AccessRequestClient
 @inject IDialogService DialogService
@@ -13,12 +14,14 @@
 
 <PageTitle>My Access Requests - EcoData</PageTitle>
 
-<MudStack Spacing="0" Class="mb-6">
-    <MudText Typo="Typo.caption" Color="Color.Secondary">Organizations</MudText>
-    <MudText Typo="Typo.h4">Requests</MudText>
-</MudStack>
-
-<SearchHeader SearchSignal="SearchTextSignal" Placeholder="Search requests..." />
+<SearchHeader SearchSignal="SearchTextSignal" Placeholder="Search requests...">
+    <Actions>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add"
+                   OnClick="OpenRequestAccessDialog">
+            Request Access
+        </MudButton>
+    </Actions>
+</SearchHeader>
 
 <MudPaper Elevation="1" Class="rounded-lg">
     <EcoDataVirtualizedList @ref="_listRef" TItem="OrganizationAccessRequestDto"
@@ -174,6 +177,18 @@
     private void NavigateToBrowse() => Navigation.NavigateTo("/organizations/discover");
 
     private void NavigateToOrganization(Guid organizationId) => Navigation.NavigateTo($"/organizations/{organizationId}");
+
+    private async Task OpenRequestAccessDialog()
+    {
+        var options = new DialogOptions { CloseOnEscapeKey = true, MaxWidth = MaxWidth.Small, FullWidth = true };
+        var dialog = await DialogService.ShowAsync<RequestAccessDialog>("Request Access", options);
+        var result = await dialog.Result;
+
+        if (result is { Canceled: false })
+        {
+            _listRef?.Refresh();
+        }
+    }
 
     private static string FormatDate(DateTimeOffset date) => date.LocalDateTime.ToString("MMM d, yyyy");
 }

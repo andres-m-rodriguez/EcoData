@@ -1,6 +1,7 @@
 <CascadingValue Value="this">
     <div class="tabs-container">
-        <div class="tabs-header">
+        <!-- Desktop: Horizontal tabs -->
+        <div class="tabs-header tabs-desktop">
             @foreach (var tab in _tabs)
             {
                 var isActive = tab == ActiveTab;
@@ -17,6 +18,25 @@
                 </button>
             }
         </div>
+
+        <!-- Mobile: Dropdown -->
+        <div class="tabs-header tabs-mobile">
+            <MudSelect T="int" Value="ActiveIndex" ValueChanged="OnDropdownChanged" Variant="Variant.Outlined"
+                       Class="tabs-dropdown" Dense="true">
+                @foreach (var tab in _tabs)
+                {
+                    var index = _tabs.IndexOf(tab);
+                    <MudSelectItem T="int" Value="index">
+                        @tab.Title
+                        @if (tab.Badge is not null)
+                        {
+                            <span class="ml-2">(@tab.Badge)</span>
+                        }
+                    </MudSelectItem>
+                }
+            </MudSelect>
+        </div>
+
         <div class="tabs-content">
             @ChildContent
         </div>
@@ -61,5 +81,12 @@
             await ActiveIndexChanged.InvokeAsync(index);
             StateHasChanged();
         }
+    }
+
+    private async Task OnDropdownChanged(int index)
+    {
+        ActiveIndex = index;
+        await ActiveIndexChanged.InvokeAsync(index);
+        StateHasChanged();
     }
 }

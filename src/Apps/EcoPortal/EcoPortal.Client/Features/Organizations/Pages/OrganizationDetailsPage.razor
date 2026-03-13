@@ -8,8 +8,7 @@
 @using EcoData.Sensors.Application.Client
 @using EcoPortal.Client.Services
 @using EcoPortal.Client.Features.Organizations.Authorization
-@using EcoPortal.Client.Features.Organizations.Components
-@using EcoPortal.Client.Features.OrganizationMembers.Components
+@using EcoPortal.Client.Features.Organizations.ViewModels
 @using EcoPortal.Client.Features.Sensors.Components
 @using BlazingSingularity.Commands
 @using OrgPermissions = EcoData.Organization.Contracts.Permissions
@@ -21,166 +20,295 @@
 @inject IDialogService DialogService
 @inject ISnackbar Snackbar
 
-<PageTitle>@(_organization?.Name ?? "Organization") - EcoData</PageTitle>
+<PageTitle>@(_viewModel?.PageTitle ?? "Organization - EcoData")</PageTitle>
 
 @if (LoadCommand.IsLoading)
 {
-    <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="200px" />
-    <MudContainer MaxWidth="MaxWidth.Large" Class="mt-4">
-        <MudStack Row="true" AlignItems="AlignItems.End" Spacing="4">
-            <MudSkeleton SkeletonType="SkeletonType.Circle" Width="56px" Height="56px" />
-            <MudStack Spacing="1">
-                <MudSkeleton Width="180px" Height="28px" />
-                <MudSkeleton Width="120px" Height="16px" />
+    <MudContainer MaxWidth="MaxWidth.Large" Class="mt-6">
+        <MudPaper Elevation="1" Class="pa-6 rounded-lg mb-6">
+            <MudStack Row AlignItems="AlignItems.Center" Spacing="4">
+                <MudSkeleton SkeletonType="SkeletonType.Circle" Width="64px" Height="64px" />
+                <MudStack Spacing="2">
+                    <MudSkeleton Width="250px" Height="32px" />
+                    <MudSkeleton Width="150px" Height="20px" />
+                </MudStack>
             </MudStack>
-        </MudStack>
-        <MudGrid Class="mt-5" Spacing="3">
-            @for (var i = 0; i < 2; i++)
-            {
-                <MudItem xs="6">
-                    <MudPaper Outlined Class="pa-4">
-                        <MudSkeleton Width="60px" Height="12px" />
-                        <MudSkeleton Width="40px" Height="28px" Class="mt-2" />
-                        <MudSkeleton Width="80px" Height="12px" Class="mt-1" />
-                    </MudPaper>
-                </MudItem>
-            }
-        </MudGrid>
+        </MudPaper>
+        <MudPaper Elevation="1" Class="rounded-lg pa-6">
+            <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="48px" Class="mb-4" />
+            <MudGrid Spacing="4">
+                @for (var i = 0; i < 3; i++)
+                {
+                    <MudItem xs="12" sm="4">
+                        <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="120px" />
+                    </MudItem>
+                }
+            </MudGrid>
+        </MudPaper>
     </MudContainer>
 }
-else if (_organization is null)
+else if (_viewModel is null)
 {
-    <MudContainer MaxWidth="MaxWidth.Small" Class="py-8">
-        <MudPaper Elevation="0" Class="pa-8 rounded-lg text-center" Style="background: var(--mud-palette-background-gray)">
-            <MudIcon Icon="@Icons.Material.Filled.Error" Size="Size.Large" Color="Color.Error" />
-            <MudText Typo="Typo.h6" Color="Color.Error" Class="mt-2">Organization not found</MudText>
+    <MudContainer MaxWidth="MaxWidth.Small" Class="py-16">
+        <MudPaper Elevation="1" Class="pa-8 rounded-lg d-flex flex-column align-center justify-center">
+            <MudIcon Icon="@Icons.Material.Filled.DomainDisabled" Size="Size.Large" Color="Color.Error" Class="mb-4" />
+            <MudText Typo="Typo.h5" Color="Color.Error">Organization not found</MudText>
+            <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mt-2 text-center">
+                The organization you are looking for does not exist or you do not have permission to view it.
+            </MudText>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="mt-6"
+                       OnClick="@(() => Navigation.NavigateTo("/organizations"))">
+                Back to Organizations
+            </MudButton>
         </MudPaper>
     </MudContainer>
 }
 else
 {
-    <HeroBanner ImageUrl="@_organization.CardPictureUrl" Height="200">
-        <Actions>
-            <RequireOrganizationPermission Permission="@OrgPermissions.Organization.Update" OrganizationId="Id">
-                <MudButton Variant="Variant.Filled" Size="Size.Small" StartIcon="@Icons.Material.Outlined.Edit"
-                           OnClick="NavigateToEdit">
-                    Edit
-                </MudButton>
-            </RequireOrganizationPermission>
-            <RequireOrganizationPermission Permission="@OrgPermissions.Organization.Delete" OrganizationId="Id">
-                <MudButton Variant="Variant.Filled" Size="Size.Small" StartIcon="@Icons.Material.Outlined.Delete"
-                           Class="danger" OnClick="ConfirmDelete">
-                    Delete
-                </MudButton>
-            </RequireOrganizationPermission>
-        </Actions>
-    </HeroBanner>
-
-    <MudContainer MaxWidth="MaxWidth.Large" Class="mt-4">
-        <ProfileHeader AvatarUrl="@_organization.ProfilePictureUrl"
-                       Title="@_organization.Name"
-                       SubtitleUrl="@_organization.WebsiteUrl"
-                       Caption="@($"Created {_organization.CreatedAt:MMM d, yyyy}")" />
-
-        <MudGrid Class="mt-5" Spacing="3">
-            <MudItem xs="6">
-                <StatCard Label="Sensors"
-                          Value="@_sensorCount.ToString()"
-                          Subtitle="@($"{_sensors.Count(s => s.IsActive)} online now")" />
-            </MudItem>
-            <MudItem xs="6">
-                <StatCard Label="Team Members"
-                          Value="@_members.Count.ToString()"
-                          Subtitle="@($"{_members.Count(m => m.RoleName == "Admin")} admins")" />
-            </MudItem>
-        </MudGrid>
-
-        @if (!string.IsNullOrWhiteSpace(_organization.AboutUs))
-        {
-            <MudPaper Outlined Class="pa-4 mt-5">
-                <MudText Typo="Typo.subtitle2" Class="d-inline" Style="font-weight: 600;">About</MudText>
-                <MudText Typo="Typo.body2" Color="Color.Secondary" Class="d-inline ml-3">
-                    @_organization.AboutUs
-                </MudText>
-            </MudPaper>
-        }
-
-        <div class="mt-6">
-            <Tabs>
-                <Tab Title="Sensors" Icon="@Icons.Material.Outlined.Sensors" Badge="@_sensorCount.ToString()">
-                    <RequireOrganizationPermission Permission="@SensorPermissions.Sensor.Create" OrganizationId="Id">
-                        <MudStack Row Justify="Justify.FlexEnd" Class="mb-3">
-                            <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small"
-                                       StartIcon="@Icons.Material.Filled.Add" OnClick="NavigateToCreateSensor">
-                                Add Sensor
-                            </MudButton>
-                        </MudStack>
-                    </RequireOrganizationPermission>
-                    @if (_sensorCount == 0)
-                    {
-                        <MudPaper Elevation="0" Class="pa-6 rounded-lg text-center">
-                            <MudIcon Icon="@Icons.Material.Outlined.Sensors" Size="Size.Large" Color="Color.Secondary" />
-                            <MudText Typo="Typo.body1" Color="Color.Secondary" Class="mt-2">No sensors yet</MudText>
-                        </MudPaper>
-                    }
-                    else
-                    {
-                        <MudPaper Outlined Class="rounded-lg">
-                            @foreach (var sensor in _sensors)
+    <MudContainer MaxWidth="MaxWidth.Large" Class="mt-6 mb-8">
+        <!-- Header Card with Banner Image -->
+        <MudPaper Elevation="1" Class="mb-6 rounded-lg overflow-hidden">
+            @if (_viewModel.HasCardPicture)
+            {
+                <div class="org-banner">
+                    <MudImage Src="@_viewModel.CardPictureUrl" Alt="@_viewModel.Name" ObjectFit="ObjectFit.Cover"
+                              Class="org-banner-img" />
+                    <div class="org-banner-overlay"></div>
+                </div>
+            }
+            <div class="pa-6">
+                <MudGrid>
+                    <MudItem xs="12" md="8">
+                        <MudStack Row AlignItems="AlignItems.Center" Spacing="4">
+                            @if (_viewModel.HasProfilePicture)
                             {
-                                <SensorListItem Sensor="sensor" OnClick="NavigateToSensor" />
+                                <MudAvatar Size="Size.Large">
+                                    <MudImage Src="@_viewModel.ProfilePictureUrl" Alt="@_viewModel.Name"
+                                              ObjectFit="ObjectFit.Cover" />
+                                </MudAvatar>
                             }
-                        </MudPaper>
-                        @if (_sensorCount > 4)
-                        {
-                            <MudStack Row Justify="Justify.FlexEnd" Class="mt-3">
-                                <MudButton Variant="Variant.Text" Color="Color.Primary"
-                                           EndIcon="@Icons.Material.Filled.ArrowForward" OnClick="NavigateToSensors">
-                                    View all
-                                </MudButton>
-                            </MudStack>
-                        }
-                    }
-                </Tab>
-                <Tab Title="Our Team" Icon="@Icons.Material.Outlined.Group" Badge="@_members.Count.ToString()">
-                    <RequireOrganizationPermission Permission="@OrgPermissions.Organization.ManageMembers" OrganizationId="Id">
-                        <MudStack Row Justify="Justify.FlexEnd" Class="mb-3">
-                            <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small"
-                                       StartIcon="@Icons.Material.Filled.PersonAdd" OnClick="NavigateToTeam">
-                                Add Member
-                            </MudButton>
-                        </MudStack>
-                    </RequireOrganizationPermission>
-                    @if (_members.Count == 0)
-                    {
-                        <MudPaper Elevation="0" Class="pa-6 rounded-lg text-center">
-                            <MudIcon Icon="@Icons.Material.Outlined.Group" Size="Size.Large" Color="Color.Secondary" />
-                            <MudText Typo="Typo.body1" Color="Color.Secondary" Class="mt-2">No members yet</MudText>
-                        </MudPaper>
-                    }
-                    else
-                    {
-                        <MudGrid Spacing="3">
-                            @foreach (var member in _members.Take(10))
+                            else
                             {
-                                <MudItem xs="6" sm="4" md="3" lg="2">
-                                    <MemberCard DisplayName="@member.DisplayName" RoleName="@member.RoleName" />
+                                <MudAvatar Size="Size.Large" Color="Color.Primary" Variant="Variant.Filled">
+                                    <MudIcon Icon="@Icons.Material.Filled.Business" />
+                                </MudAvatar>
+                            }
+
+                            <MudStack Spacing="1">
+                                <MudText Typo="Typo.h4">@_viewModel.Name</MudText>
+                                @if (_viewModel.HasWebsite)
+                                {
+                                    <MudLink Href="@_viewModel.WebsiteUrl" Target="_blank" Color="Color.Primary"
+                                             Typo="Typo.body2" Class="d-flex align-center">
+                                        <MudIcon Icon="@Icons.Material.Outlined.Link" Size="Size.Small" Class="mr-1" />
+                                        @_viewModel.DisplayWebsiteUrl
+                                    </MudLink>
+                                }
+                                <MudText Typo="Typo.caption" Class="d-flex align-center">
+                                    <MudIcon Icon="@Icons.Material.Outlined.CalendarMonth" Size="Size.Small" Class="mr-1" />
+                                    Joined @_viewModel.FormattedCreatedDate
+                                </MudText>
+                            </MudStack>
+                        </MudStack>
+                    </MudItem>
+
+                    <MudItem xs="12" md="4" Class="d-flex justify-md-end align-start">
+                        <MudStack Row Spacing="1">
+                            <RequireOrganizationPermission Permission="@OrgPermissions.Organization.Update" OrganizationId="Id">
+                                <MudTooltip Text="Edit Organization">
+                                    <MudIconButton Icon="@Icons.Material.Outlined.Edit" Color="Color.Primary"
+                                                   Variant="Variant.Filled" Size="Size.Medium" OnClick="NavigateToEdit" />
+                                </MudTooltip>
+                            </RequireOrganizationPermission>
+                            <RequireOrganizationPermission Permission="@OrgPermissions.Organization.Delete" OrganizationId="Id">
+                                <MudTooltip Text="Delete Organization">
+                                    <MudIconButton Icon="@Icons.Material.Outlined.Delete" Color="Color.Error"
+                                                   Variant="Variant.Outlined" Size="Size.Medium" OnClick="ConfirmDelete" />
+                                </MudTooltip>
+                            </RequireOrganizationPermission>
+                        </MudStack>
+                    </MudItem>
+                </MudGrid>
+            </div>
+        </MudPaper>
+
+        <!-- Tabs Section -->
+        <MudPaper Elevation="1" Class="rounded-lg">
+            <Tabs>
+                <Tab Title="Overview" Icon="@Icons.Material.Outlined.Dashboard">
+                    <div class="pa-6">
+                        <MudGrid Spacing="4">
+                            @if (_viewModel.HasAbout)
+                            {
+                                <MudItem xs="12">
+                                    <MudText Typo="Typo.h6" Class="mb-2">About Us</MudText>
+                                    <MudText Typo="Typo.body1">@_viewModel.AboutUs</MudText>
                                 </MudItem>
                             }
+
+                            <MudItem xs="12" sm="4">
+                                <MudPaper Elevation="0" Outlined="true" Class="pa-4 rounded-lg d-flex align-center">
+                                    <MudIcon Icon="@Icons.Material.Outlined.Sensors" Color="Color.Primary" Size="Size.Large"
+                                             Class="mr-4" />
+                                    <div>
+                                        <MudText Typo="Typo.h5">@_viewModel.TotalSensorCount</MudText>
+                                        <MudText Typo="Typo.body2" Color="Color.Secondary">Total Sensors</MudText>
+                                    </div>
+                                </MudPaper>
+                            </MudItem>
+                            <MudItem xs="12" sm="4">
+                                <MudPaper Elevation="0" Outlined="true" Class="pa-4 rounded-lg d-flex align-center">
+                                    <MudIcon Icon="@Icons.Material.Outlined.Group" Color="Color.Secondary" Size="Size.Large"
+                                             Class="mr-4" />
+                                    <div>
+                                        <MudText Typo="Typo.h5">@_viewModel.MemberCount</MudText>
+                                        <MudText Typo="Typo.body2" Color="Color.Secondary">Team Members</MudText>
+                                    </div>
+                                </MudPaper>
+                            </MudItem>
+                            <MudItem xs="12" sm="4">
+                                <MudPaper Elevation="0" Outlined="true" Class="pa-4 rounded-lg d-flex align-center">
+                                    <MudIcon Icon="@Icons.Material.Outlined.Science" Color="Color.Tertiary" Size="Size.Large"
+                                             Class="mr-4" />
+                                    <div>
+                                        <MudText Typo="Typo.h5">0</MudText>
+                                        <MudText Typo="Typo.body2" Color="Color.Secondary">Publications</MudText>
+                                    </div>
+                                </MudPaper>
+                            </MudItem>
                         </MudGrid>
-                        @if (_members.Count > 10)
-                        {
-                            <MudStack Row Justify="Justify.FlexEnd" Class="mt-3">
-                                <MudButton Variant="Variant.Text" Color="Color.Primary"
-                                           EndIcon="@Icons.Material.Filled.ArrowForward" OnClick="NavigateToTeam">
-                                    View all @_members.Count members
+                    </div>
+                </Tab>
+
+                <Tab Title="Sensors" Icon="@Icons.Material.Outlined.Sensors" Badge="@_viewModel.SensorCountBadge">
+                    <div class="pa-6">
+                        <MudStack Row Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Class="mb-4">
+                            <MudText Typo="Typo.h6">Sensor Fleet</MudText>
+                            <RequireOrganizationPermission Permission="@SensorPermissions.Sensor.Create" OrganizationId="Id">
+                                <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small"
+                                           StartIcon="@Icons.Material.Filled.Add" OnClick="NavigateToCreateSensor">
+                                    Add Sensor
                                 </MudButton>
-                            </MudStack>
+                            </RequireOrganizationPermission>
+                        </MudStack>
+
+                        @if (!_viewModel.HasSensors)
+                        {
+                            <MudPaper Elevation="0" Outlined="true" Class="pa-8 text-center rounded-lg empty-state">
+                                <MudIcon Icon="@Icons.Material.Outlined.SensorsOff" Size="Size.Large" Color="Color.Secondary"
+                                         Class="mb-2" />
+                                <MudText Typo="Typo.h6" Color="Color.Secondary">No sensors deployed</MudText>
+                                <MudText Typo="Typo.body2" Color="Color.Secondary">
+                                    Deploy a sensor to start gathering ecological data.
+                                </MudText>
+                            </MudPaper>
                         }
-                    }
+                        else
+                        {
+                            <MudGrid Spacing="3">
+                                @foreach (var sensor in _viewModel.DisplayedSensors)
+                                {
+                                    <MudItem xs="12" md="6">
+                                        <SensorListItem Sensor="sensor" OnClick="NavigateToSensor" />
+                                    </MudItem>
+                                }
+                            </MudGrid>
+                            @if (_viewModel.ShowViewAllSensors)
+                            {
+                                <div class="d-flex justify-center mt-4">
+                                    <MudButton Variant="Variant.Text" Color="Color.Primary"
+                                               EndIcon="@Icons.Material.Filled.ArrowForward" OnClick="NavigateToSensors">
+                                        @_viewModel.ViewAllSensorsText
+                                    </MudButton>
+                                </div>
+                            }
+                        }
+                    </div>
+                </Tab>
+
+                <Tab Title="Team" Icon="@Icons.Material.Outlined.Group" Badge="@_viewModel.MemberCountBadge">
+                    <div class="pa-6">
+                        <MudStack Row Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Class="mb-4">
+                            <MudText Typo="Typo.h6">Organization Members</MudText>
+                            <RequireOrganizationPermission Permission="@OrgPermissions.Organization.ManageMembers"
+                                                           OrganizationId="Id">
+                                <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small"
+                                           StartIcon="@Icons.Material.Filled.PersonAdd" OnClick="NavigateToTeam">
+                                    Invite Member
+                                </MudButton>
+                            </RequireOrganizationPermission>
+                        </MudStack>
+
+                        @if (!_viewModel.HasMembers)
+                        {
+                            <MudPaper Elevation="0" Outlined="true" Class="pa-8 text-center rounded-lg empty-state">
+                                <MudIcon Icon="@Icons.Material.Outlined.GroupOff" Size="Size.Large" Color="Color.Secondary"
+                                         Class="mb-2" />
+                                <MudText Typo="Typo.h6" Color="Color.Secondary">No team members</MudText>
+                            </MudPaper>
+                        }
+                        else
+                        {
+                            <MudGrid Spacing="3">
+                                @foreach (var member in _viewModel.DisplayedMembers)
+                                {
+                                    <MudItem xs="12" sm="6" md="4" lg="3">
+                                        <MudPaper Elevation="0" Outlined="true" Class="pa-4 text-center rounded-lg">
+                                            <MudAvatar Size="Size.Large"
+                                                       Color="@OrganizationDetailsViewModel.GetMemberAvatarColor(member.DisplayName)"
+                                                       Class="mb-3">
+                                                @OrganizationDetailsViewModel.GetMemberInitial(member.DisplayName)
+                                            </MudAvatar>
+                                            <MudText Typo="Typo.subtitle1" Class="mud-text-truncate">
+                                                @member.DisplayName
+                                            </MudText>
+                                            <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mud-text-truncate">
+                                                @member.RoleName
+                                            </MudText>
+                                        </MudPaper>
+                                    </MudItem>
+                                }
+                            </MudGrid>
+                            @if (_viewModel.ShowViewAllMembers)
+                            {
+                                <div class="d-flex justify-center mt-4">
+                                    <MudButton Variant="Variant.Text" Color="Color.Primary"
+                                               EndIcon="@Icons.Material.Filled.ArrowForward" OnClick="NavigateToTeam">
+                                        @_viewModel.ViewAllMembersText
+                                    </MudButton>
+                                </div>
+                            }
+                        }
+                    </div>
+                </Tab>
+
+                <Tab Title="Projects" Icon="@Icons.Material.Outlined.AccountTree">
+                    <div class="pa-6">
+                        <MudPaper Elevation="0" Outlined="true" Class="pa-8 text-center rounded-lg empty-state">
+                            <MudIcon Icon="@Icons.Material.Outlined.Construction" Size="Size.Large" Color="Color.Secondary"
+                                     Class="mb-2" />
+                            <MudText Typo="Typo.h6" Color="Color.Secondary">Projects Coming Soon</MudText>
+                            <MudText Typo="Typo.body2" Color="Color.Secondary">
+                                Track field operations and data initiatives here.
+                            </MudText>
+                        </MudPaper>
+                    </div>
+                </Tab>
+
+                <Tab Title="Research" Icon="@Icons.Material.Outlined.Science">
+                    <div class="pa-6">
+                        <MudPaper Elevation="0" Outlined="true" Class="pa-8 text-center rounded-lg empty-state">
+                            <MudIcon Icon="@Icons.Material.Outlined.Article" Size="Size.Large" Color="Color.Secondary"
+                                     Class="mb-2" />
+                            <MudText Typo="Typo.h6" Color="Color.Secondary">Publications Coming Soon</MudText>
+                            <MudText Typo="Typo.body2" Color="Color.Secondary">
+                                A centralized hub for ecological research and data reports.
+                            </MudText>
+                        </MudPaper>
+                    </div>
                 </Tab>
             </Tabs>
-        </div>
+        </MudPaper>
     </MudContainer>
 }
 
@@ -188,6 +316,7 @@ else
     [Parameter]
     public Guid Id { get; set; }
 
+    private OrganizationDetailsViewModel? _viewModel;
     private OrganizationDtoForDetail? _organization;
     private List<SensorDtoForList> _sensors = [];
     private List<OrganizationMemberDto> _members = [];
@@ -211,7 +340,7 @@ else
 
         if (_organization is not null)
         {
-            var parameters = new SensorParameters(PageSize: 4, OrganizationId: Id);
+            var parameters = new SensorParameters(PageSize: OrganizationDetailsViewModel.MaxDisplayedSensors, OrganizationId: Id);
             _sensorCount = await SensorClient.GetSensorCountAsync(parameters);
 
             await foreach (var sensor in SensorClient.GetSensorsAsync(parameters))
@@ -223,6 +352,8 @@ else
             {
                 _members.Add(member);
             }
+
+            _viewModel = new OrganizationDetailsViewModel(_organization, _sensors, _members, _sensorCount);
         }
     }
 
@@ -234,11 +365,11 @@ else
 
     private async Task ConfirmDelete()
     {
-        if (_organization is null) return;
+        if (_viewModel is null) return;
 
         var parameters = new DialogParameters<ConfirmDialog>
         {
-            { x => x.ContentText, $"Are you sure you want to delete \"{_organization.Name}\"?" },
+            { x => x.ContentText, $"Are you sure you want to delete \"{_viewModel.Name}\"?" },
             { x => x.ButtonText, "Delete" },
             { x => x.Color, Color.Error }
         };

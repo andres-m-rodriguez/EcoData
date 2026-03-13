@@ -1,0 +1,184 @@
+/* Animations */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes float {
+    0% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
+    100% { transform: translateY(0px); }
+}
+
+@keyframes gradientShift {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+/* Landing Page Container - Break out of parent container */
+.landing-page {
+    margin: -24px -16px;
+    padding-top: 8px;
+    background: var(--mud-palette-background);
+}
+
+/* Hero Section */
+.hero-section {
+    padding: 6rem 1rem;
+    text-align: center;
+    background: linear-gradient(-45deg,
+        var(--mud-palette-background),
+        var(--mud-palette-surface),
+        var(--mud-palette-background-grey),
+        var(--mud-palette-surface));
+    background-size: 400% 400%;
+    animation: gradientShift 15s ease infinite;
+    border-bottom: 1px solid var(--mud-palette-lines-default);
+}
+
+::deep .hero-content {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+::deep .hero-title {
+    opacity: 0;
+    animation: fadeInUp 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+    line-height: 1.2 !important;
+}
+
+::deep .hero-subtitle {
+    opacity: 0;
+    animation: fadeInUp 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) 0.2s forwards;
+    max-width: 600px;
+}
+
+::deep .hero-actions {
+    opacity: 0;
+    animation: fadeInUp 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) 0.4s forwards;
+}
+
+::deep .hero-btn {
+    transition: all 0.3s ease;
+}
+
+::deep .hero-btn:hover {
+    transform: translateY(-2px);
+}
+
+/* Features Section */
+.features-section {
+    padding: 5rem 1rem;
+}
+
+::deep .section-title {
+    opacity: 0;
+    animation: fadeInUp 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) 0.6s forwards;
+}
+
+::deep .feature-card {
+    background: var(--mud-palette-surface);
+    border: 1px solid var(--mud-palette-lines-default);
+    border-radius: 12px;
+    transition: all 0.3s ease;
+    opacity: 0;
+    animation: fadeInUp 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+    height: 100%;
+}
+
+::deep .feature-card:hover {
+    transform: translateY(-8px);
+    border-color: var(--mud-palette-primary);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+}
+
+/* Stagger feature cards */
+::deep .mud-grid-item:nth-child(1) .feature-card {
+    animation-delay: 0.8s;
+}
+
+::deep .mud-grid-item:nth-child(2) .feature-card {
+    animation-delay: 1.0s;
+}
+
+::deep .mud-grid-item:nth-child(3) .feature-card {
+    animation-delay: 1.2s;
+}
+
+.feature-icon {
+    display: inline-block;
+    animation: float 4s ease-in-out infinite;
+}
+
+/* Offset float animations */
+::deep .mud-grid-item:nth-child(2) .feature-icon {
+    animation-delay: 1s;
+}
+
+::deep .mud-grid-item:nth-child(3) .feature-icon {
+    animation-delay: 2s;
+}
+
+/* Data Sources Section */
+.data-sources-section {
+    padding: 5rem 1rem;
+    background: var(--mud-palette-background-grey);
+}
+
+::deep .data-source-card {
+    background: var(--mud-palette-surface);
+    border: 1px solid var(--mud-palette-lines-default);
+    border-radius: 12px;
+    transition: all 0.3s ease;
+    height: 100%;
+}
+
+::deep .data-source-card:hover {
+    border-color: var(--mud-palette-primary);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+/* CTA Section */
+.cta-section {
+    padding: 5rem 1rem;
+}
+
+::deep .cta-card {
+    background: var(--mud-palette-surface);
+    border: 1px solid var(--mud-palette-lines-default);
+    border-radius: 12px;
+}
+
+/* Footer */
+.footer-section {
+    padding: 2rem 1rem;
+    border-top: 1px solid var(--mud-palette-lines-default);
+}
+
+/* Text primary color helper */
+::deep .text-primary {
+    color: var(--mud-palette-primary) !important;
+}
+
+/* Responsive */
+@media (max-width: 960px) {
+    .hero-section {
+        padding: 4rem 1rem;
+    }
+
+    ::deep .hero-actions {
+        flex-direction: column;
+        width: 100%;
+    }
+
+    ::deep .hero-btn {
+        width: 100%;
+    }
+}
