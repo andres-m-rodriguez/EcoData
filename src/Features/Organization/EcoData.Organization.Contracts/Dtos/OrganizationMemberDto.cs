@@ -9,6 +9,4 @@ public record OrganizationMemberDto(
     DateTimeOffset CreatedAt
 );
 
-public record AddMemberRequest(Guid UserId, string Role);
-
 public record UpdateMemberRoleRequest(string Role);

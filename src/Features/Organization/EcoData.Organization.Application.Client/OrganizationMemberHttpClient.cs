@@ -52,45 +52,6 @@ public sealed class OrganizationMemberHttpClient(HttpClient httpClient)
     }
 
     public async Task<
-        OneOf<OrganizationMemberDto, NotFoundError, ConflictError, ApiError>
-    > CreateAsync(
-        Guid organizationId,
-        AddMemberRequest request,
-        CancellationToken cancellationToken = default
-    )
-    {
-        var response = await httpClient.PostAsJsonAsync(
-            $"api/organizations/{organizationId}/members",
-            request,
-            cancellationToken
-        );
-
-        if (response.StatusCode == HttpStatusCode.NotFound)
-        {
-            return new NotFoundError();
-        }
-
-        if (response.StatusCode == HttpStatusCode.Conflict)
-        {
-            var message = await response.Content.ReadAsStringAsync(cancellationToken);
-            return new ConflictError(message);
-        }
-
-        if (!response.IsSuccessStatusCode)
-        {
-            return new ApiError(
-                (int)response.StatusCode,
-                await response.Content.ReadAsStringAsync(cancellationToken)
-            );
-        }
-
-        var result = await response.Content.ReadFromJsonAsync<OrganizationMemberDto>(
-            cancellationToken
-        );
-        return result!;
-    }
-
-    public async Task<
         OneOf<OrganizationMemberDto, NotFoundError, ValidationError, ApiError>
     > UpdateAsync(
         Guid organizationId,
