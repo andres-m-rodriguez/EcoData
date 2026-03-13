@@ -1,10 +1,10 @@
 using System.Net;
 using System.Net.Http.Json;
+using EcoData.Common.Http.Helpers;
+using EcoData.Common.Pagination;
 using EcoData.Organization.Contracts.Dtos;
 using EcoData.Organization.Contracts.Errors;
 using EcoData.Organization.Contracts.Parameters;
-using EcoData.Common.Http.Helpers;
-using EcoData.Common.Pagination;
 using OneOf;
 
 namespace EcoData.Organization.Application.Client;
