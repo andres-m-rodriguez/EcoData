@@ -51,12 +51,15 @@
                 <MudNavLink Href="/organizations/discover" Icon="@Icons.Material.Outlined.Explore">
                     Discover
                 </MudNavLink>
-                <MudNavLink Href="/organizations/my" Icon="@Icons.Material.Outlined.Groups">
-                    My Orgs
-                </MudNavLink>
-                <MudNavLink Href="/organizations/requests" Icon="@Icons.Material.Outlined.Pending">
-                    Requests
-                </MudNavLink>
+                @if (AuthState.IsAuthenticated)
+                {
+                    <MudNavLink Href="/organizations/my" Icon="@Icons.Material.Outlined.Groups">
+                        My Orgs
+                    </MudNavLink>
+                    <MudNavLink Href="/organizations/requests" Icon="@Icons.Material.Outlined.Pending">
+                        Requests
+                    </MudNavLink>
+                }
             </MudNavGroup>
             <MudNavLink Href="@SensorMapPage.Path" Icon="@Icons.Material.Outlined.Map">Map</MudNavLink>
         </MudNavMenu>
