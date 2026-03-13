@@ -1,9 +1,10 @@
-@page "/my-requests"
+@page "/organizations/requests"
 @using EcoData.Organization.Contracts.Dtos
 @using EcoData.Organization.Contracts.Parameters
 @using EcoData.Organization.Application.Client
 @using EcoData.Common.Pagination.Blazor
 @using EcoPortal.Client.Services
+@using BlazingSingularity.Signals
 @inject IOrganizationAccessRequestHttpClient AccessRequestClient
 @inject IDialogService DialogService
 @inject ISnackbar Snackbar
@@ -12,17 +13,18 @@
 
 <PageTitle>My Access Requests - EcoData</PageTitle>
 
-<MudText Typo="Typo.h5" Class="mb-4">My Access Requests</MudText>
+<MudStack Spacing="0" Class="mb-6">
+    <MudText Typo="Typo.caption" Color="Color.Secondary">Organizations</MudText>
+    <MudText Typo="Typo.h4">Requests</MudText>
+</MudStack>
+
+<SearchHeader SearchSignal="SearchTextSignal" Placeholder="Search requests..." />
 
 <MudPaper Elevation="1" Class="rounded-lg">
-    <EcoDataVirtualizedList @ref="_listRef"
-                            TItem="OrganizationAccessRequestDto"
+    <EcoDataVirtualizedList @ref="_listRef" TItem="OrganizationAccessRequestDto"
                             TParams="OrganizationAccessRequestParameters"
-                            ItemsProvider="(p, ct) => AccessRequestClient.GetMyRequestsAsync(p)"
-                            ParametersBuilder="CreateParameters"
-                            CursorSelector="r => r.Id"
-                            ItemSize="80"
-                            OverscanCount="3">
+                            ItemsProvider="(p, ct) => AccessRequestClient.GetMyRequestsAsync(p)" ParametersBuilder="CreateParameters"
+                            CursorSelector="r => r.Id" ItemSize="80" OverscanCount="3">
         <LoadingTemplate>
             @for (var i = 0; i < 5; i++)
             {
@@ -52,8 +54,8 @@
             </div>
         </PlaceholderTemplate>
         <ItemTemplate Context="request">
-            <MudStack Row AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween"
-                      Class="pa-4 flex-wrap gap-4" Style="border-bottom: 1px solid var(--mud-palette-lines-default);">
+            <MudStack Row AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="pa-4 flex-wrap gap-4"
+                      Style="border-bottom: 1px solid var(--mud-palette-lines-default);">
                 <MudStack Row AlignItems="AlignItems.Center" Spacing="3">
                     <MudAvatar Color="Color.Primary" Size="Size.Medium">
                         <MudIcon Icon="@Icons.Material.Filled.Business" />
@@ -80,7 +82,8 @@
                         @if (request.Status is "Approved" or "Rejected" && request.ReviewedAt.HasValue)
                         {
                             <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mt-1">
-                                @(request.Status == "Approved" ? "Approved" : "Rejected") by @(request.ReviewedByDisplayName ?? "Unknown") on @FormatDate(request.ReviewedAt.Value)
+@(request.Status == "Approved" ? "Approved" : "Rejected") by @(request.ReviewedByDisplayName
+                            ?? "Unknown") on @FormatDate(request.ReviewedAt.Value)
                             </MudText>
                         }
                     </MudStack>
@@ -126,9 +129,18 @@
 @code {
     private EcoDataVirtualizedList<OrganizationAccessRequestDto, OrganizationAccessRequestParameters>? _listRef;
 
+    [Signal]
+    private string? _searchText;
+
+    protected override void OnInitialized()
+    {
+        SearchTextSignal.OnChange(_ => _listRef?.Refresh());
+    }
+
     private OrganizationAccessRequestParameters CreateParameters(Guid? cursor) => new(
         PageSize: 20,
-        Cursor: cursor
+        Cursor: cursor,
+        Search: string.IsNullOrWhiteSpace(SearchText) ? null : SearchText
     );
 
     private async Task CancelRequest(OrganizationAccessRequestDto request)
@@ -159,7 +171,7 @@
         }
     }
 
-    private void NavigateToBrowse() => Navigation.NavigateTo("/organizations");
+    private void NavigateToBrowse() => Navigation.NavigateTo("/organizations/discover");
 
     private void NavigateToOrganization(Guid organizationId) => Navigation.NavigateTo($"/organizations/{organizationId}");
 

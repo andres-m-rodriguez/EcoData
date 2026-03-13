@@ -1,10 +1,10 @@
 using System.Runtime.CompilerServices;
+using EcoData.Identity.DataAccess.Interfaces;
 using EcoData.Organization.Contracts.Dtos;
 using EcoData.Organization.Contracts.Parameters;
 using EcoData.Organization.DataAccess.Interfaces;
 using EcoData.Organization.Database;
 using EcoData.Organization.Database.Models;
-using EcoData.Identity.DataAccess.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
 namespace EcoData.Organization.DataAccess.Repositories;
@@ -111,8 +111,7 @@ public sealed class OrganizationMemberRepository(
         await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
 
         var role = await context
-            .OrganizationRoles
-            .Where(r => r.Name == roleName && r.OrganizationId == organizationId)
+            .OrganizationRoles.Where(r => r.Name == roleName && r.OrganizationId == organizationId)
             .FirstOrDefaultAsync(cancellationToken);
 
         if (role is null)
@@ -167,8 +166,7 @@ public sealed class OrganizationMemberRepository(
         }
 
         var role = await context
-            .OrganizationRoles
-            .Where(r => r.Name == roleName && r.OrganizationId == organizationId)
+            .OrganizationRoles.Where(r => r.Name == roleName && r.OrganizationId == organizationId)
             .FirstOrDefaultAsync(cancellationToken);
 
         if (role is null)
