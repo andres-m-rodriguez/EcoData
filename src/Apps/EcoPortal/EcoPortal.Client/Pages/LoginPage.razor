@@ -10,76 +10,73 @@
 
 <PageTitle>Login - EcoData</PageTitle>
 
-<MudPaper Elevation="3" Class="pa-6">
-    @if (!string.IsNullOrEmpty(_errorMessage))
-    {
-        <MudAlert Severity="Severity.Error" Variant="Variant.Filled" Dense="true" Class="mb-4">
-            @_errorMessage
-        </MudAlert>
-    }
+@if (!string.IsNullOrEmpty(_errorMessage))
+{
+    <MudAlert Severity="Severity.Error" Variant="Variant.Filled" Dense="true" Class="mb-4">
+        @_errorMessage
+    </MudAlert>
+}
 
-    <MudText Typo="Typo.h5" Align="Align.Center" Class="mb-4">Welcome Back</MudText>
+<MudText Typo="Typo.h5" Align="Align.Center" Class="mb-4">Welcome Back</MudText>
 
-    <EditForm Model="_model" OnValidSubmit="() => LoginCommand.ExecuteAsync()">
-        <DataAnnotationsValidator />
+<EditForm Model="_model" OnValidSubmit="() => LoginCommand.ExecuteAsync()">
+    <DataAnnotationsValidator />
 
-        <MudStack Spacing="3">
-            <MudTextField @bind-Value="_model.Email"
-                          Label="Email"
-                          Placeholder="Enter your email"
-                          InputType="InputType.Email"
-                          Adornment="Adornment.Start"
-                          AdornmentIcon="@Icons.Material.Filled.Email"
-                          Variant="Variant.Outlined"
-                          Required="true"
-                          RequiredError="Email is required"
-                          Disabled="LoginCommand.IsLoading" />
+    <MudStack Spacing="3">
+        <MudTextField @bind-Value="_model.Email"
+                      Label="Email"
+                      Placeholder="Enter your email"
+                      InputType="InputType.Email"
+                      Adornment="Adornment.Start"
+                      AdornmentIcon="@Icons.Material.Filled.Email"
+                      Variant="Variant.Outlined"
+                      Required="true"
+                      RequiredError="Email is required"
+                      Disabled="LoginCommand.IsLoading" />
 
-            <MudTextField @bind-Value="_model.Password"
-                          Label="Password"
-                          Placeholder="Enter your password"
-                          InputType="@(_showPassword ? InputType.Text : InputType.Password)"
-                          Adornment="Adornment.End"
-                          AdornmentIcon="@(_showPassword ? Icons.Material.Filled.VisibilityOff : Icons.Material.Filled.Visibility)"
-                          OnAdornmentClick="() => _showPassword = !_showPassword"
-                          AdornmentAriaLabel="Toggle password visibility"
-                          Variant="Variant.Outlined"
-                          Required="true"
-                          RequiredError="Password is required"
-                          Disabled="LoginCommand.IsLoading" />
+        <MudTextField @bind-Value="_model.Password"
+                      Label="Password"
+                      Placeholder="Enter your password"
+                      InputType="@(_showPassword ? InputType.Text : InputType.Password)"
+                      Adornment="Adornment.End"
+                      AdornmentIcon="@(_showPassword ? Icons.Material.Filled.VisibilityOff : Icons.Material.Filled.Visibility)"
+                      OnAdornmentClick="() => _showPassword = !_showPassword"
+                      AdornmentAriaLabel="Toggle password visibility"
+                      Variant="Variant.Outlined"
+                      Required="true"
+                      RequiredError="Password is required"
+                      Disabled="LoginCommand.IsLoading" />
 
-            <MudCheckBox @bind-Value="_model.RememberMe"
-                         Label="Remember me"
-                         Color="Color.Primary"
-                         Dense="true"
-                         Disabled="LoginCommand.IsLoading" />
+        <MudCheckBox @bind-Value="_model.RememberMe"
+                     Label="Remember me"
+                     Color="Color.Primary"
+                     Dense="true"
+                     Disabled="LoginCommand.IsLoading" />
 
-            <MudButton ButtonType="ButtonType.Submit"
-                       Variant="Variant.Filled"
-                       Color="Color.Primary"
-                       FullWidth="true"
-                       Size="Size.Large"
-                       Disabled="LoginCommand.IsLoading">
-                @if (LoginCommand.IsLoading)
-                {
-                    <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
-                    <span>Signing in...</span>
-                }
-                else
-                {
-                    <span>Sign In</span>
-                }
-            </MudButton>
-        </MudStack>
-    </EditForm>
+        <MudButton ButtonType="ButtonType.Submit"
+                   Variant="Variant.Filled"
+                   Color="Color.Primary"
+                   FullWidth="true"
+                   Disabled="LoginCommand.IsLoading">
+            @if (LoginCommand.IsLoading)
+            {
+                <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
+                <span>Signing in...</span>
+            }
+            else
+            {
+                <span>Sign In</span>
+            }
+        </MudButton>
+    </MudStack>
+</EditForm>
 
-    <MudDivider Class="my-4" />
+<MudDivider Class="my-4" />
 
-    <MudText Typo="Typo.body2" Align="Align.Center">
-        Don't have an account?
-        <MudLink Href="/register" Color="Color.Primary">Request Access</MudLink>
-    </MudText>
-</MudPaper>
+<MudText Typo="Typo.body2" Align="Align.Center">
+    Don't have an account?
+    <MudLink Href="/register" Color="Color.Primary">Register</MudLink>
+</MudText>
 
 @code {
     private readonly LoginModel _model = new();
