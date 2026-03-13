@@ -7,8 +7,8 @@ using EcoData.Seeder;
 var builder = Host.CreateApplicationBuilder(args);
 
 builder.AddServiceDefaults();
-builder.AddOrganizationDatabase("aquatrack");
-builder.AddSensorsDatabase("aquatrack");
+builder.AddOrganizationDatabase();
+builder.AddSensorsDatabase();
 builder.AddIdentityDatabase();
 builder.AddLocationsDatabase();
 
