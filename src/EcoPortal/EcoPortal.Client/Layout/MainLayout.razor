@@ -47,7 +47,17 @@
                 Dashboard
             </MudNavLink>
             <MudNavLink Href="@SensorsPage.Path" Icon="@Icons.Material.Outlined.Sensors">Sensors</MudNavLink>
-            <MudNavLink Href="@OrganizationsPage.Path" Icon="@Icons.Material.Outlined.Business">Organizations</MudNavLink>
+            <MudNavGroup Title="Organizations" Icon="@Icons.Material.Outlined.Business" Expanded="true">
+                <MudNavLink Href="/organizations/discover" Icon="@Icons.Material.Outlined.Explore">
+                    Discover
+                </MudNavLink>
+                <MudNavLink Href="/organizations/my" Icon="@Icons.Material.Outlined.Groups">
+                    My Orgs
+                </MudNavLink>
+                <MudNavLink Href="/organizations/requests" Icon="@Icons.Material.Outlined.Pending">
+                    Requests
+                </MudNavLink>
+            </MudNavGroup>
             <MudNavLink Href="@SensorMapPage.Path" Icon="@Icons.Material.Outlined.Map">Map</MudNavLink>
         </MudNavMenu>
 
