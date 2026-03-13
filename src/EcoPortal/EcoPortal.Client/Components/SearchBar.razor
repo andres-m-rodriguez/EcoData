@@ -1,0 +1,91 @@
+@inject IJSRuntime JS
+@implements IAsyncDisposable
+
+<div class="search-bar-wrapper @(_isSticky ? "is-sticky" : "")" @ref="_searchBarRef">
+    <div class="search-bar">
+        <MudIcon Icon="@Icons.Material.Filled.Search" Class="search-icon" />
+        <MudTextField T="string"
+                      Value="@Value"
+                      ValueChanged="@ValueChanged"
+                      Placeholder="@Placeholder"
+                      Variant="Variant.Text"
+                      Margin="Margin.None"
+                      Underline="false"
+                      Immediate="true"
+                      DebounceInterval="300"
+                      Class="search-input" />
+        @if (ShowFilterButton)
+        {
+            <div class="divider"></div>
+            <button type="button" class="filter-btn @(HasActiveFilters ? "active" : "")" @onclick="OnFilterClick">
+                <MudIcon Icon="@Icons.Material.Filled.Tune" Size="Size.Small" />
+                <span>Filter</span>
+                @if (HasActiveFilters)
+                {
+                    <span class="filter-badge">@FilterCount</span>
+                }
+            </button>
+        }
+    </div>
+</div>
+
+@code {
+    private ElementReference _searchBarRef;
+    private bool _isSticky;
+    private DotNetObjectReference<SearchBar>? _dotNetRef;
+    private IJSObjectReference? _jsModule;
+
+    [Parameter]
+    public string? Value { get; set; }
+
+    [Parameter]
+    public EventCallback<string?> ValueChanged { get; set; }
+
+    [Parameter]
+    public string Placeholder { get; set; } = "Search...";
+
+    [Parameter]
+    public bool ShowFilterButton { get; set; }
+
+    [Parameter]
+    public bool HasActiveFilters { get; set; }
+
+    [Parameter]
+    public int FilterCount { get; set; } = 1;
+
+    [Parameter]
+    public EventCallback OnFilterClick { get; set; }
+
+    [Parameter]
+    public bool EnableSticky { get; set; } = true;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && EnableSticky)
+        {
+            _dotNetRef = DotNetObjectReference.Create(this);
+            _jsModule = await JS.InvokeAsync<IJSObjectReference>("import", "./js/stickySearch.js");
+            await _jsModule.InvokeVoidAsync("initStickySearch", _searchBarRef, _dotNetRef);
+        }
+    }
+
+    [JSInvokable]
+    public void SetSticky(bool isSticky)
+    {
+        if (_isSticky != isSticky)
+        {
+            _isSticky = isSticky;
+            StateHasChanged();
+        }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (_jsModule is not null)
+        {
+            await _jsModule.InvokeVoidAsync("destroyStickySearch");
+            await _jsModule.DisposeAsync();
+        }
+        _dotNetRef?.Dispose();
+    }
+}

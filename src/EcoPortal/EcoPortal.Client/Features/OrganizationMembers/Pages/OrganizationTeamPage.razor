@@ -1,0 +1,256 @@
+@page "/organizations/{OrganizationId:guid}/members"
+@page "/organizations/{OrganizationId:guid}/team"
+@using EcoData.Organization.Contracts
+@using EcoPortal.Client.Authorization
+@attribute [OrganizationPermission(Permissions.Organization.ManageMembers)]
+@using EcoData.Organization.Contracts.Dtos
+@using EcoData.Organization.Contracts.Parameters
+@using EcoData.Organization.Application.Client
+@using EcoPortal.Client.Services
+@using EcoPortal.Client.Features.OrganizationMembers.Components
+@using EcoPortal.Client.Features.OrganizationMembers.Dialogs
+@using EcoData.Common.Pagination.Blazor
+@using BlazingSingularity.Commands
+@using BlazingSingularity.Signals
+@inject IOrganizationHttpClient OrganizationClient
+@inject IOrganizationMemberHttpClient MemberClient
+@inject INavigationService Navigation
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+
+<PageTitle>Members - @(_organization?.Name ?? "Organization") - EcoData</PageTitle>
+
+<SearchHeader SearchSignal="SearchTextSignal" Placeholder="Search members..." EnableSticky="true">
+    <Actions>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.PersonAdd"
+                   OnClick="OpenAddMemberDialog">
+            Add Member
+        </MudButton>
+    </Actions>
+</SearchHeader>
+
+@if (LoadOrganizationCommand.IsLoading)
+{
+    <MudPaper Elevation="0" Class="rounded-lg">
+        @for (var i = 0; i < 5; i++)
+        {
+            <MudPaper Elevation="0" Class="pa-3 border-b">
+                <MudStack Row AlignItems="AlignItems.Center" Spacing="3">
+                    <MudSkeleton SkeletonType="SkeletonType.Circle" Width="40px" Height="40px" />
+                    <MudStack Spacing="1">
+                        <MudSkeleton Width="150px" Height="16px" />
+                        <MudSkeleton Width="200px" Height="12px" />
+                    </MudStack>
+                    <MudSpacer />
+                    <MudSkeleton Width="80px" Height="24px" />
+                </MudStack>
+            </MudPaper>
+        }
+    </MudPaper>
+}
+else if (_organization is null)
+{
+    <MudPaper Elevation="0" Class="pa-8 rounded-lg">
+        <MudStack AlignItems="AlignItems.Center">
+            <MudIcon Icon="@Icons.Material.Filled.Error" Size="Size.Large" Color="Color.Error" />
+            <MudText Typo="Typo.h6" Color="Color.Error" Class="mt-2">Organization not found</MudText>
+        </MudStack>
+    </MudPaper>
+}
+else
+{
+    <MudPaper Elevation="0" Class="rounded-lg">
+        <EcoDataVirtualizedList @ref="_virtualizedList" TItem="OrganizationMemberDto" TParams="OrganizationMemberParameters"
+                                ItemsProvider="GetItemsAsync" ParametersBuilder="BuildParameters" CursorSelector="m => m.Id"
+                                ItemSize="65" OverscanCount="3">
+            <LoadingTemplate>
+                @for (var i = 0; i < 5; i++)
+                {
+                    <MudPaper Elevation="0" Class="pa-3 border-b">
+                        <MudStack Row AlignItems="AlignItems.Center" Spacing="3">
+                            <MudSkeleton SkeletonType="SkeletonType.Circle" Width="40px" Height="40px" />
+                            <MudStack Spacing="1">
+                                <MudSkeleton Width="150px" Height="16px" />
+                                <MudSkeleton Width="200px" Height="12px" />
+                            </MudStack>
+                            <MudSpacer />
+                            <MudSkeleton Width="80px" Height="24px" />
+                        </MudStack>
+                    </MudPaper>
+                }
+            </LoadingTemplate>
+            <EmptyTemplate>
+                @if (HasActiveFilters)
+                {
+                    <MudStack AlignItems="AlignItems.Center" Class="pa-8">
+                        <MudIcon Icon="@Icons.Material.Filled.SearchOff" Size="Size.Large" Color="Color.Secondary" />
+                        <MudText Typo="Typo.h6" Color="Color.Secondary" Class="mt-2">No members found</MudText>
+                        <MudText Typo="Typo.body2" Color="Color.Secondary">
+                            No members match your search criteria.
+                        </MudText>
+                        <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.FilterAltOff"
+                                   OnClick="ClearFilters" Class="mt-3">
+                            Clear Filters
+                        </MudButton>
+                    </MudStack>
+                }
+                else
+                {
+                    <MudStack AlignItems="AlignItems.Center" Class="pa-8">
+                        <MudIcon Icon="@Icons.Material.Filled.Group" Size="Size.Large" Color="Color.Secondary" />
+                        <MudText Typo="Typo.h6" Color="Color.Secondary" Class="mt-2">No members yet</MudText>
+                        <MudText Typo="Typo.body2" Color="Color.Secondary">
+                            Add members to this organization to get started.
+                        </MudText>
+                        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.PersonAdd"
+                                   OnClick="OpenAddMemberDialog" Class="mt-3">
+                            Add Member
+                        </MudButton>
+                    </MudStack>
+                }
+            </EmptyTemplate>
+            <ItemTemplate Context="member">
+                <MemberListItem Member="member" ShowActions="true" OnChangeRole="OpenChangeRoleDialog"
+                                OnRemove="ConfirmRemoveMember" />
+            </ItemTemplate>
+            <PlaceholderTemplate>
+                <MudPaper Elevation="0" Class="pa-3 border-b">
+                    <MudStack Row AlignItems="AlignItems.Center" Spacing="3">
+                        <MudSkeleton SkeletonType="SkeletonType.Circle" Width="40px" Height="40px" />
+                        <MudStack Spacing="1">
+                            <MudSkeleton Width="150px" Height="16px" />
+                            <MudSkeleton Width="200px" Height="12px" />
+                        </MudStack>
+                        <MudSpacer />
+                        <MudSkeleton Width="80px" Height="24px" />
+                    </MudStack>
+                </MudPaper>
+            </PlaceholderTemplate>
+        </EcoDataVirtualizedList>
+    </MudPaper>
+}
+
+@code {
+    private EcoDataVirtualizedList<OrganizationMemberDto, OrganizationMemberParameters>? _virtualizedList;
+
+    [Parameter]
+    public Guid OrganizationId { get; set; }
+
+    private OrganizationDtoForDetail? _organization;
+
+    [Signal]
+    private string? _searchText;
+
+    private bool HasActiveFilters => !string.IsNullOrWhiteSpace(SearchText);
+
+    protected override async Task OnInitializedAsync()
+    {
+        Navigation.SetFallback($"/organizations/{OrganizationId}");
+        SearchTextSignal.OnChange(_ => _virtualizedList?.Refresh());
+        await LoadOrganizationCommand.ExecuteAsync();
+    }
+
+    [RelayCommand]
+    private async Task LoadOrganization()
+    {
+        var result = await OrganizationClient.GetByIdAsync(OrganizationId);
+        result.Switch(
+            organization => _organization = organization,
+            _ => _organization = null,
+            _ => _organization = null
+        );
+    }
+
+    private OrganizationMemberParameters BuildParameters(Guid? cursor) => new(
+        PageSize: 50,
+        Cursor: cursor,
+        Search: string.IsNullOrWhiteSpace(SearchText) ? null : SearchText
+    );
+
+    private IAsyncEnumerable<OrganizationMemberDto> GetItemsAsync(OrganizationMemberParameters parameters, CancellationToken cancellationToken)
+    {
+        return MemberClient.GetAllAsync(OrganizationId, parameters, cancellationToken);
+    }
+
+    private void ClearFilters()
+    {
+        SearchText = null;
+    }
+
+    private async Task OpenAddMemberDialog()
+    {
+        var options = new DialogOptions { CloseOnEscapeKey = true, MaxWidth = MaxWidth.Small, FullWidth = true };
+        var dialog = await DialogService.ShowAsync<AddMemberDialog>("Add Member", options);
+        var result = await dialog.Result;
+
+        if (result is { Canceled: false, Data: AddMemberRequest request })
+        {
+            var createResult = await MemberClient.CreateAsync(OrganizationId, request);
+            createResult.Switch(
+                _ =>
+                {
+                    Snackbar.Add("Member added successfully", Severity.Success);
+                    _virtualizedList?.Refresh();
+                },
+                _ => Snackbar.Add("User not found", Severity.Error),
+                conflict => Snackbar.Add(conflict.Message, Severity.Warning),
+                error => Snackbar.Add($"Failed to add member: {error.Message}", Severity.Error)
+            );
+        }
+    }
+
+    private async Task OpenChangeRoleDialog(OrganizationMemberDto member)
+    {
+        var parameters = new DialogParameters<ChangeRoleDialog>
+        {
+            { x => x.MemberName, member.DisplayName },
+            { x => x.CurrentRole, member.RoleName }
+        };
+        var options = new DialogOptions { CloseOnEscapeKey = true, MaxWidth = MaxWidth.Small, FullWidth = true };
+        var dialog = await DialogService.ShowAsync<ChangeRoleDialog>("Change Role", parameters, options);
+        var result = await dialog.Result;
+
+        if (result is { Canceled: false, Data: UpdateMemberRoleRequest request })
+        {
+            var updateResult = await MemberClient.UpdateAsync(OrganizationId, member.UserId, request);
+            updateResult.Switch(
+                _ =>
+                {
+                    Snackbar.Add("Role updated successfully", Severity.Success);
+                    _virtualizedList?.Refresh();
+                },
+                _ => Snackbar.Add("Member not found", Severity.Error),
+                validation => Snackbar.Add(validation.Errors.FirstOrDefault()?.ErrorMessage ?? "Validation error", Severity.Warning),
+                error => Snackbar.Add($"Failed to update role: {error.Message}", Severity.Error)
+            );
+        }
+    }
+
+    private async Task ConfirmRemoveMember(OrganizationMemberDto member)
+    {
+        var parameters = new DialogParameters<ConfirmDialog>
+        {
+            { x => x.ContentText, $"Are you sure you want to remove {member.DisplayName} from this organization?" },
+            { x => x.ButtonText, "Remove" },
+            { x => x.Color, Color.Error }
+        };
+        var options = new DialogOptions { CloseOnEscapeKey = true, MaxWidth = MaxWidth.ExtraSmall };
+        var dialog = await DialogService.ShowAsync<ConfirmDialog>("Remove Member", parameters, options);
+        var result = await dialog.Result;
+
+        if (result is { Canceled: false })
+        {
+            var deleteResult = await MemberClient.DeleteAsync(OrganizationId, member.UserId);
+            deleteResult.Switch(
+                _ =>
+                {
+                    Snackbar.Add("Member removed successfully", Severity.Success);
+                    _virtualizedList?.Refresh();
+                },
+                _ => Snackbar.Add("Member not found", Severity.Error),
+                validation => Snackbar.Add(validation.Errors.FirstOrDefault()?.ErrorMessage ?? "Cannot remove member", Severity.Warning),
+                error => Snackbar.Add($"Failed to remove member: {error.Message}", Severity.Error)
+            );
+        }
+    }
+}

@@ -1,0 +1,125 @@
+@page "/login"
+@layout AuthLayout
+@using EcoPortal.Client.Layout
+@using EcoPortal.Client.Services
+@using EcoData.Identity.Contracts.Requests
+@using BlazingSingularity
+@using BlazingSingularity.Commands
+@inject AuthStateService AuthState
+@inject NavigationManager Navigation
+
+<PageTitle>Login - EcoData</PageTitle>
+
+<MudPaper Elevation="3" Class="pa-6">
+    @if (!string.IsNullOrEmpty(_errorMessage))
+    {
+        <MudAlert Severity="Severity.Error" Variant="Variant.Filled" Dense="true" Class="mb-4">
+            @_errorMessage
+        </MudAlert>
+    }
+
+    <MudText Typo="Typo.h5" Align="Align.Center" Class="mb-4">Welcome Back</MudText>
+
+    <EditForm Model="_model" OnValidSubmit="() => LoginCommand.ExecuteAsync()">
+        <DataAnnotationsValidator />
+
+        <MudStack Spacing="3">
+            <MudTextField @bind-Value="_model.Email"
+                          Label="Email"
+                          Placeholder="Enter your email"
+                          InputType="InputType.Email"
+                          Adornment="Adornment.Start"
+                          AdornmentIcon="@Icons.Material.Filled.Email"
+                          Variant="Variant.Outlined"
+                          Required="true"
+                          RequiredError="Email is required"
+                          Disabled="LoginCommand.IsLoading" />
+
+            <MudTextField @bind-Value="_model.Password"
+                          Label="Password"
+                          Placeholder="Enter your password"
+                          InputType="@(_showPassword ? InputType.Text : InputType.Password)"
+                          Adornment="Adornment.End"
+                          AdornmentIcon="@(_showPassword ? Icons.Material.Filled.VisibilityOff : Icons.Material.Filled.Visibility)"
+                          OnAdornmentClick="() => _showPassword = !_showPassword"
+                          AdornmentAriaLabel="Toggle password visibility"
+                          Variant="Variant.Outlined"
+                          Required="true"
+                          RequiredError="Password is required"
+                          Disabled="LoginCommand.IsLoading" />
+
+            <MudCheckBox @bind-Value="_model.RememberMe"
+                         Label="Remember me"
+                         Color="Color.Primary"
+                         Dense="true"
+                         Disabled="LoginCommand.IsLoading" />
+
+            <MudButton ButtonType="ButtonType.Submit"
+                       Variant="Variant.Filled"
+                       Color="Color.Primary"
+                       FullWidth="true"
+                       Size="Size.Large"
+                       Disabled="LoginCommand.IsLoading">
+                @if (LoginCommand.IsLoading)
+                {
+                    <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
+                    <span>Signing in...</span>
+                }
+                else
+                {
+                    <span>Sign In</span>
+                }
+            </MudButton>
+        </MudStack>
+    </EditForm>
+
+    <MudDivider Class="my-4" />
+
+    <MudText Typo="Typo.body2" Align="Align.Center">
+        Don't have an account?
+        <MudLink Href="/register" Color="Color.Primary">Request Access</MudLink>
+    </MudText>
+</MudPaper>
+
+@code {
+    private readonly LoginModel _model = new();
+    private bool _showPassword;
+    private string? _errorMessage;
+
+    [SupplyParameterFromQuery]
+    public string? ReturnUrl { get; set; }
+
+    [RelayCommand]
+    private async Task Login()
+    {
+        _errorMessage = null;
+
+        var request = new LoginRequest(_model.Email, _model.Password, _model.RememberMe);
+
+        var validationResult = new LoginRequestValidator().Validate(request);
+        if (!validationResult.IsValid)
+        {
+            _errorMessage = validationResult.Errors[0].ErrorMessage;
+            return;
+        }
+
+        var result = await AuthState.LoginAsync(request);
+
+        if (result.Success)
+        {
+            var returnUrl = string.IsNullOrEmpty(ReturnUrl) ? "/" : ReturnUrl;
+            Navigation.NavigateTo(returnUrl);
+        }
+        else
+        {
+            _errorMessage = result.Error;
+        }
+    }
+
+    private sealed class LoginModel
+    {
+        public string Email { get; set; } = string.Empty;
+        public string Password { get; set; } = string.Empty;
+        public bool RememberMe { get; set; }
+    }
+}

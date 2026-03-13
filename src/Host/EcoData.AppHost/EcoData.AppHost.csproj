@@ -1,15 +1,5 @@
 <Project Sdk="Aspire.AppHost.Sdk/13.1.2">
 
-  <ItemGroup>
-    <PackageReference Include="Aspire.Hosting.PostgreSQL" Version="13.1.2" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\..\AquaTrack\EcoData.AquaTrack.WebApp\EcoData.AquaTrack.WebApp.csproj" />
-    <ProjectReference Include="..\..\AquaTrack\EcoData.AquaTrack.Ingestion\EcoData.AquaTrack.Ingestion.csproj" />
-    <ProjectReference Include="..\EcoData.Seeder\EcoData.Seeder.csproj" />
-  </ItemGroup>
-
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>net10.0</TargetFramework>
@@ -17,5 +7,14 @@
     <Nullable>enable</Nullable>
     <UserSecretsId>55334bac-5b11-4e1a-8794-850dcd60d61e</UserSecretsId>
   </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Aspire.Hosting.PostgreSQL" Version="13.1.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\EcoPortal\EcoPortal.Server\EcoPortal.Server.csproj" />
+    <ProjectReference Include="..\EcoData.Seeder\EcoData.Seeder.csproj" />
+  </ItemGroup>
 
 </Project>

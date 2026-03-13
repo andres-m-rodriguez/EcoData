@@ -1,0 +1,208 @@
+@using EcoData.Sensors.Contracts.Dtos
+@using EcoData.Sensors.Contracts.Parameters
+@using EcoData.Sensors.Application.Client
+@using EcoPortal.Client.Features.Sensors.Dialogs
+@using EcoData.Common.Pagination.Blazor
+@using BlazingSingularity.Signals
+@inject ISensorHttpClient SensorClient
+@inject IDialogService DialogService
+
+@if (ShowFilters)
+{
+    <SearchHeader SearchSignal="SearchTextSignal" Placeholder="Search sensors..." ShowFilterButton="true"
+                  HasActiveFilters="HasNonSearchFilters" OnFilterClick="OpenFilterDialog">
+        <Actions>
+            @Actions
+        </Actions>
+    </SearchHeader>
+}
+
+<MudPaper Elevation="@Elevation" Class="sensor-list-container rounded-lg">
+    <EcoDataVirtualizedList @ref="_virtualizedList" TItem="SensorDtoForList" TParams="SensorParameters"
+                            ItemsProvider="GetItemsAsync" ParametersBuilder="BuildParameters" CursorSelector="sensor => sensor.Id"
+                            ItemSize="65" OverscanCount="3">
+        <LoadingTemplate>
+            @for (var i = 0; i < 8; i++)
+            {
+                <div class="sensor-skeleton">
+                    <div class="skeleton-primary">
+                        <MudSkeleton Width="70%" Height="16px" />
+                        <MudSkeleton Width="40%" Height="12px" Class="mt-1" />
+                    </div>
+                    <div class="skeleton-municipality">
+                        <MudSkeleton Width="100%" Height="14px" />
+                    </div>
+                    <div class="skeleton-coords">
+                        <MudSkeleton Width="100%" Height="14px" />
+                    </div>
+                    <div class="skeleton-status">
+                        <MudSkeleton Width="60px" Height="24px" Class="rounded-pill" />
+                    </div>
+                    <div class="skeleton-menu">
+                        <MudSkeleton SkeletonType="SkeletonType.Circle" Width="32px" Height="32px" />
+                    </div>
+                </div>
+            }
+        </LoadingTemplate>
+        <EmptyTemplate>
+            @if (HasActiveFilters)
+            {
+                <MudStack AlignItems="AlignItems.Center" Class="pa-8">
+                    <MudIcon Icon="@Icons.Material.Filled.SearchOff" Size="Size.Large" Color="Color.Secondary" />
+                    <MudText Typo="Typo.h6" Color="Color.Secondary" Class="mt-2">No sensors found</MudText>
+                    <MudText Typo="Typo.body2" Color="Color.Secondary">
+                        No sensors match your current filter criteria.
+                    </MudText>
+                    <MudButton Variant="Variant.Outlined" Color="Color.Primary"
+                               StartIcon="@Icons.Material.Filled.FilterAltOff" OnClick="ClearFilters" Class="mt-3">
+                        Clear Filters
+                    </MudButton>
+                </MudStack>
+            }
+            else
+            {
+                <MudStack AlignItems="AlignItems.Center" Class="pa-8">
+                    <MudIcon Icon="@Icons.Material.Filled.Sensors" Size="Size.Large" Color="Color.Secondary" />
+                    <MudText Typo="Typo.h6" Color="Color.Secondary" Class="mt-2">@EmptyMessage</MudText>
+                    <MudText Typo="Typo.body2" Color="Color.Secondary">
+                        @EmptySubMessage
+                    </MudText>
+                </MudStack>
+            }
+        </EmptyTemplate>
+        <ItemTemplate Context="sensor">
+            <SensorListItem Sensor="sensor" OnMapClick="HandleMapClick" OnClick="HandleClick" />
+        </ItemTemplate>
+        <PlaceholderTemplate>
+            <div class="sensor-skeleton">
+                <div class="skeleton-primary">
+                    <MudSkeleton Width="70%" Height="16px" />
+                    <MudSkeleton Width="40%" Height="12px" Class="mt-1" />
+                </div>
+                <div class="skeleton-municipality">
+                    <MudSkeleton Width="100%" Height="14px" />
+                </div>
+                <div class="skeleton-coords">
+                    <MudSkeleton Width="100%" Height="14px" />
+                </div>
+                <div class="skeleton-status">
+                    <MudSkeleton Width="60px" Height="24px" Class="rounded-pill" />
+                </div>
+                <div class="skeleton-menu">
+                    <MudSkeleton SkeletonType="SkeletonType.Circle" Width="32px" Height="32px" />
+                </div>
+            </div>
+        </PlaceholderTemplate>
+    </EcoDataVirtualizedList>
+</MudPaper>
+
+@code {
+    private EcoDataVirtualizedList<SensorDtoForList, SensorParameters>? _virtualizedList;
+
+    [Signal]
+    private string? _searchText;
+
+    [Signal]
+    private SensorStatusFilter _statusFilter = SensorStatusFilter.All;
+
+    [Parameter]
+    public Guid? OrganizationId { get; set; }
+
+    [Parameter]
+    public bool ShowFilters { get; set; } = true;
+
+    [Parameter]
+    public int Elevation { get; set; } = 1;
+
+    [Parameter]
+    public string EmptyMessage { get; set; } = "No sensors yet";
+
+    [Parameter]
+    public string EmptySubMessage { get; set; } = "Sensors will appear here once data is ingested.";
+
+    [Parameter]
+    public EventCallback<SensorDtoForList> OnMapClick { get; set; }
+
+    [Parameter]
+    public EventCallback<SensorDtoForList> OnSensorClick { get; set; }
+
+    [Parameter]
+    public RenderFragment? Actions { get; set; }
+
+    private bool HasActiveFilters => !string.IsNullOrWhiteSpace(SearchText) || StatusFilter != SensorStatusFilter.All;
+    private bool HasNonSearchFilters => StatusFilter != SensorStatusFilter.All;
+
+    protected override void OnInitialized()
+    {
+        SearchTextSignal.OnChange(_ => _virtualizedList?.Refresh());
+        StatusFilterSignal.OnChange(_ => _virtualizedList?.Refresh());
+    }
+
+    private async Task OpenFilterDialog()
+    {
+        var parameters = new DialogParameters<SensorFilterDialog>
+        {
+            { x => x.StatusFilter, StatusFilter }
+        };
+
+        var options = new DialogOptions
+        {
+            CloseOnEscapeKey = true,
+            MaxWidth = MaxWidth.Small,
+            FullWidth = true
+        };
+
+        var dialog = await DialogService.ShowAsync<SensorFilterDialog>("Filters", parameters, options);
+        var result = await dialog.Result;
+
+        if (result is { Canceled: false, Data: SensorStatusFilter filter })
+        {
+            StatusFilter = filter;
+        }
+    }
+
+    private SensorParameters BuildParameters(Guid? cursor)
+    {
+        return new SensorParameters(
+            PageSize: 50,
+            Cursor: cursor,
+            Search: string.IsNullOrWhiteSpace(SearchText) ? null : SearchText,
+            IsActive: StatusFilter switch
+            {
+                SensorStatusFilter.Active => true,
+                SensorStatusFilter.Inactive => false,
+                _ => null
+            },
+            OrganizationId: OrganizationId
+        );
+    }
+
+    private IAsyncEnumerable<SensorDtoForList> GetItemsAsync(SensorParameters parameters, CancellationToken
+cancellationToken)
+    {
+        return SensorClient.GetSensorsAsync(parameters, cancellationToken);
+    }
+
+    private void ClearFilters()
+    {
+        SearchText = null;
+        StatusFilter = SensorStatusFilter.All;
+    }
+
+    private async Task HandleMapClick(SensorDtoForList sensor)
+    {
+        await OnMapClick.InvokeAsync(sensor);
+    }
+
+    private async Task HandleClick(SensorDtoForList sensor)
+    {
+        await OnSensorClick.InvokeAsync(sensor);
+    }
+
+    public enum SensorStatusFilter
+    {
+        All,
+        Active,
+        Inactive
+    }
+}

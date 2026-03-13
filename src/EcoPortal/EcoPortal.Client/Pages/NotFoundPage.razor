@@ -1,0 +1,43 @@
+@page "/not-found"
+@inject NavigationManager Navigation
+
+<PageTitle>Page Not Found - EcoData</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.Small" Class="d-flex align-center justify-center" Style="min-height: calc(100vh - 100px);">
+    <MudStack AlignItems="AlignItems.Center" Spacing="4">
+        <MudAvatar Color="Color.Primary" Size="Size.Large" Style="width: 120px; height: 120px;">
+            <MudIcon Icon="@Icons.Material.Filled.SearchOff" Style="font-size: 4rem;" />
+        </MudAvatar>
+
+        <MudText Typo="Typo.h1" Color="Color.Primary" Align="Align.Center">404</MudText>
+
+        <MudStack Spacing="1" AlignItems="AlignItems.Center">
+            <MudText Typo="Typo.h5" Align="Align.Center">Page Not Found</MudText>
+            <MudText Typo="Typo.body1" Color="Color.Secondary" Align="Align.Center">
+                The page you're looking for doesn't exist or has been moved.
+            </MudText>
+        </MudStack>
+
+        <MudStack Row="true" Spacing="2" Class="mt-4">
+            <MudButton Variant="Variant.Filled"
+                       Color="Color.Primary"
+                       StartIcon="@Icons.Material.Filled.Home"
+                       Href="/">
+                Go to Dashboard
+            </MudButton>
+            <MudButton Variant="Variant.Outlined"
+                       Color="Color.Primary"
+                       StartIcon="@Icons.Material.Filled.ArrowBack"
+                       OnClick="GoBack">
+                Go Back
+            </MudButton>
+        </MudStack>
+    </MudStack>
+</MudContainer>
+
+@code {
+    private void GoBack()
+    {
+        Navigation.NavigateTo("/");
+    }
+}

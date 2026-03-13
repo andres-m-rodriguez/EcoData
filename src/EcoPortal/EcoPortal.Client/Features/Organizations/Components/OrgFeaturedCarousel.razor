@@ -1,0 +1,91 @@
+@using EcoData.Organization.Contracts.Dtos
+@using MudBlazor
+
+@if (Loading)
+{
+    <div class="carousel-wrapper @Class">
+        <div class="carousel-nav-placeholder"></div>
+        <div class="carousel-viewport">
+            <div class="carousel-track">
+                @for (var i = 0; i < 6; i++)
+                {
+                    <div class="carousel-item">
+                        <MudSkeleton SkeletonType="SkeletonType.Rectangle" Class="carousel-skeleton" />
+                        <MudSkeleton Width="80%" Height="16px" Class="mt-2 mx-auto" />
+                    </div>
+                }
+            </div>
+        </div>
+        <div class="carousel-nav-placeholder"></div>
+    </div>
+}
+else if (Organizations.Count == 0)
+{
+    <MudPaper Elevation="0" Class="@($"empty-state {Class}")">
+        <MudStack AlignItems="AlignItems.Center">
+            <MudIcon Icon="@Icons.Material.Filled.Business" Size="Size.Large" Color="Color.Secondary" />
+            <MudText Typo="Typo.body1" Color="Color.Secondary">No organizations available yet</MudText>
+        </MudStack>
+    </MudPaper>
+}
+else
+{
+    <div class="carousel-wrapper @Class">
+        <MudIconButton Icon="@Icons.Material.Filled.ChevronLeft"
+                       Size="Size.Small"
+                       Disabled="@(_carouselIndex == 0)"
+                       OnClick="CarouselPrevious"
+                       Class="carousel-nav" />
+        <div class="carousel-viewport">
+            <div class="carousel-track" style="--carousel-index: @_carouselIndex;">
+                @foreach (var org in Organizations)
+                {
+                    <div class="carousel-item">
+                        <OrgFeaturedCard ImageUrl="@org.CardPictureUrl"
+                                         Title="@org.Name"
+                                         OnClick="() => OnOrganizationClick.InvokeAsync(org)" />
+                    </div>
+                }
+            </div>
+        </div>
+        <MudIconButton Icon="@Icons.Material.Filled.ChevronRight"
+                       Size="Size.Small"
+                       Disabled="@(!CanGoNext)"
+                       OnClick="CarouselNext"
+                       Class="carousel-nav" />
+    </div>
+}
+
+@code {
+    private int _carouselIndex;
+
+    [Parameter]
+    public IReadOnlyList<OrganizationDtoForList> Organizations { get; set; } = [];
+
+    [Parameter]
+    public bool Loading { get; set; }
+
+    [Parameter]
+    public EventCallback<OrganizationDtoForList> OnOrganizationClick { get; set; }
+
+    [Parameter]
+    public string? Class { get; set; }
+
+    // Responsive visible count is handled in CSS, but we need a reasonable
+    // estimate for disabling the next button. Use the largest breakpoint value.
+    private const int MaxVisibleCount = 6;
+
+    private bool CanGoNext => _carouselIndex + MaxVisibleCount < Organizations.Count;
+
+    private void CarouselPrevious()
+    {
+        if (_carouselIndex > 0)
+            _carouselIndex--;
+    }
+
+    private void CarouselNext()
+    {
+        if (CanGoNext)
+            _carouselIndex++;
+    }
+}
