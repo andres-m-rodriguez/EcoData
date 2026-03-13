@@ -4,43 +4,48 @@
     <Project Path="src/Host/EcoData.ServiceDefaults/EcoData.ServiceDefaults.csproj" />
     <Project Path="src/Host/EcoData.Seeder/EcoData.Seeder.csproj" />
   </Folder>
-  <Folder Name="/Common/">
-    <Project Path="src/Common/EcoData.Common.Http.Helpers/EcoData.Common.Http.Helpers.csproj" />
-    <Project Path="src/Common/EcoData.Common.Pagination/EcoData.Common.Pagination.csproj" />
-    <Project Path="src/Common/EcoData.Common.Pagination.Blazor/EcoData.Common.Pagination.Blazor.csproj" />
-    <Project Path="src/Common/EcoData.Common.Results/EcoData.Common.Results.csproj" />
+  <Folder Name="/Features/">
+    <Folder Name="/Features/Common/">
+      <Project Path="src/Features/Common/EcoData.Common.Http.Helpers/EcoData.Common.Http.Helpers.csproj" />
+      <Project Path="src/Features/Common/EcoData.Common.Pagination/EcoData.Common.Pagination.csproj" />
+      <Project Path="src/Features/Common/EcoData.Common.Pagination.Blazor/EcoData.Common.Pagination.Blazor.csproj" />
+      <Project Path="src/Features/Common/EcoData.Common.Results/EcoData.Common.Results.csproj" />
+    </Folder>
+    <Folder Name="/Features/Identity/">
+      <Project Path="src/Features/Identity/EcoData.Identity.Database/EcoData.Identity.Database.csproj" />
+      <Project Path="src/Features/Identity/EcoData.Identity.Contracts/EcoData.Identity.Contracts.csproj" />
+      <Project Path="src/Features/Identity/EcoData.Identity.DataAccess/EcoData.Identity.DataAccess.csproj" />
+      <Project Path="src/Features/Identity/EcoData.Identity.Application/EcoData.Identity.Application.csproj" />
+      <Project Path="src/Features/Identity/EcoData.Identity.Application.Client/EcoData.Identity.Application.Client.csproj" />
+      <Project Path="src/Features/Identity/EcoData.Identity.Api/EcoData.Identity.Api.csproj" />
+    </Folder>
+    <Folder Name="/Features/Locations/">
+      <Project Path="src/Features/Locations/EcoData.Locations.Contracts/EcoData.Locations.Contracts.csproj" />
+      <Project Path="src/Features/Locations/EcoData.Locations.Database/EcoData.Locations.Database.csproj" />
+      <Project Path="src/Features/Locations/EcoData.Locations.DataAccess/EcoData.Locations.DataAccess.csproj" />
+      <Project Path="src/Features/Locations/EcoData.Locations.Api/EcoData.Locations.Api.csproj" />
+    </Folder>
+    <Folder Name="/Features/Organization/">
+      <Project Path="src/Features/Organization/EcoData.Organization.Database/EcoData.Organization.Database.csproj" />
+      <Project Path="src/Features/Organization/EcoData.Organization.Contracts/EcoData.Organization.Contracts.csproj" />
+      <Project Path="src/Features/Organization/EcoData.Organization.DataAccess/EcoData.Organization.DataAccess.csproj" />
+      <Project Path="src/Features/Organization/EcoData.Organization.Api/EcoData.Organization.Api.csproj" />
+      <Project Path="src/Features/Organization/EcoData.Organization.Application.Client/EcoData.Organization.Application.Client.csproj" />
+    </Folder>
+    <Folder Name="/Features/Sensors/">
+      <Project Path="src/Features/Sensors/EcoData.Sensors.Database/EcoData.Sensors.Database.csproj" />
+      <Project Path="src/Features/Sensors/EcoData.Sensors.Contracts/EcoData.Sensors.Contracts.csproj" />
+      <Project Path="src/Features/Sensors/EcoData.Sensors.DataAccess/EcoData.Sensors.DataAccess.csproj" />
+      <Project Path="src/Features/Sensors/EcoData.Sensors.Api/EcoData.Sensors.Api.csproj" />
+      <Project Path="src/Features/Sensors/EcoData.Sensors.Application.Client/EcoData.Sensors.Application.Client.csproj" />
+      <Project Path="src/Features/Sensors/EcoData.Sensors.Ingestion/EcoData.Sensors.Ingestion.csproj" />
+    </Folder>
   </Folder>
-  <Folder Name="/Identity/">
-    <Project Path="src/Identity/EcoData.Identity.Database/EcoData.Identity.Database.csproj" />
-    <Project Path="src/Identity/EcoData.Identity.Contracts/EcoData.Identity.Contracts.csproj" />
-    <Project Path="src/Identity/EcoData.Identity.DataAccess/EcoData.Identity.DataAccess.csproj" />
-    <Project Path="src/Identity/EcoData.Identity.Application/EcoData.Identity.Application.csproj" />
-    <Project Path="src/Identity/EcoData.Identity.Application.Client/EcoData.Identity.Application.Client.csproj" />
-    <Project Path="src/Identity/EcoData.Identity.Api/EcoData.Identity.Api.csproj" />
-  </Folder>
-  <Folder Name="/Locations/">
-    <Project Path="src/Locations/EcoData.Locations.Contracts/EcoData.Locations.Contracts.csproj" />
-    <Project Path="src/Locations/EcoData.Locations.Database/EcoData.Locations.Database.csproj" />
-    <Project Path="src/Locations/EcoData.Locations.DataAccess/EcoData.Locations.DataAccess.csproj" />
-    <Project Path="src/Locations/EcoData.Locations.Api/EcoData.Locations.Api.csproj" />
-  </Folder>
-  <Folder Name="/Organization/">
-    <Project Path="src/Organization/EcoData.Organization.Database/EcoData.Organization.Database.csproj" />
-    <Project Path="src/Organization/EcoData.Organization.Contracts/EcoData.Organization.Contracts.csproj" />
-    <Project Path="src/Organization/EcoData.Organization.DataAccess/EcoData.Organization.DataAccess.csproj" />
-    <Project Path="src/Organization/EcoData.Organization.Api/EcoData.Organization.Api.csproj" />
-    <Project Path="src/Organization/EcoData.Organization.Application.Client/EcoData.Organization.Application.Client.csproj" />
-  </Folder>
-  <Folder Name="/Sensors/">
-    <Project Path="src/Sensors/EcoData.Sensors.Database/EcoData.Sensors.Database.csproj" />
-    <Project Path="src/Sensors/EcoData.Sensors.Contracts/EcoData.Sensors.Contracts.csproj" />
-    <Project Path="src/Sensors/EcoData.Sensors.DataAccess/EcoData.Sensors.DataAccess.csproj" />
-    <Project Path="src/Sensors/EcoData.Sensors.Api/EcoData.Sensors.Api.csproj" />
-    <Project Path="src/Sensors/EcoData.Sensors.Application.Client/EcoData.Sensors.Application.Client.csproj" />
-  </Folder>
-  <Folder Name="/EcoPortal/">
-    <Project Path="src/EcoPortal/EcoPortal.Server/EcoPortal.Server.csproj" />
-    <Project Path="src/EcoPortal/EcoPortal.Client/EcoPortal.Client.csproj" />
+  <Folder Name="/Apps/">
+    <Folder Name="/Apps/EcoPortal/">
+      <Project Path="src/Apps/EcoPortal/EcoPortal.Server/EcoPortal.Server.csproj" />
+      <Project Path="src/Apps/EcoPortal/EcoPortal.Client/EcoPortal.Client.csproj" />
+    </Folder>
   </Folder>
   <Folder Name="/Tests/">
     <Project Path="tests/EcoData.AquaTrack.IntegrationTests/EcoData.AquaTrack.IntegrationTests.csproj" />
