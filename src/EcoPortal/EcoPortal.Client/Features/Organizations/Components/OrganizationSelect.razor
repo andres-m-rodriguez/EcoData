@@ -1,0 +1,57 @@
+@using EcoData.Organization.Application.Client
+@using EcoData.Organization.Contracts.Dtos
+@using EcoData.Organization.Contracts.Parameters
+@inject IOrganizationHttpClient OrganizationClient
+
+<MudAutocomplete T="OrganizationDtoForList"
+                 Label="@Label"
+                 Value="Value"
+                 ValueChanged="ValueChanged"
+                 SearchFunc="SearchOrganizationsAsync"
+                 ToStringFunc="@(o => o?.Name ?? string.Empty)"
+                 Required="@Required"
+                 RequiredError="@RequiredError"
+                 HelperText="@HelperText"
+                 Variant="@Variant"
+                 Adornment="Adornment.Start"
+                 AdornmentIcon="@Icons.Material.Filled.Business"
+                 Disabled="@Disabled"
+                 ShowProgressIndicator="true"
+                 ProgressIndicatorColor="Color.Primary" />
+
+@code {
+    [Parameter]
+    public OrganizationDtoForList? Value { get; set; }
+
+    [Parameter]
+    public EventCallback<OrganizationDtoForList?> ValueChanged { get; set; }
+
+    [Parameter]
+    public string Label { get; set; } = "Organization";
+
+    [Parameter]
+    public string? HelperText { get; set; }
+
+    [Parameter]
+    public bool Required { get; set; }
+
+    [Parameter]
+    public string RequiredError { get; set; } = "Please select an organization";
+
+    [Parameter]
+    public Variant Variant { get; set; } = Variant.Outlined;
+
+    [Parameter]
+    public bool Disabled { get; set; }
+
+    private async Task<IEnumerable<OrganizationDtoForList>> SearchOrganizationsAsync(string? value, CancellationToken ct)
+    {
+        var parameters = new OrganizationParameters { Search = value };
+        var organizations = new List<OrganizationDtoForList>();
+        await foreach (var org in OrganizationClient.GetOrganizationsAsync(parameters, ct))
+        {
+            organizations.Add(org);
+        }
+        return organizations;
+    }
+}

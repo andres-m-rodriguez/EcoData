@@ -1,0 +1,15 @@
+@page "/sensors"
+@using EcoData.Sensors.Contracts.Dtos
+@using EcoPortal.Client.Features.Sensors.Components
+@inject NavigationManager Navigation
+
+<PageTitle>Sensors - EcoData</PageTitle>
+
+<SensorList OnMapClick="NavigateToMap" />
+
+@code {
+    private void NavigateToMap(SensorDtoForList sensor)
+    {
+        Navigation.NavigateTo($"/map?lat={sensor.Latitude}&lon={sensor.Longitude}");
+    }
+}
