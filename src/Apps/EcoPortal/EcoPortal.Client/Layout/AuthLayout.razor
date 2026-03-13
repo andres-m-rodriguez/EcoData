@@ -6,15 +6,23 @@
 <MudDialogProvider />
 <MudSnackbarProvider />
 
-<div class="auth-page">
-    <div class="auth-container">
-        <div class="auth-header">
-            <MudAvatar Color="Color.Primary" Variant="Variant.Filled" Size="Size.Large" Class="auth-logo">
-                <MudIcon Icon="@Icons.Material.Filled.Water" Size="Size.Large" />
-            </MudAvatar>
-            <MudText Typo="Typo.h4" Class="mt-3">EcoData</MudText>
-            <MudText Typo="Typo.body2" Class="text-secondary">Environmental Monitoring</MudText>
-        </div>
-        @Body
-    </div>
-</div>
+<MudLayout>
+    <MudMainContent>
+        <MudGrid Justify="Justify.Center" Class="pa-4">
+            <MudItem xs="12" sm="8" md="6" lg="4">
+                <MudStack AlignItems="AlignItems.Center" Spacing="4" Class="mt-16 mb-4">
+                    <MudAvatar Color="Color.Primary" Variant="Variant.Filled" Size="Size.Large">
+                        <MudIcon Icon="@Icons.Material.Filled.Grass" Size="Size.Large" />
+                    </MudAvatar>
+                    <MudStack Spacing="0" AlignItems="AlignItems.Center">
+                        <MudText Typo="Typo.h4">EcoData</MudText>
+                        <MudText Typo="Typo.body2" Color="Color.Secondary">Environmental Monitoring</MudText>
+                    </MudStack>
+                </MudStack>
+                <MudPaper Elevation="3" Class="pa-6">
+                    @Body
+                </MudPaper>
+            </MudItem>
+        </MudGrid>
+    </MudMainContent>
+</MudLayout>

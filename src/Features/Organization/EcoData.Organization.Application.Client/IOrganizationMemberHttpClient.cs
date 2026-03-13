@@ -19,12 +19,6 @@ public interface IOrganizationMemberHttpClient
         CancellationToken cancellationToken = default
     );
 
-    Task<OneOf<OrganizationMemberDto, NotFoundError, ConflictError, ApiError>> CreateAsync(
-        Guid organizationId,
-        AddMemberRequest request,
-        CancellationToken cancellationToken = default
-    );
-
     Task<OneOf<OrganizationMemberDto, NotFoundError, ValidationError, ApiError>> UpdateAsync(
         Guid organizationId,
         Guid userId,

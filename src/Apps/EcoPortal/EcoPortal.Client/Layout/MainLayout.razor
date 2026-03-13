@@ -17,46 +17,111 @@
 <MudLayout>
     <MudAppBar Elevation="0"
                Style="background-color: var(--mud-palette-drawer-background); color: var(--mud-palette-text-primary);" Fixed="true">
-        <MudIconButton Icon="@Icons.Material.Filled.ArrowBack" Color="Color.Inherit" Edge="Edge.Start" Size="Size.Small"
-                       Disabled="@(!Navigation.CanGoBack)" OnClick="NavigateBackAsync" />
-        <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit"
-                       OnClick="ToggleDrawer" />
-        <MudText Typo="Typo.h6">EcoData</MudText>
+
+        @* Mobile: Back button + Hamburger menu (hidden on md+) *@
+        <div class="d-flex d-md-none">
+            <MudIconButton Icon="@Icons.Material.Filled.ArrowBack" Color="Color.Inherit" Edge="Edge.Start" Size="Size.Small"
+                           Disabled="@(!Navigation.CanGoBack)" OnClick="NavigateBackAsync" />
+            <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit"
+                           OnClick="ToggleDrawer" />
+        </div>
+
+        <MudText Typo="Typo.h6" Class="ml-2">EcoData</MudText>
+
+        @* Desktop: Navigation buttons (hidden on sm-) *@
+        <div class="d-none d-md-flex align-center ml-6 gap-1">
+            <MudButton Href="@HomePage.Path" Color="Color.Inherit" Variant="Variant.Text">
+                Home
+            </MudButton>
+            <MudButton Href="@SensorsPage.Path" Color="Color.Inherit" Variant="Variant.Text">
+                Sensors
+            </MudButton>
+            <MudMenu Label="Organizations" Color="Color.Inherit" Variant="Variant.Text" EndIcon="@Icons.Material.Filled.KeyboardArrowDown">
+                <MudMenuItem Href="/organizations/discover" Icon="@Icons.Material.Outlined.Explore">
+                    Discover
+                </MudMenuItem>
+                @if (AuthState.IsAuthenticated)
+                {
+                    <MudMenuItem Href="/organizations/my" Icon="@Icons.Material.Outlined.Groups">
+                        My Orgs
+                    </MudMenuItem>
+                    <MudMenuItem Href="/organizations/requests" Icon="@Icons.Material.Outlined.Pending">
+                        Requests
+                    </MudMenuItem>
+                }
+            </MudMenu>
+            <MudButton Href="@SensorMapPage.Path" Color="Color.Inherit" Variant="Variant.Text">
+                Map
+            </MudButton>
+        </div>
+
         <MudSpacer />
-        <MudHidden Breakpoint="Breakpoint.SmAndDown">
+
+        @* Desktop: Theme toggle + User menu (hidden on sm-) *@
+        <div class="d-none d-md-flex align-center">
             <MudIconButton Icon="@(_isDarkMode ? Icons.Material.Filled.LightMode : Icons.Material.Filled.DarkMode)"
                            Color="Color.Inherit" OnClick="ToggleTheme" />
-        </MudHidden>
+            @if (AuthState.IsAuthenticated)
+            {
+                <MudMenu AnchorOrigin="Origin.BottomRight" TransformOrigin="Origin.TopRight">
+                    <ActivatorContent>
+                        <MudChip T="string" Color="Color.Default" Variant="Variant.Text" Class="ml-2 cursor-pointer">
+                            <AvatarContent>
+                                <MudAvatar Color="Color.Tertiary" Size="Size.Small">
+                                    @GetUserInitial()
+                                </MudAvatar>
+                            </AvatarContent>
+                            <ChildContent>
+                                @AuthState.CurrentUser?.DisplayName
+                            </ChildContent>
+                        </MudChip>
+                    </ActivatorContent>
+                    <ChildContent>
+                        <MudMenuItem Icon="@Icons.Material.Outlined.Person">Profile</MudMenuItem>
+                        <MudDivider />
+                        <MudMenuItem OnClick="LogoutAsync" Icon="@Icons.Material.Outlined.Logout">Sign Out</MudMenuItem>
+                    </ChildContent>
+                </MudMenu>
+            }
+            else
+            {
+                <MudButton Href="/login" Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small" Class="ml-2">
+                    Sign In
+                </MudButton>
+            }
+        </div>
     </MudAppBar>
 
-    <MudDrawer @bind-Open="_drawerOpen" ClipMode="DrawerClipMode.Docked" Variant="DrawerVariant.Responsive"
-               Elevation="1">
-        <MudHidden Breakpoint="Breakpoint.SmAndDown" Invert="true">
-            <MudToolBar Dense="true">
-                <MudIconButton Icon="@Icons.Material.Filled.Close" Color="Color.Inherit" OnClick="ToggleDrawer"
-                               Edge="Edge.Start" />
-                <MudSpacer />
-                <MudIconButton Icon="@Icons.Material.Outlined.Notifications" Color="Color.Inherit" />
-                <MudIconButton Icon="@(_isDarkMode ? Icons.Material.Filled.LightMode : Icons.Material.Filled.DarkMode)"
-                               Color="Color.Inherit" OnClick="ToggleTheme" Edge="Edge.End" />
-            </MudToolBar>
-        </MudHidden>
+    @* Mobile-only drawer *@
+    <MudDrawer @bind-Open="_drawerOpen" ClipMode="DrawerClipMode.Docked" Variant="DrawerVariant.Temporary"
+               Elevation="1" Breakpoint="Breakpoint.Md">
+        <MudToolBar Dense="true">
+            <MudIconButton Icon="@Icons.Material.Filled.Close" Color="Color.Inherit" OnClick="ToggleDrawer"
+                           Edge="Edge.Start" />
+            <MudSpacer />
+            <MudIconButton Icon="@Icons.Material.Outlined.Notifications" Color="Color.Inherit" />
+            <MudIconButton Icon="@(_isDarkMode ? Icons.Material.Filled.LightMode : Icons.Material.Filled.DarkMode)"
+                           Color="Color.Inherit" OnClick="ToggleTheme" Edge="Edge.End" />
+        </MudToolBar>
 
         <MudNavMenu Class="pt-4">
             <MudNavLink Href="@HomePage.Path" Match="NavLinkMatch.All" Icon="@Icons.Material.Outlined.Home">
-                Dashboard
+                Home
             </MudNavLink>
             <MudNavLink Href="@SensorsPage.Path" Icon="@Icons.Material.Outlined.Sensors">Sensors</MudNavLink>
             <MudNavGroup Title="Organizations" Icon="@Icons.Material.Outlined.Business" Expanded="true">
                 <MudNavLink Href="/organizations/discover" Icon="@Icons.Material.Outlined.Explore">
                     Discover
                 </MudNavLink>
-                <MudNavLink Href="/organizations/my" Icon="@Icons.Material.Outlined.Groups">
-                    My Orgs
-                </MudNavLink>
-                <MudNavLink Href="/organizations/requests" Icon="@Icons.Material.Outlined.Pending">
-                    Requests
-                </MudNavLink>
+                @if (AuthState.IsAuthenticated)
+                {
+                    <MudNavLink Href="/organizations/my" Icon="@Icons.Material.Outlined.Groups">
+                        My Orgs
+                    </MudNavLink>
+                    <MudNavLink Href="/organizations/requests" Icon="@Icons.Material.Outlined.Pending">
+                        Requests
+                    </MudNavLink>
+                }
             </MudNavGroup>
             <MudNavLink Href="@SensorMapPage.Path" Icon="@Icons.Material.Outlined.Map">Map</MudNavLink>
         </MudNavMenu>
@@ -88,7 +153,7 @@
             }
             else
             {
-                <MudListItem Href="@LoginPage.Path" Icon="@Icons.Material.Outlined.Login">
+                <MudListItem Href="/login" Icon="@Icons.Material.Outlined.Login">
                     <ChildContent>
                         <MudText Typo="Typo.body2">Sign In</MudText>
                     </ChildContent>
@@ -97,15 +162,15 @@
         </MudList>
     </MudDrawer>
 
-    <MudMainContent>
-        <MudContainer MaxWidth="MaxWidth.Large" Class="py-4 px-4">
+    <MudMainContent Class="main-content">
+        <MudContainer MaxWidth="MaxWidth.Large" Class="py-6 px-4 content-container">
             @Body
         </MudContainer>
     </MudMainContent>
 </MudLayout>
 
 @code {
-    private bool _drawerOpen = true;
+    private bool _drawerOpen = false;
     private bool _isDarkMode;
 
     private void ToggleDrawer() => _drawerOpen = !_drawerOpen;
