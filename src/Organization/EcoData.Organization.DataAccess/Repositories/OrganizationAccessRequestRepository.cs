@@ -1,10 +1,10 @@
 using System.Runtime.CompilerServices;
+using EcoData.Identity.DataAccess.Interfaces;
 using EcoData.Organization.Contracts.Dtos;
 using EcoData.Organization.Contracts.Parameters;
 using EcoData.Organization.DataAccess.Interfaces;
 using EcoData.Organization.Database;
 using EcoData.Organization.Database.Models;
-using EcoData.Identity.DataAccess.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
 namespace EcoData.Organization.DataAccess.Repositories;
@@ -22,11 +22,18 @@ public sealed class OrganizationAccessRequestRepository(
     {
         await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
 
-        var query = context.OrganizationAccessRequests
-            .Where(r => r.OrganizationId == organizationId);
+        var query = context.OrganizationAccessRequests.Where(r =>
+            r.OrganizationId == organizationId
+        );
 
-        if (!string.IsNullOrEmpty(parameters.Status) &&
-            Enum.TryParse<OrganizationAccessRequestStatus>(parameters.Status, true, out var status))
+        if (
+            !string.IsNullOrEmpty(parameters.Status)
+            && Enum.TryParse<OrganizationAccessRequestStatus>(
+                parameters.Status,
+                true,
+                out var status
+            )
+        )
         {
             query = query.Where(r => r.Status == status);
         }
@@ -101,11 +108,16 @@ public sealed class OrganizationAccessRequestRepository(
     {
         await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
 
-        var query = context.OrganizationAccessRequests
-            .Where(r => r.UserId == userId);
+        var query = context.OrganizationAccessRequests.Where(r => r.UserId == userId);
 
-        if (!string.IsNullOrEmpty(parameters.Status) &&
-            Enum.TryParse<OrganizationAccessRequestStatus>(parameters.Status, true, out var status))
+        if (
+            !string.IsNullOrEmpty(parameters.Status)
+            && Enum.TryParse<OrganizationAccessRequestStatus>(
+                parameters.Status,
+                true,
+                out var status
+            )
+        )
         {
             query = query.Where(r => r.Status == status);
         }
@@ -184,8 +196,8 @@ public sealed class OrganizationAccessRequestRepository(
     {
         await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
 
-        var request = await context.OrganizationAccessRequests
-            .Where(r => r.Id == id)
+        var request = await context
+            .OrganizationAccessRequests.Where(r => r.Id == id)
             .Select(r => new
             {
                 r.Id,
@@ -208,7 +220,10 @@ public sealed class OrganizationAccessRequestRepository(
 
         var user = await userLookupRepository.GetByIdAsync(request.UserId, cancellationToken);
         var reviewer = request.ReviewedByUserId.HasValue
-            ? await userLookupRepository.GetByIdAsync(request.ReviewedByUserId.Value, cancellationToken)
+            ? await userLookupRepository.GetByIdAsync(
+                request.ReviewedByUserId.Value,
+                cancellationToken
+            )
             : null;
 
         return new OrganizationAccessRequestDto(
@@ -237,8 +252,8 @@ public sealed class OrganizationAccessRequestRepository(
     {
         await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
 
-        var organization = await context.Organizations
-            .Where(o => o.Id == organizationId)
+        var organization = await context
+            .Organizations.Where(o => o.Id == organizationId)
             .Select(o => new { o.Id, o.Name })
             .FirstAsync(cancellationToken);
 
@@ -288,8 +303,8 @@ public sealed class OrganizationAccessRequestRepository(
     {
         await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
 
-        var entity = await context.OrganizationAccessRequests
-            .AsTracking()
+        var entity = await context
+            .OrganizationAccessRequests.AsTracking()
             .Include(r => r.Organization)
             .FirstOrDefaultAsync(r => r.Id == id, cancellationToken);
 
@@ -325,15 +340,12 @@ public sealed class OrganizationAccessRequestRepository(
         );
     }
 
-    public async Task<bool> DeleteAsync(
-        Guid id,
-        CancellationToken cancellationToken = default
-    )
+    public async Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken = default)
     {
         await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
 
-        var entity = await context.OrganizationAccessRequests
-            .AsTracking()
+        var entity = await context
+            .OrganizationAccessRequests.AsTracking()
             .FirstOrDefaultAsync(r => r.Id == id, cancellationToken);
 
         if (entity is null)
@@ -354,8 +366,8 @@ public sealed class OrganizationAccessRequestRepository(
     {
         await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
 
-        var entity = await context.OrganizationAccessRequests
-            .AsTracking()
+        var entity = await context
+            .OrganizationAccessRequests.AsTracking()
             .Include(r => r.Organization)
             .FirstOrDefaultAsync(r => r.Id == id, cancellationToken);
 
@@ -396,9 +408,10 @@ public sealed class OrganizationAccessRequestRepository(
         await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
 
         return await context.OrganizationAccessRequests.AnyAsync(
-            r => r.UserId == userId
-                 && r.OrganizationId == organizationId
-                 && r.Status == OrganizationAccessRequestStatus.Pending,
+            r =>
+                r.UserId == userId
+                && r.OrganizationId == organizationId
+                && r.Status == OrganizationAccessRequestStatus.Pending,
             cancellationToken
         );
     }
