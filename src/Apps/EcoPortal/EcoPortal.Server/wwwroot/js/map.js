@@ -26,6 +26,11 @@ window.locationPicker = {
             this.marker = L.marker([initialLat, initialLng]).addTo(this.map);
         }
 
+        // Invalidate size after a short delay to ensure container is fully rendered
+        setTimeout(() => {
+            this.map.invalidateSize();
+        }, 100);
+
         // Handle map clicks
         this.map.on('click', (e) => {
             const { lat, lng } = e.latlng;
