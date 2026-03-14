@@ -1,5 +1,6 @@
 using EcoData.Identity.Api.Authentication;
 using EcoData.Identity.Api.Endpoints;
+using EcoData.Identity.Api.RateLimiting;
 using EcoData.Identity.Application.Extensions;
 using EcoData.Identity.DataAccess.Extensions;
 using EcoData.Identity.Database.Extensions;
@@ -53,6 +54,7 @@ builder
     .AddSensorJwtAuthentication(builder.Configuration);
 
 builder.Services.AddOrganizationAuthorization();
+builder.Services.AddLoginRateLimiting();
 
 var app = builder.Build();
 
@@ -70,6 +72,7 @@ else
 
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseLoginRateLimiting();
 app.UseAntiforgery();
 
 app.MapStaticAssets();

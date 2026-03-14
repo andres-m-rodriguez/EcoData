@@ -18,7 +18,17 @@ public sealed class AuthHttpClient(HttpClient httpClient) : IAuthHttpClient
             return new AuthResult(true, user);
         }
 
-        var error = response.StatusCode switch
+        if (response.StatusCode == HttpStatusCode.TooManyRequests)
+        {
+            var retryAfterSeconds = GetRetryAfterSeconds(response);
+            var minutes = (int)Math.Ceiling(retryAfterSeconds / 60.0);
+            var error = minutes > 1
+                ? $"Too many login attempts. Please try again in {minutes} minutes."
+                : "Too many login attempts. Please try again in 1 minute.";
+            return new AuthResult(false, Error: error);
+        }
+
+        var error2 = response.StatusCode switch
         {
             HttpStatusCode.Unauthorized => "Invalid email or password",
             HttpStatusCode.Forbidden => "Your account is pending approval",
@@ -26,7 +36,20 @@ public sealed class AuthHttpClient(HttpClient httpClient) : IAuthHttpClient
             _ => "An error occurred during login"
         };
 
-        return new AuthResult(false, Error: error);
+        return new AuthResult(false, Error: error2);
+    }
+
+    private static int GetRetryAfterSeconds(HttpResponseMessage response)
+    {
+        if (response.Headers.TryGetValues("Retry-After", out var values))
+        {
+            var retryAfter = values.FirstOrDefault();
+            if (int.TryParse(retryAfter, out var seconds))
+            {
+                return seconds;
+            }
+        }
+        return 900; // Default to 15 minutes
     }
 
     public async Task<AuthResult> RegisterAsync(RegisterRequest request, CancellationToken cancellationToken = default)
