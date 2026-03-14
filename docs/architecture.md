@@ -1,396 +1,105 @@
-# EcoData Architecture
+# Why Modular Monolith (and How We Migrate When Ready)
 
-## Overview
+## The Decision
 
-EcoData uses a **vertical slice / modular monolith** architecture. Each feature is isolated into its own module with well-defined boundaries, making it possible to extract features into microservices if needed. The architecture follows projection-based data access patterns and avoids Entity Framework's `.Include()` in favor of explicit `.Select()` projections.
+EcoData is a **modular monolith** — not a traditional monolith, and not microservices. The architecture enforces strict module boundaries, separate databases per module, and no cross-module direct database access, but everything is deployed as a single unit hosted by one process.
 
-## High-Level Architecture
+The decision is not permanent. The architecture is explicitly designed so that any module can be promoted to a standalone microservice when traffic demands it — without a rewrite.
 
-```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                             EcoData.AppHost                                 │
-│                        (.NET Aspire Orchestration)                          │
-└───────────────────────────────────┬─────────────────────────────────────────┘
-                                    │ orchestrates
-        ┌───────────────────────────┼───────────────────────────┐
-        ▼                           ▼                           ▼
-┌───────────────┐           ┌───────────────┐           ┌───────────────┐
-│  PostgreSQL   │           │EcoData        │           │EcoData        │
-│  (databases)  │◄──────────│.{Service}     │           │.{Service}     │
-└───────────────┘           │   .Seeder     │           │   .WebApp     │
-                            └───────────────┘           └───────┬───────┘
-                                                                │
-                                    ┌───────────────────────────┴───────┐
-                                    │                                   │
-                                    ▼                                   ▼
-                            ┌───────────────┐               ┌───────────────┐
-                            │  Features/*   │               │EcoData        │
-                            │   .Api        │               │.{Service}     │
-                            └───────────────┘               │.WebApp.Client │
-                                                            │   (WASM)      │
-                                                            └───────────────┘
-```
+---
 
-## Project Structure
+## Why Not Microservices Now
 
-```
-src/
-├── Host/                                      # Shared infrastructure
-│   ├── EcoData.AppHost/                      # Aspire orchestration
-│   ├── EcoData.ServiceDefaults/              # Shared Aspire configuration
-│   └── EcoData.Gateway/                      # YARP reverse proxy
-│
-├── Common/                                    # Shared contracts
-│   ├── EcoData.i18n.Contracts/               # Localization interfaces
-│   └── EcoData.Pagination.Contracts/         # Pagination types
-│
-└── {Service}/                                 # Service (e.g., AquaTrack, FaunaFinder)
-    ├── EcoData.{Service}.WebApp/             # Blazor Server host
-    ├── EcoData.{Service}.WebApp.Client/      # Blazor WebAssembly UI
-    ├── EcoData.{Service}.Seeder/             # Database migration & seeding
-    │
-    └── Features/                              # Feature modules
-        └── {Feature}/                         # Individual feature
-            ├── EcoData.{Service}.{Feature}.Api/
-            ├── EcoData.{Service}.{Feature}.Application/
-            ├── EcoData.{Service}.{Feature}.Application.Client/
-            ├── EcoData.{Service}.{Feature}.Contracts/
-            ├── EcoData.{Service}.{Feature}.DataAccess/
-            └── EcoData.{Service}.{Feature}.Database/
-```
+Microservices solve real problems, but those problems need to actually exist first.
 
-## Feature Module Structure
+**Cost.** Running each module as its own service means separate hosting costs for each one. At current scale, that overhead adds cost without adding value. One process, one deployment, one bill.
 
-Each feature follows a consistent 6-project structure:
+**Team size.** Microservices are largely a team-scaling solution — they let independent teams own and deploy services without stepping on each other. With one developer, the coordination overhead that microservices eliminate doesn't exist, but the operational complexity they introduce does.
+
+**Not at scale yet.** Microservices let you scale individual services independently based on traffic. That's a real advantage — when you have traffic patterns that justify it. Paying for that flexibility before the traffic exists is premature optimization.
+
+**Complexity has a cost.** Service discovery, network failures, distributed tracing, eventual consistency, inter-service authentication — these are all real problems microservices introduce that a monolith doesn't have. Taking on that complexity before it's necessary slows down development without a corresponding benefit.
+
+---
+
+## Why Not a Traditional Monolith Either
+
+A traditional monolith shares everything — one database, one codebase with no enforced boundaries, modules that reach directly into each other's tables. That works at small scale but becomes painful quickly: schema changes have unpredictable blast radius, ownership is unclear, and migrating to microservices later requires untangling a mess.
+
+The modular monolith avoids that by enforcing the same boundaries microservices would have, while keeping the deployment simple.
+
+---
+
+## The Module Structure
+
+Each module is a set of six projects with fixed responsibilities:
 
 ```
-Features/{Feature}/
-├── EcoData.{Service}.{Feature}.Api/                # Minimal API endpoints
-│   └── {Feature}Endpoints.cs
-│
-├── EcoData.{Service}.{Feature}.Application/        # Server-side business logic
-│   ├── Extensions/
-│   │   └── {Feature}ApplicationConfigurator.cs
-│   └── Services/
-│       └── I{Service}.cs / {Service}.cs
-│
-├── EcoData.{Service}.{Feature}.Application.Client/ # HTTP client for WASM
-│   └── {Feature}Client.cs                          # Implements same interface
-│
-├── EcoData.{Service}.{Feature}.Contracts/          # DTOs, requests, responses
-│   ├── Dtos/                                       # (ZERO project dependencies)
-│   ├── Requests/
-│   ├── Responses/
-│   └── Validators/
-│
-├── EcoData.{Service}.{Feature}.DataAccess/         # Repository implementations
-│   ├── Extensions/
-│   │   └── {Feature}DataAccessConfigurator.cs
-│   ├── Interfaces/
-│   │   └── I{Entity}Repository.cs
-│   └── Repositories/
-│       └── {Entity}Repository.cs
-│
-└── EcoData.{Service}.{Feature}.Database/           # EF Core, models, migrations
-    ├── Extensions/
-    │   └── {Feature}DatabaseConfigurator.cs
-    ├── Models/
-    │   └── {Entity}.cs                             # Contains nested EntityConfiguration
-    ├── Migrations/
-    └── {Feature}DbContext.cs
+Module.Api
+  └── All endpoints defined as extension methods (MapXEndpoints)
+      Hosted by the monolith's WebApp.Server, but self-contained
+      Can become a standalone host by adding Program.cs
+
+Module.Application.Server
+  └── Server-side services and business logic
+      Currently: direct database access via repositories
+      Later: HTTP or message-bus based implementations (the migration seam)
+
+Module.Application.Client
+  └── Client-to-service communication
+      HTTP clients consumed by the Blazor frontend
+      Uses IAsyncEnumerable<T> for streaming collection results
+
+Module.Contracts
+  └── DTOs, requests, parameters, and error types
+      Zero project dependencies — safe for both server and WASM
+      All types are sealed records for immutability
+
+Module.DataAccess
+  └── Repository implementations
+      Uses IDbContextFactory pattern for fresh context per operation
+      Projection-based queries only — no .Include(), always .Select()
+      Takes parameters and returns DTOs/errors from the Contracts layer
+      Interface mirrors the HTTP client in shape — same inputs, same outputs (not a shared interface)
+
+Module.Database
+  └── EF Core DbContext, entity models, and migrations
+      Each module owns its own database
+      Models contain nested EntityConfiguration classes
+      Snake_case naming convention, NoTracking by default
 ```
 
-## Layer Responsibilities
+**What makes this structure significant** is that `Module.Application.Server` is the seam. Today it talks directly to `Module.DataAccess` and `Module.Database`. When a module needs to become its own service, `Module.Application.Server` gets refactored to call over the network instead — and nothing else changes. The contracts, clients, endpoints, and database are all already self-contained.
 
-### Contracts (Leaf Project - No Dependencies)
+---
 
-The `.Contracts` project is the foundation of each feature. It has **zero project dependencies**, making it safe to reference from Blazor WebAssembly.
+## The Migration Path
 
-```
-.Contracts/
-├── Dtos/           # Data transfer objects
-├── Requests/       # API request models
-├── Responses/      # API response models
-├── Results/        # Operation result types
-├── Errors/         # Error definitions
-└── Validators/     # FluentValidation validators
-```
+When a module's traffic justifies running it independently, the migration is a promotion, not a rewrite:
 
-**Key Rules:**
-- All types are `sealed record` for immutability
-- No references to other projects (can only use NuGet packages)
-- Usable by both server and WASM client
+1. Add a `Program.cs` to `Module.Api` — it becomes a standalone ASP.NET host
+2. Refactor `Module.Application.Server` to use HTTP or Azure Service Bus instead of direct DB access
+3. Remove that module from the monolith's `WebApp.Server` registration
+4. Deploy the module to its own container
 
-### Database
+Everything else — the contracts, the HTTP clients, the endpoint definitions, the database schema — stays exactly as it is. The module was already behaving like a microservice in terms of boundaries. Deployment is the only thing that changes.
 
-Contains Entity Framework Core models, DbContext, and migrations.
+---
 
-**Key Patterns:**
-- Each feature has its own `DbContext` and database
-- Models contain nested `EntityConfiguration` classes
-- Snake_case naming convention via `UseSnakeCaseNamingConvention()`
-- NoTracking by default
-- Uses `IDbContextFactory` pattern
+## Constraints Enforced Today
 
-```csharp
-public sealed class SampleEntity
-{
-    public required int Id { get; set; }
-    public required string Name { get; set; }
-    // ...
+Even as a monolith, these rules are non-negotiable and apply now — not just when we migrate:
 
-    public sealed class EntityConfiguration : IEntityTypeConfiguration<SampleEntity>
-    {
-        public void Configure(EntityTypeBuilder<SampleEntity> builder)
-        {
-            builder.ToTable("sample_entities");
-            builder.HasKey(static e => e.Id);
-            // ...
-        }
-    }
-}
-```
+- **Separate database per module.** Each module owns its own database on the same PostgreSQL server. No module reads from another module's database directly.
+- **No cross-module direct queries.** If module A needs data from module B, it goes through `Module.Application.Server` — the same path it would take in a microservice world.
+- **No .Include() in queries.** Repositories use projection-based queries with `.Select()` only. This enforces that data fetching is deliberate and bounded, never accidentally pulling in related data from outside the module's domain.
+- **Contracts as the boundary.** Modules expose DTOs and interfaces through `Module.Contracts`, which has zero dependencies and is safe to reference from both server and WASM. The implementation is always hidden behind that boundary.
+- **Clear ownership.** Every table, every endpoint, every HTTP client belongs to exactly one module. No shared tables, no shared repositories.
 
-### DataAccess
+These constraints mean the architecture is already microservice-compatible — it's just collocated for now.
 
-Repository implementations using projection-based queries.
+---
 
-**Critical Rule: NO `.Include()` - Always use `.Select()` projection**
+## When to Migrate a Module
 
-```csharp
-// DON'T DO THIS
-var entity = await context.Entities
-    .Include(e => e.Related)
-        .ThenInclude(r => r.Nested)
-    .FirstOrDefaultAsync(e => e.Id == id);
-return MapToDto(entity);
-
-// DO THIS
-return await context.Entities
-    .AsNoTracking()
-    .Where(e => e.Id == entityId)
-    .Select(static e => new EntityDetailDto(
-        e.Id,
-        e.Name,
-        e.Related.Select(static r => new RelatedDto(
-            r.Id,
-            new NestedDto(r.Nested.Id, r.Nested.Code),
-            r.Value
-        )).ToList()
-    ))
-    .FirstOrDefaultAsync(cancellationToken);
-```
-
-**Benefits:**
-- Single SQL query with JOINs (no N+1)
-- Only requested columns are fetched
-- No entity tracking overhead
-- Repositories return DTOs, not entities
-
-### Application
-
-Server-side business logic and services. This layer orchestrates between DataAccess and external systems.
-
-### Application.Client
-
-HTTP client implementations for Blazor WebAssembly. Implements the same service interfaces as Application, but communicates via HTTP.
-
-```csharp
-// Server: Direct database access
-public class SampleService : ISampleService { ... }
-
-// Client: HTTP calls to API
-public class SampleClient : ISampleService { ... }
-```
-
-### Api
-
-Minimal API endpoints that expose the feature's functionality.
-
-```csharp
-public static class SampleEndpoints
-{
-    public static IEndpointRouteBuilder MapSampleEndpoints(this IEndpointRouteBuilder app)
-    {
-        var group = app.MapGroup("/api/sample")
-            .WithTags("Sample");
-
-        group.MapGet("/{id}", GetById);
-        group.MapPost("/", Create)
-            .RequireAuthorization();
-
-        return app;
-    }
-}
-```
-
-## Cross-Feature Communication
-
-Features communicate through their contracts only:
-
-```
-┌─────────────────┐         ┌─────────────────┐
-│    Feature A    │         │    Feature B    │
-│                 │         │                 │
-│  References:    │         │  References:    │
-│  - Own layers   │         │  - Own layers   │
-│                 │         │  - Feature A ID │
-│                 │         │    (int only)   │
-└─────────────────┘         └─────────────────┘
-```
-
-**Rules:**
-- Cross-feature references by ID only (no navigation properties)
-- No direct dependencies between feature modules
-- Each feature has its own database
-
-## Core Projects
-
-### EcoData.{Service}.WebApp
-
-The Blazor Server host application that:
-- Hosts the Blazor WebAssembly client
-- Exposes API endpoints from all features
-- Handles server-side rendering
-- Manages authentication cookies
-
-### EcoData.{Service}.WebApp.Client
-
-The Blazor WebAssembly application:
-- Uses MudBlazor for UI components
-- Communicates with server via HTTP clients
-- Supports offline-capable scenarios
-
-### EcoData.AppHost
-
-.NET Aspire orchestration that manages:
-- PostgreSQL database containers
-- Service startup order
-- Service discovery
-- Development-time configuration
-
-**Startup Order:**
-1. PostgreSQL databases start
-2. Seeder runs (waits for databases)
-3. Server starts (waits for seeder)
-
-### EcoData.{Service}.Seeder
-
-Background worker that:
-- Applies pending EF Core migrations
-- Seeds initial data if databases are empty
-- Stops automatically after completion
-
-### EcoData.ServiceDefaults
-
-Shared Aspire configuration:
-- OpenTelemetry setup
-- Health checks
-- Service discovery
-- HTTP resilience policies
-
-## Dependency Graph
-
-```
-                    ┌──────────────────────┐
-                    │  .Contracts (Common) │
-                    │  - i18n.Contracts    │
-                    │  - Pagination        │
-                    └──────────┬───────────┘
-                               │
-         ┌─────────────────────┼─────────────────────┐
-         ▼                     ▼                     ▼
-┌─────────────────┐   ┌─────────────────┐   ┌─────────────────┐
-│ Feature.Contracts│   │ Feature.Contracts│   │ Feature.Contracts│
-│   (Feature A)   │   │   (Feature B)   │   │   (Future...)   │
-└────────┬────────┘   └────────┬────────┘   └────────┬────────┘
-         │                     │                     │
-    ┌────┴────┐           ┌────┴────┐           ┌────┴────┐
-    ▼         ▼           ▼         ▼           ▼         ▼
-┌───────┐ ┌───────┐   ┌───────┐ ┌───────┐   ┌───────┐ ┌───────┐
-│  App  │ │  App  │   │  App  │ │  App  │   │  App  │ │  App  │
-│Client │ │Server │   │Client │ │Server │   │Client │ │Server │
-└───────┘ └───┬───┘   └───────┘ └───┬───┘   └───────┘ └───┬───┘
-              │                     │                     │
-              ▼                     ▼                     ▼
-         ┌─────────┐           ┌─────────┐           ┌─────────┐
-         │DataAccess│           │DataAccess│           │DataAccess│
-         └────┬────┘           └────┬────┘           └────┬────┘
-              │                     │                     │
-              ▼                     ▼                     ▼
-         ┌─────────┐           ┌─────────┐           ┌─────────┐
-         │Database │           │Database │           │Database │
-         └─────────┘           └─────────┘           └─────────┘
-```
-
-## Key Architectural Decisions
-
-### 1. Vertical Slices Over Horizontal Layers
-
-Traditional layered architecture groups by technical concern. This architecture groups by feature/domain, making it easier to:
-- Understand a feature in isolation
-- Extract features to separate services
-- Assign ownership to teams
-
-### 2. Contracts as the Boundary
-
-The `.Contracts` project defines the public API of each feature. Other features can only depend on contracts, never on implementation details.
-
-### 3. Separate Databases Per Feature
-
-Each feature has its own database, enabling:
-- Independent scaling
-- Feature isolation
-- Easier microservice extraction
-
-### 4. Dual Application Layer
-
-The Application/Application.Client split enables:
-- Same interface for server and WASM
-- Type-safe API calls
-- Shared validation logic
-
-### 5. DbContextFactory Pattern
-
-Repositories use `IDbContextFactory` instead of direct injection:
-
-```csharp
-public sealed class SampleRepository(
-    IDbContextFactory<SampleDbContext> contextFactory
-) : ISampleRepository
-{
-    public async Task<SampleDetailDto?> GetAsync(int id, CancellationToken ct)
-    {
-        await using var context = await contextFactory.CreateDbContextAsync(ct);
-        // ...
-    }
-}
-```
-
-**Benefits:**
-- Each operation gets a fresh context
-- Better for Blazor Server (long-lived connections)
-- Avoids context lifetime issues
-
-## Running the Application
-
-```bash
-# From solution root
-dotnet run --project src/Host/EcoData.AppHost
-```
-
-## Adding a New Feature
-
-1. Create the feature folder: `src/{Service}/Features/{Feature}/`
-2. Create the 6 projects following the structure above
-3. Register services in each `*Configurator.cs` extension
-4. Add database to AppHost
-5. Map endpoints in EcoData.{Service}.WebApp
-
-## Adding Migrations
-
-```bash
-dotnet ef migrations add {MigrationName} \
-    --project src/{Service}/Features/{Feature}/EcoData.{Service}.{Feature}.Database \
-    --startup-project src/{Service}/EcoData.{Service}.WebApp
-```
+Traffic is the signal. When a specific module's load justifies independent scaling, or when a module's deployment cycle needs to be decoupled from the rest, that's when promotion makes sense. There is no predetermined timeline — the architecture supports staying a modular monolith indefinitely if the traffic never demands otherwise.

@@ -9,6 +9,7 @@
 @using static EcoPortal.Client.Features.Sensors.Dialogs.ReadingFilterDialog
 @using EcoPortal.Client.Services
 @inject ISensorHttpClient SensorClient
+@inject ISensorReadingHttpClient ReadingClient
 @inject IDialogService DialogService
 @inject INavigationService Navigation
 
@@ -172,7 +173,7 @@ else
 
         if (_sensor is not null)
         {
-            _availableParameters = await SensorClient.GetReadingParametersAsync(SensorId);
+            _availableParameters = await ReadingClient.GetReadingParametersAsync(SensorId);
         }
 
         _loading = false;
@@ -223,7 +224,7 @@ else
         ReadingParameters parameters,
         CancellationToken cancellationToken)
     {
-        return SensorClient.GetReadingsAsync(SensorId, parameters, cancellationToken);
+        return ReadingClient.GetReadingsAsync(SensorId, parameters, cancellationToken);
     }
 
     private void RefreshReadings()
