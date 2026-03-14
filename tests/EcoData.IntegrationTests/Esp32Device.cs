@@ -10,6 +10,7 @@ namespace EcoData.IntegrationTests;
 public sealed class Esp32Device : IEsp32Device
 {
     private readonly ISensorHttpClient _sensors;
+    private readonly ISensorReadingHttpClient _readings;
 
     private Guid? _sensorId;
     private string? _token;
@@ -17,6 +18,7 @@ public sealed class Esp32Device : IEsp32Device
     public Esp32Device(HttpClient httpClient)
     {
         _sensors = new SensorHttpClient(httpClient);
+        _readings = new SensorReadingHttpClient(httpClient);
     }
 
     public Guid SensorId =>
@@ -48,7 +50,7 @@ public sealed class Esp32Device : IEsp32Device
         if (_token is null)
             throw new InvalidOperationException("Sensor must be registered first.");
 
-        var result = await _sensors.PostReadingAsync(SensorId, reading, ct);
+        var result = await _readings.PostReadingsAsync(SensorId, reading, ct);
 
         if (!result.IsT0)
             throw new InvalidOperationException("Failed to post sensor reading.");
