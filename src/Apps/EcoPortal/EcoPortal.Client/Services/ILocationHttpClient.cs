@@ -14,4 +14,9 @@ public interface ILocationHttpClient
         MunicipalityParameters? parameters = null,
         CancellationToken cancellationToken = default
     );
+
+    Task<MunicipalityDtoForDetail?> GetMunicipalityByIdAsync(
+        Guid id,
+        CancellationToken cancellationToken = default
+    );
 }

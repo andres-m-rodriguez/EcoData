@@ -230,7 +230,7 @@ public sealed class SensorRepository(IDbContextFactory<SensorsDbContext> context
     {
         await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
 
-        var entity = await context.Sensors.FirstOrDefaultAsync(s => s.Id == id, cancellationToken);
+        var entity = await context.Sensors.AsTracking().FirstOrDefaultAsync(s => s.Id == id, cancellationToken);
         if (entity is null)
         {
             return null;
@@ -265,7 +265,7 @@ public sealed class SensorRepository(IDbContextFactory<SensorsDbContext> context
     {
         await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
 
-        var entity = await context.Sensors.FirstOrDefaultAsync(s => s.Id == id, cancellationToken);
+        var entity = await context.Sensors.AsTracking().FirstOrDefaultAsync(s => s.Id == id, cancellationToken);
         if (entity is null)
         {
             return false;

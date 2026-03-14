@@ -95,4 +95,49 @@ public sealed class SensorHttpClient(HttpClient httpClient) : ISensorHttpClient
 
         return await response.Content.ReadFromJsonAsync<SensorDtoForDetail>(cancellationToken);
     }
+
+    public async Task<OneOf<SensorDtoForDetail, ValidationError, NotFoundError, ForbiddenError>> UpdateAsync(
+        Guid sensorId,
+        SensorDtoForUpdate request,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var response = await httpClient.PutAsJsonAsync($"api/sensors/{sensorId}", request, cancellationToken);
+
+        if (response.IsSuccessStatusCode)
+        {
+            var result = await response.Content.ReadFromJsonAsync<SensorDtoForDetail>(cancellationToken);
+            return result!;
+        }
+
+        return response.StatusCode switch
+        {
+            HttpStatusCode.NotFound => new NotFoundError(),
+            HttpStatusCode.Forbidden => new ForbiddenError("You don't have permission to update this sensor"),
+            HttpStatusCode.BadRequest => new ValidationError(
+                await response.Content.ReadAsStringAsync(cancellationToken)
+            ),
+            _ => new ValidationError("Failed to update sensor")
+        };
+    }
+
+    public async Task<OneOf<bool, NotFoundError, ForbiddenError>> DeleteAsync(
+        Guid sensorId,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var response = await httpClient.DeleteAsync($"api/sensors/{sensorId}", cancellationToken);
+
+        if (response.IsSuccessStatusCode)
+        {
+            return true;
+        }
+
+        return response.StatusCode switch
+        {
+            HttpStatusCode.NotFound => new NotFoundError(),
+            HttpStatusCode.Forbidden => new ForbiddenError("You don't have permission to delete this sensor"),
+            _ => new NotFoundError()
+        };
+    }
 }

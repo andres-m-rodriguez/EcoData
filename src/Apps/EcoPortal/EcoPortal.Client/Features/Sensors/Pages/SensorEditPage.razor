@@ -1,0 +1,128 @@
+@page "/sensors/{SensorId:guid}/edit"
+@using EcoData.Sensors.Application.Client
+@using EcoData.Sensors.Contracts.Dtos
+@using EcoPortal.Client.Features.Sensors.Components
+@using EcoPortal.Client.Services
+@using BlazingSingularity.Commands
+@using static EcoPortal.Client.Features.Sensors.Components.SensorForm
+@inject ISensorHttpClient SensorClient
+@inject INavigationService Navigation
+@inject ISnackbar Snackbar
+
+<PageTitle>Edit Sensor - EcoData</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.Small" Class="pa-4">
+    @if (LoadCommand.IsLoading)
+    {
+        <MudPaper Elevation="1" Class="pa-6">
+            <MudSkeleton Width="200px" Height="32px" />
+            <MudSkeleton Width="100%" Height="56px" Class="mt-4" />
+            <MudSkeleton Width="100%" Height="56px" Class="mt-4" />
+            <MudSkeleton Width="100%" Height="56px" Class="mt-4" />
+        </MudPaper>
+    }
+    else if (_sensor is null)
+    {
+        <MudPaper Elevation="1" Class="pa-6">
+            <MudStack AlignItems="AlignItems.Center">
+                <MudIcon Icon="@Icons.Material.Filled.Error" Size="Size.Large" Color="Color.Error" />
+                <MudText Typo="Typo.h6" Color="Color.Error" Class="mt-2">Sensor not found</MudText>
+                <MudButton Variant="Variant.Outlined" Color="Color.Primary" OnClick="NavigateBack" Class="mt-4">
+                    Go Back
+                </MudButton>
+            </MudStack>
+        </MudPaper>
+    }
+    else
+    {
+        <MudButton Variant="Variant.Text" StartIcon="@Icons.Material.Filled.ArrowBack"
+                   OnClick="NavigateBack" Class="mb-2">
+            Go Back
+        </MudButton>
+
+        <MudPaper Elevation="1" Class="pa-6">
+            <MudText Typo="Typo.h5" Class="mb-4">Edit Sensor</MudText>
+
+            <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-4">
+                External ID: <strong>@_sensor.ExternalId</strong>
+            </MudText>
+
+            <SensorForm Model="_formModel"
+                        SubmitButtonText="Save Changes"
+                        ErrorMessage="@_errorMessage"
+                        IsLoading="SaveCommand.IsLoading"
+                        HideExternalId="true"
+                        OnSubmit="HandleSubmit"
+                        OnCancel="NavigateBack" />
+        </MudPaper>
+    }
+</MudContainer>
+
+@code {
+    [Parameter]
+    public Guid SensorId { get; set; }
+
+    private SensorDtoForDetail? _sensor;
+    private SensorFormModel _formModel = new();
+    private string? _errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        Navigation.SetFallback($"/sensors/{SensorId}");
+        await LoadCommand.ExecuteAsync();
+    }
+
+    [RelayCommand]
+    private async Task Load()
+    {
+        _sensor = await SensorClient.GetByIdAsync(SensorId);
+
+        if (_sensor is not null)
+        {
+            _formModel = new SensorFormModel
+            {
+                ExternalId = _sensor.ExternalId,
+                Name = _sensor.Name,
+                Latitude = _sensor.Latitude,
+                Longitude = _sensor.Longitude,
+                MunicipalityId = _sensor.MunicipalityId,
+                IsActive = _sensor.IsActive
+            };
+        }
+    }
+
+    private async Task HandleSubmit(SensorFormModel model)
+    {
+        await SaveCommand.ExecuteAsync();
+    }
+
+    [RelayCommand]
+    private async Task Save()
+    {
+        _errorMessage = null;
+
+        var request = new SensorDtoForUpdate(
+            _sensor!.ExternalId,
+            _formModel.Name.Trim(),
+            _formModel.Latitude,
+            _formModel.Longitude,
+            _formModel.MunicipalityId,
+            _formModel.IsActive
+        );
+
+        var result = await SensorClient.UpdateAsync(SensorId, request);
+
+        result.Switch(
+            _ =>
+            {
+                Snackbar.Add("Sensor updated successfully", Severity.Success);
+                Navigation.NavigateTo($"/sensors/{SensorId}", replace: true);
+            },
+            validation => _errorMessage = "Validation error: " + string.Join(", ", validation.Errors.Select(e => e.ErrorMessage)),
+            _ => _errorMessage = "Sensor not found",
+            forbidden => _errorMessage = forbidden.Message
+        );
+    }
+
+    private void NavigateBack() => Navigation.GoBack();
+}
