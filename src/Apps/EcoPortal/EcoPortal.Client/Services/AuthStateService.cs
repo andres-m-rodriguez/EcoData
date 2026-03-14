@@ -34,13 +34,13 @@ public sealed class AuthStateService(IAuthHttpClient authClient)
         NotifyStateChanged();
     }
 
-    public async Task<AuthResult> LoginAsync(LoginRequest request)
+    public async Task<LoginResult> LoginAsync(LoginRequest request)
     {
         var result = await authClient.LoginAsync(request);
 
-        if (result.Success)
+        if (result.IsT0)
         {
-            _currentUser = result.User;
+            _currentUser = result.AsT0;
         }
 
         NotifyStateChanged();

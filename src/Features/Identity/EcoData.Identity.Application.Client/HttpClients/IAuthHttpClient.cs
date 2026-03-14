@@ -6,14 +6,8 @@ namespace EcoData.Identity.Application.Client.HttpClients;
 
 public interface IAuthHttpClient
 {
-    Task<AuthResult> LoginAsync(
-        LoginRequest request,
-        CancellationToken cancellationToken = default
-    );
-    Task<AuthResult> RegisterAsync(
-        RegisterRequest request,
-        CancellationToken cancellationToken = default
-    );
+    Task<LoginResult> LoginAsync(LoginRequest request, CancellationToken cancellationToken = default);
+    Task<RegisterResult> RegisterAsync(RegisterRequest request, CancellationToken cancellationToken = default);
     Task LogoutAsync(CancellationToken cancellationToken = default);
     Task<UserInfo?> GetCurrentUserAsync(CancellationToken cancellationToken = default);
 }
