@@ -25,7 +25,7 @@ public sealed class DeviceTests
         var loginResult = await _fixture.AuthHttpClient.LoginAsync(
             new LoginRequest("admin@gmail.com", "Admin@123")
         );
-        Assert.True(loginResult.Success);
+        Assert.True(loginResult.IsT0);
 
         // Get or create test organization
         var existingOrg = await _fixture

@@ -1,14 +1,17 @@
+using System.Net;
 using System.Net.Http.Json;
 using EcoData.Common.Http.Helpers;
 using EcoData.Sensors.Contracts.Dtos;
+using EcoData.Sensors.Contracts.Errors;
 using EcoData.Sensors.Contracts.Parameters;
 using EcoData.Sensors.Contracts.Requests;
+using OneOf;
 
 namespace EcoData.Sensors.Application.Client;
 
 public sealed class SensorHttpClient(HttpClient httpClient) : ISensorHttpClient
 {
-    public async Task<SensorRegistrationResultDto?> RegisterAsync(
+    public async Task<OneOf<SensorRegistrationResultDto, ValidationError, ForbiddenError, ConflictError>> RegisterAsync(
         RegisterSensorRequest request,
         CancellationToken cancellationToken = default
     )
@@ -19,14 +22,20 @@ public sealed class SensorHttpClient(HttpClient httpClient) : ISensorHttpClient
             cancellationToken
         );
 
-        if (!response.IsSuccessStatusCode)
+        if (response.IsSuccessStatusCode)
         {
-            return null;
+            var result = await response.Content.ReadFromJsonAsync<SensorRegistrationResultDto>(cancellationToken);
+            return result!;
         }
 
-        return await response.Content.ReadFromJsonAsync<SensorRegistrationResultDto>(
-            cancellationToken
-        );
+        return response.StatusCode switch
+        {
+            HttpStatusCode.Forbidden => new ForbiddenError("You don't have permission to register sensors for this organization"),
+            HttpStatusCode.Conflict => new ConflictError("A sensor with this external ID already exists"),
+            HttpStatusCode.BadRequest => new ValidationError(
+                await response.Content.ReadAsStringAsync(cancellationToken)),
+            _ => new ValidationError("Failed to register sensor")
+        };
     }
 
     public IAsyncEnumerable<SensorDtoForList> GetSensorsAsync(
@@ -123,7 +132,7 @@ public sealed class SensorHttpClient(HttpClient httpClient) : ISensorHttpClient
         return await response.Content.ReadFromJsonAsync<IReadOnlyList<string>>(cancellationToken) ?? [];
     }
 
-    public async Task<ReadingBatchResult?> PostReadingAsync(
+    public async Task<OneOf<ReadingBatchResult, NotFoundError, ValidationError>> PostReadingAsync(
         Guid sensorId,
         SensorReadingDto reading,
         CancellationToken cancellationToken = default
@@ -168,11 +177,18 @@ public sealed class SensorHttpClient(HttpClient httpClient) : ISensorHttpClient
             cancellationToken
         );
 
-        if (!response.IsSuccessStatusCode)
+        if (response.IsSuccessStatusCode)
         {
-            return null;
+            var result = await response.Content.ReadFromJsonAsync<ReadingBatchResult>(cancellationToken);
+            return result!;
         }
 
-        return await response.Content.ReadFromJsonAsync<ReadingBatchResult>(cancellationToken);
+        return response.StatusCode switch
+        {
+            HttpStatusCode.NotFound => new NotFoundError(),
+            HttpStatusCode.BadRequest => new ValidationError(
+                await response.Content.ReadAsStringAsync(cancellationToken)),
+            _ => new ValidationError("Failed to post reading")
+        };
     }
 }
