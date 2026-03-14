@@ -19,4 +19,10 @@ public interface ILocationHttpClient
         Guid id,
         CancellationToken cancellationToken = default
     );
+
+    Task<MunicipalityDtoForDetail?> GetMunicipalityByPointAsync(
+        decimal latitude,
+        decimal longitude,
+        CancellationToken cancellationToken = default
+    );
 }

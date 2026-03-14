@@ -1,0 +1,185 @@
+@using EcoData.Locations.Contracts.Dtos
+@using EcoPortal.Client.Services
+@implements IAsyncDisposable
+@inject IJSRuntime JS
+@inject ILocationHttpClient LocationClient
+
+<MudStack Spacing="3">
+    <MudStack Row="true" Spacing="2">
+        <MudNumericField @bind-Value="_latitude"
+                         Label="Latitude"
+                         Min="-90"
+                         Max="90"
+                         Step="0.000001M"
+                         Format="F6"
+                         HelperText="-90 to 90"
+                         Disabled="IsLoading"
+                         Immediate="true"
+                         DebounceInterval="500"
+                         OnDebounceIntervalElapsed="OnManualCoordinatesChanged"
+                         Style="flex: 1;" />
+
+        <MudNumericField @bind-Value="_longitude"
+                         Label="Longitude"
+                         Min="-180"
+                         Max="180"
+                         Step="0.000001M"
+                         Format="F6"
+                         HelperText="-180 to 180"
+                         Disabled="IsLoading"
+                         Immediate="true"
+                         DebounceInterval="500"
+                         OnDebounceIntervalElapsed="OnManualCoordinatesChanged"
+                         Style="flex: 1;" />
+    </MudStack>
+
+    <div id="@_mapElementId" style="height: 300px; width: 100%; border-radius: 4px; border: 1px solid var(--mud-palette-lines-default);"></div>
+
+    @if (_isValidating)
+    {
+        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+            <MudProgressCircular Size="Size.Small" Indeterminate="true" />
+            <MudText Typo="Typo.body2" Color="Color.Secondary">Validating location...</MudText>
+        </MudStack>
+    }
+    else if (_municipality is not null)
+    {
+        <MudAlert Severity="Severity.Success" Variant="Variant.Outlined" Dense="true">
+            <MudText Typo="Typo.body2">
+                <strong>@_municipality.Name</strong>, @_municipality.StateName
+            </MudText>
+        </MudAlert>
+    }
+    else if (_hasValidationError)
+    {
+        <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Dense="true">
+            <MudText Typo="Typo.body2">
+                Location is outside supported regions. Please select a location within a supported area.
+            </MudText>
+        </MudAlert>
+    }
+</MudStack>
+
+@code {
+    private readonly string _mapElementId = $"location-picker-{Guid.NewGuid():N}";
+    private DotNetObjectReference<LocationPicker>? _dotNetRef;
+    private bool _mapInitialized;
+    private bool _isValidating;
+    private bool _hasValidationError;
+    private MunicipalityDtoForDetail? _municipality;
+
+    private decimal _latitude;
+    private decimal _longitude;
+
+    [Parameter]
+    public decimal Latitude { get; set; }
+
+    [Parameter]
+    public decimal Longitude { get; set; }
+
+    [Parameter]
+    public bool IsLoading { get; set; }
+
+    [Parameter]
+    public EventCallback<LocationSelectedEventArgs> OnLocationChanged { get; set; }
+
+    protected override void OnParametersSet()
+    {
+        if (Latitude != 0 && Longitude != 0)
+        {
+            _latitude = Latitude;
+            _longitude = Longitude;
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            _dotNetRef = DotNetObjectReference.Create(this);
+
+            double? initialLat = _latitude != 0 ? (double)_latitude : null;
+            double? initialLng = _longitude != 0 ? (double)_longitude : null;
+
+            await JS.InvokeVoidAsync("locationPicker.init", _mapElementId, _dotNetRef, initialLat, initialLng);
+            _mapInitialized = true;
+
+            // Validate initial coordinates if provided
+            if (_latitude != 0 && _longitude != 0)
+            {
+                await ValidateAndNotify();
+            }
+        }
+    }
+
+    [JSInvokable]
+    public async Task OnLocationSelected(double lat, double lng)
+    {
+        _latitude = (decimal)lat;
+        _longitude = (decimal)lng;
+        StateHasChanged();
+
+        await ValidateAndNotify();
+    }
+
+    private async Task OnManualCoordinatesChanged()
+    {
+        if (_latitude < -90 || _latitude > 90 || _longitude < -180 || _longitude > 180)
+        {
+            return;
+        }
+
+        if (_mapInitialized && _latitude != 0 && _longitude != 0)
+        {
+            await JS.InvokeVoidAsync("locationPicker.setLocation", (double)_latitude, (double)_longitude);
+            await ValidateAndNotify();
+        }
+    }
+
+    private async Task ValidateAndNotify()
+    {
+        _isValidating = true;
+        _hasValidationError = false;
+        _municipality = null;
+        StateHasChanged();
+
+        try
+        {
+            _municipality = await LocationClient.GetMunicipalityByPointAsync(_latitude, _longitude);
+            _hasValidationError = _municipality is null;
+
+            await OnLocationChanged.InvokeAsync(new LocationSelectedEventArgs(
+                _latitude,
+                _longitude,
+                _municipality
+            ));
+        }
+        finally
+        {
+            _isValidating = false;
+            StateHasChanged();
+        }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (_mapInitialized)
+        {
+            try
+            {
+                await JS.InvokeVoidAsync("locationPicker.dispose");
+            }
+            catch (JSDisconnectedException)
+            {
+                // Ignore during app shutdown
+            }
+        }
+        _dotNetRef?.Dispose();
+    }
+
+    public sealed record LocationSelectedEventArgs(
+        decimal Latitude,
+        decimal Longitude,
+        MunicipalityDtoForDetail? Municipality
+    );
+}
