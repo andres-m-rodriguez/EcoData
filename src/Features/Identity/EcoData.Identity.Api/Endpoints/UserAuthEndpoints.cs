@@ -54,6 +54,7 @@ public static class UserAuthEndpoints
                         userInfo => TypedResults.Ok(userInfo),
                         _ => TypedResults.Unauthorized(),
                         _ => TypedResults.StatusCode(423), // Locked
+                        _ => TypedResults.StatusCode(429), // TooManyRequests - handled by middleware, but needed for exhaustive match
                         validationFailed => TypedResults.BadRequest(validationFailed.Errors)
                     );
                 }
