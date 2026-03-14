@@ -1,7 +1,9 @@
+using System.Runtime.CompilerServices;
 using EcoData.Sensors.Contracts.Dtos;
+using EcoData.Sensors.Contracts.Parameters;
+using EcoData.Sensors.DataAccess.Interfaces;
 using EcoData.Sensors.Database;
 using EcoData.Sensors.Database.Models;
-using EcoData.Sensors.DataAccess.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
 namespace EcoData.Sensors.DataAccess.Repositories;
@@ -14,7 +16,8 @@ public sealed class ReadingRepository(IDbContextFactory<SensorsDbContext> contex
         DateTimeOffset? from = null,
         DateTimeOffset? to = null,
         int limit = 100,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default
+    )
     {
         await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
 
@@ -47,13 +50,89 @@ public sealed class ReadingRepository(IDbContextFactory<SensorsDbContext> contex
             .ToListAsync(cancellationToken);
     }
 
-    public async Task<IReadOnlyList<ReadingDtoForList>> GetLatestAsync(
-        int limit = 50,
-        CancellationToken cancellationToken = default)
+    public async IAsyncEnumerable<ReadingDtoForDetail> GetReadingsAsync(
+        Guid sensorId,
+        ReadingParameters parameters,
+        [EnumeratorCancellation] CancellationToken cancellationToken = default
+    )
     {
         await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
-        return await context.Readings
-            .OrderByDescending(r => r.RecordedAt)
+
+        var query = context.Readings.Where(r => r.SensorId == sensorId);
+
+        if (!string.IsNullOrWhiteSpace(parameters.Search))
+        {
+            var search = parameters.Search.Trim().ToLower();
+            query = query.Where(r => r.Parameter.ToLower().Contains(search));
+        }
+
+        if (!string.IsNullOrWhiteSpace(parameters.Parameter))
+        {
+            query = query.Where(r => r.Parameter == parameters.Parameter);
+        }
+
+        if (parameters.FromDate.HasValue)
+        {
+            var fromUtc = parameters.FromDate.Value.ToUniversalTime();
+            query = query.Where(r => r.RecordedAt >= fromUtc);
+        }
+
+        if (parameters.ToDate.HasValue)
+        {
+            var toUtc = parameters.ToDate.Value.ToUniversalTime();
+            query = query.Where(r => r.RecordedAt <= toUtc);
+        }
+
+        if (parameters.Cursor.HasValue)
+        {
+            query = query.Where(r => r.Id < parameters.Cursor.Value);
+        }
+
+        await foreach (
+            var reading in query
+                .OrderByDescending(r => r.RecordedAt)
+                .ThenByDescending(r => r.Id)
+                .Take(parameters.PageSize + 1)
+                .Select(static r => new ReadingDtoForDetail(
+                    r.Id,
+                    r.SensorId,
+                    r.Parameter,
+                    r.Value,
+                    r.Unit,
+                    r.RecordedAt,
+                    r.IngestedAt
+                ))
+                .AsAsyncEnumerable()
+                .WithCancellation(cancellationToken)
+        )
+        {
+            yield return reading;
+        }
+    }
+
+    public async Task<IReadOnlyList<string>> GetDistinctParametersAsync(
+        Guid sensorId,
+        CancellationToken cancellationToken = default
+    )
+    {
+        await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
+
+        return await context
+            .Readings.Where(r => r.SensorId == sensorId)
+            .Select(r => r.Parameter)
+            .Distinct()
+            .OrderBy(p => p)
+            .ToListAsync(cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<ReadingDtoForList>> GetLatestAsync(
+        int limit = 50,
+        CancellationToken cancellationToken = default
+    )
+    {
+        await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
+        return await context
+            .Readings.OrderByDescending(r => r.RecordedAt)
             .Take(limit)
             .Select(r => new ReadingDtoForList(
                 r.Id,
@@ -67,7 +146,10 @@ public sealed class ReadingRepository(IDbContextFactory<SensorsDbContext> contex
             .ToListAsync(cancellationToken);
     }
 
-    public async Task CreateManyAsync(ICollection<ReadingDtoForCreate> dtos, CancellationToken cancellationToken = default)
+    public async Task CreateManyAsync(
+        ICollection<ReadingDtoForCreate> dtos,
+        CancellationToken cancellationToken = default
+    )
     {
         await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
         var now = DateTimeOffset.UtcNow;
