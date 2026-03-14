@@ -1,4 +1,5 @@
-using EcoData.Identity.Application.Client;
+using EcoData.Identity.Application.Client.HttpClients;
+using EcoData.Identity.Contracts.Results;
 using EcoData.Identity.Contracts.Authorization;
 using EcoData.Identity.Contracts.Requests;
 using EcoData.Identity.Contracts.Responses;

@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using EcoData.Identity.Application.Client.HttpClients;
 using EcoData.Identity.Contracts.Authorization;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -11,10 +12,8 @@ public static class DependencyInjection
         Action<HttpClient>? configureClient = null
     )
     {
-        services.AddHttpClient<IAuthHttpClient, AuthHttpClient>(client =>
-        {
-            configureClient?.Invoke(client);
-        });
+        services.AddHttpClient<IAuthHttpClient, AuthHttpClient>()
+            .ConfigureHttpClient(client => configureClient?.Invoke(client));
 
         return services;
     }

@@ -1,0 +1,10 @@
+# Downloaded dependencies
+vendor/
+
+# Build artifacts
+*.exe
+*.obj
+*.o
+
+# IDE
+.vscode/

@@ -34,15 +34,9 @@ public interface ISensorRepository
         CancellationToken cancellationToken = default
     );
 
-    Task<SensorDtoForCreated> CreateForOrganizationAsync(
-        Guid organizationId,
-        SensorDtoForOrganizationCreate dto,
-        CancellationToken cancellationToken = default
-    );
-
     Task<SensorDtoForDetail?> UpdateAsync(
         Guid id,
-        SensorDtoForOrganizationCreate dto,
+        SensorDtoForUpdate dto,
         CancellationToken cancellationToken = default
     );
 

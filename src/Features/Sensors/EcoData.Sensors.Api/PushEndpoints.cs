@@ -9,16 +9,22 @@ namespace EcoData.Sensors.Api;
 
 public static class PushEndpoints
 {
+    private const string SensorJwtScheme = "SensorJwt";
+
     public static IEndpointRouteBuilder MapPushEndpoints(this IEndpointRouteBuilder app)
     {
         var group = app.MapGroup("/api/push")
             .WithTags("Push API")
-            .RequireAuthorization();
+            .RequireAuthorization(policy =>
+                policy.AddAuthenticationSchemes(SensorJwtScheme)
+                      .RequireAuthenticatedUser());
 
         group
             .MapPost(
                 "/readings",
-                async Task<Results<Ok<ReadingBatchResult>, UnauthorizedHttpResult, NotFound<string>>> (
+                async Task<
+                    Results<Ok<ReadingBatchResult>, UnauthorizedHttpResult, NotFound<string>>
+                > (
                     ReadingBatchDtoForCreate batch,
                     ISensorRepository sensorRepository,
                     IReadingRepository readingRepository,
@@ -55,7 +61,11 @@ public static class PushEndpoints
                         await readingRepository.CreateManyAsync(readingsToCreate, ct);
 
                         var maxRecordedAt = readingsToCreate.Max(r => r.RecordedAt);
-                        await healthRepository.RecordReadingAsync(batch.SensorId, maxRecordedAt, ct);
+                        await healthRepository.RecordReadingAsync(
+                            batch.SensorId,
+                            maxRecordedAt,
+                            ct
+                        );
                     }
 
                     return TypedResults.Ok(
@@ -110,13 +120,22 @@ public static class PushEndpoints
                             await readingRepository.CreateManyAsync(readingsToCreate, ct);
 
                             var maxRecordedAt = readingsToCreate.Max(r => r.RecordedAt);
-                            await healthRepository.RecordReadingAsync(batch.SensorId, maxRecordedAt, ct);
+                            await healthRepository.RecordReadingAsync(
+                                batch.SensorId,
+                                maxRecordedAt,
+                                ct
+                            );
                         }
                     }
 
                     var totalSubmitted = multipleBatch.Batches.Sum(b => b.Readings.Count);
                     return TypedResults.Ok(
-                        new ReadingBatchResult(totalSubmitted, totalAccepted, totalRejected, allErrors)
+                        new ReadingBatchResult(
+                            totalSubmitted,
+                            totalAccepted,
+                            totalRejected,
+                            allErrors
+                        )
                     );
                 }
             )

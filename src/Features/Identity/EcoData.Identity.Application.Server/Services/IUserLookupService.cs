@@ -1,8 +1,8 @@
-namespace EcoData.Identity.DataAccess.Interfaces;
+namespace EcoData.Identity.Application.Server.Services;
 
 public record UserLookupDto(Guid Id, string Email, string DisplayName);
 
-public interface IUserLookupRepository
+public interface IUserLookupService
 {
     Task<IReadOnlyDictionary<Guid, UserLookupDto>> GetByIdsAsync(
         IEnumerable<Guid> userIds,

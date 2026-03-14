@@ -14,7 +14,9 @@
     </PackageReference>
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\EcoData.Organization.Application.Server\EcoData.Organization.Application.Server.csproj" />
     <ProjectReference Include="..\EcoData.Organization.DataAccess\EcoData.Organization.DataAccess.csproj" />
     <ProjectReference Include="..\..\Identity\EcoData.Identity.Contracts\EcoData.Identity.Contracts.csproj" />
+    <ProjectReference Include="..\..\Identity\EcoData.Identity.Application.Server\EcoData.Identity.Application.Server.csproj" />
   </ItemGroup>
 </Project>

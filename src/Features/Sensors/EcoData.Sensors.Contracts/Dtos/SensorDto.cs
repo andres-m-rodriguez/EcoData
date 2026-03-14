@@ -39,11 +39,17 @@ public sealed record SensorDtoForCreate(
 
 public sealed record SensorDtoForCreated(Guid Id, string ExternalId);
 
-public sealed record SensorDtoForOrganizationCreate(
+public sealed record SensorDtoForUpdate(
     string ExternalId,
     string Name,
     decimal Latitude,
     decimal Longitude,
     Guid MunicipalityId,
     bool IsActive
+);
+
+public sealed record SensorRegistrationResultDto(
+    Guid SensorId,
+    string AccessToken,
+    DateTimeOffset ExpiresAt
 );

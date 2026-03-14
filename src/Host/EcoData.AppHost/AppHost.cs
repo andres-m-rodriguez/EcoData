@@ -2,6 +2,8 @@ using EcoData.AppHost.Extensions;
 
 var builder = DistributedApplication.CreateBuilder(args);
 
+var jwtSecretKey = builder.AddParameter("jwt-secret-key", secret: true);
+
 var postgres = builder
     .AddPostgres("postgres")
     .WithImage("postgis/postgis", "16-3.4")
@@ -34,6 +36,10 @@ builder
     .WithReference(sensorsDb)
     .WithReference(locationsDb)
     .WithReference(identityDb)
+    .WithEnvironment("Jwt__SecretKey", jwtSecretKey)
+    .WithEnvironment("Jwt__Issuer", "EcoData")
+    .WithEnvironment("Jwt__Audience", "EcoData")
+    .WithEnvironment("Jwt__ExpirationHours", "24")
     .WaitFor(seeder);
 
 builder

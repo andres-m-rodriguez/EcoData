@@ -222,41 +222,9 @@ public sealed class SensorRepository(IDbContextFactory<SensorsDbContext> context
         return entities.Select(e => new SensorDtoForCreated(e.Id, e.ExternalId)).ToList();
     }
 
-    public async Task<SensorDtoForCreated> CreateForOrganizationAsync(
-        Guid organizationId,
-        SensorDtoForOrganizationCreate dto,
-        CancellationToken cancellationToken = default
-    )
-    {
-        await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
-        var now = DateTimeOffset.UtcNow;
-
-        var entity = new Sensor
-        {
-            Id = Guid.CreateVersion7(),
-            OrganizationId = organizationId,
-            SourceId = null,
-            ExternalId = dto.ExternalId,
-            Name = dto.Name,
-            Latitude = dto.Latitude,
-            Longitude = dto.Longitude,
-            MunicipalityId = dto.MunicipalityId,
-            IsActive = dto.IsActive,
-            ReportingMode = ReportingMode.Push,
-            SensorTypeId = null,
-            CreatedAt = now,
-            UpdatedAt = now,
-        };
-
-        context.Sensors.Add(entity);
-        await context.SaveChangesAsync(cancellationToken);
-
-        return new SensorDtoForCreated(entity.Id, entity.ExternalId);
-    }
-
     public async Task<SensorDtoForDetail?> UpdateAsync(
         Guid id,
-        SensorDtoForOrganizationCreate dto,
+        SensorDtoForUpdate dto,
         CancellationToken cancellationToken = default
     )
     {

@@ -1,6 +1,6 @@
 using System.Security.Claims;
 using EcoData.Identity.Contracts.Claims;
-using EcoData.Identity.DataAccess.Interfaces;
+using EcoData.Organization.Application.Server.Services;
 using EcoData.Organization.Contracts.Dtos;
 using EcoData.Organization.Contracts.Parameters;
 using EcoData.Organization.DataAccess.Interfaces;
@@ -58,7 +58,7 @@ public static class MemberEndpoints
                     UpdateMemberRoleRequest request,
                     ClaimsPrincipal user,
                     IOrganizationMemberRepository repository,
-                    IPermissionService permissionService,
+                    IOrganizationPermissionService permissionService,
                     CancellationToken ct
                 ) =>
                 {
@@ -100,7 +100,7 @@ public static class MemberEndpoints
                     Guid userId,
                     ClaimsPrincipal user,
                     IOrganizationMemberRepository repository,
-                    IPermissionService permissionService,
+                    IOrganizationPermissionService permissionService,
                     CancellationToken ct
                 ) =>
                 {

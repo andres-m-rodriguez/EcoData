@@ -54,16 +54,16 @@ public sealed class AuthService(
         var createResult = await userManager.CreateAsync(user, request.Password);
         if (!createResult.Succeeded)
         {
-            return new ValidationFailed(
-                createResult.Errors.Select(e => e.Description).ToList()
-            );
+            return new ValidationFailed(createResult.Errors.Select(e => e.Description).ToList());
         }
 
         return new UserInfo(
             user.Id,
             user.Email,
             user.DisplayName,
-            user.GlobalRole.HasValue ? (Contracts.Authorization.GlobalRole)user.GlobalRole.Value : null,
+            user.GlobalRole.HasValue
+                ? (Contracts.Authorization.GlobalRole)user.GlobalRole.Value
+                : null,
             user.CreatedAt
         );
     }
@@ -112,7 +112,9 @@ public sealed class AuthService(
             user.Id,
             user.Email!,
             user.DisplayName,
-            user.GlobalRole.HasValue ? (Contracts.Authorization.GlobalRole)user.GlobalRole.Value : null,
+            user.GlobalRole.HasValue
+                ? (Contracts.Authorization.GlobalRole)user.GlobalRole.Value
+                : null,
             user.CreatedAt
         );
     }
@@ -142,7 +144,9 @@ public sealed class AuthService(
             user.Id,
             user.Email!,
             user.DisplayName,
-            user.GlobalRole.HasValue ? (Contracts.Authorization.GlobalRole)user.GlobalRole.Value : null,
+            user.GlobalRole.HasValue
+                ? (Contracts.Authorization.GlobalRole)user.GlobalRole.Value
+                : null,
             user.CreatedAt
         );
     }
@@ -177,18 +181,22 @@ public sealed class AuthService(
             query = query.Where(u => u.Id > parameters.Cursor.Value);
         }
 
-        await foreach (var user in query
-            .OrderBy(u => u.Id)
-            .Take(parameters.PageSize + 1)
-            .Select(u => new UserInfo(
-                u.Id,
-                u.Email!,
-                u.DisplayName,
-                u.GlobalRole.HasValue ? (Contracts.Authorization.GlobalRole)u.GlobalRole.Value : null,
-                u.CreatedAt
-            ))
-            .AsAsyncEnumerable()
-            .WithCancellation(cancellationToken))
+        await foreach (
+            var user in query
+                .OrderBy(u => u.Id)
+                .Take(parameters.PageSize + 1)
+                .Select(u => new UserInfo(
+                    u.Id,
+                    u.Email!,
+                    u.DisplayName,
+                    u.GlobalRole.HasValue
+                        ? (Contracts.Authorization.GlobalRole)u.GlobalRole.Value
+                        : null,
+                    u.CreatedAt
+                ))
+                .AsAsyncEnumerable()
+                .WithCancellation(cancellationToken)
+        )
         {
             yield return user;
         }
