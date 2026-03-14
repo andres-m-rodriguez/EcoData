@@ -61,6 +61,26 @@ public static class SensorEndpoints
             .WithName("GetSensorById");
 
         group
+            .MapGet(
+                "/{id:guid}/readings",
+                (
+                    Guid id,
+                    [AsParameters] ReadingParameters parameters,
+                    IReadingRepository repository,
+                    CancellationToken ct
+                ) => repository.GetReadingsAsync(id, parameters, ct)
+            )
+            .WithName("GetSensorReadings");
+
+        group
+            .MapGet(
+                "/{id:guid}/readings/parameters",
+                (Guid id, IReadingRepository repository, CancellationToken ct) =>
+                    repository.GetDistinctParametersAsync(id, ct)
+            )
+            .WithName("GetSensorReadingParameters");
+
+        group
             .MapPost(
                 "/register",
                 async Task<

@@ -5,11 +5,16 @@
 
 <PageTitle>Sensors - EcoData</PageTitle>
 
-<SensorList OnMapClick="NavigateToMap" />
+<SensorList OnMapClick="NavigateToMap" OnSensorClick="NavigateToDetail" />
 
 @code {
     private void NavigateToMap(SensorDtoForList sensor)
     {
         Navigation.NavigateTo($"/map?lat={sensor.Latitude}&lon={sensor.Longitude}");
+    }
+
+    private void NavigateToDetail(SensorDtoForList sensor)
+    {
+        Navigation.NavigateTo($"/sensors/{sensor.Id}");
     }
 }
