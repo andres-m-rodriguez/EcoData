@@ -66,6 +66,7 @@ public static class SensorEndpoints
                 async Task<
                     Results<
                         Ok<SensorRegistrationResultDto>,
+                        ValidationProblem,
                         UnauthorizedHttpResult,
                         ForbidHttpResult,
                         Conflict<string>
@@ -79,6 +80,15 @@ public static class SensorEndpoints
                     CancellationToken ct
                 ) =>
                 {
+                    var validation = new RegisterSensorRequestValidator().Validate(request);
+                    if (!validation.IsValid)
+                    {
+                        var errors = validation.Errors
+                            .GroupBy(e => e.PropertyName)
+                            .ToDictionary(g => g.Key, g => g.Select(e => e.ErrorMessage).ToArray());
+                        return TypedResults.ValidationProblem(errors);
+                    }
+
                     var token = new RequestClaimToken(user);
                     if (!token.IsAuthenticated)
                     {
