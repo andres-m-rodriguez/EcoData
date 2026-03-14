@@ -226,15 +226,28 @@ _selectedMunicipality is not null;
 
         var result = await SensorClient.RegisterAsync(request);
 
-        if (result is not null)
-        {
-            await ShowCredentialsDialog(result);
-            Navigation.NavigateTo($"/organizations/{OrganizationId}/sensors");
-        }
-        else
-        {
-            _errorMessage = "Failed to register sensor";
-        }
+        await result.Match(
+            async credentials =>
+            {
+                await ShowCredentialsDialog(credentials);
+                Navigation.NavigateTo($"/organizations/{OrganizationId}/sensors");
+            },
+            validation =>
+            {
+                _errorMessage = string.Join(", ", validation.Errors.Select(e => e.ErrorMessage));
+                return Task.CompletedTask;
+            },
+            forbidden =>
+            {
+                _errorMessage = forbidden.Message ?? "You don't have permission to register sensors";
+                return Task.CompletedTask;
+            },
+            conflict =>
+            {
+                _errorMessage = conflict.Message;
+                return Task.CompletedTask;
+            }
+        );
     }
 
     private async Task ShowCredentialsDialog(SensorRegistrationResultDto credentials)

@@ -102,15 +102,19 @@
 
         var result = await AuthState.LoginAsync(request);
 
-        if (result.Success)
-        {
-            var returnUrl = string.IsNullOrEmpty(ReturnUrl) ? "/" : ReturnUrl;
-            Navigation.NavigateTo(returnUrl);
-        }
-        else
-        {
-            _errorMessage = result.Error;
-        }
+        result.Switch(
+            user =>
+            {
+                var returnUrl = string.IsNullOrEmpty(ReturnUrl) ? "/" : ReturnUrl;
+                Navigation.NavigateTo(returnUrl);
+            },
+            _ => _errorMessage = "Invalid email or password",
+            _ => _errorMessage = "Your account has been locked. Please try again later.",
+            tooMany => _errorMessage = tooMany.RetryAfterMinutes > 1
+                ? $"Too many login attempts. Please try again in {tooMany.RetryAfterMinutes} minutes."
+                : "Too many login attempts. Please try again in 1 minute.",
+            validation => _errorMessage = string.Join(", ", validation.Errors)
+        );
     }
 
     private sealed class LoginModel
