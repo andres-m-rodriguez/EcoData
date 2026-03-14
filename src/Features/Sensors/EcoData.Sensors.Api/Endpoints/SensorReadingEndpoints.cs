@@ -46,6 +46,7 @@ public static class SensorReadingEndpoints
                     ISensorRepository sensorRepository,
                     IReadingRepository readingRepository,
                     ISensorHealthRepository healthRepository,
+                    TimeProvider timeProvider,
                     CancellationToken ct
                 ) =>
                 {
@@ -55,27 +56,39 @@ public static class SensorReadingEndpoints
                         return TypedResults.NotFound($"Sensor {sensorId} not found");
                     }
 
-                    var readingsToCreate = batch
-                        .Readings.Select(reading => new ReadingDtoForCreate(
+                    var validator = new ReadingItemValidator(timeProvider.GetUtcNow());
+                    var validReadings = new List<ReadingDtoForCreate>();
+                    var errors = new List<string>();
+
+                    foreach (var reading in batch.Readings)
+                    {
+                        var result = validator.Validate(reading);
+                        if (!result.IsValid)
+                        {
+                            errors.AddRange(result.Errors.Select(e => $"'{reading.Parameter}': {e.ErrorMessage}"));
+                            continue;
+                        }
+
+                        validReadings.Add(new ReadingDtoForCreate(
                             sensorId,
                             reading.Parameter,
                             reading.Description,
                             reading.Value,
                             reading.Unit,
                             reading.RecordedAt
-                        ))
-                        .ToList();
+                        ));
+                    }
 
-                    if (readingsToCreate.Count > 0)
+                    if (validReadings.Count > 0)
                     {
-                        await readingRepository.CreateManyAsync(readingsToCreate, ct);
+                        await readingRepository.CreateManyAsync(validReadings, ct);
 
-                        var maxRecordedAt = readingsToCreate.Max(r => r.RecordedAt);
+                        var maxRecordedAt = validReadings.Max(r => r.RecordedAt);
                         await healthRepository.RecordReadingAsync(sensorId, maxRecordedAt, ct);
                     }
 
                     return TypedResults.Ok(
-                        new ReadingBatchResult(batch.Readings.Count, readingsToCreate.Count, 0, [])
+                        new ReadingBatchResult(batch.Readings.Count, validReadings.Count, errors.Count, errors)
                     );
                 }
             )
