@@ -62,21 +62,21 @@ public static class SensorEndpoints
 
         group
             .MapGet(
-                "/{id:guid}/readings",
+                "/{sensorId:guid}/readings",
                 (
-                    Guid id,
+                    Guid sensorId,
                     [AsParameters] ReadingParameters parameters,
                     IReadingRepository repository,
                     CancellationToken ct
-                ) => repository.GetReadingsAsync(id, parameters, ct)
+                ) => repository.GetReadingsAsync(sensorId, parameters, ct)
             )
             .WithName("GetSensorReadings");
 
         group
             .MapGet(
-                "/{id:guid}/readings/parameters",
-                (Guid id, IReadingRepository repository, CancellationToken ct) =>
-                    repository.GetDistinctParametersAsync(id, ct)
+                "/{sensorId:guid}/readings/parameters",
+                (Guid sensorId, IReadingRepository repository, CancellationToken ct) =>
+                    repository.GetDistinctParametersAsync(sensorId, ct)
             )
             .WithName("GetSensorReadingParameters");
 
