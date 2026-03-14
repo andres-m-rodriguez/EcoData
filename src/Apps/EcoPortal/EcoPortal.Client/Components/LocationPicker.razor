@@ -1,11 +1,14 @@
 @using EcoData.Locations.Contracts.Dtos
 @using EcoPortal.Client.Services
+@using BlazingSingularity.Commands
+@using BlazingSingularity.Signals
 @implements IAsyncDisposable
 @inject ILocationHttpClient LocationClient
 
 <MudStack Spacing="3">
     <MudStack Row="true" Spacing="2">
-        <MudNumericField @bind-Value="_latitude"
+        <MudNumericField Value="Latitude"
+                         ValueChanged="@(async (decimal v) => await OnLatitudeChanged(v))"
                          Label="Latitude"
                          Min="-90"
                          Max="90"
@@ -14,11 +17,10 @@
                          HelperText="-90 to 90"
                          Disabled="IsLoading"
                          Immediate="true"
-                         DebounceInterval="500"
-                         OnDebounceIntervalElapsed="OnManualCoordinatesChanged"
                          Style="flex: 1;" />
 
-        <MudNumericField @bind-Value="_longitude"
+        <MudNumericField Value="Longitude"
+                         ValueChanged="@(async (decimal v) => await OnLongitudeChanged(v))"
                          Label="Longitude"
                          Min="-180"
                          Max="180"
@@ -27,33 +29,53 @@
                          HelperText="-180 to 180"
                          Disabled="IsLoading"
                          Immediate="true"
-                         DebounceInterval="500"
-                         OnDebounceIntervalElapsed="OnManualCoordinatesChanged"
                          Style="flex: 1;" />
     </MudStack>
 
+    <MudStack Row="true" Justify="Justify.FlexEnd">
+        <MudButton Variant="Variant.Text"
+                   Size="Size.Small"
+                   StartIcon="@Icons.Material.Filled.MyLocation"
+                   OnClick="() => GetCurrentLocationCommand.ExecuteAsync()"
+                   Disabled="IsLoading || GetCurrentLocationCommand.IsLoading">
+            @if (GetCurrentLocationCommand.IsLoading)
+            {
+                <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
+            }
+            Use my location
+        </MudButton>
+    </MudStack>
+
     <LeafletMap @ref="_map"
-                Latitude="(double?)Latitude"
-                Longitude="(double?)Longitude"
-                ShowMarker="Latitude != 0 && Longitude != 0"
+                Latitude="(double?)InitialLatitude"
+                Longitude="(double?)InitialLongitude"
+                ShowMarker="InitialLatitude != 0 && InitialLongitude != 0"
                 OnMapClick="OnMapClicked" />
 
-    @if (_isValidating)
+    @if (!string.IsNullOrEmpty(GeolocationError))
+    {
+        <MudAlert Severity="Severity.Error" Variant="Variant.Outlined" Dense="true"
+                  ShowCloseIcon="true" CloseIconClicked="() => GeolocationError = null">
+            <MudText Typo="Typo.body2">@GeolocationError</MudText>
+        </MudAlert>
+    }
+
+    @if (ValidateLocationCommand.IsLoading)
     {
         <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
             <MudProgressCircular Size="Size.Small" Indeterminate="true" />
             <MudText Typo="Typo.body2" Color="Color.Secondary">Validating location...</MudText>
         </MudStack>
     }
-    else if (_municipality is not null)
+    else if (Municipality is not null)
     {
         <MudAlert Severity="Severity.Success" Variant="Variant.Outlined" Dense="true">
             <MudText Typo="Typo.body2">
-                <strong>@_municipality.Name</strong>, @_municipality.StateName
+                <strong>@Municipality.Name</strong>, @Municipality.StateName
             </MudText>
         </MudAlert>
     }
-    else if (_hasValidationError)
+    else if (HasValidationError)
     {
         <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Dense="true">
             <MudText Typo="Typo.body2">
@@ -65,87 +87,101 @@
 
 @code {
     private LeafletMap? _map;
-    private bool _isValidating;
-    private bool _hasValidationError;
-    private MunicipalityDtoForDetail? _municipality;
 
-    private decimal _latitude;
-    private decimal _longitude;
+    [Signal] private decimal _latitude;
+    [Signal] private decimal _longitude;
+    [Signal] private string? _geolocationError;
+    [Signal] private MunicipalityDtoForDetail? _municipality;
+    [Signal] private bool _hasValidationError;
 
-    [Parameter]
-    public decimal Latitude { get; set; }
-
-    [Parameter]
-    public decimal Longitude { get; set; }
-
-    [Parameter]
-    public bool IsLoading { get; set; }
-
-    [Parameter]
-    public EventCallback<LocationSelectedEventArgs> OnLocationChanged { get; set; }
+    [Parameter] public decimal InitialLatitude { get; set; }
+    [Parameter] public decimal InitialLongitude { get; set; }
+    [Parameter] public bool IsLoading { get; set; }
+    [Parameter] public EventCallback<LocationSelectedEventArgs> OnLocationChanged { get; set; }
 
     protected override void OnParametersSet()
     {
-        if (Latitude != 0 && Longitude != 0)
+        if (InitialLatitude != 0 && InitialLongitude != 0 && Latitude == 0 && Longitude == 0)
         {
-            _latitude = Latitude;
-            _longitude = Longitude;
+            Latitude = InitialLatitude;
+            Longitude = InitialLongitude;
         }
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (firstRender && _latitude != 0 && _longitude != 0)
+        if (firstRender && Latitude != 0 && Longitude != 0)
         {
-            await ValidateAndNotify();
+            await ValidateLocationCommand.ExecuteAsync();
         }
+    }
+
+    [RelayCommand]
+    private async Task GetCurrentLocation()
+    {
+        if (_map is null) return;
+
+        GeolocationError = null;
+        var result = await _map.GetCurrentLocationAsync();
+
+        if (result.Success && result.Latitude.HasValue && result.Longitude.HasValue)
+        {
+            Latitude = (decimal)result.Latitude.Value;
+            Longitude = (decimal)result.Longitude.Value;
+            await ValidateLocationCommand.ExecuteAsync();
+        }
+        else
+        {
+            GeolocationError = result.Error ?? "Unable to get current location";
+        }
+    }
+
+    [RelayCommand]
+    private async Task ValidateLocation()
+    {
+        HasValidationError = false;
+        Municipality = null;
+
+        Municipality = await LocationClient.GetMunicipalityByPointAsync(Latitude, Longitude);
+        HasValidationError = Municipality is null;
+
+        await OnLocationChanged.InvokeAsync(new LocationSelectedEventArgs(
+            Latitude,
+            Longitude,
+            Municipality
+        ));
     }
 
     private async Task OnMapClicked(MapClickEventArgs args)
     {
-        _latitude = (decimal)args.Latitude;
-        _longitude = (decimal)args.Longitude;
-        StateHasChanged();
+        Latitude = (decimal)args.Latitude;
+        Longitude = (decimal)args.Longitude;
+        GeolocationError = null;
 
-        await ValidateAndNotify();
+        await ValidateLocationCommand.ExecuteAsync();
     }
 
-    private async Task OnManualCoordinatesChanged()
+    private async Task OnLatitudeChanged(decimal value)
     {
-        if (_latitude < -90 || _latitude > 90 || _longitude < -180 || _longitude > 180)
-        {
+        Latitude = value;
+        await OnCoordinatesChanged();
+    }
+
+    private async Task OnLongitudeChanged(decimal value)
+    {
+        Longitude = value;
+        await OnCoordinatesChanged();
+    }
+
+    private async Task OnCoordinatesChanged()
+    {
+        if (Latitude < -90 || Latitude > 90 || Longitude < -180 || Longitude > 180)
             return;
-        }
 
-        if (_latitude != 0 && _longitude != 0 && _map is not null)
+        if (Latitude != 0 && Longitude != 0 && _map is not null)
         {
-            await _map.SetMarkerAsync((double)_latitude, (double)_longitude);
-            await ValidateAndNotify();
-        }
-    }
-
-    private async Task ValidateAndNotify()
-    {
-        _isValidating = true;
-        _hasValidationError = false;
-        _municipality = null;
-        StateHasChanged();
-
-        try
-        {
-            _municipality = await LocationClient.GetMunicipalityByPointAsync(_latitude, _longitude);
-            _hasValidationError = _municipality is null;
-
-            await OnLocationChanged.InvokeAsync(new LocationSelectedEventArgs(
-                _latitude,
-                _longitude,
-                _municipality
-            ));
-        }
-        finally
-        {
-            _isValidating = false;
-            StateHasChanged();
+            await _map.SetMarkerAsync((double)Latitude, (double)Longitude);
+            await ValidateLocationCommand.ExecuteAsync();
         }
     }
 

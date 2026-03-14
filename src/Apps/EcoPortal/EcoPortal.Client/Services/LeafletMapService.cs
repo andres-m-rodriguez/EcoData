@@ -65,6 +65,21 @@ public sealed class LeafletMapInstance : ILeafletMapInstance
         await _js.InvokeVoidAsync("leafletMapService.invalidateSize", ElementId);
     }
 
+    public async ValueTask<GeolocationResult> GetCurrentLocationAsync()
+    {
+        if (_disposed) return new GeolocationResult(false, Error: "Map disposed");
+
+        try
+        {
+            var result = await _js.InvokeAsync<GeolocationResult>("leafletMapService.getCurrentLocation", ElementId);
+            return result;
+        }
+        catch (Exception ex)
+        {
+            return new GeolocationResult(false, Error: ex.Message);
+        }
+    }
+
     public void OnClick(Func<MapClickEventArgs, Task> handler)
     {
         _clickHandler = handler;

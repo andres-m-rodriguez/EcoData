@@ -13,9 +13,17 @@ public interface ILeafletMapInstance : IAsyncDisposable
     ValueTask SetMarkerAsync(double latitude, double longitude);
     ValueTask ClearMarkerAsync();
     ValueTask InvalidateSizeAsync();
+    ValueTask<GeolocationResult> GetCurrentLocationAsync();
 
     void OnClick(Func<MapClickEventArgs, Task> handler);
 }
+
+public sealed record GeolocationResult(
+    bool Success,
+    double? Latitude = null,
+    double? Longitude = null,
+    string? Error = null
+);
 
 public sealed record LeafletMapOptions(
     double? InitialLatitude = null,
