@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using EcoData.Identity.Api.RateLimiting;
 using EcoData.Identity.Application.Services;
 using EcoData.Identity.Contracts.Authorization;
 using EcoData.Identity.Contracts.Parameters;
@@ -57,7 +58,8 @@ public static class UserAuthEndpoints
                     );
                 }
             )
-            .WithName("Login");
+            .WithName("Login")
+            .RequireRateLimiting(LoginRateLimiterExtensions.LoginRateLimiterPolicy);
 
         group
             .MapGet(
