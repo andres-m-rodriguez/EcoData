@@ -27,21 +27,4 @@ public interface ISensorHttpClient
         Guid sensorId,
         CancellationToken cancellationToken = default
     );
-
-    IAsyncEnumerable<ReadingDtoForDetail> GetReadingsAsync(
-        Guid sensorId,
-        ReadingParameters parameters,
-        CancellationToken cancellationToken = default
-    );
-
-    Task<IReadOnlyList<string>> GetReadingParametersAsync(
-        Guid sensorId,
-        CancellationToken cancellationToken = default
-    );
-
-    Task<OneOf<ReadingBatchResult, NotFoundError, ValidationError>> PostReadingAsync(
-        Guid sensorId,
-        SensorReadingDto reading,
-        CancellationToken cancellationToken = default
-    );
 }

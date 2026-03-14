@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Routing;
 
-namespace EcoData.Sensors.Api;
+namespace EcoData.Sensors.Api.Endpoints;
 
 public static class ReferenceDataEndpoints
 {
@@ -16,7 +16,8 @@ public static class ReferenceDataEndpoints
         sensorTypesGroup
             .MapGet(
                 "/",
-                (ISensorTypeRepository repository, CancellationToken ct) => repository.GetAllAsync(ct)
+                (ISensorTypeRepository repository, CancellationToken ct) =>
+                    repository.GetAllAsync(ct)
             )
             .WithName("GetSensorTypes");
 
@@ -30,7 +31,9 @@ public static class ReferenceDataEndpoints
                 ) =>
                 {
                     var sensorType = await repository.GetByIdAsync(id, ct);
-                    return sensorType is null ? TypedResults.NotFound() : TypedResults.Ok(sensorType);
+                    return sensorType is null
+                        ? TypedResults.NotFound()
+                        : TypedResults.Ok(sensorType);
                 }
             )
             .WithName("GetSensorTypeById");

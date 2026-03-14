@@ -15,7 +15,7 @@ using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
 using Permissions = EcoData.Sensors.Contracts.Permissions;
 
-namespace EcoData.Sensors.Api;
+namespace EcoData.Sensors.Api.Endpoints;
 
 public static class SensorEndpoints
 {
@@ -59,26 +59,6 @@ public static class SensorEndpoints
                 }
             )
             .WithName("GetSensorById");
-
-        group
-            .MapGet(
-                "/{sensorId:guid}/readings",
-                (
-                    Guid sensorId,
-                    [AsParameters] ReadingParameters parameters,
-                    IReadingRepository repository,
-                    CancellationToken ct
-                ) => repository.GetReadingsAsync(sensorId, parameters, ct)
-            )
-            .WithName("GetSensorReadings");
-
-        group
-            .MapGet(
-                "/{sensorId:guid}/readings/parameters",
-                (Guid sensorId, IReadingRepository repository, CancellationToken ct) =>
-                    repository.GetDistinctParametersAsync(sensorId, ct)
-            )
-            .WithName("GetSensorReadingParameters");
 
         group
             .MapPost(
