@@ -88,6 +88,58 @@ window.leafletMapService = {
         instance.map.invalidateSize();
     },
 
+    getCurrentLocation: function (elementId) {
+        return new Promise((resolve) => {
+            if (!navigator.geolocation) {
+                resolve({ success: false, error: 'Geolocation is not supported by your browser' });
+                return;
+            }
+
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    const lat = position.coords.latitude;
+                    const lng = position.coords.longitude;
+
+                    // Update map if instance exists
+                    const instance = this.instances.get(elementId);
+                    if (instance) {
+                        if (instance.marker) {
+                            instance.marker.setLatLng([lat, lng]);
+                        } else {
+                            instance.marker = L.marker([lat, lng]).addTo(instance.map);
+                        }
+                        instance.map.setView([lat, lng], 14);
+
+                        // Notify Blazor of the location
+                        if (instance.dotNetRef) {
+                            instance.dotNetRef.invokeMethodAsync('HandleMapClick', lat, lng);
+                        }
+                    }
+
+                    resolve({ success: true, latitude: lat, longitude: lng });
+                },
+                (error) => {
+                    let errorMessage;
+                    switch (error.code) {
+                        case error.PERMISSION_DENIED:
+                            errorMessage = 'Location permission denied';
+                            break;
+                        case error.POSITION_UNAVAILABLE:
+                            errorMessage = 'Location information unavailable';
+                            break;
+                        case error.TIMEOUT:
+                            errorMessage = 'Location request timed out';
+                            break;
+                        default:
+                            errorMessage = 'An unknown error occurred';
+                    }
+                    resolve({ success: false, error: errorMessage });
+                },
+                { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+            );
+        });
+    },
+
     dispose: function (elementId) {
         const instance = this.instances.get(elementId);
         if (!instance) return;

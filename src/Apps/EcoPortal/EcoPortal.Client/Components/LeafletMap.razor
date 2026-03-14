@@ -78,6 +78,15 @@
         }
     }
 
+    public async Task<GeolocationResult> GetCurrentLocationAsync()
+    {
+        if (_mapInstance is not null)
+        {
+            return await _mapInstance.GetCurrentLocationAsync();
+        }
+        return new GeolocationResult(false, Error: "Map not initialized");
+    }
+
     public async ValueTask DisposeAsync()
     {
         if (_mapInstance is not null)
