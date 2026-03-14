@@ -1,76 +1,103 @@
-window.locationPicker = {
-    map: null,
-    marker: null,
-    dotNetRef: null,
+// Leaflet Map Service - manages multiple map instances by element ID
+window.leafletMapService = {
+    instances: new Map(),
 
-    init: function (elementId, dotNetRef, initialLat, initialLng) {
-        if (this.map) {
-            this.map.remove();
+    create: function (elementId, dotNetRef, initialLat, initialLng, initialZoom, showMarker) {
+        // Dispose existing instance if any
+        if (this.instances.has(elementId)) {
+            this.dispose(elementId);
         }
 
-        this.dotNetRef = dotNetRef;
-
-        // Use initial coordinates or default to Puerto Rico
+        // Default to Puerto Rico if no coordinates
         const lat = initialLat || 18.2208;
         const lng = initialLng || -66.5901;
-        const zoom = initialLat ? 12 : 9;
+        const zoom = initialLat ? 12 : (initialZoom || 9);
 
-        this.map = L.map(elementId).setView([lat, lng], zoom);
+        const map = L.map(elementId).setView([lat, lng], zoom);
 
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-        }).addTo(this.map);
+        }).addTo(map);
 
-        // Add initial marker if coordinates provided
-        if (initialLat && initialLng) {
-            this.marker = L.marker([initialLat, initialLng]).addTo(this.map);
+        const instance = {
+            map: map,
+            marker: null,
+            dotNetRef: dotNetRef
+        };
+
+        // Add initial marker if requested
+        if (showMarker && initialLat && initialLng) {
+            instance.marker = L.marker([lat, lng]).addTo(map);
         }
 
-        // Invalidate size after a short delay to ensure container is fully rendered
-        setTimeout(() => {
-            this.map.invalidateSize();
-        }, 100);
-
         // Handle map clicks
-        this.map.on('click', (e) => {
+        map.on('click', (e) => {
             const { lat, lng } = e.latlng;
 
             // Update or create marker
-            if (this.marker) {
-                this.marker.setLatLng([lat, lng]);
+            if (instance.marker) {
+                instance.marker.setLatLng([lat, lng]);
             } else {
-                this.marker = L.marker([lat, lng]).addTo(this.map);
+                instance.marker = L.marker([lat, lng]).addTo(map);
             }
 
             // Notify Blazor
-            if (this.dotNetRef) {
-                this.dotNetRef.invokeMethodAsync('OnLocationSelected', lat, lng);
+            if (instance.dotNetRef) {
+                instance.dotNetRef.invokeMethodAsync('HandleMapClick', lat, lng);
             }
         });
+
+        // Invalidate size after rendering
+        setTimeout(() => map.invalidateSize(), 100);
+
+        this.instances.set(elementId, instance);
     },
 
-    setLocation: function (lat, lng) {
-        if (!this.map) return;
+    setView: function (elementId, lat, lng, zoom) {
+        const instance = this.instances.get(elementId);
+        if (!instance) return;
 
-        if (this.marker) {
-            this.marker.setLatLng([lat, lng]);
+        instance.map.setView([lat, lng], zoom || instance.map.getZoom());
+    },
+
+    setMarker: function (elementId, lat, lng) {
+        const instance = this.instances.get(elementId);
+        if (!instance) return;
+
+        if (instance.marker) {
+            instance.marker.setLatLng([lat, lng]);
         } else {
-            this.marker = L.marker([lat, lng]).addTo(this.map);
+            instance.marker = L.marker([lat, lng]).addTo(instance.map);
         }
 
-        this.map.setView([lat, lng], 12);
+        instance.map.setView([lat, lng], 12);
     },
 
-    dispose: function () {
-        if (this.map) {
-            this.map.remove();
-            this.map = null;
-            this.marker = null;
-            this.dotNetRef = null;
-        }
+    clearMarker: function (elementId) {
+        const instance = this.instances.get(elementId);
+        if (!instance || !instance.marker) return;
+
+        instance.map.removeLayer(instance.marker);
+        instance.marker = null;
+    },
+
+    invalidateSize: function (elementId) {
+        const instance = this.instances.get(elementId);
+        if (!instance) return;
+
+        instance.map.invalidateSize();
+    },
+
+    dispose: function (elementId) {
+        const instance = this.instances.get(elementId);
+        if (!instance) return;
+
+        instance.map.remove();
+        this.instances.delete(elementId);
     }
 };
 
+// Sensor Map - for displaying multiple sensors (used by SensorMapPage)
 window.sensorMap = {
     map: null,
     markersLayer: null,

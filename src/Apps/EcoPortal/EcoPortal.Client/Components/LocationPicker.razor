@@ -1,7 +1,6 @@
 @using EcoData.Locations.Contracts.Dtos
 @using EcoPortal.Client.Services
 @implements IAsyncDisposable
-@inject IJSRuntime JS
 @inject ILocationHttpClient LocationClient
 
 <MudStack Spacing="3">
@@ -33,7 +32,11 @@
                          Style="flex: 1;" />
     </MudStack>
 
-    <div id="@_mapElementId" style="height: 300px; min-height: 300px; width: 100%; border-radius: 4px; border: 1px solid var(--mud-palette-lines-default); display: block;"></div>
+    <LeafletMap @ref="_map"
+                Latitude="(double?)Latitude"
+                Longitude="(double?)Longitude"
+                ShowMarker="Latitude != 0 && Longitude != 0"
+                OnMapClick="OnMapClicked" />
 
     @if (_isValidating)
     {
@@ -61,9 +64,7 @@
 </MudStack>
 
 @code {
-    private readonly string _mapElementId = $"location-picker-{Guid.NewGuid():N}";
-    private DotNetObjectReference<LocationPicker>? _dotNetRef;
-    private bool _mapInitialized;
+    private LeafletMap? _map;
     private bool _isValidating;
     private bool _hasValidationError;
     private MunicipalityDtoForDetail? _municipality;
@@ -94,29 +95,16 @@
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (firstRender)
+        if (firstRender && _latitude != 0 && _longitude != 0)
         {
-            _dotNetRef = DotNetObjectReference.Create(this);
-
-            double? initialLat = _latitude != 0 ? (double)_latitude : null;
-            double? initialLng = _longitude != 0 ? (double)_longitude : null;
-
-            await JS.InvokeVoidAsync("locationPicker.init", _mapElementId, _dotNetRef, initialLat, initialLng);
-            _mapInitialized = true;
-
-            // Validate initial coordinates if provided
-            if (_latitude != 0 && _longitude != 0)
-            {
-                await ValidateAndNotify();
-            }
+            await ValidateAndNotify();
         }
     }
 
-    [JSInvokable]
-    public async Task OnLocationSelected(double lat, double lng)
+    private async Task OnMapClicked(MapClickEventArgs args)
     {
-        _latitude = (decimal)lat;
-        _longitude = (decimal)lng;
+        _latitude = (decimal)args.Latitude;
+        _longitude = (decimal)args.Longitude;
         StateHasChanged();
 
         await ValidateAndNotify();
@@ -129,9 +117,9 @@
             return;
         }
 
-        if (_mapInitialized && _latitude != 0 && _longitude != 0)
+        if (_latitude != 0 && _longitude != 0 && _map is not null)
         {
-            await JS.InvokeVoidAsync("locationPicker.setLocation", (double)_latitude, (double)_longitude);
+            await _map.SetMarkerAsync((double)_latitude, (double)_longitude);
             await ValidateAndNotify();
         }
     }
@@ -163,18 +151,10 @@
 
     public async ValueTask DisposeAsync()
     {
-        if (_mapInitialized)
+        if (_map is not null)
         {
-            try
-            {
-                await JS.InvokeVoidAsync("locationPicker.dispose");
-            }
-            catch (JSDisconnectedException)
-            {
-                // Ignore during app shutdown
-            }
+            await _map.DisposeAsync();
         }
-        _dotNetRef?.Dispose();
     }
 
     public sealed record LocationSelectedEventArgs(
