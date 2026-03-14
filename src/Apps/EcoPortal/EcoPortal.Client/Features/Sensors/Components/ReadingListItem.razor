@@ -3,7 +3,17 @@
 <MudStack Row Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Class="pa-3"
           Style="border-bottom: 1px solid var(--mud-palette-lines-default);">
     <MudStack Spacing="0">
-        <MudText Typo="Typo.body2">@Reading.Parameter</MudText>
+        <MudText Typo="Typo.body2">
+            @if (!string.IsNullOrWhiteSpace(Reading.Description))
+            {
+                @Reading.Description
+                <MudText Typo="Typo.caption" Color="Color.Secondary" Style="display: inline;"> (@Reading.Parameter)</MudText>
+            }
+            else
+            {
+                @Reading.Parameter
+            }
+        </MudText>
         <MudText Typo="Typo.caption" Color="Color.Secondary">
             @Reading.RecordedAt.LocalDateTime.ToString("g")
         </MudText>

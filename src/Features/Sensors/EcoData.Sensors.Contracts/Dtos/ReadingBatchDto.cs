@@ -7,6 +7,7 @@ public sealed record ReadingBatchDtoForCreate(
 
 public sealed record ReadingItemDto(
     string Parameter,
+    string? Description,
     double Value,
     string Unit,
     DateTimeOffset RecordedAt

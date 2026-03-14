@@ -4,6 +4,7 @@ public sealed record ReadingDtoForDetail(
     Guid Id,
     Guid SensorId,
     string Parameter,
+    string? Description,
     double Value,
     string Unit,
     DateTimeOffset RecordedAt,
@@ -23,6 +24,7 @@ public sealed record ReadingDtoForList(
 public sealed record ReadingDtoForCreate(
     Guid SensorId,
     string Parameter,
+    string? Description,
     double Value,
     string Unit,
     DateTimeOffset RecordedAt
