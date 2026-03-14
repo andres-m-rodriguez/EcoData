@@ -46,4 +46,19 @@ public sealed class LocationHttpClient(HttpClient httpClient) : ILocationHttpCli
             cancellationToken
         )!;
     }
+
+    public async Task<MunicipalityDtoForDetail?> GetMunicipalityByIdAsync(
+        Guid id,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var response = await httpClient.GetAsync($"api/municipalities/{id}", cancellationToken);
+
+        if (!response.IsSuccessStatusCode)
+        {
+            return null;
+        }
+
+        return await response.Content.ReadFromJsonAsync<MunicipalityDtoForDetail>(cancellationToken);
+    }
 }

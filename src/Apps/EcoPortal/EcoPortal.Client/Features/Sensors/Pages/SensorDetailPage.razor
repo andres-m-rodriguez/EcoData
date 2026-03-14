@@ -8,10 +8,12 @@
 @using BlazingSingularity.Signals
 @using static EcoPortal.Client.Features.Sensors.Dialogs.ReadingFilterDialog
 @using EcoPortal.Client.Services
+@using EcoPortal.Client.Components
 @inject ISensorHttpClient SensorClient
 @inject ISensorReadingHttpClient ReadingClient
 @inject IDialogService DialogService
 @inject INavigationService Navigation
+@inject ISnackbar Snackbar
 
 <PageTitle>@(_sensor?.Name ?? "Sensor") - EcoData</PageTitle>
 
@@ -50,10 +52,18 @@ else
         <MudPaper Elevation="1" Class="pa-4 mb-4">
             <MudStack Spacing="2">
                 <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center">
-                    <MudText Typo="Typo.h5">@_sensor.Name</MudText>
-                    <MudChip T="string" Color="@(_sensor.IsActive ? Color.Success : Color.Default)" Size="Size.Small">
-                        @(_sensor.IsActive ? "Active" : "Inactive")
-                    </MudChip>
+                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                        <MudText Typo="Typo.h5">@_sensor.Name</MudText>
+                        <MudChip T="string" Color="@(_sensor.IsActive ? Color.Success : Color.Default)" Size="Size.Small">
+                            @(_sensor.IsActive ? "Active" : "Inactive")
+                        </MudChip>
+                    </MudStack>
+                    <MudStack Row="true" Spacing="1">
+                        <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary"
+                                       OnClick="NavigateToEdit" />
+                        <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error"
+                                       OnClick="ConfirmDelete" />
+                    </MudStack>
                 </MudStack>
 
                 <MudStack Row="true" Spacing="4" Class="mt-2">
@@ -239,5 +249,34 @@ else
         _fromDate = null;
         _toDate = null;
         _virtualizedList?.Refresh();
+    }
+
+    private void NavigateToEdit() => Navigation.NavigateTo($"/sensors/{SensorId}/edit");
+
+    private async Task ConfirmDelete()
+    {
+        var parameters = new DialogParameters<ConfirmDialog>
+        {
+            { x => x.ContentText, $"Are you sure you want to delete sensor '{_sensor!.Name}'? This will also delete all readings and health data." },
+            { x => x.ButtonText, "Delete" },
+            { x => x.Color, Color.Error }
+        };
+        var options = new DialogOptions { CloseOnEscapeKey = true, MaxWidth = MaxWidth.ExtraSmall };
+        var dialog = await DialogService.ShowAsync<ConfirmDialog>("Delete Sensor", parameters, options);
+        var result = await dialog.Result;
+
+        if (result is { Canceled: false })
+        {
+            var deleteResult = await SensorClient.DeleteAsync(SensorId);
+            deleteResult.Switch(
+                _ =>
+                {
+                    Snackbar.Add("Sensor deleted successfully", Severity.Success);
+                    Navigation.NavigateTo("/sensors");
+                },
+                _ => Snackbar.Add("Sensor not found", Severity.Error),
+                error => Snackbar.Add(error.Message, Severity.Error)
+            );
+        }
     }
 }

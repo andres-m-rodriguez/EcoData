@@ -9,7 +9,7 @@ public interface INavigationService
     string CurrentUri { get; }
     string CurrentPath { get; }
 
-    void NavigateTo(string uri);
+    void NavigateTo(string uri, bool replace = false);
     Task GoBackAsync(string? fallback = null);
     void GoBack(string? fallback = null);
 
@@ -45,9 +45,9 @@ public sealed class NavigationService : INavigationService, IDisposable
 
     public event Action? OnStateChanged;
 
-    public void NavigateTo(string uri)
+    public void NavigateTo(string uri, bool replace = false)
     {
-        _navigationManager.NavigateTo(uri);
+        _navigationManager.NavigateTo(uri, replace: replace);
     }
 
     public async Task GoBackAsync(string? fallback = null)
