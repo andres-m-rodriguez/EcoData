@@ -19,5 +19,3 @@ public sealed record ReadingBatchResult(
     int Rejected,
     IReadOnlyList<string> Errors
 );
-
-public sealed record MultipleSensorReadingBatch(IReadOnlyList<ReadingBatchDtoForCreate> Batches);

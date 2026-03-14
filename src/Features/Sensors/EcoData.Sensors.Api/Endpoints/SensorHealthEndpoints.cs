@@ -6,10 +6,12 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Routing;
 
-namespace EcoData.Sensors.Api;
+namespace EcoData.Sensors.Api.Endpoints;
 
 public static class SensorHealthEndpoints
 {
+    private const string SensorJwtScheme = "SensorJwt";
+
     public static IEndpointRouteBuilder MapSensorHealthEndpoints(this IEndpointRouteBuilder app)
     {
         var group = app.MapGroup("/api/health/sensors").WithTags("Sensor Health");
@@ -28,7 +30,8 @@ public static class SensorHealthEndpoints
         group
             .MapGet(
                 "/summary",
-                (ISensorHealthRepository repository, CancellationToken ct) => repository.GetSummaryAsync(ct)
+                (ISensorHealthRepository repository, CancellationToken ct) =>
+                    repository.GetSummaryAsync(ct)
             )
             .WithName("GetSensorHealthSummary");
 
@@ -62,43 +65,32 @@ public static class SensorHealthEndpoints
             .WithName("GetSensorHealth");
 
         sensorGroup
-            .MapGet(
-                "/config",
-                async Task<Results<Ok<SensorHealthConfigDtoForDetail>, NotFound>> (
+            .MapPost(
+                "/heartbeat",
+                async Task<Results<Ok<HeartbeatResponse>, NotFound<string>>> (
                     Guid sensorId,
-                    ISensorHealthRepository repository,
-                    CancellationToken ct
-                ) =>
-                {
-                    var config = await repository.GetConfigByIdAsync(sensorId, ct);
-                    return config is null ? TypedResults.NotFound() : TypedResults.Ok(config);
-                }
-            )
-            .WithName("GetSensorHealthConfig");
-
-        sensorGroup
-            .MapPut(
-                "/config",
-                async Task<Results<Ok<SensorHealthConfigDtoForDetail>, NotFound<string>>> (
-                    Guid sensorId,
-                    SensorHealthConfigDtoForCreate dto,
-                    ISensorHealthRepository repository,
                     ISensorRepository sensorRepository,
+                    ISensorHealthRepository healthRepository,
                     CancellationToken ct
                 ) =>
                 {
                     var sensor = await sensorRepository.GetByIdAsync(sensorId, ct);
                     if (sensor is null)
                     {
-                        return TypedResults.NotFound("Sensor not found");
+                        return TypedResults.NotFound($"Sensor {sensorId} not found");
                     }
 
-                    var config = await repository.UpsertConfigAsync(sensorId, dto, ct);
-                    return TypedResults.Ok(config);
+                    await healthRepository.RecordReadingAsync(sensorId, DateTimeOffset.UtcNow, ct);
+
+                    return TypedResults.Ok(
+                        new HeartbeatResponse("Heartbeat received", sensorId, DateTimeOffset.UtcNow)
+                    );
                 }
             )
-            .WithName("UpsertSensorHealthConfig")
-            .RequireAuthorization();
+            .RequireAuthorization(policy =>
+                policy.AddAuthenticationSchemes(SensorJwtScheme).RequireAuthenticatedUser()
+            )
+            .WithName("SendHeartbeat");
 
         return app;
     }

@@ -14,6 +14,11 @@ public static class DependencyInjection
             configureClient?.Invoke(client);
         });
 
+        services.AddHttpClient<ISensorReadingHttpClient, SensorReadingHttpClient>(client =>
+        {
+            configureClient?.Invoke(client);
+        });
+
         services.AddHttpClient<ISensorHealthHttpClient, SensorHealthHttpClient>(client =>
         {
             configureClient?.Invoke(client);
