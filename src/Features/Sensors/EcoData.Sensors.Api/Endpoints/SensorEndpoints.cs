@@ -168,6 +168,102 @@ public static class SensorEndpoints
             .RequireAuthorization()
             .WithName("RegisterSensor");
 
+        group
+            .MapPut(
+                "/{id:guid}",
+                async Task<
+                    Results<Ok<SensorDtoForDetail>, ValidationProblem, NotFound, UnauthorizedHttpResult, ForbidHttpResult>
+                > (
+                    Guid id,
+                    SensorDtoForUpdate request,
+                    ClaimsPrincipal user,
+                    ISensorRepository repository,
+                    IOrganizationPermissionService permissionService,
+                    CancellationToken ct
+                ) =>
+                {
+                    var validation = new SensorDtoForUpdateValidator().Validate(request);
+                    if (!validation.IsValid)
+                    {
+                        var errors = validation.Errors
+                            .GroupBy(e => e.PropertyName)
+                            .ToDictionary(g => g.Key, g => g.Select(e => e.ErrorMessage).ToArray());
+                        return TypedResults.ValidationProblem(errors);
+                    }
+
+                    var token = new RequestClaimToken(user);
+                    if (!token.IsAuthenticated)
+                    {
+                        return TypedResults.Unauthorized();
+                    }
+
+                    var existing = await repository.GetByIdAsync(id, ct);
+                    if (existing is null)
+                    {
+                        return TypedResults.NotFound();
+                    }
+
+                    var hasPermission = await permissionService.HasPermissionAsync(
+                        token.UserId!.Value,
+                        existing.OrganizationId,
+                        Permissions.Sensor.Update,
+                        ct
+                    );
+
+                    if (!hasPermission)
+                    {
+                        return TypedResults.Forbid();
+                    }
+
+                    var updated = await repository.UpdateAsync(id, request, ct);
+                    return updated is null ? TypedResults.NotFound() : TypedResults.Ok(updated);
+                }
+            )
+            .RequireAuthorization()
+            .WithName("UpdateSensor");
+
+        group
+            .MapDelete(
+                "/{id:guid}",
+                async Task<Results<NoContent, NotFound, UnauthorizedHttpResult, ForbidHttpResult>> (
+                    Guid id,
+                    ClaimsPrincipal user,
+                    ISensorRepository repository,
+                    IOrganizationPermissionService permissionService,
+                    CancellationToken ct
+                ) =>
+                {
+                    var token = new RequestClaimToken(user);
+                    if (!token.IsAuthenticated)
+                    {
+                        return TypedResults.Unauthorized();
+                    }
+
+                    var existing = await repository.GetByIdAsync(id, ct);
+                    if (existing is null)
+                    {
+                        return TypedResults.NotFound();
+                    }
+
+                    var hasPermission = await permissionService.HasPermissionAsync(
+                        token.UserId!.Value,
+                        existing.OrganizationId,
+                        Permissions.Sensor.Delete,
+                        ct
+                    );
+
+                    if (!hasPermission)
+                    {
+                        return TypedResults.Forbid();
+                    }
+
+                    var deleted = await repository.DeleteAsync(id, ct);
+                    return deleted ? TypedResults.NoContent() : TypedResults.NotFound();
+                }
+            )
+            .RequireAuthorization()
+            .WithName("DeleteSensor");
+
         return app;
     }
 }

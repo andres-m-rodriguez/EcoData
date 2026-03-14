@@ -1,0 +1,255 @@
+@using System.ComponentModel.DataAnnotations
+@using EcoData.Locations.Contracts.Dtos
+@using EcoData.Locations.Contracts.Parameters
+@using EcoPortal.Client.Services
+@inject ILocationHttpClient LocationClient
+
+<MudStack Spacing="3">
+    @if (!string.IsNullOrEmpty(ErrorMessage))
+    {
+        <MudAlert Severity="Severity.Error" Variant="Variant.Filled" Dense="true">
+            @ErrorMessage
+        </MudAlert>
+    }
+
+    @if (!HideExternalId)
+    {
+        <MudTextField @bind-Value="Model.ExternalId"
+                      Label="External ID"
+                      Required="true"
+                      RequiredError="External ID is required"
+                      MaxLength="100"
+                      Counter="100"
+                      HelperText="Unique identifier for this sensor"
+                      Immediate="true"
+                      Disabled="IsLoading" />
+    }
+
+    <MudTextField @bind-Value="Model.Name"
+                  Label="Name"
+                  Required="true"
+                  RequiredError="Name is required"
+                  MaxLength="300"
+                  Counter="300"
+                  HelperText="Display name for the sensor"
+                  Immediate="true"
+                  Disabled="IsLoading" />
+
+    <MudStack Row="true" Spacing="2">
+        <MudNumericField @bind-Value="Model.Latitude"
+                         Label="Latitude"
+                         Required="true"
+                         Min="-90"
+                         Max="90"
+                         Step="0.000001M"
+                         Format="F6"
+                         HelperText="-90 to 90"
+                         Disabled="IsLoading"
+                         Style="flex: 1;" />
+
+        <MudNumericField @bind-Value="Model.Longitude"
+                         Label="Longitude"
+                         Required="true"
+                         Min="-180"
+                         Max="180"
+                         Step="0.000001M"
+                         Format="F6"
+                         HelperText="-180 to 180"
+                         Disabled="IsLoading"
+                         Style="flex: 1;" />
+    </MudStack>
+
+    <MudSelect T="StateDtoForList"
+               Label="State"
+               Value="_selectedState"
+               ValueChanged="OnStateChanged"
+               ToStringFunc="@(s => s?.Name ?? string.Empty)"
+               Disabled="IsLoading || _states is null"
+               HelperText="Select the state/territory">
+        @if (_states is not null)
+        {
+            @foreach (var state in _states)
+            {
+                <MudSelectItem Value="@state">@state.Name</MudSelectItem>
+            }
+        }
+    </MudSelect>
+
+    <MudAutocomplete T="MunicipalityDtoForList"
+                     Label="Municipality"
+                     Value="_selectedMunicipality"
+                     ValueChanged="OnMunicipalityChanged"
+                     SearchFunc="SearchMunicipalities"
+                     ToStringFunc="@(m => m?.Name ?? string.Empty)"
+                     Disabled="IsLoading || _selectedState is null"
+                     HelperText="@(_selectedState is null ? "Select a state first" : "Search for a municipality")"
+                     ResetValueOnEmptyText="true" />
+
+    <MudSwitch @bind-Value="Model.IsActive"
+               Label="Active"
+               Color="Color.Primary"
+               Disabled="IsLoading" />
+
+    <MudStack Row="true" Justify="Justify.FlexEnd" Spacing="2" Class="mt-4">
+        <MudButton Variant="Variant.Text"
+                   Color="Color.Default"
+                   OnClick="HandleCancel"
+                   Disabled="IsLoading">
+            Cancel
+        </MudButton>
+        <MudButton Variant="Variant.Filled"
+                   Color="Color.Primary"
+                   OnClick="HandleSubmit"
+                   Disabled="IsLoading || !IsFormValid">
+            @if (IsLoading)
+            {
+                <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
+            }
+            @SubmitButtonText
+        </MudButton>
+    </MudStack>
+</MudStack>
+
+@code {
+    private List<StateDtoForList>? _states;
+    private StateDtoForList? _selectedState;
+    private MunicipalityDtoForList? _selectedMunicipality;
+    private Guid _lastLoadedMunicipalityId;
+
+    [Parameter]
+    public SensorFormModel Model { get; set; } = new();
+
+    [Parameter]
+    public string SubmitButtonText { get; set; } = "Save";
+
+    [Parameter]
+    public string? ErrorMessage { get; set; }
+
+    [Parameter]
+    public bool IsLoading { get; set; }
+
+    [Parameter]
+    public bool HideExternalId { get; set; }
+
+    [Parameter]
+    public EventCallback<SensorFormModel> OnSubmit { get; set; }
+
+    [Parameter]
+    public EventCallback OnCancel { get; set; }
+
+    private bool IsFormValid =>
+        !string.IsNullOrWhiteSpace(Model.Name) &&
+        (HideExternalId || !string.IsNullOrWhiteSpace(Model.ExternalId)) &&
+        Model.Latitude >= -90 && Model.Latitude <= 90 &&
+        Model.Longitude >= -180 && Model.Longitude <= 180 &&
+        Model.MunicipalityId != Guid.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadStatesAsync();
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (Model.MunicipalityId != Guid.Empty && Model.MunicipalityId != _lastLoadedMunicipalityId)
+        {
+            _lastLoadedMunicipalityId = Model.MunicipalityId;
+            await LoadMunicipalityAsync(Model.MunicipalityId);
+        }
+    }
+
+    private async Task LoadStatesAsync()
+    {
+        _states = [];
+        await foreach (var state in LocationClient.GetStatesAsync(new StateParameters(PageSize: 100)))
+        {
+            _states.Add(state);
+        }
+    }
+
+    private async Task LoadMunicipalityAsync(Guid municipalityId)
+    {
+        var municipality = await LocationClient.GetMunicipalityByIdAsync(municipalityId);
+        if (municipality is not null)
+        {
+            _selectedMunicipality = new MunicipalityDtoForList(
+                municipality.Id,
+                municipality.Name,
+                municipality.GeoJsonId,
+                municipality.CountyFipsCode,
+                municipality.CentroidLatitude,
+                municipality.CentroidLongitude
+            );
+
+            _selectedState = _states?.FirstOrDefault(s => s.Code == municipality.StateCode);
+        }
+    }
+
+    private void OnStateChanged(StateDtoForList? state)
+    {
+        _selectedState = state;
+        _selectedMunicipality = null;
+        Model.MunicipalityId = Guid.Empty;
+    }
+
+    private void OnMunicipalityChanged(MunicipalityDtoForList? municipality)
+    {
+        _selectedMunicipality = municipality;
+        Model.MunicipalityId = municipality?.Id ?? Guid.Empty;
+    }
+
+    private async Task<IEnumerable<MunicipalityDtoForList>> SearchMunicipalities(string? search, CancellationToken ct)
+    {
+        if (_selectedState is null)
+        {
+            return [];
+        }
+
+        var parameters = new MunicipalityParameters(
+            PageSize: 20,
+            Search: search,
+            StateCode: _selectedState.Code
+        );
+
+        var results = new List<MunicipalityDtoForList>();
+        await foreach (var municipality in LocationClient.GetMunicipalitiesAsync(parameters, ct))
+        {
+            results.Add(municipality);
+        }
+        return results;
+    }
+
+    private async Task HandleSubmit()
+    {
+        if (!IsFormValid)
+            return;
+
+        await OnSubmit.InvokeAsync(Model);
+    }
+
+    private async Task HandleCancel()
+    {
+        await OnCancel.InvokeAsync();
+    }
+
+    public class SensorFormModel
+    {
+        [Required(ErrorMessage = "External ID is required")]
+        [MaxLength(100)]
+        public string ExternalId { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "Name is required")]
+        [MaxLength(300)]
+        public string Name { get; set; } = string.Empty;
+
+        [Range(-90, 90, ErrorMessage = "Latitude must be between -90 and 90")]
+        public decimal Latitude { get; set; }
+
+        [Range(-180, 180, ErrorMessage = "Longitude must be between -180 and 180")]
+        public decimal Longitude { get; set; }
+
+        public Guid MunicipalityId { get; set; }
+
+        public bool IsActive { get; set; } = true;
+    }
+}

@@ -184,12 +184,20 @@ else
                     <div class="pa-6">
                         <MudStack Row Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Class="mb-4">
                             <MudText Typo="Typo.h6">Sensor Fleet</MudText>
-                            <RequireOrganizationPermission Permission="@SensorPermissions.Sensor.Create" OrganizationId="Id">
-                                <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small"
-                                           StartIcon="@Icons.Material.Filled.Add" OnClick="NavigateToCreateSensor">
-                                    Add Sensor
-                                </MudButton>
-                            </RequireOrganizationPermission>
+                            <MudStack Row Spacing="2">
+                                <RequireOrganizationPermission Permission="@SensorPermissions.Sensor.Update" OrganizationId="Id">
+                                    <MudButton Variant="Variant.Outlined" Color="Color.Primary" Size="Size.Small"
+                                               StartIcon="@Icons.Material.Filled.Settings" OnClick="NavigateToSensors">
+                                        Manage Sensors
+                                    </MudButton>
+                                </RequireOrganizationPermission>
+                                <RequireOrganizationPermission Permission="@SensorPermissions.Sensor.Create" OrganizationId="Id">
+                                    <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small"
+                                               StartIcon="@Icons.Material.Filled.Add" OnClick="NavigateToCreateSensor">
+                                        Add Sensor
+                                    </MudButton>
+                                </RequireOrganizationPermission>
+                            </MudStack>
                         </MudStack>
 
                         @if (!_viewModel.HasSensors)

@@ -27,4 +27,15 @@ public interface ISensorHttpClient
         Guid sensorId,
         CancellationToken cancellationToken = default
     );
+
+    Task<OneOf<SensorDtoForDetail, ValidationError, NotFoundError, ForbiddenError>> UpdateAsync(
+        Guid sensorId,
+        SensorDtoForUpdate request,
+        CancellationToken cancellationToken = default
+    );
+
+    Task<OneOf<bool, NotFoundError, ForbiddenError>> DeleteAsync(
+        Guid sensorId,
+        CancellationToken cancellationToken = default
+    );
 }
