@@ -84,6 +84,45 @@ public sealed class SensorHttpClient(HttpClient httpClient) : ISensorHttpClient
         return await response.Content.ReadFromJsonAsync<SensorDtoForDetail>(cancellationToken);
     }
 
+    public IAsyncEnumerable<ReadingDtoForDetail> GetReadingsAsync(
+        Guid sensorId,
+        ReadingParameters parameters,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var queryString = new QueryStringBuilder()
+            .Add("pageSize", parameters.PageSize != 50 ? parameters.PageSize : null)
+            .Add("cursor", parameters.Cursor)
+            .Add("search", parameters.Search)
+            .Add("parameter", parameters.Parameter)
+            .Add("fromDate", parameters.FromDate)
+            .Add("toDate", parameters.ToDate)
+            .Build();
+
+        return httpClient.GetFromJsonAsAsyncEnumerable<ReadingDtoForDetail>(
+            $"api/sensors/{sensorId}/readings{queryString}",
+            cancellationToken
+        )!;
+    }
+
+    public async Task<IReadOnlyList<string>> GetReadingParametersAsync(
+        Guid sensorId,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var response = await httpClient.GetAsync(
+            $"api/sensors/{sensorId}/readings/parameters",
+            cancellationToken
+        );
+
+        if (!response.IsSuccessStatusCode)
+        {
+            return [];
+        }
+
+        return await response.Content.ReadFromJsonAsync<IReadOnlyList<string>>(cancellationToken) ?? [];
+    }
+
     public async Task<ReadingBatchResult?> PostReadingAsync(
         Guid sensorId,
         SensorReadingDto reading,

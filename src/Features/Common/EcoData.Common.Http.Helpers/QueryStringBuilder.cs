@@ -54,6 +54,16 @@ public sealed class QueryStringBuilder
         return this;
     }
 
+    public QueryStringBuilder Add(string key, DateTimeOffset? value)
+    {
+        if (value.HasValue)
+        {
+            _parameters.Add($"{key}={Uri.EscapeDataString(value.Value.ToString("o"))}");
+        }
+
+        return this;
+    }
+
     public string Build()
     {
         return _parameters.Count > 0 ? $"?{string.Join("&", _parameters)}" : string.Empty;
