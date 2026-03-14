@@ -49,7 +49,7 @@ public sealed class AuthHttpClient(HttpClient httpClient) : IAuthHttpClient
                 return seconds;
             }
         }
-        return 900; // Default to 15 minutes
+        return 120; // Default to 2 minutes
     }
 
     public async Task<AuthResult> RegisterAsync(RegisterRequest request, CancellationToken cancellationToken = default)

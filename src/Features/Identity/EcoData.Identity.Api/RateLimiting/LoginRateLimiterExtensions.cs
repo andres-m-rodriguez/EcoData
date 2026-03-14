@@ -8,7 +8,7 @@ namespace EcoData.Identity.Api.RateLimiting;
 public static class LoginRateLimiterExtensions
 {
     public const string LoginRateLimiterPolicy = "LoginRateLimiter";
-    private static readonly TimeSpan CooldownPeriod = TimeSpan.FromMinutes(15);
+    private static readonly TimeSpan CooldownPeriod = TimeSpan.FromMinutes(2);
     private const int MaxAttempts = 3;
 
     public static IServiceCollection AddLoginRateLimiting(this IServiceCollection services)
