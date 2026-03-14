@@ -1,11 +1,11 @@
-using EcoData.Identity.DataAccess.Interfaces;
+using EcoData.Identity.Application.Server.Services;
 using EcoData.Identity.Database;
 using Microsoft.EntityFrameworkCore;
 
-namespace EcoData.Identity.DataAccess.Repositories;
+namespace EcoData.Identity.DataAccess.Services;
 
-public sealed class UserLookupRepository(IDbContextFactory<IdentityDbContext> contextFactory)
-    : IUserLookupRepository
+public sealed class UserLookupService(IDbContextFactory<IdentityDbContext> contextFactory)
+    : IUserLookupService
 {
     public async Task<IReadOnlyDictionary<Guid, UserLookupDto>> GetByIdsAsync(
         IEnumerable<Guid> userIds,

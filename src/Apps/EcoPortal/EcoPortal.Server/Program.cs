@@ -1,4 +1,5 @@
-using EcoData.Identity.Api;
+using EcoData.Identity.Api.Authentication;
+using EcoData.Identity.Api.Endpoints;
 using EcoData.Identity.Application.Extensions;
 using EcoData.Identity.DataAccess.Extensions;
 using EcoData.Identity.Database.Extensions;
@@ -29,16 +30,27 @@ builder.Services.AddCascadingAuthenticationState();
 
 builder.Services.AddMudServices();
 builder.Services.AddIdentityDataAccess();
-builder.Services.AddIdentityApplication();
+builder.Services.AddIdentityApplication(builder.Configuration);
 builder.Services.AddLocationsDataAccess();
 builder.Services.AddOrganizationDataAccess();
 builder.Services.AddSensorsDataAccess();
 
-builder.Services.AddAuthentication(options =>
-{
-    options.DefaultAuthenticateScheme = Microsoft.AspNetCore.Identity.IdentityConstants.ApplicationScheme;
-    options.DefaultChallengeScheme = Microsoft.AspNetCore.Identity.IdentityConstants.ApplicationScheme;
-}).AddApiKeyAuthentication();
+builder
+    .Services.AddAuthentication(options =>
+    {
+        options.DefaultAuthenticateScheme = Microsoft
+            .AspNetCore
+            .Identity
+            .IdentityConstants
+            .ApplicationScheme;
+        options.DefaultChallengeScheme = Microsoft
+            .AspNetCore
+            .Identity
+            .IdentityConstants
+            .ApplicationScheme;
+    })
+    .AddApiKeyAuthentication()
+    .AddSensorJwtAuthentication(builder.Configuration);
 
 builder.Services.AddOrganizationAuthorization();
 
@@ -67,7 +79,7 @@ app.MapRazorComponents<App>()
 
 app.MapOrganizationApiEndpoints();
 app.MapSensorsApiEndpoints();
-app.MapAuthEndpoints();
+app.MapUserAuthEndpoints();
 app.MapStateEndpoints();
 app.MapMunicipalityEndpoints();
 

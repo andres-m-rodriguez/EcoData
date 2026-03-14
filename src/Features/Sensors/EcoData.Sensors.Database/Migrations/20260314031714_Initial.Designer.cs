@@ -12,7 +12,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace EcoData.Sensors.Database.Migrations
 {
     [DbContext(typeof(SensorsDbContext))]
-    [Migration("20260313053226_Initial")]
+    [Migration("20260314031714_Initial")]
     partial class Initial
     {
         /// <inheritdoc />

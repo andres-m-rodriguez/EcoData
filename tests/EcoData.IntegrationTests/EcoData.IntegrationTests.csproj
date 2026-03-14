@@ -23,6 +23,7 @@
     <ProjectReference Include="..\..\src\Host\EcoData.AppHost\EcoData.AppHost.csproj" />
     <ProjectReference Include="..\..\src\Features\Organization\EcoData.Organization.Application.Client\EcoData.Organization.Application.Client.csproj" />
     <ProjectReference Include="..\..\src\Features\Sensors\EcoData.Sensors.Application.Client\EcoData.Sensors.Application.Client.csproj" />
+    <ProjectReference Include="..\..\src\Features\Sensors\EcoData.Sensors.Contracts\EcoData.Sensors.Contracts.csproj" />
     <ProjectReference Include="..\..\src\Features\Identity\EcoData.Identity.Application.Client\EcoData.Identity.Application.Client.csproj" />
   </ItemGroup>
 

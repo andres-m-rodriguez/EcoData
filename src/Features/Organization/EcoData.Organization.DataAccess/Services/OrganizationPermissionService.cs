@@ -1,12 +1,13 @@
+using EcoData.Identity.Application.Server.Services;
+using EcoData.Organization.Application.Server.Services;
 using EcoData.Organization.DataAccess.Interfaces;
-using EcoData.Identity.DataAccess.Interfaces;
 
 namespace EcoData.Organization.DataAccess.Services;
 
-public sealed class PermissionService(
+public sealed class OrganizationPermissionService(
     IOrganizationMembershipRepository membershipRepository,
-    IUserLookupRepository userLookupRepository
-) : IPermissionService
+    IUserLookupService userLookupService
+) : IOrganizationPermissionService
 {
     public async Task<bool> HasPermissionAsync(
         Guid userId,
@@ -16,7 +17,7 @@ public sealed class PermissionService(
     )
     {
         // GlobalAdmin has all permissions
-        if (await userLookupRepository.IsGlobalAdminAsync(userId, cancellationToken))
+        if (await userLookupService.IsGlobalAdminAsync(userId, cancellationToken))
         {
             return true;
         }

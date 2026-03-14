@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using EcoData.Identity.Contracts.Claims;
+using EcoData.Organization.Application.Server.Services;
 using EcoData.Organization.Contracts.Dtos;
 using EcoData.Organization.Contracts.Parameters;
 using EcoData.Organization.Contracts.Requests;
@@ -107,7 +108,7 @@ public static class OrganizationAccessRequestEndpoints
                     [AsParameters] OrganizationAccessRequestParameters parameters,
                     ClaimsPrincipal user,
                     IOrganizationAccessRequestRepository repository,
-                    IPermissionService permissionService,
+                    IOrganizationPermissionService permissionService,
                     CancellationToken ct
                 ) =>
                 {
@@ -140,7 +141,7 @@ public static class OrganizationAccessRequestEndpoints
                     Guid id,
                     ClaimsPrincipal user,
                     IOrganizationAccessRequestRepository repository,
-                    IPermissionService permissionService,
+                    IOrganizationPermissionService permissionService,
                     CancellationToken ct
                 ) =>
                 {
@@ -186,7 +187,7 @@ public static class OrganizationAccessRequestEndpoints
                     ClaimsPrincipal user,
                     IOrganizationAccessRequestRepository repository,
                     IOrganizationMemberRepository memberRepository,
-                    IPermissionService permissionService,
+                    IOrganizationPermissionService permissionService,
                     CancellationToken ct
                 ) =>
                 {

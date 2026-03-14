@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using EcoData.Identity.Contracts.Authorization;
 using EcoData.Identity.Contracts.Claims;
+using EcoData.Organization.Application.Server.Services;
 using EcoData.Organization.Contracts.Dtos;
 using EcoData.Organization.Contracts.Parameters;
 using EcoData.Organization.DataAccess.Interfaces;
@@ -93,7 +94,7 @@ public static class OrganizationEndpoints
                     OrganizationDtoForUpdate dto,
                     ClaimsPrincipal user,
                     IOrganizationRepository repository,
-                    IPermissionService permissionService,
+                    IOrganizationPermissionService permissionService,
                     CancellationToken ct
                 ) =>
                 {
@@ -125,7 +126,7 @@ public static class OrganizationEndpoints
                     Guid id,
                     ClaimsPrincipal user,
                     IOrganizationRepository repository,
-                    IPermissionService permissionService,
+                    IOrganizationPermissionService permissionService,
                     CancellationToken ct
                 ) =>
                 {
