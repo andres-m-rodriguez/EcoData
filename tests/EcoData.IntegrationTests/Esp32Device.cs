@@ -32,13 +32,15 @@ public sealed class Esp32Device : IEsp32Device
     {
         var result = await _sensors.RegisterAsync(request, ct);
 
-        if (result is not null)
+        if (result.IsT0)
         {
-            _sensorId = result.SensorId;
-            _token = result.AccessToken;
+            var credentials = result.AsT0;
+            _sensorId = credentials.SensorId;
+            _token = credentials.AccessToken;
+            return credentials;
         }
 
-        return result;
+        return null;
     }
 
     public async Task SendSensorDataAsync(SensorReadingDto reading, CancellationToken ct = default)
@@ -48,7 +50,7 @@ public sealed class Esp32Device : IEsp32Device
 
         var result = await _sensors.PostReadingAsync(SensorId, reading, ct);
 
-        if (result is null)
+        if (!result.IsT0)
             throw new InvalidOperationException("Failed to post sensor reading.");
     }
 }
