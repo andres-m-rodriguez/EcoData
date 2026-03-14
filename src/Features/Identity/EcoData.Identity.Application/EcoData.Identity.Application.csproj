@@ -11,6 +11,11 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.3.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\EcoData.Identity.Application.Server\EcoData.Identity.Application.Server.csproj" />
     <ProjectReference Include="..\EcoData.Identity.Contracts\EcoData.Identity.Contracts.csproj" />
     <ProjectReference Include="..\EcoData.Identity.Database\EcoData.Identity.Database.csproj" />
     <ProjectReference Include="..\EcoData.Identity.DataAccess\EcoData.Identity.DataAccess.csproj" />

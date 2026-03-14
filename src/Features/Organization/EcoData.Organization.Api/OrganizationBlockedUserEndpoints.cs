@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using EcoData.Identity.Contracts.Claims;
+using EcoData.Organization.Application.Server.Services;
 using EcoData.Organization.Contracts.Dtos;
 using EcoData.Organization.DataAccess.Interfaces;
 using Microsoft.AspNetCore.Builder;
@@ -27,7 +28,7 @@ public static class OrganizationBlockedUserEndpoints
                     Guid organizationId,
                     ClaimsPrincipal user,
                     IOrganizationBlockedUserRepository repository,
-                    IPermissionService permissionService,
+                    IOrganizationPermissionService permissionService,
                     CancellationToken ct
                 ) =>
                 {
@@ -60,7 +61,7 @@ public static class OrganizationBlockedUserEndpoints
                     BlockUserRequest request,
                     ClaimsPrincipal user,
                     IOrganizationBlockedUserRepository repository,
-                    IPermissionService permissionService,
+                    IOrganizationPermissionService permissionService,
                     CancellationToken ct
                 ) =>
                 {
@@ -112,7 +113,7 @@ public static class OrganizationBlockedUserEndpoints
                     Guid userId,
                     ClaimsPrincipal user,
                     IOrganizationBlockedUserRepository repository,
-                    IPermissionService permissionService,
+                    IOrganizationPermissionService permissionService,
                     CancellationToken ct
                 ) =>
                 {

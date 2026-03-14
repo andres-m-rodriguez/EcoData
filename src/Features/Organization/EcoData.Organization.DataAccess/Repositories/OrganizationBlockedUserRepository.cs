@@ -3,14 +3,14 @@ using EcoData.Organization.Contracts.Dtos;
 using EcoData.Organization.DataAccess.Interfaces;
 using EcoData.Organization.Database;
 using EcoData.Organization.Database.Models;
-using EcoData.Identity.DataAccess.Interfaces;
+using EcoData.Identity.Application.Server.Services;
 using Microsoft.EntityFrameworkCore;
 
 namespace EcoData.Organization.DataAccess.Repositories;
 
 public sealed class OrganizationBlockedUserRepository(
     IDbContextFactory<OrganizationDbContext> contextFactory,
-    IUserLookupRepository userLookupRepository
+    IUserLookupService userLookupService
 ) : IOrganizationBlockedUserRepository
 {
     public async IAsyncEnumerable<OrganizationBlockedUserDto> GetByOrganizationAsync(
@@ -42,7 +42,7 @@ public sealed class OrganizationBlockedUserRepository(
             .SelectMany(b => new[] { b.UserId, b.BlockedByUserId })
             .Distinct();
 
-        var users = await userLookupRepository.GetByIdsAsync(userIds, cancellationToken);
+        var users = await userLookupService.GetByIdsAsync(userIds, cancellationToken);
 
         foreach (var blocked in blockedUsers)
         {
@@ -98,7 +98,7 @@ public sealed class OrganizationBlockedUserRepository(
         context.OrganizationBlockedUsers.Add(entity);
         await context.SaveChangesAsync(cancellationToken);
 
-        var users = await userLookupRepository.GetByIdsAsync(
+        var users = await userLookupService.GetByIdsAsync(
             [userId, blockedByUserId],
             cancellationToken
         );

@@ -1,6 +1,6 @@
 using System.Security.Claims;
 using System.Text.RegularExpressions;
-using EcoData.Organization.DataAccess.Interfaces;
+using EcoData.Organization.Application.Server.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 
@@ -8,7 +8,7 @@ namespace EcoData.Organization.Api.Authorization;
 
 public sealed partial class OrganizationPermissionHandler(
     IHttpContextAccessor httpContextAccessor,
-    IPermissionService permissionService
+    IOrganizationPermissionService permissionService
 ) : AuthorizationHandler<OrganizationPermissionRequirement>
 {
     protected override async Task HandleRequirementAsync(

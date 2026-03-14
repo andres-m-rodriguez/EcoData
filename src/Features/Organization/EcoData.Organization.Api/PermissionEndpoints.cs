@@ -1,8 +1,8 @@
 using System.Security.Claims;
 using EcoData.Organization.Contracts.Dtos;
 using EcoData.Organization.DataAccess.Interfaces;
+using EcoData.Identity.Application.Server.Services;
 using EcoData.Identity.Contracts.Claims;
-using EcoData.Identity.DataAccess.Interfaces;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
@@ -24,7 +24,7 @@ public static class PermissionEndpoints
                 Guid organizationId,
                 ClaimsPrincipal user,
                 IOrganizationMembershipRepository membershipRepository,
-                IUserLookupRepository userLookupRepository,
+                IUserLookupService userLookupService,
                 CancellationToken ct
             ) =>
             {
@@ -35,7 +35,7 @@ public static class PermissionEndpoints
                 }
 
                 var userId = token.UserId!.Value;
-                var isGlobalAdmin = await userLookupRepository.IsGlobalAdminAsync(userId, ct);
+                var isGlobalAdmin = await userLookupService.IsGlobalAdminAsync(userId, ct);
 
                 if (isGlobalAdmin)
                 {

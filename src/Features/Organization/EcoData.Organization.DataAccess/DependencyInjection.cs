@@ -1,3 +1,4 @@
+using EcoData.Organization.Application.Server.Services;
 using EcoData.Organization.DataAccess.Interfaces;
 using EcoData.Organization.DataAccess.Repositories;
 using EcoData.Organization.DataAccess.Services;
@@ -16,7 +17,7 @@ public static class DependencyInjection
         services.AddScoped<IOrganizationBlockedUserRepository, OrganizationBlockedUserRepository>();
         services.AddScoped<IApiKeyRepository, ApiKeyRepository>();
         services.AddScoped<IDataSourceRepository, DataSourceRepository>();
-        services.AddScoped<IPermissionService, PermissionService>();
+        services.AddScoped<IOrganizationPermissionService, OrganizationPermissionService>();
 
         return services;
     }
