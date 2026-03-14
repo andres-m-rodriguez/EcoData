@@ -156,6 +156,11 @@ namespace EcoData.Sensors.Database.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("id");
 
+                    b.Property<string>("Description")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("description");
+
                     b.Property<DateTimeOffset>("IngestedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("ingested_at");

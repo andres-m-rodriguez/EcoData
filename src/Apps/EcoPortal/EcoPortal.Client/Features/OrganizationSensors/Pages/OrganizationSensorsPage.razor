@@ -18,7 +18,8 @@
 <SensorList OrganizationId="OrganizationId"
             EmptyMessage="No sensors yet"
             EmptySubMessage="Add sensors to start monitoring water quality."
-            OnMapClick="NavigateToMap">
+            OnMapClick="NavigateToMap"
+            OnSensorClick="NavigateToDetail">
     <Actions>
         <RequireOrganizationPermission Permission="@Permissions.Sensor.Create" OrganizationId="OrganizationId">
             <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add"
@@ -57,5 +58,10 @@
     private void NavigateToMap(SensorDtoForList sensor)
     {
         Navigation.NavigateTo($"/map?lat={sensor.Latitude}&lon={sensor.Longitude}");
+    }
+
+    private void NavigateToDetail(SensorDtoForList sensor)
+    {
+        Navigation.NavigateTo($"/sensors/{sensor.Id}");
     }
 }

@@ -72,7 +72,7 @@
                 Snackbar.Add($"Access request submitted for {_selectedOrganization.Name}", Severity.Success);
                 MudDialog.Close(DialogResult.Ok(true));
             },
-            conflict => Snackbar.Add("You already have a pending request for this organization", Severity.Warning),
+            conflict => Snackbar.Add(conflict.Message, Severity.Warning),
             error => Snackbar.Add($"Failed to submit request: {error.Message}", Severity.Error)
         );
     }

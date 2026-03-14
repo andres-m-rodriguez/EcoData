@@ -48,6 +48,7 @@ public static class PushEndpoints
                             new ReadingDtoForCreate(
                                 batch.SensorId,
                                 reading.Parameter,
+                                reading.Description,
                                 reading.Value,
                                 reading.Unit,
                                 reading.RecordedAt
@@ -107,6 +108,7 @@ public static class PushEndpoints
                                 new ReadingDtoForCreate(
                                     batch.SensorId,
                                     reading.Parameter,
+                                    reading.Description,
                                     reading.Value,
                                     reading.Unit,
                                     reading.RecordedAt
