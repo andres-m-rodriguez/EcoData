@@ -1,10 +1,15 @@
 using EcoData.Sensors.Contracts.Dtos;
 using EcoData.Sensors.Contracts.Parameters;
+using EcoData.Sensors.Contracts.Requests;
 
 namespace EcoData.Sensors.Application.Client;
 
 public interface ISensorHttpClient
 {
+    Task<SensorRegistrationResultDto?> RegisterAsync(
+        RegisterSensorRequest request,
+        CancellationToken cancellationToken = default
+    );
     IAsyncEnumerable<SensorDtoForList> GetSensorsAsync(
         SensorParameters parameters,
         CancellationToken cancellationToken = default
@@ -20,9 +25,9 @@ public interface ISensorHttpClient
         CancellationToken cancellationToken = default
     );
 
-    Task<SensorDtoForCreated?> CreateForOrganizationAsync(
-        Guid organizationId,
-        SensorDtoForOrganizationCreate dto,
+    Task<ReadingBatchResult?> PostReadingAsync(
+        Guid sensorId,
+        SensorReadingDto reading,
         CancellationToken cancellationToken = default
     );
 }

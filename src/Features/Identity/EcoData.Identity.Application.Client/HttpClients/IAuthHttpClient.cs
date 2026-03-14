@@ -1,7 +1,8 @@
 using EcoData.Identity.Contracts.Requests;
 using EcoData.Identity.Contracts.Responses;
+using EcoData.Identity.Contracts.Results;
 
-namespace EcoData.Identity.Application.Client;
+namespace EcoData.Identity.Application.Client.HttpClients;
 
 public interface IAuthHttpClient
 {
@@ -16,5 +17,3 @@ public interface IAuthHttpClient
     Task LogoutAsync(CancellationToken cancellationToken = default);
     Task<UserInfo?> GetCurrentUserAsync(CancellationToken cancellationToken = default);
 }
-
-public record AuthResult(bool Success, UserInfo? User = null, string? Error = null);

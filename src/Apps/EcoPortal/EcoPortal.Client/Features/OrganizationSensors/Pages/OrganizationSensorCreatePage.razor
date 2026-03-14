@@ -5,16 +5,19 @@
 @using EcoData.Organization.Contracts.Dtos
 @using EcoData.Organization.Application.Client
 @using EcoData.Sensors.Contracts.Dtos
+@using EcoData.Sensors.Contracts.Requests
 @using EcoData.Sensors.Application.Client
 @using EcoPortal.Client.Services
 @using EcoData.Locations.Contracts.Dtos
 @using EcoData.Locations.Contracts.Parameters
 @using BlazingSingularity.Commands
+@using EcoPortal.Client.Features.OrganizationSensors.Dialogs
 @inject ISensorHttpClient SensorClient
 @inject IOrganizationHttpClient OrganizationClient
 @inject ILocationHttpClient LocationClient
 @inject INavigationService Navigation
 @inject ISnackbar Snackbar
+@inject IDialogService DialogService
 @inject AuthStateService AuthState
 
 <PageTitle>Add Sensor - EcoData</PageTitle>
@@ -211,26 +214,48 @@ _selectedMunicipality is not null;
             return;
         }
 
-        var dto = new SensorDtoForOrganizationCreate(
-            _externalId.Trim(),
+        var request = new RegisterSensorRequest(
+            OrganizationId,
+            _organization!.Name,
             _name.Trim(),
+            _externalId.Trim(),
             _latitude,
             _longitude,
-            _selectedMunicipality!.Id,
-            _isActive
+            _selectedMunicipality!.Id
         );
 
-        var result = await SensorClient.CreateForOrganizationAsync(OrganizationId, dto);
+        var result = await SensorClient.RegisterAsync(request);
 
         if (result is not null)
         {
-            Snackbar.Add("Sensor created successfully", Severity.Success);
+            await ShowCredentialsDialog(result);
             Navigation.NavigateTo($"/organizations/{OrganizationId}/sensors");
         }
         else
         {
-            _errorMessage = "Failed to create sensor";
+            _errorMessage = "Failed to register sensor";
         }
+    }
+
+    private async Task ShowCredentialsDialog(SensorRegistrationResultDto credentials)
+    {
+        var parameters = new DialogParameters<SensorCredentialsDialog>
+        {
+            { x => x.SensorId, credentials.SensorId },
+            { x => x.AccessToken, credentials.AccessToken },
+            { x => x.ExpiresAt, credentials.ExpiresAt },
+            { x => x.SensorName, _name }
+        };
+
+        var options = new DialogOptions
+        {
+            CloseButton = false,
+            BackdropClick = false,
+            MaxWidth = MaxWidth.Small,
+            FullWidth = true
+        };
+
+        await DialogService.ShowAsync<SensorCredentialsDialog>("Sensor Registered", parameters, options);
     }
 
     private void NavigateToSensors() => Navigation.GoBack();

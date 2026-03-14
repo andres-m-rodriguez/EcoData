@@ -7,9 +7,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\EcoData.Organization.Application.Server\EcoData.Organization.Application.Server.csproj" />
     <ProjectReference Include="..\EcoData.Organization.Contracts\EcoData.Organization.Contracts.csproj" />
     <ProjectReference Include="..\EcoData.Organization.Database\EcoData.Organization.Database.csproj" />
-    <ProjectReference Include="..\..\Identity\EcoData.Identity.DataAccess\EcoData.Identity.DataAccess.csproj" />
+    <ProjectReference Include="..\..\Identity\EcoData.Identity.Application.Server\EcoData.Identity.Application.Server.csproj" />
   </ItemGroup>
 
 </Project>

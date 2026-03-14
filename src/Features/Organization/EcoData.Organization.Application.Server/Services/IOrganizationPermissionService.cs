@@ -1,6 +1,6 @@
-namespace EcoData.Organization.DataAccess.Interfaces;
+namespace EcoData.Organization.Application.Server.Services;
 
-public interface IPermissionService
+public interface IOrganizationPermissionService
 {
     Task<bool> HasPermissionAsync(
         Guid userId,

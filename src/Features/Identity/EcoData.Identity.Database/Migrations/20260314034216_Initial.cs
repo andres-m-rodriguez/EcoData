@@ -27,6 +27,21 @@ namespace EcoData.Identity.Database.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "sensor_credentials",
+                columns: table => new
+                {
+                    sensor_id = table.Column<Guid>(type: "uuid", nullable: false),
+                    organization_id = table.Column<Guid>(type: "uuid", nullable: false),
+                    organization_name = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
+                    sensor_name = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
+                    created_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("pk_sensor_credentials", x => x.sensor_id);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "users",
                 columns: table => new
                 {
@@ -204,6 +219,9 @@ namespace EcoData.Identity.Database.Migrations
         {
             migrationBuilder.DropTable(
                 name: "role_claims");
+
+            migrationBuilder.DropTable(
+                name: "sensor_credentials");
 
             migrationBuilder.DropTable(
                 name: "user_claims");

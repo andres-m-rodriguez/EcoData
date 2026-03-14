@@ -9,7 +9,8 @@ public static class IdentityDatabaseExtensions
 {
     public static IHostApplicationBuilder AddIdentityDatabase(
         this IHostApplicationBuilder builder,
-        string connectionName = "identity")
+        string connectionName = "identity"
+    )
     {
         var connectionString = builder.Configuration.GetConnectionString(connectionName);
 
@@ -26,14 +27,20 @@ public static class IdentityDatabaseExtensions
         return builder;
     }
 
-    private static void ConfigureDbContext(string? connectionString, DbContextOptionsBuilder options)
+    private static void ConfigureDbContext(
+        string? connectionString,
+        DbContextOptionsBuilder options
+    )
     {
-        options.UseNpgsql(connectionString, npgsqlOptions =>
-        {
-            npgsqlOptions.MigrationsAssembly("EcoData.Identity.Database");
-            npgsqlOptions.MigrationsHistoryTable("__ef_migrations_history", "public");
-            npgsqlOptions.EnableRetryOnFailure(maxRetryCount: 5);
-        });
+        options.UseNpgsql(
+            connectionString,
+            npgsqlOptions =>
+            {
+                npgsqlOptions.MigrationsAssembly("EcoData.Identity.Database");
+                npgsqlOptions.MigrationsHistoryTable("__ef_migrations_history", "public");
+                npgsqlOptions.EnableRetryOnFailure(maxRetryCount: 5);
+            }
+        );
         options.UseSnakeCaseNamingConvention();
         options.UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking);
         options.EnableThreadSafetyChecks(false);

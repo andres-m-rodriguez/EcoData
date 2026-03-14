@@ -1,5 +1,5 @@
 using System.Runtime.CompilerServices;
-using EcoData.Identity.DataAccess.Interfaces;
+using EcoData.Identity.Application.Server.Services;
 using EcoData.Organization.Contracts.Dtos;
 using EcoData.Organization.Contracts.Parameters;
 using EcoData.Organization.DataAccess.Interfaces;
@@ -11,7 +11,7 @@ namespace EcoData.Organization.DataAccess.Repositories;
 
 public sealed class OrganizationAccessRequestRepository(
     IDbContextFactory<OrganizationDbContext> contextFactory,
-    IUserLookupRepository userLookupRepository
+    IUserLookupService userLookupService
 ) : IOrganizationAccessRequestRepository
 {
     public async IAsyncEnumerable<OrganizationAccessRequestDto> GetByOrganizationAsync(
@@ -73,7 +73,7 @@ public sealed class OrganizationAccessRequestRepository(
             .Concat(requests.Select(r => r.UserId))
             .Distinct();
 
-        var users = await userLookupRepository.GetByIdsAsync(userIds, cancellationToken);
+        var users = await userLookupService.GetByIdsAsync(userIds, cancellationToken);
 
         foreach (var request in requests)
         {
@@ -156,14 +156,14 @@ public sealed class OrganizationAccessRequestRepository(
             yield break;
         }
 
-        var user = await userLookupRepository.GetByIdAsync(userId, cancellationToken);
+        var user = await userLookupService.GetByIdAsync(userId, cancellationToken);
 
         var reviewerIds = requests
             .Where(r => r.ReviewedByUserId.HasValue)
             .Select(r => r.ReviewedByUserId!.Value)
             .Distinct();
 
-        var reviewers = await userLookupRepository.GetByIdsAsync(reviewerIds, cancellationToken);
+        var reviewers = await userLookupService.GetByIdsAsync(reviewerIds, cancellationToken);
 
         foreach (var request in requests)
         {
@@ -218,9 +218,9 @@ public sealed class OrganizationAccessRequestRepository(
             return null;
         }
 
-        var user = await userLookupRepository.GetByIdAsync(request.UserId, cancellationToken);
+        var user = await userLookupService.GetByIdAsync(request.UserId, cancellationToken);
         var reviewer = request.ReviewedByUserId.HasValue
-            ? await userLookupRepository.GetByIdAsync(
+            ? await userLookupService.GetByIdAsync(
                 request.ReviewedByUserId.Value,
                 cancellationToken
             )
@@ -274,7 +274,7 @@ public sealed class OrganizationAccessRequestRepository(
         context.OrganizationAccessRequests.Add(entity);
         await context.SaveChangesAsync(cancellationToken);
 
-        var user = await userLookupRepository.GetByIdAsync(userId, cancellationToken);
+        var user = await userLookupService.GetByIdAsync(userId, cancellationToken);
 
         return new OrganizationAccessRequestDto(
             entity.Id,
@@ -324,8 +324,8 @@ public sealed class OrganizationAccessRequestRepository(
             .Select(o => o.Name)
             .FirstOrDefaultAsync(cancellationToken) ?? "";
 
-        var user = await userLookupRepository.GetByIdAsync(entity.UserId, cancellationToken);
-        var reviewer = await userLookupRepository.GetByIdAsync(reviewedByUserId, cancellationToken);
+        var user = await userLookupService.GetByIdAsync(entity.UserId, cancellationToken);
+        var reviewer = await userLookupService.GetByIdAsync(reviewedByUserId, cancellationToken);
 
         return new OrganizationAccessRequestDto(
             entity.Id,
@@ -388,7 +388,7 @@ public sealed class OrganizationAccessRequestRepository(
             .Select(o => o.Name)
             .FirstOrDefaultAsync(cancellationToken) ?? "";
 
-        var user = await userLookupRepository.GetByIdAsync(entity.UserId, cancellationToken);
+        var user = await userLookupService.GetByIdAsync(entity.UserId, cancellationToken);
 
         return new OrganizationAccessRequestDto(
             entity.Id,

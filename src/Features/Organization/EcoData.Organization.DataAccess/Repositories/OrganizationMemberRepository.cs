@@ -1,5 +1,5 @@
 using System.Runtime.CompilerServices;
-using EcoData.Identity.DataAccess.Interfaces;
+using EcoData.Identity.Application.Server.Services;
 using EcoData.Organization.Contracts.Dtos;
 using EcoData.Organization.Contracts.Parameters;
 using EcoData.Organization.DataAccess.Interfaces;
@@ -11,7 +11,7 @@ namespace EcoData.Organization.DataAccess.Repositories;
 
 public sealed class OrganizationMemberRepository(
     IDbContextFactory<OrganizationDbContext> contextFactory,
-    IUserLookupRepository userLookupRepository
+    IUserLookupService userLookupService
 ) : IOrganizationMemberRepository
 {
     public async IAsyncEnumerable<OrganizationMemberDto> GetAllAsync(
@@ -47,7 +47,7 @@ public sealed class OrganizationMemberRepository(
         }
 
         var userIds = members.Select(m => m.UserId).Distinct();
-        var users = await userLookupRepository.GetByIdsAsync(userIds, cancellationToken);
+        var users = await userLookupService.GetByIdsAsync(userIds, cancellationToken);
 
         foreach (var member in members)
         {
@@ -89,7 +89,7 @@ public sealed class OrganizationMemberRepository(
             return null;
         }
 
-        var user = await userLookupRepository.GetByIdAsync(userId, cancellationToken);
+        var user = await userLookupService.GetByIdAsync(userId, cancellationToken);
 
         return new OrganizationMemberDto(
             member.Id,
@@ -132,7 +132,7 @@ public sealed class OrganizationMemberRepository(
         context.OrganizationMembers.Add(entity);
         await context.SaveChangesAsync(cancellationToken);
 
-        var user = await userLookupRepository.GetByIdAsync(userId, cancellationToken);
+        var user = await userLookupService.GetByIdAsync(userId, cancellationToken);
 
         return new OrganizationMemberDto(
             entity.Id,
@@ -177,7 +177,7 @@ public sealed class OrganizationMemberRepository(
         member.RoleId = role.Id;
         await context.SaveChangesAsync(cancellationToken);
 
-        var user = await userLookupRepository.GetByIdAsync(userId, cancellationToken);
+        var user = await userLookupService.GetByIdAsync(userId, cancellationToken);
 
         return new OrganizationMemberDto(
             member.Id,

@@ -2,8 +2,9 @@ using System.Net;
 using System.Net.Http.Json;
 using EcoData.Identity.Contracts.Requests;
 using EcoData.Identity.Contracts.Responses;
+using EcoData.Identity.Contracts.Results;
 
-namespace EcoData.Identity.Application.Client;
+namespace EcoData.Identity.Application.Client.HttpClients;
 
 public sealed class AuthHttpClient(HttpClient httpClient) : IAuthHttpClient
 {
