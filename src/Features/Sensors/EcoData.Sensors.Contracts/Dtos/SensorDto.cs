@@ -1,3 +1,5 @@
+using FluentValidation;
+
 namespace EcoData.Sensors.Contracts.Dtos;
 
 public sealed record SensorDtoForList(
@@ -47,6 +49,36 @@ public sealed record SensorDtoForUpdate(
     Guid MunicipalityId,
     bool IsActive
 );
+
+public sealed class SensorDtoForUpdateValidator : AbstractValidator<SensorDtoForUpdate>
+{
+    public SensorDtoForUpdateValidator()
+    {
+        RuleFor(static x => x.Name)
+            .NotEmpty()
+            .WithMessage("Name is required")
+            .MaximumLength(300)
+            .WithMessage("Name must be 300 characters or less");
+
+        RuleFor(static x => x.ExternalId)
+            .NotEmpty()
+            .WithMessage("External ID is required")
+            .MaximumLength(100)
+            .WithMessage("External ID must be 100 characters or less");
+
+        RuleFor(static x => x.Latitude)
+            .InclusiveBetween(-90m, 90m)
+            .WithMessage("Latitude must be between -90 and 90");
+
+        RuleFor(static x => x.Longitude)
+            .InclusiveBetween(-180m, 180m)
+            .WithMessage("Longitude must be between -180 and 180");
+
+        RuleFor(static x => x.MunicipalityId)
+            .NotEmpty()
+            .WithMessage("Municipality is required");
+    }
+}
 
 public sealed record SensorRegistrationResultDto(
     Guid SensorId,
