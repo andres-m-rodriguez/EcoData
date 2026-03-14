@@ -1,0 +1,88 @@
+@using EcoPortal.Client.Services
+@implements IAsyncDisposable
+@inject ILeafletMapService MapService
+
+<div id="@_elementId" class="leaflet-map-container @Class"></div>
+
+@code {
+    private readonly string _elementId = $"leaflet-map-{Guid.NewGuid():N}";
+    private ILeafletMapInstance? _mapInstance;
+
+    [Parameter]
+    public string? Class { get; set; }
+
+    [Parameter]
+    public double? Latitude { get; set; }
+
+    [Parameter]
+    public double? Longitude { get; set; }
+
+    [Parameter]
+    public int Zoom { get; set; } = 9;
+
+    [Parameter]
+    public bool ShowMarker { get; set; }
+
+    [Parameter]
+    public EventCallback<MapClickEventArgs> OnMapClick { get; set; }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            var options = new LeafletMapOptions(
+                InitialLatitude: Latitude,
+                InitialLongitude: Longitude,
+                InitialZoom: Zoom,
+                ShowMarker: ShowMarker && Latitude.HasValue && Longitude.HasValue
+            );
+
+            _mapInstance = await MapService.CreateAsync(_elementId, options);
+
+            _mapInstance.OnClick(async args =>
+            {
+                await OnMapClick.InvokeAsync(args);
+            });
+        }
+    }
+
+    public async Task SetViewAsync(double latitude, double longitude, int? zoom = null)
+    {
+        if (_mapInstance is not null)
+        {
+            await _mapInstance.SetViewAsync(latitude, longitude, zoom);
+        }
+    }
+
+    public async Task SetMarkerAsync(double latitude, double longitude)
+    {
+        if (_mapInstance is not null)
+        {
+            await _mapInstance.SetMarkerAsync(latitude, longitude);
+        }
+    }
+
+    public async Task ClearMarkerAsync()
+    {
+        if (_mapInstance is not null)
+        {
+            await _mapInstance.ClearMarkerAsync();
+        }
+    }
+
+    public async Task InvalidateSizeAsync()
+    {
+        if (_mapInstance is not null)
+        {
+            await _mapInstance.InvalidateSizeAsync();
+        }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (_mapInstance is not null)
+        {
+            await _mapInstance.DisposeAsync();
+        }
+    }
+}
