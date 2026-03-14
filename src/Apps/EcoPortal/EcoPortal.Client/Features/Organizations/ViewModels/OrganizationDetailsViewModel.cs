@@ -71,7 +71,7 @@ public class OrganizationDetailsViewModel
     public string ViewAllMembersText => $"View all {_members.Count} members";
 
     // Configuration
-    public const int MaxDisplayedSensors = 4;
+    public const int MaxDisplayedSensors = 6;
     public const int MaxDisplayedMembers = 10;
 
     // Member Display Helpers

@@ -12,7 +12,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace EcoData.Sensors.Database.Migrations
 {
     [DbContext(typeof(SensorsDbContext))]
-    [Migration("20260314031714_Initial")]
+    [Migration("20260314173648_Initial")]
     partial class Initial
     {
         /// <inheritdoc />
@@ -158,6 +158,11 @@ namespace EcoData.Sensors.Database.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid")
                         .HasColumnName("id");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("description");
 
                     b.Property<DateTimeOffset>("IngestedAt")
                         .HasColumnType("timestamp with time zone")

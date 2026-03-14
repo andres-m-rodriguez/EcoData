@@ -11,10 +11,9 @@ namespace EcoData.Sensors.Application.Client;
 
 public sealed class SensorHttpClient(HttpClient httpClient) : ISensorHttpClient
 {
-    public async Task<OneOf<SensorRegistrationResultDto, ValidationError, ForbiddenError, ConflictError>> RegisterAsync(
-        RegisterSensorRequest request,
-        CancellationToken cancellationToken = default
-    )
+    public async Task<
+        OneOf<SensorRegistrationResultDto, ValidationError, ForbiddenError, ConflictError>
+    > RegisterAsync(RegisterSensorRequest request, CancellationToken cancellationToken = default)
     {
         var response = await httpClient.PostAsJsonAsync(
             "api/sensors/register",
@@ -24,17 +23,24 @@ public sealed class SensorHttpClient(HttpClient httpClient) : ISensorHttpClient
 
         if (response.IsSuccessStatusCode)
         {
-            var result = await response.Content.ReadFromJsonAsync<SensorRegistrationResultDto>(cancellationToken);
+            var result = await response.Content.ReadFromJsonAsync<SensorRegistrationResultDto>(
+                cancellationToken
+            );
             return result!;
         }
 
         return response.StatusCode switch
         {
-            HttpStatusCode.Forbidden => new ForbiddenError("You don't have permission to register sensors for this organization"),
-            HttpStatusCode.Conflict => new ConflictError("A sensor with this external ID already exists"),
+            HttpStatusCode.Forbidden => new ForbiddenError(
+                "You don't have permission to register sensors for this organization"
+            ),
+            HttpStatusCode.Conflict => new ConflictError(
+                "A sensor with this external ID already exists"
+            ),
             HttpStatusCode.BadRequest => new ValidationError(
-                await response.Content.ReadAsStringAsync(cancellationToken)),
-            _ => new ValidationError("Failed to register sensor")
+                await response.Content.ReadAsStringAsync(cancellationToken)
+            ),
+            _ => new ValidationError("Failed to register sensor"),
         };
     }
 
@@ -129,7 +135,8 @@ public sealed class SensorHttpClient(HttpClient httpClient) : ISensorHttpClient
             return [];
         }
 
-        return await response.Content.ReadFromJsonAsync<IReadOnlyList<string>>(cancellationToken) ?? [];
+        return await response.Content.ReadFromJsonAsync<IReadOnlyList<string>>(cancellationToken)
+            ?? [];
     }
 
     public async Task<OneOf<ReadingBatchResult, NotFoundError, ValidationError>> PostReadingAsync(
@@ -143,16 +150,17 @@ public sealed class SensorHttpClient(HttpClient httpClient) : ISensorHttpClient
 
         if (reading.Temperature.HasValue)
             readingItems.Add(
-                new ReadingItemDto("Temperature", reading.Temperature.Value, "°C", timestamp)
+                new ReadingItemDto("Temperature", null, reading.Temperature.Value, "°C", timestamp)
             );
 
         if (reading.Ph.HasValue)
-            readingItems.Add(new ReadingItemDto("pH", reading.Ph.Value, "pH", timestamp));
+            readingItems.Add(new ReadingItemDto("pH", null, reading.Ph.Value, "pH", timestamp));
 
         if (reading.DissolvedOxygen.HasValue)
             readingItems.Add(
                 new ReadingItemDto(
                     "Dissolved Oxygen",
+                    null,
                     reading.DissolvedOxygen.Value,
                     "mg/L",
                     timestamp
@@ -161,12 +169,18 @@ public sealed class SensorHttpClient(HttpClient httpClient) : ISensorHttpClient
 
         if (reading.Turbidity.HasValue)
             readingItems.Add(
-                new ReadingItemDto("Turbidity", reading.Turbidity.Value, "NTU", timestamp)
+                new ReadingItemDto("Turbidity", null, reading.Turbidity.Value, "NTU", timestamp)
             );
 
         if (reading.Conductivity.HasValue)
             readingItems.Add(
-                new ReadingItemDto("Conductivity", reading.Conductivity.Value, "µS/cm", timestamp)
+                new ReadingItemDto(
+                    "Conductivity",
+                    null,
+                    reading.Conductivity.Value,
+                    "µS/cm",
+                    timestamp
+                )
             );
 
         var batch = new ReadingBatchDtoForCreate(sensorId, readingItems);
@@ -179,7 +193,9 @@ public sealed class SensorHttpClient(HttpClient httpClient) : ISensorHttpClient
 
         if (response.IsSuccessStatusCode)
         {
-            var result = await response.Content.ReadFromJsonAsync<ReadingBatchResult>(cancellationToken);
+            var result = await response.Content.ReadFromJsonAsync<ReadingBatchResult>(
+                cancellationToken
+            );
             return result!;
         }
 
@@ -187,8 +203,9 @@ public sealed class SensorHttpClient(HttpClient httpClient) : ISensorHttpClient
         {
             HttpStatusCode.NotFound => new NotFoundError(),
             HttpStatusCode.BadRequest => new ValidationError(
-                await response.Content.ReadAsStringAsync(cancellationToken)),
-            _ => new ValidationError("Failed to post reading")
+                await response.Content.ReadAsStringAsync(cancellationToken)
+            ),
+            _ => new ValidationError("Failed to post reading"),
         };
     }
 }
