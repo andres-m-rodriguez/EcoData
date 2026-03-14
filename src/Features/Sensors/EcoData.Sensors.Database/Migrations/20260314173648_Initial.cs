@@ -123,6 +123,7 @@ namespace EcoData.Sensors.Database.Migrations
                     id = table.Column<Guid>(type: "uuid", nullable: false),
                     sensor_id = table.Column<Guid>(type: "uuid", nullable: false),
                     parameter = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
+                    description = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: true),
                     value = table.Column<double>(type: "double precision", nullable: false),
                     unit = table.Column<string>(type: "character varying(30)", maxLength: 30, nullable: false),
                     recorded_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),

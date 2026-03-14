@@ -112,6 +112,7 @@ public sealed class UsgsIngestionWorker(
                     }
 
                     var parameterCode = series.Variable.VariableCode.FirstOrDefault()?.Value ?? "UNKNOWN";
+                    var variableName = series.Variable.VariableName;
                     var unitCode = series.Variable.Unit.UnitCode;
 
                     foreach (var valuesSet in series.Values)
@@ -121,7 +122,7 @@ public sealed class UsgsIngestionWorker(
                             if (double.TryParse(reading.Value, out var value))
                             {
                                 readingsToAdd.Add(new ReadingDtoForCreate(
-                                    sensor.Id, parameterCode, value, unitCode, reading.DateTime
+                                    sensor.Id, parameterCode, variableName, value, unitCode, reading.DateTime
                                 ));
                             }
                         }
