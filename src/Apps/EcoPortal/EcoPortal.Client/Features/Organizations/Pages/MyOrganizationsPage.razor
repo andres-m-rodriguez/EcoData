@@ -7,7 +7,7 @@
 @using BlazingSingularity.Commands
 @inject IOrganizationHttpClient OrganizationClient
 @inject AuthStateService AuthState
-@inject NavigationManager Navigation
+@inject INavigationService Navigation
 
 <PageTitle>My Organizations - EcoData</PageTitle>
 
@@ -111,6 +111,6 @@
 
     private void NavigateToOrganization(MyOrganizationDto organization)
     {
-        Navigation.NavigateTo($"/organizations/{organization.Id}");
+        Navigation.NavigateTo($"/organizations/{organization.Id}", "/organizations/my");
     }
 }
