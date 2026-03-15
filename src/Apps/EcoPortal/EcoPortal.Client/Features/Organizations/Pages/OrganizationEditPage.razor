@@ -15,7 +15,7 @@
 
 <PageTitle>Edit Organization - EcoData</PageTitle>
 
-<EcoDataPageLayout Title="Edit Organization" FeatureName="Organizations" FallbackUrl="@($"/organizations/{Id}")" MaxWidth="MaxWidth.Small">
+<EcoDataPageLayout Title="Edit Organization" FallbackUrl="@($"/organizations/{Id}")" MaxWidth="MaxWidth.Small">
     <ChildContent>
         @if (LoadCommand.IsLoading)
         {

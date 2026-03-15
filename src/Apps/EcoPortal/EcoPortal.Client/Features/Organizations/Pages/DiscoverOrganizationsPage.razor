@@ -13,14 +13,14 @@
 
 <PageTitle>Discover Organizations - EcoData</PageTitle>
 
-<EcoDataPageLayout Title="Discover" FeatureName="Organizations">
+<EcoDataPageLayout Title="Discover">
     <Actions>
         @if (AuthState.IsGlobalAdmin)
         {
             <MudButton Variant="Variant.Filled" Color="Color.Primary"
                        StartIcon="@Icons.Material.Filled.Add"
                        Href="/organizations/create">
-                Create Organization
+                Create
             </MudButton>
         }
     </Actions>

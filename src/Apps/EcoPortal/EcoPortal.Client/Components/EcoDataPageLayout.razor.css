@@ -1,0 +1,77 @@
+/* === Design Tokens === */
+:root {
+    --eco-transition-fast: 150ms;
+    --eco-transition-normal: 250ms;
+    --eco-transition-slow: 350ms;
+    --eco-ease-out: cubic-bezier(0.0, 0.0, 0.2, 1);
+    --eco-ease-in-out: cubic-bezier(0.4, 0.0, 0.2, 1);
+}
+
+/* === Page Header === */
+.page-header {
+    animation: header-enter var(--eco-transition-normal) var(--eco-ease-out);
+}
+
+@keyframes header-enter {
+    from {
+        opacity: 0;
+        transform: translateY(-8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* === Actions === */
+.page-actions {
+    animation: actions-enter var(--eco-transition-normal) var(--eco-ease-out);
+    animation-delay: 50ms;
+    animation-fill-mode: backwards;
+}
+
+@keyframes actions-enter {
+    from {
+        opacity: 0;
+        transform: translateX(8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+/* === Content === */
+.page-content {
+    animation: content-enter var(--eco-transition-slow) var(--eco-ease-out);
+    animation-delay: 100ms;
+    animation-fill-mode: backwards;
+}
+
+@keyframes content-enter {
+    from {
+        opacity: 0;
+        transform: translateY(12px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* === Mobile: Reduce top margin === */
+@media (max-width: 600px) {
+    ::deep .page-container {
+        margin-top: 8px !important;
+    }
+}
+
+/* === Accessibility === */
+@media (prefers-reduced-motion: reduce) {
+    .page-header,
+    .page-actions,
+    .page-content {
+        animation: none;
+        transition: none;
+    }
+}

@@ -12,7 +12,7 @@
 
 <PageTitle>Edit Sensor - EcoData</PageTitle>
 
-<EcoDataPageLayout Title="Edit Sensor" FeatureName="Sensors" FallbackUrl="@($"/sensors/{SensorId}")" MaxWidth="MaxWidth.Small">
+<EcoDataPageLayout Title="Edit Sensor" FallbackUrl="@($"/sensors/{SensorId}")" MaxWidth="MaxWidth.Small">
     <ChildContent>
         @if (LoadCommand.IsLoading)
         {
