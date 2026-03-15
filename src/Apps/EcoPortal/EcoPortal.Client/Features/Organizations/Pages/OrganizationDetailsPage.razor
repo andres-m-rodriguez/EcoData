@@ -397,6 +397,7 @@ else
                     Navigation.NavigateTo("/organizations");
                 },
                 _ => Snackbar.Add("Organization not found", Severity.Error),
+                conflict => Snackbar.Add(conflict.Message, Severity.Warning),
                 error => Snackbar.Add($"Failed to delete: {error.Message}", Severity.Error)
             );
         }

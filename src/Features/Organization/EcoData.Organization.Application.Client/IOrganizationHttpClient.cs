@@ -32,7 +32,7 @@ public interface IOrganizationHttpClient
         CancellationToken cancellationToken = default
     );
 
-    Task<OneOf<Success, NotFoundError, ApiError>> DeleteAsync(
+    Task<OneOf<Success, NotFoundError, ConflictError, ApiError>> DeleteAsync(
         Guid id,
         CancellationToken cancellationToken = default
     );
