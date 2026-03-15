@@ -2,11 +2,7 @@
 .pio/
 .pioenvs/
 .piolibdeps/
-
-# ESP-IDF
-build/
-sdkconfig.old
-sdkconfig.*.old
+compile_commands.json
 
 # IDE
 .vscode/
