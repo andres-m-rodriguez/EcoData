@@ -1,3 +1,4 @@
+using Aspire.Hosting.Azure;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Logging;
@@ -6,6 +7,21 @@ namespace EcoData.AppHost.Extensions;
 
 public static class DatabaseExtensions
 {
+    public static IResourceBuilder<AzurePostgresFlexibleServerDatabaseResource> WithDropDatabaseCommand(
+        this IResourceBuilder<AzurePostgresFlexibleServerDatabaseResource> builder
+    )
+    {
+        var databaseName = builder.Resource.Name;
+
+        return builder.WithCommand(
+            name: "drop-database",
+            displayName: "Drop & Recreate",
+            executeCommand: context =>
+                ExecuteDropDatabaseAsync(context, builder.Resource.Parent, databaseName),
+            commandOptions: CreateCommandOptions(databaseName)
+        );
+    }
+
     public static IResourceBuilder<PostgresDatabaseResource> WithDropDatabaseCommand(
         this IResourceBuilder<PostgresDatabaseResource> builder
     )
