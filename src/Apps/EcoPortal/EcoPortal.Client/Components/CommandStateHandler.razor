@@ -1,0 +1,32 @@
+@using BlazingSingularity.Commands
+@typeparam TData
+
+@if (Command.IsLoading)
+{
+    @LoadingTemplate
+}
+else if (Data is null)
+{
+    @NotFoundTemplate
+}
+else
+{
+    @ContentTemplate(Data)
+}
+
+@code {
+    [Parameter, EditorRequired]
+    public IAsyncCommand Command { get; set; } = default!;
+
+    [Parameter]
+    public TData? Data { get; set; }
+
+    [Parameter, EditorRequired]
+    public RenderFragment LoadingTemplate { get; set; } = default!;
+
+    [Parameter, EditorRequired]
+    public RenderFragment NotFoundTemplate { get; set; } = default!;
+
+    [Parameter, EditorRequired]
+    public RenderFragment<TData> ContentTemplate { get; set; } = default!;
+}
