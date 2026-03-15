@@ -266,7 +266,7 @@ else
                 _ =>
                 {
                     Snackbar.Add("Sensor deleted successfully", Severity.Success);
-                    Navigation.NavigateTo("/sensors");
+                    Navigation.GoBack();
                 },
                 _ => Snackbar.Add("Sensor not found", Severity.Error),
                 error => Snackbar.Add(error.Message, Severity.Error)
