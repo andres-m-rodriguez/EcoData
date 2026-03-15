@@ -38,7 +38,7 @@
 
     protected override async Task OnInitializedAsync()
     {
-        Navigation.SetFallback($"/organizations/{OrganizationId}");
+        Navigation.SetReturnUrlOrFallback($"/organizations/{OrganizationId}");
         await LoadCommand.ExecuteAsync();
     }
 
@@ -53,7 +53,7 @@
         );
     }
 
-    private void NavigateToCreateSensor() => Navigation.NavigateTo($"/organizations/{OrganizationId}/sensors/create");
+    private void NavigateToCreateSensor() => Navigation.NavigateTo($"/organizations/{OrganizationId}/sensors/create", $"/organizations/{OrganizationId}/sensors");
 
     private void NavigateToMap(SensorDtoForList sensor)
     {
@@ -62,6 +62,6 @@
 
     private void NavigateToDetail(SensorDtoForList sensor)
     {
-        Navigation.NavigateTo($"/sensors/{sensor.Id}");
+        Navigation.NavigateTo($"/sensors/{sensor.Id}", $"/organizations/{OrganizationId}/sensors");
     }
 }

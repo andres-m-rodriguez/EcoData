@@ -54,7 +54,7 @@
 
     protected override async Task OnInitializedAsync()
     {
-        Navigation.SetFallback($"/organizations/{Id}");
+        Navigation.SetReturnUrlOrFallback($"/organizations/{Id}");
         await LoadCommand.ExecuteAsync();
     }
 

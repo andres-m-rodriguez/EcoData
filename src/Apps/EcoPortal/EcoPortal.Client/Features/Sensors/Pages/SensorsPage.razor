@@ -1,7 +1,8 @@
 @page "/sensors"
 @using EcoData.Sensors.Contracts.Dtos
 @using EcoPortal.Client.Features.Sensors.Components
-@inject NavigationManager Navigation
+@using EcoPortal.Client.Services
+@inject INavigationService Navigation
 
 <PageTitle>Sensors - EcoData</PageTitle>
 
@@ -15,6 +16,6 @@
 
     private void NavigateToDetail(SensorDtoForList sensor)
     {
-        Navigation.NavigateTo($"/sensors/{sensor.Id}");
+        Navigation.NavigateTo($"/sensors/{sensor.Id}", "/sensors");
     }
 }

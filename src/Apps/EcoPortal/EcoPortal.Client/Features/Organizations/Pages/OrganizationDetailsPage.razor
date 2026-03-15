@@ -365,11 +365,11 @@ else
         }
     }
 
-    private void NavigateToEdit() => Navigation.NavigateTo($"/organizations/{Id}/edit");
-    private void NavigateToSensors() => Navigation.NavigateTo($"/organizations/{Id}/sensors");
-    private void NavigateToTeam() => Navigation.NavigateTo($"/organizations/{Id}/team");
-    private void NavigateToSensor(SensorDtoForList sensor) => Navigation.NavigateTo($"/sensors/{sensor.Id}");
-    private void NavigateToCreateSensor() => Navigation.NavigateTo($"/organizations/{Id}/sensors/create");
+    private void NavigateToEdit() => Navigation.NavigateTo($"/organizations/{Id}/edit", $"/organizations/{Id}");
+    private void NavigateToSensors() => Navigation.NavigateTo($"/organizations/{Id}/sensors", $"/organizations/{Id}");
+    private void NavigateToTeam() => Navigation.NavigateTo($"/organizations/{Id}/team", $"/organizations/{Id}");
+    private void NavigateToSensor(SensorDtoForList sensor) => Navigation.NavigateTo($"/sensors/{sensor.Id}", $"/organizations/{Id}");
+    private void NavigateToCreateSensor() => Navigation.NavigateTo($"/organizations/{Id}/sensors/create", $"/organizations/{Id}");
 
     private async Task ConfirmDelete()
     {
