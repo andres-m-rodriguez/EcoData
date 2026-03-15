@@ -7,6 +7,7 @@
 @using EcoData.Sensors.Contracts.Parameters
 @using EcoData.Sensors.Application.Client
 @using EcoPortal.Client.Services
+@using EcoPortal.Client.Components
 @using EcoPortal.Client.Features.Organizations.Authorization
 @using EcoPortal.Client.Features.Organizations.ViewModels
 @using EcoPortal.Client.Features.Sensors.Components
@@ -66,6 +67,8 @@ else if (_viewModel is null)
 else
 {
     <MudContainer MaxWidth="MaxWidth.Large" Class="mt-6 mb-8">
+        <PageBackButton />
+
         <!-- Header Card with Banner Image -->
         <MudPaper Elevation="1" Class="mb-6 rounded-lg overflow-hidden">
             @if (_viewModel.HasCardPicture)
@@ -332,7 +335,7 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        Navigation.SetFallback("/organizations");
+        Navigation.SetReturnUrlOrFallback("/organizations");
         await LoadCommand.ExecuteAsync();
     }
 
