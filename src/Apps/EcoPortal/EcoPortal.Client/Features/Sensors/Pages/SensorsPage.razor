@@ -1,12 +1,17 @@
 @page "/sensors"
 @using EcoData.Sensors.Contracts.Dtos
+@using EcoPortal.Client.Components
 @using EcoPortal.Client.Features.Sensors.Components
 @using EcoPortal.Client.Services
 @inject INavigationService Navigation
 
 <PageTitle>Sensors - EcoData</PageTitle>
 
-<SensorList OnMapClick="NavigateToMap" OnSensorClick="NavigateToDetail" />
+<EcoDataPageLayout Title="Sensors">
+    <ChildContent>
+        <SensorList OnMapClick="NavigateToMap" OnSensorClick="NavigateToDetail" />
+    </ChildContent>
+</EcoDataPageLayout>
 
 @code {
     private void NavigateToMap(SensorDtoForList sensor)

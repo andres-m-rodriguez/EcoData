@@ -3,19 +3,11 @@
 @implements IAsyncDisposable
 
 <div class="search-header-wrapper @(_isSticky ? "is-sticky" : "")" @ref="_headerRef">
-    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Class="flex-wrap search-header">
-        <div class="search-wrapper">
-            <SearchBar @bind-Value="SearchSignal.Value" Placeholder="@Placeholder" ShowFilterButton="ShowFilterButton"
-                       HasActiveFilters="HasActiveFilters" FilterCount="FilterCount" OnFilterClick="OnFilterClick"
-                       EnableSticky="false" />
-        </div>
-        @if (Actions is not null)
-        {
-            <div class="actions-wrapper">
-                @Actions
-            </div>
-        }
-    </MudStack>
+    <div class="search-wrapper">
+        <SearchBar @bind-Value="SearchSignal.Value" Placeholder="@Placeholder" ShowFilterButton="ShowFilterButton"
+                   HasActiveFilters="HasActiveFilters" FilterCount="FilterCount" OnFilterClick="OnFilterClick"
+                   EnableSticky="false" />
+    </div>
 </div>
 
 @code {
@@ -44,9 +36,6 @@
 
     [Parameter]
     public bool EnableSticky { get; set; } = true;
-
-    [Parameter]
-    public RenderFragment? Actions { get; set; }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {

@@ -12,40 +12,39 @@
 @inject INavigationService Navigation
 @inject ISnackbar Snackbar
 @inject AuthStateService AuthState
+
 <PageTitle>Edit Organization - EcoData</PageTitle>
 
-<MudContainer MaxWidth="MaxWidth.Small" Class="pa-4">
-    @if (LoadCommand.IsLoading)
-    {
-        <MudPaper Elevation="1" Class="pa-6 rounded-lg">
-            <MudSkeleton Width="200px" Height="32px" />
-            <MudSkeleton Width="100%" Height="56px" Class="mt-4" />
-            <MudSkeleton Width="100%" Height="56px" Class="mt-4" />
-            <MudSkeleton Width="100%" Height="120px" Class="mt-4" />
-            <MudSkeleton Width="100%" Height="56px" Class="mt-4" />
-        </MudPaper>
-    }
-    else if (_organization is null)
-    {
-        <MudPaper Elevation="1" Class="pa-6 rounded-lg">
-            <MudStack AlignItems="AlignItems.Center">
-                <MudIcon Icon="@Icons.Material.Filled.Error" Size="Size.Large" Color="Color.Error" />
-                <MudText Typo="Typo.h6" Color="Color.Error" Class="mt-2">Organization not found</MudText>
-            </MudStack>
-        </MudPaper>
-    }
-    else
-    {
-        <PageBackButton />
-
-        <MudPaper Elevation="1" Class="pa-6 rounded-lg">
-            <MudText Typo="Typo.h5" Class="mb-4">Edit Organization</MudText>
-
-            <OrganizationForm Model="_model" SubmitButtonText="Save Changes" ErrorMessage="@_errorMessage"
-                              IsLoading="SaveCommand.IsLoading" OnSubmit="HandleSubmit" OnCancel="NavigateToDetails" />
-        </MudPaper>
-    }
-</MudContainer>
+<EcoDataPageLayout Title="Edit Organization" FallbackUrl="@($"/organizations/{Id}")" MaxWidth="MaxWidth.Small">
+    <ChildContent>
+        @if (LoadCommand.IsLoading)
+        {
+            <MudPaper Elevation="1" Class="pa-6 rounded-lg">
+                <MudSkeleton Width="200px" Height="32px" />
+                <MudSkeleton Width="100%" Height="56px" Class="mt-4" />
+                <MudSkeleton Width="100%" Height="56px" Class="mt-4" />
+                <MudSkeleton Width="100%" Height="120px" Class="mt-4" />
+                <MudSkeleton Width="100%" Height="56px" Class="mt-4" />
+            </MudPaper>
+        }
+        else if (_organization is null)
+        {
+            <MudPaper Elevation="1" Class="pa-6 rounded-lg">
+                <MudStack AlignItems="AlignItems.Center">
+                    <MudIcon Icon="@Icons.Material.Filled.Error" Size="Size.Large" Color="Color.Error" />
+                    <MudText Typo="Typo.h6" Color="Color.Error" Class="mt-2">Organization not found</MudText>
+                </MudStack>
+            </MudPaper>
+        }
+        else
+        {
+            <MudPaper Elevation="1" Class="pa-6 rounded-lg">
+                <OrganizationForm Model="_model" SubmitButtonText="Save Changes" ErrorMessage="@_errorMessage"
+                                  IsLoading="SaveCommand.IsLoading" OnSubmit="HandleSubmit" OnCancel="NavigateToDetails" />
+            </MudPaper>
+        }
+    </ChildContent>
+</EcoDataPageLayout>
 
 @code {
     [Parameter]
@@ -57,7 +56,6 @@
 
     protected override async Task OnInitializedAsync()
     {
-        Navigation.SetReturnUrlOrFallback($"/organizations/{Id}");
         await LoadCommand.ExecuteAsync();
     }
 

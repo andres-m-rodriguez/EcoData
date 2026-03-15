@@ -15,7 +15,7 @@ public interface INavigationService
     Task GoBackAsync(string? fallback = null);
     void GoBack(string? fallback = null);
 
-    void SetFallback(string path);
+    void SetFallback(string? path);
     void SetReturnUrlOrFallback(string fallback);
     bool CanGoBack { get; }
 
@@ -85,7 +85,7 @@ public sealed class NavigationService : INavigationService, IDisposable
         _ = GoBackAsync(fallback);
     }
 
-    public void SetFallback(string path)
+    public void SetFallback(string? path)
     {
         _fallbackPath = path;
         OnStateChanged?.Invoke();
@@ -115,9 +115,6 @@ public sealed class NavigationService : INavigationService, IDisposable
             // Add new path to history for forward navigation
             _history.Add(newPath);
         }
-
-        // Don't reset _fallbackPath here - pages set their own fallback in OnInitialized
-        // which may run before or after this event fires
 
         OnStateChanged?.Invoke();
     }
