@@ -1,15 +1,8 @@
 # Deploy to Azure using Aspire pipelines
-# Runs on push to master or manual trigger
-
 name: Deploy to Azure
 
 on:
   workflow_dispatch:
-    inputs:
-      force-deploy-all:
-        description: 'Deploy all services regardless of changes'
-        type: boolean
-        default: false
   push:
     branches:
       - master
@@ -24,87 +17,9 @@ env:
   AZURE_SUBSCRIPTION_ID: ${{ vars.AZURE_SUBSCRIPTION_ID }}
   AZURE_LOCATION: ${{ vars.AZURE_LOCATION }}
   AZURE_RESOURCE_GROUP: ${{ vars.AZURE_RESOURCE_GROUP }}
-  ASPIRE_CLI_TELEMETRY_OPTOUT: 1
-  ASPIRE_CLI_NOLOGO: 1
 
 jobs:
-  detect-changes:
-    runs-on: ubuntu-latest
-    outputs:
-      resources: ${{ steps.check.outputs.resources }}
-      has-changes: ${{ steps.check.outputs.has-changes }}
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: 10.x
-
-      - name: Detect affected resources
-        id: check
-        run: |
-          # Resource to project mappings for EcoData
-          declare -A PROJECT_TO_RESOURCE
-          PROJECT_TO_RESOURCE["EcoPortal.Server"]="ecoportal"
-          PROJECT_TO_RESOURCE["EcoPortal.Client"]="ecoportal"
-          PROJECT_TO_RESOURCE["EcoData.Sensors.Ingestion"]="sensors-ingestion"
-          PROJECT_TO_RESOURCE["EcoData.Seeder"]="seeder"
-          # Shared projects affect all resources
-          PROJECT_TO_RESOURCE["EcoData.ServiceDefaults"]="ecoportal sensors-ingestion seeder"
-          PROJECT_TO_RESOURCE["EcoData.Organization.Api"]="ecoportal"
-          PROJECT_TO_RESOURCE["EcoData.Sensors.Api"]="ecoportal sensors-ingestion"
-          PROJECT_TO_RESOURCE["EcoData.Identity.Api"]="ecoportal"
-          PROJECT_TO_RESOURCE["EcoData.Locations.Api"]="ecoportal"
-
-          RESOURCES=""
-
-          if [ "${{ github.event.inputs.force-deploy-all }}" == "true" ]; then
-            echo "Force deploy all enabled"
-            RESOURCES="ecoportal sensors-ingestion seeder"
-          else
-            dotnet tool install -g dotnet-affected || true
-            dotnet affected -p . --from HEAD~1 --to HEAD --format text -o affected.txt || true
-
-            if [ -f affected.txt ] && [ -s affected.txt ]; then
-              echo "Affected projects:"
-              cat affected.txt
-
-              while IFS= read -r line; do
-                line=$(echo "$line" | xargs)
-                project=$(basename "$line" .csproj)
-                echo "Looking up: $project"
-
-                res="${PROJECT_TO_RESOURCE[$project]}"
-                if [ -n "$res" ]; then
-                  for r in $res; do
-                    if [[ ! " $RESOURCES " =~ " $r " ]]; then
-                      RESOURCES="$RESOURCES $r"
-                    fi
-                  done
-                fi
-              done < affected.txt
-
-              RESOURCES=$(echo "$RESOURCES" | xargs)
-            else
-              echo "No affected projects detected or first deployment - deploying all"
-              RESOURCES="ecoportal sensors-ingestion seeder"
-            fi
-          fi
-
-          echo "Resources to deploy: $RESOURCES"
-          echo "resources=$RESOURCES" >> $GITHUB_OUTPUT
-
-          if [ -n "$RESOURCES" ]; then
-            echo "has-changes=true" >> $GITHUB_OUTPUT
-          else
-            echo "has-changes=false" >> $GITHUB_OUTPUT
-          fi
-
   deploy:
-    needs: detect-changes
-    if: needs.detect-changes.outputs.has-changes == 'true'
     runs-on: ubuntu-latest
     environment: Production
     steps:
@@ -124,36 +39,10 @@ jobs:
           tenant-id: ${{ env.AZURE_TENANT_ID }}
           subscription-id: ${{ env.AZURE_SUBSCRIPTION_ID }}
 
-      - name: Deploy resources
+      - name: Deploy to Azure
         env:
           Azure__SubscriptionId: ${{ env.AZURE_SUBSCRIPTION_ID }}
           Azure__Location: ${{ env.AZURE_LOCATION }}
           Azure__ResourceGroup: ${{ env.AZURE_RESOURCE_GROUP }}
-          RESOURCES: ${{ needs.detect-changes.outputs.resources }}
         run: |
-          echo "Deploying: $RESOURCES"
-
-          # Deploy seeder first if in the list (handles migrations)
-          if [[ " $RESOURCES " =~ " seeder " ]]; then
-            echo "Deploying seeder..."
-            aspire do deploy-seeder --project src/Host/EcoData.AppHost --environment Production --non-interactive
-          fi
-
-          # Deploy other resources
-          for resource in $RESOURCES; do
-            if [ "$resource" != "seeder" ]; then
-              echo "Deploying $resource..."
-              aspire do deploy-$resource --project src/Host/EcoData.AppHost --environment Production --non-interactive
-            fi
-          done
-
-      - name: Run post-deployment steps
-        env:
-          AZURE_RESOURCE_GROUP: ${{ env.AZURE_RESOURCE_GROUP }}
-          RESOURCES: ${{ needs.detect-changes.outputs.resources }}
-        run: |
-          # Run migrations if seeder was deployed
-          if [[ " $RESOURCES " =~ " seeder " ]]; then
-            echo "Running migrations..."
-            aspire do run-migrations --project src/Host/EcoData.AppHost --environment Production --non-interactive || true
-          fi
+          aspire do deploy --project src/Host/EcoData.AppHost --environment Production --non-interactive
