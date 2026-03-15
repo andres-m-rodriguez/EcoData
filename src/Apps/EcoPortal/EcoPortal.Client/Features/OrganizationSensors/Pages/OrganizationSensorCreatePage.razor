@@ -268,7 +268,8 @@
             FullWidth = true
         };
 
-        await DialogService.ShowAsync<SensorCredentialsDialog>("Sensor Registered", parameters, options);
+        var dialog = await DialogService.ShowAsync<SensorCredentialsDialog>("Sensor Registered", parameters, options);
+        await dialog.Result;
     }
 
     private void NavigateToSensors() => Navigation.GoBack();
