@@ -8,28 +8,28 @@
 @using EcoData.Common.Pagination.Blazor
 @using BlazingSingularity.Signals
 @using EcoPortal.Client.Services
+@using EcoPortal.Client.Components
 @inject IOrganizationAccessRequestHttpClient AccessRequestClient
 @inject IOrganizationHttpClient OrganizationClient
 @inject IOrganizationBlockedUserHttpClient BlockedUserClient
 @inject IDialogService DialogService
 @inject ISnackbar Snackbar
-@inject NavigationManager Navigation
+@inject INavigationService Navigation
 
-<PageTitle>Access Requests - EcoData</PageTitle>
+<PageTitle>Requests - EcoData</PageTitle>
 
-<RequireOrganizationPermission OrganizationId="OrganizationId" Permission="EcoData.Organization.Contracts.Permissions.Organization.ManageMembers">
-    <Authorized>
-        <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Class="mb-4">
-            <MudText Typo="Typo.h5">Access Requests</MudText>
-            <MudChipSet T="string" SelectedValue="_statusFilter" SelectedValueChanged="OnStatusFilterChanged" SelectionMode="SelectionMode.SingleSelection">
-                <MudChip T="string" Value="@("")" Color="Color.Default" Variant="Variant.Outlined">All</MudChip>
-                <MudChip T="string" Value="@("Pending")" Color="Color.Warning" Variant="Variant.Outlined">Pending</MudChip>
-                <MudChip T="string" Value="@("Approved")" Color="Color.Success" Variant="Variant.Outlined">Approved</MudChip>
-                <MudChip T="string" Value="@("Rejected")" Color="Color.Error" Variant="Variant.Outlined">Rejected</MudChip>
-            </MudChipSet>
-        </MudStack>
+<EcoDataPageLayout Title="Requests" FallbackUrl="@($"/organizations/{OrganizationId}/team")">
+    <ChildContent>
+        <RequireOrganizationPermission OrganizationId="OrganizationId" Permission="EcoData.Organization.Contracts.Permissions.Organization.ManageMembers">
+            <Authorized>
+                <MudChipSet T="string" SelectedValue="_statusFilter" SelectedValueChanged="OnStatusFilterChanged" SelectionMode="SelectionMode.SingleSelection" Class="mb-4">
+                    <MudChip T="string" Value="@("")" Color="Color.Default" Variant="Variant.Outlined">All</MudChip>
+                    <MudChip T="string" Value="@("Pending")" Color="Color.Warning" Variant="Variant.Outlined">Pending</MudChip>
+                    <MudChip T="string" Value="@("Approved")" Color="Color.Success" Variant="Variant.Outlined">Approved</MudChip>
+                    <MudChip T="string" Value="@("Rejected")" Color="Color.Error" Variant="Variant.Outlined">Rejected</MudChip>
+                </MudChipSet>
 
-        <MudPaper Elevation="1" Class="rounded-lg">
+                <MudPaper Elevation="1" Class="rounded-lg">
             <EcoDataVirtualizedList @ref="_listRef"
                                     TItem="OrganizationAccessRequestDto"
                                     TParams="OrganizationAccessRequestParameters"
@@ -141,21 +141,23 @@
                         }
                     </MudStack>
                 </ItemTemplate>
-            </EcoDataVirtualizedList>
-        </MudPaper>
-    </Authorized>
-    <NotAuthorized>
-        <MudPaper Elevation="1" Class="pa-8 rounded-lg">
-            <MudStack AlignItems="AlignItems.Center">
-                <MudIcon Icon="@Icons.Material.Filled.Lock" Size="Size.Large" Color="Color.Error" />
-                <MudText Typo="Typo.h6" Color="Color.Error" Class="mt-2">Access Denied</MudText>
-                <MudText Typo="Typo.body2" Color="Color.Secondary">
-                    You don't have permission to view access requests for this organization.
-                </MudText>
-            </MudStack>
-        </MudPaper>
-    </NotAuthorized>
-</RequireOrganizationPermission>
+                </EcoDataVirtualizedList>
+                </MudPaper>
+            </Authorized>
+            <NotAuthorized>
+                <MudPaper Elevation="1" Class="pa-8 rounded-lg">
+                    <MudStack AlignItems="AlignItems.Center">
+                        <MudIcon Icon="@Icons.Material.Filled.Lock" Size="Size.Large" Color="Color.Error" />
+                        <MudText Typo="Typo.h6" Color="Color.Error" Class="mt-2">Access Denied</MudText>
+                        <MudText Typo="Typo.body2" Color="Color.Secondary">
+                            You don't have permission to view access requests for this organization.
+                        </MudText>
+                    </MudStack>
+                </MudPaper>
+            </NotAuthorized>
+        </RequireOrganizationPermission>
+    </ChildContent>
+</EcoDataPageLayout>
 
 @code {
     [Parameter]

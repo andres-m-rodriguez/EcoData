@@ -5,6 +5,7 @@
 @using EcoData.Organization.Contracts.Dtos
 @using EcoData.Organization.Application.Client
 @using EcoData.Sensors.Contracts.Dtos
+@using EcoPortal.Client.Components
 @using EcoPortal.Client.Services
 @using EcoPortal.Client.Features.Sensors.Components
 @using EcoPortal.Client.Features.Organizations.Authorization
@@ -15,20 +16,23 @@
 
 <PageTitle>Sensors - @(_organization?.Name ?? "Organization") - EcoData</PageTitle>
 
-<SensorList OrganizationId="OrganizationId"
-            EmptyMessage="No sensors yet"
-            EmptySubMessage="Add sensors to start monitoring water quality."
-            OnMapClick="NavigateToMap"
-            OnSensorClick="NavigateToDetail">
+<EcoDataPageLayout Title="Sensors" FallbackUrl="@($"/organizations/{OrganizationId}")">
     <Actions>
         <RequireOrganizationPermission Permission="@Permissions.Sensor.Create" OrganizationId="OrganizationId">
             <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add"
-                       Size="Size.Small" OnClick="NavigateToCreateSensor">
-                Add Sensor
+                       OnClick="NavigateToCreateSensor">
+                Add
             </MudButton>
         </RequireOrganizationPermission>
     </Actions>
-</SensorList>
+    <ChildContent>
+        <SensorList OrganizationId="OrganizationId"
+                    EmptyMessage="No sensors yet"
+                    EmptySubMessage="Add sensors to start monitoring water quality."
+                    OnMapClick="NavigateToMap"
+                    OnSensorClick="NavigateToDetail" />
+    </ChildContent>
+</EcoDataPageLayout>
 
 @code {
     [Parameter]
@@ -38,7 +42,6 @@
 
     protected override async Task OnInitializedAsync()
     {
-        Navigation.SetReturnUrlOrFallback($"/organizations/{OrganizationId}");
         await LoadCommand.ExecuteAsync();
     }
 

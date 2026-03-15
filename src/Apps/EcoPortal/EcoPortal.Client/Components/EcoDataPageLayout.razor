@@ -1,0 +1,67 @@
+@using EcoPortal.Client.Services
+@inject INavigationService Navigation
+
+<MudContainer MaxWidth="@MaxWidth" Class="@ContainerClass">
+    @if (!string.IsNullOrEmpty(FallbackUrl))
+    {
+        <MudButton Variant="Variant.Text"
+                   StartIcon="@Icons.Material.Filled.ArrowBack"
+                   OnClick="GoBack"
+                   Class="d-none d-sm-inline-flex mb-2">
+            Back
+        </MudButton>
+    }
+
+    @if (!string.IsNullOrEmpty(Title) || Actions is not null)
+    {
+        <div class="page-header mb-2">
+            <MudStack Row Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center">
+                @if (!string.IsNullOrEmpty(Title))
+                {
+                    <MudText Typo="@TitleTypo">@Title</MudText>
+                }
+
+                @if (Actions is not null)
+                {
+                    <div class="page-actions">
+                        <MudStack Row Spacing="2">
+                            @Actions
+                        </MudStack>
+                    </div>
+                }
+            </MudStack>
+        </div>
+    }
+
+    <div class="page-content">
+        @ChildContent
+    </div>
+</MudContainer>
+
+@code {
+    [Parameter]
+    public string? Title { get; set; }
+
+    [Parameter]
+    public string? FallbackUrl { get; set; }
+
+    [Parameter]
+    public MaxWidth MaxWidth { get; set; } = MaxWidth.Large;
+
+    [Parameter]
+    public RenderFragment? Actions { get; set; }
+
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+
+    private string ContainerClass => MaxWidth == MaxWidth.Small ? "pa-4" : "page-container mt-4 mb-8";
+    private Typo TitleTypo => MaxWidth == MaxWidth.Small ? Typo.h5 : Typo.h4;
+
+    protected override void OnInitialized()
+    {
+        // Always set fallback - pass null to clear it for pages without a back destination
+        Navigation.SetFallback(FallbackUrl);
+    }
+
+    private void GoBack() => Navigation.GoBack(FallbackUrl);
+}
