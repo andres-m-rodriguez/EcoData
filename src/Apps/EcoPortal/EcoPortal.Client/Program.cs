@@ -26,6 +26,7 @@ builder.Services.AddHttpClient<IDataSourceHttpClient, DataSourceHttpClient>(clie
 });
 
 builder.Services.AddScoped<ISensorMapManager, SensorMapManager>();
+builder.Services.AddScoped<ILeafletMapService, LeafletMapService>();
 builder.Services.AddScoped<INavigationService, NavigationService>();
 builder.Services.AddScoped<AuthStateService>();
 builder.Services.AddScoped<PermissionContextService>();

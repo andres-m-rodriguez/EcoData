@@ -1,8 +1,7 @@
 @using System.ComponentModel.DataAnnotations
 @using EcoData.Locations.Contracts.Dtos
-@using EcoData.Locations.Contracts.Parameters
-@using EcoPortal.Client.Services
-@inject ILocationHttpClient LocationClient
+@using EcoPortal.Client.Components
+@using static EcoPortal.Client.Components.LocationPicker
 
 <MudStack Spacing="3">
     @if (!string.IsNullOrEmpty(ErrorMessage))
@@ -35,55 +34,15 @@
                   Immediate="true"
                   Disabled="IsLoading" />
 
-    <MudStack Row="true" Spacing="2">
-        <MudNumericField @bind-Value="Model.Latitude"
-                         Label="Latitude"
-                         Required="true"
-                         Min="-90"
-                         Max="90"
-                         Step="0.000001M"
-                         Format="F6"
-                         HelperText="-90 to 90"
-                         Disabled="IsLoading"
-                         Style="flex: 1;" />
+    <MudText Typo="Typo.subtitle2" Class="mt-2">Location</MudText>
+    <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mb-1">
+        Click on the map or enter coordinates manually to set the sensor location.
+    </MudText>
 
-        <MudNumericField @bind-Value="Model.Longitude"
-                         Label="Longitude"
-                         Required="true"
-                         Min="-180"
-                         Max="180"
-                         Step="0.000001M"
-                         Format="F6"
-                         HelperText="-180 to 180"
-                         Disabled="IsLoading"
-                         Style="flex: 1;" />
-    </MudStack>
-
-    <MudSelect T="StateDtoForList"
-               Label="State"
-               Value="_selectedState"
-               ValueChanged="OnStateChanged"
-               ToStringFunc="@(s => s?.Name ?? string.Empty)"
-               Disabled="IsLoading || _states is null"
-               HelperText="Select the state/territory">
-        @if (_states is not null)
-        {
-            @foreach (var state in _states)
-            {
-                <MudSelectItem Value="@state">@state.Name</MudSelectItem>
-            }
-        }
-    </MudSelect>
-
-    <MudAutocomplete T="MunicipalityDtoForList"
-                     Label="Municipality"
-                     Value="_selectedMunicipality"
-                     ValueChanged="OnMunicipalityChanged"
-                     SearchFunc="SearchMunicipalities"
-                     ToStringFunc="@(m => m?.Name ?? string.Empty)"
-                     Disabled="IsLoading || _selectedState is null"
-                     HelperText="@(_selectedState is null ? "Select a state first" : "Search for a municipality")"
-                     ResetValueOnEmptyText="true" />
+    <LocationPicker InitialLatitude="Model.Latitude"
+                    InitialLongitude="Model.Longitude"
+                    IsLoading="IsLoading"
+                    OnLocationChanged="OnLocationChanged" />
 
     <MudSwitch @bind-Value="Model.IsActive"
                Label="Active"
@@ -111,10 +70,7 @@
 </MudStack>
 
 @code {
-    private List<StateDtoForList>? _states;
-    private StateDtoForList? _selectedState;
-    private MunicipalityDtoForList? _selectedMunicipality;
-    private Guid _lastLoadedMunicipalityId;
+    private string? _municipalityName;
 
     [Parameter]
     public SensorFormModel Model { get; set; } = new();
@@ -144,79 +100,14 @@
         Model.Longitude >= -180 && Model.Longitude <= 180 &&
         Model.MunicipalityId != Guid.Empty;
 
-    protected override async Task OnInitializedAsync()
+    private void OnLocationChanged(LocationSelectedEventArgs args)
     {
-        await LoadStatesAsync();
-    }
-
-    protected override async Task OnParametersSetAsync()
-    {
-        if (Model.MunicipalityId != Guid.Empty && Model.MunicipalityId != _lastLoadedMunicipalityId)
-        {
-            _lastLoadedMunicipalityId = Model.MunicipalityId;
-            await LoadMunicipalityAsync(Model.MunicipalityId);
-        }
-    }
-
-    private async Task LoadStatesAsync()
-    {
-        _states = [];
-        await foreach (var state in LocationClient.GetStatesAsync(new StateParameters(PageSize: 100)))
-        {
-            _states.Add(state);
-        }
-    }
-
-    private async Task LoadMunicipalityAsync(Guid municipalityId)
-    {
-        var municipality = await LocationClient.GetMunicipalityByIdAsync(municipalityId);
-        if (municipality is not null)
-        {
-            _selectedMunicipality = new MunicipalityDtoForList(
-                municipality.Id,
-                municipality.Name,
-                municipality.GeoJsonId,
-                municipality.CountyFipsCode,
-                municipality.CentroidLatitude,
-                municipality.CentroidLongitude
-            );
-
-            _selectedState = _states?.FirstOrDefault(s => s.Code == municipality.StateCode);
-        }
-    }
-
-    private void OnStateChanged(StateDtoForList? state)
-    {
-        _selectedState = state;
-        _selectedMunicipality = null;
-        Model.MunicipalityId = Guid.Empty;
-    }
-
-    private void OnMunicipalityChanged(MunicipalityDtoForList? municipality)
-    {
-        _selectedMunicipality = municipality;
-        Model.MunicipalityId = municipality?.Id ?? Guid.Empty;
-    }
-
-    private async Task<IEnumerable<MunicipalityDtoForList>> SearchMunicipalities(string? search, CancellationToken ct)
-    {
-        if (_selectedState is null)
-        {
-            return [];
-        }
-
-        var parameters = new MunicipalityParameters(
-            PageSize: 20,
-            Search: search,
-            StateCode: _selectedState.Code
-        );
-
-        var results = new List<MunicipalityDtoForList>();
-        await foreach (var municipality in LocationClient.GetMunicipalitiesAsync(parameters, ct))
-        {
-            results.Add(municipality);
-        }
-        return results;
+        Model.Latitude = args.Latitude;
+        Model.Longitude = args.Longitude;
+        Model.MunicipalityId = args.Municipality?.Id ?? Guid.Empty;
+        _municipalityName = args.Municipality is not null
+            ? $"{args.Municipality.Name}, {args.Municipality.StateName}"
+            : null;
     }
 
     private async Task HandleSubmit()
