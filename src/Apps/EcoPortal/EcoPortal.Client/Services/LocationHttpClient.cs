@@ -61,4 +61,25 @@ public sealed class LocationHttpClient(HttpClient httpClient) : ILocationHttpCli
 
         return await response.Content.ReadFromJsonAsync<MunicipalityDtoForDetail>(cancellationToken);
     }
+
+    public async Task<MunicipalityDtoForDetail?> GetMunicipalityByPointAsync(
+        decimal latitude,
+        decimal longitude,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var queryString = new QueryStringBuilder()
+            .Add("latitude", latitude)
+            .Add("longitude", longitude)
+            .Build();
+
+        var response = await httpClient.GetAsync($"api/municipalities/by-point{queryString}", cancellationToken);
+
+        if (!response.IsSuccessStatusCode)
+        {
+            return null;
+        }
+
+        return await response.Content.ReadFromJsonAsync<MunicipalityDtoForDetail>(cancellationToken);
+    }
 }
