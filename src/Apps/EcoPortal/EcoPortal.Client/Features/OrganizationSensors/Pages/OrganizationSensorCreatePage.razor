@@ -136,7 +136,7 @@ _selectedMunicipality is not null;
 
     protected override async Task OnInitializedAsync()
     {
-        Navigation.SetFallback($"/organizations/{OrganizationId}/sensors");
+        Navigation.SetReturnUrlOrFallback($"/organizations/{OrganizationId}/sensors");
         await LoadCommand.ExecuteAsync();
     }
 

@@ -34,21 +34,12 @@ else if (_sensor is null)
         <MudStack AlignItems="AlignItems.Center" Class="pa-8">
             <MudIcon Icon="@Icons.Material.Filled.SensorsOff" Size="Size.Large" Color="Color.Secondary" />
             <MudText Typo="Typo.h6" Color="Color.Secondary" Class="mt-2">Sensor not found</MudText>
-            <MudButton Variant="Variant.Outlined" Color="Color.Primary" OnClick="@(() => Navigation.GoBack("/sensors"))"
-                       Class="mt-4">
-                Go Back
-            </MudButton>
         </MudStack>
     </MudContainer>
 }
 else
 {
     <MudContainer MaxWidth="MaxWidth.Large" Class="pa-4">
-        <MudButton Variant="Variant.Text" StartIcon="@Icons.Material.Filled.ArrowBack"
-                   OnClick="@(() => Navigation.GoBack("/sensors"))" Class="mb-2">
-            Go Back
-        </MudButton>
-
         <MudPaper Elevation="1" Class="pa-4 mb-4">
             <MudStack Spacing="2">
                 <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center">
@@ -177,6 +168,7 @@ else
 
     protected override async Task OnInitializedAsync()
     {
+        Navigation.SetReturnUrlOrFallback("/sensors");
         SearchTextSignal.OnChange(_ => _virtualizedList?.Refresh());
 
         _sensor = await SensorClient.GetByIdAsync(SensorId);
@@ -251,7 +243,7 @@ else
         _virtualizedList?.Refresh();
     }
 
-    private void NavigateToEdit() => Navigation.NavigateTo($"/sensors/{SensorId}/edit");
+    private void NavigateToEdit() => Navigation.NavigateTo($"/sensors/{SensorId}/edit", $"/sensors/{SensorId}");
 
     private async Task ConfirmDelete()
     {
