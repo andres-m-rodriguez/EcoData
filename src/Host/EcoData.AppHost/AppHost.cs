@@ -50,12 +50,18 @@ var sensorsIngestion = builder
     .WithReference(locationsDb)
     .WaitFor(seeder);
 
-// Azure Key Vault for production secrets
+// Azure resources for production
 if (builder.ExecutionContext.IsPublishMode)
 {
     var keyVault = builder.AddAzureKeyVault("keyvault");
     ecoportal.WithReference(keyVault);
     sensorsIngestion.WithReference(keyVault);
+
+    // Application Insights for telemetry
+    var appInsights = builder.AddAzureApplicationInsights("appinsights");
+    ecoportal.WithReference(appInsights);
+    sensorsIngestion.WithReference(appInsights);
+    seeder.WithReference(appInsights);
 }
 
 // Pipeline steps for Azure deployment
