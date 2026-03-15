@@ -2,6 +2,9 @@ using EcoData.AppHost.Extensions;
 
 var builder = DistributedApplication.CreateBuilder(args);
 
+// Azure Container App Environment for deployment
+builder.AddAzureContainerAppEnvironment("aca-env");
+
 // JWT secret - from Key Vault in production, parameter in development
 var jwtSecretKey = builder.AddParameter("jwt-secret-key", secret: true);
 
