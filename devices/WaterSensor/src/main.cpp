@@ -1,5 +1,5 @@
 #include <Arduino.h>
-#include <optional>
+#include "ReadingItemDto.h"
 
 static const char* TAG = "WaterSensor";
 
