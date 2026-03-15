@@ -2,6 +2,7 @@
 @using EcoData.Organization.Contracts.Dtos
 @using EcoData.Organization.Application.Client
 @using EcoPortal.Client.Services
+@using EcoPortal.Client.Components
 @using EcoPortal.Client.Features.Organizations.Components
 @using BlazingSingularity.Commands
 @inject IOrganizationHttpClient OrganizationClient
@@ -26,6 +27,8 @@
     }
     else
     {
+        <PageBackButton />
+
         <MudPaper Elevation="1" Class="pa-6 rounded-lg">
             <MudText Typo="Typo.h5" Class="mb-4">Create Organization</MudText>
 

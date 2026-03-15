@@ -3,6 +3,7 @@
 @using EcoData.Sensors.Contracts.Dtos
 @using EcoPortal.Client.Features.Sensors.Components
 @using EcoPortal.Client.Services
+@using EcoPortal.Client.Components
 @using BlazingSingularity.Commands
 @using static EcoPortal.Client.Features.Sensors.Components.SensorForm
 @inject ISensorHttpClient SensorClient
@@ -32,6 +33,8 @@
     }
     else
     {
+        <PageBackButton />
+
         <MudPaper Elevation="1" Class="pa-6">
             <MudText Typo="Typo.h5" Class="mb-4">Edit Sensor</MudText>
 
