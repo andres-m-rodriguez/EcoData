@@ -23,6 +23,9 @@ public static class SensorsDatabaseExtensions
             ConfigureDbContext(connectionString, options);
         });
 
+        // Enrich with Azure-specific configuration (SSL, health checks, telemetry)
+        builder.EnrichAzureNpgsqlDbContext<SensorsDbContext>();
+
         return builder;
     }
 
