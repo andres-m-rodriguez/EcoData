@@ -1,0 +1,26 @@
+CompileFlags:
+  Remove:
+    - -mlongcalls
+    - -fstrict-volatile-bitfields
+    - -fno-tree-switch-conversion
+    - -mtext-section-literals
+    - -fno-rtti
+    - -mfix-esp32-psram-cache-issue
+    - -mfix-esp32-psram-cache-strategy=memw
+    - -fstack-protector*
+    - -freestanding
+    - -march=*
+    - --target=xtensa*
+    - -mno-rtti
+  Add:
+    - -IC:/Users/Overlord/.platformio/packages/framework-arduinoespressif32/cores/esp32
+    - -IC:/Users/Overlord/.platformio/packages/framework-arduinoespressif32/tools/sdk/esp32/include/freertos/include
+    - -IC:/Users/Overlord/.platformio/packages/framework-arduinoespressif32/tools/sdk/esp32/include/esp_common/include
+    - -DARDUINO=10812
+    - -DARDUINO_ARCH_ESP32
+    - -Wno-unknown-warning-option
+
+Diagnostics:
+  Suppress:
+    - drv_unknown_argument*
+    - pp_file_not_found
