@@ -10,11 +10,7 @@
 @if (ShowFilters)
 {
     <SearchHeader SearchSignal="SearchTextSignal" Placeholder="Search sensors..." ShowFilterButton="true"
-                  HasActiveFilters="HasNonSearchFilters" OnFilterClick="OpenFilterDialog">
-        <Actions>
-            @Actions
-        </Actions>
-    </SearchHeader>
+                  HasActiveFilters="HasNonSearchFilters" OnFilterClick="OpenFilterDialog" />
 }
 
 <MudPaper Elevation="@Elevation" Class="sensor-list-container rounded-lg">
@@ -125,9 +121,6 @@
 
     [Parameter]
     public EventCallback<SensorDtoForList> OnSensorClick { get; set; }
-
-    [Parameter]
-    public RenderFragment? Actions { get; set; }
 
     private bool HasActiveFilters => !string.IsNullOrWhiteSpace(SearchText) || StatusFilter != SensorStatusFilter.All;
     private bool HasNonSearchFilters => StatusFilter != SensorStatusFilter.All;
