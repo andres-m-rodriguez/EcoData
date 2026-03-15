@@ -10,7 +10,6 @@ var jwtSecretKey = builder.AddParameter("jwt-secret-key", secret: true);
 
 var postgres = builder
     .AddAzurePostgresFlexibleServer("postgres")
-    .WithPasswordAuthentication()
     .RunAsContainer(c => c.WithImage("postgis/postgis", "16-3.4").WithDataVolume().WithPgAdmin());
 
 var organizationDb = postgres.AddDatabase("organization").WithDropDatabaseCommand();
