@@ -3,6 +3,7 @@
 @using EcoData.Sensors.Contracts.Dtos
 @using EcoPortal.Client.Features.Sensors.Components
 @using EcoPortal.Client.Services
+@using EcoPortal.Client.Components
 @using BlazingSingularity.Commands
 @using static EcoPortal.Client.Features.Sensors.Components.SensorForm
 @inject ISensorHttpClient SensorClient
@@ -27,18 +28,12 @@
             <MudStack AlignItems="AlignItems.Center">
                 <MudIcon Icon="@Icons.Material.Filled.Error" Size="Size.Large" Color="Color.Error" />
                 <MudText Typo="Typo.h6" Color="Color.Error" Class="mt-2">Sensor not found</MudText>
-                <MudButton Variant="Variant.Outlined" Color="Color.Primary" OnClick="NavigateBack" Class="mt-4">
-                    Go Back
-                </MudButton>
             </MudStack>
         </MudPaper>
     }
     else
     {
-        <MudButton Variant="Variant.Text" StartIcon="@Icons.Material.Filled.ArrowBack"
-                   OnClick="NavigateBack" Class="mb-2">
-            Go Back
-        </MudButton>
+        <PageBackButton />
 
         <MudPaper Elevation="1" Class="pa-6">
             <MudText Typo="Typo.h5" Class="mb-4">Edit Sensor</MudText>
@@ -68,7 +63,7 @@
 
     protected override async Task OnInitializedAsync()
     {
-        Navigation.SetFallback($"/sensors/{SensorId}");
+        Navigation.SetReturnUrlOrFallback($"/sensors/{SensorId}");
         await LoadCommand.ExecuteAsync();
     }
 

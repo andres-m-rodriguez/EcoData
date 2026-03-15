@@ -8,6 +8,7 @@
 @using EcoData.Sensors.Contracts.Requests
 @using EcoData.Sensors.Application.Client
 @using EcoPortal.Client.Services
+@using EcoPortal.Client.Components
 @using EcoData.Locations.Contracts.Dtos
 @using EcoData.Locations.Contracts.Parameters
 @using BlazingSingularity.Commands
@@ -43,6 +44,8 @@
     }
     else
     {
+        <PageBackButton />
+
         <MudPaper Elevation="1" Class="pa-6">
             <MudText Typo="Typo.h5" Class="mb-4">Add Sensor</MudText>
 
@@ -136,7 +139,7 @@ _selectedMunicipality is not null;
 
     protected override async Task OnInitializedAsync()
     {
-        Navigation.SetFallback($"/organizations/{OrganizationId}/sensors");
+        Navigation.SetReturnUrlOrFallback($"/organizations/{OrganizationId}/sensors");
         await LoadCommand.ExecuteAsync();
     }
 

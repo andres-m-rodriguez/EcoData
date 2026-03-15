@@ -115,7 +115,7 @@ public sealed class OrganizationHttpClient(HttpClient httpClient) : IOrganizatio
         return result!;
     }
 
-    public async Task<OneOf<Success, NotFoundError, ApiError>> DeleteAsync(
+    public async Task<OneOf<Success, NotFoundError, ConflictError, ApiError>> DeleteAsync(
         Guid id,
         CancellationToken cancellationToken = default
     )
@@ -124,6 +124,9 @@ public sealed class OrganizationHttpClient(HttpClient httpClient) : IOrganizatio
 
         if (response.StatusCode == HttpStatusCode.NotFound)
             return new NotFoundError();
+
+        if (response.StatusCode == HttpStatusCode.Conflict)
+            return new ConflictError(await response.Content.ReadAsStringAsync(cancellationToken));
 
         if (!response.IsSuccessStatusCode)
             return new ApiError(

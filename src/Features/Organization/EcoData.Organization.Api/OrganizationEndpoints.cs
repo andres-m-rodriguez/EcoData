@@ -5,6 +5,7 @@ using EcoData.Organization.Application.Server.Services;
 using EcoData.Organization.Contracts.Dtos;
 using EcoData.Organization.Contracts.Parameters;
 using EcoData.Organization.DataAccess.Interfaces;
+using EcoData.Sensors.DataAccess.Interfaces;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
@@ -122,10 +123,11 @@ public static class OrganizationEndpoints
         group
             .MapDelete(
                 "/{id:guid}",
-                async Task<Results<NoContent, NotFound, ForbidHttpResult>> (
+                async Task<Results<NoContent, NotFound, Conflict<string>, ForbidHttpResult>> (
                     Guid id,
                     ClaimsPrincipal user,
                     IOrganizationRepository repository,
+                    ISensorRepository sensorRepository,
                     IOrganizationPermissionService permissionService,
                     CancellationToken ct
                 ) =>
@@ -142,6 +144,14 @@ public static class OrganizationEndpoints
                     )
                     {
                         return TypedResults.Forbid();
+                    }
+
+                    var sensorCount = await sensorRepository.GetCountByOrganizationAsync(id, ct);
+                    if (sensorCount > 0)
+                    {
+                        return TypedResults.Conflict(
+                            $"Cannot delete organization with {sensorCount} active sensor(s). Please delete or reassign all sensors first."
+                        );
                     }
 
                     var deleted = await repository.DeleteAsync(id, ct);

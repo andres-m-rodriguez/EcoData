@@ -7,6 +7,7 @@
 @using EcoData.Sensors.Contracts.Parameters
 @using EcoData.Sensors.Application.Client
 @using EcoPortal.Client.Services
+@using EcoPortal.Client.Components
 @using EcoPortal.Client.Features.Organizations.Authorization
 @using EcoPortal.Client.Features.Organizations.ViewModels
 @using EcoPortal.Client.Features.Sensors.Components
@@ -66,6 +67,8 @@ else if (_viewModel is null)
 else
 {
     <MudContainer MaxWidth="MaxWidth.Large" Class="mt-6 mb-8">
+        <PageBackButton />
+
         <!-- Header Card with Banner Image -->
         <MudPaper Elevation="1" Class="mb-6 rounded-lg overflow-hidden">
             @if (_viewModel.HasCardPicture)
@@ -332,7 +335,7 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        Navigation.SetFallback("/organizations");
+        Navigation.SetReturnUrlOrFallback("/organizations");
         await LoadCommand.ExecuteAsync();
     }
 
@@ -365,11 +368,11 @@ else
         }
     }
 
-    private void NavigateToEdit() => Navigation.NavigateTo($"/organizations/{Id}/edit");
-    private void NavigateToSensors() => Navigation.NavigateTo($"/organizations/{Id}/sensors");
-    private void NavigateToTeam() => Navigation.NavigateTo($"/organizations/{Id}/team");
-    private void NavigateToSensor(SensorDtoForList sensor) => Navigation.NavigateTo($"/sensors/{sensor.Id}");
-    private void NavigateToCreateSensor() => Navigation.NavigateTo($"/organizations/{Id}/sensors/create");
+    private void NavigateToEdit() => Navigation.NavigateTo($"/organizations/{Id}/edit", $"/organizations/{Id}");
+    private void NavigateToSensors() => Navigation.NavigateTo($"/organizations/{Id}/sensors", $"/organizations/{Id}");
+    private void NavigateToTeam() => Navigation.NavigateTo($"/organizations/{Id}/team", $"/organizations/{Id}");
+    private void NavigateToSensor(SensorDtoForList sensor) => Navigation.NavigateTo($"/sensors/{sensor.Id}", $"/organizations/{Id}");
+    private void NavigateToCreateSensor() => Navigation.NavigateTo($"/organizations/{Id}/sensors/create", $"/organizations/{Id}");
 
     private async Task ConfirmDelete()
     {
@@ -391,9 +394,10 @@ else
                 _ =>
                 {
                     Snackbar.Add("Deleted", Severity.Success);
-                    Navigation.NavigateTo("/organizations");
+                    Navigation.NavigateTo("/organizations/discover");
                 },
                 _ => Snackbar.Add("Organization not found", Severity.Error),
+                conflict => Snackbar.Add(conflict.Message, Severity.Warning),
                 error => Snackbar.Add($"Failed to delete: {error.Message}", Severity.Error)
             );
         }
