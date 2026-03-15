@@ -394,7 +394,7 @@ else
                 _ =>
                 {
                     Snackbar.Add("Deleted", Severity.Success);
-                    Navigation.NavigateTo("/organizations");
+                    Navigation.NavigateTo("/organizations/discover");
                 },
                 _ => Snackbar.Add("Organization not found", Severity.Error),
                 conflict => Snackbar.Add(conflict.Message, Severity.Warning),
