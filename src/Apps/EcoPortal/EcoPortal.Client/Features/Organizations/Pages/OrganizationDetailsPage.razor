@@ -185,13 +185,13 @@
                                 <RequireOrganizationPermission Permission="@SensorPermissions.Sensor.Update" OrganizationId="Id">
                                     <MudButton Variant="Variant.Outlined" Color="Color.Primary" Size="Size.Small"
                                                StartIcon="@Icons.Material.Filled.Settings" OnClick="NavigateToSensors">
-                                        Manage Sensors
+                                        Manage
                                     </MudButton>
                                 </RequireOrganizationPermission>
                                 <RequireOrganizationPermission Permission="@SensorPermissions.Sensor.Create" OrganizationId="Id">
                                     <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small"
                                                StartIcon="@Icons.Material.Filled.Add" OnClick="NavigateToCreateSensor">
-                                        Add Sensor
+                                        Add
                                     </MudButton>
                                 </RequireOrganizationPermission>
                             </MudStack>
@@ -234,12 +234,12 @@
                 <Tab Title="Team" Icon="@Icons.Material.Outlined.Group" Badge="@_viewModel.MemberCountBadge">
                     <div class="pa-6">
                         <MudStack Row Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Class="mb-4">
-                            <MudText Typo="Typo.h6">Organization Members</MudText>
+                            <MudText Typo="Typo.h6">Members</MudText>
                             <RequireOrganizationPermission Permission="@OrgPermissions.Organization.ManageMembers"
                                                            OrganizationId="Id">
                                 <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small"
-                                           StartIcon="@Icons.Material.Filled.PersonAdd" OnClick="NavigateToTeam">
-                                    Invite Member
+                                           StartIcon="@Icons.Material.Filled.Settings" OnClick="NavigateToTeam">
+                                    Manage
                                 </MudButton>
                             </RequireOrganizationPermission>
                         </MudStack>

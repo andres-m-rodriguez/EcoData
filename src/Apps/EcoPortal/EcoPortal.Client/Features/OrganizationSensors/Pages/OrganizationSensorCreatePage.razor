@@ -23,7 +23,7 @@
 
 <PageTitle>Add Sensor - EcoData</PageTitle>
 
-<EcoDataPageLayout Title="Add Sensor" FeatureName="@(_organization?.Name ?? "Organization")" FallbackUrl="@($"/organizations/{OrganizationId}/sensors")" MaxWidth="MaxWidth.Small">
+<EcoDataPageLayout Title="Add Sensor" FallbackUrl="@($"/organizations/{OrganizationId}/sensors")" MaxWidth="MaxWidth.Small">
     <ChildContent>
         @if (LoadCommand.IsLoading)
         {

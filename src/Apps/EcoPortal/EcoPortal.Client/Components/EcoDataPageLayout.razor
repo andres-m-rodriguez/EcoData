@@ -7,43 +7,40 @@
         <MudButton Variant="Variant.Text"
                    StartIcon="@Icons.Material.Filled.ArrowBack"
                    OnClick="GoBack"
-                   Class="mb-2">
+                   Class="d-none d-sm-inline-flex mb-2">
             Back
         </MudButton>
     }
 
     @if (!string.IsNullOrEmpty(Title) || Actions is not null)
     {
-        <MudStack Row Justify="Justify.SpaceBetween" AlignItems="AlignItems.Start" Class="mb-4">
-            <MudStack Spacing="0">
-                @if (!string.IsNullOrEmpty(FeatureName))
-                {
-                    <MudText Typo="Typo.caption" Color="Color.Secondary">@FeatureName</MudText>
-                }
+        <div class="page-header mb-2">
+            <MudStack Row Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center">
                 @if (!string.IsNullOrEmpty(Title))
                 {
                     <MudText Typo="@TitleTypo">@Title</MudText>
                 }
-            </MudStack>
 
-            @if (Actions is not null)
-            {
-                <MudStack Row Spacing="2">
-                    @Actions
-                </MudStack>
-            }
-        </MudStack>
+                @if (Actions is not null)
+                {
+                    <div class="page-actions">
+                        <MudStack Row Spacing="2">
+                            @Actions
+                        </MudStack>
+                    </div>
+                }
+            </MudStack>
+        </div>
     }
 
-    @ChildContent
+    <div class="page-content">
+        @ChildContent
+    </div>
 </MudContainer>
 
 @code {
     [Parameter]
     public string? Title { get; set; }
-
-    [Parameter]
-    public string? FeatureName { get; set; }
 
     [Parameter]
     public string? FallbackUrl { get; set; }
@@ -57,16 +54,14 @@
     [Parameter]
     public RenderFragment? ChildContent { get; set; }
 
-    private string ContainerClass => MaxWidth == MaxWidth.Small ? "pa-4" : "mt-6 mb-8";
+    private string ContainerClass => MaxWidth == MaxWidth.Small ? "pa-4" : "page-container mt-4 mb-8";
     private Typo TitleTypo => MaxWidth == MaxWidth.Small ? Typo.h5 : Typo.h4;
 
     protected override void OnInitialized()
     {
-        if (!string.IsNullOrEmpty(FallbackUrl))
-        {
-            Navigation.SetFallback(FallbackUrl);
-        }
+        // Always set fallback - pass null to clear it for pages without a back destination
+        Navigation.SetFallback(FallbackUrl);
     }
 
-    private void GoBack() => Navigation.GoBack();
+    private void GoBack() => Navigation.GoBack(FallbackUrl);
 }
