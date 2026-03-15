@@ -24,7 +24,8 @@ var seeder = builder
     .WaitFor(organizationDb)
     .WaitFor(sensorsDb)
     .WaitFor(identityDb)
-    .WaitFor(locationsDb);
+    .WaitFor(locationsDb)
+    .PublishAsAzureContainerAppJob();
 
 var ecoportal = builder
     .AddProject<Projects.EcoPortal_Server>("ecoportal")
@@ -53,5 +54,8 @@ if (builder.ExecutionContext.IsPublishMode)
     ecoportal.WithReference(keyVault);
     sensorsIngestion.WithReference(keyVault);
 }
+
+// Pipeline steps for Azure deployment
+builder.AddMigrationsStep();
 
 builder.Build().Run();
