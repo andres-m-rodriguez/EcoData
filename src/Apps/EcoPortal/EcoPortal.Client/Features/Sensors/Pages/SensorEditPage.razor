@@ -12,46 +12,44 @@
 
 <PageTitle>Edit Sensor - EcoData</PageTitle>
 
-<MudContainer MaxWidth="MaxWidth.Small" Class="pa-4">
-    @if (LoadCommand.IsLoading)
-    {
-        <MudPaper Elevation="1" Class="pa-6">
-            <MudSkeleton Width="200px" Height="32px" />
-            <MudSkeleton Width="100%" Height="56px" Class="mt-4" />
-            <MudSkeleton Width="100%" Height="56px" Class="mt-4" />
-            <MudSkeleton Width="100%" Height="56px" Class="mt-4" />
-        </MudPaper>
-    }
-    else if (_sensor is null)
-    {
-        <MudPaper Elevation="1" Class="pa-6">
-            <MudStack AlignItems="AlignItems.Center">
-                <MudIcon Icon="@Icons.Material.Filled.Error" Size="Size.Large" Color="Color.Error" />
-                <MudText Typo="Typo.h6" Color="Color.Error" Class="mt-2">Sensor not found</MudText>
-            </MudStack>
-        </MudPaper>
-    }
-    else
-    {
-        <PageBackButton />
+<EcoDataPageLayout Title="Edit Sensor" FeatureName="Sensors" FallbackUrl="@($"/sensors/{SensorId}")" MaxWidth="MaxWidth.Small">
+    <ChildContent>
+        @if (LoadCommand.IsLoading)
+        {
+            <MudPaper Elevation="1" Class="pa-6">
+                <MudSkeleton Width="200px" Height="32px" />
+                <MudSkeleton Width="100%" Height="56px" Class="mt-4" />
+                <MudSkeleton Width="100%" Height="56px" Class="mt-4" />
+                <MudSkeleton Width="100%" Height="56px" Class="mt-4" />
+            </MudPaper>
+        }
+        else if (_sensor is null)
+        {
+            <MudPaper Elevation="1" Class="pa-6">
+                <MudStack AlignItems="AlignItems.Center">
+                    <MudIcon Icon="@Icons.Material.Filled.Error" Size="Size.Large" Color="Color.Error" />
+                    <MudText Typo="Typo.h6" Color="Color.Error" Class="mt-2">Sensor not found</MudText>
+                </MudStack>
+            </MudPaper>
+        }
+        else
+        {
+            <MudPaper Elevation="1" Class="pa-6">
+                <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-4">
+                    External ID: <strong>@_sensor.ExternalId</strong>
+                </MudText>
 
-        <MudPaper Elevation="1" Class="pa-6">
-            <MudText Typo="Typo.h5" Class="mb-4">Edit Sensor</MudText>
-
-            <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-4">
-                External ID: <strong>@_sensor.ExternalId</strong>
-            </MudText>
-
-            <SensorForm Model="_formModel"
-                        SubmitButtonText="Save Changes"
-                        ErrorMessage="@_errorMessage"
-                        IsLoading="SaveCommand.IsLoading"
-                        HideExternalId="true"
-                        OnSubmit="HandleSubmit"
-                        OnCancel="NavigateBack" />
-        </MudPaper>
-    }
-</MudContainer>
+                <SensorForm Model="_formModel"
+                            SubmitButtonText="Save Changes"
+                            ErrorMessage="@_errorMessage"
+                            IsLoading="SaveCommand.IsLoading"
+                            HideExternalId="true"
+                            OnSubmit="HandleSubmit"
+                            OnCancel="NavigateBack" />
+            </MudPaper>
+        }
+    </ChildContent>
+</EcoDataPageLayout>
 
 @code {
     [Parameter]
@@ -63,7 +61,6 @@
 
     protected override async Task OnInitializedAsync()
     {
-        Navigation.SetReturnUrlOrFallback($"/sensors/{SensorId}");
         await LoadCommand.ExecuteAsync();
     }
 

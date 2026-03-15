@@ -66,8 +66,7 @@ else if (_viewModel is null)
 }
 else
 {
-    <MudContainer MaxWidth="MaxWidth.Large" Class="mt-6 mb-8">
-        <PageBackButton />
+    <EcoDataPageLayout FallbackUrl="/organizations/discover">
 
         <!-- Header Card with Banner Image -->
         <MudPaper Elevation="1" Class="mb-6 rounded-lg overflow-hidden">
@@ -320,7 +319,7 @@ else
                 </Tab>
             </Tabs>
         </MudPaper>
-    </MudContainer>
+    </EcoDataPageLayout>
 }
 
 @code {
@@ -335,7 +334,6 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        Navigation.SetReturnUrlOrFallback("/organizations/discover");
         await LoadCommand.ExecuteAsync();
     }
 

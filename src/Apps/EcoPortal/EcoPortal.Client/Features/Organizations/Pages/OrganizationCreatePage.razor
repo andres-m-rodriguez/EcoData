@@ -11,25 +11,18 @@
 
 <PageTitle>Create Organization - EcoData</PageTitle>
 
-<MudContainer MaxWidth="MaxWidth.Small" Class="pa-4">
-    <PageBackButton />
-
-    <MudPaper Elevation="1" Class="pa-6 rounded-lg">
-        <MudText Typo="Typo.h5" Class="mb-4">Create Organization</MudText>
-
-        <OrganizationForm Model="_model" SubmitButtonText="Create" ErrorMessage="@_errorMessage"
-                          IsLoading="CreateCommand.IsLoading" OnSubmit="HandleSubmit" OnCancel="NavigateBack" />
-    </MudPaper>
-</MudContainer>
+<EcoDataPageLayout Title="Create Organization" FeatureName="Organizations" FallbackUrl="/organizations/discover" MaxWidth="MaxWidth.Small">
+    <ChildContent>
+        <MudPaper Elevation="1" Class="pa-6 rounded-lg">
+            <OrganizationForm Model="_model" SubmitButtonText="Create" ErrorMessage="@_errorMessage"
+                              IsLoading="CreateCommand.IsLoading" OnSubmit="HandleSubmit" OnCancel="NavigateBack" />
+        </MudPaper>
+    </ChildContent>
+</EcoDataPageLayout>
 
 @code {
     private readonly OrganizationForm.OrganizationFormModel _model = new();
     private string? _errorMessage;
-
-    protected override void OnInitialized()
-    {
-        Navigation.SetReturnUrlOrFallback("/organizations");
-    }
 
     private async Task HandleSubmit(OrganizationForm.OrganizationFormModel model)
     {

@@ -6,6 +6,7 @@
 @using EcoData.Organization.Contracts.Dtos
 @using EcoData.Organization.Contracts.Parameters
 @using EcoData.Organization.Application.Client
+@using EcoPortal.Client.Components
 @using EcoPortal.Client.Services
 @using EcoPortal.Client.Features.OrganizationMembers.Components
 @using EcoPortal.Client.Features.OrganizationMembers.Dialogs
@@ -20,50 +21,19 @@
 
 <PageTitle>Members - @(_organization?.Name ?? "Organization") - EcoData</PageTitle>
 
-<SearchHeader SearchSignal="SearchTextSignal" Placeholder="Search members..." EnableSticky="true">
+<EcoDataPageLayout Title="Team" FeatureName="@(_organization?.Name ?? "Organization")" FallbackUrl="@($"/organizations/{OrganizationId}")">
     <Actions>
         <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Inbox"
                    Href="@($"/organizations/{OrganizationId}/requests")">
             Requests
         </MudButton>
     </Actions>
-</SearchHeader>
+    <ChildContent>
+        <SearchHeader SearchSignal="SearchTextSignal" Placeholder="Search members..." EnableSticky="true" />
 
-@if (LoadOrganizationCommand.IsLoading)
-{
-    <MudPaper Elevation="0" Class="rounded-lg">
-        @for (var i = 0; i < 5; i++)
+        @if (LoadOrganizationCommand.IsLoading)
         {
-            <MudPaper Elevation="0" Class="pa-3 border-b">
-                <MudStack Row AlignItems="AlignItems.Center" Spacing="3">
-                    <MudSkeleton SkeletonType="SkeletonType.Circle" Width="40px" Height="40px" />
-                    <MudStack Spacing="1">
-                        <MudSkeleton Width="150px" Height="16px" />
-                        <MudSkeleton Width="200px" Height="12px" />
-                    </MudStack>
-                    <MudSpacer />
-                    <MudSkeleton Width="80px" Height="24px" />
-                </MudStack>
-            </MudPaper>
-        }
-    </MudPaper>
-}
-else if (_organization is null)
-{
-    <MudPaper Elevation="0" Class="pa-8 rounded-lg">
-        <MudStack AlignItems="AlignItems.Center">
-            <MudIcon Icon="@Icons.Material.Filled.Error" Size="Size.Large" Color="Color.Error" />
-            <MudText Typo="Typo.h6" Color="Color.Error" Class="mt-2">Organization not found</MudText>
-        </MudStack>
-    </MudPaper>
-}
-else
-{
-    <MudPaper Elevation="0" Class="rounded-lg">
-        <EcoDataVirtualizedList @ref="_virtualizedList" TItem="OrganizationMemberDto" TParams="OrganizationMemberParameters"
-                                ItemsProvider="GetItemsAsync" ParametersBuilder="BuildParameters" CursorSelector="m => m.Id"
-                                ItemSize="65" OverscanCount="3">
-            <LoadingTemplate>
+            <MudPaper Elevation="0" Class="rounded-lg">
                 @for (var i = 0; i < 5; i++)
                 {
                     <MudPaper Elevation="0" Class="pa-3 border-b">
@@ -78,57 +48,91 @@ else
                         </MudStack>
                     </MudPaper>
                 }
-            </LoadingTemplate>
-            <EmptyTemplate>
-                @if (HasActiveFilters)
-                {
-                    <MudStack AlignItems="AlignItems.Center" Class="pa-8">
-                        <MudIcon Icon="@Icons.Material.Filled.SearchOff" Size="Size.Large" Color="Color.Secondary" />
-                        <MudText Typo="Typo.h6" Color="Color.Secondary" Class="mt-2">No members found</MudText>
-                        <MudText Typo="Typo.body2" Color="Color.Secondary">
-                            No members match your search criteria.
-                        </MudText>
-                        <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.FilterAltOff"
-                                   OnClick="ClearFilters" Class="mt-3">
-                            Clear Filters
-                        </MudButton>
-                    </MudStack>
-                }
-                else
-                {
-                    <MudStack AlignItems="AlignItems.Center" Class="pa-8">
-                        <MudIcon Icon="@Icons.Material.Filled.Group" Size="Size.Large" Color="Color.Secondary" />
-                        <MudText Typo="Typo.h6" Color="Color.Secondary" Class="mt-2">No members yet</MudText>
-                        <MudText Typo="Typo.body2" Color="Color.Secondary">
-                            Approve access requests to add members to this organization.
-                        </MudText>
-                        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Inbox"
-                                   Href="@($"/organizations/{OrganizationId}/requests")" Class="mt-3">
-                            View Requests
-                        </MudButton>
-                    </MudStack>
-                }
-            </EmptyTemplate>
-            <ItemTemplate Context="member">
-                <MemberListItem Member="member" ShowActions="true" OnChangeRole="OpenChangeRoleDialog"
-                                OnRemove="ConfirmRemoveMember" />
-            </ItemTemplate>
-            <PlaceholderTemplate>
-                <MudPaper Elevation="0" Class="pa-3 border-b">
-                    <MudStack Row AlignItems="AlignItems.Center" Spacing="3">
-                        <MudSkeleton SkeletonType="SkeletonType.Circle" Width="40px" Height="40px" />
-                        <MudStack Spacing="1">
-                            <MudSkeleton Width="150px" Height="16px" />
-                            <MudSkeleton Width="200px" Height="12px" />
-                        </MudStack>
-                        <MudSpacer />
-                        <MudSkeleton Width="80px" Height="24px" />
-                    </MudStack>
-                </MudPaper>
-            </PlaceholderTemplate>
-        </EcoDataVirtualizedList>
-    </MudPaper>
-}
+            </MudPaper>
+        }
+        else if (_organization is null)
+        {
+            <MudPaper Elevation="0" Class="pa-8 rounded-lg">
+                <MudStack AlignItems="AlignItems.Center">
+                    <MudIcon Icon="@Icons.Material.Filled.Error" Size="Size.Large" Color="Color.Error" />
+                    <MudText Typo="Typo.h6" Color="Color.Error" Class="mt-2">Organization not found</MudText>
+                </MudStack>
+            </MudPaper>
+        }
+        else
+        {
+            <MudPaper Elevation="0" Class="rounded-lg">
+                <EcoDataVirtualizedList @ref="_virtualizedList" TItem="OrganizationMemberDto" TParams="OrganizationMemberParameters"
+                                        ItemsProvider="GetItemsAsync" ParametersBuilder="BuildParameters" CursorSelector="m => m.Id"
+                                        ItemSize="65" OverscanCount="3">
+                    <LoadingTemplate>
+                        @for (var i = 0; i < 5; i++)
+                        {
+                            <MudPaper Elevation="0" Class="pa-3 border-b">
+                                <MudStack Row AlignItems="AlignItems.Center" Spacing="3">
+                                    <MudSkeleton SkeletonType="SkeletonType.Circle" Width="40px" Height="40px" />
+                                    <MudStack Spacing="1">
+                                        <MudSkeleton Width="150px" Height="16px" />
+                                        <MudSkeleton Width="200px" Height="12px" />
+                                    </MudStack>
+                                    <MudSpacer />
+                                    <MudSkeleton Width="80px" Height="24px" />
+                                </MudStack>
+                            </MudPaper>
+                        }
+                    </LoadingTemplate>
+                    <EmptyTemplate>
+                        @if (HasActiveFilters)
+                        {
+                            <MudStack AlignItems="AlignItems.Center" Class="pa-8">
+                                <MudIcon Icon="@Icons.Material.Filled.SearchOff" Size="Size.Large" Color="Color.Secondary" />
+                                <MudText Typo="Typo.h6" Color="Color.Secondary" Class="mt-2">No members found</MudText>
+                                <MudText Typo="Typo.body2" Color="Color.Secondary">
+                                    No members match your search criteria.
+                                </MudText>
+                                <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.FilterAltOff"
+                                           OnClick="ClearFilters" Class="mt-3">
+                                    Clear Filters
+                                </MudButton>
+                            </MudStack>
+                        }
+                        else
+                        {
+                            <MudStack AlignItems="AlignItems.Center" Class="pa-8">
+                                <MudIcon Icon="@Icons.Material.Filled.Group" Size="Size.Large" Color="Color.Secondary" />
+                                <MudText Typo="Typo.h6" Color="Color.Secondary" Class="mt-2">No members yet</MudText>
+                                <MudText Typo="Typo.body2" Color="Color.Secondary">
+                                    Approve access requests to add members to this organization.
+                                </MudText>
+                                <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Inbox"
+                                           Href="@($"/organizations/{OrganizationId}/requests")" Class="mt-3">
+                                    View Requests
+                                </MudButton>
+                            </MudStack>
+                        }
+                    </EmptyTemplate>
+                    <ItemTemplate Context="member">
+                        <MemberListItem Member="member" ShowActions="true" OnChangeRole="OpenChangeRoleDialog"
+                                        OnRemove="ConfirmRemoveMember" />
+                    </ItemTemplate>
+                    <PlaceholderTemplate>
+                        <MudPaper Elevation="0" Class="pa-3 border-b">
+                            <MudStack Row AlignItems="AlignItems.Center" Spacing="3">
+                                <MudSkeleton SkeletonType="SkeletonType.Circle" Width="40px" Height="40px" />
+                                <MudStack Spacing="1">
+                                    <MudSkeleton Width="150px" Height="16px" />
+                                    <MudSkeleton Width="200px" Height="12px" />
+                                </MudStack>
+                                <MudSpacer />
+                                <MudSkeleton Width="80px" Height="24px" />
+                            </MudStack>
+                        </MudPaper>
+                    </PlaceholderTemplate>
+                </EcoDataVirtualizedList>
+            </MudPaper>
+        }
+    </ChildContent>
+</EcoDataPageLayout>
 
 @code {
     private EcoDataVirtualizedList<OrganizationMemberDto, OrganizationMemberParameters>? _virtualizedList;
@@ -145,7 +149,6 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        Navigation.SetFallback($"/organizations/{OrganizationId}");
         SearchTextSignal.OnChange(_ => _virtualizedList?.Refresh());
         await LoadOrganizationCommand.ExecuteAsync();
     }

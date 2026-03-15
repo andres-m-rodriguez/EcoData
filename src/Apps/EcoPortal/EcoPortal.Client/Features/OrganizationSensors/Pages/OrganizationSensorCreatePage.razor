@@ -23,101 +23,99 @@
 
 <PageTitle>Add Sensor - EcoData</PageTitle>
 
-<MudContainer MaxWidth="MaxWidth.Small" Class="pa-4">
-    @if (LoadCommand.IsLoading)
-    {
-        <MudPaper Elevation="1" Class="pa-6">
-            <MudSkeleton Width="200px" Height="32px" />
-            <MudSkeleton Width="100%" Height="56px" Class="mt-4" />
-            <MudSkeleton Width="100%" Height="56px" Class="mt-4" />
-            <MudSkeleton Width="100%" Height="56px" Class="mt-4" />
-        </MudPaper>
-    }
-    else if (_organization is null)
-    {
-        <MudPaper Elevation="1" Class="pa-6">
-            <MudStack AlignItems="AlignItems.Center">
-                <MudIcon Icon="@Icons.Material.Filled.Error" Size="Size.Large" Color="Color.Error" />
-                <MudText Typo="Typo.h6" Color="Color.Error" Class="mt-2">Organization not found</MudText>
-            </MudStack>
-        </MudPaper>
-    }
-    else
-    {
-        <PageBackButton />
-
-        <MudPaper Elevation="1" Class="pa-6">
-            <MudText Typo="Typo.h5" Class="mb-4">Add Sensor</MudText>
-
-            <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-4">
-                Adding sensor to <strong>@_organization.Name</strong>
-            </MudText>
-
-            @if (!string.IsNullOrEmpty(_errorMessage))
-            {
-                <MudAlert Severity="Severity.Error" Variant="Variant.Filled" Dense="true" Class="mb-4">
-                    @_errorMessage
-                </MudAlert>
-            }
-
-            <MudStack Spacing="3">
-                <MudTextField @bind-Value="_externalId" Label="External ID" Required="true"
-                              RequiredError="External ID is required" MaxLength="100" HelperText="Unique identifier for this sensor"
-                              Disabled="CreateCommand.IsLoading" />
-
-                <MudTextField @bind-Value="_name" Label="Name" Required="true" RequiredError="Name is required"
-                              MaxLength="300" HelperText="Display name for the sensor" Disabled="CreateCommand.IsLoading" />
-
-                <MudStack Row="true" Spacing="2">
-                    <MudNumericField @bind-Value="_latitude" Label="Latitude" Required="true" Min="-90" Max="90"
-                                     Step="0.000001M" Format="F6" HelperText="-90 to 90" Disabled="CreateCommand.IsLoading"
-                                     Style="flex: 1;" />
-
-                    <MudNumericField @bind-Value="_longitude" Label="Longitude" Required="true" Min="-180" Max="180"
-                                     Step="0.000001M" Format="F6" HelperText="-180 to 180" Disabled="CreateCommand.IsLoading"
-                                     Style="flex: 1;" />
+<EcoDataPageLayout Title="Add Sensor" FeatureName="@(_organization?.Name ?? "Organization")" FallbackUrl="@($"/organizations/{OrganizationId}/sensors")" MaxWidth="MaxWidth.Small">
+    <ChildContent>
+        @if (LoadCommand.IsLoading)
+        {
+            <MudPaper Elevation="1" Class="pa-6">
+                <MudSkeleton Width="200px" Height="32px" />
+                <MudSkeleton Width="100%" Height="56px" Class="mt-4" />
+                <MudSkeleton Width="100%" Height="56px" Class="mt-4" />
+                <MudSkeleton Width="100%" Height="56px" Class="mt-4" />
+            </MudPaper>
+        }
+        else if (_organization is null)
+        {
+            <MudPaper Elevation="1" Class="pa-6">
+                <MudStack AlignItems="AlignItems.Center">
+                    <MudIcon Icon="@Icons.Material.Filled.Error" Size="Size.Large" Color="Color.Error" />
+                    <MudText Typo="Typo.h6" Color="Color.Error" Class="mt-2">Organization not found</MudText>
                 </MudStack>
+            </MudPaper>
+        }
+        else
+        {
+            <MudPaper Elevation="1" Class="pa-6">
+                <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-4">
+                    Adding sensor to <strong>@_organization.Name</strong>
+                </MudText>
 
-                <MudSelect T="StateDtoForList" Label="State" Value="_selectedState" ValueChanged="OnStateChanged"
-                           ToStringFunc="@(s => s?.Name ?? string.Empty)" Disabled="CreateCommand.IsLoading || _states is null"
-                           HelperText="Select the state/territory">
-                    @if (_states is not null)
-                    {
-                        @foreach (var state in _states)
+                @if (!string.IsNullOrEmpty(_errorMessage))
+                {
+                    <MudAlert Severity="Severity.Error" Variant="Variant.Filled" Dense="true" Class="mb-4">
+                        @_errorMessage
+                    </MudAlert>
+                }
+
+                <MudStack Spacing="3">
+                    <MudTextField @bind-Value="_externalId" Label="External ID" Required="true"
+                                  RequiredError="External ID is required" MaxLength="100" HelperText="Unique identifier for this sensor"
+                                  Disabled="CreateCommand.IsLoading" />
+
+                    <MudTextField @bind-Value="_name" Label="Name" Required="true" RequiredError="Name is required"
+                                  MaxLength="300" HelperText="Display name for the sensor" Disabled="CreateCommand.IsLoading" />
+
+                    <MudStack Row="true" Spacing="2">
+                        <MudNumericField @bind-Value="_latitude" Label="Latitude" Required="true" Min="-90" Max="90"
+                                         Step="0.000001M" Format="F6" HelperText="-90 to 90" Disabled="CreateCommand.IsLoading"
+                                         Style="flex: 1;" />
+
+                        <MudNumericField @bind-Value="_longitude" Label="Longitude" Required="true" Min="-180" Max="180"
+                                         Step="0.000001M" Format="F6" HelperText="-180 to 180" Disabled="CreateCommand.IsLoading"
+                                         Style="flex: 1;" />
+                    </MudStack>
+
+                    <MudSelect T="StateDtoForList" Label="State" Value="_selectedState" ValueChanged="OnStateChanged"
+                               ToStringFunc="@(s => s?.Name ?? string.Empty)" Disabled="CreateCommand.IsLoading || _states is null"
+                               HelperText="Select the state/territory">
+                        @if (_states is not null)
                         {
-                            <MudSelectItem Value="@state">@state.Name</MudSelectItem>
+                            @foreach (var state in _states)
+                            {
+                                <MudSelectItem Value="@state">@state.Name</MudSelectItem>
+                            }
                         }
-                    }
-                </MudSelect>
+                    </MudSelect>
 
-                <MudAutocomplete T="MunicipalityDtoForList" Label="Municipality" Value="_selectedMunicipality"
-                                 ValueChanged="OnMunicipalityChanged" SearchFunc="SearchMunicipalities"
-                                 ToStringFunc="@(m => m?.Name ?? string.Empty)"
-                                 Disabled="CreateCommand.IsLoading || _selectedState is null"
-                                 HelperText="@(_selectedState is null ? "Select a state first" : "Search for a municipality")"
-                                 ResetValueOnEmptyText="true" />
+                    <MudAutocomplete T="MunicipalityDtoForList" Label="Municipality" Value="_selectedMunicipality"
+                                     ValueChanged="OnMunicipalityChanged" SearchFunc="SearchMunicipalities"
+                                     ToStringFunc="@(m => m?.Name ?? string.Empty)"
+                                     Disabled="CreateCommand.IsLoading || _selectedState is null"
+                                     HelperText="@(_selectedState is null ? "Select a state first" : "Search for a municipality")"
+                                     ResetValueOnEmptyText="true" />
 
-                <MudSwitch @bind-Value="_isActive" Label="Active" Color="Color.Primary"
-                           Disabled="CreateCommand.IsLoading" />
+                    <MudSwitch @bind-Value="_isActive" Label="Active" Color="Color.Primary"
+                               Disabled="CreateCommand.IsLoading" />
 
-                <MudStack Row="true" Justify="Justify.FlexEnd" Spacing="2" Class="mt-4">
-                    <MudButton Variant="Variant.Text" Color="Color.Default" OnClick="NavigateToSensors"
-                               Disabled="CreateCommand.IsLoading">
-                        Cancel
-                    </MudButton>
-                    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="() => CreateCommand.ExecuteAsync()"
-                               Disabled="CreateCommand.IsLoading || !IsFormValid">
-                        @if (CreateCommand.IsLoading)
-                        {
-                            <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
-                        }
-                        Create Sensor
-                    </MudButton>
+                    <MudStack Row="true" Justify="Justify.FlexEnd" Spacing="2" Class="mt-4">
+                        <MudButton Variant="Variant.Text" Color="Color.Default" OnClick="NavigateToSensors"
+                                   Disabled="CreateCommand.IsLoading">
+                            Cancel
+                        </MudButton>
+                        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="() => CreateCommand.ExecuteAsync()"
+                                   Disabled="CreateCommand.IsLoading || !IsFormValid">
+                            @if (CreateCommand.IsLoading)
+                            {
+                                <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
+                            }
+                            Create Sensor
+                        </MudButton>
+                    </MudStack>
                 </MudStack>
-            </MudStack>
-        </MudPaper>
-    }
-</MudContainer>
+            </MudPaper>
+        }
+    </ChildContent>
+</EcoDataPageLayout>
 
 @code {
     [Parameter]
@@ -135,11 +133,10 @@
     private string? _errorMessage;
 
     private bool IsFormValid => !string.IsNullOrWhiteSpace(_externalId) && !string.IsNullOrWhiteSpace(_name) &&
-_selectedMunicipality is not null;
+        _selectedMunicipality is not null;
 
     protected override async Task OnInitializedAsync()
     {
-        Navigation.SetReturnUrlOrFallback($"/organizations/{OrganizationId}/sensors");
         await LoadCommand.ExecuteAsync();
     }
 
