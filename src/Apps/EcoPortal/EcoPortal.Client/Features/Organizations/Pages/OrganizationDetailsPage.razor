@@ -335,7 +335,7 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        Navigation.SetReturnUrlOrFallback("/organizations");
+        Navigation.SetReturnUrlOrFallback("/organizations/discover");
         await LoadCommand.ExecuteAsync();
     }
 

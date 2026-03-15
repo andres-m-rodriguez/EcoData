@@ -104,7 +104,7 @@
 
     private void NavigateToDetails(OrganizationDtoForList organization)
     {
-        Navigation.NavigateTo($"/organizations/{organization.Id}");
+        Navigation.NavigateTo($"/organizations/{organization.Id}", "/organizations/discover");
     }
 
     private void ClearSearch()

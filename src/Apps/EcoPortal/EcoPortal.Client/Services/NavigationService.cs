@@ -65,20 +65,18 @@ public sealed class NavigationService : INavigationService, IDisposable
 
     public async Task GoBackAsync(string? fallback = null)
     {
-        if (_history.Count > 1)
+        // Prioritize explicit fallback over browser history
+        // This prevents going back to forms after create operations
+        var fallbackPath = fallback ?? _fallbackPath;
+        if (fallbackPath is not null)
         {
-            // Use browser history for proper back/forward navigation
+            _navigationManager.NavigateTo(fallbackPath);
+        }
+        else if (_history.Count > 1)
+        {
+            // Only use browser history when no fallback is set
             _isNavigatingBack = true;
             await _jsRuntime.InvokeVoidAsync("history.back");
-        }
-        else
-        {
-            // Fall back to explicit navigation when no history exists
-            var fallbackPath = fallback ?? _fallbackPath;
-            if (fallbackPath is not null)
-            {
-                _navigationManager.NavigateTo(fallbackPath);
-            }
         }
     }
 
@@ -118,8 +116,8 @@ public sealed class NavigationService : INavigationService, IDisposable
             _history.Add(newPath);
         }
 
-        // Reset fallback on navigation
-        _fallbackPath = null;
+        // Don't reset _fallbackPath here - pages set their own fallback in OnInitialized
+        // which may run before or after this event fires
 
         OnStateChanged?.Invoke();
     }

@@ -10,7 +10,7 @@
 @inject IDialogService DialogService
 @inject ISnackbar Snackbar
 @inject AuthStateService AuthState
-@inject NavigationManager Navigation
+@inject INavigationService Navigation
 
 <PageTitle>My Access Requests - EcoData</PageTitle>
 
@@ -176,7 +176,7 @@
 
     private void NavigateToBrowse() => Navigation.NavigateTo("/organizations/discover");
 
-    private void NavigateToOrganization(Guid organizationId) => Navigation.NavigateTo($"/organizations/{organizationId}");
+    private void NavigateToOrganization(Guid organizationId) => Navigation.NavigateTo($"/organizations/{organizationId}", "/organizations/requests");
 
     private async Task OpenRequestAccessDialog()
     {
