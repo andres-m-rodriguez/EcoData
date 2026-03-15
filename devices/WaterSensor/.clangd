@@ -24,3 +24,7 @@ Diagnostics:
   Suppress:
     - drv_unknown_argument*
     - pp_file_not_found
+    - member_function_call_bad_type
+    - ovl_no_viable_member_function_in_call
+    - typecheck_nonviable_condition
+    - "*"
