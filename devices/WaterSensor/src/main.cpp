@@ -1,31 +1,19 @@
-#include <stdio.h>
+#include <Arduino.h>
 #include <optional>
-#include "freertos/FreeRTOS.h"
-#include "freertos/task.h"
-#include "esp_log.h"
-#include "esp_system.h"
-#include "nvs_flash.h"
 
 static const char* TAG = "WaterSensor";
 
-extern "C" void app_main(void)
+void setup()
 {
-    // Initialize NVS (required for WiFi)
-    esp_err_t ret = nvs_flash_init();
-    if (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND)
-    {
-        ESP_ERROR_CHECK(nvs_flash_erase());
-        ret = nvs_flash_init();
-    }
-    ESP_ERROR_CHECK(ret);
+    Serial.begin(115200);
+    delay(1000);
 
-    ESP_LOGI(TAG, "EcoData Water Sensor initialized");
-    ESP_LOGI(TAG, "Free heap: %lu bytes", esp_get_free_heap_size());
+    Serial.println("[WaterSensor] EcoData Water Sensor initialized");
+    Serial.printf("[WaterSensor] Free heap: %u bytes\n", ESP.getFreeHeap());
+}
 
-    // Main loop
-    while (true)
-    {
-        ESP_LOGI(TAG, "Running...");
-        vTaskDelay(pdMS_TO_TICKS(5000));
-    }
+void loop()
+{
+    Serial.println("[WaterSensor] Running...");
+    delay(5000);
 }
