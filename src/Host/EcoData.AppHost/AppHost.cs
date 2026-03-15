@@ -2,20 +2,20 @@ using EcoData.AppHost.Extensions;
 
 var builder = DistributedApplication.CreateBuilder(args);
 
+// Azure Container App Environment for deployment
+builder.AddAzureContainerAppEnvironment("aca-env");
+
+// JWT secret - from Key Vault in production, parameter in development
 var jwtSecretKey = builder.AddParameter("jwt-secret-key", secret: true);
 
 var postgres = builder
-    .AddPostgres("postgres")
-    .WithImage("postgis/postgis", "16-3.4")
-    .WithDataVolume()
-    .WithPgAdmin();
+    .AddAzurePostgresFlexibleServer("postgres")
+    .WithPasswordAuthentication()
+    .RunAsContainer(c => c.WithImage("postgis/postgis", "16-3.4").WithDataVolume().WithPgAdmin());
 
 var organizationDb = postgres.AddDatabase("organization").WithDropDatabaseCommand();
-
 var sensorsDb = postgres.AddDatabase("sensors").WithDropDatabaseCommand();
-
 var locationsDb = postgres.AddDatabase("locations").WithDropDatabaseCommand();
-
 var identityDb = postgres.AddDatabase("identity").WithDropDatabaseCommand();
 
 var seeder = builder
@@ -27,9 +27,10 @@ var seeder = builder
     .WaitFor(organizationDb)
     .WaitFor(sensorsDb)
     .WaitFor(identityDb)
-    .WaitFor(locationsDb);
+    .WaitFor(locationsDb)
+    .PublishAsAzureContainerAppJob();
 
-builder
+var ecoportal = builder
     .AddProject<Projects.EcoPortal_Server>("ecoportal")
     .WithExternalHttpEndpoints()
     .WithReference(organizationDb)
@@ -42,11 +43,22 @@ builder
     .WithEnvironment("Jwt__ExpirationHours", "24")
     .WaitFor(seeder);
 
-builder
+var sensorsIngestion = builder
     .AddProject<Projects.EcoData_Sensors_Ingestion>("sensors-ingestion")
     .WithReference(organizationDb)
     .WithReference(sensorsDb)
     .WithReference(locationsDb)
     .WaitFor(seeder);
+
+// Azure Key Vault for production secrets
+if (builder.ExecutionContext.IsPublishMode)
+{
+    var keyVault = builder.AddAzureKeyVault("keyvault");
+    ecoportal.WithReference(keyVault);
+    sensorsIngestion.WithReference(keyVault);
+}
+
+// Pipeline steps for Azure deployment
+builder.AddMigrationsStep();
 
 builder.Build().Run();
