@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600" viewBox="0 0 800 600">
+  <defs>
+    <pattern id="topo-lines" patternUnits="userSpaceOnUse" width="100" height="100">
+      <!-- Topographic contour lines -->
+      <path d="M0,50 Q25,30 50,50 T100,50" stroke="#0078d4" stroke-width="0.5" fill="none" opacity="0.05"/>
+      <path d="M0,70 Q25,50 50,70 T100,70" stroke="#0078d4" stroke-width="0.5" fill="none" opacity="0.04"/>
+      <path d="M0,30 Q25,10 50,30 T100,30" stroke="#0078d4" stroke-width="0.5" fill="none" opacity="0.04"/>
+      <path d="M0,90 Q25,70 50,90 T100,90" stroke="#0078d4" stroke-width="0.5" fill="none" opacity="0.03"/>
+      <circle cx="75" cy="25" r="15" stroke="#0078d4" stroke-width="0.4" fill="none" opacity="0.03"/>
+      <circle cx="75" cy="25" r="8" stroke="#0078d4" stroke-width="0.4" fill="none" opacity="0.04"/>
+    </pattern>
+  </defs>
+
+  <!-- Background pattern -->
+  <rect width="100%" height="100%" fill="url(#topo-lines)"/>
+
+  <!-- Simplified Puerto Rico coastline outline (centered, subtle) -->
+  <g transform="translate(250, 200) scale(2.5)" opacity="0.06">
+    <path d="M0,50
+             C5,48 15,42 30,40
+             C45,38 55,35 70,33
+             C85,31 95,32 105,35
+             C115,38 120,42 118,48
+             C116,54 110,58 100,60
+             C90,62 80,63 65,62
+             C50,61 35,58 25,55
+             C15,52 5,52 0,50
+             Z"
+          stroke="#0078d4"
+          stroke-width="1"
+          fill="none"/>
+    <!-- Vieques -->
+    <ellipse cx="135" cy="52" rx="12" ry="5" stroke="#0078d4" stroke-width="0.8" fill="none"/>
+    <!-- Culebra -->
+    <ellipse cx="150" cy="42" rx="6" ry="3" stroke="#0078d4" stroke-width="0.8" fill="none"/>
+  </g>
+</svg>
