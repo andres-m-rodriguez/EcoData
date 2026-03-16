@@ -1,4 +1,6 @@
 @page "/sensors/{SensorId:guid}/edit"
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize]
 @using EcoData.Sensors.Application.Client
 @using EcoData.Sensors.Contracts.Dtos
 @using EcoPortal.Client.Features.Sensors.Components
@@ -6,9 +8,12 @@
 @using EcoPortal.Client.Components
 @using BlazingSingularity.Commands
 @using static EcoPortal.Client.Features.Sensors.Components.SensorForm
+@using SensorPermissions = EcoData.Sensors.Contracts.Permissions
 @inject ISensorHttpClient SensorClient
 @inject INavigationService Navigation
 @inject ISnackbar Snackbar
+@inject PermissionContextService PermissionContext
+@inject AuthStateService AuthState
 
 <PageTitle>Edit Sensor - EcoData</PageTitle>
 
@@ -23,12 +28,14 @@
                 <MudSkeleton Width="100%" Height="56px" Class="mt-4" />
             </MudPaper>
         }
-        else if (_sensor is null)
+        else if (_sensor is null || !_hasPermission)
         {
             <MudPaper Elevation="1" Class="pa-6">
                 <MudStack AlignItems="AlignItems.Center">
                     <MudIcon Icon="@Icons.Material.Filled.Error" Size="Size.Large" Color="Color.Error" />
-                    <MudText Typo="Typo.h6" Color="Color.Error" Class="mt-2">Sensor not found</MudText>
+                    <MudText Typo="Typo.h6" Color="Color.Error" Class="mt-2">
+                        @(_sensor is null ? "Sensor not found" : "You don't have permission to edit this sensor")
+                    </MudText>
                 </MudStack>
             </MudPaper>
         }
@@ -58,6 +65,7 @@
     private SensorDtoForDetail? _sensor;
     private SensorFormModel _formModel = new();
     private string? _errorMessage;
+    private bool _hasPermission;
 
     protected override async Task OnInitializedAsync()
     {
@@ -71,15 +79,27 @@
 
         if (_sensor is not null)
         {
-            _formModel = new SensorFormModel
+            // Check if user has permission to update this sensor
+            if (!AuthState.IsInitialized)
             {
-                ExternalId = _sensor.ExternalId,
-                Name = _sensor.Name,
-                Latitude = _sensor.Latitude,
-                Longitude = _sensor.Longitude,
-                MunicipalityId = _sensor.MunicipalityId,
-                IsActive = _sensor.IsActive
-            };
+                await AuthState.InitializeAsync();
+            }
+
+            _hasPermission = AuthState.IsGlobalAdmin ||
+                await PermissionContext.HasPermissionAsync(_sensor.OrganizationId, SensorPermissions.Sensor.Update);
+
+            if (_hasPermission)
+            {
+                _formModel = new SensorFormModel
+                {
+                    ExternalId = _sensor.ExternalId,
+                    Name = _sensor.Name,
+                    Latitude = _sensor.Latitude,
+                    Longitude = _sensor.Longitude,
+                    MunicipalityId = _sensor.MunicipalityId,
+                    IsActive = _sensor.IsActive
+                };
+            }
         }
     }
 
