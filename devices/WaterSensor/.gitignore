@@ -1,0 +1,12 @@
+# PlatformIO
+.pio/
+.pioenvs/
+.piolibdeps/
+compile_commands.json
+
+# IDE
+.vscode/
+.idea/
+
+# Local configuration with credentials - DO NOT COMMIT
+include/config.local.h
