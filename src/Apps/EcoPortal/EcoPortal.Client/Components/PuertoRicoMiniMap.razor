@@ -1,0 +1,87 @@
+@using EcoData.Sensors.Contracts.Dtos
+@using EcoData.Sensors.Contracts.Parameters
+@using EcoData.Sensors.Application.Client
+@implements IAsyncDisposable
+@inject ISensorHttpClient SensorClient
+@inject IJSRuntime JS
+
+<div class="mini-map-wrapper">
+    <div id="@_elementId" class="mini-map-container"></div>
+    @if (_loading)
+    {
+        <div class="mini-map-loading">
+            <MudProgressCircular Indeterminate="true" Size="Size.Small" Color="Color.Primary" />
+        </div>
+    }
+</div>
+
+@code {
+    private readonly string _elementId = $"mini-map-{Guid.NewGuid():N}";
+    private readonly CancellationTokenSource _cts = new();
+    private List<SensorDtoForList>? _sensors;
+    private bool _mapInitialized;
+    private bool _loading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadSensorsAsync();
+    }
+
+    private async Task LoadSensorsAsync()
+    {
+        try
+        {
+            var parameters = new SensorParameters(PageSize: 50, IsActive: true);
+            _sensors = [];
+            await foreach (var sensor in SensorClient.GetSensorsAsync(parameters, _cts.Token))
+            {
+                _sensors.Add(sensor);
+            }
+        }
+        catch
+        {
+            _sensors = [];
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!_loading && !_mapInitialized && _sensors is not null)
+        {
+            _mapInitialized = true;
+            await JS.InvokeVoidAsync("miniMap.init", _elementId);
+
+            if (_sensors.Count > 0)
+            {
+                var sensorData = _sensors
+                    .Where(s => s.Latitude != 0 && s.Longitude != 0)
+                    .Select(s => new { latitude = (double)s.Latitude, longitude = (double)s.Longitude })
+                    .ToList();
+
+                await JS.InvokeVoidAsync("miniMap.addSensors", _elementId, sensorData);
+            }
+        }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        await _cts.CancelAsync();
+        _cts.Dispose();
+
+        if (_mapInitialized)
+        {
+            try
+            {
+                await JS.InvokeVoidAsync("miniMap.dispose", _elementId);
+            }
+            catch
+            {
+                // Ignore disposal errors
+            }
+        }
+    }
+}

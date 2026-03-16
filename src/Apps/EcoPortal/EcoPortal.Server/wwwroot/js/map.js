@@ -149,6 +149,77 @@ window.leafletMapService = {
     }
 };
 
+// Mini Map - for homepage preview (read-only, no interaction)
+window.miniMap = {
+    instances: new Map(),
+
+    init: function (elementId) {
+        // Dispose existing instance if any
+        if (this.instances.has(elementId)) {
+            this.dispose(elementId);
+        }
+
+        // Adjust zoom based on screen width - more zoomed out on mobile
+        const isMobile = window.innerWidth < 600;
+        const isTablet = window.innerWidth < 960;
+        const zoom = isMobile ? 7.5 : (isTablet ? 8 : 8.5);
+
+        // Center on Puerto Rico with a wider view
+        const map = L.map(elementId, {
+            zoomControl: false,
+            attributionControl: false,
+            dragging: false,
+            scrollWheelZoom: false,
+            doubleClickZoom: false,
+            boxZoom: false,
+            keyboard: false,
+            touchZoom: false
+        }).setView([18.2208, -66.3], zoom);
+
+        // Use a darker tile layer for contrast
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+            subdomains: 'abcd',
+            maxZoom: 19
+        }).addTo(map);
+
+        const markersLayer = L.featureGroup().addTo(map);
+
+        this.instances.set(elementId, {
+            map: map,
+            markersLayer: markersLayer
+        });
+    },
+
+    addSensors: function (elementId, sensors) {
+        const instance = this.instances.get(elementId);
+        if (!instance) return;
+
+        instance.markersLayer.clearLayers();
+
+        sensors.forEach(sensor => {
+            const marker = L.circleMarker([sensor.latitude, sensor.longitude], {
+                radius: 5,
+                fillColor: '#00bcd4',
+                color: '#00bcd4',
+                weight: 1,
+                opacity: 0.9,
+                fillOpacity: 0.7,
+                className: 'sensor-glow-marker'
+            });
+
+            instance.markersLayer.addLayer(marker);
+        });
+    },
+
+    dispose: function (elementId) {
+        const instance = this.instances.get(elementId);
+        if (!instance) return;
+
+        instance.map.remove();
+        this.instances.delete(elementId);
+    }
+};
+
 // Sensor Map - for displaying multiple sensors (used by SensorMapPage)
 window.sensorMap = {
     map: null,
