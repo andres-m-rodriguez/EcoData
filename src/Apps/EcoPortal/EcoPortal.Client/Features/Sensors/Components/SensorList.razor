@@ -67,7 +67,7 @@
             }
         </EmptyTemplate>
         <ItemTemplate Context="sensor">
-            <SensorListItem Sensor="sensor" OnMapClick="HandleMapClick" OnClick="HandleClick" />
+            <SensorListItem Sensor="sensor" OnClick="HandleClick" />
         </ItemTemplate>
         <PlaceholderTemplate>
             <div class="sensor-skeleton">
@@ -115,9 +115,6 @@
 
     [Parameter]
     public string EmptySubMessage { get; set; } = "Sensors will appear here once data is ingested.";
-
-    [Parameter]
-    public EventCallback<SensorDtoForList> OnMapClick { get; set; }
 
     [Parameter]
     public EventCallback<SensorDtoForList> OnSensorClick { get; set; }
@@ -180,11 +177,6 @@ cancellationToken)
     {
         SearchText = null;
         StatusFilter = SensorStatusFilter.All;
-    }
-
-    private async Task HandleMapClick(SensorDtoForList sensor)
-    {
-        await OnMapClick.InvokeAsync(sensor);
     }
 
     private async Task HandleClick(SensorDtoForList sensor)

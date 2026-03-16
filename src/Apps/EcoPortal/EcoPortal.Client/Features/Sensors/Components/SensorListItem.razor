@@ -5,9 +5,6 @@
           @onclick="HandleClick">
     <MudStack Spacing="0" Style="min-width: 0; flex: 1;">
         <MudText Typo="Typo.body2" Class="mud-text-truncate">@Sensor.Name</MudText>
-        <MudHidden Breakpoint="Breakpoint.SmAndUp" Invert>
-            <MudText Typo="Typo.caption" Color="Color.Secondary">@Sensor.ExternalId</MudText>
-        </MudHidden>
     </MudStack>
 
     <MudHidden Breakpoint="Breakpoint.MdAndUp" Invert>
@@ -26,17 +23,6 @@
              Variant="Variant.Filled">
         @(Sensor.IsActive ? "Active" : "Inactive")
     </MudChip>
-
-    <div @onclick:stopPropagation="true">
-        <MudMenu Icon="@Icons.Material.Filled.MoreVert"
-                 Size="Size.Small"
-                 AnchorOrigin="Origin.BottomRight"
-                 TransformOrigin="Origin.TopRight">
-            <MudMenuItem Icon="@Icons.Material.Outlined.Map" OnClick="@HandleMapClick">
-                View on Map
-            </MudMenuItem>
-        </MudMenu>
-    </div>
 </MudStack>
 
 @code {
@@ -44,15 +30,7 @@
     public required SensorDtoForList Sensor { get; set; }
 
     [Parameter]
-    public EventCallback<SensorDtoForList> OnMapClick { get; set; }
-
-    [Parameter]
     public EventCallback<SensorDtoForList> OnClick { get; set; }
-
-    private async Task HandleMapClick()
-    {
-        await OnMapClick.InvokeAsync(Sensor);
-    }
 
     private async Task HandleClick()
     {

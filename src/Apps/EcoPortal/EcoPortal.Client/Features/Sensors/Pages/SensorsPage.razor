@@ -9,16 +9,11 @@
 
 <EcoDataPageLayout Title="Sensors">
     <ChildContent>
-        <SensorList OnMapClick="NavigateToMap" OnSensorClick="NavigateToDetail" />
+        <SensorList OnSensorClick="NavigateToDetail" />
     </ChildContent>
 </EcoDataPageLayout>
 
 @code {
-    private void NavigateToMap(SensorDtoForList sensor)
-    {
-        Navigation.NavigateTo($"/map?lat={sensor.Latitude}&lon={sensor.Longitude}");
-    }
-
     private void NavigateToDetail(SensorDtoForList sensor)
     {
         Navigation.NavigateTo($"/sensors/{sensor.Id}", "/sensors");
