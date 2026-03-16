@@ -167,7 +167,7 @@
     color: var(--mud-palette-primary) !important;
 }
 
-/* Responsive */
+/* Responsive - Tablet */
 @media (max-width: 960px) {
     .hero-section {
         padding: 4rem 1rem;
@@ -180,5 +180,33 @@
 
     ::deep .hero-btn {
         width: 100%;
+    }
+}
+
+/* Responsive - Mobile */
+@media (max-width: 600px) {
+    .hero-section {
+        padding: 3rem 1rem;
+    }
+
+    ::deep .hero-title {
+        font-size: 1.75rem !important;
+        line-height: 1.3 !important;
+    }
+
+    ::deep .hero-subtitle {
+        font-size: 0.95rem !important;
+        line-height: 1.5 !important;
+    }
+
+    ::deep .hero-btn {
+        font-size: 0.875rem !important;
+        padding: 8px 16px !important;
+    }
+
+    .features-section,
+    .data-sources-section,
+    .cta-section {
+        padding: 3rem 1rem;
     }
 }
