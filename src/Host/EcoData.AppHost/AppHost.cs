@@ -1,3 +1,5 @@
+#pragma warning disable ASPIREACADOMAINS001
+
 using EcoData.AppHost.Extensions;
 
 var builder = DistributedApplication.CreateBuilder(args);
@@ -29,6 +31,9 @@ var seeder = builder
     .WaitFor(locationsDb)
     .PublishAsAzureContainerAppJob();
 
+var customDomainValue = builder.Configuration["Parameters:customDomain"];
+var hasCustomDomain = !string.IsNullOrEmpty(customDomainValue);
+
 var ecoportal = builder
     .AddProject<Projects.EcoPortal_Server>("ecoportal")
     .WithExternalHttpEndpoints()
@@ -41,6 +46,19 @@ var ecoportal = builder
     .WithEnvironment("Jwt__Audience", "EcoData")
     .WithEnvironment("Jwt__ExpirationHours", "24")
     .WaitFor(seeder);
+
+if (hasCustomDomain)
+{
+    var customDomain = builder.AddParameter("customDomain");
+    var certificateName = builder.AddParameter("certificateName", "", publishValueAsDefault: true);
+
+    ecoportal.PublishAsAzureContainerApp(
+        (infra, app) =>
+        {
+            app.ConfigureCustomDomain(customDomain, certificateName);
+        }
+    );
+}
 
 var sensorsIngestion = builder
     .AddProject<Projects.EcoData_Sensors_Ingestion>("sensors-ingestion")
