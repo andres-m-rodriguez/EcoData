@@ -45,5 +45,7 @@ jobs:
           Azure__Location: ${{ env.AZURE_LOCATION }}
           Azure__ResourceGroup: ${{ env.AZURE_RESOURCE_GROUP }}
           Parameters__jwt-secret-key: ${{ secrets.JWT_SECRET_KEY }}
+          Parameters__customDomain: ${{ vars.CUSTOM_DOMAIN }}
+          Parameters__certificateName: ${{ vars.CERTIFICATE_NAME }}
         run: |
           aspire do deploy --project src/Host/EcoData.AppHost --environment Production --non-interactive
