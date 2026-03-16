@@ -199,14 +199,32 @@
         line-height: 1.5 !important;
     }
 
+    ::deep .hero-actions {
+        flex-direction: column !important;
+        width: 100%;
+    }
+
     ::deep .hero-btn {
+        width: 100%;
         font-size: 0.875rem !important;
-        padding: 8px 16px !important;
+        padding: 6px 12px !important;
     }
 
     .features-section,
     .data-sources-section,
     .cta-section {
         padding: 3rem 1rem;
+    }
+
+    /* CTA section buttons */
+    ::deep .cta-card .mud-stack-row {
+        flex-direction: column !important;
+        width: 100%;
+    }
+
+    ::deep .cta-card .mud-button-root {
+        width: 100%;
+        font-size: 0.875rem !important;
+        padding: 6px 12px !important;
     }
 }
