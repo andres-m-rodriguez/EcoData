@@ -1,13 +1,49 @@
 #pragma once
 
-#include <string>
+#include <Arduino.h>
+#include <vector>
 #include <optional>
-#include <chrono>
+#include <ctime>
 
 struct ReadingItemDto {
-    std::string parameter;
-    std::optional<std::string> description;
+    String parameter;
+    std::optional<String> description;
     double value;
-    std::string unit;
-    std::chrono::system_clock::time_point recordedAt;
+    String unit;
+    time_t recordedAt;
+
+    ReadingItemDto(const String& param, double val, const String& u)
+        : parameter(param)
+        , description(std::nullopt)
+        , value(val)
+        , unit(u)
+        , recordedAt(time(nullptr))
+    {}
+
+    ReadingItemDto(const String& param, const String& desc, double val, const String& u)
+        : parameter(param)
+        , description(desc)
+        , value(val)
+        , unit(u)
+        , recordedAt(time(nullptr))
+    {}
+};
+
+struct ReadingBatchDto {
+    String sensorId;
+    std::vector<ReadingItemDto> readings;
+
+    ReadingBatchDto(const String& id) : sensorId(id) {}
+
+    void addReading(const String& parameter, double value, const String& unit) {
+        readings.emplace_back(parameter, value, unit);
+    }
+
+    void addReading(const String& parameter, const String& description, double value, const String& unit) {
+        readings.emplace_back(parameter, description, value, unit);
+    }
+
+    void addReading(const ReadingItemDto& reading) {
+        readings.push_back(reading);
+    }
 };
