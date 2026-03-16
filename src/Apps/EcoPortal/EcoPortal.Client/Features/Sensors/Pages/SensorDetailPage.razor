@@ -9,6 +9,8 @@
 @using static EcoPortal.Client.Features.Sensors.Dialogs.ReadingFilterDialog
 @using EcoPortal.Client.Services
 @using EcoPortal.Client.Components
+@using EcoPortal.Client.Features.Organizations.Authorization
+@using SensorPermissions = EcoData.Sensors.Contracts.Permissions
 @inject ISensorHttpClient SensorClient
 @inject ISensorReadingHttpClient ReadingClient
 @inject IDialogService DialogService
@@ -47,12 +49,16 @@
                             @(_sensor.IsActive ? "Active" : "Inactive")
                         </MudChip>
                     </MudStack>
-                    <MudStack Row="true" Spacing="1">
-                        <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary"
-                                       OnClick="NavigateToEdit" />
-                        <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error"
-                                       OnClick="ConfirmDelete" />
-                    </MudStack>
+                    <RequireOrganizationPermission Permission="@SensorPermissions.Sensor.Update" OrganizationId="_sensor.OrganizationId">
+                        <MudStack Row="true" Spacing="1">
+                            <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary"
+                                           OnClick="NavigateToEdit" />
+                            <RequireOrganizationPermission Permission="@SensorPermissions.Sensor.Delete" OrganizationId="_sensor.OrganizationId">
+                                <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error"
+                                               OnClick="ConfirmDelete" />
+                            </RequireOrganizationPermission>
+                        </MudStack>
+                    </RequireOrganizationPermission>
                 </MudStack>
 
                 <MudStack Row="true" Spacing="4" Class="mt-2">
