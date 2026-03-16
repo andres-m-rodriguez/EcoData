@@ -94,6 +94,7 @@ public sealed class NavigationService : INavigationService, IDisposable
     public void SetReturnUrlOrFallback(string fallback)
     {
         _fallbackPath = _returnUrl ?? fallback;
+        _returnUrl = null;
         OnStateChanged?.Invoke();
     }
 
