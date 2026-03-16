@@ -29,7 +29,6 @@
         <SensorList OrganizationId="OrganizationId"
                     EmptyMessage="No sensors yet"
                     EmptySubMessage="Add sensors to start monitoring water quality."
-                    OnMapClick="NavigateToMap"
                     OnSensorClick="NavigateToDetail" />
     </ChildContent>
 </EcoDataPageLayout>
@@ -57,11 +56,6 @@
     }
 
     private void NavigateToCreateSensor() => Navigation.NavigateTo($"/organizations/{OrganizationId}/sensors/create", $"/organizations/{OrganizationId}/sensors");
-
-    private void NavigateToMap(SensorDtoForList sensor)
-    {
-        Navigation.NavigateTo($"/map?lat={sensor.Latitude}&lon={sensor.Longitude}");
-    }
 
     private void NavigateToDetail(SensorDtoForList sensor)
     {
