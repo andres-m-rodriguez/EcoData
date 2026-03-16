@@ -59,9 +59,16 @@
 
     protected override void OnInitialized()
     {
-        // Always set fallback - pass null to clear it for pages without a back destination
-        Navigation.SetFallback(FallbackUrl);
+        // Prioritize return URL from navigation over the page's hardcoded fallback
+        if (FallbackUrl is not null)
+        {
+            Navigation.SetReturnUrlOrFallback(FallbackUrl);
+        }
+        else
+        {
+            Navigation.SetFallback(null);
+        }
     }
 
-    private void GoBack() => Navigation.GoBack(FallbackUrl);
+    private void GoBack() => Navigation.GoBack();
 }
