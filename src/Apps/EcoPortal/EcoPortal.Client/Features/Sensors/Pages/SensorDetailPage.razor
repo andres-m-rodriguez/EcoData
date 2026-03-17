@@ -212,13 +212,15 @@
 
     private ReadingParameters BuildParameters(Guid? cursor)
     {
+        var localOffset = TimeZoneInfo.Local.GetUtcOffset(DateTime.Now);
+
         return new ReadingParameters(
             PageSize: 50,
             Cursor: cursor,
             Search: string.IsNullOrWhiteSpace(SearchText) ? null : SearchText,
             Parameter: _parameterFilter,
-            FromDate: _fromDate.HasValue ? new DateTimeOffset(_fromDate.Value, TimeSpan.Zero) : null,
-            ToDate: _toDate.HasValue ? new DateTimeOffset(_toDate.Value.AddDays(1).AddTicks(-1), TimeSpan.Zero) : null
+            FromDate: _fromDate.HasValue ? new DateTimeOffset(_fromDate.Value, localOffset) : null,
+            ToDate: _toDate.HasValue ? new DateTimeOffset(_toDate.Value.AddDays(1).AddTicks(-1), localOffset) : null
         );
     }
 
