@@ -10,16 +10,15 @@ public sealed record RegisterSensorRequest(
     decimal Latitude,
     decimal Longitude,
     Guid MunicipalityId,
-    Guid? SensorTypeId = null
+    Guid? SensorTypeId = null,
+    int? ExpectedIntervalSeconds = 300
 );
 
 public sealed class RegisterSensorRequestValidator : AbstractValidator<RegisterSensorRequest>
 {
     public RegisterSensorRequestValidator()
     {
-        RuleFor(static x => x.OrganizationId)
-            .NotEmpty()
-            .WithMessage("Organization is required");
+        RuleFor(static x => x.OrganizationId).NotEmpty().WithMessage("Organization is required");
 
         RuleFor(static x => x.Name)
             .NotEmpty()
@@ -41,8 +40,11 @@ public sealed class RegisterSensorRequestValidator : AbstractValidator<RegisterS
             .InclusiveBetween(-180m, 180m)
             .WithMessage("Longitude must be between -180 and 180");
 
-        RuleFor(static x => x.MunicipalityId)
-            .NotEmpty()
-            .WithMessage("Municipality is required");
+        RuleFor(static x => x.MunicipalityId).NotEmpty().WithMessage("Municipality is required");
+
+        RuleFor(static x => x.ExpectedIntervalSeconds)
+            .InclusiveBetween(10, 86400)
+            .When(static x => x.ExpectedIntervalSeconds.HasValue)
+            .WithMessage("Expected interval must be between 10 seconds and 24 hours");
     }
 }

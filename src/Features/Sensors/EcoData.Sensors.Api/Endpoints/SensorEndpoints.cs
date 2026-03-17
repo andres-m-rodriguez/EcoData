@@ -6,13 +6,10 @@ using EcoData.Sensors.Contracts.Dtos;
 using EcoData.Sensors.Contracts.Parameters;
 using EcoData.Sensors.Contracts.Requests;
 using EcoData.Sensors.DataAccess.Interfaces;
-using EcoData.Sensors.Database;
-using EcoData.Sensors.Database.Models;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Routing;
-using Microsoft.EntityFrameworkCore;
 using Permissions = EcoData.Sensors.Contracts.Permissions;
 
 namespace EcoData.Sensors.Api.Endpoints;
@@ -65,7 +62,7 @@ public static class SensorEndpoints
                 "/register",
                 async Task<
                     Results<
-                        Ok<SensorRegistrationResultDto>,
+                        Ok<SensorDtoForRegistered>,
                         ValidationProblem,
                         UnauthorizedHttpResult,
                         ForbidHttpResult,
@@ -76,15 +73,15 @@ public static class SensorEndpoints
                     ClaimsPrincipal user,
                     IOrganizationPermissionService permissionService,
                     ISensorIdentityProviderService identityProvider,
-                    IDbContextFactory<SensorsDbContext> contextFactory,
+                    ISensorRepository repository,
                     CancellationToken ct
                 ) =>
                 {
                     var validation = new RegisterSensorRequestValidator().Validate(request);
                     if (!validation.IsValid)
                     {
-                        var errors = validation.Errors
-                            .GroupBy(e => e.PropertyName)
+                        var errors = validation
+                            .Errors.GroupBy(e => e.PropertyName)
                             .ToDictionary(g => g.Key, g => g.Select(e => e.ErrorMessage).ToArray());
                         return TypedResults.ValidationProblem(errors);
                     }
@@ -95,10 +92,8 @@ public static class SensorEndpoints
                         return TypedResults.Unauthorized();
                     }
 
-                    var userId = token.UserId!.Value;
-
                     var hasPermission = await permissionService.HasPermissionAsync(
-                        userId,
+                        token.UserId!.Value,
                         request.OrganizationId,
                         Permissions.Sensor.Create,
                         ct
@@ -109,44 +104,14 @@ public static class SensorEndpoints
                         return TypedResults.Forbid();
                     }
 
-                    await using var context = await contextFactory.CreateDbContextAsync(ct);
+                    var result = await repository.RegisterAsync(request, ct);
 
-                    var existingSensor = await context.Sensors.AnyAsync(
-                        s =>
-                            s.OrganizationId == request.OrganizationId
-                            && s.ExternalId == request.ExternalId,
-                        ct
-                    );
-
-                    if (existingSensor)
+                    if (result.IsT1)
                     {
-                        return TypedResults.Conflict(
-                            $"A sensor with external ID '{request.ExternalId}' already exists in this organization."
-                        );
+                        return TypedResults.Conflict(result.AsT1.Message);
                     }
 
-                    var sensorId = Guid.CreateVersion7();
-                    var now = DateTimeOffset.UtcNow;
-
-                    var sensor = new Sensor
-                    {
-                        Id = sensorId,
-                        OrganizationId = request.OrganizationId,
-                        SourceId = null,
-                        ExternalId = request.ExternalId,
-                        Name = request.Name,
-                        Latitude = request.Latitude,
-                        Longitude = request.Longitude,
-                        MunicipalityId = request.MunicipalityId,
-                        IsActive = true,
-                        ReportingMode = ReportingMode.Push,
-                        SensorTypeId = request.SensorTypeId,
-                        CreatedAt = now,
-                        UpdatedAt = now,
-                    };
-
-                    context.Sensors.Add(sensor);
-                    await context.SaveChangesAsync(ct);
+                    var sensorId = result.AsT0;
 
                     var credentials = await identityProvider.ProvisionAsync(
                         sensorId,
@@ -157,7 +122,7 @@ public static class SensorEndpoints
                     );
 
                     return TypedResults.Ok(
-                        new SensorRegistrationResultDto(
+                        new SensorDtoForRegistered(
                             credentials.SensorId,
                             credentials.AccessToken,
                             credentials.ExpiresAt
@@ -172,7 +137,13 @@ public static class SensorEndpoints
             .MapPut(
                 "/{id:guid}",
                 async Task<
-                    Results<Ok<SensorDtoForDetail>, ValidationProblem, NotFound, UnauthorizedHttpResult, ForbidHttpResult>
+                    Results<
+                        Ok<SensorDtoForDetail>,
+                        ValidationProblem,
+                        NotFound,
+                        UnauthorizedHttpResult,
+                        ForbidHttpResult
+                    >
                 > (
                     Guid id,
                     SensorDtoForUpdate request,
@@ -185,8 +156,8 @@ public static class SensorEndpoints
                     var validation = new SensorDtoForUpdateValidator().Validate(request);
                     if (!validation.IsValid)
                     {
-                        var errors = validation.Errors
-                            .GroupBy(e => e.PropertyName)
+                        var errors = validation
+                            .Errors.GroupBy(e => e.PropertyName)
                             .ToDictionary(g => g.Key, g => g.Select(e => e.ErrorMessage).ToArray());
                         return TypedResults.ValidationProblem(errors);
                     }
