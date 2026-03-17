@@ -47,7 +47,7 @@ public static class PipelineExtensions
                     context.Logger.LogInformation("Seeder job triggered successfully");
                 }
             },
-            dependsOn: "deploy-seeder"
+            dependsOn: "provision-seeder-containerapp"
         );
 
         return builder;
@@ -127,7 +127,7 @@ public static class PipelineExtensions
                     }
                 }
             },
-            dependsOn: $"deploy-{ContainerAppName}"
+            dependsOn: $"provision-{ContainerAppName}-containerapp"
         );
 
         return builder;
