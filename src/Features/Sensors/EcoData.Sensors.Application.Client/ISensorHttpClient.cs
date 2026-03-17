@@ -8,7 +8,7 @@ namespace EcoData.Sensors.Application.Client;
 
 public interface ISensorHttpClient
 {
-    Task<OneOf<SensorRegistrationResultDto, ValidationError, ForbiddenError, ConflictError>> RegisterAsync(
+    Task<OneOf<SensorDtoForRegistered, ValidationError, ForbiddenError, ConflictError>> RegisterAsync(
         RegisterSensorRequest request,
         CancellationToken cancellationToken = default
     );
