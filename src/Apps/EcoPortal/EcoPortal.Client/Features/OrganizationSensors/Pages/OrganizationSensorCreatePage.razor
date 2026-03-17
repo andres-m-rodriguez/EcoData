@@ -94,6 +94,14 @@
                                      HelperText="@(_selectedState is null ? "Select a state first" : "Search for a municipality")"
                                      ResetValueOnEmptyText="true" />
 
+                    <MudSelect T="int" @bind-Value="_expectedIntervalSeconds" Label="Reporting Interval"
+                               HelperText="How often the sensor will send data" Disabled="CreateCommand.IsLoading">
+                        <MudSelectItem Value="60">Every minute</MudSelectItem>
+                        <MudSelectItem Value="300">Every 5 minutes</MudSelectItem>
+                        <MudSelectItem Value="900">Every 15 minutes</MudSelectItem>
+                        <MudSelectItem Value="3600">Every hour</MudSelectItem>
+                    </MudSelect>
+
                     <MudSwitch @bind-Value="_isActive" Label="Active" Color="Color.Primary"
                                Disabled="CreateCommand.IsLoading" />
 
@@ -130,6 +138,7 @@
     private decimal _latitude;
     private decimal _longitude;
     private bool _isActive = true;
+    private int _expectedIntervalSeconds = 300;
     private string? _errorMessage;
 
     private bool IsFormValid => !string.IsNullOrWhiteSpace(_externalId) && !string.IsNullOrWhiteSpace(_name) &&
@@ -221,7 +230,8 @@
             _externalId.Trim(),
             _latitude,
             _longitude,
-            _selectedMunicipality!.Id
+            _selectedMunicipality!.Id,
+            ExpectedIntervalSeconds: _expectedIntervalSeconds
         );
 
         var result = await SensorClient.RegisterAsync(request);
@@ -250,7 +260,7 @@
         );
     }
 
-    private async Task ShowCredentialsDialog(SensorRegistrationResultDto credentials)
+    private async Task ShowCredentialsDialog(SensorDtoForRegistered credentials)
     {
         var parameters = new DialogParameters<SensorCredentialsDialog>
         {

@@ -1,16 +1,92 @@
 using System.Runtime.CompilerServices;
 using EcoData.Sensors.Contracts.Dtos;
+using EcoData.Sensors.Contracts.Errors;
 using EcoData.Sensors.Contracts.Parameters;
+using EcoData.Sensors.Contracts.Requests;
 using EcoData.Sensors.DataAccess.Interfaces;
 using EcoData.Sensors.Database;
 using EcoData.Sensors.Database.Models;
 using Microsoft.EntityFrameworkCore;
+using OneOf;
 
 namespace EcoData.Sensors.DataAccess.Repositories;
 
 public sealed class SensorRepository(IDbContextFactory<SensorsDbContext> contextFactory)
     : ISensorRepository
 {
+    public async Task<OneOf<Guid, ConflictError>> RegisterAsync(
+        RegisterSensorRequest request,
+        CancellationToken cancellationToken = default
+    )
+    {
+        await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
+
+        var existingSensor = await context.Sensors.AnyAsync(
+            s => s.OrganizationId == request.OrganizationId && s.ExternalId == request.ExternalId,
+            cancellationToken
+        );
+
+        if (existingSensor)
+        {
+            return new ConflictError(
+                $"A sensor with external ID '{request.ExternalId}' already exists in this organization."
+            );
+        }
+
+        var sensorId = Guid.CreateVersion7();
+        var now = DateTimeOffset.UtcNow;
+
+        var sensor = new Sensor
+        {
+            Id = sensorId,
+            OrganizationId = request.OrganizationId,
+            SourceId = null,
+            ExternalId = request.ExternalId,
+            Name = request.Name,
+            Latitude = request.Latitude,
+            Longitude = request.Longitude,
+            MunicipalityId = request.MunicipalityId,
+            IsActive = true,
+            ReportingMode = ReportingMode.Push,
+            SensorTypeId = request.SensorTypeId,
+            CreatedAt = now,
+            UpdatedAt = now,
+        };
+
+        context.Sensors.Add(sensor);
+
+        var expectedInterval = request.ExpectedIntervalSeconds ?? 300;
+        var healthConfig = new SensorHealthConfig
+        {
+            Id = Guid.CreateVersion7(),
+            SensorId = sensorId,
+            ExpectedIntervalSeconds = expectedInterval,
+            StaleThresholdSeconds = expectedInterval * 3,
+            UnhealthyThresholdSeconds = expectedInterval * 12,
+            IsMonitoringEnabled = true,
+            CreatedAt = now,
+            UpdatedAt = now,
+        };
+        context.SensorHealthConfigs.Add(healthConfig);
+
+        var healthStatus = new SensorHealthStatus
+        {
+            Id = Guid.CreateVersion7(),
+            SensorId = sensorId,
+            LastReadingAt = null,
+            LastHeartbeatAt = null,
+            Status = SensorHealthStatusType.Unknown,
+            ConsecutiveFailures = 0,
+            LastErrorMessage = null,
+            UpdatedAt = now,
+        };
+        context.SensorHealthStatuses.Add(healthStatus);
+
+        await context.SaveChangesAsync(cancellationToken);
+
+        return sensorId;
+    }
+
     public async Task<bool> ExistsAsync(
         string externalId,
         Guid dataSourceId,

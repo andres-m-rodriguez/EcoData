@@ -20,6 +20,7 @@ public sealed class EcoDataTestFixture : IAsyncLifetime
     private IOrganizationHttpClient? _organizationHttpClient;
     private ISensorHttpClient? _sensorHttpClient;
     private ISensorHealthHttpClient? _sensorHealthHttpClient;
+    private IDeviceFactory? _deviceFactory;
 
     public HttpClient HttpClient =>
         _httpClient
@@ -51,18 +52,11 @@ public sealed class EcoDataTestFixture : IAsyncLifetime
             "Fixture not initialized. Ensure tests run within the EcoData collection."
         );
 
-    public IEsp32Device CreateDevice(bool useCpp = false)
-    {
-        if (useCpp)
-        {
-            var exePath = Path.GetFullPath("../../../../../devices/ecodata.exe");
-            var apiUrl =
-                _httpClient?.BaseAddress?.ToString()
-                ?? throw new InvalidOperationException("HttpClient not initialized.");
-            return new CppEsp32Device(exePath, apiUrl, HttpClient);
-        }
-        return new Esp32Device(HttpClient);
-    }
+    public IDeviceFactory DeviceFactory =>
+        _deviceFactory
+        ?? throw new InvalidOperationException(
+            "Fixture not initialized. Ensure tests run within the EcoData collection."
+        );
 
     public async Task InitializeAsync()
     {
@@ -96,6 +90,7 @@ public sealed class EcoDataTestFixture : IAsyncLifetime
         _organizationHttpClient = new OrganizationHttpClient(_httpClient);
         _sensorHttpClient = new SensorHttpClient(_httpClient);
         _sensorHealthHttpClient = new SensorHealthHttpClient(_httpClient);
+        _deviceFactory = new DeviceFactory(_httpClient);
     }
 
     public async Task DisposeAsync()

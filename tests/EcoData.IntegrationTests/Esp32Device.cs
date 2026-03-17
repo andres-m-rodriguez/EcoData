@@ -7,19 +7,13 @@ namespace EcoData.IntegrationTests;
 /// <summary>
 /// Simulates an ESP32 device for integration tests using C# HTTP clients.
 /// </summary>
-public sealed class Esp32Device : IEsp32Device
+public sealed class Esp32Device(HttpClient httpClient)
 {
-    private readonly ISensorHttpClient _sensors;
-    private readonly ISensorReadingHttpClient _readings;
+    private readonly ISensorHttpClient _sensors = new SensorHttpClient(httpClient);
+    private readonly ISensorReadingHttpClient _readings = new SensorReadingHttpClient(httpClient);
 
     private Guid? _sensorId;
     private string? _token;
-
-    public Esp32Device(HttpClient httpClient)
-    {
-        _sensors = new SensorHttpClient(httpClient);
-        _readings = new SensorReadingHttpClient(httpClient);
-    }
 
     public Guid SensorId =>
         _sensorId ?? throw new InvalidOperationException("Sensor not registered.");
@@ -27,7 +21,7 @@ public sealed class Esp32Device : IEsp32Device
     public bool IsRegistered => _sensorId.HasValue;
     public bool IsAuthenticated => _token is not null;
 
-    public async Task<SensorRegistrationResultDto?> RegisterAsync(
+    public async Task<SensorDtoForRegistered?> RegisterAsync(
         RegisterSensorRequest request,
         CancellationToken ct = default
     )
