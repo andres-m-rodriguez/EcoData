@@ -34,6 +34,19 @@
                   Immediate="true"
                   Disabled="IsLoading" />
 
+    @if (ShowReportingInterval)
+    {
+        <MudSelect @bind-Value="Model.ExpectedIntervalSeconds"
+                   Label="Reporting Interval"
+                   HelperText="How often the sensor will send data"
+                   Disabled="IsLoading">
+            <MudSelectItem Value="60">Every minute</MudSelectItem>
+            <MudSelectItem Value="300">Every 5 minutes</MudSelectItem>
+            <MudSelectItem Value="900">Every 15 minutes</MudSelectItem>
+            <MudSelectItem Value="3600">Every hour</MudSelectItem>
+        </MudSelect>
+    }
+
     <MudText Typo="Typo.subtitle2" Class="mt-2">Location</MudText>
     <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mb-1">
         Click on the map or enter coordinates manually to set the sensor location.
@@ -86,6 +99,9 @@
 
     [Parameter]
     public bool HideExternalId { get; set; }
+
+    [Parameter]
+    public bool ShowReportingInterval { get; set; }
 
     [Parameter]
     public EventCallback<SensorFormModel> OnSubmit { get; set; }
@@ -142,5 +158,7 @@
         public Guid MunicipalityId { get; set; }
 
         public bool IsActive { get; set; } = true;
+
+        public int ExpectedIntervalSeconds { get; set; } = 300;
     }
 }

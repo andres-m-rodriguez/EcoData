@@ -74,13 +74,11 @@ public sealed class SensorDtoForUpdateValidator : AbstractValidator<SensorDtoFor
             .InclusiveBetween(-180m, 180m)
             .WithMessage("Longitude must be between -180 and 180");
 
-        RuleFor(static x => x.MunicipalityId)
-            .NotEmpty()
-            .WithMessage("Municipality is required");
+        RuleFor(static x => x.MunicipalityId).NotEmpty().WithMessage("Municipality is required");
     }
 }
 
-public sealed record SensorRegistrationResultDto(
+public sealed record SensorDtoForRegistered(
     Guid SensorId,
     string AccessToken,
     DateTimeOffset ExpiresAt

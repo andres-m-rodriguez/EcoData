@@ -1,10 +1,18 @@
 using EcoData.Sensors.Contracts.Dtos;
+using EcoData.Sensors.Contracts.Errors;
 using EcoData.Sensors.Contracts.Parameters;
+using EcoData.Sensors.Contracts.Requests;
+using OneOf;
 
 namespace EcoData.Sensors.DataAccess.Interfaces;
 
 public interface ISensorRepository
 {
+    Task<OneOf<Guid, ConflictError>> RegisterAsync(
+        RegisterSensorRequest request,
+        CancellationToken cancellationToken = default
+    );
+
     Task<bool> ExistsAsync(
         string externalId,
         Guid dataSourceId,

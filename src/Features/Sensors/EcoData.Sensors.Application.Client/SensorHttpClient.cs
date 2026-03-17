@@ -11,7 +11,7 @@ namespace EcoData.Sensors.Application.Client;
 
 public sealed class SensorHttpClient(HttpClient httpClient) : ISensorHttpClient
 {
-    public async Task<OneOf<SensorRegistrationResultDto, ValidationError, ForbiddenError, ConflictError>> RegisterAsync(
+    public async Task<OneOf<SensorDtoForRegistered, ValidationError, ForbiddenError, ConflictError>> RegisterAsync(
         RegisterSensorRequest request,
         CancellationToken cancellationToken = default
     )
@@ -24,7 +24,7 @@ public sealed class SensorHttpClient(HttpClient httpClient) : ISensorHttpClient
 
         if (response.IsSuccessStatusCode)
         {
-            var result = await response.Content.ReadFromJsonAsync<SensorRegistrationResultDto>(cancellationToken);
+            var result = await response.Content.ReadFromJsonAsync<SensorDtoForRegistered>(cancellationToken);
             return result!;
         }
 
