@@ -83,5 +83,6 @@ if (builder.ExecutionContext.IsPublishMode)
 
 // Pipeline steps for Azure deployment
 builder.AddMigrationsStep();
+builder.AddCustomDomainStep();
 
 builder.Build().Run();
