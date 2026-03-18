@@ -1,5 +1,3 @@
-#pragma warning disable ASPIREACADOMAINS001
-
 using EcoData.AppHost.Extensions;
 
 var builder = DistributedApplication.CreateBuilder(args);
@@ -31,8 +29,8 @@ var seeder = builder
     .WaitFor(locationsDb)
     .PublishAsAzureContainerAppJob();
 
-var customDomainValue = builder.Configuration["Parameters:customDomain"];
-var hasCustomDomain = !string.IsNullOrEmpty(customDomainValue);
+// Custom domain is configured via GitHub Actions workflow step after deployment
+// to avoid Aspire resetting the SSL binding during re-provisioning
 
 var ecoportal = builder
     .AddProject<Projects.EcoPortal_Server>("ecoportal")
@@ -46,19 +44,6 @@ var ecoportal = builder
     .WithEnvironment("Jwt__Audience", "EcoData")
     .WithEnvironment("Jwt__ExpirationHours", "24")
     .WaitFor(seeder);
-
-if (hasCustomDomain)
-{
-    var customDomain = builder.AddParameter("customDomain");
-    var certificateName = builder.AddParameter("certificateName", "", publishValueAsDefault: true);
-
-    ecoportal.PublishAsAzureContainerApp(
-        (infra, app) =>
-        {
-            app.ConfigureCustomDomain(customDomain, certificateName);
-        }
-    );
-}
 
 var sensorsIngestion = builder
     .AddProject<Projects.EcoData_Sensors_Ingestion>("sensors-ingestion")
@@ -80,9 +65,5 @@ if (builder.ExecutionContext.IsPublishMode)
     sensorsIngestion.WithReference(appInsights);
     seeder.WithReference(appInsights);
 }
-
-// Pipeline steps for Azure deployment
-builder.AddMigrationsStep();
-builder.AddCustomDomainStep();
 
 builder.Build().Run();
