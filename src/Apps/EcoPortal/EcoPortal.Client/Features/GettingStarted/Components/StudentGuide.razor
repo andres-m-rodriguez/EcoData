@@ -1,0 +1,159 @@
+@using BlazorStaticNavigation
+
+<MudStack Spacing="4" Class="pa-2">
+    @* Overview *@
+    <MudText Typo="Typo.body1">
+        Welcome! As a student, you'll join your school's organization, register your sensors,
+        and start collecting environmental data. Here's how to get started:
+    </MudText>
+
+    @* Step 1 *@
+    <MudStack Spacing="2">
+        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+            <MudAvatar Size="Size.Small" Color="Color.Primary">1</MudAvatar>
+            <MudText Typo="Typo.subtitle1"><strong>Create Your Account</strong></MudText>
+        </MudStack>
+        <MudText Typo="Typo.body2" Class="ml-10">
+            Go to <MudLink Href="/register">Register</MudLink> and create an account using your school email.
+            This helps your professor identify you when approving access.
+        </MudText>
+    </MudStack>
+
+    @* Step 2 *@
+    <MudStack Spacing="2">
+        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+            <MudAvatar Size="Size.Small" Color="Color.Primary">2</MudAvatar>
+            <MudText Typo="Typo.subtitle1"><strong>Join Your Organization</strong></MudText>
+        </MudStack>
+        <MudText Typo="Typo.body2" Class="ml-10">
+            Browse <MudLink Href="/organizations/discover">Organizations</MudLink> to find your school or lab.
+            Click <strong>Request Access</strong> and wait for your professor to approve you.
+        </MudText>
+        <MudAlert Severity="Severity.Info" Variant="Variant.Text" Dense="true" Class="ml-10">
+            You'll start as a "Viewer". Ask your professor to upgrade you to "Editor" if you need to register sensors.
+        </MudAlert>
+    </MudStack>
+
+    @* Step 3 *@
+    <MudStack Spacing="2">
+        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+            <MudAvatar Size="Size.Small" Color="Color.Primary">3</MudAvatar>
+            <MudText Typo="Typo.subtitle1"><strong>Register Your Sensor</strong></MudText>
+        </MudStack>
+        <MudText Typo="Typo.body2" Class="ml-10">
+            Once you have Editor permissions, go to your organization's Sensors tab and click <strong>Add Sensor</strong>.
+            Fill in:
+        </MudText>
+        <MudSimpleTable Dense="true" Hover="true" Class="ml-10" Style="max-width: 500px;">
+            <tbody>
+                <tr>
+                    <td><strong>External ID</strong></td>
+                    <td>Your sensor's unique identifier (e.g., ESP32-LAB-01)</td>
+                </tr>
+                <tr>
+                    <td><strong>Name</strong></td>
+                    <td>A descriptive name for the sensor location</td>
+                </tr>
+                <tr>
+                    <td><strong>Location</strong></td>
+                    <td>Click on the map or enter coordinates</td>
+                </tr>
+                <tr>
+                    <td><strong>Reporting Interval</strong></td>
+                    <td>How often your sensor sends data</td>
+                </tr>
+            </tbody>
+        </MudSimpleTable>
+    </MudStack>
+
+    @* Step 4 - Critical *@
+    <MudStack Spacing="2">
+        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+            <MudAvatar Size="Size.Small" Color="Color.Primary">4</MudAvatar>
+            <MudText Typo="Typo.subtitle1"><strong>Save Your Credentials</strong></MudText>
+        </MudStack>
+        <MudAlert Severity="Severity.Warning" Variant="Variant.Filled" Class="ml-10">
+            <strong>IMPORTANT:</strong> After registration, you'll receive a <strong>Sensor ID</strong> and
+            <strong>Access Token</strong>. Save these immediately! The token is shown only once.
+            If you lose it, contact your organization admin to regenerate it.
+        </MudAlert>
+    </MudStack>
+
+    @* Step 5 *@
+    <MudStack Spacing="2">
+        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+            <MudAvatar Size="Size.Small" Color="Color.Primary">5</MudAvatar>
+            <MudText Typo="Typo.subtitle1"><strong>Configure Your Device</strong></MudText>
+        </MudStack>
+        <MudText Typo="Typo.body2" Class="ml-10">
+            Program your ESP32 or Arduino with the Sensor ID and Access Token. Here's a quick example:
+        </MudText>
+        <MudPaper Elevation="0" Class="ml-10 pa-3 code-block">
+            <pre style="margin: 0; font-size: 0.8rem; overflow-x: auto;"><code>// EcoData Configuration
+const char* SENSOR_ID = "your-sensor-id";
+const char* ACCESS_TOKEN = "your-access-token";
+const char* API_URL = "https://your-server/api/sensors/";
+
+// POST readings to: API_URL + SENSOR_ID + "/readings/"
+// Header: Authorization: Bearer ACCESS_TOKEN</code></pre>
+        </MudPaper>
+    </MudStack>
+
+    @* Step 6 *@
+    <MudStack Spacing="2">
+        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+            <MudAvatar Size="Size.Small" Color="Color.Primary">6</MudAvatar>
+            <MudText Typo="Typo.subtitle1"><strong>View Your Data</strong></MudText>
+        </MudStack>
+        <MudText Typo="Typo.body2" Class="ml-10">
+            Once your sensor starts reporting, view readings on the sensor detail page.
+            Use filters to search by parameter (pH, Temperature, etc.) or date range.
+        </MudText>
+    </MudStack>
+
+    @* Health Status Info *@
+    <MudDivider Class="my-2" />
+    <MudText Typo="Typo.subtitle1"><strong>Understanding Sensor Health</strong></MudText>
+    <MudStack Row="true" Spacing="2" Class="flex-wrap">
+        <MudChip T="string" Color="Color.Success" Size="Size.Small">Healthy</MudChip>
+        <MudText Typo="Typo.body2">Reporting as expected</MudText>
+    </MudStack>
+    <MudStack Row="true" Spacing="2" Class="flex-wrap">
+        <MudChip T="string" Color="Color.Warning" Size="Size.Small">Stale</MudChip>
+        <MudText Typo="Typo.body2">Delayed reporting - check connectivity</MudText>
+    </MudStack>
+    <MudStack Row="true" Spacing="2" Class="flex-wrap">
+        <MudChip T="string" Color="Color.Error" Size="Size.Small">Unhealthy</MudChip>
+        <MudText Typo="Typo.body2">Likely offline - investigate device</MudText>
+    </MudStack>
+
+    @* Troubleshooting *@
+    <MudDivider Class="my-2" />
+    <MudText Typo="Typo.subtitle1"><strong>Common Issues</strong></MudText>
+    <MudSimpleTable Dense="true" Hover="true">
+        <thead>
+            <tr>
+                <th>Problem</th>
+                <th>Solution</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>No readings appearing</td>
+                <td>Check WiFi, verify Sensor ID and Token are correct</td>
+            </tr>
+            <tr>
+                <td>Lost access token</td>
+                <td>Contact your organization admin to regenerate</td>
+            </tr>
+            <tr>
+                <td>Can't register sensors</td>
+                <td>Ask admin to upgrade you from Viewer to Editor</td>
+            </tr>
+            <tr>
+                <td>Access request pending</td>
+                <td>Contact your professor directly</td>
+            </tr>
+        </tbody>
+    </MudSimpleTable>
+</MudStack>
