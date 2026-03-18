@@ -1,0 +1,115 @@
+@page "/getting-started"
+@using BlazorStaticNavigation
+
+<PageTitle>Getting Started - EcoData</PageTitle>
+
+<div class="getting-started-page">
+    <MudContainer MaxWidth="MaxWidth.Large" Class="py-6">
+        @* Header Section *@
+        <MudStack Spacing="2" Class="mb-6">
+            <h1 class="serif-headline">Getting Started</h1>
+            <MudText Typo="Typo.body1" Color="Color.Secondary">
+                Choose your role below to see a personalized guide for using EcoData.
+            </MudText>
+        </MudStack>
+
+        @* Role Selection Cards *@
+        <MudExpansionPanels MultiExpansion="false" Elevation="0" Class="guide-panels">
+            @* For Students *@
+            <MudExpansionPanel Class="guide-panel">
+                <TitleContent>
+                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="3">
+                        <MudAvatar Color="Color.Primary" Variant="Variant.Filled">
+                            <MudIcon Icon="@Icons.Material.Filled.School" />
+                        </MudAvatar>
+                        <MudStack Spacing="0">
+                            <MudText Typo="Typo.h6">For Students</MudText>
+                            <MudText Typo="Typo.body2" Color="Color.Secondary">
+                                Register sensors, collect data, and complete your research projects
+                            </MudText>
+                        </MudStack>
+                    </MudStack>
+                </TitleContent>
+                <ChildContent>
+                    <StudentGuide />
+                </ChildContent>
+            </MudExpansionPanel>
+
+            @* For Researchers & Educators *@
+            <MudExpansionPanel Class="guide-panel">
+                <TitleContent>
+                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="3">
+                        <MudAvatar Color="Color.Secondary" Variant="Variant.Filled">
+                            <MudIcon Icon="@Icons.Material.Filled.Science" />
+                        </MudAvatar>
+                        <MudStack Spacing="0">
+                            <MudText Typo="Typo.h6">For Researchers & Educators</MudText>
+                            <MudText Typo="Typo.body2" Color="Color.Secondary">
+                                Manage organizations, approve students, and oversee sensor networks
+                            </MudText>
+                        </MudStack>
+                    </MudStack>
+                </TitleContent>
+                <ChildContent>
+                    <ResearcherGuide />
+                </ChildContent>
+            </MudExpansionPanel>
+
+            @* For the Public *@
+            <MudExpansionPanel Class="guide-panel">
+                <TitleContent>
+                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="3">
+                        <MudAvatar Color="Color.Tertiary" Variant="Variant.Filled">
+                            <MudIcon Icon="@Icons.Material.Filled.Public" />
+                        </MudAvatar>
+                        <MudStack Spacing="0">
+                            <MudText Typo="Typo.h6">For the Public</MudText>
+                            <MudText Typo="Typo.body2" Color="Color.Secondary">
+                                Explore environmental data and learn about monitoring efforts
+                            </MudText>
+                        </MudStack>
+                    </MudStack>
+                </TitleContent>
+                <ChildContent>
+                    <PublicGuide />
+                </ChildContent>
+            </MudExpansionPanel>
+        </MudExpansionPanels>
+
+        @* Quick Links Section *@
+        <MudPaper Elevation="0" Class="mt-6 pa-5 quick-links-card">
+            <MudStack Spacing="3">
+                <MudText Typo="Typo.h6">Quick Links</MudText>
+                <MudGrid Spacing="2">
+                    <MudItem xs="12" sm="6" md="3">
+                        <MudButton Href="/sensors" Variant="Variant.Outlined" FullWidth="true"
+                                   StartIcon="@Icons.Material.Outlined.Sensors" Color="Color.Primary">
+                            Browse Sensors
+                        </MudButton>
+                    </MudItem>
+                    <MudItem xs="12" sm="6" md="3">
+                        <MudButton Href="/map" Variant="Variant.Outlined" FullWidth="true"
+                                   StartIcon="@Icons.Material.Outlined.Map" Color="Color.Primary">
+                            View Map
+                        </MudButton>
+                    </MudItem>
+                    <MudItem xs="12" sm="6" md="3">
+                        <MudButton Href="/organizations/discover" Variant="Variant.Outlined" FullWidth="true"
+                                   StartIcon="@Icons.Material.Outlined.Business" Color="Color.Primary">
+                            Find Organizations
+                        </MudButton>
+                    </MudItem>
+                    <MudItem xs="12" sm="6" md="3">
+                        <MudButton Href="/register" Variant="Variant.Outlined" FullWidth="true"
+                                   StartIcon="@Icons.Material.Outlined.PersonAdd" Color="Color.Primary">
+                            Create Account
+                        </MudButton>
+                    </MudItem>
+                </MudGrid>
+            </MudStack>
+        </MudPaper>
+    </MudContainer>
+</div>
+
+@code {
+}
