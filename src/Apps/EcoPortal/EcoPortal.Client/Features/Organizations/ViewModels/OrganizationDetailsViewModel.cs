@@ -1,36 +1,17 @@
 using EcoData.Organization.Contracts.Dtos;
-using EcoData.Sensors.Contracts.Dtos;
 using MudBlazor;
 
 namespace EcoPortal.Client.Features.Organizations.ViewModels;
 
-public class OrganizationDetailsViewModel
+public class OrganizationDetailsViewModel(OrganizationDtoForDetail organization)
 {
-    private readonly OrganizationDtoForDetail _organization;
-    private readonly List<SensorDtoForList> _sensors;
-    private readonly List<OrganizationMemberDto> _members;
-    private readonly int _totalSensorCount;
-
-    public OrganizationDetailsViewModel(
-        OrganizationDtoForDetail organization,
-        List<SensorDtoForList> sensors,
-        List<OrganizationMemberDto> members,
-        int totalSensorCount
-    )
-    {
-        _organization = organization;
-        _sensors = sensors;
-        _members = members;
-        _totalSensorCount = totalSensorCount;
-    }
-
     // Organization Info
-    public Guid Id => _organization.Id;
-    public string Name => _organization.Name;
-    public string? ProfilePictureUrl => _organization.ProfilePictureUrl;
-    public string? CardPictureUrl => _organization.CardPictureUrl;
-    public string? AboutUs => _organization.AboutUs;
-    public string? WebsiteUrl => _organization.WebsiteUrl;
+    public Guid Id => organization.Id;
+    public string Name => organization.Name;
+    public string? ProfilePictureUrl => organization.ProfilePictureUrl;
+    public string? CardPictureUrl => organization.CardPictureUrl;
+    public string? AboutUs => organization.AboutUs;
+    public string? WebsiteUrl => organization.WebsiteUrl;
 
     // Display Properties
     public bool HasProfilePicture => !string.IsNullOrWhiteSpace(ProfilePictureUrl);
@@ -43,32 +24,9 @@ public class OrganizationDetailsViewModel
             ? uri.Host
             : WebsiteUrl ?? string.Empty;
 
-    public string FormattedCreatedDate => _organization.CreatedAt.ToString("MMM d, yyyy");
+    public string FormattedCreatedDate => organization.CreatedAt.ToString("MMM d, yyyy");
 
     public string PageTitle => $"{Name} - EcoData";
-
-    // Sensor Stats
-    public int TotalSensorCount => _totalSensorCount;
-    public int OnlineSensorCount => _sensors.Count(s => s.IsActive);
-    public bool HasSensors => _totalSensorCount > 0;
-    public bool ShowViewAllSensors => _totalSensorCount > MaxDisplayedSensors;
-    public IEnumerable<SensorDtoForList> DisplayedSensors => _sensors;
-
-    public string SensorCountBadge => _totalSensorCount.ToString();
-    public string OnlineSensorSubtitle => $"{OnlineSensorCount} online now";
-    public string ViewAllSensorsText => $"View all {_totalSensorCount} sensors";
-
-    // Member Stats
-    public int MemberCount => _members.Count;
-    public int AdminCount => _members.Count(m => m.RoleName == "Admin");
-    public bool HasMembers => _members.Count > 0;
-    public bool ShowViewAllMembers => _members.Count > MaxDisplayedMembers;
-    public IEnumerable<OrganizationMemberDto> DisplayedMembers =>
-        _members.Take(MaxDisplayedMembers);
-
-    public string MemberCountBadge => _members.Count.ToString();
-    public string AdminCountSubtitle => $"{AdminCount} admins";
-    public string ViewAllMembersText => $"View all {_members.Count} members";
 
     // Configuration
     public const int MaxDisplayedSensors = 6;

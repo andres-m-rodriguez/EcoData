@@ -1,8 +1,9 @@
+using EcoData.Identity.Application.Client;
 using EcoData.Organization.Application.Client;
 using EcoData.Sensors.Application.Client;
 using EcoPortal.Client.Authorization;
+using EcoPortal.Client.Features.Organizations.Services;
 using EcoPortal.Client.Services;
-using EcoData.Identity.Application.Client;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
@@ -25,6 +26,8 @@ builder.Services.AddHttpClient<IDataSourceHttpClient, DataSourceHttpClient>(clie
     client.BaseAddress = baseAddress;
 });
 
+builder.Services.AddMemoryCache();
+builder.Services.AddSingleton<IOrganizationCacheService, OrganizationCacheService>();
 builder.Services.AddScoped<ISensorMapManager, SensorMapManager>();
 builder.Services.AddScoped<ILeafletMapService, LeafletMapService>();
 builder.Services.AddScoped<INavigationService, NavigationService>();
@@ -34,6 +37,7 @@ builder.Services.AddScoped<ClientAuthStateProvider>();
 builder.Services.AddScoped<AuthenticationStateProvider>(sp =>
     sp.GetRequiredService<ClientAuthStateProvider>()
 );
+
 // Register custom policy provider BEFORE AddAuthorizationCore (uses TryAddSingleton)
 builder.Services.AddSingleton<IAuthorizationPolicyProvider, OrganizationPermissionPolicyProvider>();
 builder.Services.AddScoped<IAuthorizationHandler, OrganizationPermissionHandler>();
