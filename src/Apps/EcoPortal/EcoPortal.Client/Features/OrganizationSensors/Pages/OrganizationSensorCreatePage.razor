@@ -8,18 +8,14 @@
 @using EcoData.Sensors.Contracts.Requests
 @using EcoData.Sensors.Application.Client
 @using EcoPortal.Client.Services
-@using EcoPortal.Client.Components
-@using EcoData.Locations.Contracts.Dtos
-@using EcoData.Locations.Contracts.Parameters
 @using BlazingSingularity.Commands
 @using EcoPortal.Client.Features.OrganizationSensors.Dialogs
+@using EcoPortal.Client.Features.Sensors.Components
+@using static EcoPortal.Client.Features.Sensors.Components.SensorForm
 @inject ISensorHttpClient SensorClient
 @inject IOrganizationHttpClient OrganizationClient
-@inject ILocationHttpClient LocationClient
 @inject INavigationService Navigation
-@inject ISnackbar Snackbar
 @inject IDialogService DialogService
-@inject AuthStateService AuthState
 
 <PageTitle>Add Sensor - EcoData</PageTitle>
 
@@ -50,76 +46,14 @@
                     Adding sensor to <strong>@_organization.Name</strong>
                 </MudText>
 
-                @if (!string.IsNullOrEmpty(_errorMessage))
-                {
-                    <MudAlert Severity="Severity.Error" Variant="Variant.Filled" Dense="true" Class="mb-4">
-                        @_errorMessage
-                    </MudAlert>
-                }
-
-                <MudStack Spacing="3">
-                    <MudTextField @bind-Value="_externalId" Label="External ID" Required="true"
-                                  RequiredError="External ID is required" MaxLength="100" HelperText="Unique identifier for this sensor"
-                                  Disabled="CreateCommand.IsLoading" />
-
-                    <MudTextField @bind-Value="_name" Label="Name" Required="true" RequiredError="Name is required"
-                                  MaxLength="300" HelperText="Display name for the sensor" Disabled="CreateCommand.IsLoading" />
-
-                    <MudStack Row="true" Spacing="2">
-                        <MudNumericField @bind-Value="_latitude" Label="Latitude" Required="true" Min="-90" Max="90"
-                                         Step="0.000001M" Format="F6" HelperText="-90 to 90" Disabled="CreateCommand.IsLoading"
-                                         Style="flex: 1;" />
-
-                        <MudNumericField @bind-Value="_longitude" Label="Longitude" Required="true" Min="-180" Max="180"
-                                         Step="0.000001M" Format="F6" HelperText="-180 to 180" Disabled="CreateCommand.IsLoading"
-                                         Style="flex: 1;" />
-                    </MudStack>
-
-                    <MudSelect T="StateDtoForList" Label="State" Value="_selectedState" ValueChanged="OnStateChanged"
-                               ToStringFunc="@(s => s?.Name ?? string.Empty)" Disabled="CreateCommand.IsLoading || _states is null"
-                               HelperText="Select the state/territory">
-                        @if (_states is not null)
-                        {
-                            @foreach (var state in _states)
-                            {
-                                <MudSelectItem Value="@state">@state.Name</MudSelectItem>
-                            }
-                        }
-                    </MudSelect>
-
-                    <MudAutocomplete T="MunicipalityDtoForList" Label="Municipality" Value="_selectedMunicipality"
-                                     ValueChanged="OnMunicipalityChanged" SearchFunc="SearchMunicipalities"
-                                     ToStringFunc="@(m => m?.Name ?? string.Empty)"
-                                     Disabled="CreateCommand.IsLoading || _selectedState is null"
-                                     HelperText="@(_selectedState is null ? "Select a state first" : "Search for a municipality")"
-                                     ResetValueOnEmptyText="true" />
-
-                    <MudSelect T="int" @bind-Value="_expectedIntervalSeconds" Label="Reporting Interval"
-                               HelperText="How often the sensor will send data" Disabled="CreateCommand.IsLoading">
-                        <MudSelectItem Value="60">Every minute</MudSelectItem>
-                        <MudSelectItem Value="300">Every 5 minutes</MudSelectItem>
-                        <MudSelectItem Value="900">Every 15 minutes</MudSelectItem>
-                        <MudSelectItem Value="3600">Every hour</MudSelectItem>
-                    </MudSelect>
-
-                    <MudSwitch @bind-Value="_isActive" Label="Active" Color="Color.Primary"
-                               Disabled="CreateCommand.IsLoading" />
-
-                    <MudStack Row="true" Justify="Justify.FlexEnd" Spacing="2" Class="mt-4">
-                        <MudButton Variant="Variant.Text" Color="Color.Default" OnClick="NavigateToSensors"
-                                   Disabled="CreateCommand.IsLoading">
-                            Cancel
-                        </MudButton>
-                        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="() => CreateCommand.ExecuteAsync()"
-                                   Disabled="CreateCommand.IsLoading || !IsFormValid">
-                            @if (CreateCommand.IsLoading)
-                            {
-                                <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
-                            }
-                            Create Sensor
-                        </MudButton>
-                    </MudStack>
-                </MudStack>
+                <SensorForm Model="_formModel"
+                            SubmitButtonText="Create Sensor"
+                            ErrorMessage="@_errorMessage"
+                            IsLoading="CreateCommand.IsLoading"
+                            HideExternalId="false"
+                            ShowReportingInterval="true"
+                            OnSubmit="OnFormSubmit"
+                            OnCancel="NavigateToSensors" />
             </MudPaper>
         }
     </ChildContent>
@@ -130,19 +64,8 @@
     public Guid OrganizationId { get; set; }
 
     private OrganizationDtoForDetail? _organization;
-    private List<StateDtoForList>? _states;
-    private StateDtoForList? _selectedState;
-    private MunicipalityDtoForList? _selectedMunicipality;
-    private string _externalId = string.Empty;
-    private string _name = string.Empty;
-    private decimal _latitude;
-    private decimal _longitude;
-    private bool _isActive = true;
-    private int _expectedIntervalSeconds = 300;
+    private SensorFormModel _formModel = new();
     private string? _errorMessage;
-
-    private bool IsFormValid => !string.IsNullOrWhiteSpace(_externalId) && !string.IsNullOrWhiteSpace(_name) &&
-        _selectedMunicipality is not null;
 
     protected override async Task OnInitializedAsync()
     {
@@ -152,12 +75,7 @@
     [RelayCommand]
     private async Task Load()
     {
-        var orgTask = OrganizationClient.GetByIdAsync(OrganizationId);
-        var statesTask = LoadStatesAsync();
-
-        await Task.WhenAll(orgTask, statesTask);
-
-        var result = await orgTask;
+        var result = await OrganizationClient.GetByIdAsync(OrganizationId);
         result.Switch(
             organization => _organization = organization,
             _ => _organization = null,
@@ -165,45 +83,9 @@
         );
     }
 
-    private async Task LoadStatesAsync()
+    private async Task OnFormSubmit(SensorFormModel model)
     {
-        _states = [];
-        await foreach (var state in LocationClient.GetStatesAsync(new StateParameters(PageSize: 100)))
-        {
-            _states.Add(state);
-        }
-    }
-
-    private void OnStateChanged(StateDtoForList? state)
-    {
-        _selectedState = state;
-        _selectedMunicipality = null;
-    }
-
-    private void OnMunicipalityChanged(MunicipalityDtoForList? municipality)
-    {
-        _selectedMunicipality = municipality;
-    }
-
-    private async Task<IEnumerable<MunicipalityDtoForList>> SearchMunicipalities(string? search, CancellationToken ct)
-    {
-        if (_selectedState is null)
-        {
-            return [];
-        }
-
-        var parameters = new MunicipalityParameters(
-            PageSize: 20,
-            Search: search,
-            StateCode: _selectedState.Code
-        );
-
-        var results = new List<MunicipalityDtoForList>();
-        await foreach (var municipality in LocationClient.GetMunicipalitiesAsync(parameters, ct))
-        {
-            results.Add(municipality);
-        }
-        return results;
+        await CreateCommand.ExecuteAsync();
     }
 
     [RelayCommand]
@@ -211,27 +93,15 @@
     {
         _errorMessage = null;
 
-        if (string.IsNullOrWhiteSpace(_externalId))
-        {
-            _errorMessage = "External ID is required";
-            return;
-        }
-
-        if (string.IsNullOrWhiteSpace(_name))
-        {
-            _errorMessage = "Name is required";
-            return;
-        }
-
         var request = new RegisterSensorRequest(
             OrganizationId,
             _organization!.Name,
-            _name.Trim(),
-            _externalId.Trim(),
-            _latitude,
-            _longitude,
-            _selectedMunicipality!.Id,
-            ExpectedIntervalSeconds: _expectedIntervalSeconds
+            _formModel.Name.Trim(),
+            _formModel.ExternalId.Trim(),
+            _formModel.Latitude,
+            _formModel.Longitude,
+            _formModel.MunicipalityId,
+            ExpectedIntervalSeconds: _formModel.ExpectedIntervalSeconds
         );
 
         var result = await SensorClient.RegisterAsync(request);
@@ -267,7 +137,7 @@
             { x => x.SensorId, credentials.SensorId },
             { x => x.AccessToken, credentials.AccessToken },
             { x => x.ExpiresAt, credentials.ExpiresAt },
-            { x => x.SensorName, _name }
+            { x => x.SensorName, _formModel.Name }
         };
 
         var options = new DialogOptions
