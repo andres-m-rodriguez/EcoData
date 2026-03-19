@@ -286,3 +286,90 @@ window.sensorMap = {
         }
     }
 };
+
+// Organization Sensor Map - for displaying sensors within an organization with fullscreen support
+window.orgSensorMap = {
+    instances: new Map(),
+
+    init: function (elementId, dotNetRef) {
+        // Dispose existing instance if any
+        if (this.instances.has(elementId)) {
+            this.dispose(elementId);
+        }
+
+        // Center on Puerto Rico
+        const map = L.map(elementId).setView([18.2208, -66.5901], 9);
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+
+        const markersLayer = L.featureGroup().addTo(map);
+
+        this.instances.set(elementId, {
+            map: map,
+            markersLayer: markersLayer,
+            dotNetRef: dotNetRef
+        });
+
+        // Invalidate size after rendering
+        setTimeout(() => map.invalidateSize(), 100);
+    },
+
+    addSensors: function (elementId, sensors, navigateOnClick) {
+        const instance = this.instances.get(elementId);
+        if (!instance) return;
+
+        instance.markersLayer.clearLayers();
+
+        sensors.forEach(sensor => {
+            if (sensor.latitude === 0 && sensor.longitude === 0) return;
+
+            const marker = L.circleMarker([sensor.latitude, sensor.longitude], {
+                radius: 8,
+                fillColor: sensor.isActive ? '#4caf50' : '#9e9e9e',
+                color: '#fff',
+                weight: 2,
+                opacity: 1,
+                fillOpacity: 0.8
+            });
+
+            const popupContent = `
+                <div style="min-width: 180px;">
+                    <strong>${sensor.name}</strong><br/>
+                    <small style="color: #666;">ID: ${sensor.externalId}</small><br/>
+                    <small style="color: ${sensor.isActive ? '#4caf50' : '#9e9e9e'};">
+                        ● ${sensor.isActive ? 'Active' : 'Inactive'}
+                    </small>
+                    ${navigateOnClick ? `<br/><a href="/sensors/${sensor.id}" style="color: #1976d2; font-size: 12px;">View Details →</a>` : ''}
+                </div>
+            `;
+
+            marker.bindPopup(popupContent);
+            instance.markersLayer.addLayer(marker);
+        });
+
+        // Fit bounds if there are sensors
+        if (sensors.length > 0) {
+            const bounds = instance.markersLayer.getBounds();
+            if (bounds.isValid()) {
+                instance.map.fitBounds(bounds, { padding: [50, 50], maxZoom: 12 });
+            }
+        }
+    },
+
+    invalidateSize: function (elementId) {
+        const instance = this.instances.get(elementId);
+        if (!instance) return;
+
+        instance.map.invalidateSize();
+    },
+
+    dispose: function (elementId) {
+        const instance = this.instances.get(elementId);
+        if (!instance) return;
+
+        instance.map.remove();
+        this.instances.delete(elementId);
+    }
+};

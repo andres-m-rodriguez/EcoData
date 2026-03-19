@@ -1,0 +1,114 @@
+@using EcoData.Sensors.Contracts.Dtos
+@implements IAsyncDisposable
+@inject IJSRuntime JS
+
+<div class="@GetContainerClass()">
+    <div class="org-map-header">
+        <MudText Typo="Typo.subtitle2" Class="org-map-title">
+            @if (IsLoading)
+            {
+                <MudSkeleton Width="100px" />
+            }
+            else
+            {
+                @($"{SensorCount} Sensor{(SensorCount == 1 ? "" : "s")}")
+            }
+        </MudText>
+        <MudTooltip Text="@(_isFullscreen ? "Exit Fullscreen" : "Fullscreen")">
+            <MudIconButton Icon="@(_isFullscreen ? Icons.Material.Filled.FullscreenExit : Icons.Material.Filled.Fullscreen)"
+                           Size="Size.Small"
+                           Color="Color.Default"
+                           OnClick="ToggleFullscreen" />
+        </MudTooltip>
+    </div>
+    <div id="@_elementId" class="org-map-container"></div>
+    @if (IsLoading)
+    {
+        <div class="org-map-loading">
+            <MudProgressCircular Indeterminate="true" Size="Size.Medium" Color="Color.Primary" />
+        </div>
+    }
+    else if (SensorCount == 0)
+    {
+        <div class="org-map-empty">
+            <MudIcon Icon="@Icons.Material.Outlined.LocationOff" Size="Size.Large" Color="Color.Secondary" />
+            <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mt-2">No sensors to display</MudText>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter]
+    public List<SensorDtoForList>? Sensors { get; set; }
+
+    [Parameter]
+    public bool IsLoading { get; set; }
+
+    private readonly string _elementId = $"org-map-{Guid.NewGuid():N}";
+    private bool _mapInitialized;
+    private bool _isFullscreen;
+    private bool _sensorsAdded;
+
+    private int SensorCount => Sensors?.Count(s => s.Latitude != 0 && s.Longitude != 0) ?? 0;
+
+    private string GetContainerClass()
+    {
+        return _isFullscreen ? "org-map-wrapper org-map-fullscreen" : "org-map-wrapper";
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!IsLoading && !_mapInitialized)
+        {
+            _mapInitialized = true;
+            await JS.InvokeVoidAsync("orgSensorMap.init", _elementId, null);
+        }
+
+        if (_mapInitialized && Sensors is not null && !_sensorsAdded)
+        {
+            _sensorsAdded = true;
+            var sensorData = Sensors
+                .Where(s => s.Latitude != 0 && s.Longitude != 0)
+                .Select(s => new
+                {
+                    id = s.Id,
+                    name = s.Name,
+                    externalId = s.ExternalId,
+                    latitude = (double)s.Latitude,
+                    longitude = (double)s.Longitude,
+                    isActive = s.IsActive
+                })
+                .ToList();
+
+            await JS.InvokeVoidAsync("orgSensorMap.addSensors", _elementId, sensorData, true);
+        }
+    }
+
+    private async Task ToggleFullscreen()
+    {
+        _isFullscreen = !_isFullscreen;
+        StateHasChanged();
+
+        // Give DOM time to update, then invalidate map size
+        await Task.Delay(50);
+        if (_mapInitialized)
+        {
+            await JS.InvokeVoidAsync("orgSensorMap.invalidateSize", _elementId);
+        }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (_mapInitialized)
+        {
+            try
+            {
+                await JS.InvokeVoidAsync("orgSensorMap.dispose", _elementId);
+            }
+            catch
+            {
+                // Ignore disposal errors
+            }
+        }
+    }
+}
