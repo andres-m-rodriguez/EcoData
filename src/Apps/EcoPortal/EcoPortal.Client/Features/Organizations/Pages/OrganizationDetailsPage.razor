@@ -12,6 +12,7 @@
 @using EcoPortal.Client.Features.Organizations.Authorization
 @using EcoPortal.Client.Features.Organizations.ViewModels
 @using EcoPortal.Client.Features.Sensors.Components
+@using EcoPortal.Client.Features.Organizations.Components
 @using BlazingSingularity.Commands
 @using BlazingSingularity.Fetch
 @implements IDisposable
@@ -273,6 +274,13 @@
                                     </div>
                                 }
                             }
+                        </div>
+                    </Tab>
+
+                    <Tab Title="Map" Icon="@Icons.Material.Outlined.Map">
+                        <div class="pa-6">
+                            <OrganizationSensorMap Sensors="@(_sensorsFetch.Data?.ToList())"
+                                                   IsLoading="@_sensorsFetch.IsLoading" />
                         </div>
                     </Tab>
 
