@@ -168,7 +168,62 @@ Dependencies are injected directly into endpoint handlers. Keep handlers focused
 
 ### Streaming Lists
 
-List endpoints should return `IAsyncEnumerable<T>` for streaming. This is handled by the repository.
+List endpoints should return `IAsyncEnumerable<T>` for streaming. Items are sent to the client as they're retrieved from the database, rather than buffering the entire result set in memory.
+
+#### Endpoint
+
+```csharp
+group
+    .MapGet(
+        "/",
+        (
+            Guid sensorId,
+            [AsParameters] ReadingParameters parameters,
+            IReadingRepository repository,
+            CancellationToken ct
+        ) => repository.GetReadingsAsync(sensorId, parameters, ct)
+    )
+    .WithName("GetSensorReadings");
+```
+
+#### Repository
+
+```csharp
+public async IAsyncEnumerable<ReadingDtoForDetail> GetReadingsAsync(
+    Guid sensorId,
+    ReadingParameters parameters,
+    [EnumeratorCancellation] CancellationToken ct)
+{
+    var query = _context.Readings
+        .Where(r => r.SensorId == sensorId)
+        .Select(r => new ReadingDtoForDetail(r.Id, r.Parameter, r.Value, r.Unit, r.RecordedAt));
+
+    await foreach (var reading in query.AsAsyncEnumerable().WithCancellation(ct))
+    {
+        yield return reading;
+    }
+}
+```
+
+#### HTTP Client
+
+```csharp
+public IAsyncEnumerable<ReadingDtoForDetail> GetReadingsAsync(
+    Guid sensorId,
+    ReadingParameters parameters,
+    CancellationToken ct = default)
+{
+    return _http.GetFromJsonAsAsyncEnumerable<ReadingDtoForDetail>(
+        $"/api/sensors/{sensorId}/readings?{parameters.ToQueryString()}",
+        ct);
+}
+```
+
+Key points:
+- Use `[EnumeratorCancellation]` attribute on the `CancellationToken` parameter
+- Call `AsAsyncEnumerable()` on EF Core queries to enable streaming
+- Use `yield return` to stream items one at a time
+- Client uses `GetFromJsonAsAsyncEnumerable` to consume the stream
 
 ---
 
