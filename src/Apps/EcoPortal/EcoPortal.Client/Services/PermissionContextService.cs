@@ -8,7 +8,7 @@ public sealed class PermissionContextService(
     AuthStateService authState
 )
 {
-    private readonly Dictionary<Guid, UserPermissionsDto> _cache = [];
+    private readonly Dictionary<Guid, Task<UserPermissionsDto>> _cache = [];
 
     public async Task<bool> HasPermissionAsync(
         Guid organizationId,
@@ -31,23 +31,20 @@ public sealed class PermissionContextService(
         return permissions.Permissions.Contains(permission);
     }
 
-    public async Task<UserPermissionsDto> GetPermissionsAsync(
+    public Task<UserPermissionsDto> GetPermissionsAsync(
         Guid organizationId,
         CancellationToken cancellationToken = default
     )
     {
-        if (_cache.TryGetValue(organizationId, out var cached))
+        if (_cache.TryGetValue(organizationId, out var cachedTask))
         {
-            return cached;
+            return cachedTask;
         }
 
-        var permissions = await permissionClient.GetMyPermissionsAsync(
-            organizationId,
-            cancellationToken
-        );
-        _cache[organizationId] = permissions;
+        var task = permissionClient.GetMyPermissionsAsync(organizationId, cancellationToken);
+        _cache[organizationId] = task;
 
-        return permissions;
+        return task;
     }
 
     public void InvalidateCache(Guid? organizationId = null)
