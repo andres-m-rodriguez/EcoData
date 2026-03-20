@@ -23,4 +23,9 @@ public interface ISensorReadingHttpClient
         SensorReadingDto reading,
         CancellationToken cancellationToken = default
     );
+
+    IAsyncEnumerable<ReadingDtoForCreate> SubscribeToReadingsAsync(
+        Guid sensorId,
+        CancellationToken cancellationToken = default
+    );
 }
