@@ -1,3 +1,4 @@
+using System.Text.Json;
 using EcoData.Locations.Contracts.Dtos;
 using EcoData.Locations.Contracts.Parameters;
 
@@ -23,6 +24,11 @@ public interface ILocationHttpClient
     Task<MunicipalityDtoForDetail?> GetMunicipalityByPointAsync(
         decimal latitude,
         decimal longitude,
+        CancellationToken cancellationToken = default
+    );
+
+    Task<JsonDocument?> GetMunicipalitiesGeoJsonAsync(
+        string stateCode,
         CancellationToken cancellationToken = default
     );
 }

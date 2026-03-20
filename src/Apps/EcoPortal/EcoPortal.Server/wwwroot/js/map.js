@@ -304,11 +304,10 @@ window.orgSensorMap = {
             attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         }).addTo(map);
 
-        const markersLayer = L.featureGroup().addTo(map);
-
         this.instances.set(elementId, {
             map: map,
-            markersLayer: markersLayer,
+            municipalitiesLayer: null,
+            selectedMunicipalityId: null,
             dotNetRef: dotNetRef
         });
 
@@ -316,47 +315,108 @@ window.orgSensorMap = {
         setTimeout(() => map.invalidateSize(), 100);
     },
 
-    addSensors: function (elementId, sensors, navigateOnClick) {
+    addMunicipalities: function (elementId, geoJson) {
         const instance = this.instances.get(elementId);
         if (!instance) return;
 
-        instance.markersLayer.clearLayers();
+        // Remove existing layer if any
+        if (instance.municipalitiesLayer) {
+            instance.map.removeLayer(instance.municipalitiesLayer);
+        }
 
-        sensors.forEach(sensor => {
-            if (sensor.latitude === 0 && sensor.longitude === 0) return;
+        const self = this;
+        instance.municipalitiesLayer = L.geoJSON(geoJson, {
+            style: (feature) => self._getMunicipalityStyle(instance, feature, false),
+            onEachFeature: (feature, layer) => {
+                // Tooltip with municipality name
+                layer.bindTooltip(feature.properties.name, {
+                    permanent: false,
+                    direction: 'center',
+                    className: 'municipality-tooltip'
+                });
 
-            const marker = L.circleMarker([sensor.latitude, sensor.longitude], {
-                radius: 8,
-                fillColor: sensor.isActive ? '#4caf50' : '#9e9e9e',
-                color: '#fff',
-                weight: 2,
-                opacity: 1,
-                fillOpacity: 0.8
-            });
+                // Click handler
+                layer.on('click', (e) => {
+                    L.DomEvent.stopPropagation(e);
+                    self._onMunicipalityClick(elementId, feature, layer);
+                });
 
-            const popupContent = `
-                <div style="min-width: 180px;">
-                    <strong>${sensor.name}</strong><br/>
-                    <small style="color: #666;">ID: ${sensor.externalId}</small><br/>
-                    <small style="color: ${sensor.isActive ? '#4caf50' : '#9e9e9e'};">
-                        ● ${sensor.isActive ? 'Active' : 'Inactive'}
-                    </small>
-                    ${navigateOnClick ? `<br/><a href="/sensors/${sensor.id}" style="color: #1976d2; font-size: 12px;">View Details →</a>` : ''}
-                </div>
-            `;
-
-            marker.bindPopup(popupContent);
-            instance.markersLayer.addLayer(marker);
-        });
-
-        // Fit bounds if there are sensors
-        if (sensors.length > 0) {
-            const bounds = instance.markersLayer.getBounds();
-            if (bounds.isValid()) {
-                instance.map.fitBounds(bounds, { padding: [50, 50], maxZoom: 12 });
+                // Hover effects - make clickable with cursor and highlight
+                layer.on('mouseover', () => {
+                    layer.getElement().style.cursor = 'pointer';
+                    if (instance.selectedMunicipalityId !== feature.properties.id) {
+                        layer.setStyle({
+                            fillOpacity: 0.5,
+                            fillColor: '#bbdefb',
+                            weight: 2,
+                            color: '#1976d2'
+                        });
+                    }
+                });
+                layer.on('mouseout', () => {
+                    if (instance.selectedMunicipalityId !== feature.properties.id) {
+                        layer.setStyle(self._getMunicipalityStyle(instance, feature, false));
+                    }
+                });
             }
+        }).addTo(instance.map);
+    },
+
+    _getMunicipalityStyle: function (instance, feature, isSelected) {
+        if (isSelected || instance.selectedMunicipalityId === feature.properties.id) {
+            return {
+                fillColor: '#1976d2',
+                fillOpacity: 0.5,
+                color: '#1565c0',
+                weight: 3
+            };
+        }
+        return {
+            fillColor: '#e3f2fd',
+            fillOpacity: 0.4,
+            color: '#64b5f6',
+            weight: 2
+        };
+    },
+
+    _onMunicipalityClick: function (elementId, feature, layer) {
+        const instance = this.instances.get(elementId);
+        if (!instance || !instance.dotNetRef) return;
+
+        const clickedId = feature.properties.id;
+        const clickedName = feature.properties.name;
+
+        // Toggle selection
+        if (instance.selectedMunicipalityId === clickedId) {
+            // Deselect
+            instance.selectedMunicipalityId = null;
+            this._resetMunicipalityStyles(instance);
+            instance.dotNetRef.invokeMethodAsync('HandleMunicipalityCleared');
+        } else {
+            // Select new municipality
+            instance.selectedMunicipalityId = clickedId;
+            this._resetMunicipalityStyles(instance);
+            layer.setStyle(this._getMunicipalityStyle(instance, feature, true));
+            instance.dotNetRef.invokeMethodAsync('HandleMunicipalitySelected', clickedId, clickedName);
         }
     },
+
+    _resetMunicipalityStyles: function (instance) {
+        if (!instance.municipalitiesLayer) return;
+        const self = this;
+        instance.municipalitiesLayer.eachLayer((layer) => {
+            layer.setStyle(self._getMunicipalityStyle(instance, layer.feature, false));
+        });
+    },
+
+    clearMunicipalitySelection: function (elementId) {
+        const instance = this.instances.get(elementId);
+        if (!instance) return;
+
+        instance.selectedMunicipalityId = null;
+        this._resetMunicipalityStyles(instance);
+    },
+
 
     invalidateSize: function (elementId) {
         const instance = this.instances.get(elementId);

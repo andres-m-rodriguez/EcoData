@@ -1,0 +1,11 @@
+.map-detail-panel-loading {
+    padding: 16px;
+}
+
+.loading-item {
+    margin-bottom: 12px;
+}
+
+.loading-item:last-child {
+    margin-bottom: 0;
+}
