@@ -16,6 +16,7 @@
 @inject IDialogService DialogService
 @inject INavigationService Navigation
 @inject ISnackbar Snackbar
+@implements IAsyncDisposable
 
 <PageTitle>@(_sensor?.Name ?? "Sensor") - EcoData</PageTitle>
 
@@ -39,124 +40,221 @@
         }
         else
         {
-
-        <MudPaper Elevation="1" Class="pa-4 mb-4">
-            <MudStack Spacing="2">
-                <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center">
-                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
-                        <MudText Typo="Typo.h5">@_sensor.Name</MudText>
-                        <MudChip T="string" Color="@(_sensor.IsActive ? Color.Success : Color.Default)" Size="Size.Small">
-                            @(_sensor.IsActive ? "Active" : "Inactive")
-                        </MudChip>
-                    </MudStack>
-                    <RequireOrganizationPermission Permission="@SensorPermissions.Sensor.Update" OrganizationId="_sensor.OrganizationId">
-                        <MudStack Row="true" Spacing="1">
-                            <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary"
-                                           OnClick="NavigateToEdit" />
-                            <RequireOrganizationPermission Permission="@SensorPermissions.Sensor.Delete" OrganizationId="_sensor.OrganizationId">
-                                <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error"
-                                               OnClick="ConfirmDelete" />
-                            </RequireOrganizationPermission>
+            <MudPaper Elevation="1" Class="pa-4 mb-4">
+                <MudStack Spacing="2">
+                    <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center">
+                        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                            <MudText Typo="Typo.h5">@_sensor.Name</MudText>
+                            <MudChip T="string" Color="@(_sensor.IsActive ? Color.Success : Color.Default)" Size="Size.Small">
+                                @(_sensor.IsActive ? "Active" : "Inactive")
+                            </MudChip>
                         </MudStack>
-                    </RequireOrganizationPermission>
-                </MudStack>
-
-                <MudStack Row="true" Spacing="4" Class="mt-2">
-                    <MudStack Spacing="0">
-                        <MudText Typo="Typo.caption" Color="Color.Secondary">Coordinates</MudText>
-                        <MudText Typo="Typo.body2">@_sensor.Latitude.ToString("F4"), @_sensor.Longitude.ToString("F4")</MudText>
-                    </MudStack>
-                    <MudStack Spacing="0">
-                        <MudText Typo="Typo.caption" Color="Color.Secondary">Created</MudText>
-                        <MudText Typo="Typo.body2">@_sensor.CreatedAt.LocalDateTime.ToString("d")</MudText>
-                    </MudStack>
-                </MudStack>
-            </MudStack>
-        </MudPaper>
-
-        <MudPaper Elevation="1" Class="pa-4">
-            <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Class="mb-4">
-                <MudText Typo="Typo.h6">Readings</MudText>
-                <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.Refresh"
-                           OnClick="RefreshReadings">
-                    Refresh
-                </MudButton>
-            </MudStack>
-
-            <SearchHeader SearchSignal="SearchTextSignal" Placeholder="Search by parameter..."
-                          ShowFilterButton="true" HasActiveFilters="HasNonSearchFilters"
-                          OnFilterClick="OpenFilterDialog" />
-
-            <EcoDataVirtualizedList @ref="_virtualizedList" TItem="ReadingDtoForDetail" TParams="ReadingParameters"
-                                    ItemsProvider="GetReadingsAsync" ParametersBuilder="BuildParameters"
-                                    CursorSelector="reading => reading.Id" ItemSize="60" OverscanCount="3">
-                <LoadingTemplate>
-                    @for (var i = 0; i < 8; i++)
-                    {
-                        <MudStack Row Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Class="pa-3"
-                                  Style="border-bottom: 1px solid var(--mud-palette-lines-default);">
-                            <MudStack Spacing="1">
-                                <MudSkeleton Width="120px" Height="16px" />
-                                <MudSkeleton Width="80px" Height="12px" />
+                        <RequireOrganizationPermission Permission="@SensorPermissions.Sensor.Update" OrganizationId="_sensor.OrganizationId">
+                            <MudStack Row="true" Spacing="1">
+                                <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary"
+                                               OnClick="NavigateToEdit" />
+                                <RequireOrganizationPermission Permission="@SensorPermissions.Sensor.Delete" OrganizationId="_sensor.OrganizationId">
+                                    <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error"
+                                                   OnClick="ConfirmDelete" />
+                                </RequireOrganizationPermission>
                             </MudStack>
-                            <MudSkeleton Width="60px" Height="16px" />
+                        </RequireOrganizationPermission>
+                    </MudStack>
+
+                    <MudStack Row="true" Spacing="4" Class="mt-2">
+                        <MudStack Spacing="0">
+                            <MudText Typo="Typo.caption" Color="Color.Secondary">Coordinates</MudText>
+                            <MudText Typo="Typo.body2">@_sensor.Latitude.ToString("F4"), @_sensor.Longitude.ToString("F4")</MudText>
                         </MudStack>
+                        <MudStack Spacing="0">
+                            <MudText Typo="Typo.caption" Color="Color.Secondary">Created</MudText>
+                            <MudText Typo="Typo.body2">@_sensor.CreatedAt.LocalDateTime.ToString("d")</MudText>
+                        </MudStack>
+                    </MudStack>
+                </MudStack>
+            </MudPaper>
+
+            <MudPaper Elevation="1" Class="pa-4">
+                <Tabs ActiveIndex="_activeTab" ActiveIndexChanged="OnTabChanged">
+                    <Tab Title="History" Icon="@Icons.Material.Filled.History" />
+                    <Tab Title="Live" Icon="@Icons.Material.Filled.Stream" Badge="@(_liveConnected ? "●" : null)" />
+                </Tabs>
+
+                @if (_activeTab == 0)
+                {
+                    <MudStack Row="true" Justify="Justify.FlexEnd" Class="mb-2">
+                        <MudButton Variant="Variant.Text" StartIcon="@Icons.Material.Filled.Refresh"
+                                   OnClick="RefreshReadings" Size="Size.Small">
+                            Refresh
+                        </MudButton>
+                    </MudStack>
+
+                    <SearchHeader SearchSignal="SearchTextSignal" Placeholder="Search by parameter..."
+                                  ShowFilterButton="true" HasActiveFilters="HasNonSearchFilters"
+                                  OnFilterClick="OpenFilterDialog" />
+
+                    <EcoDataVirtualizedList @ref="_virtualizedList" TItem="ReadingDtoForDetail" TParams="ReadingParameters"
+                                            ItemsProvider="GetReadingsAsync" ParametersBuilder="BuildParameters"
+                                            CursorSelector="reading => reading.Id" ItemSize="60" OverscanCount="3">
+                        <LoadingTemplate>
+                            @for (var i = 0; i < 8; i++)
+                            {
+                                <MudStack Row Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Class="pa-3"
+                                          Style="border-bottom: 1px solid var(--mud-palette-lines-default);">
+                                    <MudStack Spacing="1">
+                                        <MudSkeleton Width="120px" Height="16px" />
+                                        <MudSkeleton Width="80px" Height="12px" />
+                                    </MudStack>
+                                    <MudSkeleton Width="60px" Height="16px" />
+                                </MudStack>
+                            }
+                        </LoadingTemplate>
+                        <EmptyTemplate>
+                            @if (HasActiveFilters)
+                            {
+                                <MudStack AlignItems="AlignItems.Center" Class="pa-8">
+                                    <MudIcon Icon="@Icons.Material.Filled.SearchOff" Size="Size.Large" Color="Color.Secondary" />
+                                    <MudText Typo="Typo.h6" Color="Color.Secondary" Class="mt-2">No readings found</MudText>
+                                    <MudText Typo="Typo.body2" Color="Color.Secondary">
+                                        No readings match your current filter criteria.
+                                    </MudText>
+                                    <MudButton Variant="Variant.Outlined" Color="Color.Primary"
+                                               StartIcon="@Icons.Material.Filled.FilterAltOff" OnClick="ClearFilters" Class="mt-3">
+                                        Clear Filters
+                                    </MudButton>
+                                </MudStack>
+                            }
+                            else
+                            {
+                                <MudStack AlignItems="AlignItems.Center" Class="pa-8">
+                                    <MudIcon Icon="@Icons.Material.Filled.Assessment" Size="Size.Large" Color="Color.Secondary" />
+                                    <MudText Typo="Typo.h6" Color="Color.Secondary" Class="mt-2">No readings yet</MudText>
+                                    <MudText Typo="Typo.body2" Color="Color.Secondary">
+                                        Readings will appear here once the sensor starts reporting data.
+                                    </MudText>
+                                </MudStack>
+                            }
+                        </EmptyTemplate>
+                        <ItemTemplate Context="reading">
+                            <ReadingListItem Reading="reading" />
+                        </ItemTemplate>
+                        <PlaceholderTemplate>
+                            <MudStack Row Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Class="pa-3"
+                                      Style="border-bottom: 1px solid var(--mud-palette-lines-default);">
+                                <MudStack Spacing="1">
+                                    <MudSkeleton Width="120px" Height="16px" />
+                                    <MudSkeleton Width="80px" Height="12px" />
+                                </MudStack>
+                                <MudSkeleton Width="60px" Height="16px" />
+                            </MudStack>
+                        </PlaceholderTemplate>
+                    </EcoDataVirtualizedList>
+                }
+                else
+                {
+                    @if (_liveReconnecting)
+                    {
+                        <MudAlert Severity="Severity.Warning" Dense="true" Class="mb-3">
+                            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                                <MudProgressCircular Size="Size.Small" Indeterminate="true" />
+                                <MudText Typo="Typo.body2">Reconnecting...</MudText>
+                            </MudStack>
+                        </MudAlert>
                     }
-                </LoadingTemplate>
-                <EmptyTemplate>
-                    @if (HasActiveFilters)
+
+                    @if (!_liveConnected && !_liveReconnecting && _liveReadings.Count == 0)
                     {
                         <MudStack AlignItems="AlignItems.Center" Class="pa-8">
-                            <MudIcon Icon="@Icons.Material.Filled.SearchOff" Size="Size.Large" Color="Color.Secondary" />
-                            <MudText Typo="Typo.h6" Color="Color.Secondary" Class="mt-2">No readings found</MudText>
+                            <MudProgressCircular Size="Size.Medium" Indeterminate="true" Color="Color.Primary" />
+                            <MudText Typo="Typo.h6" Color="Color.Secondary" Class="mt-4">Connecting...</MudText>
+                        </MudStack>
+                    }
+                    else if (_liveReadings.Count == 0)
+                    {
+                        <MudStack AlignItems="AlignItems.Center" Class="pa-8">
+                            <MudIcon Icon="@Icons.Material.Filled.Sensors" Size="Size.Large" Color="Color.Primary"
+                                     Class="pulse-icon" />
+                            <MudText Typo="Typo.h6" Color="Color.Secondary" Class="mt-4">Waiting for readings...</MudText>
                             <MudText Typo="Typo.body2" Color="Color.Secondary">
-                                No readings match your current filter criteria.
+                                New readings will appear here in real-time.
                             </MudText>
-                            <MudButton Variant="Variant.Outlined" Color="Color.Primary"
-                                       StartIcon="@Icons.Material.Filled.FilterAltOff" OnClick="ClearFilters" Class="mt-3">
-                                Clear Filters
-                            </MudButton>
                         </MudStack>
                     }
                     else
                     {
-                        <MudStack AlignItems="AlignItems.Center" Class="pa-8">
-                            <MudIcon Icon="@Icons.Material.Filled.Assessment" Size="Size.Large" Color="Color.Secondary" />
-                            <MudText Typo="Typo.h6" Color="Color.Secondary" Class="mt-2">No readings yet</MudText>
-                            <MudText Typo="Typo.body2" Color="Color.Secondary">
-                                Readings will appear here once the sensor starts reporting data.
-                            </MudText>
-                        </MudStack>
+                        <div class="live-readings-list">
+                            @foreach (var (reading, index) in _liveReadings.Select((r, i) => (r, i)))
+                            {
+                                <div class="live-reading-item @(index == 0 ? "new" : "")">
+                                    <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center">
+                                        <MudStack Spacing="0">
+                                            <MudText Typo="Typo.body1" Style="font-weight: 500;">@reading.Parameter</MudText>
+                                            <MudText Typo="Typo.caption" Color="Color.Secondary">
+                                                @reading.RecordedAt.LocalDateTime.ToString("HH:mm:ss")
+                                            </MudText>
+                                        </MudStack>
+                                        <MudText Typo="Typo.h6" Color="Color.Primary">
+                                            @reading.Value.ToString("F2") <span style="font-size: 0.75em; font-weight: normal;">@reading.Unit</span>
+                                        </MudText>
+                                    </MudStack>
+                                </div>
+                            }
+                        </div>
                     }
-                </EmptyTemplate>
-                <ItemTemplate Context="reading">
-                    <ReadingListItem Reading="reading" />
-                </ItemTemplate>
-                <PlaceholderTemplate>
-                    <MudStack Row Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Class="pa-3"
-                              Style="border-bottom: 1px solid var(--mud-palette-lines-default);">
-                        <MudStack Spacing="1">
-                            <MudSkeleton Width="120px" Height="16px" />
-                            <MudSkeleton Width="80px" Height="12px" />
-                        </MudStack>
-                        <MudSkeleton Width="60px" Height="16px" />
-                    </MudStack>
-                </PlaceholderTemplate>
-            </EcoDataVirtualizedList>
-        </MudPaper>
+                }
+            </MudPaper>
         }
     </ChildContent>
 </EcoDataPageLayout>
+
+<style>
+    .pulse-icon {
+        animation: pulse-icon 2s ease-in-out infinite;
+    }
+
+    @@keyframes pulse-icon {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.4; }
+    }
+
+    .live-readings-list {
+        max-height: 500px;
+        overflow-y: auto;
+    }
+
+    .live-reading-item {
+        padding: 12px 0;
+        border-bottom: 1px solid var(--mud-palette-lines-default);
+        transition: background-color 0.3s ease;
+    }
+
+    .live-reading-item.new {
+        animation: highlight-new 1.5s ease;
+    }
+
+    @@keyframes highlight-new {
+        0% { background-color: var(--mud-palette-primary-lighten); }
+        100% { background-color: transparent; }
+    }
+</style>
 
 @code {
     private EcoDataVirtualizedList<ReadingDtoForDetail, ReadingParameters>? _virtualizedList;
     private SensorDtoForDetail? _sensor;
     private IReadOnlyList<string> _availableParameters = [];
     private bool _loading = true;
+    private int _activeTab;
 
     private string? _parameterFilter;
     private DateTime? _fromDate;
     private DateTime? _toDate;
+
+    // Live readings state
+    private readonly List<ReadingDtoForCreate> _liveReadings = new();
+    private CancellationTokenSource? _liveCts;
+    private bool _liveConnected;
+    private bool _liveReconnecting;
+    private const int MaxLiveReadings = 100;
 
     [Signal]
     private string? _searchText;
@@ -179,6 +277,86 @@
         }
 
         _loading = false;
+    }
+
+    private async Task OnTabChanged(int index)
+    {
+        _activeTab = index;
+
+        if (index == 1)
+        {
+            await StartLiveStream();
+        }
+        else
+        {
+            await StopLiveStream();
+        }
+    }
+
+    private async Task StartLiveStream()
+    {
+        await StopLiveStream();
+
+        _liveCts = new CancellationTokenSource();
+        _ = SubscribeToLiveReadingsAsync(_liveCts.Token);
+    }
+
+    private async Task StopLiveStream()
+    {
+        if (_liveCts is not null)
+        {
+            await _liveCts.CancelAsync();
+            _liveCts.Dispose();
+            _liveCts = null;
+        }
+
+        _liveConnected = false;
+        _liveReconnecting = false;
+    }
+
+    private async Task SubscribeToLiveReadingsAsync(CancellationToken ct)
+    {
+        while (!ct.IsCancellationRequested)
+        {
+            try
+            {
+                _liveConnected = true;
+                _liveReconnecting = false;
+                await InvokeAsync(StateHasChanged);
+
+                await foreach (var reading in ReadingClient.SubscribeToReadingsAsync(SensorId, ct))
+                {
+                    _liveReadings.Insert(0, reading);
+
+                    if (_liveReadings.Count > MaxLiveReadings)
+                    {
+                        _liveReadings.RemoveAt(_liveReadings.Count - 1);
+                    }
+
+                    await InvokeAsync(StateHasChanged);
+                }
+            }
+            catch (OperationCanceledException)
+            {
+                break;
+            }
+            catch (Exception)
+            {
+                _liveConnected = false;
+                _liveReconnecting = true;
+                await InvokeAsync(StateHasChanged);
+
+                // Wait before reconnecting
+                try
+                {
+                    await Task.Delay(3000, ct);
+                }
+                catch (OperationCanceledException)
+                {
+                    break;
+                }
+            }
+        }
     }
 
     private async Task OpenFilterDialog()
@@ -272,5 +450,10 @@
                 error => Snackbar.Add(error.Message, Severity.Error)
             );
         }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        await StopLiveStream();
     }
 }
