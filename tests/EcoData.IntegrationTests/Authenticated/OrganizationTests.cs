@@ -1,12 +1,20 @@
 using EcoData.IntegrationTests.Bases;
+using EcoData.IntegrationTests.Stores;
+using EcoData.Organization.Application.Client;
 using EcoData.Organization.Contracts.Dtos;
+using EcoData.Sensors.Application.Client;
 using EcoData.Sensors.Contracts.Requests;
+using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 
 namespace EcoData.IntegrationTests.Authenticated;
 
 public sealed class OrganizationTests(EcoDataTestFixture fixture) : AuthenticatedTestBase(fixture)
 {
+    private IOrganizationHttpClient OrganizationHttpClient => Services.GetRequiredService<IOrganizationHttpClient>();
+    private ISensorHttpClient SensorHttpClient => Services.GetRequiredService<ISensorHttpClient>();
+    private LocationsTestStore Locations => Services.GetRequiredService<LocationsTestStore>();
+
     [Fact]
     public async Task DeleteOrganization_WithSensors_ReturnsConflict()
     {

@@ -1,5 +1,3 @@
-using System.Net.ServerSentEvents;
-using System.Runtime.CompilerServices;
 using EcoData.Common.Messaging;
 using EcoData.Sensors.Contracts;
 using EcoData.Sensors.Contracts.Dtos;
@@ -86,18 +84,24 @@ public static class SensorReadingEndpoints
                         var result = validator.Validate(reading);
                         if (!result.IsValid)
                         {
-                            errors.AddRange(result.Errors.Select(e => $"'{reading.Parameter}': {e.ErrorMessage}"));
+                            errors.AddRange(
+                                result.Errors.Select(e =>
+                                    $"'{reading.Parameter}': {e.ErrorMessage}"
+                                )
+                            );
                             continue;
                         }
 
-                        validReadings.Add(new ReadingDtoForCreate(
-                            sensorId,
-                            reading.Parameter,
-                            reading.Description,
-                            reading.Value,
-                            reading.Unit,
-                            reading.RecordedAt
-                        ));
+                        validReadings.Add(
+                            new ReadingDtoForCreate(
+                                sensorId,
+                                reading.Parameter,
+                                reading.Description,
+                                reading.Value,
+                                reading.Unit,
+                                reading.RecordedAt
+                            )
+                        );
                     }
 
                     if (validReadings.Count > 0)
@@ -116,7 +120,12 @@ public static class SensorReadingEndpoints
                     }
 
                     return TypedResults.Ok(
-                        new ReadingBatchResult(batch.Readings.Count, validReadings.Count, errors.Count, errors)
+                        new ReadingBatchResult(
+                            batch.Readings.Count,
+                            validReadings.Count,
+                            errors.Count,
+                            errors
+                        )
                     );
                 }
             )
@@ -128,14 +137,9 @@ public static class SensorReadingEndpoints
         return app;
     }
 
-    private static async IAsyncEnumerable<SseItem<ReadingDtoForCreate>> StreamReadingsAsync(
+    private static IAsyncEnumerable<ReadingDtoForCreate> StreamReadingsAsync(
         IMessageBroker<ReadingDtoForCreate> messageBroker,
         string topic,
-        [EnumeratorCancellation] CancellationToken ct)
-    {
-        await foreach (var reading in messageBroker.SubscribeAsync(topic, ct))
-        {
-            yield return new SseItem<ReadingDtoForCreate>(reading);
-        }
-    }
+        CancellationToken ct
+    ) => messageBroker.SubscribeAsync(topic, ct);
 }

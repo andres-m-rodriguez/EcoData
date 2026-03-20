@@ -13,6 +13,8 @@ namespace EcoData.Sensors.Application.Client;
 
 public sealed class SensorReadingHttpClient(HttpClient httpClient) : ISensorReadingHttpClient
 {
+    private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
+
     public IAsyncEnumerable<ReadingDtoForDetail> GetReadingsAsync(
         Guid sensorId,
         ReadingParameters parameters,
@@ -116,7 +118,7 @@ public sealed class SensorReadingHttpClient(HttpClient httpClient) : ISensorRead
         await using var stream = await response.Content.ReadAsStreamAsync(cancellationToken);
 
         await foreach (var item in SseParser.Create(stream,
-            (_, data) => JsonSerializer.Deserialize<ReadingDtoForCreate>(data)).EnumerateAsync(cancellationToken))
+            (_, bytes) => JsonSerializer.Deserialize<ReadingDtoForCreate>(bytes, JsonOptions)).EnumerateAsync(cancellationToken))
         {
             if (item.Data is not null)
                 yield return item.Data;
