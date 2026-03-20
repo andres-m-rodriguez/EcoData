@@ -1,5 +1,3 @@
-using Aspire.Hosting;
-using Aspire.Hosting.ApplicationModel;
 using EcoData.IntegrationTests.Stores;
 using EcoData.Locations.Database;
 using EcoData.Organization.Database;
@@ -8,35 +6,25 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace EcoData.IntegrationTests;
 
-public static class TestSeeder
+public sealed class TestSeeder(IServiceProvider services)
 {
     private const string TestOrgName = "Test Org";
 
-    public static async Task<(
+    public async Task<(
         OrganizationsTestStore Organizations,
         LocationsTestStore Locations
-    )> SeedAsync(DistributedApplication app, CancellationToken ct = default)
+    )> SeedAsync(CancellationToken ct = default)
     {
-        var organizationConnStr = await GetConnectionStringAsync(app, "organization", ct);
-        var locationsConnStr = await GetConnectionStringAsync(app, "locations", ct);
-
-        var organizations = await SeedOrganizationAsync(organizationConnStr!, ct);
-        var locations = await SeedLocationsAsync(locationsConnStr!, ct);
+        var organizations = await SeedOrganizationAsync(ct);
+        var locations = await SeedLocationsAsync(ct);
 
         return (organizations, locations);
     }
 
-    private static async Task<OrganizationsTestStore> SeedOrganizationAsync(
-        string connectionString,
-        CancellationToken ct
-    )
+    private async Task<OrganizationsTestStore> SeedOrganizationAsync(CancellationToken ct)
     {
-        var options = new DbContextOptionsBuilder<OrganizationDbContext>()
-            .UseNpgsql(connectionString)
-            .UseSnakeCaseNamingConvention()
-            .Options;
-
-        await using var context = new OrganizationDbContext(options);
+        await using var scope = services.CreateAsyncScope();
+        var context = scope.ServiceProvider.GetRequiredService<OrganizationDbContext>();
 
         var existingOrg = await context.Organizations.FirstOrDefaultAsync(
             o => o.Name == TestOrgName,
@@ -48,7 +36,7 @@ public static class TestSeeder
 
         var org = new EcoData.Organization.Database.Models.Organization
         {
-            Id = Guid.NewGuid(),
+            Id = Guid.CreateVersion7(),
             Name = TestOrgName,
             ProfilePictureUrl = null,
             CardPictureUrl = null,
@@ -64,17 +52,10 @@ public static class TestSeeder
         return new OrganizationsTestStore(org.Id, TestOrgName);
     }
 
-    private static async Task<LocationsTestStore> SeedLocationsAsync(
-        string connectionString,
-        CancellationToken ct
-    )
+    private async Task<LocationsTestStore> SeedLocationsAsync(CancellationToken ct)
     {
-        var options = new DbContextOptionsBuilder<LocationsDbContext>()
-            .UseNpgsql(connectionString)
-            .UseSnakeCaseNamingConvention()
-            .Options;
-
-        await using var context = new LocationsDbContext(options);
+        await using var scope = services.CreateAsyncScope();
+        var context = scope.ServiceProvider.GetRequiredService<LocationsDbContext>();
 
         var municipality = await context.Municipalities.FirstAsync(ct);
 
@@ -83,24 +64,5 @@ public static class TestSeeder
             municipality.CentroidLatitude,
             municipality.CentroidLongitude
         );
-    }
-
-    private static async Task<string?> GetConnectionStringAsync(
-        DistributedApplication app,
-        string resourceName,
-        CancellationToken ct
-    )
-    {
-        var model = app.Services.GetRequiredService<DistributedApplicationModel>();
-        var resource =
-            model.Resources.SingleOrDefault(r => r.Name == resourceName)
-            ?? throw new InvalidOperationException($"Resource '{resourceName}' not found.");
-
-        if (resource is not IResourceWithConnectionString connStrResource)
-            throw new InvalidOperationException(
-                $"Resource '{resourceName}' does not expose a connection string."
-            );
-
-        return await connStrResource.GetConnectionStringAsync(ct);
     }
 }
