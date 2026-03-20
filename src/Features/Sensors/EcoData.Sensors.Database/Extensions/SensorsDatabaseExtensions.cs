@@ -29,6 +29,7 @@ public static class SensorsDatabaseExtensions
         {
             npgsqlOptions.MigrationsAssembly("EcoData.Sensors.Database");
             npgsqlOptions.MigrationsHistoryTable("__ef_migrations_history", "public");
+            npgsqlOptions.UseNetTopologySuite();
         });
         options.UseSnakeCaseNamingConvention();
         options.UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking);

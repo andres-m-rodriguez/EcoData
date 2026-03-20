@@ -1,4 +1,5 @@
 using System.Net.Http.Json;
+using System.Text.Json;
 using EcoData.Common.Http.Helpers;
 using EcoData.Locations.Contracts.Dtos;
 using EcoData.Locations.Contracts.Parameters;
@@ -81,5 +82,23 @@ public sealed class LocationHttpClient(HttpClient httpClient) : ILocationHttpCli
         }
 
         return await response.Content.ReadFromJsonAsync<MunicipalityDtoForDetail>(cancellationToken);
+    }
+
+    public async Task<JsonDocument?> GetMunicipalitiesGeoJsonAsync(
+        string stateCode,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var response = await httpClient.GetAsync(
+            $"api/municipalities/geojson/state/{stateCode}",
+            cancellationToken
+        );
+
+        if (!response.IsSuccessStatusCode)
+        {
+            return null;
+        }
+
+        return await response.Content.ReadFromJsonAsync<JsonDocument>(cancellationToken);
     }
 }

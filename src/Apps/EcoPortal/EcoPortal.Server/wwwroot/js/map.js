@@ -286,3 +286,150 @@ window.sensorMap = {
         }
     }
 };
+
+// Organization Sensor Map - for displaying sensors within an organization with fullscreen support
+window.orgSensorMap = {
+    instances: new Map(),
+
+    init: function (elementId, dotNetRef) {
+        // Dispose existing instance if any
+        if (this.instances.has(elementId)) {
+            this.dispose(elementId);
+        }
+
+        // Center on Puerto Rico
+        const map = L.map(elementId).setView([18.2208, -66.5901], 9);
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+
+        this.instances.set(elementId, {
+            map: map,
+            municipalitiesLayer: null,
+            selectedMunicipalityId: null,
+            dotNetRef: dotNetRef
+        });
+
+        // Invalidate size after rendering
+        setTimeout(() => map.invalidateSize(), 100);
+    },
+
+    addMunicipalities: function (elementId, geoJson) {
+        const instance = this.instances.get(elementId);
+        if (!instance) return;
+
+        // Remove existing layer if any
+        if (instance.municipalitiesLayer) {
+            instance.map.removeLayer(instance.municipalitiesLayer);
+        }
+
+        const self = this;
+        instance.municipalitiesLayer = L.geoJSON(geoJson, {
+            style: (feature) => self._getMunicipalityStyle(instance, feature, false),
+            onEachFeature: (feature, layer) => {
+                // Tooltip with municipality name
+                layer.bindTooltip(feature.properties.name, {
+                    permanent: false,
+                    direction: 'center',
+                    className: 'municipality-tooltip'
+                });
+
+                // Click handler
+                layer.on('click', (e) => {
+                    L.DomEvent.stopPropagation(e);
+                    self._onMunicipalityClick(elementId, feature, layer);
+                });
+
+                // Hover effects - make clickable with cursor and highlight
+                layer.on('mouseover', () => {
+                    layer.getElement().style.cursor = 'pointer';
+                    if (instance.selectedMunicipalityId !== feature.properties.id) {
+                        layer.setStyle({
+                            fillOpacity: 0.5,
+                            fillColor: '#bbdefb',
+                            weight: 2,
+                            color: '#1976d2'
+                        });
+                    }
+                });
+                layer.on('mouseout', () => {
+                    if (instance.selectedMunicipalityId !== feature.properties.id) {
+                        layer.setStyle(self._getMunicipalityStyle(instance, feature, false));
+                    }
+                });
+            }
+        }).addTo(instance.map);
+    },
+
+    _getMunicipalityStyle: function (instance, feature, isSelected) {
+        if (isSelected || instance.selectedMunicipalityId === feature.properties.id) {
+            return {
+                fillColor: '#1976d2',
+                fillOpacity: 0.5,
+                color: '#1565c0',
+                weight: 3
+            };
+        }
+        return {
+            fillColor: '#e3f2fd',
+            fillOpacity: 0.4,
+            color: '#64b5f6',
+            weight: 2
+        };
+    },
+
+    _onMunicipalityClick: function (elementId, feature, layer) {
+        const instance = this.instances.get(elementId);
+        if (!instance || !instance.dotNetRef) return;
+
+        const clickedId = feature.properties.id;
+        const clickedName = feature.properties.name;
+
+        // Toggle selection
+        if (instance.selectedMunicipalityId === clickedId) {
+            // Deselect
+            instance.selectedMunicipalityId = null;
+            this._resetMunicipalityStyles(instance);
+            instance.dotNetRef.invokeMethodAsync('HandleMunicipalityCleared');
+        } else {
+            // Select new municipality
+            instance.selectedMunicipalityId = clickedId;
+            this._resetMunicipalityStyles(instance);
+            layer.setStyle(this._getMunicipalityStyle(instance, feature, true));
+            instance.dotNetRef.invokeMethodAsync('HandleMunicipalitySelected', clickedId, clickedName);
+        }
+    },
+
+    _resetMunicipalityStyles: function (instance) {
+        if (!instance.municipalitiesLayer) return;
+        const self = this;
+        instance.municipalitiesLayer.eachLayer((layer) => {
+            layer.setStyle(self._getMunicipalityStyle(instance, layer.feature, false));
+        });
+    },
+
+    clearMunicipalitySelection: function (elementId) {
+        const instance = this.instances.get(elementId);
+        if (!instance) return;
+
+        instance.selectedMunicipalityId = null;
+        this._resetMunicipalityStyles(instance);
+    },
+
+
+    invalidateSize: function (elementId) {
+        const instance = this.instances.get(elementId);
+        if (!instance) return;
+
+        instance.map.invalidateSize();
+    },
+
+    dispose: function (elementId) {
+        const instance = this.instances.get(elementId);
+        if (!instance) return;
+
+        instance.map.remove();
+        this.instances.delete(elementId);
+    }
+};
