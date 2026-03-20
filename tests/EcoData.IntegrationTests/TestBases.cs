@@ -1,5 +1,6 @@
 using EcoData.Identity.Application.Client.HttpClients;
 using EcoData.Identity.Contracts.Requests;
+using EcoData.Identity.Contracts.Responses;
 using EcoData.Organization.Application.Client;
 using EcoData.Sensors.Application.Client;
 using Xunit;
@@ -32,14 +33,9 @@ public abstract class AnonymousTestBase
 /// Automatically logs in as admin before each test.
 /// </summary>
 [Collection(EcoDataTestCollection.Name)]
-public abstract class AuthenticatedTestBase : IAsyncLifetime
+public abstract class AuthenticatedTestBase(EcoDataTestFixture fixture) : IAsyncLifetime
 {
-    protected readonly EcoDataTestFixture Fixture;
-
-    protected AuthenticatedTestBase(EcoDataTestFixture fixture)
-    {
-        Fixture = fixture;
-    }
+    protected readonly EcoDataTestFixture Fixture = fixture;
 
     protected HttpClient HttpClient => Fixture.HttpClient;
     protected IAuthHttpClient AuthHttpClient => Fixture.AuthHttpClient;
@@ -47,6 +43,8 @@ public abstract class AuthenticatedTestBase : IAsyncLifetime
     protected ISensorHttpClient SensorHttpClient => Fixture.SensorHttpClient;
     protected ISensorHealthHttpClient SensorHealthHttpClient => Fixture.SensorHealthHttpClient;
     protected IDeviceFactory DeviceFactory => Fixture.DeviceFactory;
+
+    protected UserInfo CurrentUser { get; private set; } = null!;
 
     public async Task InitializeAsync()
     {
@@ -58,6 +56,8 @@ public abstract class AuthenticatedTestBase : IAsyncLifetime
         {
             throw new InvalidOperationException("Failed to authenticate for test setup");
         }
+
+        CurrentUser = result.AsT0;
     }
 
     public Task DisposeAsync() => Task.CompletedTask;
