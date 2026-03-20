@@ -58,6 +58,9 @@
     <Project Path="src/Features/Identity/EcoData.Identity.Application.Server/EcoData.Identity.Application.Server.csproj" />
     <Project Path="src/Features/Identity/EcoData.Identity.Contracts/EcoData.Identity.Contracts.csproj" />
   </Folder>
+  <Folder Name="/src/Features/Locations/">
+    <Project Path="src/Features/Locations/EcoData.Locations.Helpers/EcoData.Locations.Helpers.csproj" />
+  </Folder>
   <Folder Name="/src/Features/Organization/">
     <Project Path="src/Features/Organization/EcoData.Organization.Application.Server/EcoData.Organization.Application.Server.csproj" />
     <Project Path="src/Features/Organization/EcoData.Organization.Contracts/EcoData.Organization.Contracts.csproj" />
