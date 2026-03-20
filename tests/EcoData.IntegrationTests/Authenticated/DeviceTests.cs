@@ -1,42 +1,44 @@
-using EcoData.Organization.Contracts.Parameters;
+using EcoData.IntegrationTests.Bases;
+using EcoData.IntegrationTests.Devices;
+using EcoData.IntegrationTests.Stores;
+using EcoData.Sensors.Application.Client;
 using EcoData.Sensors.Contracts.Dtos;
 using EcoData.Sensors.Contracts.Requests;
+using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 
 namespace EcoData.IntegrationTests.Authenticated;
 
 public sealed class DeviceTests(EcoDataTestFixture fixture) : AuthenticatedTestBase(fixture)
 {
+    private ISensorHttpClient SensorHttpClient => Services.GetRequiredService<ISensorHttpClient>();
+    private IDeviceFactory DeviceFactory => Services.GetRequiredService<IDeviceFactory>();
+    private OrganizationsTestStore Organizations =>
+        Services.GetRequiredService<OrganizationsTestStore>();
+    private LocationsTestStore Locations => Services.GetRequiredService<LocationsTestStore>();
+
     [Fact]
     public async Task Device_CanRegisterAndPushReadings()
     {
-        // Get or create test organization
-        var existingOrg = await OrganizationHttpClient
-            .GetOrganizationsAsync(new OrganizationParameters(PageSize: 1, Search: "Test Org"))
-            .FirstOrDefaultAsync();
-
-        var orgId =
-            existingOrg?.Id
-            ?? (await OrganizationHttpClient.CreateAsync(new("Test Org", null, null))).AsT0.Id;
-
-        // Create device and register
-        var device = DeviceFactory.CreateEsp32Device();
-
-        var registration = await device.RegisterAsync(
+        var registration = await SensorHttpClient.RegisterAsync(
             new RegisterSensorRequest(
-                OrganizationId: orgId,
-                OrganizationName: "Test Org",
-                Name: "Test Sensor",
+                OrganizationId: Organizations.OrganizationId,
+                OrganizationName: Organizations.OrganizationName,
+                Name: $"Test-Sensor-{Guid.NewGuid().ToString("N")[..8]}",
                 ExternalId: Guid.NewGuid().ToString(),
-                Latitude: 0,
-                Longitude: 0,
-                MunicipalityId: Guid.Empty
+                Latitude: Locations.Latitude,
+                Longitude: Locations.Longitude,
+                MunicipalityId: Locations.MunicipalityId
             )
         );
-        Assert.NotNull(registration);
-        Assert.True(device.IsAuthenticated);
+        Assert.True(registration.IsT0, "Sensor registration failed");
+        var credentials = registration.AsT0;
 
-        // Push readings
+        using var device = DeviceFactory.CreateEsp32Device(
+            credentials.SensorId,
+            credentials.AccessToken
+        );
+
         var reading = new SensorReadingDto(Temperature: 25.5, Ph: 7.2, DissolvedOxygen: 8.0);
         await device.SendSensorDataAsync(reading);
     }

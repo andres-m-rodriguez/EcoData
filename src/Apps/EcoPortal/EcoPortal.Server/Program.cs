@@ -1,3 +1,4 @@
+using EcoData.Common.Messaging;
 using EcoData.Identity.Api.Authentication;
 using EcoData.Identity.Api.Endpoints;
 using EcoData.Identity.Api.RateLimiting;
@@ -13,6 +14,7 @@ using EcoData.Organization.Api.Authorization;
 using EcoData.Organization.DataAccess;
 using EcoData.Organization.Database.Extensions;
 using EcoData.Sensors.Api;
+using EcoData.Sensors.Contracts.Dtos;
 using EcoData.Sensors.DataAccess;
 using EcoData.Sensors.Database.Extensions;
 using EcoPortal.Server.Components;
@@ -35,6 +37,7 @@ builder.Services.AddIdentityApplication(builder.Configuration);
 builder.Services.AddLocationsDataAccess();
 builder.Services.AddOrganizationDataAccess();
 builder.Services.AddSensorsDataAccess();
+builder.Services.AddInMemoryMessageBroker<ReadingDtoForCreate>();
 
 builder
     .Services.AddAuthentication(options =>
