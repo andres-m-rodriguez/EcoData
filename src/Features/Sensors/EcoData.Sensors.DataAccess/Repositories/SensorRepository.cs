@@ -1,4 +1,5 @@
 using System.Runtime.CompilerServices;
+using EcoData.Locations.Helpers;
 using EcoData.Sensors.Contracts.Dtos;
 using EcoData.Sensors.Contracts.Errors;
 using EcoData.Sensors.Contracts.Parameters;
@@ -45,6 +46,7 @@ public sealed class SensorRepository(IDbContextFactory<SensorsDbContext> context
             Name = request.Name,
             Latitude = request.Latitude,
             Longitude = request.Longitude,
+            Location = GeometryHelpers.CreatePoint(request.Latitude, request.Longitude),
             MunicipalityId = request.MunicipalityId,
             IsActive = true,
             ReportingMode = ReportingMode.Push,
@@ -177,6 +179,11 @@ public sealed class SensorRepository(IDbContextFactory<SensorsDbContext> context
             query = query.Where(s => s.Name.ToLower().Contains(search));
         }
 
+        if (parameters.MunicipalityId.HasValue)
+        {
+            query = query.Where(s => s.MunicipalityId == parameters.MunicipalityId.Value);
+        }
+
         if (parameters.Cursor.HasValue)
         {
             query = query.Where(s => s.Id > parameters.Cursor.Value);
@@ -236,6 +243,11 @@ public sealed class SensorRepository(IDbContextFactory<SensorsDbContext> context
             query = query.Where(s => s.Name.ToLower().Contains(search));
         }
 
+        if (parameters.MunicipalityId.HasValue)
+        {
+            query = query.Where(s => s.MunicipalityId == parameters.MunicipalityId.Value);
+        }
+
         if (parameters.Cursor.HasValue)
         {
             query = query.Where(s => s.Id > parameters.Cursor.Value);
@@ -283,6 +295,7 @@ public sealed class SensorRepository(IDbContextFactory<SensorsDbContext> context
                 Name = dto.Name,
                 Latitude = dto.Latitude,
                 Longitude = dto.Longitude,
+                Location = GeometryHelpers.CreatePoint(dto.Latitude, dto.Longitude),
                 MunicipalityId = dto.MunicipalityId,
                 IsActive = dto.IsActive,
                 ReportingMode = ReportingMode.Pull,
@@ -316,6 +329,7 @@ public sealed class SensorRepository(IDbContextFactory<SensorsDbContext> context
         entity.Name = dto.Name;
         entity.Latitude = dto.Latitude;
         entity.Longitude = dto.Longitude;
+        entity.Location = GeometryHelpers.CreatePoint(dto.Latitude, dto.Longitude);
         entity.MunicipalityId = dto.MunicipalityId;
         entity.IsActive = dto.IsActive;
         entity.UpdatedAt = DateTimeOffset.UtcNow;
@@ -395,4 +409,5 @@ public sealed class SensorRepository(IDbContextFactory<SensorsDbContext> context
             yield return sensor;
         }
     }
+
 }

@@ -53,6 +53,7 @@ public sealed class SensorHttpClient(HttpClient httpClient) : ISensorHttpClient
             .Add("isActive", parameters.IsActive)
             .Add("dataSourceId", parameters.DataSourceId)
             .Add("organizationId", parameters.OrganizationId)
+            .Add("municipalityId", parameters.MunicipalityId)
             .Build();
 
         return httpClient.GetFromJsonAsAsyncEnumerable<SensorDtoForList>(
@@ -73,6 +74,7 @@ public sealed class SensorHttpClient(HttpClient httpClient) : ISensorHttpClient
             .Add("isActive", parameters.IsActive)
             .Add("dataSourceId", parameters.DataSourceId)
             .Add("organizationId", parameters.OrganizationId)
+            .Add("municipalityId", parameters.MunicipalityId)
             .Build();
 
         return httpClient.GetFromJsonAsync<int>(

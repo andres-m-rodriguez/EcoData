@@ -1,0 +1,14 @@
+<div class="map-detail-panel-loading">
+    @for (var i = 0; i < Count; i++)
+    {
+        <div class="loading-item">
+            <MudSkeleton Width="60%" Height="20px" />
+            <MudSkeleton Width="40%" Height="14px" Class="mt-1" />
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter]
+    public int Count { get; set; } = 3;
+}

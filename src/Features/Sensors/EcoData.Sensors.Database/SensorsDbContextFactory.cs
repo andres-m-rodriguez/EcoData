@@ -15,6 +15,7 @@ public sealed class SensorsDbContextFactory : IDesignTimeDbContextFactory<Sensor
             {
                 npgsqlOptions.MigrationsAssembly("EcoData.Sensors.Database");
                 npgsqlOptions.MigrationsHistoryTable("__ef_migrations_history", "public");
+                npgsqlOptions.UseNetTopologySuite();
             });
 
         optionsBuilder.UseSnakeCaseNamingConvention();

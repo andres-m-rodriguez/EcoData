@@ -1,0 +1,71 @@
+@* Desktop Sidebar *@
+<div class="map-detail-panel-desktop @(IsOpen ? "open" : "")">
+    <div class="panel-header">
+        <div class="panel-title">
+            <MudText Typo="Typo.subtitle1">@Title</MudText>
+            <MudIconButton Icon="@Icons.Material.Filled.Close" Size="Size.Small" OnClick="HandleClose" />
+        </div>
+        @if (!string.IsNullOrEmpty(Subtitle))
+        {
+            <div class="panel-subtitle">@Subtitle</div>
+        }
+    </div>
+    <MudDivider />
+    <div class="panel-content">
+        @ChildContent
+    </div>
+</div>
+
+@* Mobile Bottom Sheet *@
+<div class="map-detail-panel-backdrop @(IsOpen ? "open" : "")" @onclick="HandleClose"></div>
+<div class="map-detail-panel-mobile @(IsOpen ? "open" : "")">
+    <div class="panel-header-mobile">
+        <div class="sheet-handle"></div>
+        <div class="panel-title">
+            <MudText Typo="Typo.subtitle1">@Title</MudText>
+            <MudIconButton Icon="@Icons.Material.Filled.Close" Size="Size.Small" OnClick="HandleClose" />
+        </div>
+        @if (!string.IsNullOrEmpty(Subtitle))
+        {
+            <div class="panel-subtitle">@Subtitle</div>
+        }
+    </div>
+    <MudDivider />
+    <div class="panel-content-mobile">
+        @ChildContent
+    </div>
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public required string Title { get; set; }
+
+    [Parameter]
+    public string? Subtitle { get; set; }
+
+    [Parameter]
+    public bool IsOpen { get; set; }
+
+    [Parameter]
+    public EventCallback OnClose { get; set; }
+
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+
+    /// <summary>
+    /// Height of the header bar above the panel (default 48px)
+    /// </summary>
+    [Parameter]
+    public int HeaderHeight { get; set; } = 48;
+
+    /// <summary>
+    /// Width of the desktop sidebar (default 360px)
+    /// </summary>
+    [Parameter]
+    public int DesktopWidth { get; set; } = 360;
+
+    private async Task HandleClose()
+    {
+        await OnClose.InvokeAsync();
+    }
+}

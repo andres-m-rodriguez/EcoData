@@ -8,5 +8,6 @@ public sealed record SensorParameters(
     string? Search = null,
     bool? IsActive = null,
     Guid? DataSourceId = null,
-    Guid? OrganizationId = null
+    Guid? OrganizationId = null,
+    Guid? MunicipalityId = null
 ) : CursorParameters(PageSize, Cursor);

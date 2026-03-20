@@ -1,0 +1,14 @@
+<div class="map-detail-panel-empty">
+    <MudIcon Icon="@Icon" Size="Size.Large" Color="Color.Secondary" />
+    <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mt-2">
+        @Message
+    </MudText>
+</div>
+
+@code {
+    [Parameter]
+    public string Icon { get; set; } = Icons.Material.Outlined.Info;
+
+    [Parameter]
+    public string Message { get; set; } = "No items found";
+}

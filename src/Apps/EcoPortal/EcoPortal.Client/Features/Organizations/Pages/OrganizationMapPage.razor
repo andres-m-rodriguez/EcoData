@@ -1,0 +1,188 @@
+@page "/organizations/{Id:guid}/map"
+@using EcoData.Common.Pagination.Blazor
+@using EcoData.Sensors.Contracts.Dtos
+@using EcoData.Sensors.Contracts.Parameters
+@using EcoData.Sensors.Application.Client
+@using EcoPortal.Client.Services
+@implements IAsyncDisposable
+@inject IJSRuntime JS
+@inject ILocationHttpClient LocationClient
+@inject ISensorHttpClient SensorClient
+@inject INavigationService Navigation
+
+<PageTitle>Sensor Map - EcoData</PageTitle>
+
+<div class="map-page">
+    <div class="map-header">
+        <MudIconButton Icon="@Icons.Material.Filled.ArrowBack" OnClick="NavigateBack" />
+        <MudText Typo="Typo.h6" Class="ml-2 flex-grow-1">
+            @(_selectedMunicipalityName ?? "Select a municipality")
+        </MudText>
+        <MudIconButton Icon="@(_isFullscreen ? Icons.Material.Filled.FullscreenExit : Icons.Material.Filled.Fullscreen)"
+                       OnClick="ToggleFullscreen" />
+    </div>
+
+    <div class="map-body">
+        <div id="@_elementId" class="map-leaflet"></div>
+    </div>
+
+    @if (_selectedMunicipalityName is not null)
+    {
+        <MapDetailPanel Title="@_selectedMunicipalityName"
+                        Subtitle="@GetSensorCountText()"
+                        IsOpen="@_panelOpen"
+                        OnClose="ClosePanel">
+            <EcoDataVirtualizedList @key="_selectedMunicipalityId"
+                                     @ref="_sensorList"
+                                     TItem="SensorDtoForList"
+                                     TParams="SensorParameters"
+                                     ItemsProvider="(p, ct) => SensorClient.GetSensorsAsync(p, ct)"
+                                     ParametersBuilder="BuildSensorParameters"
+                                     CursorSelector="s => s.Id"
+                                     ItemSize="72">
+                <LoadingTemplate>
+                    <MapDetailPanelLoading />
+                </LoadingTemplate>
+                <EmptyTemplate>
+                    <MapDetailPanelEmpty Icon="@Icons.Material.Outlined.SensorsOff"
+                                         Message="No sensors in this municipality" />
+                </EmptyTemplate>
+                <ItemTemplate Context="sensor">
+                    <MapDetailPanelItem OnClick="() => NavigateToSensor(sensor.Id)">
+                        <div class="d-flex justify-space-between align-start">
+                            <div>
+                                <MudText Typo="Typo.subtitle2" Color="Color.Primary">@sensor.Name</MudText>
+                                <MudText Typo="Typo.caption" Color="Color.Secondary">@sensor.ExternalId</MudText>
+                            </div>
+                            <MudChip T="string" Size="Size.Small" Color="@(sensor.IsActive ? Color.Success : Color.Default)" Variant="Variant.Text">
+                                @(sensor.IsActive ? "Active" : "Inactive")
+                            </MudChip>
+                        </div>
+                    </MapDetailPanelItem>
+                </ItemTemplate>
+            </EcoDataVirtualizedList>
+        </MapDetailPanel>
+    }
+</div>
+
+@code {
+    [Parameter]
+    public Guid Id { get; set; }
+
+    private readonly string _elementId = $"org-map-{Guid.NewGuid():N}";
+    private bool _mapInitialized;
+    private bool _isFullscreen;
+    private bool _panelOpen;
+    private string? _selectedMunicipalityName;
+    private Guid? _selectedMunicipalityId;
+    private int? _sensorCount;
+    private EcoDataVirtualizedList<SensorDtoForList, SensorParameters>? _sensorList;
+    private DotNetObjectReference<OrganizationMapPage>? _dotNetRef;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            _dotNetRef = DotNetObjectReference.Create(this);
+            await JS.InvokeVoidAsync("orgSensorMap.init", _elementId, _dotNetRef);
+            _mapInitialized = true;
+
+            var geoJson = await LocationClient.GetMunicipalitiesGeoJsonAsync("PR");
+            if (geoJson is not null)
+            {
+                await JS.InvokeVoidAsync("orgSensorMap.addMunicipalities", _elementId, geoJson.RootElement);
+            }
+        }
+    }
+
+    [JSInvokable]
+    public async Task HandleMunicipalitySelected(Guid municipalityId, string municipalityName)
+    {
+        _selectedMunicipalityId = municipalityId;
+        _selectedMunicipalityName = municipalityName;
+        _sensorCount = null;
+        _panelOpen = false;
+        StateHasChanged();
+
+        await Task.Delay(10);
+        _panelOpen = true;
+        StateHasChanged();
+
+        _sensorCount = await SensorClient.GetSensorCountAsync(
+            new SensorParameters(OrganizationId: Id, MunicipalityId: municipalityId)
+        );
+        StateHasChanged();
+    }
+
+    private SensorParameters BuildSensorParameters(Guid? cursor)
+    {
+        return new SensorParameters(Cursor: cursor, OrganizationId: Id, MunicipalityId: _selectedMunicipalityId);
+    }
+
+    [JSInvokable]
+    public void HandleMunicipalityCleared()
+    {
+        ClosePanel();
+    }
+
+    private void ClosePanel()
+    {
+        _panelOpen = false;
+        StateHasChanged();
+
+        _ = Task.Delay(300).ContinueWith(_ =>
+        {
+            _selectedMunicipalityId = null;
+            _selectedMunicipalityName = null;
+            _sensorCount = null;
+            InvokeAsync(StateHasChanged);
+        });
+
+        _ = JS.InvokeVoidAsync("orgSensorMap.clearMunicipalitySelection", _elementId);
+    }
+
+    private string GetSensorCountText()
+    {
+        if (_sensorCount is null) return "Loading...";
+        return $"{_sensorCount} sensor{(_sensorCount == 1 ? "" : "s")}";
+    }
+
+    private void NavigateToSensor(Guid sensorId)
+    {
+        Navigation.NavigateTo($"/sensors/{sensorId}", $"/organizations/{Id}/map");
+    }
+
+    private void NavigateBack()
+    {
+        Navigation.NavigateTo($"/organizations/{Id}");
+    }
+
+    private async Task ToggleFullscreen()
+    {
+        _isFullscreen = !_isFullscreen;
+        StateHasChanged();
+
+        await Task.Delay(50);
+        if (_mapInitialized)
+        {
+            await JS.InvokeVoidAsync("orgSensorMap.invalidateSize", _elementId);
+        }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        _dotNetRef?.Dispose();
+
+        if (_mapInitialized)
+        {
+            try
+            {
+                await JS.InvokeVoidAsync("orgSensorMap.dispose", _elementId);
+            }
+            catch
+            {
+                // Ignore disposal errors
+            }
+        }
+    }
+}
