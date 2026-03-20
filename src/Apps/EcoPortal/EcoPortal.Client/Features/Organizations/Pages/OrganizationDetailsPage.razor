@@ -12,6 +12,7 @@
 @using EcoPortal.Client.Features.Organizations.Authorization
 @using EcoPortal.Client.Features.Organizations.ViewModels
 @using EcoPortal.Client.Features.Sensors.Components
+@using EcoPortal.Client.Features.Organizations.Components
 @using BlazingSingularity.Commands
 @using BlazingSingularity.Fetch
 @implements IDisposable
@@ -118,6 +119,10 @@
 
                         <MudItem xs="12" md="4" Class="d-flex justify-md-end align-start">
                             <MudStack Row Spacing="1">
+                                <MudTooltip Text="Sensor Map">
+                                    <MudIconButton Icon="@Icons.Material.Outlined.Map" Color="Color.Primary"
+                                                   Variant="Variant.Outlined" Size="Size.Medium" OnClick="NavigateToMap" />
+                                </MudTooltip>
                                 <RequireOrganizationPermission Permission="@OrgPermissions.Organization.Update"
                                                                OrganizationId="Id">
                                     <MudTooltip Text="Edit Organization">
@@ -275,6 +280,8 @@
                             }
                         </div>
                     </Tab>
+
+                    <Tab Title="Map" Icon="@Icons.Material.Outlined.Map" OnClick="NavigateToMap" />
 
                     <Tab Title="Team" Icon="@Icons.Material.Outlined.Group"
                          Badge="@(_membersFetch.IsLoading ? "..." : (_membersFetch.Data?.Count ?? 0).ToString())">
@@ -474,6 +481,7 @@
     private void NavigateToEdit() => Navigation.NavigateTo($"/organizations/{Id}/edit", $"/organizations/{Id}");
     private void NavigateToSensors() => Navigation.NavigateTo($"/organizations/{Id}/sensors", $"/organizations/{Id}");
     private void NavigateToTeam() => Navigation.NavigateTo($"/organizations/{Id}/team", $"/organizations/{Id}");
+    private void NavigateToMap() => Navigation.NavigateTo($"/organizations/{Id}/map", $"/organizations/{Id}");
     private void NavigateToSensor(SensorDtoForList sensor) => Navigation.NavigateTo($"/sensors/{sensor.Id}",
     $"/organizations/{Id}");
     private void NavigateToCreateSensor() => Navigation.NavigateTo($"/organizations/{Id}/sensors/create",

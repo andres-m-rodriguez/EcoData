@@ -17,6 +17,7 @@ public sealed class SensorsDbContext(DbContextOptions<SensorsDbContext> options)
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        modelBuilder.HasPostgresExtension("postgis");
         modelBuilder.ApplyConfiguration(new Sensor.EntityConfiguration());
         modelBuilder.ApplyConfiguration(new SensorType.EntityConfiguration());
         modelBuilder.ApplyConfiguration(new Parameter.EntityConfiguration());

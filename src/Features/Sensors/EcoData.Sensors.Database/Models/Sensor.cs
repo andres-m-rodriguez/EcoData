@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using NetTopologySuite.Geometries;
 
 namespace EcoData.Sensors.Database.Models;
 
@@ -12,6 +13,7 @@ public sealed class Sensor
     public required string Name { get; set; }
     public required decimal Latitude { get; set; }
     public required decimal Longitude { get; set; }
+    public Point? Location { get; set; }
     public required Guid MunicipalityId { get; set; }
     public required bool IsActive { get; set; }
     public required ReportingMode ReportingMode { get; set; }
@@ -43,6 +45,10 @@ public sealed class Sensor
             builder.Property(static e => e.Longitude).HasPrecision(9, 6).IsRequired();
 
             builder.HasIndex(static e => e.MunicipalityId);
+
+            builder.Property(static e => e.Location).HasColumnType("geometry(Point, 4326)");
+
+            builder.HasIndex(static e => e.Location).HasMethod("GIST");
 
             builder
                 .Property(static e => e.ReportingMode)
