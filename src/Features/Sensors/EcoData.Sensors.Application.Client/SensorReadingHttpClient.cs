@@ -1,5 +1,8 @@
 using System.Net;
 using System.Net.Http.Json;
+using System.Net.ServerSentEvents;
+using System.Runtime.CompilerServices;
+using System.Text.Json;
 using EcoData.Common.Http.Helpers;
 using EcoData.Sensors.Contracts.Dtos;
 using EcoData.Sensors.Contracts.Errors;
@@ -95,5 +98,28 @@ public sealed class SensorReadingHttpClient(HttpClient httpClient) : ISensorRead
             ),
             _ => new ValidationError("Failed to post reading")
         };
+    }
+
+    public async IAsyncEnumerable<ReadingDtoForCreate> SubscribeToReadingsAsync(
+        Guid sensorId,
+        [EnumeratorCancellation] CancellationToken cancellationToken = default
+    )
+    {
+        using var response = await httpClient.GetAsync(
+            $"api/sensors/{sensorId}/readings/stream",
+            HttpCompletionOption.ResponseHeadersRead,
+            cancellationToken
+        );
+
+        response.EnsureSuccessStatusCode();
+
+        await using var stream = await response.Content.ReadAsStreamAsync(cancellationToken);
+
+        await foreach (var item in SseParser.Create(stream,
+            (_, data) => JsonSerializer.Deserialize<ReadingDtoForCreate>(data)).EnumerateAsync(cancellationToken))
+        {
+            if (item.Data is not null)
+                yield return item.Data;
+        }
     }
 }

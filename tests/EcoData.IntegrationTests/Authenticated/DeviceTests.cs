@@ -1,4 +1,4 @@
-using EcoData.Organization.Contracts.Parameters;
+using EcoData.IntegrationTests.Bases;
 using EcoData.Sensors.Contracts.Dtos;
 using EcoData.Sensors.Contracts.Requests;
 using Xunit;
@@ -10,33 +10,19 @@ public sealed class DeviceTests(EcoDataTestFixture fixture) : AuthenticatedTestB
     [Fact]
     public async Task Device_CanRegisterAndPushReadings()
     {
-        // Get or create test organization
-        var existingOrg = await OrganizationHttpClient
-            .GetOrganizationsAsync(new OrganizationParameters(PageSize: 1, Search: "Test Org"))
-            .FirstOrDefaultAsync();
+        var registration = await SensorHttpClient.RegisterAsync(new RegisterSensorRequest(
+            OrganizationId: Organizations.OrganizationId,
+            OrganizationName: Organizations.OrganizationName,
+            Name: $"Test-Sensor-{Guid.NewGuid().ToString("N")[..8]}",
+            ExternalId: Guid.NewGuid().ToString(),
+            Latitude: Locations.Latitude,
+            Longitude: Locations.Longitude,
+            MunicipalityId: Locations.MunicipalityId));
+        Assert.True(registration.IsT0, "Sensor registration failed");
+        var credentials = registration.AsT0;
 
-        var orgId =
-            existingOrg?.Id
-            ?? (await OrganizationHttpClient.CreateAsync(new("Test Org", null, null))).AsT0.Id;
+        using var device = DeviceFactory.CreateEsp32Device(credentials.SensorId, credentials.AccessToken);
 
-        // Create device and register
-        var device = DeviceFactory.CreateEsp32Device();
-
-        var registration = await device.RegisterAsync(
-            new RegisterSensorRequest(
-                OrganizationId: orgId,
-                OrganizationName: "Test Org",
-                Name: "Test Sensor",
-                ExternalId: Guid.NewGuid().ToString(),
-                Latitude: 0,
-                Longitude: 0,
-                MunicipalityId: Guid.Empty
-            )
-        );
-        Assert.NotNull(registration);
-        Assert.True(device.IsAuthenticated);
-
-        // Push readings
         var reading = new SensorReadingDto(Temperature: 25.5, Ph: 7.2, DissolvedOxygen: 8.0);
         await device.SendSensorDataAsync(reading);
     }

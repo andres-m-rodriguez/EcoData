@@ -11,10 +11,9 @@ namespace EcoData.Sensors.Application.Client;
 
 public sealed class SensorHttpClient(HttpClient httpClient) : ISensorHttpClient
 {
-    public async Task<OneOf<SensorDtoForRegistered, ValidationError, ForbiddenError, ConflictError>> RegisterAsync(
-        RegisterSensorRequest request,
-        CancellationToken cancellationToken = default
-    )
+    public async Task<
+        OneOf<SensorDtoForRegistered, ValidationError, ForbiddenError, ConflictError>
+    > RegisterAsync(RegisterSensorRequest request, CancellationToken cancellationToken = default)
     {
         var response = await httpClient.PostAsJsonAsync(
             "api/sensors/register",
@@ -24,7 +23,9 @@ public sealed class SensorHttpClient(HttpClient httpClient) : ISensorHttpClient
 
         if (response.IsSuccessStatusCode)
         {
-            var result = await response.Content.ReadFromJsonAsync<SensorDtoForRegistered>(cancellationToken);
+            var result = await response.Content.ReadFromJsonAsync<SensorDtoForRegistered>(
+                cancellationToken
+            );
             return result!;
         }
 
@@ -33,11 +34,13 @@ public sealed class SensorHttpClient(HttpClient httpClient) : ISensorHttpClient
             HttpStatusCode.Forbidden => new ForbiddenError(
                 "You don't have permission to register sensors for this organization"
             ),
-            HttpStatusCode.Conflict => new ConflictError("A sensor with this external ID already exists"),
+            HttpStatusCode.Conflict => new ConflictError(
+                "A sensor with this external ID already exists"
+            ),
             HttpStatusCode.BadRequest => new ValidationError(
                 await response.Content.ReadAsStringAsync(cancellationToken)
             ),
-            _ => new ValidationError("Failed to register sensor")
+            _ => new ValidationError("Failed to register sensor"),
         };
     }
 
@@ -98,28 +101,38 @@ public sealed class SensorHttpClient(HttpClient httpClient) : ISensorHttpClient
         return await response.Content.ReadFromJsonAsync<SensorDtoForDetail>(cancellationToken);
     }
 
-    public async Task<OneOf<SensorDtoForDetail, ValidationError, NotFoundError, ForbiddenError>> UpdateAsync(
+    public async Task<
+        OneOf<SensorDtoForDetail, ValidationError, NotFoundError, ForbiddenError>
+    > UpdateAsync(
         Guid sensorId,
         SensorDtoForUpdate request,
         CancellationToken cancellationToken = default
     )
     {
-        var response = await httpClient.PutAsJsonAsync($"api/sensors/{sensorId}", request, cancellationToken);
+        var response = await httpClient.PutAsJsonAsync(
+            $"api/sensors/{sensorId}",
+            request,
+            cancellationToken
+        );
 
         if (response.IsSuccessStatusCode)
         {
-            var result = await response.Content.ReadFromJsonAsync<SensorDtoForDetail>(cancellationToken);
+            var result = await response.Content.ReadFromJsonAsync<SensorDtoForDetail>(
+                cancellationToken
+            );
             return result!;
         }
 
         return response.StatusCode switch
         {
             HttpStatusCode.NotFound => new NotFoundError(),
-            HttpStatusCode.Forbidden => new ForbiddenError("You don't have permission to update this sensor"),
+            HttpStatusCode.Forbidden => new ForbiddenError(
+                "You don't have permission to update this sensor"
+            ),
             HttpStatusCode.BadRequest => new ValidationError(
                 await response.Content.ReadAsStringAsync(cancellationToken)
             ),
-            _ => new ValidationError("Failed to update sensor")
+            _ => new ValidationError("Failed to update sensor"),
         };
     }
 
@@ -138,8 +151,10 @@ public sealed class SensorHttpClient(HttpClient httpClient) : ISensorHttpClient
         return response.StatusCode switch
         {
             HttpStatusCode.NotFound => new NotFoundError(),
-            HttpStatusCode.Forbidden => new ForbiddenError("You don't have permission to delete this sensor"),
-            _ => new NotFoundError()
+            HttpStatusCode.Forbidden => new ForbiddenError(
+                "You don't have permission to delete this sensor"
+            ),
+            _ => new NotFoundError(),
         };
     }
 }

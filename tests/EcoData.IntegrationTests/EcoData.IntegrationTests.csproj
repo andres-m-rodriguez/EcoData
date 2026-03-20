@@ -22,9 +22,16 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\Host\EcoData.AppHost\EcoData.AppHost.csproj" />
     <ProjectReference Include="..\..\src\Features\Organization\EcoData.Organization.Application.Client\EcoData.Organization.Application.Client.csproj" />
+    <ProjectReference Include="..\..\src\Features\Organization\EcoData.Organization.Database\EcoData.Organization.Database.csproj" />
+    <ProjectReference Include="..\..\src\Features\Locations\EcoData.Locations.Database\EcoData.Locations.Database.csproj" />
     <ProjectReference Include="..\..\src\Features\Sensors\EcoData.Sensors.Application.Client\EcoData.Sensors.Application.Client.csproj" />
     <ProjectReference Include="..\..\src\Features\Sensors\EcoData.Sensors.Contracts\EcoData.Sensors.Contracts.csproj" />
     <ProjectReference Include="..\..\src\Features\Identity\EcoData.Identity.Application.Client\EcoData.Identity.Application.Client.csproj" />
+    <ProjectReference Include="..\..\src\Features\Locations\EcoData.Locations.Application.Client\EcoData.Locations.Application.Client.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="EFCore.NamingConventions" Version="10.0.0" />
   </ItemGroup>
 
 </Project>
