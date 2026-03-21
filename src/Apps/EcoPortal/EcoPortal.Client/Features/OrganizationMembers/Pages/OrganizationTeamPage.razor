@@ -1,6 +1,7 @@
 @page "/organizations/{OrganizationId:guid}/members"
 @page "/organizations/{OrganizationId:guid}/team"
 @using EcoData.Organization.Contracts
+@using EcoData.Common.Problems.Contracts
 @using EcoPortal.Client.Authorization
 @attribute [OrganizationPermission(Permissions.Organization.ManageMembers)]
 @using EcoData.Organization.Contracts.Dtos
@@ -200,9 +201,7 @@
                     Snackbar.Add("Role updated successfully", Severity.Success);
                     _virtualizedList?.Refresh();
                 },
-                _ => Snackbar.Add("Member not found", Severity.Error),
-                validation => Snackbar.Add(validation.Errors.FirstOrDefault()?.ErrorMessage ?? "Validation error", Severity.Warning),
-                error => Snackbar.Add($"Failed to update role: {error.Message}", Severity.Error)
+                problem => Snackbar.Add(problem.Detail ?? "Failed to update role", Severity.Error)
             );
         }
     }
@@ -228,9 +227,7 @@
                     Snackbar.Add("Member removed successfully", Severity.Success);
                     _virtualizedList?.Refresh();
                 },
-                _ => Snackbar.Add("Member not found", Severity.Error),
-                validation => Snackbar.Add(validation.Errors.FirstOrDefault()?.ErrorMessage ?? "Cannot remove member", Severity.Warning),
-                error => Snackbar.Add($"Failed to remove member: {error.Message}", Severity.Error)
+                problem => Snackbar.Add(problem.Detail ?? "Failed to remove member", Severity.Error)
             );
         }
     }
