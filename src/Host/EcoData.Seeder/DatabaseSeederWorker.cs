@@ -32,6 +32,7 @@ public sealed class DatabaseSeederWorker(
 
             await SeedAdminUserAsync(services, stoppingToken);
             await SeedLocationsAsync(services, stoppingToken);
+            await SeedOrganizationRolesAsync(services, stoppingToken);
 
             logger.LogInformation("All database migrations and seeding completed successfully.");
         }
@@ -256,5 +257,55 @@ public sealed class DatabaseSeederWorker(
                 municipalities.Count
             );
         }
+    }
+
+    private async Task SeedOrganizationRolesAsync(
+        IServiceProvider services,
+        CancellationToken stoppingToken
+    )
+    {
+        var context = services.GetRequiredService<OrganizationDbContext>();
+
+        // Get all organizations that don't have a Contributor role
+        var organizationsWithoutContributor = await context
+            .Organizations.Where(o =>
+                !context.OrganizationRoles.Any(r =>
+                    r.OrganizationId == o.Id && r.Name == "Contributor"
+                )
+            )
+            .Select(o => o.Id)
+            .ToListAsync(stoppingToken);
+
+        if (organizationsWithoutContributor.Count == 0)
+        {
+            logger.LogInformation("All organizations have Contributor role. Skipping...");
+            return;
+        }
+
+        logger.LogInformation(
+            "Adding Contributor role to {Count} organizations...",
+            organizationsWithoutContributor.Count
+        );
+
+        var now = DateTimeOffset.UtcNow;
+        foreach (var organizationId in organizationsWithoutContributor)
+        {
+            context.OrganizationRoles.Add(
+                new Organization.Database.Models.OrganizationRole
+                {
+                    Id = Guid.CreateVersion7(),
+                    OrganizationId = organizationId,
+                    Name = "Contributor",
+                    CreatedAt = now,
+                }
+            );
+        }
+
+        await context.SaveChangesAsync(stoppingToken);
+
+        logger.LogInformation(
+            "Added Contributor role to {Count} organizations",
+            organizationsWithoutContributor.Count
+        );
     }
 }
