@@ -3,8 +3,6 @@
     top: 64px;
     z-index: 100;
     background-color: var(--mud-palette-background);
-    margin-bottom: 16px;
-    padding: 8px 0;
     transition: box-shadow 0.2s ease;
 }
 

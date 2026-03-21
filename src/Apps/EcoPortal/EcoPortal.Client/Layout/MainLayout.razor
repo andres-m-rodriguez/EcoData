@@ -1,12 +1,14 @@
 @inherits LayoutComponentBase
 @using BlazingSingularity
 @using BlazingSingularity.Commands
+@using EcoPortal.Client.Components
 @using EcoPortal.Client.Pages
 @using EcoPortal.Client.Services
 @using EcoPortal.Client.Themes
 @inject AuthStateService AuthState
 @inject ClientAuthStateProvider AuthStateProvider
 @inject INavigationService Navigation
+@inject NavigationManager NavigationManager
 @implements IDisposable
 
 <MudThemeProvider Theme="AppThemes.Azure" IsDarkMode="_isDarkMode" />
@@ -15,8 +17,7 @@
 <MudSnackbarProvider />
 
 <MudLayout>
-    <MudAppBar Elevation="0"
-               Style="background-color: var(--mud-palette-drawer-background); color: var(--mud-palette-text-primary);" Fixed="true">
+    <MudAppBar Elevation="0" Fixed="true" Class="app-bar-blur">
 
         @* Mobile: Back button + Hamburger menu (hidden on md+) *@
         <div class="d-flex d-md-none">
@@ -26,41 +27,28 @@
                            OnClick="ToggleDrawer" />
         </div>
 
-        <MudText Typo="Typo.h6" Class="ml-2">EcoData</MudText>
+        <span class="logo-text ml-2">EcoData</span>
 
-        @* Desktop: Navigation buttons (hidden on sm-) *@
-        <div class="d-none d-md-flex align-center ml-6 gap-1">
-            <MudButton Href="@HomePage.Path" Color="Color.Inherit" Variant="Variant.Text">
+        @* Desktop: Navigation links (hidden on sm-) *@
+        <div class="d-none d-md-flex align-center ml-6 gap-4">
+            <MudLink Href="@HomePage.Path" Underline="Underline.None" Class="@GetNavLinkClass(HomePage.Path)">
                 Home
-            </MudButton>
-            <MudButton Href="@SensorsPage.Path" Color="Color.Inherit" Variant="Variant.Text">
+            </MudLink>
+            <MudLink Href="@SensorsPage.Path" Underline="Underline.None" Class="@GetNavLinkClass(SensorsPage.Path)">
                 Sensors
-            </MudButton>
-            <MudMenu Label="Organizations" Color="Color.Inherit" Variant="Variant.Text" EndIcon="@Icons.Material.Filled.KeyboardArrowDown">
-                <MudMenuItem Href="/organizations/discover" Icon="@Icons.Material.Outlined.Explore">
-                    Discover
-                </MudMenuItem>
-                @if (AuthState.IsAuthenticated)
-                {
-                    <MudMenuItem Href="/organizations/my" Icon="@Icons.Material.Outlined.Groups">
-                        My Orgs
-                    </MudMenuItem>
-                    <MudMenuItem Href="/organizations/requests" Icon="@Icons.Material.Outlined.Pending">
-                        Requests
-                    </MudMenuItem>
-                }
-            </MudMenu>
-            <MudButton Href="@GettingStartedPage.Path" Color="Color.Inherit" Variant="Variant.Text">
+            </MudLink>
+            <MudLink Href="/organizations/discover" Underline="Underline.None" Class="@GetNavLinkClass("/organizations")">
+                Organizations
+            </MudLink>
+            <MudLink Href="@GettingStartedPage.Path" Underline="Underline.None" Class="@GetNavLinkClass(GettingStartedPage.Path)">
                 Getting Started
-            </MudButton>
+            </MudLink>
         </div>
 
         <MudSpacer />
 
-        @* Desktop: Theme toggle + User menu (hidden on sm-) *@
+        @* Desktop: User menu (hidden on sm-) *@
         <div class="d-none d-md-flex align-center">
-            <MudIconButton Icon="@(_isDarkMode ? Icons.Material.Filled.LightMode : Icons.Material.Filled.DarkMode)"
-                           Color="Color.Inherit" OnClick="ToggleTheme" />
             @if (AuthState.IsAuthenticated)
             {
                 <MudMenu AnchorOrigin="Origin.BottomRight" TransformOrigin="Origin.TopRight">
@@ -85,7 +73,7 @@
             }
             else
             {
-                <MudButton Href="/login" Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small" Class="ml-2">
+                <MudButton Href="/login" Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small" Class="ml-2 gradient-btn">
                     Sign In
                 </MudButton>
             }
@@ -99,30 +87,15 @@
             <MudIconButton Icon="@Icons.Material.Filled.Close" Color="Color.Inherit" OnClick="ToggleDrawer"
                            Edge="Edge.Start" />
             <MudSpacer />
-            <MudIconButton Icon="@Icons.Material.Outlined.Notifications" Color="Color.Inherit" />
-            <MudIconButton Icon="@(_isDarkMode ? Icons.Material.Filled.LightMode : Icons.Material.Filled.DarkMode)"
-                           Color="Color.Inherit" OnClick="ToggleTheme" Edge="Edge.End" />
+            <MudIconButton Icon="@Icons.Material.Outlined.Notifications" Color="Color.Inherit" Edge="Edge.End" />
         </MudToolBar>
 
         <MudNavMenu Class="pt-4">
             <MudNavLink Href="@HomePage.Path" Match="NavLinkMatch.All" Icon="@Icons.Material.Outlined.Home">
                 Home
             </MudNavLink>
-            <MudNavLink Href="@SensorsPage.Path" Icon="@Icons.Material.Outlined.Sensors">Sensors</MudNavLink>
-            <MudNavGroup Title="Organizations" Icon="@Icons.Material.Outlined.Business" Expanded="true">
-                <MudNavLink Href="/organizations/discover" Icon="@Icons.Material.Outlined.Explore">
-                    Discover
-                </MudNavLink>
-                @if (AuthState.IsAuthenticated)
-                {
-                    <MudNavLink Href="/organizations/my" Icon="@Icons.Material.Outlined.Groups">
-                        My Orgs
-                    </MudNavLink>
-                    <MudNavLink Href="/organizations/requests" Icon="@Icons.Material.Outlined.Pending">
-                        Requests
-                    </MudNavLink>
-                }
-            </MudNavGroup>
+            <MudNavLink Href="@SensorsPage.Path" Icon="@Icons.Material.Outlined.Water">Sensors</MudNavLink>
+            <MudNavLink Href="/organizations/discover" Icon="@Icons.Material.Outlined.Business">Organizations</MudNavLink>
             <MudNavLink Href="@GettingStartedPage.Path" Icon="@Icons.Material.Outlined.Help">Getting Started</MudNavLink>
         </MudNavMenu>
 
@@ -166,6 +139,7 @@
         <MudContainer MaxWidth="MaxWidth.Large" Class="py-6 px-4 content-container">
             @Body
         </MudContainer>
+        <Footer />
     </MudMainContent>
 </MudLayout>
 
@@ -186,7 +160,13 @@
         AuthState.SetAuthStateProvider(AuthStateProvider);
         AuthState.OnAuthStateChanged += HandleAuthStateChanged;
         Navigation.OnStateChanged += HandleNavigationStateChanged;
+        NavigationManager.LocationChanged += HandleLocationChanged;
         await AuthState.InitializeAsync();
+    }
+
+    private void HandleLocationChanged(object? sender, Microsoft.AspNetCore.Components.Routing.LocationChangedEventArgs e)
+    {
+        InvokeAsync(StateHasChanged);
     }
 
     private void HandleAuthStateChanged()
@@ -205,6 +185,16 @@
         return string.IsNullOrEmpty(name) ? "?" : name[0].ToString().ToUpper();
     }
 
+    private string GetNavLinkClass(string path)
+    {
+        var currentUri = NavigationManager.ToBaseRelativePath(NavigationManager.Uri);
+        var isActive = path == "/"
+            ? string.IsNullOrEmpty(currentUri) || currentUri == "/"
+            : currentUri.StartsWith(path.TrimStart('/'), StringComparison.OrdinalIgnoreCase);
+
+        return isActive ? "nav-link-active" : "nav-link";
+    }
+
     [RelayCommand]
     private async Task Logout()
     {
@@ -220,5 +210,6 @@
     {
         AuthState.OnAuthStateChanged -= HandleAuthStateChanged;
         Navigation.OnStateChanged -= HandleNavigationStateChanged;
+        NavigationManager.LocationChanged -= HandleLocationChanged;
     }
 }
