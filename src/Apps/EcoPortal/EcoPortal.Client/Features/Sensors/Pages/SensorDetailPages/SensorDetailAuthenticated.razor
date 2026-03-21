@@ -1,0 +1,153 @@
+@using EcoData.Sensors.Contracts.Dtos
+@using EcoData.Sensors.Application.Client
+@using EcoPortal.Client.Features.Sensors.Dialogs
+@using static EcoPortal.Client.Features.Sensors.Dialogs.ReadingFilterDialog
+@using EcoPortal.Client.Services
+@using EcoPortal.Client.Components
+@using EcoPortal.Client.Features.Organizations.Authorization
+@using EcoPortal.Client.Features.Sensors.Pages.SensorDetailPages.Components
+@using SensorPermissions = EcoData.Sensors.Contracts.Permissions
+@inject ISensorHttpClient SensorClient
+@inject ISensorReadingHttpClient ReadingClient
+@inject IDialogService DialogService
+@inject INavigationService Navigation
+@inject ISnackbar Snackbar
+
+<MudPaper Elevation="1" Class="pa-4 mb-4">
+    <MudStack Spacing="2">
+        <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center">
+            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                <MudText Typo="Typo.h5">@Sensor.Name</MudText>
+                <MudChip T="string" Color="@(Sensor.IsActive? Color.Success: Color.Default)" Size="Size.Small">
+                    @(Sensor.IsActive ? "Active" : "Inactive")
+                </MudChip>
+            </MudStack>
+            <RequireOrganizationPermission Permission="@SensorPermissions.Sensor.Update"
+                                           OrganizationId="Sensor.OrganizationId">
+                <MudStack Row="true" Spacing="1">
+                    <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary"                                   OnClick="NavigateToEdit" />
+                    <RequireOrganizationPermission Permission="@SensorPermissions.Sensor.Delete"
+                                                   OrganizationId="Sensor.OrganizationId">
+                        <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error"
+                                       OnClick="ConfirmDelete" />
+                    </RequireOrganizationPermission>
+                </MudStack>
+            </RequireOrganizationPermission>
+        </MudStack>
+
+        <MudStack Row="true" Spacing="4">
+            <MudStack Spacing="0">
+                <MudText Typo="Typo.caption" Color="Color.Secondary">Coordinates</MudText>
+                <MudText Typo="Typo.body2">@Sensor.Latitude.ToString("F4"), @Sensor.Longitude.ToString("F4")</MudText>
+            </MudStack>
+            <MudStack Spacing="0">
+                <MudText Typo="Typo.caption" Color="Color.Secondary">Created</MudText>
+                <MudText Typo="Typo.body2">@Sensor.CreatedAt.LocalDateTime.ToString("d")</MudText>
+            </MudStack>
+        </MudStack>
+    </MudStack>
+</MudPaper>
+
+<MudPaper Elevation="1" Class="pa-4">
+    <Tabs ActiveIndex="_activeTab" ActiveIndexChanged="OnTabChanged">
+        <Tab Title="History" Icon="@Icons.Material.Filled.History">
+            <SensorReadingsList @ref="_readingsList" SensorId="Sensor.Id"                                ShowFilter="true"
+                                OnFilterClick="OpenFilterDialog"                                ParameterFilter="_parameterFilter" FromDate="_fromDate"
+                                ToDate="_toDate">
+                <ActionButtons>
+                    <MudButton Variant="Variant.Text" StartIcon="@Icons.Material.Filled.Refresh"
+                               OnClick="RefreshReadings" Size="Size.Small">
+                        Refresh
+                    </MudButton>
+                </ActionButtons>
+            </SensorReadingsList>
+        </Tab>
+        <Tab Title="Live" Icon="@Icons.Material.Filled.Stream"
+             Badge="@(_liveReadings?.IsConnected == true ? "●" : null)">
+            <SensorLiveReadings @ref="_liveReadings" SensorId="Sensor.Id" />
+        </Tab>
+    </Tabs>
+</MudPaper>
+
+@code {
+    private SensorReadingsList? _readingsList;
+    private SensorLiveReadings? _liveReadings;
+    private IReadOnlyList<string> _availableParameters = [];
+    private int _activeTab;
+
+    private string? _parameterFilter;
+    private DateTime? _fromDate;
+    private DateTime? _toDate;
+
+    [Parameter, EditorRequired]
+    public SensorDtoForDetail Sensor { get; set; } = default!;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _availableParameters = await ReadingClient.GetReadingParametersAsync(Sensor.Id);
+    }
+
+    private void OnTabChanged(int index)
+    {
+        _activeTab = index;
+    }
+
+    private async Task OpenFilterDialog()
+    {
+        var parameters = new DialogParameters<ReadingFilterDialog>
+        {
+            { x => x.ParameterFilter, _parameterFilter },
+            { x => x.FromDate, _fromDate },
+            { x => x.ToDate, _toDate },
+            { x => x.AvailableParameters, _availableParameters }
+        };
+
+        var options = new DialogOptions
+        {
+            CloseOnEscapeKey = true,
+            MaxWidth = MaxWidth.Small,
+            FullWidth = true
+        };
+
+        var dialog = await DialogService.ShowAsync<ReadingFilterDialog>("Filters", parameters, options);
+        var result = await dialog.Result;
+
+        if (result is { Canceled: false, Data: ReadingFilterResult filter })
+        {
+            _parameterFilter = filter.Parameter;
+            _fromDate = filter.FromDate;
+            _toDate = filter.ToDate;
+        }
+    }
+
+    private void RefreshReadings() => _readingsList?.Refresh();
+
+    private void NavigateToEdit() => Navigation.NavigateTo($"/sensors/{Sensor.Id}/edit", $"/sensors/{Sensor.Id}");
+
+    private async Task ConfirmDelete()
+    {
+        var parameters = new DialogParameters<ConfirmDialog>
+        {
+            { x => x.ContentText, $"Are you sure you want to delete sensor '{Sensor.Name}'? This will also delete all readings and health data." },
+            { x => x.ButtonText, "Delete" },
+            { x => x.Color, Color.Error }
+        };
+        var options = new DialogOptions { CloseOnEscapeKey = true, MaxWidth = MaxWidth.ExtraSmall };
+        var dialog = await DialogService.ShowAsync<ConfirmDialog>("Delete Sensor", parameters, options);
+        var result = await dialog.Result;
+
+        if (result is { Canceled: false })
+        {
+            var deleteResult = await SensorClient.DeleteAsync(Sensor.Id);
+            deleteResult.Switch(
+                _ =>
+                {
+                    Snackbar.Add("Sensor deleted successfully", Severity.Success);
+                    Navigation.GoBack();
+                },
+                _ => Snackbar.Add("Sensor not found", Severity.Error),
+                error => Snackbar.Add(error.Message, Severity.Error)
+            );
+        }
+    }
+}

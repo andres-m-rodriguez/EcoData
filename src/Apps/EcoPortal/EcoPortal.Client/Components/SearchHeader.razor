@@ -3,11 +3,19 @@
 @implements IAsyncDisposable
 
 <div class="search-header-wrapper @(_isSticky ? "is-sticky" : "")" @ref="_headerRef">
-    <div class="search-wrapper">
-        <SearchBar @bind-Value="SearchSignal.Value" Placeholder="@Placeholder" ShowFilterButton="ShowFilterButton"
-                   HasActiveFilters="HasActiveFilters" FilterCount="FilterCount" OnFilterClick="OnFilterClick"
-                   EnableSticky="false" />
-    </div>
+    <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center">
+        <div class="search-wrapper">
+            <SearchBar @bind-Value="SearchSignal.Value" Placeholder="@Placeholder" ShowFilterButton="ShowFilterButton"
+                       HasActiveFilters="HasActiveFilters" FilterCount="FilterCount" OnFilterClick="OnFilterClick"
+                       EnableSticky="false" />
+        </div>
+        @if (ActionButtons is not null)
+        {
+            <MudStack Row="true" Spacing="1">
+                @ActionButtons
+            </MudStack>
+        }
+    </MudStack>
 </div>
 
 @code {
@@ -33,6 +41,9 @@
 
     [Parameter]
     public EventCallback OnFilterClick { get; set; }
+
+    [Parameter]
+    public RenderFragment? ActionButtons { get; set; }
 
     [Parameter]
     public bool EnableSticky { get; set; } = true;
