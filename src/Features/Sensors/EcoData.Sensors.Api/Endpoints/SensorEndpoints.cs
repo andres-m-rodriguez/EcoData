@@ -45,14 +45,21 @@ public static class SensorEndpoints
         group
             .MapGet(
                 "/{id:guid}",
-                async Task<Results<Ok<SensorDtoForDetail>, NotFound>> (
+                async Task<Results<Ok<SensorDtoForDetail>, ProblemHttpResult>> (
                     Guid id,
                     ISensorRepository repository,
                     CancellationToken ct
                 ) =>
                 {
                     var sensor = await repository.GetByIdAsync(id, ct);
-                    return sensor is null ? TypedResults.NotFound() : TypedResults.Ok(sensor);
+                    if (sensor is null)
+                    {
+                        return TypedResults.Problem(
+                            detail: "Sensor not found.",
+                            statusCode: StatusCodes.Status404NotFound
+                        );
+                    }
+                    return TypedResults.Ok(sensor);
                 }
             )
             .WithName("GetSensorById");
@@ -66,7 +73,7 @@ public static class SensorEndpoints
                         ValidationProblem,
                         UnauthorizedHttpResult,
                         ForbidHttpResult,
-                        Conflict<string>
+                        ProblemHttpResult
                     >
                 > (
                     RegisterSensorRequest request,
@@ -108,7 +115,10 @@ public static class SensorEndpoints
 
                     if (result.IsT1)
                     {
-                        return TypedResults.Conflict(result.AsT1.Message);
+                        return TypedResults.Problem(
+                            detail: result.AsT1.Message,
+                            statusCode: StatusCodes.Status409Conflict
+                        );
                     }
 
                     var sensorId = result.AsT0;
@@ -140,7 +150,7 @@ public static class SensorEndpoints
                     Results<
                         Ok<SensorDtoForDetail>,
                         ValidationProblem,
-                        NotFound,
+                        ProblemHttpResult,
                         UnauthorizedHttpResult,
                         ForbidHttpResult
                     >
@@ -171,7 +181,10 @@ public static class SensorEndpoints
                     var existing = await repository.GetByIdAsync(id, ct);
                     if (existing is null)
                     {
-                        return TypedResults.NotFound();
+                        return TypedResults.Problem(
+                            detail: "Sensor not found.",
+                            statusCode: StatusCodes.Status404NotFound
+                        );
                     }
 
                     var hasPermission = await permissionService.HasPermissionAsync(
@@ -187,7 +200,14 @@ public static class SensorEndpoints
                     }
 
                     var updated = await repository.UpdateAsync(id, request, ct);
-                    return updated is null ? TypedResults.NotFound() : TypedResults.Ok(updated);
+                    if (updated is null)
+                    {
+                        return TypedResults.Problem(
+                            detail: "Sensor not found.",
+                            statusCode: StatusCodes.Status404NotFound
+                        );
+                    }
+                    return TypedResults.Ok(updated);
                 }
             )
             .RequireAuthorization()
@@ -196,7 +216,9 @@ public static class SensorEndpoints
         group
             .MapDelete(
                 "/{id:guid}",
-                async Task<Results<NoContent, NotFound, UnauthorizedHttpResult, ForbidHttpResult>> (
+                async Task<
+                    Results<NoContent, ProblemHttpResult, UnauthorizedHttpResult, ForbidHttpResult>
+                > (
                     Guid id,
                     ClaimsPrincipal user,
                     ISensorRepository repository,
@@ -213,7 +235,10 @@ public static class SensorEndpoints
                     var existing = await repository.GetByIdAsync(id, ct);
                     if (existing is null)
                     {
-                        return TypedResults.NotFound();
+                        return TypedResults.Problem(
+                            detail: "Sensor not found.",
+                            statusCode: StatusCodes.Status404NotFound
+                        );
                     }
 
                     var hasPermission = await permissionService.HasPermissionAsync(
@@ -229,7 +254,14 @@ public static class SensorEndpoints
                     }
 
                     var deleted = await repository.DeleteAsync(id, ct);
-                    return deleted ? TypedResults.NoContent() : TypedResults.NotFound();
+                    if (!deleted)
+                    {
+                        return TypedResults.Problem(
+                            detail: "Sensor not found.",
+                            statusCode: StatusCodes.Status404NotFound
+                        );
+                    }
+                    return TypedResults.NoContent();
                 }
             )
             .RequireAuthorization()

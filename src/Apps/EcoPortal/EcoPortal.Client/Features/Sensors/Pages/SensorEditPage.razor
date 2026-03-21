@@ -130,9 +130,7 @@
                 Snackbar.Add("Sensor updated successfully", Severity.Success);
                 Navigation.NavigateTo($"/sensors/{SensorId}", replace: true);
             },
-            validation => _errorMessage = "Validation error: " + string.Join(", ", validation.Errors.Select(e => e.ErrorMessage)),
-            _ => _errorMessage = "Sensor not found",
-            forbidden => _errorMessage = forbidden.Message
+            problem => _errorMessage = problem.Detail ?? "Failed to update sensor"
         );
     }
 
