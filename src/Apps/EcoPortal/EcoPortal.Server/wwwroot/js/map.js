@@ -2,7 +2,7 @@
 window.leafletMapService = {
     instances: new Map(),
 
-    create: function (elementId, dotNetRef, initialLat, initialLng, initialZoom, showMarker) {
+    create: function (elementId, dotNetRef, initialLat, initialLng, initialZoom, showMarker, disableInteraction) {
         // Dispose existing instance if any
         if (this.instances.has(elementId)) {
             this.dispose(elementId);
@@ -13,7 +13,18 @@ window.leafletMapService = {
         const lng = initialLng || -66.5901;
         const zoom = initialLat ? 12 : (initialZoom || 9);
 
-        const map = L.map(elementId).setView([lat, lng], zoom);
+        // Map options - disable interaction if requested
+        const mapOptions = disableInteraction ? {
+            zoomControl: false,
+            dragging: false,
+            scrollWheelZoom: false,
+            doubleClickZoom: false,
+            boxZoom: false,
+            keyboard: false,
+            touchZoom: false
+        } : {};
+
+        const map = L.map(elementId, mapOptions).setView([lat, lng], zoom);
 
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
