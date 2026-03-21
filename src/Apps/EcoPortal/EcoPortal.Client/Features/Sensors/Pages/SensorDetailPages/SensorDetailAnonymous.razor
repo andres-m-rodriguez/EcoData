@@ -1,0 +1,27 @@
+@using EcoData.Sensors.Contracts.Dtos
+@using EcoPortal.Client.Features.Sensors.Pages.SensorDetailPages.Components
+
+<MudPaper Elevation="1" Class="pa-4 mb-4">
+    <MudStack Spacing="2">
+        <MudText Typo="Typo.h5">@Sensor.Name</MudText>
+        <MudStack Row="true" Spacing="4">
+            <MudStack Spacing="0">
+                <MudText Typo="Typo.caption" Color="Color.Secondary">Coordinates</MudText>
+                <MudText Typo="Typo.body2">@Sensor.Latitude.ToString("F4"), @Sensor.Longitude.ToString("F4")</MudText>
+            </MudStack>
+            <MudStack Spacing="0">
+                <MudText Typo="Typo.caption" Color="Color.Secondary">Created</MudText>
+                <MudText Typo="Typo.body2">@Sensor.CreatedAt.LocalDateTime.ToString("d")</MudText>
+            </MudStack>
+        </MudStack>
+    </MudStack>
+</MudPaper>
+
+<MudPaper Elevation="1" Class="pa-4">
+    <SensorReadingsList SensorId="Sensor.Id" />
+</MudPaper>
+
+@code {
+    [Parameter, EditorRequired]
+    public SensorDtoForDetail Sensor { get; set; } = default!;
+}
