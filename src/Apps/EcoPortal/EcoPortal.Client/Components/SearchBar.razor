@@ -20,7 +20,7 @@
             <button type="button" class="filter-btn @(HasActiveFilters ? "active" : "")" @onclick="OnFilterClick">
                 <MudIcon Icon="@Icons.Material.Filled.Tune" Size="Size.Small" />
                 <span>Filter</span>
-                @if (HasActiveFilters)
+                @if (HasActiveFilters && FilterCount > 0)
                 {
                     <span class="filter-badge">@FilterCount</span>
                 }
@@ -51,7 +51,7 @@
     public bool HasActiveFilters { get; set; }
 
     [Parameter]
-    public int FilterCount { get; set; } = 1;
+    public int FilterCount { get; set; }
 
     [Parameter]
     public EventCallback OnFilterClick { get; set; }

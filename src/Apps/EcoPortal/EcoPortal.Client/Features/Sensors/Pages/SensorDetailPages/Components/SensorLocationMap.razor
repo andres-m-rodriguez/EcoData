@@ -1,0 +1,18 @@
+@using EcoPortal.Client.Components
+
+<div class="sensor-location-map">
+    <LeafletMap Latitude="@((double)Latitude)"
+                Longitude="@((double)Longitude)"
+                Zoom="13"
+                ShowMarker="true"
+                DisableInteraction="true"
+                Class="sensor-map" />
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public decimal Latitude { get; set; }
+
+    [Parameter, EditorRequired]
+    public decimal Longitude { get; set; }
+}

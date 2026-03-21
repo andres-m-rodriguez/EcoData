@@ -103,7 +103,7 @@
     [Parameter]
     public DateTime? ToDate { get; set; }
 
-    private bool HasActiveFilters => !string.IsNullOrWhiteSpace(SearchText) || HasNonSearchFilters;
+    private bool HasActiveFilters => SearchText is { Length: > 0 } || HasNonSearchFilters;
     private bool HasNonSearchFilters => ParameterFilter is not null || FromDate.HasValue || ToDate.HasValue;
 
     protected override void OnInitialized()

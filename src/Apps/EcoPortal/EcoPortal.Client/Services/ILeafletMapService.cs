@@ -29,7 +29,8 @@ public sealed record LeafletMapOptions(
     double? InitialLatitude = null,
     double? InitialLongitude = null,
     int InitialZoom = 9,
-    bool ShowMarker = false
+    bool ShowMarker = false,
+    bool DisableInteraction = false
 );
 
 public sealed record MapClickEventArgs(double Latitude, double Longitude);

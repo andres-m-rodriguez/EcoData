@@ -2,19 +2,26 @@
 @using EcoPortal.Client.Features.Sensors.Pages.SensorDetailPages.Components
 
 <MudPaper Elevation="1" Class="pa-4 mb-4">
-    <MudStack Spacing="2">
-        <MudText Typo="Typo.h5">@Sensor.Name</MudText>
-        <MudStack Row="true" Spacing="4">
-            <MudStack Spacing="0">
-                <MudText Typo="Typo.caption" Color="Color.Secondary">Coordinates</MudText>
-                <MudText Typo="Typo.body2">@Sensor.Latitude.ToString("F4"), @Sensor.Longitude.ToString("F4")</MudText>
+    <MudGrid Spacing="4">
+        <MudItem xs="12" md="7">
+            <MudStack Spacing="2">
+                <MudText Typo="Typo.h5">@Sensor.Name</MudText>
+                <MudStack Row="true" Spacing="4">
+                    <MudStack Spacing="0">
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">Coordinates</MudText>
+                        <MudText Typo="Typo.body2">@Sensor.Latitude.ToString("F4"), @Sensor.Longitude.ToString("F4")</MudText>
+                    </MudStack>
+                    <MudStack Spacing="0">
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">Created</MudText>
+                        <MudText Typo="Typo.body2">@Sensor.CreatedAt.LocalDateTime.ToString("d")</MudText>
+                    </MudStack>
+                </MudStack>
             </MudStack>
-            <MudStack Spacing="0">
-                <MudText Typo="Typo.caption" Color="Color.Secondary">Created</MudText>
-                <MudText Typo="Typo.body2">@Sensor.CreatedAt.LocalDateTime.ToString("d")</MudText>
-            </MudStack>
-        </MudStack>
-    </MudStack>
+        </MudItem>
+        <MudItem xs="12" md="5">
+            <SensorLocationMap Latitude="Sensor.Latitude" Longitude="Sensor.Longitude" />
+        </MudItem>
+    </MudGrid>
 </MudPaper>
 
 <MudPaper Elevation="1" Class="pa-4">
