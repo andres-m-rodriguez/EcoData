@@ -46,7 +46,7 @@
 
     private string _role = "Viewer";
 
-    protected override void OnParametersSet()
+    protected override void OnInitialized()
     {
         _role = CurrentRole;
     }
