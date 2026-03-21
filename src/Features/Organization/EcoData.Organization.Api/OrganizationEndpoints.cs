@@ -49,16 +49,21 @@ public static class OrganizationEndpoints
         group
             .MapGet(
                 "/{id:guid}",
-                async Task<Results<Ok<OrganizationDtoForDetail>, NotFound>> (
+                async Task<Results<Ok<OrganizationDtoForDetail>, ProblemHttpResult>> (
                     Guid id,
                     IOrganizationRepository repository,
                     CancellationToken ct
                 ) =>
                 {
                     var organization = await repository.GetByIdAsync(id, ct);
-                    return organization is null
-                        ? TypedResults.NotFound()
-                        : TypedResults.Ok(organization);
+                    if (organization is null)
+                    {
+                        return TypedResults.Problem(
+                            detail: "Organization not found.",
+                            statusCode: StatusCodes.Status404NotFound
+                        );
+                    }
+                    return TypedResults.Ok(organization);
                 }
             )
             .WithName("GetOrganizationById");
@@ -66,7 +71,7 @@ public static class OrganizationEndpoints
         group
             .MapPost(
                 "/",
-                async Task<Results<Created<OrganizationDtoForCreated>, Conflict<string>>> (
+                async Task<Results<Created<OrganizationDtoForCreated>, ProblemHttpResult>> (
                     OrganizationDtoForCreate dto,
                     IOrganizationRepository repository,
                     CancellationToken ct
@@ -75,8 +80,9 @@ public static class OrganizationEndpoints
                     var exists = await repository.ExistsAsync(dto.Name, ct);
                     if (exists)
                     {
-                        return TypedResults.Conflict(
-                            "An organization with this name already exists."
+                        return TypedResults.Problem(
+                            detail: "An organization with this name already exists.",
+                            statusCode: StatusCodes.Status409Conflict
                         );
                     }
 
@@ -90,7 +96,9 @@ public static class OrganizationEndpoints
         group
             .MapPut(
                 "/{id:guid}",
-                async Task<Results<Ok<OrganizationDtoForDetail>, NotFound, ForbidHttpResult>> (
+                async Task<
+                    Results<Ok<OrganizationDtoForDetail>, ProblemHttpResult, ForbidHttpResult>
+                > (
                     Guid id,
                     OrganizationDtoForUpdate dto,
                     ClaimsPrincipal user,
@@ -114,7 +122,14 @@ public static class OrganizationEndpoints
                     }
 
                     var updated = await repository.UpdateAsync(id, dto, ct);
-                    return updated is null ? TypedResults.NotFound() : TypedResults.Ok(updated);
+                    if (updated is null)
+                    {
+                        return TypedResults.Problem(
+                            detail: "Organization not found.",
+                            statusCode: StatusCodes.Status404NotFound
+                        );
+                    }
+                    return TypedResults.Ok(updated);
                 }
             )
             .WithName("UpdateOrganization")
@@ -123,7 +138,7 @@ public static class OrganizationEndpoints
         group
             .MapDelete(
                 "/{id:guid}",
-                async Task<Results<NoContent, NotFound, Conflict<string>, ForbidHttpResult>> (
+                async Task<Results<NoContent, ProblemHttpResult, ForbidHttpResult>> (
                     Guid id,
                     ClaimsPrincipal user,
                     IOrganizationRepository repository,
@@ -149,13 +164,21 @@ public static class OrganizationEndpoints
                     var sensorCount = await sensorRepository.GetCountByOrganizationAsync(id, ct);
                     if (sensorCount > 0)
                     {
-                        return TypedResults.Conflict(
-                            $"Cannot delete organization with {sensorCount} active sensor(s). Please delete or reassign all sensors first."
+                        return TypedResults.Problem(
+                            detail: $"Cannot delete organization with {sensorCount} active sensor(s). Please delete or reassign all sensors first.",
+                            statusCode: StatusCodes.Status409Conflict
                         );
                     }
 
                     var deleted = await repository.DeleteAsync(id, ct);
-                    return deleted ? TypedResults.NoContent() : TypedResults.NotFound();
+                    if (!deleted)
+                    {
+                        return TypedResults.Problem(
+                            detail: "Organization not found.",
+                            statusCode: StatusCodes.Status404NotFound
+                        );
+                    }
+                    return TypedResults.NoContent();
                 }
             )
             .WithName("DeleteOrganization")
