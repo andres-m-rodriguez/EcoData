@@ -3,7 +3,7 @@
 @implements IAsyncDisposable
 
 <div class="search-header-wrapper @(_isSticky ? "is-sticky" : "")" @ref="_headerRef">
-    <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center">
+    <div class="search-header-content">
         <div class="search-wrapper">
             <SearchBar @bind-Value="SearchSignal.Value" Placeholder="@Placeholder" ShowFilterButton="ShowFilterButton"
                        HasActiveFilters="HasActiveFilters" FilterCount="FilterCount" OnFilterClick="OnFilterClick"
@@ -11,11 +11,11 @@
         </div>
         @if (ActionButtons is not null)
         {
-            <MudStack Row="true" Spacing="1">
+            <div class="actions-wrapper">
                 @ActionButtons
-            </MudStack>
+            </div>
         }
-    </MudStack>
+    </div>
 </div>
 
 @code {
