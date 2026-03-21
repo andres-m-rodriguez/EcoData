@@ -1,11 +1,10 @@
-using System.Net;
 using System.Net.Http.Json;
 using System.Net.ServerSentEvents;
 using System.Runtime.CompilerServices;
 using System.Text.Json;
 using EcoData.Common.Http.Helpers;
+using EcoData.Common.Problems.Contracts;
 using EcoData.Sensors.Contracts.Dtos;
-using EcoData.Sensors.Contracts.Errors;
 using EcoData.Sensors.Contracts.Parameters;
 using OneOf;
 
@@ -54,7 +53,7 @@ public sealed class SensorReadingHttpClient(HttpClient httpClient) : ISensorRead
         return await response.Content.ReadFromJsonAsync<IReadOnlyList<string>>(cancellationToken) ?? [];
     }
 
-    public async Task<OneOf<ReadingBatchResult, NotFoundError, ValidationError>> PostReadingsAsync(
+    public async Task<OneOf<ReadingBatchResult, ProblemDetail>> PostReadingsAsync(
         Guid sensorId,
         SensorReadingDto reading,
         CancellationToken cancellationToken = default
@@ -92,14 +91,7 @@ public sealed class SensorReadingHttpClient(HttpClient httpClient) : ISensorRead
             return result!;
         }
 
-        return response.StatusCode switch
-        {
-            HttpStatusCode.NotFound => new NotFoundError(),
-            HttpStatusCode.BadRequest => new ValidationError(
-                await response.Content.ReadAsStringAsync(cancellationToken)
-            ),
-            _ => new ValidationError("Failed to post reading")
-        };
+        return await response.ReadProblemAsync(cancellationToken);
     }
 
     public async IAsyncEnumerable<ReadingDtoForCreate> SubscribeToReadingsAsync(
