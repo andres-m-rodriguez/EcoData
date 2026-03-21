@@ -73,8 +73,7 @@
                 _model.AboutUs = organization.AboutUs;
                 _model.WebsiteUrl = organization.WebsiteUrl;
             },
-            _ => _organization = null,
-            unauthorized => _organization = null
+            _ => _organization = null
         );
     }
 
@@ -110,9 +109,7 @@
                 Snackbar.Add("Organization updated successfully", Severity.Success);
                 Navigation.NavigateTo($"/organizations/{Id}");
             },
-            _ => _errorMessage = "Organization not found",
-            validationError => _errorMessage = validationError.Errors.FirstOrDefault()?.ErrorMessage ?? "Validation failed",
-            apiError => _errorMessage = apiError.Message ?? "Failed to update organization"
+            problem => _errorMessage = problem.Detail ?? "Failed to update organization"
         );
     }
 

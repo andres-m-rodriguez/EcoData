@@ -1,3 +1,4 @@
+using EcoData.Common.Problems.Contracts;
 using EcoData.Organization.Contracts.Dtos;
 using EcoData.Organization.Contracts.Errors;
 using OneOf;
@@ -11,14 +12,14 @@ public interface IOrganizationBlockedUserHttpClient
         CancellationToken cancellationToken = default
     );
 
-    Task<OneOf<OrganizationBlockedUserDto, ConflictError, ApiError>> BlockUserAsync(
+    Task<OneOf<OrganizationBlockedUserDto, ProblemDetail>> BlockUserAsync(
         Guid organizationId,
         Guid userId,
         string? reason,
         CancellationToken cancellationToken = default
     );
 
-    Task<OneOf<Success, NotFoundError, ApiError>> UnblockUserAsync(
+    Task<OneOf<Success, ProblemDetail>> UnblockUserAsync(
         Guid organizationId,
         Guid userId,
         CancellationToken cancellationToken = default

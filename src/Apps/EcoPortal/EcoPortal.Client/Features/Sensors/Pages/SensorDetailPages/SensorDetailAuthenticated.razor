@@ -145,8 +145,7 @@
                     Snackbar.Add("Sensor deleted successfully", Severity.Success);
                     Navigation.GoBack();
                 },
-                _ => Snackbar.Add("Sensor not found", Severity.Error),
-                error => Snackbar.Add(error.Message, Severity.Error)
+                problem => Snackbar.Add(problem.Detail ?? "Failed to delete sensor", Severity.Error)
             );
         }
     }

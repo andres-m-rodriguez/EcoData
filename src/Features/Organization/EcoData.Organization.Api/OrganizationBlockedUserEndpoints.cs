@@ -55,7 +55,11 @@ public static class OrganizationBlockedUserEndpoints
             .MapPost(
                 "/",
                 async Task<
-                    Results<Created<OrganizationBlockedUserDto>, Conflict<string>, ForbidHttpResult>
+                    Results<
+                        Created<OrganizationBlockedUserDto>,
+                        ProblemHttpResult,
+                        ForbidHttpResult
+                    >
                 > (
                     Guid organizationId,
                     BlockUserRequest request,
@@ -86,7 +90,10 @@ public static class OrganizationBlockedUserEndpoints
                     );
                     if (isAlreadyBlocked)
                     {
-                        return TypedResults.Conflict("This user is already blocked.");
+                        return TypedResults.Problem(
+                            detail: "This user is already blocked.",
+                            statusCode: StatusCodes.Status409Conflict
+                        );
                     }
 
                     var blocked = await repository.BlockAsync(
@@ -108,7 +115,7 @@ public static class OrganizationBlockedUserEndpoints
         group
             .MapDelete(
                 "/{userId:guid}",
-                async Task<Results<NoContent, NotFound, ForbidHttpResult>> (
+                async Task<Results<NoContent, ProblemHttpResult, ForbidHttpResult>> (
                     Guid organizationId,
                     Guid userId,
                     ClaimsPrincipal user,
@@ -132,7 +139,14 @@ public static class OrganizationBlockedUserEndpoints
                     }
 
                     var unblocked = await repository.UnblockAsync(organizationId, userId, ct);
-                    return unblocked ? TypedResults.NoContent() : TypedResults.NotFound();
+                    if (!unblocked)
+                    {
+                        return TypedResults.Problem(
+                            detail: "User is not blocked.",
+                            statusCode: StatusCodes.Status404NotFound
+                        );
+                    }
+                    return TypedResults.NoContent();
                 }
             )
             .WithName("UnblockUser");

@@ -56,8 +56,7 @@
                 Snackbar.Add("Organization created successfully", Severity.Success);
                 Navigation.NavigateTo($"/organizations/{created.Id}");
             },
-            validationError => _errorMessage = validationError.Errors.FirstOrDefault()?.ErrorMessage ?? "Validation failed",
-            apiError => _errorMessage = apiError.Message ?? "Failed to create organization"
+            problem => _errorMessage = problem.Detail ?? "Failed to create organization"
         );
     }
 

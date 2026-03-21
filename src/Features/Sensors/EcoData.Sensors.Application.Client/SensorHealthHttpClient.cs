@@ -1,8 +1,7 @@
-using System.Net;
 using System.Net.Http.Json;
 using EcoData.Common.Http.Helpers;
+using EcoData.Common.Problems.Contracts;
 using EcoData.Sensors.Contracts.Dtos;
-using EcoData.Sensors.Contracts.Errors;
 using EcoData.Sensors.Contracts.Parameters;
 using OneOf;
 
@@ -10,14 +9,14 @@ namespace EcoData.Sensors.Application.Client;
 
 public sealed class SensorHealthHttpClient(HttpClient httpClient) : ISensorHealthHttpClient
 {
-    public async Task<OneOf<SensorHealthSummaryDto, ApiError>> GetSummaryAsync(
+    public async Task<OneOf<SensorHealthSummaryDto, ProblemDetail>> GetSummaryAsync(
         CancellationToken cancellationToken = default
     )
     {
         var response = await httpClient.GetAsync("/api/health/sensors/summary", cancellationToken);
 
         if (!response.IsSuccessStatusCode)
-            return new ApiError((int)response.StatusCode, await response.Content.ReadAsStringAsync(cancellationToken));
+            return await response.ReadProblemAsync(cancellationToken);
 
         var result = await response.Content.ReadFromJsonAsync<SensorHealthSummaryDto>(cancellationToken);
         return result!;
@@ -41,35 +40,29 @@ public sealed class SensorHealthHttpClient(HttpClient httpClient) : ISensorHealt
         )!;
     }
 
-    public async Task<OneOf<SensorHealthStatusDtoForDetail, NotFoundError, ApiError>> GetSensorHealthAsync(
+    public async Task<OneOf<SensorHealthStatusDtoForDetail, ProblemDetail>> GetSensorHealthAsync(
         Guid sensorId,
         CancellationToken cancellationToken = default
     )
     {
         var response = await httpClient.GetAsync($"/api/sensors/{sensorId}/health", cancellationToken);
 
-        if (response.StatusCode == HttpStatusCode.NotFound)
-            return new NotFoundError();
-
         if (!response.IsSuccessStatusCode)
-            return new ApiError((int)response.StatusCode, await response.Content.ReadAsStringAsync(cancellationToken));
+            return await response.ReadProblemAsync(cancellationToken);
 
         var result = await response.Content.ReadFromJsonAsync<SensorHealthStatusDtoForDetail>(cancellationToken);
         return result!;
     }
 
-    public async Task<OneOf<SensorHealthConfigDtoForDetail, NotFoundError, ApiError>> GetSensorHealthConfigAsync(
+    public async Task<OneOf<SensorHealthConfigDtoForDetail, ProblemDetail>> GetSensorHealthConfigAsync(
         Guid sensorId,
         CancellationToken cancellationToken = default
     )
     {
         var response = await httpClient.GetAsync($"/api/sensors/{sensorId}/health/config", cancellationToken);
 
-        if (response.StatusCode == HttpStatusCode.NotFound)
-            return new NotFoundError();
-
         if (!response.IsSuccessStatusCode)
-            return new ApiError((int)response.StatusCode, await response.Content.ReadAsStringAsync(cancellationToken));
+            return await response.ReadProblemAsync(cancellationToken);
 
         var result = await response.Content.ReadFromJsonAsync<SensorHealthConfigDtoForDetail>(cancellationToken);
         return result!;

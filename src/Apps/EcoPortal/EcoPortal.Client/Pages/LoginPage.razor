@@ -108,12 +108,7 @@
                 var returnUrl = string.IsNullOrEmpty(ReturnUrl) ? "/" : ReturnUrl;
                 Navigation.NavigateTo(returnUrl);
             },
-            _ => _errorMessage = "Invalid email or password",
-            _ => _errorMessage = "Your account has been locked. Please try again later.",
-            tooMany => _errorMessage = tooMany.RetryAfterMinutes > 1
-                ? $"Too many login attempts. Please try again in {tooMany.RetryAfterMinutes} minutes."
-                : "Too many login attempts. Please try again in 1 minute.",
-            validation => _errorMessage = string.Join(", ", validation.Errors)
+            problem => _errorMessage = problem.Detail ?? "Login failed"
         );
     }
 

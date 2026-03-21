@@ -25,12 +25,16 @@ public static class UserAuthEndpoints
                 {
                     var result = await authService.RegisterAsync(request, ct);
 
-                    return result.Match<
-                        Results<Ok<UserInfo>, BadRequest<IReadOnlyList<string>>, Conflict<string>>
-                    >(
+                    return result.Match<Results<Ok<UserInfo>, ProblemHttpResult>>(
                         userInfo => TypedResults.Ok(userInfo),
-                        _ => TypedResults.Conflict("An account with this email already exists"),
-                        validationFailed => TypedResults.BadRequest(validationFailed.Errors)
+                        _ => TypedResults.Problem(
+                            detail: "An account with this email already exists",
+                            statusCode: StatusCodes.Status409Conflict
+                        ),
+                        validationFailed => TypedResults.Problem(
+                            detail: string.Join(", ", validationFailed.Errors),
+                            statusCode: StatusCodes.Status400BadRequest
+                        )
                     );
                 }
             )
@@ -43,19 +47,26 @@ public static class UserAuthEndpoints
                 {
                     var result = await authService.LoginAsync(request, ct);
 
-                    return result.Match<
-                        Results<
-                            Ok<UserInfo>,
-                            BadRequest<IReadOnlyList<string>>,
-                            UnauthorizedHttpResult,
-                            StatusCodeHttpResult
-                        >
-                    >(
+                    return result.Match<Results<Ok<UserInfo>, ProblemHttpResult>>(
                         userInfo => TypedResults.Ok(userInfo),
-                        _ => TypedResults.Unauthorized(),
-                        _ => TypedResults.StatusCode(423), // Locked
-                        _ => TypedResults.StatusCode(429), // TooManyRequests - handled by middleware, but needed for exhaustive match
-                        validationFailed => TypedResults.BadRequest(validationFailed.Errors)
+                        _ => TypedResults.Problem(
+                            detail: "Invalid email or password",
+                            statusCode: StatusCodes.Status401Unauthorized
+                        ),
+                        _ => TypedResults.Problem(
+                            detail: "Your account has been locked. Please try again later.",
+                            statusCode: 423
+                        ),
+                        tooMany => TypedResults.Problem(
+                            detail: tooMany.RetryAfterMinutes > 1
+                                ? $"Too many login attempts. Please try again in {tooMany.RetryAfterMinutes} minutes."
+                                : "Too many login attempts. Please try again in 1 minute.",
+                            statusCode: StatusCodes.Status429TooManyRequests
+                        ),
+                        validationFailed => TypedResults.Problem(
+                            detail: string.Join(", ", validationFailed.Errors),
+                            statusCode: StatusCodes.Status400BadRequest
+                        )
                     );
                 }
             )
