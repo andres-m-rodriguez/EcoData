@@ -1,5 +1,5 @@
+using EcoData.Common.Problems.Contracts;
 using EcoData.Sensors.Contracts.Dtos;
-using EcoData.Sensors.Contracts.Errors;
 using EcoData.Sensors.Contracts.Parameters;
 using OneOf;
 
@@ -18,7 +18,7 @@ public interface ISensorReadingHttpClient
         CancellationToken cancellationToken = default
     );
 
-    Task<OneOf<ReadingBatchResult, NotFoundError, ValidationError>> PostReadingsAsync(
+    Task<OneOf<ReadingBatchResult, ProblemDetail>> PostReadingsAsync(
         Guid sensorId,
         SensorReadingDto reading,
         CancellationToken cancellationToken = default
