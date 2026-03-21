@@ -59,9 +59,9 @@
 <MudPaper Elevation="1" Class="pa-4">
     <Tabs ActiveIndex="_activeTab" ActiveIndexChanged="OnTabChanged">
         <Tab Title="History" Icon="@Icons.Material.Filled.History">
-            <SensorReadingsList @ref="_readingsList" SensorId="Sensor.Id"                                ShowFilter="true"
-                                OnFilterClick="OpenFilterDialog"                                ParameterFilter="_parameterFilter" FromDate="_fromDate"
-                                ToDate="_toDate">
+            <SensorReadingsList @ref="_readingsList" SensorId="Sensor.Id" ShowFilter="true"
+                                OnFilterClick="OpenFilterDialog" ParameterFilter="@_parameterFilter"
+                                FromDate="@_fromDate" ToDate="@_toDate">
                 <ActionButtons>
                     <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.Refresh"
                                OnClick="RefreshReadings" Size="Size.Small">
