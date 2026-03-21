@@ -1,7 +1,7 @@
-using System.Net;
 using System.Net.Http.Json;
 using EcoData.Common.Http.Helpers;
 using EcoData.Common.Pagination;
+using EcoData.Common.Problems.Contracts;
 using EcoData.Organization.Contracts.Dtos;
 using EcoData.Organization.Contracts.Errors;
 using EcoData.Organization.Contracts.Parameters;
@@ -29,7 +29,7 @@ public sealed class OrganizationMemberHttpClient(HttpClient httpClient)
         )!;
     }
 
-    public async Task<OneOf<OrganizationMemberDto, NotFoundError>> GetAsync(
+    public async Task<OneOf<OrganizationMemberDto, ProblemDetail>> GetAsync(
         Guid organizationId,
         Guid userId,
         CancellationToken cancellationToken = default
@@ -40,9 +40,9 @@ public sealed class OrganizationMemberHttpClient(HttpClient httpClient)
             cancellationToken
         );
 
-        if (response.StatusCode == HttpStatusCode.NotFound)
+        if (!response.IsSuccessStatusCode)
         {
-            return new NotFoundError();
+            return await response.ReadProblemAsync(cancellationToken);
         }
 
         var result = await response.Content.ReadFromJsonAsync<OrganizationMemberDto>(
@@ -51,9 +51,7 @@ public sealed class OrganizationMemberHttpClient(HttpClient httpClient)
         return result!;
     }
 
-    public async Task<
-        OneOf<OrganizationMemberDto, NotFoundError, ValidationError, ApiError>
-    > UpdateAsync(
+    public async Task<OneOf<OrganizationMemberDto, ProblemDetail>> UpdateAsync(
         Guid organizationId,
         Guid userId,
         UpdateMemberRoleRequest request,
@@ -66,23 +64,9 @@ public sealed class OrganizationMemberHttpClient(HttpClient httpClient)
             cancellationToken
         );
 
-        if (response.StatusCode == HttpStatusCode.NotFound)
-        {
-            return new NotFoundError();
-        }
-
-        if (response.StatusCode == HttpStatusCode.BadRequest)
-        {
-            var message = await response.Content.ReadAsStringAsync(cancellationToken);
-            return new ValidationError([new ValidationFailure("Role", message)]);
-        }
-
         if (!response.IsSuccessStatusCode)
         {
-            return new ApiError(
-                (int)response.StatusCode,
-                await response.Content.ReadAsStringAsync(cancellationToken)
-            );
+            return await response.ReadProblemAsync(cancellationToken);
         }
 
         var result = await response.Content.ReadFromJsonAsync<OrganizationMemberDto>(
@@ -91,7 +75,7 @@ public sealed class OrganizationMemberHttpClient(HttpClient httpClient)
         return result!;
     }
 
-    public async Task<OneOf<Success, NotFoundError, ValidationError, ApiError>> DeleteAsync(
+    public async Task<OneOf<Success, ProblemDetail>> DeleteAsync(
         Guid organizationId,
         Guid userId,
         CancellationToken cancellationToken = default
@@ -102,23 +86,9 @@ public sealed class OrganizationMemberHttpClient(HttpClient httpClient)
             cancellationToken
         );
 
-        if (response.StatusCode == HttpStatusCode.NotFound)
-        {
-            return new NotFoundError();
-        }
-
-        if (response.StatusCode == HttpStatusCode.BadRequest)
-        {
-            var message = await response.Content.ReadAsStringAsync(cancellationToken);
-            return new ValidationError([new ValidationFailure("Member", message)]);
-        }
-
         if (!response.IsSuccessStatusCode)
         {
-            return new ApiError(
-                (int)response.StatusCode,
-                await response.Content.ReadAsStringAsync(cancellationToken)
-            );
+            return await response.ReadProblemAsync(cancellationToken);
         }
 
         return new Success();

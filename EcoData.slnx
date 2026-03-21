@@ -52,6 +52,7 @@
   <Folder Name="/src/Features/Common/">
     <Project Path="src/Features/Common/EcoData.Common.Http.Helpers/EcoData.Common.Http.Helpers.csproj" />
     <Project Path="src/Features/Common/EcoData.Common.Pagination/EcoData.Common.Pagination.csproj" />
+    <Project Path="src/Features/Common/EcoData.Common.Problems.Contracts/EcoData.Common.Problems.Contracts.csproj" />
     <Project Path="src/Features/Common/EcoData.Common.Results/EcoData.Common.Results.csproj" />
   </Folder>
   <Folder Name="/src/Features/Identity/">
