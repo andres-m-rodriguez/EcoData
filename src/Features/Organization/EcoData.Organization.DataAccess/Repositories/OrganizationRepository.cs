@@ -137,6 +137,13 @@ public sealed class OrganizationRepository(IDbContextFactory<OrganizationDbConte
             {
                 Id = Guid.CreateVersion7(),
                 OrganizationId = entity.Id,
+                Name = "Contributor",
+                CreatedAt = now,
+            },
+            new OrganizationRole
+            {
+                Id = Guid.CreateVersion7(),
+                OrganizationId = entity.Id,
                 Name = "Viewer",
                 CreatedAt = now,
             },
