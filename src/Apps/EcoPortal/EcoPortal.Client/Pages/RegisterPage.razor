@@ -128,8 +128,7 @@
 
         result.Switch(
             _ => Navigation.NavigateTo("/login?registered=true"),
-            _ => _errorMessage = "An account with this email already exists",
-            validation => _errorMessage = string.Join(", ", validation.Errors)
+            problem => _errorMessage = problem.Detail ?? "Registration failed"
         );
     }
 
