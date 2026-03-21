@@ -41,22 +41,24 @@ window.leafletMapService = {
             instance.marker = L.marker([lat, lng]).addTo(map);
         }
 
-        // Handle map clicks
-        map.on('click', (e) => {
-            const { lat, lng } = e.latlng;
+        // Handle map clicks (only if interaction is enabled)
+        if (!disableInteraction) {
+            map.on('click', (e) => {
+                const { lat, lng } = e.latlng;
 
-            // Update or create marker
-            if (instance.marker) {
-                instance.marker.setLatLng([lat, lng]);
-            } else {
-                instance.marker = L.marker([lat, lng]).addTo(map);
-            }
+                // Update or create marker
+                if (instance.marker) {
+                    instance.marker.setLatLng([lat, lng]);
+                } else {
+                    instance.marker = L.marker([lat, lng]).addTo(map);
+                }
 
-            // Notify Blazor
-            if (instance.dotNetRef) {
-                instance.dotNetRef.invokeMethodAsync('HandleMapClick', lat, lng);
-            }
-        });
+                // Notify Blazor
+                if (instance.dotNetRef) {
+                    instance.dotNetRef.invokeMethodAsync('HandleMapClick', lat, lng);
+                }
+            });
+        }
 
         // Invalidate size after rendering
         setTimeout(() => map.invalidateSize(), 100);
