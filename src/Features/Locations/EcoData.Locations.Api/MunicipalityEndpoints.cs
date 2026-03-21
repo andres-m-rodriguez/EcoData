@@ -29,14 +29,19 @@ public static class MunicipalityEndpoints
         group
             .MapGet(
                 "/{id:guid}",
-                async Task<Results<Ok<MunicipalityDtoForDetail>, NotFound>> (
+                async Task<Results<Ok<MunicipalityDtoForDetail>, ProblemHttpResult>> (
                     Guid id,
                     IMunicipalityRepository repository,
                     CancellationToken ct
                 ) =>
                 {
                     var municipality = await repository.GetByIdAsync(id, ct);
-                    return municipality is not null ? TypedResults.Ok(municipality) : TypedResults.NotFound();
+                    return municipality is not null
+                        ? TypedResults.Ok(municipality)
+                        : TypedResults.Problem(
+                            detail: "Municipality not found",
+                            statusCode: StatusCodes.Status404NotFound
+                        );
                 }
             )
             .WithName("GetMunicipalityById");
@@ -44,14 +49,19 @@ public static class MunicipalityEndpoints
         group
             .MapGet(
                 "/geojson-id/{geoJsonId}",
-                async Task<Results<Ok<MunicipalityDtoForDetail>, NotFound>> (
+                async Task<Results<Ok<MunicipalityDtoForDetail>, ProblemHttpResult>> (
                     string geoJsonId,
                     IMunicipalityRepository repository,
                     CancellationToken ct
                 ) =>
                 {
                     var municipality = await repository.GetByGeoJsonIdAsync(geoJsonId, ct);
-                    return municipality is not null ? TypedResults.Ok(municipality) : TypedResults.NotFound();
+                    return municipality is not null
+                        ? TypedResults.Ok(municipality)
+                        : TypedResults.Problem(
+                            detail: "Municipality not found",
+                            statusCode: StatusCodes.Status404NotFound
+                        );
                 }
             )
             .WithName("GetMunicipalityByGeoJsonId");
@@ -59,7 +69,7 @@ public static class MunicipalityEndpoints
         group
             .MapGet(
                 "/by-point",
-                async Task<Results<Ok<MunicipalityDtoForDetail>, NotFound>> (
+                async Task<Results<Ok<MunicipalityDtoForDetail>, ProblemHttpResult>> (
                     decimal latitude,
                     decimal longitude,
                     IMunicipalityRepository repository,
@@ -67,7 +77,12 @@ public static class MunicipalityEndpoints
                 ) =>
                 {
                     var municipality = await repository.GetByPointAsync(latitude, longitude, ct);
-                    return municipality is not null ? TypedResults.Ok(municipality) : TypedResults.NotFound();
+                    return municipality is not null
+                        ? TypedResults.Ok(municipality)
+                        : TypedResults.Problem(
+                            detail: "No municipality found at this location",
+                            statusCode: StatusCodes.Status404NotFound
+                        );
                 }
             )
             .WithName("GetMunicipalityByPoint");
@@ -75,7 +90,7 @@ public static class MunicipalityEndpoints
         group
             .MapGet(
                 "/geojson/state/{stateCode}",
-                async Task<Results<JsonHttpResult<object>, NotFound>> (
+                async Task<Results<JsonHttpResult<object>, ProblemHttpResult>> (
                     string stateCode,
                     IMunicipalityRepository repository,
                     CancellationToken ct
@@ -85,7 +100,10 @@ public static class MunicipalityEndpoints
 
                     if (municipalities.Count == 0)
                     {
-                        return TypedResults.NotFound();
+                        return TypedResults.Problem(
+                            detail: $"No municipalities found for state '{stateCode}'",
+                            statusCode: StatusCodes.Status404NotFound
+                        );
                     }
 
                     var features = municipalities

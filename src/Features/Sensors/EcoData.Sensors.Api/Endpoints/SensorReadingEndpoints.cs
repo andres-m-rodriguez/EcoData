@@ -58,7 +58,7 @@ public static class SensorReadingEndpoints
         group
             .MapPost(
                 "/",
-                async Task<Results<Ok<ReadingBatchResult>, NotFound<string>>> (
+                async Task<Results<Ok<ReadingBatchResult>, ProblemHttpResult>> (
                     Guid sensorId,
                     ReadingBatchDtoForCreate batch,
                     ISensorRepository sensorRepository,
@@ -72,7 +72,10 @@ public static class SensorReadingEndpoints
                     var sensor = await sensorRepository.GetByIdAsync(sensorId, ct);
                     if (sensor is null)
                     {
-                        return TypedResults.NotFound($"Sensor {sensorId} not found");
+                        return TypedResults.Problem(
+                            detail: $"Sensor {sensorId} not found",
+                            statusCode: StatusCodes.Status404NotFound
+                        );
                     }
 
                     var validator = new ReadingItemValidator(timeProvider.GetUtcNow());

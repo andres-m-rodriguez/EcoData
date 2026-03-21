@@ -17,14 +17,19 @@ public static class SensorHealthConfigEndpoints
         group
             .MapGet(
                 "/",
-                async Task<Results<Ok<SensorHealthConfigDtoForDetail>, NotFound>> (
+                async Task<Results<Ok<SensorHealthConfigDtoForDetail>, ProblemHttpResult>> (
                     Guid sensorId,
                     ISensorHealthRepository repository,
                     CancellationToken ct
                 ) =>
                 {
                     var config = await repository.GetConfigByIdAsync(sensorId, ct);
-                    return config is null ? TypedResults.NotFound() : TypedResults.Ok(config);
+                    return config is null
+                        ? TypedResults.Problem(
+                            detail: "Sensor health config not found",
+                            statusCode: StatusCodes.Status404NotFound
+                        )
+                        : TypedResults.Ok(config);
                 }
             )
             .WithName("GetSensorHealthConfig");
@@ -32,7 +37,7 @@ public static class SensorHealthConfigEndpoints
         group
             .MapPut(
                 "/",
-                async Task<Results<Ok<SensorHealthConfigDtoForDetail>, NotFound<string>>> (
+                async Task<Results<Ok<SensorHealthConfigDtoForDetail>, ProblemHttpResult>> (
                     Guid sensorId,
                     SensorHealthConfigDtoForCreate dto,
                     ISensorHealthRepository repository,
@@ -43,7 +48,10 @@ public static class SensorHealthConfigEndpoints
                     var sensor = await sensorRepository.GetByIdAsync(sensorId, ct);
                     if (sensor is null)
                     {
-                        return TypedResults.NotFound("Sensor not found");
+                        return TypedResults.Problem(
+                            detail: "Sensor not found",
+                            statusCode: StatusCodes.Status404NotFound
+                        );
                     }
 
                     var config = await repository.UpsertConfigAsync(sensorId, dto, ct);

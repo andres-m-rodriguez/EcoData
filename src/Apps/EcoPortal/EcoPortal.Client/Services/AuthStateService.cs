@@ -1,8 +1,9 @@
+using EcoData.Common.Problems.Contracts;
 using EcoData.Identity.Application.Client.HttpClients;
-using EcoData.Identity.Contracts.Results;
 using EcoData.Identity.Contracts.Authorization;
 using EcoData.Identity.Contracts.Requests;
 using EcoData.Identity.Contracts.Responses;
+using OneOf;
 
 namespace EcoPortal.Client.Services;
 
@@ -34,7 +35,7 @@ public sealed class AuthStateService(IAuthHttpClient authClient)
         NotifyStateChanged();
     }
 
-    public async Task<LoginResult> LoginAsync(LoginRequest request)
+    public async Task<OneOf<UserInfo, ProblemDetail>> LoginAsync(LoginRequest request)
     {
         var result = await authClient.LoginAsync(request);
 

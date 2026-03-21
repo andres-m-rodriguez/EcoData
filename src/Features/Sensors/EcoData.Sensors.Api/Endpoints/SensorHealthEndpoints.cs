@@ -52,14 +52,19 @@ public static class SensorHealthEndpoints
         sensorGroup
             .MapGet(
                 "/",
-                async Task<Results<Ok<SensorHealthStatusDtoForDetail>, NotFound>> (
+                async Task<Results<Ok<SensorHealthStatusDtoForDetail>, ProblemHttpResult>> (
                     Guid sensorId,
                     ISensorHealthRepository repository,
                     CancellationToken ct
                 ) =>
                 {
                     var status = await repository.GetStatusByIdAsync(sensorId, ct);
-                    return status is null ? TypedResults.NotFound() : TypedResults.Ok(status);
+                    return status is null
+                        ? TypedResults.Problem(
+                            detail: "Sensor health status not found",
+                            statusCode: StatusCodes.Status404NotFound
+                        )
+                        : TypedResults.Ok(status);
                 }
             )
             .WithName("GetSensorHealth");
@@ -67,7 +72,7 @@ public static class SensorHealthEndpoints
         sensorGroup
             .MapPost(
                 "/heartbeat",
-                async Task<Results<Ok<HeartbeatResponse>, NotFound<string>>> (
+                async Task<Results<Ok<HeartbeatResponse>, ProblemHttpResult>> (
                     Guid sensorId,
                     ISensorRepository sensorRepository,
                     ISensorHealthRepository healthRepository,
@@ -77,7 +82,10 @@ public static class SensorHealthEndpoints
                     var sensor = await sensorRepository.GetByIdAsync(sensorId, ct);
                     if (sensor is null)
                     {
-                        return TypedResults.NotFound($"Sensor {sensorId} not found");
+                        return TypedResults.Problem(
+                            detail: $"Sensor {sensorId} not found",
+                            statusCode: StatusCodes.Status404NotFound
+                        );
                     }
 
                     await healthRepository.RecordReadingAsync(sensorId, DateTimeOffset.UtcNow, ct);

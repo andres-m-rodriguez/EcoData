@@ -132,8 +132,7 @@
                     _blockedUsers.Remove(blocked);
                     StateHasChanged();
                 },
-                _ => Snackbar.Add("User not found in blocked list", Severity.Error),
-                error => Snackbar.Add($"Failed to unblock: {error.Message}", Severity.Error)
+                problem => Snackbar.Add(problem.Detail ?? "Failed to unblock user", Severity.Error)
             );
         }
     }
