@@ -1,56 +1,65 @@
-.sensor-list-container {
+.organizations-page {
+    max-width: 100%;
+}
+
+.organizations-header {
+    margin-bottom: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+@media (min-width: 960px) {
+    .organizations-header {
+        flex-direction: row;
+        align-items: flex-end;
+        justify-content: space-between;
+    }
+}
+
+.header-title-section {
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
 }
 
-/* Skeleton card styles */
-.sensor-skeleton-card {
+.header-label {
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    color: var(--mud-palette-text-secondary);
+}
+
+.header-heading {
+    font-family: 'Newsreader', serif;
+    font-size: clamp(2.5rem, 5vw, 3.5rem);
+    font-weight: 500;
+    color: var(--mud-palette-primary);
+    margin: 0;
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+}
+
+.organizations-content {
     display: flex;
     flex-direction: column;
-    gap: 1rem;
-    padding: 1.5rem;
+}
+
+.organizations-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.organization-skeleton {
+    padding: 1rem;
     background: white;
     border-radius: 0.75rem;
 }
 
-@media (min-width: 960px) {
-    .sensor-skeleton-card {
-        flex-direction: row;
-        align-items: center;
-        justify-content: space-between;
-    }
-}
-
-.skeleton-main {
-    display: flex;
-    align-items: center;
-    gap: 1.5rem;
-}
-
-.skeleton-info {
-    display: flex;
-    flex-direction: column;
-    min-width: 200px;
-}
-
-.skeleton-actions {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    border-top: 1px solid rgba(113, 121, 115, 0.05);
-    padding-top: 1rem;
-}
-
-@media (min-width: 960px) {
-    .skeleton-actions {
-        border-top: none;
-        padding-top: 0;
-    }
-}
-
 /* Empty state styles */
-.sensor-empty-state {
+.organizations-empty-state {
     display: flex;
     flex-direction: column;
     align-items: center;

@@ -13,28 +13,23 @@
                   HasActiveFilters="HasNonSearchFilters" OnFilterClick="OpenFilterDialog" />
 }
 
-<MudPaper Elevation="@Elevation" Class="sensor-list-container rounded-lg">
+<div class="sensor-list-container">
     <EcoDataVirtualizedList @ref="_virtualizedList" TItem="SensorDtoForList" TParams="SensorParameters"
                             ItemsProvider="GetItemsAsync" ParametersBuilder="BuildParameters" CursorSelector="sensor => sensor.Id"
-                            ItemSize="65" OverscanCount="3">
+                            ItemSize="120" OverscanCount="3">
         <LoadingTemplate>
-            @for (var i = 0; i < 8; i++)
+            @for (var i = 0; i < 5; i++)
             {
-                <div class="sensor-skeleton">
-                    <div class="skeleton-primary">
-                        <MudSkeleton Width="70%" Height="16px" />
-                        <MudSkeleton Width="40%" Height="12px" Class="mt-1" />
+                <div class="sensor-skeleton-card">
+                    <div class="skeleton-main">
+                        <MudSkeleton SkeletonType="SkeletonType.Circle" Width="48px" Height="48px" />
+                        <div class="skeleton-info">
+                            <MudSkeleton Width="60%" Height="20px" />
+                            <MudSkeleton Width="40%" Height="14px" Class="mt-2" />
+                        </div>
                     </div>
-                    <div class="skeleton-municipality">
-                        <MudSkeleton Width="100%" Height="14px" />
-                    </div>
-                    <div class="skeleton-coords">
-                        <MudSkeleton Width="100%" Height="14px" />
-                    </div>
-                    <div class="skeleton-status">
-                        <MudSkeleton Width="60px" Height="24px" Class="rounded-pill" />
-                    </div>
-                    <div class="skeleton-menu">
+                    <div class="skeleton-actions">
+                        <MudSkeleton Width="70px" Height="24px" Class="rounded-pill" />
                         <MudSkeleton SkeletonType="SkeletonType.Circle" Width="32px" Height="32px" />
                     </div>
                 </div>
@@ -43,54 +38,48 @@
         <EmptyTemplate>
             @if (HasActiveFilters)
             {
-                <MudStack AlignItems="AlignItems.Center" Class="pa-8">
-                    <MudIcon Icon="@Icons.Material.Filled.SearchOff" Size="Size.Large" Color="Color.Secondary" />
-                    <MudText Typo="Typo.h6" Color="Color.Secondary" Class="mt-2">No sensors found</MudText>
-                    <MudText Typo="Typo.body2" Color="Color.Secondary">
-                        No sensors match your current filter criteria.
-                    </MudText>
-                    <MudButton Variant="Variant.Outlined" Color="Color.Primary"
-                               StartIcon="@Icons.Material.Filled.FilterAltOff" OnClick="ClearFilters" Class="mt-3">
-                        Clear Filters
+                <div class="sensor-empty-state">
+                    <div class="empty-icon">
+                        <MudIcon Icon="@Icons.Material.Filled.SearchOff" Size="Size.Large" />
+                    </div>
+                    <h4 class="empty-title">No sensors found</h4>
+                    <p class="empty-description">Try adjusting your filters or search terms to find what you're looking for.</p>
+                    <MudButton Variant="Variant.Filled" Color="Color.Secondary" OnClick="ClearFilters" Class="mt-4">
+                        Clear All Filters
                     </MudButton>
-                </MudStack>
+                </div>
             }
             else
             {
-                <MudStack AlignItems="AlignItems.Center" Class="pa-8">
-                    <MudIcon Icon="@Icons.Material.Filled.Sensors" Size="Size.Large" Color="Color.Secondary" />
-                    <MudText Typo="Typo.h6" Color="Color.Secondary" Class="mt-2">@EmptyMessage</MudText>
-                    <MudText Typo="Typo.body2" Color="Color.Secondary">
-                        @EmptySubMessage
-                    </MudText>
-                </MudStack>
+                <div class="sensor-empty-state">
+                    <div class="empty-icon">
+                        <MudIcon Icon="@Icons.Material.Filled.SensorsOff" Size="Size.Large" />
+                    </div>
+                    <h4 class="empty-title">@EmptyMessage</h4>
+                    <p class="empty-description">@EmptySubMessage</p>
+                </div>
             }
         </EmptyTemplate>
         <ItemTemplate Context="sensor">
             <SensorListItem Sensor="sensor" OnClick="HandleClick" />
         </ItemTemplate>
         <PlaceholderTemplate>
-            <div class="sensor-skeleton">
-                <div class="skeleton-primary">
-                    <MudSkeleton Width="70%" Height="16px" />
-                    <MudSkeleton Width="40%" Height="12px" Class="mt-1" />
+            <div class="sensor-skeleton-card">
+                <div class="skeleton-main">
+                    <MudSkeleton SkeletonType="SkeletonType.Circle" Width="48px" Height="48px" />
+                    <div class="skeleton-info">
+                        <MudSkeleton Width="60%" Height="20px" />
+                        <MudSkeleton Width="40%" Height="14px" Class="mt-2" />
+                    </div>
                 </div>
-                <div class="skeleton-municipality">
-                    <MudSkeleton Width="100%" Height="14px" />
-                </div>
-                <div class="skeleton-coords">
-                    <MudSkeleton Width="100%" Height="14px" />
-                </div>
-                <div class="skeleton-status">
-                    <MudSkeleton Width="60px" Height="24px" Class="rounded-pill" />
-                </div>
-                <div class="skeleton-menu">
+                <div class="skeleton-actions">
+                    <MudSkeleton Width="70px" Height="24px" Class="rounded-pill" />
                     <MudSkeleton SkeletonType="SkeletonType.Circle" Width="32px" Height="32px" />
                 </div>
             </div>
         </PlaceholderTemplate>
     </EcoDataVirtualizedList>
-</MudPaper>
+</div>
 
 @code {
     private EcoDataVirtualizedList<SensorDtoForList, SensorParameters>? _virtualizedList;
