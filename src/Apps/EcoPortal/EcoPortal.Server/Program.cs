@@ -14,6 +14,7 @@ using EcoData.Organization.Api.Authorization;
 using EcoData.Organization.DataAccess;
 using EcoData.Organization.Database.Extensions;
 using EcoData.Sensors.Api;
+using EcoData.Sensors.Api.RateLimiting;
 using EcoData.Sensors.Contracts.Dtos;
 using EcoData.Sensors.DataAccess;
 using EcoData.Sensors.Database.Extensions;
@@ -58,6 +59,7 @@ builder
 
 builder.Services.AddOrganizationAuthorization();
 builder.Services.AddLoginRateLimiting();
+builder.Services.AddSensorReadingsRateLimiting();
 
 var app = builder.Build();
 

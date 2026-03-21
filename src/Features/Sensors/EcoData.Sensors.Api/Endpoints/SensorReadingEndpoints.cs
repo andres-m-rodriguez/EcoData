@@ -1,4 +1,5 @@
 using EcoData.Common.Messaging;
+using EcoData.Sensors.Api.RateLimiting;
 using EcoData.Sensors.Contracts;
 using EcoData.Sensors.Contracts.Dtos;
 using EcoData.Sensors.Contracts.Parameters;
@@ -135,6 +136,7 @@ public static class SensorReadingEndpoints
             .RequireAuthorization(policy =>
                 policy.AddAuthenticationSchemes(SensorJwtScheme).RequireAuthenticatedUser()
             )
+            .RequireRateLimiting(SensorReadingsRateLimiterExtensions.SensorReadingsRateLimiterPolicy)
             .WithName("SubmitReadings");
 
         return app;
