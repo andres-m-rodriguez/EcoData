@@ -10,5 +10,6 @@
   <ItemGroup>
     <ProjectReference Include="..\EcoData.Sensors.Contracts\EcoData.Sensors.Contracts.csproj" />
     <ProjectReference Include="..\..\Common\EcoData.Common.Http.Helpers\EcoData.Common.Http.Helpers.csproj" />
+    <ProjectReference Include="..\..\Common\EcoData.Common.Problems.Contracts\EcoData.Common.Problems.Contracts.csproj" />
   </ItemGroup>
 </Project>
