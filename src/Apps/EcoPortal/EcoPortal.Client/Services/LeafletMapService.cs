@@ -4,7 +4,10 @@ namespace EcoPortal.Client.Services;
 
 public sealed class LeafletMapService(IJSRuntime js) : ILeafletMapService
 {
-    public async ValueTask<ILeafletMapInstance> CreateAsync(string elementId, LeafletMapOptions? options = null)
+    public async ValueTask<ILeafletMapInstance> CreateAsync(
+        string elementId,
+        LeafletMapOptions? options = null
+    )
     {
         var instance = new LeafletMapInstance(js, elementId);
         await instance.InitializeAsync(options ?? new LeafletMapOptions());
@@ -37,41 +40,56 @@ public sealed class LeafletMapInstance : ILeafletMapInstance
             options.InitialLatitude,
             options.InitialLongitude,
             options.InitialZoom,
-            options.ShowMarker
+            options.ShowMarker,
+            options.DisableInteraction
         );
     }
 
     public async ValueTask SetViewAsync(double latitude, double longitude, int? zoom = null)
     {
-        if (_disposed) return;
-        await _js.InvokeVoidAsync("leafletMapService.setView", ElementId, latitude, longitude, zoom);
+        if (_disposed)
+            return;
+        await _js.InvokeVoidAsync(
+            "leafletMapService.setView",
+            ElementId,
+            latitude,
+            longitude,
+            zoom
+        );
     }
 
     public async ValueTask SetMarkerAsync(double latitude, double longitude)
     {
-        if (_disposed) return;
+        if (_disposed)
+            return;
         await _js.InvokeVoidAsync("leafletMapService.setMarker", ElementId, latitude, longitude);
     }
 
     public async ValueTask ClearMarkerAsync()
     {
-        if (_disposed) return;
+        if (_disposed)
+            return;
         await _js.InvokeVoidAsync("leafletMapService.clearMarker", ElementId);
     }
 
     public async ValueTask InvalidateSizeAsync()
     {
-        if (_disposed) return;
+        if (_disposed)
+            return;
         await _js.InvokeVoidAsync("leafletMapService.invalidateSize", ElementId);
     }
 
     public async ValueTask<GeolocationResult> GetCurrentLocationAsync()
     {
-        if (_disposed) return new GeolocationResult(false, Error: "Map disposed");
+        if (_disposed)
+            return new GeolocationResult(false, Error: "Map disposed");
 
         try
         {
-            var result = await _js.InvokeAsync<GeolocationResult>("leafletMapService.getCurrentLocation", ElementId);
+            var result = await _js.InvokeAsync<GeolocationResult>(
+                "leafletMapService.getCurrentLocation",
+                ElementId
+            );
             return result;
         }
         catch (Exception ex)
@@ -96,7 +114,8 @@ public sealed class LeafletMapInstance : ILeafletMapInstance
 
     public async ValueTask DisposeAsync()
     {
-        if (_disposed) return;
+        if (_disposed)
+            return;
         _disposed = true;
 
         try

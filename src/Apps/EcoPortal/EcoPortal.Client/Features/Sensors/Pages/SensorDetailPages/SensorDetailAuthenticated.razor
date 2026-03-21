@@ -14,48 +14,56 @@
 @inject ISnackbar Snackbar
 
 <MudPaper Elevation="1" Class="pa-4 mb-4">
-    <MudStack Spacing="2">
-        <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center">
-            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
-                <MudText Typo="Typo.h5">@Sensor.Name</MudText>
-                <MudChip T="string" Color="@(Sensor.IsActive? Color.Success: Color.Default)" Size="Size.Small">
-                    @(Sensor.IsActive ? "Active" : "Inactive")
-                </MudChip>
-            </MudStack>
-            <RequireOrganizationPermission Permission="@SensorPermissions.Sensor.Update"
-                                           OrganizationId="Sensor.OrganizationId">
-                <MudStack Row="true" Spacing="1">
-                    <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary"                                   OnClick="NavigateToEdit" />
-                    <RequireOrganizationPermission Permission="@SensorPermissions.Sensor.Delete"
+    <MudGrid Spacing="4">
+        <MudItem xs="12" md="7">
+            <MudStack Spacing="2">
+                <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center">
+                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                        <MudText Typo="Typo.h5">@Sensor.Name</MudText>
+                        <MudChip T="string" Color="@(Sensor.IsActive? Color.Success: Color.Default)" Size="Size.Small">
+                            @(Sensor.IsActive ? "Active" : "Inactive")
+                        </MudChip>
+                    </MudStack>
+                    <RequireOrganizationPermission Permission="@SensorPermissions.Sensor.Update"
                                                    OrganizationId="Sensor.OrganizationId">
-                        <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error"
-                                       OnClick="ConfirmDelete" />
+                        <MudStack Row="true" Spacing="1">
+                            <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary"
+                                           OnClick="NavigateToEdit" />
+                            <RequireOrganizationPermission Permission="@SensorPermissions.Sensor.Delete"
+                                                           OrganizationId="Sensor.OrganizationId">
+                                <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error"
+                                               OnClick="ConfirmDelete" />
+                            </RequireOrganizationPermission>
+                        </MudStack>
                     </RequireOrganizationPermission>
                 </MudStack>
-            </RequireOrganizationPermission>
-        </MudStack>
 
-        <MudStack Row="true" Spacing="4">
-            <MudStack Spacing="0">
-                <MudText Typo="Typo.caption" Color="Color.Secondary">Coordinates</MudText>
-                <MudText Typo="Typo.body2">@Sensor.Latitude.ToString("F4"), @Sensor.Longitude.ToString("F4")</MudText>
+                <MudStack Row="true" Spacing="4">
+                    <MudStack Spacing="0">
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">Coordinates</MudText>
+                        <MudText Typo="Typo.body2">@Sensor.Latitude.ToString("F4"), @Sensor.Longitude.ToString("F4")</MudText>
+                    </MudStack>
+                    <MudStack Spacing="0">
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">Created</MudText>
+                        <MudText Typo="Typo.body2">@Sensor.CreatedAt.LocalDateTime.ToString("d")</MudText>
+                    </MudStack>
+                </MudStack>
             </MudStack>
-            <MudStack Spacing="0">
-                <MudText Typo="Typo.caption" Color="Color.Secondary">Created</MudText>
-                <MudText Typo="Typo.body2">@Sensor.CreatedAt.LocalDateTime.ToString("d")</MudText>
-            </MudStack>
-        </MudStack>
-    </MudStack>
+        </MudItem>
+        <MudItem xs="12" md="5">
+            <SensorLocationMap Latitude="Sensor.Latitude" Longitude="Sensor.Longitude" />
+        </MudItem>
+    </MudGrid>
 </MudPaper>
 
 <MudPaper Elevation="1" Class="pa-4">
     <Tabs ActiveIndex="_activeTab" ActiveIndexChanged="OnTabChanged">
         <Tab Title="History" Icon="@Icons.Material.Filled.History">
-            <SensorReadingsList @ref="_readingsList" SensorId="Sensor.Id"                                ShowFilter="true"
-                                OnFilterClick="OpenFilterDialog"                                ParameterFilter="_parameterFilter" FromDate="_fromDate"
-                                ToDate="_toDate">
+            <SensorReadingsList @ref="_readingsList" SensorId="Sensor.Id" ShowFilter="true"
+                                OnFilterClick="OpenFilterDialog" ParameterFilter="@_parameterFilter"
+                                FromDate="@_fromDate" ToDate="@_toDate">
                 <ActionButtons>
-                    <MudButton Variant="Variant.Text" StartIcon="@Icons.Material.Filled.Refresh"
+                    <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.Refresh"
                                OnClick="RefreshReadings" Size="Size.Small">
                         Refresh
                     </MudButton>

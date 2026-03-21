@@ -4,10 +4,19 @@
     z-index: 100;
     background-color: var(--mud-palette-background);
     transition: box-shadow 0.2s ease;
+    margin-top: 12px;
 }
 
 .search-header-wrapper.is-sticky {
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.search-header-content {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
 }
 
 .search-wrapper {
@@ -31,6 +40,11 @@
 @media (max-width: 600px) {
     .search-header-wrapper {
         top: 56px;
+    }
+
+    .search-header-content {
+        flex-direction: column;
+        align-items: stretch;
     }
 
     .search-wrapper {

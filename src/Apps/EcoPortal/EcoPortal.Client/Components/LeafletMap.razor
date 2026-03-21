@@ -24,6 +24,9 @@
     public bool ShowMarker { get; set; }
 
     [Parameter]
+    public bool DisableInteraction { get; set; }
+
+    [Parameter]
     public EventCallback<MapClickEventArgs> OnMapClick { get; set; }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -34,7 +37,8 @@
                 InitialLatitude: Latitude,
                 InitialLongitude: Longitude,
                 InitialZoom: Zoom,
-                ShowMarker: ShowMarker && Latitude.HasValue && Longitude.HasValue
+                ShowMarker: ShowMarker && Latitude.HasValue && Longitude.HasValue,
+                DisableInteraction: DisableInteraction
             );
 
             _mapInstance = await MapService.CreateAsync(_elementId, options);
