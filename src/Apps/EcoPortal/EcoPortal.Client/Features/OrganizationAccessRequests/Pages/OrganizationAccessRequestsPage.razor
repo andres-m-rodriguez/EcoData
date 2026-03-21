@@ -210,9 +210,7 @@
                     Snackbar.Add($"Request approved. {request.UserDisplayName} is now a member.", Severity.Success);
                     _listRef?.Refresh();
                 },
-                _ => Snackbar.Add("Request not found", Severity.Error),
-                validation => Snackbar.Add(validation.Errors.FirstOrDefault()?.ErrorMessage ?? "Cannot approve request", Severity.Error),
-                error => Snackbar.Add($"Failed to approve: {error.Message}", Severity.Error)
+                problem => Snackbar.Add(problem.Detail ?? "Failed to approve request", Severity.Error)
             );
         }
     }
@@ -246,8 +244,7 @@
                         );
                         blockResult.Switch(
                             _ => Snackbar.Add($"Request rejected and {request.UserDisplayName} has been blocked", Severity.Info),
-                            _ => Snackbar.Add("Request rejected (user was already blocked)", Severity.Info),
-                            error => Snackbar.Add($"Request rejected but failed to block user: {error.Message}", Severity.Warning)
+                            problem => Snackbar.Add(problem.Detail ?? "Request rejected but failed to block user", Severity.Warning)
                         );
                     }
                     else
@@ -256,9 +253,7 @@
                     }
                     _listRef?.Refresh();
                 },
-                _ => Snackbar.Add("Request not found", Severity.Error),
-                validation => Snackbar.Add(validation.Errors.FirstOrDefault()?.ErrorMessage ?? "Cannot reject request", Severity.Error),
-                error => Snackbar.Add($"Failed to reject: {error.Message}", Severity.Error)
+                problem => Snackbar.Add(problem.Detail ?? "Failed to reject request", Severity.Error)
             );
         }
     }

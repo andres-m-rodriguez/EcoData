@@ -170,9 +170,7 @@
                     Snackbar.Add("Request cancelled successfully", Severity.Success);
                     _listRef?.Refresh();
                 },
-                _ => Snackbar.Add("Request not found", Severity.Error),
-                validation => Snackbar.Add(validation.Errors.FirstOrDefault()?.ErrorMessage ?? "Cannot cancel request", Severity.Error),
-                error => Snackbar.Add($"Failed to cancel: {error.Message}", Severity.Error)
+                problem => Snackbar.Add(problem.Detail ?? "Failed to cancel request", Severity.Error)
             );
         }
     }
