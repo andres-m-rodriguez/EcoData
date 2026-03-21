@@ -1,18 +1,20 @@
+using System.Text.Json.Serialization;
+
 namespace EcoData.Common.Problems.Contracts;
 
 public sealed record ProblemDetail(
-    string? Type,
-    string? Title,
-    int? Status,
-    string? Detail,
-    string? Instance
+    [property: JsonPropertyName("type")] string? Type,
+    [property: JsonPropertyName("title")] string? Title,
+    [property: JsonPropertyName("status")] int? Status,
+    [property: JsonPropertyName("detail")] string? Detail,
+    [property: JsonPropertyName("instance")] string? Instance
 );
 
 public sealed record ValidationProblemDetail(
-    string? Type,
-    string? Title,
-    int? Status,
-    string? Detail,
-    string? Instance,
-    Dictionary<string, string[]>? Errors
+    [property: JsonPropertyName("type")] string? Type,
+    [property: JsonPropertyName("title")] string? Title,
+    [property: JsonPropertyName("status")] int? Status,
+    [property: JsonPropertyName("detail")] string? Detail,
+    [property: JsonPropertyName("instance")] string? Instance,
+    [property: JsonPropertyName("errors")] Dictionary<string, string[]>? Errors
 );
