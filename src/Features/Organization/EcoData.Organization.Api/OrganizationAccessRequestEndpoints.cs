@@ -28,11 +28,7 @@ public static class OrganizationAccessRequestEndpoints
             .MapPost(
                 "/",
                 async Task<
-                    Results<
-                        Created<OrganizationAccessRequestDto>,
-                        Conflict<string>,
-                        UnauthorizedHttpResult
-                    >
+                    Results<Created<OrganizationAccessRequestDto>, ProblemHttpResult, UnauthorizedHttpResult>
                 > (
                     Guid organizationId,
                     CreateOrganizationAccessRequestRequest request,
@@ -56,8 +52,9 @@ public static class OrganizationAccessRequestEndpoints
                     );
                     if (isBlocked)
                     {
-                        return TypedResults.Conflict(
-                            "You are blocked from requesting access to this organization."
+                        return TypedResults.Problem(
+                            detail: "You are blocked from requesting access to this organization.",
+                            statusCode: StatusCodes.Status409Conflict
                         );
                     }
 
@@ -68,8 +65,9 @@ public static class OrganizationAccessRequestEndpoints
                     );
                     if (isMember)
                     {
-                        return TypedResults.Conflict(
-                            "You are already a member of this organization."
+                        return TypedResults.Problem(
+                            detail: "You are already a member of this organization.",
+                            statusCode: StatusCodes.Status409Conflict
                         );
                     }
 
@@ -80,8 +78,9 @@ public static class OrganizationAccessRequestEndpoints
                     );
                     if (hasPending)
                     {
-                        return TypedResults.Conflict(
-                            "You already have a pending access request for this organization."
+                        return TypedResults.Problem(
+                            detail: "You already have a pending access request for this organization.",
+                            statusCode: StatusCodes.Status409Conflict
                         );
                     }
 
@@ -136,7 +135,7 @@ public static class OrganizationAccessRequestEndpoints
         orgGroup
             .MapGet(
                 "/{id:guid}",
-                async Task<Results<Ok<OrganizationAccessRequestDto>, NotFound, ForbidHttpResult>> (
+                async Task<Results<Ok<OrganizationAccessRequestDto>, ProblemHttpResult, ForbidHttpResult>> (
                     Guid organizationId,
                     Guid id,
                     ClaimsPrincipal user,
@@ -162,7 +161,10 @@ public static class OrganizationAccessRequestEndpoints
                     var accessRequest = await repository.GetByIdAsync(id, ct);
                     if (accessRequest is null || accessRequest.OrganizationId != organizationId)
                     {
-                        return TypedResults.NotFound();
+                        return TypedResults.Problem(
+                            detail: "Access request not found.",
+                            statusCode: StatusCodes.Status404NotFound
+                        );
                     }
 
                     return TypedResults.Ok(accessRequest);
@@ -174,12 +176,7 @@ public static class OrganizationAccessRequestEndpoints
             .MapPut(
                 "/{id:guid}/status",
                 async Task<
-                    Results<
-                        Ok<OrganizationAccessRequestDto>,
-                        NotFound,
-                        BadRequest<string>,
-                        ForbidHttpResult
-                    >
+                    Results<Ok<OrganizationAccessRequestDto>, ProblemHttpResult, ForbidHttpResult>
                 > (
                     Guid organizationId,
                     Guid id,
@@ -208,14 +205,20 @@ public static class OrganizationAccessRequestEndpoints
                     var existingRequest = await repository.GetByIdAsync(id, ct);
                     if (existingRequest is null || existingRequest.OrganizationId != organizationId)
                     {
-                        return TypedResults.NotFound();
+                        return TypedResults.Problem(
+                            detail: "Access request not found.",
+                            statusCode: StatusCodes.Status404NotFound
+                        );
                     }
 
                     if (
                         existingRequest.Status != OrganizationAccessRequestStatus.Pending.ToString()
                     )
                     {
-                        return TypedResults.BadRequest("This request has already been processed.");
+                        return TypedResults.Problem(
+                            detail: "This request has already been processed.",
+                            statusCode: StatusCodes.Status400BadRequest
+                        );
                     }
 
                     var status = request.Approved
@@ -232,7 +235,10 @@ public static class OrganizationAccessRequestEndpoints
 
                     if (updatedRequest is null)
                     {
-                        return TypedResults.NotFound();
+                        return TypedResults.Problem(
+                            detail: "Access request not found.",
+                            statusCode: StatusCodes.Status404NotFound
+                        );
                     }
 
                     if (request.Approved)
@@ -281,12 +287,7 @@ public static class OrganizationAccessRequestEndpoints
             .MapPost(
                 "/{id:guid}/cancel",
                 async Task<
-                    Results<
-                        Ok<OrganizationAccessRequestDto>,
-                        NotFound,
-                        BadRequest<string>,
-                        UnauthorizedHttpResult
-                    >
+                    Results<Ok<OrganizationAccessRequestDto>, ProblemHttpResult, UnauthorizedHttpResult>
                 > (
                     Guid id,
                     ClaimsPrincipal user,
@@ -303,18 +304,30 @@ public static class OrganizationAccessRequestEndpoints
                     var accessRequest = await repository.GetByIdAsync(id, ct);
                     if (accessRequest is null || accessRequest.UserId != token.UserId.Value)
                     {
-                        return TypedResults.NotFound();
+                        return TypedResults.Problem(
+                            detail: "Access request not found.",
+                            statusCode: StatusCodes.Status404NotFound
+                        );
                     }
 
                     if (accessRequest.Status != OrganizationAccessRequestStatus.Pending.ToString())
                     {
-                        return TypedResults.BadRequest("Only pending requests can be cancelled.");
+                        return TypedResults.Problem(
+                            detail: "Only pending requests can be cancelled.",
+                            statusCode: StatusCodes.Status400BadRequest
+                        );
                     }
 
                     var cancelled = await repository.CancelAsync(id, ct);
-                    return cancelled is not null
-                        ? TypedResults.Ok(cancelled)
-                        : TypedResults.NotFound();
+                    if (cancelled is null)
+                    {
+                        return TypedResults.Problem(
+                            detail: "Access request not found.",
+                            statusCode: StatusCodes.Status404NotFound
+                        );
+                    }
+
+                    return TypedResults.Ok(cancelled);
                 }
             )
             .WithName("CancelMyAccessRequest");

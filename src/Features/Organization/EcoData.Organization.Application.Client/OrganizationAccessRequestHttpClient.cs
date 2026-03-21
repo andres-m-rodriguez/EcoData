@@ -1,16 +1,16 @@
-using System.Net;
 using System.Net.Http.Json;
-using EcoData.Organization.Contracts.Dtos;
-using EcoData.Organization.Contracts.Errors;
-using EcoData.Organization.Contracts.Parameters;
-using EcoData.Organization.Contracts.Requests;
 using EcoData.Common.Http.Helpers;
 using EcoData.Common.Pagination;
+using EcoData.Common.Problems.Contracts;
+using EcoData.Organization.Contracts.Dtos;
+using EcoData.Organization.Contracts.Parameters;
+using EcoData.Organization.Contracts.Requests;
 using OneOf;
 
 namespace EcoData.Organization.Application.Client;
 
-public sealed class OrganizationAccessRequestHttpClient(HttpClient httpClient) : IOrganizationAccessRequestHttpClient
+public sealed class OrganizationAccessRequestHttpClient(HttpClient httpClient)
+    : IOrganizationAccessRequestHttpClient
 {
     public IAsyncEnumerable<OrganizationAccessRequestDto> GetByOrganizationAsync(
         Guid organizationId,
@@ -29,7 +29,7 @@ public sealed class OrganizationAccessRequestHttpClient(HttpClient httpClient) :
         )!;
     }
 
-    public async Task<OneOf<OrganizationAccessRequestDto, NotFoundError>> GetByIdAsync(
+    public async Task<OneOf<OrganizationAccessRequestDto, ProblemDetail>> GetByIdAsync(
         Guid organizationId,
         Guid id,
         CancellationToken cancellationToken = default
@@ -40,16 +40,18 @@ public sealed class OrganizationAccessRequestHttpClient(HttpClient httpClient) :
             cancellationToken
         );
 
-        if (response.StatusCode == HttpStatusCode.NotFound)
+        if (!response.IsSuccessStatusCode)
         {
-            return new NotFoundError();
+            return await response.ReadProblemAsync(cancellationToken);
         }
 
-        var result = await response.Content.ReadFromJsonAsync<OrganizationAccessRequestDto>(cancellationToken);
+        var result = await response.Content.ReadFromJsonAsync<OrganizationAccessRequestDto>(
+            cancellationToken
+        );
         return result!;
     }
 
-    public async Task<OneOf<OrganizationAccessRequestDto, ConflictError, ApiError>> CreateAsync(
+    public async Task<OneOf<OrganizationAccessRequestDto, ProblemDetail>> CreateAsync(
         Guid organizationId,
         CreateOrganizationAccessRequestRequest request,
         CancellationToken cancellationToken = default
@@ -61,22 +63,18 @@ public sealed class OrganizationAccessRequestHttpClient(HttpClient httpClient) :
             cancellationToken
         );
 
-        if (response.StatusCode == HttpStatusCode.Conflict)
-        {
-            var message = await response.Content.ReadAsStringAsync(cancellationToken);
-            return new ConflictError(message);
-        }
-
         if (!response.IsSuccessStatusCode)
         {
-            return new ApiError((int)response.StatusCode, await response.Content.ReadAsStringAsync(cancellationToken));
+            return await response.ReadProblemAsync(cancellationToken);
         }
 
-        var result = await response.Content.ReadFromJsonAsync<OrganizationAccessRequestDto>(cancellationToken);
+        var result = await response.Content.ReadFromJsonAsync<OrganizationAccessRequestDto>(
+            cancellationToken
+        );
         return result!;
     }
 
-    public async Task<OneOf<OrganizationAccessRequestDto, NotFoundError, ValidationError, ApiError>> UpdateStatusAsync(
+    public async Task<OneOf<OrganizationAccessRequestDto, ProblemDetail>> UpdateStatusAsync(
         Guid organizationId,
         Guid id,
         UpdateOrganizationAccessRequestStatusRequest request,
@@ -89,23 +87,14 @@ public sealed class OrganizationAccessRequestHttpClient(HttpClient httpClient) :
             cancellationToken
         );
 
-        if (response.StatusCode == HttpStatusCode.NotFound)
-        {
-            return new NotFoundError();
-        }
-
-        if (response.StatusCode == HttpStatusCode.BadRequest)
-        {
-            var message = await response.Content.ReadAsStringAsync(cancellationToken);
-            return new ValidationError([new ValidationFailure("Status", message)]);
-        }
-
         if (!response.IsSuccessStatusCode)
         {
-            return new ApiError((int)response.StatusCode, await response.Content.ReadAsStringAsync(cancellationToken));
+            return await response.ReadProblemAsync(cancellationToken);
         }
 
-        var result = await response.Content.ReadFromJsonAsync<OrganizationAccessRequestDto>(cancellationToken);
+        var result = await response.Content.ReadFromJsonAsync<OrganizationAccessRequestDto>(
+            cancellationToken
+        );
         return result!;
     }
 
@@ -126,30 +115,25 @@ public sealed class OrganizationAccessRequestHttpClient(HttpClient httpClient) :
         )!;
     }
 
-    public async Task<OneOf<OrganizationAccessRequestDto, NotFoundError, ValidationError, ApiError>> CancelMyRequestAsync(
+    public async Task<OneOf<OrganizationAccessRequestDto, ProblemDetail>> CancelMyRequestAsync(
         Guid id,
         CancellationToken cancellationToken = default
     )
     {
-        var response = await httpClient.PostAsync($"api/me/access-requests/{id}/cancel", null, cancellationToken);
-
-        if (response.StatusCode == HttpStatusCode.NotFound)
-        {
-            return new NotFoundError();
-        }
-
-        if (response.StatusCode == HttpStatusCode.BadRequest)
-        {
-            var message = await response.Content.ReadAsStringAsync(cancellationToken);
-            return new ValidationError([new ValidationFailure("Request", message)]);
-        }
+        var response = await httpClient.PostAsync(
+            $"api/me/access-requests/{id}/cancel",
+            null,
+            cancellationToken
+        );
 
         if (!response.IsSuccessStatusCode)
         {
-            return new ApiError((int)response.StatusCode, await response.Content.ReadAsStringAsync(cancellationToken));
+            return await response.ReadProblemAsync(cancellationToken);
         }
 
-        var result = await response.Content.ReadFromJsonAsync<OrganizationAccessRequestDto>(cancellationToken);
+        var result = await response.Content.ReadFromJsonAsync<OrganizationAccessRequestDto>(
+            cancellationToken
+        );
         return result!;
     }
 }
