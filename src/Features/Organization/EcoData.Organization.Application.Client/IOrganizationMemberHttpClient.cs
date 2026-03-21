@@ -1,3 +1,4 @@
+using EcoData.Common.Problems.Contracts;
 using EcoData.Organization.Contracts.Dtos;
 using EcoData.Organization.Contracts.Errors;
 using EcoData.Organization.Contracts.Parameters;
@@ -13,20 +14,20 @@ public interface IOrganizationMemberHttpClient
         CancellationToken cancellationToken = default
     );
 
-    Task<OneOf<OrganizationMemberDto, NotFoundError>> GetAsync(
+    Task<OneOf<OrganizationMemberDto, ProblemDetail>> GetAsync(
         Guid organizationId,
         Guid userId,
         CancellationToken cancellationToken = default
     );
 
-    Task<OneOf<OrganizationMemberDto, NotFoundError, ValidationError, ApiError>> UpdateAsync(
+    Task<OneOf<OrganizationMemberDto, ProblemDetail>> UpdateAsync(
         Guid organizationId,
         Guid userId,
         UpdateMemberRoleRequest request,
         CancellationToken cancellationToken = default
     );
 
-    Task<OneOf<Success, NotFoundError, ValidationError, ApiError>> DeleteAsync(
+    Task<OneOf<Success, ProblemDetail>> DeleteAsync(
         Guid organizationId,
         Guid userId,
         CancellationToken cancellationToken = default

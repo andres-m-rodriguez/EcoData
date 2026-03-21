@@ -36,7 +36,7 @@ public static class MemberEndpoints
         group
             .MapGet(
                 "/{userId:guid}",
-                async Task<Results<Ok<OrganizationMemberDto>, NotFound>> (
+                async Task<Results<Ok<OrganizationMemberDto>, ProblemHttpResult>> (
                     Guid organizationId,
                     Guid userId,
                     IOrganizationMemberRepository repository,
@@ -44,7 +44,14 @@ public static class MemberEndpoints
                 ) =>
                 {
                     var member = await repository.GetAsync(organizationId, userId, ct);
-                    return member is null ? TypedResults.NotFound() : TypedResults.Ok(member);
+                    if (member is null)
+                    {
+                        return TypedResults.Problem(
+                            detail: "Member not found in this organization.",
+                            statusCode: StatusCodes.Status404NotFound
+                        );
+                    }
+                    return TypedResults.Ok(member);
                 }
             )
             .WithName("GetOrganizationMember");
@@ -52,7 +59,9 @@ public static class MemberEndpoints
         group
             .MapPut(
                 "/{userId:guid}",
-                async Task<Results<Ok<OrganizationMemberDto>, NotFound, ForbidHttpResult>> (
+                async Task<
+                    Results<Ok<OrganizationMemberDto>, ProblemHttpResult, ForbidHttpResult>
+                > (
                     Guid organizationId,
                     Guid userId,
                     UpdateMemberRoleRequest request,
@@ -84,7 +93,10 @@ public static class MemberEndpoints
                     );
                     if (member is null)
                     {
-                        return TypedResults.NotFound();
+                        return TypedResults.Problem(
+                            detail: "Member not found in this organization.",
+                            statusCode: StatusCodes.Status404NotFound
+                        );
                     }
 
                     return TypedResults.Ok(member);
@@ -95,7 +107,7 @@ public static class MemberEndpoints
         group
             .MapDelete(
                 "/{userId:guid}",
-                async Task<Results<NoContent, NotFound, ForbidHttpResult>> (
+                async Task<Results<NoContent, ProblemHttpResult, ForbidHttpResult>> (
                     Guid organizationId,
                     Guid userId,
                     ClaimsPrincipal user,
@@ -119,7 +131,14 @@ public static class MemberEndpoints
                     }
 
                     var deleted = await repository.DeleteAsync(organizationId, userId, ct);
-                    return deleted ? TypedResults.NoContent() : TypedResults.NotFound();
+                    if (!deleted)
+                    {
+                        return TypedResults.Problem(
+                            detail: "Member not found in this organization.",
+                            statusCode: StatusCodes.Status404NotFound
+                        );
+                    }
+                    return TypedResults.NoContent();
                 }
             )
             .WithName("RemoveOrganizationMember");
