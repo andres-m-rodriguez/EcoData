@@ -186,12 +186,12 @@ public sealed class SensorRepository(IDbContextFactory<SensorsDbContext> context
 
         if (parameters.Cursor.HasValue)
         {
-            query = query.Where(s => s.Id > parameters.Cursor.Value);
+            query = query.Where(s => s.Id < parameters.Cursor.Value);
         }
 
         await foreach (
             var sensor in query
-                .OrderBy(s => s.Id)
+                .OrderByDescending(s => s.Id)
                 .Take(parameters.PageSize + 1)
                 .Select(static s => new SensorDtoForList(
                     s.Id,
@@ -250,7 +250,7 @@ public sealed class SensorRepository(IDbContextFactory<SensorsDbContext> context
 
         if (parameters.Cursor.HasValue)
         {
-            query = query.Where(s => s.Id > parameters.Cursor.Value);
+            query = query.Where(s => s.Id < parameters.Cursor.Value);
         }
 
         return await query.CountAsync(cancellationToken);
