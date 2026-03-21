@@ -4,6 +4,7 @@
     z-index: 100;
     background-color: var(--mud-palette-background);
     transition: box-shadow 0.2s ease;
+    margin-top: 3px;
 }
 
 .search-header-wrapper.is-sticky {
