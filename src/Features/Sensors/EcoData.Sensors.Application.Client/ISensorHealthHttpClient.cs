@@ -1,5 +1,5 @@
+using EcoData.Common.Problems.Contracts;
 using EcoData.Sensors.Contracts.Dtos;
-using EcoData.Sensors.Contracts.Errors;
 using EcoData.Sensors.Contracts.Parameters;
 using OneOf;
 
@@ -7,7 +7,7 @@ namespace EcoData.Sensors.Application.Client;
 
 public interface ISensorHealthHttpClient
 {
-    Task<OneOf<SensorHealthSummaryDto, ApiError>> GetSummaryAsync(
+    Task<OneOf<SensorHealthSummaryDto, ProblemDetail>> GetSummaryAsync(
         CancellationToken cancellationToken = default
     );
 
@@ -16,12 +16,12 @@ public interface ISensorHealthHttpClient
         CancellationToken cancellationToken = default
     );
 
-    Task<OneOf<SensorHealthStatusDtoForDetail, NotFoundError, ApiError>> GetSensorHealthAsync(
+    Task<OneOf<SensorHealthStatusDtoForDetail, ProblemDetail>> GetSensorHealthAsync(
         Guid sensorId,
         CancellationToken cancellationToken = default
     );
 
-    Task<OneOf<SensorHealthConfigDtoForDetail, NotFoundError, ApiError>> GetSensorHealthConfigAsync(
+    Task<OneOf<SensorHealthConfigDtoForDetail, ProblemDetail>> GetSensorHealthConfigAsync(
         Guid sensorId,
         CancellationToken cancellationToken = default
     );
