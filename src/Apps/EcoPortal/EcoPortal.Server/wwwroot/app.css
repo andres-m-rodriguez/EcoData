@@ -171,3 +171,56 @@ h1:focus {
 .mud-breadcrumbs {
     padding-left: 0 !important;
 }
+
+/* ==========================================================================
+   Gradient Button
+   ========================================================================== */
+.gradient-btn {
+    background: linear-gradient(135deg, var(--mud-palette-primary) 0%, var(--mud-palette-secondary) 100%) !important;
+    color: white !important;
+    border: none !important;
+}
+
+/* ==========================================================================
+   AppBar with Backdrop Blur
+   ========================================================================== */
+.app-bar-blur {
+    background-color: rgba(255, 255, 255, 0.9) !important;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    color: var(--mud-palette-text-primary) !important;
+    border-bottom: 1px solid var(--mud-palette-lines-default);
+}
+
+.mud-theme-dark .app-bar-blur {
+    background-color: rgba(28, 28, 30, 0.9) !important;
+}
+
+/* ==========================================================================
+   Landing Page - Remove container constraints
+   ========================================================================== */
+.content-container:has(.landing-page) {
+    background: transparent !important;
+    border: none !important;
+    border-radius: 0 !important;
+    max-width: 100% !important;
+    padding: 0 !important;
+}
+
+/* ==========================================================================
+   Sensors Page - Remove container constraints
+   ========================================================================== */
+.content-container:has(.sensors-page) {
+    background: transparent !important;
+    border: none !important;
+    border-radius: 0 !important;
+}
+
+/* ==========================================================================
+   Organizations Page - Remove container constraints
+   ========================================================================== */
+.content-container:has(.organizations-page) {
+    background: transparent !important;
+    border: none !important;
+    border-radius: 0 !important;
+}
