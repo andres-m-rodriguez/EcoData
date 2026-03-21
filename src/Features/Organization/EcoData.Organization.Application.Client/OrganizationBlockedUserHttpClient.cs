@@ -1,5 +1,5 @@
-using System.Net;
 using System.Net.Http.Json;
+using EcoData.Common.Problems.Contracts;
 using EcoData.Organization.Contracts.Dtos;
 using EcoData.Organization.Contracts.Errors;
 using OneOf;
@@ -20,7 +20,7 @@ public sealed class OrganizationBlockedUserHttpClient(HttpClient httpClient)
         )!;
     }
 
-    public async Task<OneOf<OrganizationBlockedUserDto, ConflictError, ApiError>> BlockUserAsync(
+    public async Task<OneOf<OrganizationBlockedUserDto, ProblemDetail>> BlockUserAsync(
         Guid organizationId,
         Guid userId,
         string? reason,
@@ -34,18 +34,9 @@ public sealed class OrganizationBlockedUserHttpClient(HttpClient httpClient)
             cancellationToken
         );
 
-        if (response.StatusCode == HttpStatusCode.Conflict)
-        {
-            var message = await response.Content.ReadAsStringAsync(cancellationToken);
-            return new ConflictError(message);
-        }
-
         if (!response.IsSuccessStatusCode)
         {
-            return new ApiError(
-                (int)response.StatusCode,
-                await response.Content.ReadAsStringAsync(cancellationToken)
-            );
+            return await response.ReadProblemAsync(cancellationToken);
         }
 
         var result = await response.Content.ReadFromJsonAsync<OrganizationBlockedUserDto>(
@@ -54,7 +45,7 @@ public sealed class OrganizationBlockedUserHttpClient(HttpClient httpClient)
         return result!;
     }
 
-    public async Task<OneOf<Success, NotFoundError, ApiError>> UnblockUserAsync(
+    public async Task<OneOf<Success, ProblemDetail>> UnblockUserAsync(
         Guid organizationId,
         Guid userId,
         CancellationToken cancellationToken = default
@@ -65,17 +56,9 @@ public sealed class OrganizationBlockedUserHttpClient(HttpClient httpClient)
             cancellationToken
         );
 
-        if (response.StatusCode == HttpStatusCode.NotFound)
-        {
-            return new NotFoundError();
-        }
-
         if (!response.IsSuccessStatusCode)
         {
-            return new ApiError(
-                (int)response.StatusCode,
-                await response.Content.ReadAsStringAsync(cancellationToken)
-            );
+            return await response.ReadProblemAsync(cancellationToken);
         }
 
         return new Success();
