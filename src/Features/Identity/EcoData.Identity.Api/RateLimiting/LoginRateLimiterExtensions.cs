@@ -46,17 +46,23 @@ public static class LoginRateLimiterExtensions
                     ? retryAfterValue
                     : CooldownPeriod;
 
-                context.HttpContext.Response.Headers.RetryAfter = ((int)retryAfter.TotalSeconds).ToString();
-                context.HttpContext.Response.ContentType = "application/json";
+                var minutes = (int)retryAfter.TotalMinutes;
+                var detail = minutes > 1
+                    ? $"Too many login attempts. Please try again in {minutes} minutes."
+                    : "Too many login attempts. Please try again in 1 minute.";
 
-                var response = new
+                context.HttpContext.Response.Headers.RetryAfter = ((int)retryAfter.TotalSeconds).ToString();
+                context.HttpContext.Response.ContentType = "application/problem+json";
+
+                var problemDetails = new
                 {
-                    error = "Too many login attempts",
-                    message = $"Too many login attempts. Please try again in {(int)retryAfter.TotalMinutes} minutes.",
-                    retryAfterSeconds = (int)retryAfter.TotalSeconds
+                    type = "https://tools.ietf.org/html/rfc6585#section-4",
+                    title = "Too Many Requests",
+                    status = StatusCodes.Status429TooManyRequests,
+                    detail
                 };
 
-                await context.HttpContext.Response.WriteAsJsonAsync(response, cancellationToken);
+                await context.HttpContext.Response.WriteAsJsonAsync(problemDetails, cancellationToken);
             };
         });
 
