@@ -448,8 +448,7 @@
                 OrganizationCache.Set(organization);
                 return organization;
             },
-            notFound => null,
-            unauthorized => null
+            _ => null
         );
     }
 
@@ -504,14 +503,12 @@
         {
             var result = await OrganizationClient.DeleteAsync(Id);
             result.Switch(
-            _ =>
-            {
-                Snackbar.Add("Deleted", Severity.Success);
-                Navigation.NavigateTo("/organizations/discover");
-            },
-            _ => Snackbar.Add("Organization not found", Severity.Error),
-            conflict => Snackbar.Add(conflict.Message, Severity.Warning),
-            error => Snackbar.Add($"Failed to delete: {error.Message}", Severity.Error)
+                _ =>
+                {
+                    Snackbar.Add("Deleted", Severity.Success);
+                    Navigation.NavigateTo("/organizations/discover");
+                },
+                problem => Snackbar.Add(problem.Detail ?? "Failed to delete organization", Severity.Error)
             );
         }
     }

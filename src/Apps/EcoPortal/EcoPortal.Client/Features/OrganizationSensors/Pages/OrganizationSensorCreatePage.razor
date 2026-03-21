@@ -78,7 +78,6 @@
         var result = await OrganizationClient.GetByIdAsync(OrganizationId);
         result.Switch(
             organization => _organization = organization,
-            _ => _organization = null,
             _ => _organization = null
         );
     }

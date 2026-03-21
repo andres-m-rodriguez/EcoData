@@ -1,6 +1,6 @@
-using System.Net;
 using System.Net.Http.Json;
 using EcoData.Common.Http.Helpers;
+using EcoData.Common.Problems.Contracts;
 using EcoData.Organization.Contracts.Dtos;
 using EcoData.Organization.Contracts.Errors;
 using EcoData.Organization.Contracts.Parameters;
@@ -37,17 +37,17 @@ public sealed class OrganizationHttpClient(HttpClient httpClient) : IOrganizatio
         )!;
     }
 
-    public async Task<
-        OneOf<OrganizationDtoForDetail, NotFoundError, UnauthorizedError>
-    > GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
+    public async Task<OneOf<OrganizationDtoForDetail, ProblemDetail>> GetByIdAsync(
+        Guid id,
+        CancellationToken cancellationToken = default
+    )
     {
         var response = await httpClient.GetAsync($"api/organizations/{id}", cancellationToken);
 
-        if (response.StatusCode == HttpStatusCode.NotFound)
-            return new NotFoundError();
-
-        if (response.StatusCode == HttpStatusCode.Unauthorized)
-            return new UnauthorizedError();
+        if (!response.IsSuccessStatusCode)
+        {
+            return await response.ReadProblemAsync(cancellationToken);
+        }
 
         var result = await response.Content.ReadFromJsonAsync<OrganizationDtoForDetail>(
             cancellationToken
@@ -55,7 +55,7 @@ public sealed class OrganizationHttpClient(HttpClient httpClient) : IOrganizatio
         return result!;
     }
 
-    public async Task<OneOf<OrganizationDtoForCreated, ValidationError, ApiError>> CreateAsync(
+    public async Task<OneOf<OrganizationDtoForCreated, ProblemDetail>> CreateAsync(
         OrganizationDtoForCreate dto,
         CancellationToken cancellationToken = default
     )
@@ -66,15 +66,10 @@ public sealed class OrganizationHttpClient(HttpClient httpClient) : IOrganizatio
             cancellationToken
         );
 
-        if (response.StatusCode == HttpStatusCode.BadRequest)
-            return await response.Content.ReadFromJsonAsync<ValidationError>(cancellationToken)
-                ?? new ValidationError();
-
         if (!response.IsSuccessStatusCode)
-            return new ApiError(
-                (int)response.StatusCode,
-                await response.Content.ReadAsStringAsync(cancellationToken)
-            );
+        {
+            return await response.ReadProblemAsync(cancellationToken);
+        }
 
         var result = await response.Content.ReadFromJsonAsync<OrganizationDtoForCreated>(
             cancellationToken
@@ -82,9 +77,7 @@ public sealed class OrganizationHttpClient(HttpClient httpClient) : IOrganizatio
         return result!;
     }
 
-    public async Task<
-        OneOf<OrganizationDtoForDetail, NotFoundError, ValidationError, ApiError>
-    > UpdateAsync(
+    public async Task<OneOf<OrganizationDtoForDetail, ProblemDetail>> UpdateAsync(
         Guid id,
         OrganizationDtoForUpdate dto,
         CancellationToken cancellationToken = default
@@ -96,18 +89,10 @@ public sealed class OrganizationHttpClient(HttpClient httpClient) : IOrganizatio
             cancellationToken
         );
 
-        if (response.StatusCode == HttpStatusCode.NotFound)
-            return new NotFoundError();
-
-        if (response.StatusCode == HttpStatusCode.BadRequest)
-            return await response.Content.ReadFromJsonAsync<ValidationError>(cancellationToken)
-                ?? new ValidationError();
-
         if (!response.IsSuccessStatusCode)
-            return new ApiError(
-                (int)response.StatusCode,
-                await response.Content.ReadAsStringAsync(cancellationToken)
-            );
+        {
+            return await response.ReadProblemAsync(cancellationToken);
+        }
 
         var result = await response.Content.ReadFromJsonAsync<OrganizationDtoForDetail>(
             cancellationToken
@@ -115,24 +100,17 @@ public sealed class OrganizationHttpClient(HttpClient httpClient) : IOrganizatio
         return result!;
     }
 
-    public async Task<OneOf<Success, NotFoundError, ConflictError, ApiError>> DeleteAsync(
+    public async Task<OneOf<Success, ProblemDetail>> DeleteAsync(
         Guid id,
         CancellationToken cancellationToken = default
     )
     {
         var response = await httpClient.DeleteAsync($"api/organizations/{id}", cancellationToken);
 
-        if (response.StatusCode == HttpStatusCode.NotFound)
-            return new NotFoundError();
-
-        if (response.StatusCode == HttpStatusCode.Conflict)
-            return new ConflictError(await response.Content.ReadAsStringAsync(cancellationToken));
-
         if (!response.IsSuccessStatusCode)
-            return new ApiError(
-                (int)response.StatusCode,
-                await response.Content.ReadAsStringAsync(cancellationToken)
-            );
+        {
+            return await response.ReadProblemAsync(cancellationToken);
+        }
 
         return new Success();
     }
