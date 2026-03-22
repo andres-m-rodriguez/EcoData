@@ -1,3 +1,5 @@
+using EcoData.Common.Messaging;
+using EcoData.Sensors.Contracts;
 using EcoData.Sensors.Contracts.Dtos;
 using EcoData.Sensors.Contracts.Parameters;
 using EcoData.Sensors.DataAccess.Interfaces;
@@ -45,6 +47,17 @@ public static class SensorHealthEndpoints
                 ) => repository.GetAlertsAsync(parameters, ct)
             )
             .WithName("GetSensorHealthAlerts");
+
+        group
+            .MapGet(
+                "/alerts/stream",
+                (IMessageBroker<SensorHealthAlertDtoForList> messageBroker, CancellationToken ct) =>
+                    TypedResults.ServerSentEvents(
+                        messageBroker.SubscribeAsync(MessageTopics.AllHealthAlerts, ct),
+                        eventType: SseEventTypes.HealthAlert
+                    )
+            )
+            .WithName("StreamAllHealthAlerts");
 
         var sensorGroup = app.MapGroup("/api/sensors/{sensorId:guid}/health")
             .WithTags("Sensor Health");
@@ -99,6 +112,21 @@ public static class SensorHealthEndpoints
                 policy.AddAuthenticationSchemes(SensorJwtScheme).RequireAuthenticatedUser()
             )
             .WithName("SendHeartbeat");
+
+        sensorGroup
+            .MapGet(
+                "/alerts/stream",
+                (
+                    Guid sensorId,
+                    IMessageBroker<SensorHealthAlertDtoForList> messageBroker,
+                    CancellationToken ct
+                ) =>
+                    TypedResults.ServerSentEvents(
+                        messageBroker.SubscribeAsync(sensorId.ToString(), ct),
+                        eventType: SseEventTypes.HealthAlert
+                    )
+            )
+            .WithName("StreamSensorHealthAlerts");
 
         return app;
     }

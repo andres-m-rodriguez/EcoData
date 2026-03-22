@@ -1,0 +1,82 @@
+.alert-list-container {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+/* Skeleton card styles */
+.alert-skeleton-card {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    padding: 1rem 1.25rem;
+    background: var(--mud-palette-surface);
+    border-radius: 0.75rem;
+    margin-bottom: 0.5rem;
+}
+
+@media (min-width: 960px) {
+    .alert-skeleton-card {
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+    }
+}
+
+.skeleton-main {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+}
+
+.skeleton-info {
+    display: flex;
+    flex-direction: column;
+    min-width: 200px;
+}
+
+.skeleton-status {
+    display: flex;
+    align-items: center;
+}
+
+/* Empty state styles */
+.alert-empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 4rem 2rem;
+    text-align: center;
+}
+
+.empty-icon {
+    width: 6rem;
+    height: 6rem;
+    border-radius: 50%;
+    background: var(--mud-palette-background-gray);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1rem;
+}
+
+::deep .empty-icon .mud-icon-root {
+    font-size: 2.5rem;
+    color: var(--mud-palette-text-disabled);
+}
+
+.empty-title {
+    font-family: 'Newsreader', serif;
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--mud-palette-text-primary);
+    margin: 0 0 0.5rem;
+}
+
+.empty-description {
+    font-size: 0.875rem;
+    color: var(--mud-palette-text-secondary);
+    margin: 0;
+    max-width: 300px;
+}

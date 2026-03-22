@@ -16,9 +16,7 @@ public interface ISensorHealthRepository
         CancellationToken cancellationToken = default
     );
 
-    Task<SensorHealthSummaryDto> GetSummaryAsync(
-        CancellationToken cancellationToken = default
-    );
+    Task<SensorHealthSummaryDto> GetSummaryAsync(CancellationToken cancellationToken = default);
 
     Task<SensorHealthConfigDtoForDetail?> GetConfigByIdAsync(
         Guid sensorId,
@@ -50,17 +48,14 @@ public interface ISensorHealthRepository
         CancellationToken cancellationToken = default
     );
 
-    Task CreateAlertAsync(
+    Task<SensorHealthAlertDtoForList> CreateAlertAsync(
         Guid sensorId,
         SensorHealthAlertType alertType,
         string message,
         CancellationToken cancellationToken = default
     );
 
-    Task ResolveAlertsAsync(
-        Guid sensorId,
-        CancellationToken cancellationToken = default
-    );
+    Task ResolveAlertsAsync(Guid sensorId, CancellationToken cancellationToken = default);
 
     Task<IReadOnlyList<MonitoredSensorHealthStatusDto>> GetMonitoredStatusesWithConfigAsync(
         CancellationToken cancellationToken = default

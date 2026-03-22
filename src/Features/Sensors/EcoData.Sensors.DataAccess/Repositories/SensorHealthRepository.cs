@@ -1,9 +1,9 @@
 using System.Runtime.CompilerServices;
 using EcoData.Sensors.Contracts.Dtos;
 using EcoData.Sensors.Contracts.Parameters;
+using EcoData.Sensors.DataAccess.Interfaces;
 using EcoData.Sensors.Database;
 using EcoData.Sensors.Database.Models;
-using EcoData.Sensors.DataAccess.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
 namespace EcoData.Sensors.DataAccess.Repositories;
@@ -13,11 +13,12 @@ public sealed class SensorHealthRepository(IDbContextFactory<SensorsDbContext> c
 {
     public async Task<SensorHealthStatusDtoForDetail?> GetStatusByIdAsync(
         Guid sensorId,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default
+    )
     {
         await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
-        return await context.SensorHealthStatuses
-            .Where(s => s.SensorId == sensorId)
+        return await context
+            .SensorHealthStatuses.Where(s => s.SensorId == sensorId)
             .Select(s => new SensorHealthStatusDtoForDetail(
                 s.Id,
                 s.SensorId,
@@ -34,14 +35,16 @@ public sealed class SensorHealthRepository(IDbContextFactory<SensorsDbContext> c
 
     public IAsyncEnumerable<SensorHealthStatusDtoForList> GetStatusesAsync(
         SensorHealthParameters parameters,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default
+    )
     {
         return GetStatusesInternalAsync(parameters, cancellationToken);
     }
 
     private async IAsyncEnumerable<SensorHealthStatusDtoForList> GetStatusesInternalAsync(
         SensorHealthParameters parameters,
-        [EnumeratorCancellation] CancellationToken cancellationToken = default)
+        [EnumeratorCancellation] CancellationToken cancellationToken = default
+    )
     {
         await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
 
@@ -65,36 +68,44 @@ public sealed class SensorHealthRepository(IDbContextFactory<SensorsDbContext> c
             query = query.Where(s => s.SensorId > parameters.Cursor.Value);
         }
 
-        await foreach (var status in query
-            .OrderBy(s => s.SensorId)
-            .Take(parameters.PageSize + 1)
-            .Select(static s => new SensorHealthStatusDtoForList(
-                s.SensorId,
-                s.Sensor!.Name,
-                s.Status.ToString(),
-                s.LastReadingAt,
-                s.ConsecutiveFailures
-            ))
-            .AsAsyncEnumerable()
-            .WithCancellation(cancellationToken))
+        await foreach (
+            var status in query
+                .OrderBy(s => s.SensorId)
+                .Take(parameters.PageSize + 1)
+                .Select(static s => new SensorHealthStatusDtoForList(
+                    s.SensorId,
+                    s.Sensor!.Name,
+                    s.Status.ToString(),
+                    s.LastReadingAt,
+                    s.ConsecutiveFailures
+                ))
+                .AsAsyncEnumerable()
+                .WithCancellation(cancellationToken)
+        )
         {
             yield return status;
         }
     }
 
-    public async Task<SensorHealthSummaryDto> GetSummaryAsync(CancellationToken cancellationToken = default)
+    public async Task<SensorHealthSummaryDto> GetSummaryAsync(
+        CancellationToken cancellationToken = default
+    )
     {
         await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
 
-        var counts = await context.SensorHealthStatuses
-            .GroupBy(s => s.Status)
+        var counts = await context
+            .SensorHealthStatuses.GroupBy(s => s.Status)
             .Select(g => new { Status = g.Key, Count = g.Count() })
             .ToListAsync(cancellationToken);
 
-        var healthy = counts.FirstOrDefault(c => c.Status == SensorHealthStatusType.Healthy)?.Count ?? 0;
-        var stale = counts.FirstOrDefault(c => c.Status == SensorHealthStatusType.Stale)?.Count ?? 0;
-        var unhealthy = counts.FirstOrDefault(c => c.Status == SensorHealthStatusType.Unhealthy)?.Count ?? 0;
-        var unknown = counts.FirstOrDefault(c => c.Status == SensorHealthStatusType.Unknown)?.Count ?? 0;
+        var healthy =
+            counts.FirstOrDefault(c => c.Status == SensorHealthStatusType.Healthy)?.Count ?? 0;
+        var stale =
+            counts.FirstOrDefault(c => c.Status == SensorHealthStatusType.Stale)?.Count ?? 0;
+        var unhealthy =
+            counts.FirstOrDefault(c => c.Status == SensorHealthStatusType.Unhealthy)?.Count ?? 0;
+        var unknown =
+            counts.FirstOrDefault(c => c.Status == SensorHealthStatusType.Unknown)?.Count ?? 0;
 
         return new SensorHealthSummaryDto(
             TotalMonitored: healthy + stale + unhealthy + unknown,
@@ -107,11 +118,12 @@ public sealed class SensorHealthRepository(IDbContextFactory<SensorsDbContext> c
 
     public async Task<SensorHealthConfigDtoForDetail?> GetConfigByIdAsync(
         Guid sensorId,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default
+    )
     {
         await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
-        return await context.SensorHealthConfigs
-            .Where(c => c.SensorId == sensorId)
+        return await context
+            .SensorHealthConfigs.Where(c => c.SensorId == sensorId)
             .Select(c => new SensorHealthConfigDtoForDetail(
                 c.Id,
                 c.SensorId,
@@ -128,13 +140,16 @@ public sealed class SensorHealthRepository(IDbContextFactory<SensorsDbContext> c
     public async Task<SensorHealthConfigDtoForDetail> UpsertConfigAsync(
         Guid sensorId,
         SensorHealthConfigDtoForCreate config,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default
+    )
     {
         await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
         var now = DateTimeOffset.UtcNow;
 
-        var existing = await context.SensorHealthConfigs
-            .FirstOrDefaultAsync(c => c.SensorId == sensorId, cancellationToken);
+        var existing = await context.SensorHealthConfigs.FirstOrDefaultAsync(
+            c => c.SensorId == sensorId,
+            cancellationToken
+        );
 
         if (existing is null)
         {
@@ -177,14 +192,16 @@ public sealed class SensorHealthRepository(IDbContextFactory<SensorsDbContext> c
 
     public IAsyncEnumerable<SensorHealthAlertDtoForList> GetAlertsAsync(
         SensorHealthAlertParameters parameters,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default
+    )
     {
         return GetAlertsInternalAsync(parameters, cancellationToken);
     }
 
     private async IAsyncEnumerable<SensorHealthAlertDtoForList> GetAlertsInternalAsync(
         SensorHealthAlertParameters parameters,
-        [EnumeratorCancellation] CancellationToken cancellationToken = default)
+        [EnumeratorCancellation] CancellationToken cancellationToken = default
+    )
     {
         await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
 
@@ -210,25 +227,37 @@ public sealed class SensorHealthRepository(IDbContextFactory<SensorsDbContext> c
                 : query.Where(a => a.ResolvedAt == null);
         }
 
-        if (parameters.Cursor.HasValue)
+        if (parameters.FromDate.HasValue)
         {
-            query = query.Where(a => a.Id > parameters.Cursor.Value);
+            query = query.Where(a => a.TriggeredAt >= parameters.FromDate.Value);
         }
 
-        await foreach (var alert in query
-            .OrderByDescending(a => a.TriggeredAt)
-            .Take(parameters.PageSize + 1)
-            .Select(static a => new SensorHealthAlertDtoForList(
-                a.Id,
-                a.SensorId,
-                a.Sensor!.Name,
-                a.AlertType.ToString(),
-                a.TriggeredAt,
-                a.ResolvedAt,
-                a.Message
-            ))
-            .AsAsyncEnumerable()
-            .WithCancellation(cancellationToken))
+        if (parameters.ToDate.HasValue)
+        {
+            query = query.Where(a => a.TriggeredAt <= parameters.ToDate.Value);
+        }
+
+        if (parameters.Cursor.HasValue)
+        {
+            query = query.Where(a => a.Id < parameters.Cursor.Value);
+        }
+
+        await foreach (
+            var alert in query
+                .OrderByDescending(a => a.Id)
+                .Take(parameters.PageSize + 1)
+                .Select(static a => new SensorHealthAlertDtoForList(
+                    a.Id,
+                    a.SensorId,
+                    a.Sensor!.Name,
+                    a.AlertType.ToString(),
+                    a.TriggeredAt,
+                    a.ResolvedAt,
+                    a.Message
+                ))
+                .AsAsyncEnumerable()
+                .WithCancellation(cancellationToken)
+        )
         {
             yield return alert;
         }
@@ -239,13 +268,16 @@ public sealed class SensorHealthRepository(IDbContextFactory<SensorsDbContext> c
         SensorHealthStatusType status,
         DateTimeOffset? lastReadingAt,
         string? errorMessage,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default
+    )
     {
         await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
         var now = DateTimeOffset.UtcNow;
 
-        var existing = await context.SensorHealthStatuses
-            .FirstOrDefaultAsync(s => s.SensorId == sensorId, cancellationToken);
+        var existing = await context.SensorHealthStatuses.FirstOrDefaultAsync(
+            s => s.SensorId == sensorId,
+            cancellationToken
+        );
 
         if (existing is null)
         {
@@ -271,9 +303,8 @@ public sealed class SensorHealthRepository(IDbContextFactory<SensorsDbContext> c
                 existing.LastReadingAt = lastReadingAt;
             }
             existing.LastErrorMessage = errorMessage;
-            existing.ConsecutiveFailures = status == SensorHealthStatusType.Healthy
-                ? 0
-                : existing.ConsecutiveFailures + 1;
+            existing.ConsecutiveFailures =
+                status == SensorHealthStatusType.Healthy ? 0 : existing.ConsecutiveFailures + 1;
             existing.UpdatedAt = now;
         }
 
@@ -283,14 +314,17 @@ public sealed class SensorHealthRepository(IDbContextFactory<SensorsDbContext> c
     public async Task RecordReadingAsync(
         Guid sensorId,
         DateTimeOffset readingTime,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default
+    )
     {
         await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
         var now = DateTimeOffset.UtcNow;
         var readingTimeUtc = readingTime.ToUniversalTime();
 
-        var existing = await context.SensorHealthStatuses
-            .FirstOrDefaultAsync(s => s.SensorId == sensorId, cancellationToken);
+        var existing = await context.SensorHealthStatuses.FirstOrDefaultAsync(
+            s => s.SensorId == sensorId,
+            cancellationToken
+        );
 
         if (existing is null)
         {
@@ -320,11 +354,12 @@ public sealed class SensorHealthRepository(IDbContextFactory<SensorsDbContext> c
         await context.SaveChangesAsync(cancellationToken);
     }
 
-    public async Task CreateAlertAsync(
+    public async Task<SensorHealthAlertDtoForList> CreateAlertAsync(
         Guid sensorId,
         SensorHealthAlertType alertType,
         string message,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default
+    )
     {
         await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
 
@@ -340,17 +375,34 @@ public sealed class SensorHealthRepository(IDbContextFactory<SensorsDbContext> c
 
         context.SensorHealthAlerts.Add(alert);
         await context.SaveChangesAsync(cancellationToken);
+
+        var sensorName =
+            await context
+                .Sensors.Where(s => s.Id == sensorId)
+                .Select(s => s.Name)
+                .FirstOrDefaultAsync(cancellationToken) ?? "Unknown";
+
+        return new SensorHealthAlertDtoForList(
+            alert.Id,
+            alert.SensorId,
+            sensorName,
+            alert.AlertType.ToString(),
+            alert.TriggeredAt,
+            alert.ResolvedAt,
+            alert.Message
+        );
     }
 
     public async Task ResolveAlertsAsync(
         Guid sensorId,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default
+    )
     {
         await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
         var now = DateTimeOffset.UtcNow;
 
-        var unresolvedAlerts = await context.SensorHealthAlerts
-            .Where(a => a.SensorId == sensorId && a.ResolvedAt == null)
+        var unresolvedAlerts = await context
+            .SensorHealthAlerts.Where(a => a.SensorId == sensorId && a.ResolvedAt == null)
             .ToListAsync(cancellationToken);
 
         foreach (var alert in unresolvedAlerts)
@@ -364,13 +416,16 @@ public sealed class SensorHealthRepository(IDbContextFactory<SensorsDbContext> c
         }
     }
 
-    public async Task<IReadOnlyList<MonitoredSensorHealthStatusDto>> GetMonitoredStatusesWithConfigAsync(
-        CancellationToken cancellationToken = default)
+    public async Task<
+        IReadOnlyList<MonitoredSensorHealthStatusDto>
+    > GetMonitoredStatusesWithConfigAsync(CancellationToken cancellationToken = default)
     {
         await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
 
-        return await context.SensorHealthStatuses
-            .Where(s => s.Sensor!.HealthConfig != null && s.Sensor.HealthConfig.IsMonitoringEnabled)
+        return await context
+            .SensorHealthStatuses.Where(s =>
+                s.Sensor!.HealthConfig != null && s.Sensor.HealthConfig.IsMonitoringEnabled
+            )
             .Select(s => new MonitoredSensorHealthStatusDto(
                 s.Id,
                 s.SensorId,
