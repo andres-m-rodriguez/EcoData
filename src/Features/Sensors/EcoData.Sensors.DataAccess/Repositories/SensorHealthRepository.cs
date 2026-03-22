@@ -239,12 +239,12 @@ public sealed class SensorHealthRepository(IDbContextFactory<SensorsDbContext> c
 
         if (parameters.Cursor.HasValue)
         {
-            query = query.Where(a => a.Id > parameters.Cursor.Value);
+            query = query.Where(a => a.Id < parameters.Cursor.Value);
         }
 
         await foreach (
             var alert in query
-                .OrderByDescending(a => a.TriggeredAt)
+                .OrderByDescending(a => a.Id)
                 .Take(parameters.PageSize + 1)
                 .Select(static a => new SensorHealthAlertDtoForList(
                     a.Id,
