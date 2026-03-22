@@ -1,0 +1,149 @@
+@page "/alerts/{AlertId:guid}"
+@using EcoData.Sensors.Contracts.Dtos
+@using EcoData.Sensors.Application.Client
+@inject ISensorHealthHttpClient HealthClient
+@inject NavigationManager NavigationManager
+
+<PageTitle>Alert Details - EcoData</PageTitle>
+
+<EcoDataPageLayout FallbackUrl="/alerts">
+    <ChildContent>
+        @if (_loading)
+        {
+            <MudProgressCircular Color="Color.Primary" Indeterminate />
+        }
+        else if (_alert is null)
+        {
+            <MudStack AlignItems="AlignItems.Center" Class="pa-8" Spacing="2">
+                <MudIcon Icon="@Icons.Material.Filled.Warning" Size="Size.Large" Color="Color.Secondary" />
+                <MudText Typo="Typo.h6" Color="Color.Secondary">Alert not found</MudText>
+            </MudStack>
+        }
+        else
+        {
+            <div class="alert-detail">
+                <div class="alert-detail-header">
+                    <div class="alert-type-badge">
+                        <MudChip T="string" Size="Size.Medium" Color="@GetAlertColor()" Variant="Variant.Filled">
+                            @_alert.AlertType
+                        </MudChip>
+                    </div>
+                    <h1 class="alert-sensor-name">@_alert.SensorName</h1>
+                    <p class="alert-message">@_alert.Message</p>
+                </div>
+
+                <MudDivider Class="my-4" />
+
+                <div class="alert-detail-info">
+                    <MudSimpleTable Hover Bordered>
+                        <tbody>
+                            <tr>
+                                <td><strong>Alert ID</strong></td>
+                                <td><code>@_alert.Id</code></td>
+                            </tr>
+                            <tr>
+                                <td><strong>Sensor</strong></td>
+                                <td>
+                                    <MudLink Href="@($"/sensors/{_alert.SensorId}")">
+                                        @_alert.SensorName
+                                    </MudLink>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><strong>Alert Type</strong></td>
+                                <td>
+                                    <MudIcon Icon="@GetAlertIcon()" Color="@GetAlertColor()" Size="Size.Small" Class="mr-1" />
+                                    @_alert.AlertType
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><strong>Triggered At</strong></td>
+                                <td>@_alert.TriggeredAt.LocalDateTime.ToString("MMMM dd, yyyy 'at' HH:mm:ss")</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Status</strong></td>
+                                <td>
+                                    @if (_alert.ResolvedAt.HasValue)
+                                    {
+                                        <MudChip T="string" Size="Size.Small" Color="Color.Success" Variant="Variant.Outlined">
+                                            Resolved
+                                        </MudChip>
+                                        <span class="ml-2">@_alert.ResolvedAt.Value.LocalDateTime.ToString("MMMM dd, yyyy 'at' HH:mm:ss")</span>
+                                    }
+                                    else
+                                    {
+                                        <MudChip T="string" Size="Size.Small" Color="Color.Warning" Variant="Variant.Outlined">
+                                            Active
+                                        </MudChip>
+                                    }
+                                </td>
+                            </tr>
+                            @if (_alert.ResolvedAt.HasValue)
+                            {
+                                <tr>
+                                    <td><strong>Duration</strong></td>
+                                    <td>@FormatDuration(_alert.TriggeredAt, _alert.ResolvedAt.Value)</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </MudSimpleTable>
+                </div>
+
+                <div class="alert-detail-actions mt-4">
+                    <MudButton Variant="Variant.Outlined"
+                               Color="Color.Primary"
+                               StartIcon="@Icons.Material.Filled.Sensors"
+                               Href="@($"/sensors/{_alert.SensorId}")">
+                        View Sensor
+                    </MudButton>
+                </div>
+            </div>
+        }
+    </ChildContent>
+</EcoDataPageLayout>
+
+@code {
+    private SensorHealthAlertDtoForDetail? _alert;
+    private bool _loading = true;
+
+    [Parameter]
+    public Guid AlertId { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var result = await HealthClient.GetAlertByIdAsync(AlertId);
+        result.Switch(
+            alert => _alert = alert,
+            _ => _alert = null
+        );
+        _loading = false;
+    }
+
+    private Color GetAlertColor() => _alert?.AlertType switch
+    {
+        "Stale" => Color.Warning,
+        "Unhealthy" => Color.Error,
+        "Recovered" => Color.Success,
+        _ => Color.Default
+    };
+
+    private string GetAlertIcon() => _alert?.AlertType switch
+    {
+        "Stale" => Icons.Material.Filled.Schedule,
+        "Unhealthy" => Icons.Material.Filled.Error,
+        "Recovered" => Icons.Material.Filled.CheckCircle,
+        _ => Icons.Material.Filled.Warning
+    };
+
+    private static string FormatDuration(DateTimeOffset start, DateTimeOffset end)
+    {
+        var duration = end - start;
+        if (duration.TotalDays >= 1)
+            return $"{(int)duration.TotalDays}d {duration.Hours}h {duration.Minutes}m";
+        if (duration.TotalHours >= 1)
+            return $"{(int)duration.TotalHours}h {duration.Minutes}m";
+        if (duration.TotalMinutes >= 1)
+            return $"{(int)duration.TotalMinutes}m {duration.Seconds}s";
+        return $"{(int)duration.TotalSeconds}s";
+    }
+}

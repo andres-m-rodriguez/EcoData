@@ -1,6 +1,6 @@
 @using EcoData.Sensors.Contracts.Dtos
 
-<div class="alert-item">
+<a href="/alerts/@Alert.Id" class="alert-item">
     <div class="alert-item-main">
         <div class="alert-icon">
             <MudIcon Icon="@Icons.Material.Filled.Warning" Color="@GetAlertColor()" />
@@ -28,7 +28,7 @@
             @Alert.AlertType
         </MudChip>
     </div>
-</div>
+</a>
 
 @code {
     [Parameter, EditorRequired]
