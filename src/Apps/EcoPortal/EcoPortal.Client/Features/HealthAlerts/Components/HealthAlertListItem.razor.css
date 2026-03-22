@@ -6,24 +6,11 @@
     background: var(--mud-palette-surface);
     border-radius: 12px;
     margin-bottom: 8px;
-    border-left: 4px solid transparent;
     transition: all 0.2s ease;
 }
 
 .alert-item:hover {
     background: var(--mud-palette-background-gray);
-}
-
-.alert-item.stale {
-    border-left-color: var(--mud-palette-warning);
-}
-
-.alert-item.unhealthy {
-    border-left-color: var(--mud-palette-error);
-}
-
-.alert-item.recovered {
-    border-left-color: var(--mud-palette-success);
 }
 
 .alert-item-main {

@@ -1,9 +1,9 @@
 @using EcoData.Sensors.Contracts.Dtos
 
-<div class="alert-item @GetAlertTypeClass()">
+<div class="alert-item">
     <div class="alert-item-main">
         <div class="alert-icon">
-            <MudIcon Icon="@GetAlertIcon()" Color="@GetAlertColor()" />
+            <MudIcon Icon="@Icons.Material.Filled.Warning" Color="@GetAlertColor()" />
         </div>
         <div class="alert-info">
             <h3 class="alert-sensor-name">@Alert.SensorName</h3>
@@ -33,16 +33,6 @@
 @code {
     [Parameter, EditorRequired]
     public required SensorHealthAlertDtoForList Alert { get; set; }
-
-    private string GetAlertTypeClass() => Alert.AlertType.ToLowerInvariant();
-
-    private string GetAlertIcon() => Alert.AlertType switch
-    {
-        "Stale" => Icons.Material.Filled.HourglassEmpty,
-        "Unhealthy" => Icons.Material.Filled.Warning,
-        "Recovered" => Icons.Material.Filled.CheckCircle,
-        _ => Icons.Material.Filled.Info
-    };
 
     private Color GetAlertColor() => Alert.AlertType switch
     {
