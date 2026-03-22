@@ -227,6 +227,16 @@ public sealed class SensorHealthRepository(IDbContextFactory<SensorsDbContext> c
                 : query.Where(a => a.ResolvedAt == null);
         }
 
+        if (parameters.FromDate.HasValue)
+        {
+            query = query.Where(a => a.TriggeredAt >= parameters.FromDate.Value);
+        }
+
+        if (parameters.ToDate.HasValue)
+        {
+            query = query.Where(a => a.TriggeredAt <= parameters.ToDate.Value);
+        }
+
         if (parameters.Cursor.HasValue)
         {
             query = query.Where(a => a.Id > parameters.Cursor.Value);

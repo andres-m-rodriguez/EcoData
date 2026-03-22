@@ -52,13 +52,10 @@ public static class SensorHealthEndpoints
             .MapGet(
                 "/alerts/stream",
                 (IMessageBroker<SensorHealthAlertDtoForList> messageBroker, CancellationToken ct) =>
-                {
-                    var stream = StreamAlertsAsync(messageBroker, MessageTopics.AllHealthAlerts, ct);
-                    return TypedResults.ServerSentEvents(
-                        stream,
+                    TypedResults.ServerSentEvents(
+                        messageBroker.SubscribeAsync(MessageTopics.AllHealthAlerts, ct),
                         eventType: SseEventTypes.HealthAlert
-                    );
-                }
+                    )
             )
             .WithName("StreamAllHealthAlerts");
 
@@ -124,23 +121,13 @@ public static class SensorHealthEndpoints
                     IMessageBroker<SensorHealthAlertDtoForList> messageBroker,
                     CancellationToken ct
                 ) =>
-                {
-                    var topic = sensorId.ToString();
-                    var stream = StreamAlertsAsync(messageBroker, topic, ct);
-                    return TypedResults.ServerSentEvents(
-                        stream,
+                    TypedResults.ServerSentEvents(
+                        messageBroker.SubscribeAsync(sensorId.ToString(), ct),
                         eventType: SseEventTypes.HealthAlert
-                    );
-                }
+                    )
             )
             .WithName("StreamSensorHealthAlerts");
 
         return app;
     }
-
-    private static IAsyncEnumerable<SensorHealthAlertDtoForList> StreamAlertsAsync(
-        IMessageBroker<SensorHealthAlertDtoForList> messageBroker,
-        string topic,
-        CancellationToken ct
-    ) => messageBroker.SubscribeAsync(topic, ct);
 }

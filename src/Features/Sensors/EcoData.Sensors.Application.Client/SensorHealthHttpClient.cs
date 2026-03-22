@@ -67,4 +67,25 @@ public sealed class SensorHealthHttpClient(HttpClient httpClient) : ISensorHealt
         var result = await response.Content.ReadFromJsonAsync<SensorHealthConfigDtoForDetail>(cancellationToken);
         return result!;
     }
+
+    public IAsyncEnumerable<SensorHealthAlertDtoForList> GetAlertsAsync(
+        SensorHealthAlertParameters parameters,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var queryString = new QueryStringBuilder()
+            .Add("pageSize", parameters.PageSize != 20 ? parameters.PageSize : null)
+            .Add("cursor", parameters.Cursor)
+            .Add("sensorId", parameters.SensorId)
+            .Add("alertType", parameters.AlertType)
+            .Add("isResolved", parameters.IsResolved)
+            .Add("fromDate", parameters.FromDate?.ToString("o"))
+            .Add("toDate", parameters.ToDate?.ToString("o"))
+            .Build();
+
+        return httpClient.GetFromJsonAsAsyncEnumerable<SensorHealthAlertDtoForList>(
+            $"api/health/sensors/alerts{queryString}",
+            cancellationToken
+        )!;
+    }
 }
