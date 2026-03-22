@@ -48,11 +48,10 @@ public static class SensorReadingEndpoints
                     IMessageBroker<ReadingDtoForCreate> messageBroker,
                     CancellationToken ct
                 ) =>
-                {
-                    var topic = sensorId.ToString();
-                    var stream = StreamReadingsAsync(messageBroker, topic, ct);
-                    return TypedResults.ServerSentEvents(stream, eventType: SseEventTypes.Reading);
-                }
+                    TypedResults.ServerSentEvents(
+                        messageBroker.SubscribeAsync(sensorId.ToString(), ct),
+                        eventType: SseEventTypes.Reading
+                    )
             )
             .WithName("StreamSensorReadings");
 
@@ -143,10 +142,4 @@ public static class SensorReadingEndpoints
 
         return app;
     }
-
-    private static IAsyncEnumerable<ReadingDtoForCreate> StreamReadingsAsync(
-        IMessageBroker<ReadingDtoForCreate> messageBroker,
-        string topic,
-        CancellationToken ct
-    ) => messageBroker.SubscribeAsync(topic, ct);
 }

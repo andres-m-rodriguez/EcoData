@@ -1,0 +1,81 @@
+@using static EcoPortal.Client.Features.HealthAlerts.Components.HealthAlertList
+
+<MudDialog>
+    <TitleContent>
+        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+            <MudIcon Icon="@Icons.Material.Filled.FilterList" />
+            <MudText Typo="Typo.h6">Filters</MudText>
+        </MudStack>
+    </TitleContent>
+    <DialogContent>
+        <MudStack Spacing="4" Class="pt-2">
+            <MudSelect T="AlertTypeOption" Label="Alert Type" @bind-Value="TypeFilter"
+                       Variant="Variant.Outlined">
+                <MudSelectItem Value="AlertTypeOption.All">All Types</MudSelectItem>
+                <MudSelectItem Value="AlertTypeOption.Stale">Stale</MudSelectItem>
+                <MudSelectItem Value="AlertTypeOption.Unhealthy">Unhealthy</MudSelectItem>
+                <MudSelectItem Value="AlertTypeOption.Recovered">Recovered</MudSelectItem>
+            </MudSelect>
+
+            <MudSelect T="ResolvedOption" Label="Status" @bind-Value="ResolvedFilter"
+                       Variant="Variant.Outlined">
+                <MudSelectItem Value="ResolvedOption.All">All</MudSelectItem>
+                <MudSelectItem Value="ResolvedOption.Unresolved">Unresolved</MudSelectItem>
+                <MudSelectItem Value="ResolvedOption.Resolved">Resolved</MudSelectItem>
+            </MudSelect>
+
+            <MudDatePicker Label="From Date" @bind-Date="FromDate" Variant="Variant.Outlined"
+                           Clearable="true" MaxDate="DateTime.Today" />
+
+            <MudDatePicker Label="To Date" @bind-Date="ToDate" Variant="Variant.Outlined"
+                           Clearable="true" MaxDate="DateTime.Today" />
+        </MudStack>
+    </DialogContent>
+    <DialogActions>
+        <MudButton Variant="Variant.Text" Color="Color.Default" OnClick="Clear">Clear</MudButton>
+        <MudSpacer />
+        <MudButton Variant="Variant.Text" OnClick="Cancel">Cancel</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="Apply">Apply</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter]
+    private IMudDialogInstance MudDialog { get; set; } = null!;
+
+    [Parameter]
+    public AlertTypeOption TypeFilter { get; set; }
+
+    [Parameter]
+    public ResolvedOption ResolvedFilter { get; set; }
+
+    [Parameter]
+    public DateTime? FromDate { get; set; }
+
+    [Parameter]
+    public DateTime? ToDate { get; set; }
+
+    private void Cancel() => MudDialog.Cancel();
+
+    private void Clear()
+    {
+        var result = new AlertFilterResult(
+            AlertTypeOption.All,
+            ResolvedOption.All,
+            null,
+            null
+        );
+        MudDialog.Close(DialogResult.Ok(result));
+    }
+
+    private void Apply()
+    {
+        var result = new AlertFilterResult(
+            TypeFilter,
+            ResolvedFilter,
+            FromDate,
+            ToDate
+        );
+        MudDialog.Close(DialogResult.Ok(result));
+    }
+}

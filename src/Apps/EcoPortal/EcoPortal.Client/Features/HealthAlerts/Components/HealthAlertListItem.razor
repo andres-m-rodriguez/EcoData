@@ -1,0 +1,54 @@
+@using EcoData.Sensors.Contracts.Dtos
+
+<div class="alert-item @GetAlertTypeClass()">
+    <div class="alert-item-main">
+        <div class="alert-icon">
+            <MudIcon Icon="@GetAlertIcon()" Color="@GetAlertColor()" />
+        </div>
+        <div class="alert-info">
+            <h3 class="alert-sensor-name">@Alert.SensorName</h3>
+            <p class="alert-message">@Alert.Message</p>
+            <div class="alert-meta">
+                <span class="alert-time">
+                    <MudIcon Icon="@Icons.Material.Filled.Schedule" Size="Size.Small" />
+                    @Alert.TriggeredAt.LocalDateTime.ToString("MMM dd, yyyy HH:mm")
+                </span>
+                @if (Alert.ResolvedAt.HasValue)
+                {
+                    <span class="alert-resolved">
+                        <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Size="Size.Small" />
+                        Resolved @Alert.ResolvedAt.Value.LocalDateTime.ToString("MMM dd, HH:mm")
+                    </span>
+                }
+            </div>
+        </div>
+    </div>
+    <div class="alert-item-status">
+        <MudChip T="string" Size="Size.Small" Color="@GetAlertColor()" Variant="Variant.Filled">
+            @Alert.AlertType
+        </MudChip>
+    </div>
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public required SensorHealthAlertDtoForList Alert { get; set; }
+
+    private string GetAlertTypeClass() => Alert.AlertType.ToLowerInvariant();
+
+    private string GetAlertIcon() => Alert.AlertType switch
+    {
+        "Stale" => Icons.Material.Filled.HourglassEmpty,
+        "Unhealthy" => Icons.Material.Filled.Warning,
+        "Recovered" => Icons.Material.Filled.CheckCircle,
+        _ => Icons.Material.Filled.Info
+    };
+
+    private Color GetAlertColor() => Alert.AlertType switch
+    {
+        "Stale" => Color.Warning,
+        "Unhealthy" => Color.Error,
+        "Recovered" => Color.Success,
+        _ => Color.Default
+    };
+}

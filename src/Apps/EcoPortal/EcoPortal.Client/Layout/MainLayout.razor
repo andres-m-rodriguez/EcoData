@@ -37,6 +37,9 @@
             <MudLink Href="@SensorsPage.Path" Underline="Underline.None" Class="@GetNavLinkClass(SensorsPage.Path)">
                 Sensors
             </MudLink>
+            <MudLink Href="@HealthAlertsPage.Path" Underline="Underline.None" Class="@GetNavLinkClass(HealthAlertsPage.Path)">
+                Alerts
+            </MudLink>
             <MudLink Href="/organizations/discover" Underline="Underline.None" Class="@GetNavLinkClass("/organizations")">
                 Organizations
             </MudLink>
@@ -95,6 +98,7 @@
                 Home
             </MudNavLink>
             <MudNavLink Href="@SensorsPage.Path" Icon="@Icons.Material.Outlined.Water">Sensors</MudNavLink>
+            <MudNavLink Href="@HealthAlertsPage.Path" Icon="@Icons.Material.Outlined.NotificationsActive">Alerts</MudNavLink>
             <MudNavLink Href="/organizations/discover" Icon="@Icons.Material.Outlined.Business">Organizations</MudNavLink>
             <MudNavLink Href="@GettingStartedPage.Path" Icon="@Icons.Material.Outlined.Help">Getting Started</MudNavLink>
         </MudNavMenu>
