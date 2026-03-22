@@ -32,6 +32,7 @@
     <ProjectReference Include="..\..\..\Features\Sensors\EcoData.Sensors.Api\EcoData.Sensors.Api.csproj" />
     <ProjectReference Include="..\..\..\Features\Sensors\EcoData.Sensors.DataAccess\EcoData.Sensors.DataAccess.csproj" />
     <ProjectReference Include="..\..\..\Features\Sensors\EcoData.Sensors.Database\EcoData.Sensors.Database.csproj" />
+    <ProjectReference Include="..\..\..\Features\Sensors\EcoData.Sensors.Ingestion\EcoData.Sensors.Ingestion.csproj" />
   </ItemGroup>
 
 </Project>

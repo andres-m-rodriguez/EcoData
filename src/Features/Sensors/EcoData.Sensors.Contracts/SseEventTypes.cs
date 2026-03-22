@@ -23,3 +23,14 @@ public static class SseEventTypes
     /// </summary>
     public const string HealthAlert = "sensor.health.alert";
 }
+
+/// <summary>
+/// Topic constants for the message broker.
+/// </summary>
+public static class MessageTopics
+{
+    /// <summary>
+    /// Topic for all health alerts (global subscription).
+    /// </summary>
+    public const string AllHealthAlerts = "all-health-alerts";
+}

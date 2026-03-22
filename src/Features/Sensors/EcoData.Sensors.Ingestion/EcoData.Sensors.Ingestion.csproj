@@ -12,6 +12,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\..\Host\EcoData.ServiceDefaults\EcoData.ServiceDefaults.csproj" />
+    <ProjectReference Include="..\..\Common\EcoData.Common.Messaging\EcoData.Common.Messaging.csproj" />
     <ProjectReference Include="..\..\Locations\EcoData.Locations.DataAccess\EcoData.Locations.DataAccess.csproj" />
     <ProjectReference Include="..\..\Locations\EcoData.Locations.Database\EcoData.Locations.Database.csproj" />
     <ProjectReference Include="..\..\Organization\EcoData.Organization.DataAccess\EcoData.Organization.DataAccess.csproj" />

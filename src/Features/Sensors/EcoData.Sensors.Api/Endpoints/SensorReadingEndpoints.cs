@@ -136,7 +136,9 @@ public static class SensorReadingEndpoints
             .RequireAuthorization(policy =>
                 policy.AddAuthenticationSchemes(SensorJwtScheme).RequireAuthenticatedUser()
             )
-            .RequireRateLimiting(SensorReadingsRateLimiterExtensions.SensorReadingsRateLimiterPolicy)
+            .RequireRateLimiting(
+                SensorReadingsRateLimiterExtensions.SensorReadingsRateLimiterPolicy
+            )
             .WithName("SubmitReadings");
 
         return app;
