@@ -88,4 +88,18 @@ public sealed class SensorHealthHttpClient(HttpClient httpClient) : ISensorHealt
             cancellationToken
         )!;
     }
+
+    public async Task<OneOf<SensorHealthAlertDtoForDetail, ProblemDetail>> GetAlertByIdAsync(
+        Guid alertId,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var response = await httpClient.GetAsync($"/api/health/sensors/alerts/{alertId}", cancellationToken);
+
+        if (!response.IsSuccessStatusCode)
+            return await response.ReadProblemAsync(cancellationToken);
+
+        var result = await response.Content.ReadFromJsonAsync<SensorHealthAlertDtoForDetail>(cancellationToken);
+        return result!;
+    }
 }

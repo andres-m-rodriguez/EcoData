@@ -30,4 +30,9 @@ public interface ISensorHealthHttpClient
         SensorHealthAlertParameters parameters,
         CancellationToken cancellationToken = default
     );
+
+    Task<OneOf<SensorHealthAlertDtoForDetail, ProblemDetail>> GetAlertByIdAsync(
+        Guid alertId,
+        CancellationToken cancellationToken = default
+    );
 }

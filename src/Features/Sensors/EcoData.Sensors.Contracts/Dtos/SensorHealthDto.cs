@@ -55,6 +55,16 @@ public sealed record SensorHealthAlertDtoForList(
     string Message
 );
 
+public sealed record SensorHealthAlertDtoForDetail(
+    Guid Id,
+    Guid SensorId,
+    string SensorName,
+    string AlertType,
+    DateTimeOffset TriggeredAt,
+    DateTimeOffset? ResolvedAt,
+    string Message
+);
+
 public sealed record SensorHealthSummaryDto(
     int TotalMonitored,
     int Healthy,

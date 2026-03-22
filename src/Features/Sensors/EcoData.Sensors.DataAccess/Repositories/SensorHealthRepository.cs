@@ -263,6 +263,26 @@ public sealed class SensorHealthRepository(IDbContextFactory<SensorsDbContext> c
         }
     }
 
+    public async Task<SensorHealthAlertDtoForDetail?> GetAlertByIdAsync(
+        Guid alertId,
+        CancellationToken cancellationToken = default
+    )
+    {
+        await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
+        return await context
+            .SensorHealthAlerts.Where(a => a.Id == alertId)
+            .Select(a => new SensorHealthAlertDtoForDetail(
+                a.Id,
+                a.SensorId,
+                a.Sensor!.Name,
+                a.AlertType.ToString(),
+                a.TriggeredAt,
+                a.ResolvedAt,
+                a.Message
+            ))
+            .FirstOrDefaultAsync(cancellationToken);
+    }
+
     public async Task UpdateStatusAsync(
         Guid sensorId,
         SensorHealthStatusType status,

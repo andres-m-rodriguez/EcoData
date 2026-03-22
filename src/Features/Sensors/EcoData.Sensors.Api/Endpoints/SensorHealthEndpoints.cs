@@ -50,6 +50,26 @@ public static class SensorHealthEndpoints
 
         group
             .MapGet(
+                "/alerts/{alertId:guid}",
+                async Task<Results<Ok<SensorHealthAlertDtoForDetail>, ProblemHttpResult>> (
+                    Guid alertId,
+                    ISensorHealthRepository repository,
+                    CancellationToken ct
+                ) =>
+                {
+                    var alert = await repository.GetAlertByIdAsync(alertId, ct);
+                    return alert is null
+                        ? TypedResults.Problem(
+                            detail: "Alert not found",
+                            statusCode: StatusCodes.Status404NotFound
+                        )
+                        : TypedResults.Ok(alert);
+                }
+            )
+            .WithName("GetSensorHealthAlertById");
+
+        group
+            .MapGet(
                 "/alerts/stream",
                 (IMessageBroker<SensorHealthAlertDtoForList> messageBroker, CancellationToken ct) =>
                     TypedResults.ServerSentEvents(

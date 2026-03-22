@@ -34,6 +34,11 @@ public interface ISensorHealthRepository
         CancellationToken cancellationToken = default
     );
 
+    Task<SensorHealthAlertDtoForDetail?> GetAlertByIdAsync(
+        Guid alertId,
+        CancellationToken cancellationToken = default
+    );
+
     Task UpdateStatusAsync(
         Guid sensorId,
         SensorHealthStatusType status,
