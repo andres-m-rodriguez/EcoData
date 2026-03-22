@@ -24,6 +24,11 @@ public static class DependencyInjection
             configureClient?.Invoke(client);
         });
 
+        services.AddHttpClient<ISensorAlertHttpClient, SensorAlertHttpClient>(client =>
+        {
+            configureClient?.Invoke(client);
+        });
+
         return services;
     }
 

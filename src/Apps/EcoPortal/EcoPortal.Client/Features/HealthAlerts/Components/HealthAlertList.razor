@@ -4,7 +4,7 @@
 @using EcoPortal.Client.Features.HealthAlerts.Dialogs
 @using EcoData.Common.Pagination.Blazor
 @using BlazingSingularity.Signals
-@inject ISensorHealthHttpClient HealthClient
+@inject ISensorAlertHttpClient AlertClient
 @inject IDialogService DialogService
 
 <SearchHeader SearchSignal="SearchTextSignal" Placeholder="Search alerts..." ShowFilterButton="true"
@@ -186,7 +186,7 @@
         SensorHealthAlertParameters parameters,
         CancellationToken cancellationToken)
     {
-        return HealthClient.GetAlertsAsync(parameters, cancellationToken);
+        return AlertClient.GetAlertsAsync(parameters, cancellationToken);
     }
 
     private void ClearFilters()

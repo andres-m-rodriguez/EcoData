@@ -1,11 +1,24 @@
 @using EcoData.Sensors.Contracts.Dtos
+@using EcoData.Sensors.Application.Client
 @using EcoPortal.Client.Features.Sensors.Pages.SensorDetailPages.Components
+@inject ISensorHealthHttpClient HealthClient
 
 <MudPaper Elevation="1" Class="pa-4 mb-4">
     <MudGrid Spacing="4">
         <MudItem xs="12" md="7">
             <MudStack Spacing="2">
-                <MudText Typo="Typo.h5">@Sensor.Name</MudText>
+                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                    <MudText Typo="Typo.h5">@Sensor.Name</MudText>
+                    <MudChip T="string" Color="@(Sensor.IsActive? Color.Success: Color.Default)" Size="Size.Small">
+                        @(Sensor.IsActive ? "Active" : "Inactive")
+                    </MudChip>
+                    @if (_healthStatus is not null)
+                    {
+                        <MudChip T="string" Color="@GetHealthStatusColor()" Size="Size.Small" Variant="Variant.Outlined">
+                            @_healthStatus
+                        </MudChip>
+                    }
+                </MudStack>
                 <MudStack Row="true" Spacing="4">
                     <MudStack Spacing="0">
                         <MudText Typo="Typo.caption" Color="Color.Secondary">Coordinates</MudText>
@@ -29,6 +42,25 @@
 </MudPaper>
 
 @code {
+    private string? _healthStatus;
+
     [Parameter, EditorRequired]
     public SensorDtoForDetail Sensor { get; set; } = default!;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var healthResult = await HealthClient.GetSensorHealthAsync(Sensor.Id);
+        healthResult.Switch(
+            health => _healthStatus = health.Status,
+            _ => _healthStatus = null
+        );
+    }
+
+    private Color GetHealthStatusColor() => _healthStatus switch
+    {
+        "Healthy" => Color.Success,
+        "Stale" => Color.Warning,
+        "Unhealthy" => Color.Error,
+        _ => Color.Default
+    };
 }
