@@ -2,7 +2,7 @@
 @using EcoData.Sensors.Contracts.Dtos
 @using EcoData.Sensors.Application.Client
 @using EcoPortal.Client.Services
-@inject ISensorHealthHttpClient HealthClient
+@inject ISensorAlertHttpClient AlertClient
 @inject INavigationService Navigation
 
 <PageTitle>Alert Details - EcoData</PageTitle>
@@ -112,7 +112,7 @@
 
     protected override async Task OnInitializedAsync()
     {
-        var result = await HealthClient.GetAlertByIdAsync(AlertId);
+        var result = await AlertClient.GetAlertByIdAsync(AlertId);
         result.Switch(
             alert => _alert = alert,
             _ => _alert = null

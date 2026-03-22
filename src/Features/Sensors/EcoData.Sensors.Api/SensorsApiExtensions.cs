@@ -11,6 +11,7 @@ public static class SensorsApiExtensions
         app.MapSensorReadingEndpoints();
         app.MapSensorHealthEndpoints();
         app.MapSensorHealthConfigEndpoints();
+        app.MapSensorAlertEndpoints();
         app.MapReferenceDataEndpoints();
 
         return app;

@@ -9,6 +9,7 @@ using Microsoft.Extensions.Logging;
 
 namespace EcoPortal.Server.Workers;
 
+// TODO: Move to dedicated service when migrating to microservices
 public sealed class SensorHealthMonitorWorker(
     IServiceScopeFactory scopeFactory,
     IMessageBroker<SensorHealthAlertDtoForList> alertBroker,

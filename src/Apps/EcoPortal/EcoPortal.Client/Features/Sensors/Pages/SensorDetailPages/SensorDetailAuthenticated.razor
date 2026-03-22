@@ -9,6 +9,7 @@
 @using SensorPermissions = EcoData.Sensors.Contracts.Permissions
 @inject ISensorHttpClient SensorClient
 @inject ISensorReadingHttpClient ReadingClient
+@inject ISensorHealthHttpClient HealthClient
 @inject IDialogService DialogService
 @inject INavigationService Navigation
 @inject ISnackbar Snackbar
@@ -17,12 +18,20 @@
     <MudGrid Spacing="4">
         <MudItem xs="12" md="7">
             <MudStack Spacing="2">
-                <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center">
-                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center"
+                         Wrap="Wrap.Wrap" Style="gap: 8px;">
+                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Wrap="Wrap.Wrap">
                         <MudText Typo="Typo.h5">@Sensor.Name</MudText>
                         <MudChip T="string" Color="@(Sensor.IsActive? Color.Success: Color.Default)" Size="Size.Small">
                             @(Sensor.IsActive ? "Active" : "Inactive")
                         </MudChip>
+                        @if (_healthStatus is not null)
+                        {
+                            <MudChip T="string" Color="@GetHealthStatusColor()" Size="Size.Small"
+                                     Variant="Variant.Outlined">
+                                @_healthStatus
+                            </MudChip>
+                        }
                     </MudStack>
                     <RequireOrganizationPermission Permission="@SensorPermissions.Sensor.Update"
                                                    OrganizationId="Sensor.OrganizationId">
@@ -41,7 +50,8 @@
                 <MudStack Row="true" Spacing="4">
                     <MudStack Spacing="0">
                         <MudText Typo="Typo.caption" Color="Color.Secondary">Coordinates</MudText>
-                        <MudText Typo="Typo.body2">@Sensor.Latitude.ToString("F4"), @Sensor.Longitude.ToString("F4")</MudText>
+                        <MudText Typo="Typo.body2">@Sensor.Latitude.ToString("F4"), @Sensor.Longitude.ToString("F4")
+                        </MudText>
                     </MudStack>
                     <MudStack Spacing="0">
                         <MudText Typo="Typo.caption" Color="Color.Secondary">Created</MudText>
@@ -60,8 +70,8 @@
     <Tabs ActiveIndex="_activeTab" ActiveIndexChanged="OnTabChanged">
         <Tab Title="History" Icon="@Icons.Material.Filled.History">
             <SensorReadingsList @ref="_readingsList" SensorId="Sensor.Id" ShowFilter="true"
-                                OnFilterClick="OpenFilterDialog" ParameterFilter="@_parameterFilter"
-                                FromDate="@_fromDate" ToDate="@_toDate">
+                                OnFilterClick="OpenFilterDialog" ParameterFilter="@_parameterFilter"                                FromDate="@_fromDate"
+                                ToDate="@_toDate">
                 <ActionButtons>
                     <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.Refresh"
                                OnClick="RefreshReadings" Size="Size.Small">
@@ -82,6 +92,7 @@
     private SensorLiveReadings? _liveReadings;
     private IReadOnlyList<string> _availableParameters = [];
     private int _activeTab;
+    private string? _healthStatus;
 
     private string? _parameterFilter;
     private DateTime? _fromDate;
@@ -92,8 +103,25 @@
 
     protected override async Task OnInitializedAsync()
     {
-        _availableParameters = await ReadingClient.GetReadingParametersAsync(Sensor.Id);
+        var parametersTask = ReadingClient.GetReadingParametersAsync(Sensor.Id);
+        var healthTask = HealthClient.GetSensorHealthAsync(Sensor.Id);
+
+        _availableParameters = await parametersTask;
+
+        var healthResult = await healthTask;
+        healthResult.Switch(
+            health => _healthStatus = health.Status,
+            _ => _healthStatus = null
+        );
     }
+
+    private Color GetHealthStatusColor() => _healthStatus switch
+    {
+        "Healthy" => Color.Success,
+        "Stale" => Color.Warning,
+        "Unhealthy" => Color.Error,
+        _ => Color.Default
+    };
 
     private void OnTabChanged(int index)
     {
