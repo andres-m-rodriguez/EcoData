@@ -1,3 +1,4 @@
+using Aspire.Hosting;
 using Xunit;
 
 namespace EcoData.IntegrationTests.Bases;
@@ -6,4 +7,5 @@ namespace EcoData.IntegrationTests.Bases;
 public abstract class AuthenticatedTestBase(EcoDataTestFixture fixture)
 {
     protected IServiceProvider Services => fixture.Services;
+    protected DistributedApplication App => fixture.App;
 }

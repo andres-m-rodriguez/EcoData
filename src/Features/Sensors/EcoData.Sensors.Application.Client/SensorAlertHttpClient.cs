@@ -1,4 +1,7 @@
 using System.Net.Http.Json;
+using System.Net.ServerSentEvents;
+using System.Runtime.CompilerServices;
+using System.Text.Json;
 using EcoData.Common.Http.Helpers;
 using EcoData.Common.Problems.Contracts;
 using EcoData.Sensors.Contracts.Dtos;
@@ -9,6 +12,8 @@ namespace EcoData.Sensors.Application.Client;
 
 public sealed class SensorAlertHttpClient(HttpClient httpClient) : ISensorAlertHttpClient
 {
+    private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
+
     public IAsyncEnumerable<SensorHealthAlertDtoForList> GetAlertsAsync(
         SensorHealthAlertParameters parameters,
         CancellationToken cancellationToken = default
@@ -47,5 +52,64 @@ public sealed class SensorAlertHttpClient(HttpClient httpClient) : ISensorAlertH
             cancellationToken
         );
         return result!;
+    }
+
+    public async IAsyncEnumerable<SensorHealthAlertDtoForList> SubscribeToAlertsAsync(
+        [EnumeratorCancellation] CancellationToken cancellationToken = default
+    )
+    {
+        using var response = await httpClient.GetAsync(
+            "api/sensors/alerts/stream",
+            HttpCompletionOption.ResponseHeadersRead,
+            cancellationToken
+        );
+
+        response.EnsureSuccessStatusCode();
+
+        await using var stream = await response.Content.ReadAsStreamAsync(cancellationToken);
+
+        await foreach (
+            var item in SseParser
+                .Create(
+                    stream,
+                    (_, bytes) =>
+                        JsonSerializer.Deserialize<SensorHealthAlertDtoForList>(bytes, JsonOptions)
+                )
+                .EnumerateAsync(cancellationToken)
+        )
+        {
+            if (item.Data is not null)
+                yield return item.Data;
+        }
+    }
+
+    public async IAsyncEnumerable<SensorHealthAlertDtoForList> SubscribeToSensorAlertsAsync(
+        Guid sensorId,
+        [EnumeratorCancellation] CancellationToken cancellationToken = default
+    )
+    {
+        using var response = await httpClient.GetAsync(
+            $"api/sensors/{sensorId}/alerts/stream",
+            HttpCompletionOption.ResponseHeadersRead,
+            cancellationToken
+        );
+
+        response.EnsureSuccessStatusCode();
+
+        await using var stream = await response.Content.ReadAsStreamAsync(cancellationToken);
+
+        await foreach (
+            var item in SseParser
+                .Create(
+                    stream,
+                    (_, bytes) =>
+                        JsonSerializer.Deserialize<SensorHealthAlertDtoForList>(bytes, JsonOptions)
+                )
+                .EnumerateAsync(cancellationToken)
+        )
+        {
+            if (item.Data is not null)
+                yield return item.Data;
+        }
     }
 }
