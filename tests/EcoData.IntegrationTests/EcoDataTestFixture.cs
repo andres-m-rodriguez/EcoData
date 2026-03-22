@@ -15,9 +15,16 @@ public sealed class EcoDataTestFixture : IAsyncLifetime
     private HttpClient? _httpClient;
     private HttpClientHandler? _httpClientHandler;
     private ServiceProvider? _serviceProvider;
+    private ServiceProvider? _domainServiceProvider;
 
     public IServiceProvider Services =>
         _serviceProvider ?? throw new InvalidOperationException("Fixture not initialized.");
+
+    public IServiceProvider DomainServices =>
+        _domainServiceProvider ?? throw new InvalidOperationException("Fixture not initialized.");
+
+    public DistributedApplication App =>
+        _app ?? throw new InvalidOperationException("Fixture not initialized.");
 
     public async Task InitializeAsync()
     {
@@ -35,6 +42,7 @@ public sealed class EcoDataTestFixture : IAsyncLifetime
             .WaitAsync(TimeSpan.FromMinutes(5));
 
         // Get connection strings from Aspire resources
+        var identityConnStr = await _app.GetConnectionStringAsync("identity");
         var organizationConnStr = await _app.GetConnectionStringAsync("organization");
         var locationsConnStr = await _app.GetConnectionStringAsync("locations");
 
@@ -60,11 +68,17 @@ public sealed class EcoDataTestFixture : IAsyncLifetime
         };
         _httpClient = new HttpClient(_httpClientHandler) { BaseAddress = baseAddress };
 
-        // Build final service provider with all test services
+        // Build HTTP test services (API clients)
         var services = new ServiceCollection();
         services.AddIntegrationTestServices(_httpClient);
         services.AddTestStores(organizations, locations);
         _serviceProvider = services.BuildServiceProvider();
+
+        // Build domain services (same registrations as app uses)
+        var domainServices = new ServiceCollection();
+        domainServices.AddDomainServices(identityConnStr, organizationConnStr);
+        domainServices.AddTestStores(organizations, locations);
+        _domainServiceProvider = domainServices.BuildServiceProvider();
 
         // Authenticate once for all tests (cookies stored in shared HttpClient)
         var authClient = _serviceProvider.GetRequiredService<IAuthHttpClient>();
@@ -80,6 +94,9 @@ public sealed class EcoDataTestFixture : IAsyncLifetime
 
     public async Task DisposeAsync()
     {
+        if (_domainServiceProvider is not null)
+            await _domainServiceProvider.DisposeAsync();
+
         if (_serviceProvider is not null)
             await _serviceProvider.DisposeAsync();
 
