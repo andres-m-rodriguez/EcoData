@@ -73,6 +73,7 @@ def main():
     # 4. Register a new sensor
     print("Registering new sensor...")
     sensor_name = f"Simulator-{uuid.uuid4().hex[:8]}"
+    reading_interval = 10  # seconds between readings
     register_response = session.post(
         f"{BASE_URL}/api/sensors/register",
         json={
@@ -82,7 +83,8 @@ def main():
             "externalId": str(uuid.uuid4()),
             "latitude": latitude,
             "longitude": longitude,
-            "municipalityId": municipality_id
+            "municipalityId": municipality_id,
+            "expectedIntervalSeconds": reading_interval
         }
     )
 

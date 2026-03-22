@@ -1,0 +1,222 @@
+@using EcoData.Sensors.Contracts.Dtos
+@using EcoData.Sensors.Contracts.Parameters
+@using EcoData.Sensors.Application.Client
+@using EcoPortal.Client.Features.HealthAlerts.Dialogs
+@using EcoData.Common.Pagination.Blazor
+@using BlazingSingularity.Signals
+@inject ISensorHealthHttpClient HealthClient
+@inject IDialogService DialogService
+
+<SearchHeader SearchSignal="SearchTextSignal" Placeholder="Search alerts..." ShowFilterButton="true"
+              HasActiveFilters="HasNonSearchFilters" FilterCount="ActiveFilterCount" OnFilterClick="OpenFilterDialog" />
+
+<div class="alert-list-container">
+    <EcoDataVirtualizedList @ref="_virtualizedList" TItem="SensorHealthAlertDtoForList" TParams="SensorHealthAlertParameters"
+                            ItemsProvider="GetItemsAsync" ParametersBuilder="BuildParameters" CursorSelector="alert => alert.Id"
+                            ItemSize="100" OverscanCount="3">
+        <LoadingTemplate>
+            @for (var i = 0; i < 5; i++)
+            {
+                <div class="alert-skeleton-card">
+                    <div class="skeleton-main">
+                        <MudSkeleton SkeletonType="SkeletonType.Circle" Width="40px" Height="40px" />
+                        <div class="skeleton-info">
+                            <MudSkeleton Width="50%" Height="18px" />
+                            <MudSkeleton Width="80%" Height="14px" Class="mt-2" />
+                            <MudSkeleton Width="30%" Height="12px" Class="mt-2" />
+                        </div>
+                    </div>
+                    <div class="skeleton-status">
+                        <MudSkeleton Width="70px" Height="24px" Class="rounded-pill" />
+                    </div>
+                </div>
+            }
+        </LoadingTemplate>
+        <EmptyTemplate>
+            @if (HasActiveFilters)
+            {
+                <div class="alert-empty-state">
+                    <div class="empty-icon">
+                        <MudIcon Icon="@Icons.Material.Filled.SearchOff" Size="Size.Large" />
+                    </div>
+                    <h4 class="empty-title">No alerts found</h4>
+                    <p class="empty-description">Try adjusting your filters or search terms to find what you're looking for.</p>
+                    <MudButton Variant="Variant.Filled" Color="Color.Secondary" OnClick="ClearFilters" Class="mt-4">
+                        Clear All Filters
+                    </MudButton>
+                </div>
+            }
+            else
+            {
+                <div class="alert-empty-state">
+                    <div class="empty-icon">
+                        <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Size="Size.Large" />
+                    </div>
+                    <h4 class="empty-title">No alerts</h4>
+                    <p class="empty-description">All sensors are operating normally. Alerts will appear here when issues are detected.</p>
+                </div>
+            }
+        </EmptyTemplate>
+        <ItemTemplate Context="alert">
+            <HealthAlertListItem Alert="alert" />
+        </ItemTemplate>
+        <PlaceholderTemplate>
+            <div class="alert-skeleton-card">
+                <div class="skeleton-main">
+                    <MudSkeleton SkeletonType="SkeletonType.Circle" Width="40px" Height="40px" />
+                    <div class="skeleton-info">
+                        <MudSkeleton Width="50%" Height="18px" />
+                        <MudSkeleton Width="80%" Height="14px" Class="mt-2" />
+                        <MudSkeleton Width="30%" Height="12px" Class="mt-2" />
+                    </div>
+                </div>
+                <div class="skeleton-status">
+                    <MudSkeleton Width="70px" Height="24px" Class="rounded-pill" />
+                </div>
+            </div>
+        </PlaceholderTemplate>
+    </EcoDataVirtualizedList>
+</div>
+
+@code {
+    private EcoDataVirtualizedList<SensorHealthAlertDtoForList, SensorHealthAlertParameters>? _virtualizedList;
+
+    [Signal]
+    private string? _searchText;
+
+    [Signal]
+    private AlertTypeOption _typeFilter = AlertTypeOption.All;
+
+    [Signal]
+    private ResolvedOption _resolvedFilter = ResolvedOption.All;
+
+    [Signal]
+    private DateTime? _fromDate;
+
+    [Signal]
+    private DateTime? _toDate;
+
+    [Parameter]
+    public Guid? SensorId { get; set; }
+
+    private bool HasActiveFilters => !string.IsNullOrWhiteSpace(SearchText) || HasNonSearchFilters;
+
+    private bool HasNonSearchFilters =>
+        TypeFilter != AlertTypeOption.All ||
+        ResolvedFilter != ResolvedOption.All ||
+        FromDate.HasValue ||
+        ToDate.HasValue;
+
+    private int ActiveFilterCount
+    {
+        get
+        {
+            var count = 0;
+            if (TypeFilter != AlertTypeOption.All) count++;
+            if (ResolvedFilter != ResolvedOption.All) count++;
+            if (FromDate.HasValue) count++;
+            if (ToDate.HasValue) count++;
+            return count;
+        }
+    }
+
+    protected override void OnInitialized()
+    {
+        SearchTextSignal.OnChange(_ => _virtualizedList?.Refresh());
+        TypeFilterSignal.OnChange(_ => _virtualizedList?.Refresh());
+        ResolvedFilterSignal.OnChange(_ => _virtualizedList?.Refresh());
+        FromDateSignal.OnChange(_ => _virtualizedList?.Refresh());
+        ToDateSignal.OnChange(_ => _virtualizedList?.Refresh());
+    }
+
+    private async Task OpenFilterDialog()
+    {
+        var parameters = new DialogParameters<AlertFilterDialog>
+        {
+            { x => x.TypeFilter, TypeFilter },
+            { x => x.ResolvedFilter, ResolvedFilter },
+            { x => x.FromDate, FromDate },
+            { x => x.ToDate, ToDate }
+        };
+
+        var options = new DialogOptions
+        {
+            CloseOnEscapeKey = true,
+            MaxWidth = MaxWidth.Small,
+            FullWidth = true
+        };
+
+        var dialog = await DialogService.ShowAsync<AlertFilterDialog>("Filters", parameters, options);
+        var result = await dialog.Result;
+
+        if (result is { Canceled: false, Data: AlertFilterResult filterResult })
+        {
+            TypeFilter = filterResult.AlertType;
+            ResolvedFilter = filterResult.Resolved;
+            FromDate = filterResult.FromDate;
+            ToDate = filterResult.ToDate;
+        }
+    }
+
+    private SensorHealthAlertParameters BuildParameters(Guid? cursor)
+    {
+        return new SensorHealthAlertParameters(
+            PageSize: 50,
+            Cursor: cursor,
+            SensorId: SensorId,
+            AlertType: TypeFilter switch
+            {
+                AlertTypeOption.Stale => "Stale",
+                AlertTypeOption.Unhealthy => "Unhealthy",
+                AlertTypeOption.Recovered => "Recovered",
+                _ => null
+            },
+            IsResolved: ResolvedFilter switch
+            {
+                ResolvedOption.Resolved => true,
+                ResolvedOption.Unresolved => false,
+                _ => null
+            },
+            FromDate: FromDate.HasValue ? new DateTimeOffset(FromDate.Value, TimeSpan.Zero) : null,
+            ToDate: ToDate.HasValue ? new DateTimeOffset(ToDate.Value.AddDays(1).AddTicks(-1), TimeSpan.Zero) : null
+        );
+    }
+
+    private IAsyncEnumerable<SensorHealthAlertDtoForList> GetItemsAsync(
+        SensorHealthAlertParameters parameters,
+        CancellationToken cancellationToken)
+    {
+        return HealthClient.GetAlertsAsync(parameters, cancellationToken);
+    }
+
+    private void ClearFilters()
+    {
+        SearchText = null;
+        TypeFilter = AlertTypeOption.All;
+        ResolvedFilter = ResolvedOption.All;
+        FromDate = null;
+        ToDate = null;
+    }
+
+    public enum AlertTypeOption
+    {
+        All,
+        Stale,
+        Unhealthy,
+        Recovered
+    }
+
+    public enum ResolvedOption
+    {
+        All,
+        Resolved,
+        Unresolved
+    }
+
+    public sealed record AlertFilterResult(
+        AlertTypeOption AlertType,
+        ResolvedOption Resolved,
+        DateTime? FromDate,
+        DateTime? ToDate
+    );
+}

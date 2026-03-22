@@ -14,5 +14,7 @@ public sealed record SensorHealthAlertParameters(
     Guid? Cursor = null,
     Guid? SensorId = null,
     string? AlertType = null,
-    bool? IsResolved = null
+    bool? IsResolved = null,
+    DateTimeOffset? FromDate = null,
+    DateTimeOffset? ToDate = null
 ) : CursorParameters(PageSize, Cursor);

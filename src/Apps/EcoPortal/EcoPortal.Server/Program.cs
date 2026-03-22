@@ -18,6 +18,7 @@ using EcoData.Sensors.Api.RateLimiting;
 using EcoData.Sensors.Contracts.Dtos;
 using EcoData.Sensors.DataAccess;
 using EcoData.Sensors.Database.Extensions;
+using EcoData.Sensors.Ingestion.Workers;
 using EcoPortal.Server.Components;
 using MudBlazor.Services;
 
@@ -39,6 +40,8 @@ builder.Services.AddLocationsDataAccess();
 builder.Services.AddOrganizationDataAccess();
 builder.Services.AddSensorsDataAccess();
 builder.Services.AddInMemoryMessageBroker<ReadingDtoForCreate>();
+builder.Services.AddInMemoryMessageBroker<SensorHealthAlertDtoForList>();
+builder.Services.AddHostedService<SensorHealthMonitorWorker>();
 
 builder
     .Services.AddAuthentication(options =>
