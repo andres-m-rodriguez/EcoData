@@ -51,22 +51,42 @@
   <Folder Name="/src/Features/" />
   <Folder Name="/src/Features/Common/">
     <Project Path="src/Features/Common/EcoData.Common.Http.Helpers/EcoData.Common.Http.Helpers.csproj" />
+    <Project Path="src/Features/Common/EcoData.Common.Messaging/EcoData.Common.Messaging.csproj" />
     <Project Path="src/Features/Common/EcoData.Common.Pagination/EcoData.Common.Pagination.csproj" />
     <Project Path="src/Features/Common/EcoData.Common.Problems.Contracts/EcoData.Common.Problems.Contracts.csproj" />
     <Project Path="src/Features/Common/EcoData.Common.Results/EcoData.Common.Results.csproj" />
   </Folder>
   <Folder Name="/src/Features/Identity/">
     <Project Path="src/Features/Identity/EcoData.Identity.Application.Server/EcoData.Identity.Application.Server.csproj" />
+    <Project Path="src/Features/Identity/EcoData.Identity.Application/EcoData.Identity.Application.csproj" />
     <Project Path="src/Features/Identity/EcoData.Identity.Contracts/EcoData.Identity.Contracts.csproj" />
+    <Project Path="src/Features/Identity/EcoData.Identity.DataAccess/EcoData.Identity.DataAccess.csproj" />
+    <Project Path="src/Features/Identity/EcoData.Identity.Database/EcoData.Identity.Database.csproj" />
   </Folder>
   <Folder Name="/src/Features/Locations/">
+    <Project Path="src/Features/Locations/EcoData.Locations.Contracts/EcoData.Locations.Contracts.csproj" />
+    <Project Path="src/Features/Locations/EcoData.Locations.DataAccess/EcoData.Locations.DataAccess.csproj" />
+    <Project Path="src/Features/Locations/EcoData.Locations.Database/EcoData.Locations.Database.csproj" />
     <Project Path="src/Features/Locations/EcoData.Locations.Helpers/EcoData.Locations.Helpers.csproj" />
   </Folder>
   <Folder Name="/src/Features/Organization/">
     <Project Path="src/Features/Organization/EcoData.Organization.Application.Server/EcoData.Organization.Application.Server.csproj" />
     <Project Path="src/Features/Organization/EcoData.Organization.Contracts/EcoData.Organization.Contracts.csproj" />
+    <Project Path="src/Features/Organization/EcoData.Organization.DataAccess/EcoData.Organization.DataAccess.csproj" />
+    <Project Path="src/Features/Organization/EcoData.Organization.Database/EcoData.Organization.Database.csproj" />
   </Folder>
+  <Folder Name="/src/Features/Sensors/">
+    <Project Path="src/Features/Sensors/EcoData.Sensors.Contracts/EcoData.Sensors.Contracts.csproj" />
+    <Project Path="src/Features/Sensors/EcoData.Sensors.DataAccess/EcoData.Sensors.DataAccess.csproj" />
+    <Project Path="src/Features/Sensors/EcoData.Sensors.Database/EcoData.Sensors.Database.csproj" />
+    <Project Path="src/Features/Sensors/EcoData.Sensors.Ingestion/EcoData.Sensors.Ingestion.csproj" />
+  </Folder>
+  <Folder Name="/src/Host/" />
   <Folder Name="/Tests/">
+    <Project Path="tests/EcoData.Identity.Tests/EcoData.Identity.Tests.csproj" />
     <Project Path="tests/EcoData.IntegrationTests/EcoData.IntegrationTests.csproj" />
+    <Project Path="tests/EcoData.Locations.Tests/EcoData.Locations.Tests.csproj" />
+    <Project Path="tests/EcoData.Organization.Tests/EcoData.Organization.Tests.csproj" />
+    <Project Path="tests/EcoData.Sensors.Tests/EcoData.Sensors.Tests.csproj" />
   </Folder>
 </Solution>
