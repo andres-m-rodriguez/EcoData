@@ -29,6 +29,12 @@ var seeder = builder
     .WaitFor(locationsDb)
     .PublishAsAzureContainerAppJob();
 
+// Seed test data when running in Testing environment
+if (builder.Environment.EnvironmentName == "Testing")
+{
+    seeder.WithEnvironment("SEED_TEST_DATA", "true");
+}
+
 // Custom domain is configured via GitHub Actions workflow step after deployment
 // to avoid Aspire resetting the SSL binding during re-provisioning
 
