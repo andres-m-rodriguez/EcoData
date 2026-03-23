@@ -8,6 +8,8 @@ namespace EcoData.IntegrationTests.Stores;
 
 public interface ISensorsTestStore
 {
+    Task<SensorDtoForRegistered> GetOrCreateAsync(CancellationToken cancellationToken = default);
+
     Task<SensorDtoForRegistered> GetOrCreateAsync(
         string name,
         CancellationToken cancellationToken = default
@@ -21,6 +23,9 @@ public sealed class SensorsTestStore(
 ) : ISensorsTestStore
 {
     private readonly ConcurrentDictionary<string, SensorDtoForRegistered> _cache = new();
+
+    public Task<SensorDtoForRegistered> GetOrCreateAsync(CancellationToken cancellationToken = default)
+        => GetOrCreateAsync($"test-sensor-{Guid.NewGuid():N}", cancellationToken);
 
     public async Task<SensorDtoForRegistered> GetOrCreateAsync(
         string name,
