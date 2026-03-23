@@ -2,6 +2,10 @@ using System.Diagnostics;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
+// Parse args: --from <commit> --to <commit>
+var fromCommit = GetArg(args, "--from");
+var toCommit = GetArg(args, "--to");
+
 var repoRoot = FindRepoRoot(Environment.CurrentDirectory);
 var mappingsPath = Path.Combine(repoRoot, "deployable-resources.json");
 
@@ -14,7 +18,10 @@ if (!File.Exists(mappingsPath))
 // Get affected projects from dotnet affected
 Console.WriteLine("Running dotnet affected...\n");
 var affectedTxt = Path.Combine(repoRoot, "affected.txt");
-Run("dotnet", $"affected --format text -o \"{affectedTxt}\"");
+var affectedArgs = $"affected --format text -o \"{affectedTxt}\"";
+if (fromCommit is not null) affectedArgs += $" --from {fromCommit}";
+if (toCommit is not null) affectedArgs += $" --to {toCommit}";
+Run("dotnet", affectedArgs);
 
 if (!File.Exists(affectedTxt) || new FileInfo(affectedTxt).Length == 0)
 {
@@ -78,6 +85,12 @@ Console.WriteLine("All deployments successful!");
 return 0;
 
 // --- Helpers ---
+
+static string? GetArg(string[] args, string name)
+{
+    var index = Array.IndexOf(args, name);
+    return index >= 0 && index < args.Length - 1 ? args[index + 1] : null;
+}
 
 static string FindRepoRoot(string path)
 {
