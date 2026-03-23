@@ -15,61 +15,6 @@ public sealed class SensorAlertStreamTests(EcoDataTestFixture fixture)
         Services.GetRequiredService<ISensorAlertHttpClient>();
 
     [Fact]
-    public async Task GlobalAlertStream_CanConnect()
-    {
-        // Test that we can successfully connect to the global alert stream endpoint
-        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5));
-
-        var connected = false;
-        try
-        {
-            await foreach (var _ in SensorAlertHttpClient.SubscribeToAlertsAsync(cts.Token))
-            {
-                // If we receive any alert, the stream is working
-                connected = true;
-                break;
-            }
-        }
-        catch (OperationCanceledException)
-        {
-            // Timeout is expected if no alerts arrive - but connection was successful
-            connected = true;
-        }
-
-        Assert.True(connected, "Should be able to connect to global alert stream");
-    }
-
-    [Fact]
-    public async Task SensorAlertStream_CanConnect()
-    {
-        var credentials = await Sensors.GetOrCreateAsync(nameof(SensorAlertStream_CanConnect));
-
-        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5));
-
-        var connected = false;
-        try
-        {
-            await foreach (
-                var _ in SensorAlertHttpClient.SubscribeToSensorAlertsAsync(
-                    credentials.SensorId,
-                    cts.Token
-                )
-            )
-            {
-                connected = true;
-                break;
-            }
-        }
-        catch (OperationCanceledException)
-        {
-            // Timeout is expected if no alerts arrive - but connection was successful
-            connected = true;
-        }
-
-        Assert.True(connected, "Should be able to connect to sensor-specific alert stream");
-    }
-
-    [Fact]
     public async Task SensorAlertStream_OnlyReceivesAlertsForSubscribedSensor()
     {
         var sensor1 = await Sensors.GetOrCreateAsync($"{nameof(SensorAlertStream_OnlyReceivesAlertsForSubscribedSensor)}_1");

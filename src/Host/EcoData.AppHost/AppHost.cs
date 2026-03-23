@@ -44,12 +44,14 @@ var ecoportal = builder
     .WithEnvironment("Jwt__Audience", "EcoData")
     .WithEnvironment("Jwt__ExpirationHours", "24")
     .WaitFor(seeder)
-    .PublishAsAzureContainerApp((infra, app) =>
-    {
-        // Configure 2 min replicas for zero-downtime rolling deployments
-        app.Template.Scale.MinReplicas = 2;
-        app.Template.Scale.MaxReplicas = 10;
-    });
+    .PublishAsAzureContainerApp(
+        (infra, app) =>
+        {
+            // Configure 2 min replicas for zero-downtime rolling deployments
+            app.Template.Scale.MinReplicas = 2;
+            app.Template.Scale.MaxReplicas = 10;
+        }
+    );
 
 var sensorsIngestion = builder
     .AddProject<Projects.EcoData_Sensors_Ingestion>("sensors-ingestion")
