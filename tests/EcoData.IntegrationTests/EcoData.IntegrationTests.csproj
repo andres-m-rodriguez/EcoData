@@ -21,12 +21,16 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\Host\EcoData.AppHost\EcoData.AppHost.csproj" />
+    <ProjectReference Include="..\..\src\Features\Common\EcoData.Common.Messaging\EcoData.Common.Messaging.csproj" />
     <ProjectReference Include="..\..\src\Features\Organization\EcoData.Organization.Application.Client\EcoData.Organization.Application.Client.csproj" />
     <ProjectReference Include="..\..\src\Features\Organization\EcoData.Organization.Database\EcoData.Organization.Database.csproj" />
+    <ProjectReference Include="..\..\src\Features\Organization\EcoData.Organization.DataAccess\EcoData.Organization.DataAccess.csproj" />
     <ProjectReference Include="..\..\src\Features\Locations\EcoData.Locations.Database\EcoData.Locations.Database.csproj" />
     <ProjectReference Include="..\..\src\Features\Sensors\EcoData.Sensors.Application.Client\EcoData.Sensors.Application.Client.csproj" />
     <ProjectReference Include="..\..\src\Features\Sensors\EcoData.Sensors.Contracts\EcoData.Sensors.Contracts.csproj" />
     <ProjectReference Include="..\..\src\Features\Identity\EcoData.Identity.Application.Client\EcoData.Identity.Application.Client.csproj" />
+    <ProjectReference Include="..\..\src\Features\Identity\EcoData.Identity.Database\EcoData.Identity.Database.csproj" />
+    <ProjectReference Include="..\..\src\Features\Identity\EcoData.Identity.DataAccess\EcoData.Identity.DataAccess.csproj" />
     <ProjectReference Include="..\..\src\Features\Locations\EcoData.Locations.Application.Client\EcoData.Locations.Application.Client.csproj" />
   </ItemGroup>
 

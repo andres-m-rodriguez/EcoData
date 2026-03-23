@@ -1,9 +1,12 @@
 using EcoData.Identity.Application.Client.HttpClients;
+using EcoData.Identity.DataAccess.Extensions;
+using EcoData.Identity.Database;
 using EcoData.IntegrationTests.Devices;
 using EcoData.IntegrationTests.Stores;
 using EcoData.Locations.Application.Client;
 using EcoData.Locations.Database;
 using EcoData.Organization.Application.Client;
+using EcoData.Organization.DataAccess;
 using EcoData.Organization.Database;
 using EcoData.Sensors.Application.Client;
 using Microsoft.EntityFrameworkCore;
@@ -27,8 +30,36 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<ISensorHttpClient, SensorHttpClient>();
         services.AddSingleton<ISensorReadingHttpClient, SensorReadingHttpClient>();
         services.AddSingleton<ISensorHealthHttpClient, SensorHealthHttpClient>();
+        services.AddSingleton<ISensorAlertHttpClient, SensorAlertHttpClient>();
         services.AddSingleton<IMunicipalityHttpClient, MunicipalityHttpClient>();
         services.AddSingleton<IDeviceFactory, DeviceFactory>();
+        services.AddSingleton<ISensorsTestStore, SensorsTestStore>();
+
+        return services;
+    }
+
+    public static IServiceCollection AddDomainServices(
+        this IServiceCollection services,
+        string identityConnectionString,
+        string organizationConnectionString
+    )
+    {
+        // Database contexts (using factory pattern like the app)
+        services.AddPooledDbContextFactory<IdentityDbContext>(options =>
+        {
+            options.UseNpgsql(identityConnectionString);
+            options.UseSnakeCaseNamingConvention();
+        });
+
+        services.AddPooledDbContextFactory<OrganizationDbContext>(options =>
+        {
+            options.UseNpgsql(organizationConnectionString);
+            options.UseSnakeCaseNamingConvention();
+        });
+
+        // Domain services - same registrations as the app uses
+        services.AddIdentityDataAccess();
+        services.AddOrganizationDataAccess();
 
         return services;
     }

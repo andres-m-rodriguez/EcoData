@@ -31,7 +31,10 @@ public sealed class Esp32Device : IDisposable
         var result = await _readings.PostReadingsAsync(SensorId, reading, ct);
 
         if (!result.IsT0)
-            throw new InvalidOperationException("Failed to post sensor reading.");
+        {
+            var problem = result.AsT1;
+            throw new InvalidOperationException($"Failed to post sensor reading: {problem.Title} - {problem.Detail}");
+        }
     }
 
     public void Dispose() => _deviceHttpClient.Dispose();

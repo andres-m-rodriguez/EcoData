@@ -1,6 +1,6 @@
-namespace EcoData.Identity.Application.Server.Services;
+using EcoData.Identity.Contracts.Dtos;
 
-public record UserLookupDto(Guid Id, string Email, string DisplayName);
+namespace EcoData.Identity.Application.Server.Services;
 
 public interface IUserLookupService
 {
