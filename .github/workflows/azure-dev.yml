@@ -24,13 +24,17 @@ jobs:
     environment: Production
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Full history for dotnet-affected
 
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 10.x
 
-      - name: Install Aspire CLI
-        run: dotnet tool install -g aspire.cli --prerelease
+      - name: Install Tools
+        run: |
+          dotnet tool install -g aspire.cli --prerelease
+          dotnet tool install -g dotnet-affected
 
       - name: Azure Login
         uses: azure/login@v2
@@ -39,7 +43,10 @@ jobs:
           tenant-id: ${{ env.AZURE_TENANT_ID }}
           subscription-id: ${{ env.AZURE_SUBSCRIPTION_ID }}
 
-      - name: Deploy to Azure
+      - name: Generate Deploy Mappings
+        run: dotnet run scripts/generate-deploy-mappings.cs
+
+      - name: Deploy Affected Services
         env:
           Azure__SubscriptionId: ${{ env.AZURE_SUBSCRIPTION_ID }}
           Azure__Location: ${{ env.AZURE_LOCATION }}
@@ -47,8 +54,7 @@ jobs:
           Parameters__jwt-secret-key: ${{ secrets.JWT_SECRET_KEY }}
           Parameters__customDomain: ${{ vars.CUSTOM_DOMAIN }}
           Parameters__certificateName: ${{ vars.CERTIFICATE_NAME }}
-        run: |
-          aspire do deploy --project src/Host/EcoData.AppHost --environment Production --non-interactive
+        run: dotnet run scripts/deploy-affected.cs -- --from ${{ github.event.before }} --to ${{ github.sha }}
 
       - name: Configure Custom Domain
         if: ${{ vars.CUSTOM_DOMAIN != '' }}
