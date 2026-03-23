@@ -11,18 +11,15 @@
             <MudGrid Spacing="6" Class="hero-grid">
                 <MudItem xs="12" lg="6">
                     <div class="hero-content">
-                        <span class="hero-label">Environmental Intelligence</span>
+                        <span class="hero-label">Environmental Intelligences</span>
                         <h1 class="hero-title">Modernizing Puerto Rico's Ecological Data</h1>
                         <p class="hero-description">
                             Founded by Inter American University, this open-access platform provides students,
                             researchers, and environmental agencies with real-time monitoring data from sensors
                             deployed across Puerto Rico's rivers, coastlines, and urban areas.
                         </p>
-                        <MudButton Variant="Variant.Filled"
-                                   Color="Color.Primary"
-                                   StartIcon="@Icons.Material.Filled.Water"
-                                   Href="@SensorsPage.Path"
-                                   Size="Size.Large"
+                        <MudButton Variant="Variant.Filled" Color="Color.Primary"
+                                   StartIcon="@Icons.Material.Filled.Water" Href="@SensorsPage.Path" Size="Size.Large"
                                    Class="gradient-btn hero-btn">
                             Explore Sensors
                         </MudButton>
@@ -33,8 +30,7 @@
                         <div class="hero-circle-outer">
                             <div class="hero-circle-inner">
                                 <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuDE6kUTMwGHe2konqf1KBDg69kGswP4lJoqKgGC_Sp4Cahomn5rFdQWo2dAN8A2WUIWZj8nqLJ_utlzeXe6xtfzXljkV_cyO_TELt6rHYaIAxHW-e38kD0XWYqNeycjwOcXt5qT0T6lBurU6JCjd5DVL7zY_sGyRQnkMfLjgXNatcvlLAl2zzebytiLn3wtuwK3SjEpA_8sxyyOSYaAmV39a6iCrhLRvZTGzqIvoj1vNHOnXFXXJTPx4PmKUzcJJp2yoUXcesdhLEY"
-                                     alt="Aerial view of Puerto Rico lush green mountains"
-                                     class="hero-image" />
+                                     alt="Aerial view of Puerto Rico lush green mountains" class="hero-image" />
                                 @* Floating Data Cards *@
                                 <div class="floating-card floating-card-top">
                                     <span class="floating-card-label">Humidity</span>
@@ -151,12 +147,16 @@
                             </MudText>
                             <MudStack Row="true" Spacing="4">
                                 <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
-                                    <MudIcon Icon="@Icons.Material.Filled.Schedule" Size="Size.Small" Color="Color.Secondary" />
-                                    <MudText Typo="Typo.caption" Class="text-uppercase font-weight-bold" Color="Color.Secondary">15m Intervals</MudText>
+                                    <MudIcon Icon="@Icons.Material.Filled.Schedule" Size="Size.Small"
+                                             Color="Color.Secondary" />
+                                    <MudText Typo="Typo.caption" Class="text-uppercase font-weight-bold"
+                                             Color="Color.Secondary">15m Intervals</MudText>
                                 </MudStack>
                                 <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
-                                    <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Size="Size.Small" Color="Color.Secondary" />
-                                    <MudText Typo="Typo.caption" Class="text-uppercase font-weight-bold" Color="Color.Secondary">Peer Reviewed</MudText>
+                                    <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Size="Size.Small"
+                                             Color="Color.Secondary" />
+                                    <MudText Typo="Typo.caption" Class="text-uppercase font-weight-bold"
+                                             Color="Color.Secondary">Peer Reviewed</MudText>
                                 </MudStack>
                             </MudStack>
                         </MudPaper>
@@ -172,12 +172,16 @@
                             </MudText>
                             <MudStack Row="true" Spacing="4">
                                 <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
-                                    <MudIcon Icon="@Icons.Material.Filled.History" Size="Size.Small" Color="Color.Info" />
-                                    <MudText Typo="Typo.caption" Class="text-uppercase font-weight-bold" Color="Color.Info">25-Year Archive</MudText>
+                                    <MudIcon Icon="@Icons.Material.Filled.History" Size="Size.Small"
+                                             Color="Color.Info" />
+                                    <MudText Typo="Typo.caption" Class="text-uppercase font-weight-bold"
+                                             Color="Color.Info">25-Year Archive</MudText>
                                 </MudStack>
                                 <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
-                                    <MudIcon Icon="@Icons.Material.Filled.Verified" Size="Size.Small" Color="Color.Info" />
-                                    <MudText Typo="Typo.caption" Class="text-uppercase font-weight-bold" Color="Color.Info">Federal Standard</MudText>
+                                    <MudIcon Icon="@Icons.Material.Filled.Verified" Size="Size.Small"
+                                             Color="Color.Info" />
+                                    <MudText Typo="Typo.caption" Class="text-uppercase font-weight-bold"
+                                             Color="Color.Info">Federal Standard</MudText>
                                 </MudStack>
                             </MudStack>
                         </MudPaper>
@@ -198,9 +202,7 @@
                         We provide researchers with the tools needed to export datasets, register
                         new monitoring organizations, and collaborate on island-wide environmental studies.
                     </MudText>
-                    <MudButton Variant="Variant.Filled"
-                               Href="@GettingStartedPage.Path"
-                               Size="Size.Large"
+                    <MudButton Variant="Variant.Filled" Href="@GettingStartedPage.Path" Size="Size.Large"
                                Class="researchers-btn">
                         Getting Started
                     </MudButton>
@@ -266,11 +268,8 @@
                         Our interactive map allows you to drill down into specific regions of
                         Puerto Rico, viewing live atmospheric and water metrics from any connected station.
                     </MudText>
-                    <MudButton Variant="Variant.Filled"
-                               Color="Color.Secondary"
-                               StartIcon="@Icons.Material.Filled.Map"
-                               Href="@SensorsPage.Path"
-                               Size="Size.Large">
+                    <MudButton Variant="Variant.Filled" Color="Color.Secondary" StartIcon="@Icons.Material.Filled.Map"
+                               Href="@SensorsPage.Path" Size="Size.Large">
                         View All Active Sensors
                     </MudButton>
                 </MudItem>
@@ -284,7 +283,8 @@
             <MudText Typo="Typo.caption" Align="Align.Center" Class="partners-label mb-8">
                 Partnering Institutions
             </MudText>
-            <MudStack Row="true" Justify="Justify.Center" AlignItems="AlignItems.Center" Spacing="8" Class="partners-grid">
+            <MudStack Row="true" Justify="Justify.Center" AlignItems="AlignItems.Center" Spacing="8"
+                      Class="partners-grid">
                 <div class="partner-item active">
                     <div class="partner-icon">
                         <MudIcon Icon="@Icons.Material.Filled.AccountBalance" Size="Size.Large" Color="Color.Primary" />
