@@ -34,6 +34,12 @@ public sealed class DatabaseSeederWorker(
             await SeedLocationsAsync(services, stoppingToken);
             await SeedOrganizationRolesAsync(services, stoppingToken);
 
+            if (IsTestEnvironment())
+            {
+                logger.LogInformation("Test environment detected. Seeding test data...");
+                await SeedTestOrganizationAsync(services, stoppingToken);
+            }
+
             logger.LogInformation("All database migrations and seeding completed successfully.");
         }
         catch (Exception ex)
@@ -307,5 +313,61 @@ public sealed class DatabaseSeederWorker(
             "Added Contributor role to {Count} organizations",
             organizationsWithoutContributor.Count
         );
+    }
+
+    private static bool IsTestEnvironment() =>
+        Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Testing" ||
+        Environment.GetEnvironmentVariable("SEED_TEST_DATA") == "true";
+
+    private async Task SeedTestOrganizationAsync(
+        IServiceProvider services,
+        CancellationToken stoppingToken
+    )
+    {
+        var context = services.GetRequiredService<OrganizationDbContext>();
+
+        const string testOrgName = "Test Org";
+        var existingOrg = await context.Organizations.FirstOrDefaultAsync(
+            o => o.Name == testOrgName,
+            stoppingToken
+        );
+
+        if (existingOrg is not null)
+        {
+            logger.LogInformation("Test organization already exists. Skipping...");
+            return;
+        }
+
+        logger.LogInformation("Creating test organization...");
+
+        var now = DateTimeOffset.UtcNow;
+        var org = new Organization.Database.Models.Organization
+        {
+            Id = Guid.CreateVersion7(),
+            Name = testOrgName,
+            ProfilePictureUrl = null,
+            CardPictureUrl = null,
+            AboutUs = "Test organization for integration tests",
+            WebsiteUrl = null,
+            CreatedAt = now,
+            UpdatedAt = now,
+        };
+
+        context.Organizations.Add(org);
+
+        // Add Contributor role for the test org
+        context.OrganizationRoles.Add(
+            new Organization.Database.Models.OrganizationRole
+            {
+                Id = Guid.CreateVersion7(),
+                OrganizationId = org.Id,
+                Name = "Contributor",
+                CreatedAt = now,
+            }
+        );
+
+        await context.SaveChangesAsync(stoppingToken);
+
+        logger.LogInformation("Test organization created: {Name}", testOrgName);
     }
 }

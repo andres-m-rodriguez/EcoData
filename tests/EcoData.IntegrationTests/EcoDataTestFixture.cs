@@ -30,6 +30,9 @@ public sealed class EcoDataTestFixture : IAsyncLifetime
     {
         var appHost =
             await DistributedApplicationTestingBuilder.CreateAsync<Projects.EcoData_AppHost>();
+
+        appHost.Environment.EnvironmentName = "Testing";
+
         _app = await appHost.BuildAsync();
 
         var resourceNotificationService =
