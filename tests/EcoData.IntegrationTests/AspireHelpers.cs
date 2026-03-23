@@ -4,7 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace EcoData.IntegrationTests;
 
-public static class AspireHelpers
+public static class DatabaseHelpers
 {
     public static async Task<string> GetConnectionStringAsync(
         this DistributedApplication app,
