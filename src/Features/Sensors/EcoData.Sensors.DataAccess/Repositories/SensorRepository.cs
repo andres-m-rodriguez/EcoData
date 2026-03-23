@@ -287,22 +287,22 @@ public sealed class SensorRepository(IDbContextFactory<SensorsDbContext> context
         var now = DateTimeOffset.UtcNow;
 
         var entities = dtos.Select(dto => new Sensor
-            {
-                Id = Guid.CreateVersion7(),
-                OrganizationId = organizationId,
-                SourceId = dto.SourceId,
-                ExternalId = dto.ExternalId,
-                Name = dto.Name,
-                Latitude = dto.Latitude,
-                Longitude = dto.Longitude,
-                Location = GeometryHelpers.CreatePoint(dto.Latitude, dto.Longitude),
-                MunicipalityId = dto.MunicipalityId,
-                IsActive = dto.IsActive,
-                ReportingMode = ReportingMode.Pull,
-                SensorTypeId = null,
-                CreatedAt = now,
-                UpdatedAt = now,
-            })
+        {
+            Id = Guid.CreateVersion7(),
+            OrganizationId = organizationId,
+            SourceId = dto.SourceId,
+            ExternalId = dto.ExternalId,
+            Name = dto.Name,
+            Latitude = dto.Latitude,
+            Longitude = dto.Longitude,
+            Location = GeometryHelpers.CreatePoint(dto.Latitude, dto.Longitude),
+            MunicipalityId = dto.MunicipalityId,
+            IsActive = dto.IsActive,
+            ReportingMode = ReportingMode.Pull,
+            SensorTypeId = null,
+            CreatedAt = now,
+            UpdatedAt = now,
+        })
             .ToList();
 
         context.Sensors.AddRange(entities);
