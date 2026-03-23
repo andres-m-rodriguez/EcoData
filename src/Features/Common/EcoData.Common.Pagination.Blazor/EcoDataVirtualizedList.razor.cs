@@ -21,7 +21,8 @@ public partial class EcoDataVirtualizedList<TItem, TParams> : ComponentBase
         TParams,
         CancellationToken,
         IAsyncEnumerable<TItem>
-    > ItemsProvider { get; set; }
+    > ItemsProvider
+    { get; set; }
 
     /// <summary>
     /// Function that builds the parameters for a request, given an optional cursor.

@@ -17,8 +17,12 @@ public sealed class SensorAlertStreamTests(EcoDataTestFixture fixture)
     [Fact]
     public async Task SensorAlertStream_OnlyReceivesAlertsForSubscribedSensor()
     {
-        var sensor1 = await Sensors.GetOrCreateAsync($"{nameof(SensorAlertStream_OnlyReceivesAlertsForSubscribedSensor)}_1");
-        await Sensors.GetOrCreateAsync($"{nameof(SensorAlertStream_OnlyReceivesAlertsForSubscribedSensor)}_2");
+        var sensor1 = await Sensors.GetOrCreateAsync(
+            $"{nameof(SensorAlertStream_OnlyReceivesAlertsForSubscribedSensor)}_1"
+        );
+        await Sensors.GetOrCreateAsync(
+            $"{nameof(SensorAlertStream_OnlyReceivesAlertsForSubscribedSensor)}_2"
+        );
 
         using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5));
         var alerts = new List<SensorHealthAlertDtoForList>();
@@ -102,7 +106,9 @@ public sealed class SensorAlertStreamTests(EcoDataTestFixture fixture)
     [Fact]
     public async Task AlertStream_ReconnectsAfterDisconnect()
     {
-        var credentials = await Sensors.GetOrCreateAsync(nameof(AlertStream_ReconnectsAfterDisconnect));
+        var credentials = await Sensors.GetOrCreateAsync(
+            nameof(AlertStream_ReconnectsAfterDisconnect)
+        );
 
         // First subscription
         using var cts1 = new CancellationTokenSource(TimeSpan.FromSeconds(2));

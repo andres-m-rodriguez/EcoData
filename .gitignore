@@ -481,3 +481,7 @@ $RECYCLE.BIN/
 # Vim temporary swap files
 *.swp
 .azure
+
+# Deploy scripts generated files
+affected.txt
+deployable-resources.json

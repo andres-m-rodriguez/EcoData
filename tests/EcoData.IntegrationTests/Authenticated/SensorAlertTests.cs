@@ -22,16 +22,19 @@ public sealed class SensorAlertTests(EcoDataTestFixture fixture) : Authenticated
         await foreach (var alert in SensorAlertHttpClient.GetAlertsAsync(parameters))
         {
             alerts.Add(alert);
-            if (alerts.Count >= 10) break;
+            if (alerts.Count >= 10)
+                break;
         }
 
-        alerts.Should().AllSatisfy(a =>
-        {
-            a.Id.Should().NotBeEmpty();
-            a.SensorId.Should().NotBeEmpty();
-            a.AlertType.Should().NotBeNullOrEmpty();
-            a.Message.Should().NotBeNullOrEmpty();
-        });
+        alerts
+            .Should()
+            .AllSatisfy(a =>
+            {
+                a.Id.Should().NotBeEmpty();
+                a.SensorId.Should().NotBeEmpty();
+                a.AlertType.Should().NotBeNullOrEmpty();
+                a.Message.Should().NotBeNullOrEmpty();
+            });
     }
 
     [Fact]
@@ -43,7 +46,8 @@ public sealed class SensorAlertTests(EcoDataTestFixture fixture) : Authenticated
         await foreach (var alert in SensorAlertHttpClient.GetAlertsAsync(parameters))
         {
             alerts.Add(alert);
-            if (alerts.Count >= 10) break;
+            if (alerts.Count >= 10)
+                break;
         }
 
         alerts.Should().AllSatisfy(a => a.ResolvedAt.Should().NotBeNull());
@@ -58,7 +62,8 @@ public sealed class SensorAlertTests(EcoDataTestFixture fixture) : Authenticated
         await foreach (var alert in SensorAlertHttpClient.GetAlertsAsync(parameters))
         {
             alerts.Add(alert);
-            if (alerts.Count >= 10) break;
+            if (alerts.Count >= 10)
+                break;
         }
 
         alerts.Should().AllSatisfy(a => a.ResolvedAt.Should().BeNull());
@@ -117,13 +122,16 @@ public sealed class SensorAlertTests(EcoDataTestFixture fixture) : Authenticated
         await foreach (var alert in SensorAlertHttpClient.GetAlertsAsync(parameters))
         {
             alerts.Add(alert);
-            if (alerts.Count >= 10) break;
+            if (alerts.Count >= 10)
+                break;
         }
 
-        alerts.Should().AllSatisfy(a =>
-        {
-            a.TriggeredAt.Should().BeOnOrAfter(fromDate);
-            a.TriggeredAt.Should().BeOnOrBefore(toDate);
-        });
+        alerts
+            .Should()
+            .AllSatisfy(a =>
+            {
+                a.TriggeredAt.Should().BeOnOrAfter(fromDate);
+                a.TriggeredAt.Should().BeOnOrBefore(toDate);
+            });
     }
 }
