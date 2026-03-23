@@ -27,23 +27,21 @@ public sealed class TestSeeder(IServiceProvider services)
 
     private async Task<OrganizationsTestStore> GetOrganizationAsync(CancellationToken ct)
     {
-        await using var scope = services.CreateAsyncScope();
-        var context = scope.ServiceProvider.GetRequiredService<OrganizationDbContext>();
+        var factory = services.GetRequiredService<IDbContextFactory<OrganizationDbContext>>();
+        await using var context = await factory.CreateDbContextAsync(ct);
 
-        var org = await context.Organizations.FirstOrDefaultAsync(
-            o => o.Name == TestOrgName,
-            ct
-        ) ?? throw new InvalidOperationException(
-            $"Test organization '{TestOrgName}' not found. Ensure Seeder ran with SEED_TEST_DATA=true.");
+        var org =
+            await context.Organizations.FirstOrDefaultAsync(o => o.Name == TestOrgName, ct)
+            ?? throw new InvalidOperationException(
+                $"Test organization '{TestOrgName}' not found. Ensure Seeder ran with SEED_TEST_DATA=true."
+            );
 
         return new OrganizationsTestStore(org.Id, TestOrgName);
     }
 
     private async Task<LocationsTestStore> GetLocationsAsync(CancellationToken ct)
     {
-        await using var scope = services.CreateAsyncScope();
-        var context = scope.ServiceProvider.GetRequiredService<LocationsDbContext>();
-
+        var context = services.GetRequiredService<LocationsDbContext>();
         var municipality = await context.Municipalities.FirstAsync(ct);
 
         return new LocationsTestStore(

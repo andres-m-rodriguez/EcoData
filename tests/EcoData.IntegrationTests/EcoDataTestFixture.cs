@@ -1,4 +1,3 @@
-using System.Net;
 using Aspire.Hosting;
 using Aspire.Hosting.ApplicationModel;
 using Aspire.Hosting.Testing;
@@ -13,7 +12,6 @@ public sealed class EcoDataTestFixture : IAsyncLifetime
 {
     private DistributedApplication? _app;
     private HttpClient? _httpClient;
-    private HttpClientHandler? _httpClientHandler;
     private ServiceProvider? _serviceProvider;
     private ServiceProvider? _domainServiceProvider;
 
@@ -28,84 +26,53 @@ public sealed class EcoDataTestFixture : IAsyncLifetime
 
     public async Task InitializeAsync()
     {
+        // Set environment to "Testing" before AppHost.cs executes so SEED_TEST_DATA is set on seeder
         var appHost =
-            await DistributedApplicationTestingBuilder.CreateAsync<Projects.EcoData_AppHost>();
-
-        appHost.Environment.EnvironmentName = "Testing";
-
+            await DistributedApplicationTestingBuilder.CreateAsync<Projects.EcoData_AppHost>(
+                [],
+                (_, settings) => settings.EnvironmentName = "Testing"
+            );
         _app = await appHost.BuildAsync();
-
-        var resourceNotificationService =
-            _app.Services.GetRequiredService<ResourceNotificationService>();
-
         await _app.StartAsync();
 
-        await resourceNotificationService
+        await _app
+            .Services.GetRequiredService<ResourceNotificationService>()
             .WaitForResourceAsync("ecoportal", KnownResourceStates.Running)
             .WaitAsync(TimeSpan.FromMinutes(5));
 
-        // Get connection strings from Aspire resources
         var identityConnStr = await _app.GetConnectionStringAsync("identity");
         var organizationConnStr = await _app.GetConnectionStringAsync("organization");
         var locationsConnStr = await _app.GetConnectionStringAsync("locations");
 
-        // Build seeding service provider with database contexts
-        var seedingServices = new ServiceCollection();
-        seedingServices.AddTestDatabases(organizationConnStr, locationsConnStr);
-        await using var seedingProvider = seedingServices.BuildServiceProvider();
+        //(we Also used to retrieve seeded data)
+        _domainServiceProvider = new ServiceCollection()
+            .AddDomainServices(identityConnStr, organizationConnStr, locationsConnStr)
+            .BuildServiceProvider();
 
-        // Seed test data
-        var seeder = new TestSeeder(seedingProvider);
-        var (organizations, locations) = await seeder.SeedAsync();
+        var (organizations, locations) = await new TestSeeder(_domainServiceProvider).SeedAsync();
 
-        // Create shared HTTP client for cookie-based auth
         using var tempClient = _app.CreateHttpClient("ecoportal", "https");
-        var baseAddress = tempClient.BaseAddress;
+        _httpClient = ServiceCollectionExtensions.ConfigureHttpClient(tempClient.BaseAddress!);
+        _serviceProvider = new ServiceCollection()
+            .AddIntegrationTestServices(_httpClient)
+            .AddTestStores(organizations, locations)
+            .BuildServiceProvider();
 
-        _httpClientHandler = new HttpClientHandler
-        {
-            CookieContainer = new CookieContainer(),
-            UseCookies = true,
-            ServerCertificateCustomValidationCallback =
-                HttpClientHandler.DangerousAcceptAnyServerCertificateValidator,
-        };
-        _httpClient = new HttpClient(_httpClientHandler) { BaseAddress = baseAddress };
-
-        // Build HTTP test services (API clients)
-        var services = new ServiceCollection();
-        services.AddIntegrationTestServices(_httpClient);
-        services.AddTestStores(organizations, locations);
-        _serviceProvider = services.BuildServiceProvider();
-
-        // Build domain services (same registrations as app uses)
-        var domainServices = new ServiceCollection();
-        domainServices.AddDomainServices(identityConnStr, organizationConnStr);
-        domainServices.AddTestStores(organizations, locations);
-        _domainServiceProvider = domainServices.BuildServiceProvider();
-
-        // Authenticate once for all tests (cookies stored in shared HttpClient)
-        var authClient = _serviceProvider.GetRequiredService<IAuthHttpClient>();
-        var authResult = await authClient.LoginAsync(
-            new LoginRequest("admin@gmail.com", "Admin@123")
-        );
+        var authResult = await _serviceProvider
+            .GetRequiredService<IAuthHttpClient>()
+            .LoginAsync(new LoginRequest("admin@gmail.com", "Admin@123"));
 
         if (!authResult.IsT0)
-            throw new InvalidOperationException(
-                $"Failed to authenticate for test setup: {authResult.Value}"
-            );
+            throw new InvalidOperationException($"Failed to authenticate: {authResult.Value}");
     }
 
     public async Task DisposeAsync()
     {
         if (_domainServiceProvider is not null)
             await _domainServiceProvider.DisposeAsync();
-
         if (_serviceProvider is not null)
             await _serviceProvider.DisposeAsync();
-
         _httpClient?.Dispose();
-        _httpClientHandler?.Dispose();
-
         if (_app is not null)
         {
             await _app.StopAsync();
