@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Npgsql;
 
 namespace EcoData.Sensors.Database.Extensions;
 
@@ -8,17 +9,22 @@ public static class SensorsDatabaseExtensions
 {
     public static IHostApplicationBuilder AddSensorsDatabase(
         this IHostApplicationBuilder builder,
-        string connectionName = "sensors")
+        string connectionName = "sensors"
+    )
     {
         // Use AddAzureNpgsqlDbContext for Entra ID auth support
-        builder.AddAzureNpgsqlDbContext<SensorsDbContext>(connectionName,
-            configureDbContextOptions: ConfigureOptions);
+        builder.AddAzureNpgsqlDbContext<SensorsDbContext>(
+            connectionName,
+            configureDbContextOptions: ConfigureOptions
+        );
 
         // Also register factory - required by repositories
-        builder.Services.AddPooledDbContextFactory<SensorsDbContext>((sp, options) =>
-        {
-            ConfigureOptions(options);
-        });
+        builder.Services.AddPooledDbContextFactory<SensorsDbContext>(
+            (sp, options) =>
+            {
+                ConfigureOptions(options);
+            }
+        );
 
         return builder;
     }
@@ -29,6 +35,8 @@ public static class SensorsDatabaseExtensions
         {
             npgsqlOptions.MigrationsAssembly("EcoData.Sensors.Database");
             npgsqlOptions.MigrationsHistoryTable("__ef_migrations_history", "public");
+            // Configure the data source builder with NetTopologySuite before it's built
+            npgsqlOptions.ConfigureDataSource(dsBuilder => dsBuilder.UseNetTopologySuite());
             npgsqlOptions.UseNetTopologySuite();
         });
         options.UseSnakeCaseNamingConvention();
