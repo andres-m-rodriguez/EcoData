@@ -1,34 +1,44 @@
 # EcoData
 
-A monorepo for ecological and environmental data.
+Environmental monitoring platform built as a modular monolith.
 
 ## Overview
 
-This repository aggregates and manages various environmental datasets and research, including:
+EcoData aggregates and manages environmental datasets including:
 
-- **Water Sensors** - Real-time and historical water quality and level monitoring data
-- **Fauna** - Wildlife tracking, species data, and biodiversity research
-- **Research Data** - Scientific studies and environmental research datasets
+- **Sensors** - Real-time water quality and environmental monitoring
+- **Organizations** - Multi-tenant organization management
+- **Locations** - Geographic data for Mexican states and municipalities
 
-## Repository Structure
+## Architecture
 
-```
-EcoData/
-├── src/
-│   ├── Host/
-│   │   ├── EcoData.AppHost/           # Aspire orchestrator
-│   │   ├── EcoData.ServiceDefaults/   # Shared service configuration
-│   │   └── EcoData.Gateway/           # YARP reverse proxy
-│   └── AquaTrack/
-│       ├── EcoData.AquaTrack.WebApp/        # Blazor server host
-│       └── EcoData.AquaTrack.WebApp.Client/ # WASM client
-└── EcoData.slnx
-```
+Modular monolith with strict module boundaries and separate databases per module. Each module can be promoted to a microservice when traffic demands it.
+
+See [docs/architecture.md](docs/architecture.md) and [docs/system-design.md](docs/system-design.md) for details.
 
 ## Getting Started
 
 ```bash
 dotnet run --project src/Host/EcoData.AppHost
+```
+
+## Structure
+
+```
+src/
+├── Host/
+│   ├── EcoData.AppHost/         # Aspire orchestrator
+│   └── EcoData.ServiceDefaults/ # Shared configuration
+├── Apps/
+│   └── EcoPortal/               # Main web application
+│       ├── EcoPortal.Server/    # ASP.NET Core host
+│       └── EcoPortal.Client/    # Blazor WASM
+└── Features/
+    ├── Identity/                # Authentication & users
+    ├── Organization/            # Organizations & members
+    ├── Sensors/                 # Sensors & readings
+    ├── Locations/               # Geographic data
+    └── Common/                  # Shared libraries
 ```
 
 ## License
