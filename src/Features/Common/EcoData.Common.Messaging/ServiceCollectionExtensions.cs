@@ -1,3 +1,4 @@
+using EcoData.Common.Messaging.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace EcoData.Common.Messaging;
@@ -5,13 +6,30 @@ namespace EcoData.Common.Messaging;
 public static class ServiceCollectionExtensions
 {
     /// <summary>
-    /// Registers an in-memory message broker as a singleton.
-    /// Use this for single-instance deployments.
+    /// Adds the messaging infrastructure with fluent configuration.
     /// </summary>
-    /// <typeparam name="T">The type of message being published/subscribed.</typeparam>
-    public static IServiceCollection AddInMemoryMessageBroker<T>(this IServiceCollection services)
+    /// <param name="services">The service collection.</param>
+    /// <param name="configure">Configuration action for the messaging builder.</param>
+    /// <returns>The service collection for chaining.</returns>
+    public static IServiceCollection AddMessaging(
+        this IServiceCollection services,
+        Action<MessagingBuilder> configure
+    )
     {
-        services.AddSingleton<IMessageBroker<T>, InMemoryMessageBroker<T>>();
+        var builder = new MessagingBuilder(services);
+        configure(builder);
+        builder.EnsureTransportConfigured();
+
         return services;
+    }
+
+    /// <summary>
+    /// Adds the messaging infrastructure with default in-memory transport.
+    /// </summary>
+    /// <param name="services">The service collection.</param>
+    /// <returns>The service collection for chaining.</returns>
+    public static IServiceCollection AddMessaging(this IServiceCollection services)
+    {
+        return services.AddMessaging(builder => builder.UseInMemoryTransport());
     }
 }

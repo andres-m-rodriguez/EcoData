@@ -1,6 +1,7 @@
-using EcoData.Common.Messaging;
+using EcoData.Common.Messaging.Abstractions;
 using EcoData.Sensors.Contracts;
 using EcoData.Sensors.Contracts.Dtos;
+using EcoData.Sensors.Contracts.Events;
 using EcoData.Sensors.Database.Models;
 using EcoData.Sensors.DataAccess.Interfaces;
 using Microsoft.Extensions.DependencyInjection;
@@ -12,7 +13,7 @@ namespace EcoPortal.Server.Workers;
 // TODO: Move to dedicated service when migrating to microservices
 public sealed class SensorHealthMonitorWorker(
     IServiceScopeFactory scopeFactory,
-    IMessageBroker<SensorHealthAlertDtoForList> alertBroker,
+    IMessageBus messageBus,
     ILogger<SensorHealthMonitorWorker> logger
 ) : BackgroundService
 {
@@ -203,11 +204,28 @@ public sealed class SensorHealthMonitorWorker(
 
     private async Task PublishAlertAsync(SensorHealthAlertDtoForList alert, CancellationToken cancellationToken)
     {
+        var alertEvent = new SensorHealthAlertEvent(
+            alert.Id,
+            alert.SensorId,
+            alert.SensorName,
+            alert.AlertType,
+            alert.TriggeredAt,
+            alert.ResolvedAt,
+            alert.Message
+        );
+
         // Publish to sensor-specific topic for subscribers interested in a specific sensor
-        var sensorTopic = alert.SensorId.ToString();
-        await alertBroker.PublishAsync(sensorTopic, alert, cancellationToken);
+        await messageBus.PublishEventAsync(
+            alertEvent,
+            alert.SensorId.ToString(),
+            cancellationToken: cancellationToken
+        );
 
         // Publish to global topic for subscribers interested in all alerts
-        await alertBroker.PublishAsync(MessageTopics.AllHealthAlerts, alert, cancellationToken);
+        await messageBus.PublishEventAsync(
+            alertEvent,
+            MessageTopics.AllHealthAlerts,
+            cancellationToken: cancellationToken
+        );
     }
 }
