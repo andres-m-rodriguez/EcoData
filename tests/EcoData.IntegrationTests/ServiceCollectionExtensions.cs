@@ -1,4 +1,3 @@
-using System.Net;
 using EcoData.Identity.Application.Client.HttpClients;
 using EcoData.Identity.DataAccess.Extensions;
 using EcoData.Identity.Database;
@@ -17,19 +16,6 @@ namespace EcoData.IntegrationTests;
 
 public static class ServiceCollectionExtensions
 {
-    public static HttpClient ConfigureHttpClient(Uri baseAddress)
-    {
-        var handler = new HttpClientHandler
-        {
-            CookieContainer = new CookieContainer(),
-            UseCookies = true,
-            ServerCertificateCustomValidationCallback =
-                HttpClientHandler.DangerousAcceptAnyServerCertificateValidator,
-        };
-
-        return new HttpClient(handler) { BaseAddress = baseAddress };
-    }
-
     public static IServiceCollection AddIntegrationTestServices(
         this IServiceCollection services,
         HttpClient httpClient
@@ -55,30 +41,20 @@ public static class ServiceCollectionExtensions
     public static IServiceCollection AddDomainServices(
         this IServiceCollection services,
         string identityConnectionString,
-        string organizationConnectionString,
-        string locationsConnectionString
+        string organizationConnectionString
     )
     {
-        // Database contexts - matches configuration from *.Database extension methods
+        // Database contexts (using factory pattern like the app)
         services.AddPooledDbContextFactory<IdentityDbContext>(options =>
         {
             options.UseNpgsql(identityConnectionString);
             options.UseSnakeCaseNamingConvention();
-            options.UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking);
         });
 
         services.AddPooledDbContextFactory<OrganizationDbContext>(options =>
         {
             options.UseNpgsql(organizationConnectionString);
             options.UseSnakeCaseNamingConvention();
-            options.UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking);
-        });
-
-        services.AddDbContext<LocationsDbContext>(options =>
-        {
-            options.UseNpgsql(locationsConnectionString, npgsql => npgsql.UseNetTopologySuite());
-            options.UseSnakeCaseNamingConvention();
-            options.UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking);
         });
 
         // Domain services - same registrations as the app uses

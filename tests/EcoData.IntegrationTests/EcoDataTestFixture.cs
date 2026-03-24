@@ -1,3 +1,4 @@
+using System.Net;
 using Aspire.Hosting;
 using Aspire.Hosting.ApplicationModel;
 using Aspire.Hosting.Testing;
@@ -12,6 +13,7 @@ public sealed class EcoDataTestFixture : IAsyncLifetime
 {
     private DistributedApplication? _app;
     private HttpClient? _httpClient;
+    private HttpClientHandler? _httpClientHandler;
     private ServiceProvider? _serviceProvider;
     private ServiceProvider? _domainServiceProvider;
 
@@ -26,53 +28,96 @@ public sealed class EcoDataTestFixture : IAsyncLifetime
 
     public async Task InitializeAsync()
     {
-        // Set environment to "Testing" before AppHost.cs executes so SEED_TEST_DATA is set on seeder
         var appHost =
-            await DistributedApplicationTestingBuilder.CreateAsync<Projects.EcoData_AppHost>(
-                [],
-                (_, settings) => settings.EnvironmentName = "Testing"
-            );
+            await DistributedApplicationTestingBuilder.CreateAsync<Projects.EcoData_AppHost>();
         _app = await appHost.BuildAsync();
+
+        var resourceNotificationService =
+            _app.Services.GetRequiredService<ResourceNotificationService>();
+
         await _app.StartAsync();
 
-        await _app
-            .Services.GetRequiredService<ResourceNotificationService>()
+        // Wait for ecoportal to be running
+        Console.WriteLine("Waiting for ecoportal...");
+        await resourceNotificationService
             .WaitForResourceAsync("ecoportal", KnownResourceStates.Running)
             .WaitAsync(TimeSpan.FromMinutes(5));
+        Console.WriteLine("ecoportal is running");
 
+        // The seeder runs migrations but .WaitFor() only waits for it to start, not complete.
+        // Wait for seeder to either exit or fail
+        Console.WriteLine("Waiting for seeder to finish its work...");
+        await resourceNotificationService
+            .WaitForResourceAsync(
+                "seeder",
+                s => s.Snapshot.State?.Text is "Exited" or "Finished" or "FailedToStart"
+                    || s.Snapshot.ExitCode.HasValue
+            )
+            .WaitAsync(TimeSpan.FromMinutes(5));
+        Console.WriteLine("Seeder finished");
+
+        // Get connection strings from Aspire resources
         var identityConnStr = await _app.GetConnectionStringAsync("identity");
         var organizationConnStr = await _app.GetConnectionStringAsync("organization");
         var locationsConnStr = await _app.GetConnectionStringAsync("locations");
 
-        //(we Also used to retrieve seeded data)
-        _domainServiceProvider = new ServiceCollection()
-            .AddDomainServices(identityConnStr, organizationConnStr, locationsConnStr)
-            .BuildServiceProvider();
+        // Build seeding service provider with database contexts
+        var seedingServices = new ServiceCollection();
+        seedingServices.AddTestDatabases(organizationConnStr, locationsConnStr);
+        await using var seedingProvider = seedingServices.BuildServiceProvider();
 
-        var (organizations, locations) = await new TestSeeder(_domainServiceProvider).SeedAsync();
+        // Seed test data
+        var seeder = new TestSeeder(seedingProvider);
+        var (organizations, locations) = await seeder.SeedAsync();
 
+        // Create shared HTTP client for cookie-based auth
         using var tempClient = _app.CreateHttpClient("ecoportal", "https");
-        _httpClient = ServiceCollectionExtensions.ConfigureHttpClient(tempClient.BaseAddress!);
-        _serviceProvider = new ServiceCollection()
-            .AddIntegrationTestServices(_httpClient)
-            .AddTestStores(organizations, locations)
-            .BuildServiceProvider();
+        var baseAddress = tempClient.BaseAddress;
 
-        var authResult = await _serviceProvider
-            .GetRequiredService<IAuthHttpClient>()
-            .LoginAsync(new LoginRequest("admin@gmail.com", "Admin@123"));
+        _httpClientHandler = new HttpClientHandler
+        {
+            CookieContainer = new CookieContainer(),
+            UseCookies = true,
+            ServerCertificateCustomValidationCallback =
+                HttpClientHandler.DangerousAcceptAnyServerCertificateValidator,
+        };
+        _httpClient = new HttpClient(_httpClientHandler) { BaseAddress = baseAddress };
+
+        // Build HTTP test services (API clients)
+        var services = new ServiceCollection();
+        services.AddIntegrationTestServices(_httpClient);
+        services.AddTestStores(organizations, locations);
+        _serviceProvider = services.BuildServiceProvider();
+
+        // Build domain services (same registrations as app uses)
+        var domainServices = new ServiceCollection();
+        domainServices.AddDomainServices(identityConnStr, organizationConnStr);
+        domainServices.AddTestStores(organizations, locations);
+        _domainServiceProvider = domainServices.BuildServiceProvider();
+
+        // Authenticate once for all tests (cookies stored in shared HttpClient)
+        var authClient = _serviceProvider.GetRequiredService<IAuthHttpClient>();
+        var authResult = await authClient.LoginAsync(
+            new LoginRequest("admin@gmail.com", "Admin@123")
+        );
 
         if (!authResult.IsT0)
-            throw new InvalidOperationException($"Failed to authenticate: {authResult.Value}");
+            throw new InvalidOperationException(
+                $"Failed to authenticate for test setup: {authResult.Value}"
+            );
     }
 
     public async Task DisposeAsync()
     {
         if (_domainServiceProvider is not null)
             await _domainServiceProvider.DisposeAsync();
+
         if (_serviceProvider is not null)
             await _serviceProvider.DisposeAsync();
+
         _httpClient?.Dispose();
+        _httpClientHandler?.Dispose();
+
         if (_app is not null)
         {
             await _app.StopAsync();

@@ -6,10 +6,6 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace EcoData.IntegrationTests;
 
-/// <summary>
-/// Retrieves test data seeded by the Seeder project.
-/// The Seeder seeds "Test Org" when SEED_TEST_DATA=true (set via AppHost in Testing environment).
-/// </summary>
 public sealed class TestSeeder(IServiceProvider services)
 {
     private const string TestOrgName = "Test Org";
@@ -19,29 +15,48 @@ public sealed class TestSeeder(IServiceProvider services)
         LocationsTestStore Locations
     )> SeedAsync(CancellationToken ct = default)
     {
-        var organizations = await GetOrganizationAsync(ct);
-        var locations = await GetLocationsAsync(ct);
+        var organizations = await SeedOrganizationAsync(ct);
+        var locations = await SeedLocationsAsync(ct);
 
         return (organizations, locations);
     }
 
-    private async Task<OrganizationsTestStore> GetOrganizationAsync(CancellationToken ct)
+    private async Task<OrganizationsTestStore> SeedOrganizationAsync(CancellationToken ct)
     {
-        var factory = services.GetRequiredService<IDbContextFactory<OrganizationDbContext>>();
-        await using var context = await factory.CreateDbContextAsync(ct);
+        await using var scope = services.CreateAsyncScope();
+        var context = scope.ServiceProvider.GetRequiredService<OrganizationDbContext>();
 
-        var org =
-            await context.Organizations.FirstOrDefaultAsync(o => o.Name == TestOrgName, ct)
-            ?? throw new InvalidOperationException(
-                $"Test organization '{TestOrgName}' not found. Ensure Seeder ran with SEED_TEST_DATA=true."
-            );
+        var existingOrg = await context.Organizations.FirstOrDefaultAsync(
+            o => o.Name == TestOrgName,
+            ct
+        );
+
+        if (existingOrg is not null)
+            return new OrganizationsTestStore(existingOrg.Id, TestOrgName);
+
+        var org = new EcoData.Organization.Database.Models.Organization
+        {
+            Id = Guid.CreateVersion7(),
+            Name = TestOrgName,
+            ProfilePictureUrl = null,
+            CardPictureUrl = null,
+            AboutUs = null,
+            WebsiteUrl = null,
+            CreatedAt = DateTimeOffset.UtcNow,
+            UpdatedAt = DateTimeOffset.UtcNow,
+        };
+
+        context.Organizations.Add(org);
+        await context.SaveChangesAsync(ct);
 
         return new OrganizationsTestStore(org.Id, TestOrgName);
     }
 
-    private async Task<LocationsTestStore> GetLocationsAsync(CancellationToken ct)
+    private async Task<LocationsTestStore> SeedLocationsAsync(CancellationToken ct)
     {
-        var context = services.GetRequiredService<LocationsDbContext>();
+        await using var scope = services.CreateAsyncScope();
+        var context = scope.ServiceProvider.GetRequiredService<LocationsDbContext>();
+
         var municipality = await context.Municipalities.FirstAsync(ct);
 
         return new LocationsTestStore(
