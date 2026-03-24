@@ -1,7 +1,8 @@
-using EcoData.Common.Messaging;
+using EcoData.Common.Messaging.Abstractions;
 using EcoData.Sensors.Api.RateLimiting;
 using EcoData.Sensors.Contracts;
 using EcoData.Sensors.Contracts.Dtos;
+using EcoData.Sensors.Contracts.Events;
 using EcoData.Sensors.Contracts.Parameters;
 using EcoData.Sensors.DataAccess.Interfaces;
 using Microsoft.AspNetCore.Builder;
@@ -43,13 +44,12 @@ public static class SensorReadingEndpoints
         group
             .MapGet(
                 "/stream",
-                (
-                    Guid sensorId,
-                    IMessageBroker<ReadingDtoForCreate> messageBroker,
-                    CancellationToken ct
-                ) =>
+                (Guid sensorId, IMessageBus messageBus, CancellationToken ct) =>
                     TypedResults.ServerSentEvents(
-                        messageBroker.SubscribeAsync(sensorId.ToString(), ct),
+                        messageBus.SubscribeToEventsAsync<ReadingCreatedEvent>(
+                            sensorId.ToString(),
+                            ct
+                        ),
                         eventType: SseEventTypes.Reading
                     )
             )
@@ -64,7 +64,7 @@ public static class SensorReadingEndpoints
                     ISensorRepository sensorRepository,
                     IReadingRepository readingRepository,
                     ISensorHealthRepository healthRepository,
-                    IMessageBroker<ReadingDtoForCreate> messageBroker,
+                    IMessageBus messageBus,
                     TimeProvider timeProvider,
                     CancellationToken ct
                 ) =>
@@ -118,7 +118,18 @@ public static class SensorReadingEndpoints
                         var topic = sensorId.ToString();
                         foreach (var reading in validReadings)
                         {
-                            await messageBroker.PublishAsync(topic, reading, ct);
+                            await messageBus.PublishEventAsync(
+                                new ReadingCreatedEvent(
+                                    reading.SensorId,
+                                    reading.Parameter,
+                                    reading.Description,
+                                    reading.Value,
+                                    reading.Unit,
+                                    reading.RecordedAt
+                                ),
+                                topic,
+                                cancellationToken: ct
+                            );
                         }
                     }
 

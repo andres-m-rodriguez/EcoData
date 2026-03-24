@@ -1,6 +1,7 @@
-using EcoData.Common.Messaging;
+using EcoData.Common.Messaging.Abstractions;
 using EcoData.Sensors.Contracts;
 using EcoData.Sensors.Contracts.Dtos;
+using EcoData.Sensors.Contracts.Events;
 using EcoData.Sensors.Contracts.Parameters;
 using EcoData.Sensors.DataAccess.Interfaces;
 using Microsoft.AspNetCore.Builder;
@@ -50,9 +51,12 @@ public static class SensorAlertEndpoints
         group
             .MapGet(
                 "/stream",
-                (IMessageBroker<SensorHealthAlertDtoForList> messageBroker, CancellationToken ct) =>
+                (IMessageBus messageBus, CancellationToken ct) =>
                     TypedResults.ServerSentEvents(
-                        messageBroker.SubscribeAsync(MessageTopics.AllHealthAlerts, ct),
+                        messageBus.SubscribeToEventsAsync<SensorHealthAlertEvent>(
+                            MessageTopics.AllHealthAlerts,
+                            ct
+                        ),
                         eventType: SseEventTypes.HealthAlert
                     )
             )
@@ -64,13 +68,12 @@ public static class SensorAlertEndpoints
         sensorGroup
             .MapGet(
                 "/stream",
-                (
-                    Guid sensorId,
-                    IMessageBroker<SensorHealthAlertDtoForList> messageBroker,
-                    CancellationToken ct
-                ) =>
+                (Guid sensorId, IMessageBus messageBus, CancellationToken ct) =>
                     TypedResults.ServerSentEvents(
-                        messageBroker.SubscribeAsync(sensorId.ToString(), ct),
+                        messageBus.SubscribeToEventsAsync<SensorHealthAlertEvent>(
+                            sensorId.ToString(),
+                            ct
+                        ),
                         eventType: SseEventTypes.HealthAlert
                     )
             )
