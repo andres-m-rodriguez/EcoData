@@ -25,4 +25,10 @@ public interface ISensorHealthHttpClient
         Guid sensorId,
         CancellationToken cancellationToken = default
     );
+
+    Task<OneOf<SensorHealthConfigDtoForDetail, ProblemDetail>> UpdateHealthConfigAsync(
+        Guid sensorId,
+        SensorHealthConfigDtoForCreate config,
+        CancellationToken cancellationToken = default
+    );
 }
