@@ -4,11 +4,19 @@ using Microsoft.JSInterop;
 
 namespace EcoPortal.Client.Services;
 
+public enum NavigationDirection
+{
+    None,
+    Forward,
+    Back
+}
+
 public interface INavigationService
 {
     string CurrentUri { get; }
     string CurrentPath { get; }
     string? ReturnUrl { get; }
+    NavigationDirection Direction { get; }
 
     void NavigateTo(string uri, bool replace = false);
     void NavigateTo(string uri, string returnUrl);
@@ -30,6 +38,7 @@ public sealed class NavigationService : INavigationService, IDisposable
     private string? _fallbackPath;
     private string? _returnUrl;
     private bool _isNavigatingBack;
+    private NavigationDirection _direction = NavigationDirection.None;
 
     public NavigationService(NavigationManager navigationManager, IJSRuntime jsRuntime)
     {
@@ -48,6 +57,8 @@ public sealed class NavigationService : INavigationService, IDisposable
     public string? ReturnUrl => _returnUrl;
 
     public bool CanGoBack => _history.Count > 1 || _fallbackPath is not null;
+
+    public NavigationDirection Direction => _direction;
 
     public event Action? OnStateChanged;
 
@@ -110,11 +121,13 @@ public sealed class NavigationService : INavigationService, IDisposable
                 _history.RemoveAt(_history.Count - 1);
             }
             _isNavigatingBack = false;
+            _direction = NavigationDirection.Back;
         }
         else
         {
             // Add new path to history for forward navigation
             _history.Add(newPath);
+            _direction = NavigationDirection.Forward;
         }
 
         OnStateChanged?.Invoke();
