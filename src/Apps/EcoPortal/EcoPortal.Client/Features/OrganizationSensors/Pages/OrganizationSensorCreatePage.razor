@@ -19,7 +19,7 @@
 
 <PageTitle>Add Sensor - EcoData</PageTitle>
 
-<EcoDataPageLayout Title="Add Sensor" FallbackUrl="@($"/organizations/{OrganizationId}/sensors")" MaxWidth="MaxWidth.Small">
+<EcoDataPageLayout Title="Add Sensor" FallbackUrl="@($"/organizations/{OrganizationId}/sensors")">
     <ChildContent>
         @if (LoadCommand.IsLoading)
         {

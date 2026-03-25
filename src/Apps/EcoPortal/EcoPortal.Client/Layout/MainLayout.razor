@@ -140,9 +140,16 @@
     </MudDrawer>
 
     <MudMainContent Class="main-content">
-        <MudContainer MaxWidth="MaxWidth.Large" Class="py-6 px-4 content-container">
+        @if (IsHomePage)
+        {
             @Body
-        </MudContainer>
+        }
+        else
+        {
+            <MudContainer MaxWidth="MaxWidth.Large" Class="py-6 px-4 content-container">
+                @Body
+            </MudContainer>
+        }
         <Footer />
     </MudMainContent>
 </MudLayout>
@@ -150,6 +157,15 @@
 @code {
     private bool _drawerOpen = false;
     private bool _isDarkMode;
+
+    private bool IsHomePage
+    {
+        get
+        {
+            var uri = NavigationManager.ToBaseRelativePath(NavigationManager.Uri);
+            return string.IsNullOrEmpty(uri) || uri == "/" || uri.StartsWith("?") || uri.StartsWith("#");
+        }
+    }
 
     private void ToggleDrawer() => _drawerOpen = !_drawerOpen;
     private void ToggleTheme() => _isDarkMode = !_isDarkMode;
