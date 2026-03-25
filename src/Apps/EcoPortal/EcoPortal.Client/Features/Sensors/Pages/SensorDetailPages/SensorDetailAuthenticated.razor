@@ -75,21 +75,13 @@
                 </MudStack>
             </MudItem>
             <MudItem xs="12" md="4">
-                <MudStack Row="true" Justify="Justify.FlexEnd" Spacing="2" Class="flex-wrap"
-                          Style="gap: 8px;">
-                    <RequireOrganizationPermission Permission="@SensorPermissions.Sensor.Update"
+                <MudStack Row="true" Justify="Justify.FlexEnd" Spacing="2">
+                    <RequireOrganizationPermission Permission="@SensorPermissions.Sensor.Delete"
                                                    OrganizationId="Sensor.OrganizationId">
-                        <MudButton Variant="Variant.Outlined" Color="Color.Default"
-                                   StartIcon="@Icons.Material.Filled.Edit" OnClick="NavigateToEdit">
-                            Edit
-                        </MudButton>
-                        <RequireOrganizationPermission Permission="@SensorPermissions.Sensor.Delete"
-                                                       OrganizationId="Sensor.OrganizationId">
-                            <MudButton Variant="Variant.Outlined" Color="Color.Error"
-                                       StartIcon="@Icons.Material.Filled.Delete" OnClick="ConfirmDelete">
-                                Delete
-                            </MudButton>
-                        </RequireOrganizationPermission>
+                        <MudTooltip Text="Delete Sensor">
+                            <MudIconButton Icon="@Icons.Material.Outlined.Delete" Color="Color.Error"
+                                           Variant="Variant.Outlined" Size="Size.Medium" OnClick="ConfirmDelete" />
+                        </MudTooltip>
                     </RequireOrganizationPermission>
                 </MudStack>
             </MudItem>
@@ -281,20 +273,19 @@
                     <MudText Typo="Typo.subtitle2" Style="font-weight: 600;">Quick Actions</MudText>
                 </MudStack>
                 <MudStack Spacing="2">
-                    <MudButton Variant="Variant.Outlined" FullWidth="true" StartIcon="@Icons.Material.Filled.Refresh"
-                               OnClick="RefreshReadings" Class="justify-start">
-                        Refresh Readings
-                    </MudButton>
-                    <MudButton Variant="Variant.Outlined" FullWidth="true" StartIcon="@Icons.Material.Filled.Download"
-                               Class="justify-start">
-                        Export Data
-                    </MudButton>
+                    <QuickActionCard Icon="@Icons.Material.Filled.Refresh"
+                                     Title="Refresh Readings"
+                                     Description="Reload latest data"
+                                     OnClick="RefreshReadings" />
+                    <QuickActionCard Icon="@Icons.Material.Filled.Download"
+                                     Title="Export Data"
+                                     Description="CSV, JSON, or PDF" />
                     <RequireOrganizationPermission Permission="@SensorPermissions.Sensor.Update"
                                                    OrganizationId="Sensor.OrganizationId">
-                        <MudButton Variant="Variant.Outlined" FullWidth="true" StartIcon="@Icons.Material.Filled.Settings"
-                                   OnClick="NavigateToEdit" Class="justify-start">
-                            Configure Sensor
-                        </MudButton>
+                        <QuickActionCard Icon="@Icons.Material.Filled.Settings"
+                                         Title="Configure Sensor"
+                                         Description="Edit settings"
+                                         OnClick="NavigateToEdit" />
                     </RequireOrganizationPermission>
                 </MudStack>
             </MudPaper>
