@@ -2,8 +2,8 @@ using EcoData.Common.Messaging.Abstractions;
 using EcoData.Sensors.Contracts;
 using EcoData.Sensors.Contracts.Dtos;
 using EcoData.Sensors.Contracts.Events;
-using EcoData.Sensors.Database.Models;
 using EcoData.Sensors.DataAccess.Interfaces;
+using EcoData.Sensors.Database.Models;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -36,20 +36,31 @@ public sealed class SensorHealthMonitorWorker(
 
             await Task.Delay(CheckInterval, stoppingToken);
         }
+
+        logger.LogInformation("Sensor Health Monitor Worker stopping");
     }
 
     private async Task CheckSensorHealthAsync(CancellationToken cancellationToken)
     {
+        logger.LogDebug("Starting sensor health check cycle");
+
         using var scope = scopeFactory.CreateScope();
         var healthRepository = scope.ServiceProvider.GetRequiredService<ISensorHealthRepository>();
 
-        var monitoredStatuses = await healthRepository.GetMonitoredStatusesWithConfigAsync(cancellationToken);
+        var monitoredStatuses = await healthRepository.GetMonitoredStatusesWithConfigAsync(
+            cancellationToken
+        );
 
         if (monitoredStatuses.Count == 0)
         {
             logger.LogDebug("No sensors with health monitoring enabled");
             return;
         }
+
+        logger.LogDebug(
+            "Checking health for {SensorCount} monitored sensors",
+            monitoredStatuses.Count
+        );
 
         var now = DateTimeOffset.UtcNow;
         var staleCount = 0;
@@ -63,50 +74,75 @@ public sealed class SensorHealthMonitorWorker(
 
             if (newStatus == previousStatus)
             {
+                logger.LogTrace(
+                    "Sensor {SensorId} status unchanged: {Status}",
+                    status.SensorId,
+                    previousStatus
+                );
                 continue;
             }
+
+            logger.LogDebug(
+                "Sensor {SensorId} status changing from {PreviousStatus} to {NewStatus}",
+                status.SensorId,
+                previousStatus,
+                newStatus
+            );
 
             await healthRepository.UpdateStatusAsync(
                 status.SensorId,
                 newStatus,
                 status.LastReadingAt,
                 GetStatusMessage(newStatus, status.LastReadingAt, now),
-                cancellationToken);
+                cancellationToken
+            );
 
             switch (newStatus)
             {
-                case SensorHealthStatusType.Stale when previousStatus == SensorHealthStatusType.Healthy:
+                case SensorHealthStatusType.Stale
+                    when previousStatus == SensorHealthStatusType.Healthy:
                     staleCount++;
                     var staleAlert = await healthRepository.CreateAlertAsync(
                         status.SensorId,
                         SensorHealthAlertType.Stale,
                         $"Sensor became stale. Last reading: {FormatLastReading(status.LastReadingAt, now)}",
-                        cancellationToken);
+                        cancellationToken
+                    );
                     await PublishAlertAsync(staleAlert, cancellationToken);
-                    logger.LogWarning("Sensor {SensorId} is now stale. Last reading: {LastReadingAt}",
-                        status.SensorId, status.LastReadingAt);
+                    logger.LogWarning(
+                        "Sensor {SensorId} is now stale. Last reading: {LastReadingAt}",
+                        status.SensorId,
+                        status.LastReadingAt
+                    );
                     break;
 
-                case SensorHealthStatusType.Unhealthy when previousStatus != SensorHealthStatusType.Unhealthy:
+                case SensorHealthStatusType.Unhealthy
+                    when previousStatus != SensorHealthStatusType.Unhealthy:
                     unhealthyCount++;
                     var unhealthyAlert = await healthRepository.CreateAlertAsync(
                         status.SensorId,
                         SensorHealthAlertType.Unhealthy,
                         $"Sensor is unhealthy. Last reading: {FormatLastReading(status.LastReadingAt, now)}",
-                        cancellationToken);
+                        cancellationToken
+                    );
                     await PublishAlertAsync(unhealthyAlert, cancellationToken);
-                    logger.LogError("Sensor {SensorId} is now unhealthy. Last reading: {LastReadingAt}",
-                        status.SensorId, status.LastReadingAt);
+                    logger.LogError(
+                        "Sensor {SensorId} is now unhealthy. Last reading: {LastReadingAt}",
+                        status.SensorId,
+                        status.LastReadingAt
+                    );
                     break;
 
-                case SensorHealthStatusType.Healthy when previousStatus != SensorHealthStatusType.Healthy:
+                case SensorHealthStatusType.Healthy
+                    when previousStatus != SensorHealthStatusType.Healthy:
                     recoveredCount++;
                     await healthRepository.ResolveAlertsAsync(status.SensorId, cancellationToken);
                     var recoveredAlert = await healthRepository.CreateAlertAsync(
                         status.SensorId,
                         SensorHealthAlertType.Recovered,
                         "Sensor has recovered and is now healthy",
-                        cancellationToken);
+                        cancellationToken
+                    );
                     await PublishAlertAsync(recoveredAlert, cancellationToken);
                     logger.LogInformation("Sensor {SensorId} has recovered", status.SensorId);
                     break;
@@ -117,7 +153,10 @@ public sealed class SensorHealthMonitorWorker(
         {
             logger.LogInformation(
                 "Health check completed. Stale: {StaleCount}, Unhealthy: {UnhealthyCount}, Recovered: {RecoveredCount}",
-                staleCount, unhealthyCount, recoveredCount);
+                staleCount,
+                unhealthyCount,
+                recoveredCount
+            );
         }
         else
         {
@@ -127,7 +166,8 @@ public sealed class SensorHealthMonitorWorker(
 
     private static SensorHealthStatusType DetermineHealthStatus(
         MonitoredSensorHealthStatusDto status,
-        DateTimeOffset now)
+        DateTimeOffset now
+    )
     {
         if (!status.LastReadingAt.HasValue)
         {
@@ -154,7 +194,8 @@ public sealed class SensorHealthMonitorWorker(
     private static string? GetStatusMessage(
         SensorHealthStatusType status,
         DateTimeOffset? lastReadingAt,
-        DateTimeOffset now)
+        DateTimeOffset now
+    )
     {
         if (!lastReadingAt.HasValue)
         {
@@ -165,9 +206,11 @@ public sealed class SensorHealthMonitorWorker(
 
         return status switch
         {
-            SensorHealthStatusType.Stale => $"No data received for {FormatDuration(timeSinceLastReading)}",
-            SensorHealthStatusType.Unhealthy => $"No data received for {FormatDuration(timeSinceLastReading)}",
-            _ => null
+            SensorHealthStatusType.Stale =>
+                $"No data received for {FormatDuration(timeSinceLastReading)}",
+            SensorHealthStatusType.Unhealthy =>
+                $"No data received for {FormatDuration(timeSinceLastReading)}",
+            _ => null,
         };
     }
 
@@ -202,8 +245,19 @@ public sealed class SensorHealthMonitorWorker(
         return $"{(int)duration.TotalSeconds} second(s)";
     }
 
-    private async Task PublishAlertAsync(SensorHealthAlertDtoForList alert, CancellationToken cancellationToken)
+    private async Task PublishAlertAsync(
+        SensorHealthAlertDtoForList alert,
+        CancellationToken cancellationToken
+    )
     {
+        logger.LogDebug(
+            "Publishing health alert {AlertId} for sensor {SensorId} ({SensorName}): {AlertType}",
+            alert.Id,
+            alert.SensorId,
+            alert.SensorName,
+            alert.AlertType
+        );
+
         var alertEvent = new SensorHealthAlertEvent(
             alert.Id,
             alert.SensorId,
@@ -227,5 +281,7 @@ public sealed class SensorHealthMonitorWorker(
             MessageTopics.AllHealthAlerts,
             cancellationToken: cancellationToken
         );
+
+        logger.LogDebug("Health alert {AlertId} published to message bus", alert.Id);
     }
 }
