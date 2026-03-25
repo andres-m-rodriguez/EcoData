@@ -14,12 +14,23 @@
 
     @if (!string.IsNullOrEmpty(Title) || Actions is not null)
     {
-        <div class="page-header mb-2">
+        <div class="page-header mb-4">
             <MudStack Row Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center">
-                @if (!string.IsNullOrEmpty(Title))
-                {
-                    <MudText Typo="Typo.h5">@Title</MudText>
-                }
+                <MudStack Spacing="1">
+                    @if (!string.IsNullOrEmpty(Label))
+                    {
+                        <MudText Typo="Typo.overline" Color="Color.Secondary" Style="letter-spacing: 0.15em;">
+                            @Label
+                        </MudText>
+                    }
+                    @if (!string.IsNullOrEmpty(Title))
+                    {
+                        <MudText Typo="Typo.h5" Color="Color.Primary"
+                                 Style="font-family: 'Newsreader', serif; font-weight: 500; letter-spacing: -0.02em;">
+                            @Title
+                        </MudText>
+                    }
+                </MudStack>
 
                 @if (Actions is not null)
                 {
@@ -40,6 +51,9 @@
 
 @code {
     [Parameter]
+    public string? Label { get; set; }
+
+    [Parameter]
     public string? Title { get; set; }
 
     [Parameter]
@@ -51,16 +65,22 @@
     [Parameter]
     public RenderFragment? ChildContent { get; set; }
 
-    protected override void OnInitialized()
+    private bool _fallbackSet;
+
+    protected override void OnAfterRender(bool firstRender)
     {
-        // Prioritize return URL from navigation over the page's hardcoded fallback
-        if (FallbackUrl is not null)
+        if (firstRender && !_fallbackSet)
         {
-            Navigation.SetReturnUrlOrFallback(FallbackUrl);
-        }
-        else
-        {
-            Navigation.SetFallback(null);
+            _fallbackSet = true;
+            // Prioritize return URL from navigation over the page's hardcoded fallback
+            if (FallbackUrl is not null)
+            {
+                Navigation.SetReturnUrlOrFallback(FallbackUrl);
+            }
+            else
+            {
+                Navigation.SetFallback(null);
+            }
         }
     }
 
