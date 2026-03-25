@@ -19,15 +19,16 @@
 <MudLayout>
     <MudAppBar Elevation="0" Fixed="true" Class="app-bar-blur">
 
-        @* Mobile: Back button + Hamburger menu (hidden on md+) *@
+        @* Mobile: Back button only (hidden on md+) *@
         <div class="d-flex d-md-none">
-            <MudIconButton Icon="@Icons.Material.Filled.ArrowBack" Color="Color.Inherit" Edge="Edge.Start" Size="Size.Small"
-                           Disabled="@(!Navigation.CanGoBack)" OnClick="NavigateBackAsync" />
-            <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit"
-                           OnClick="ToggleDrawer" />
+            @if (Navigation.CanGoBack)
+            {
+                <MudIconButton Icon="@Icons.Material.Filled.ArrowBack" Color="Color.Dark"
+                               Class="back-btn-mobile" OnClick="NavigateBackAsync" />
+            }
         </div>
 
-        <span class="logo-text ml-2">EcoData</span>
+        <span class="logo-text ml-2">Ecoportal</span>
 
         @* Desktop: Navigation links (hidden on sm-) *@
         <div class="d-none d-md-flex align-center ml-6 gap-4">
@@ -37,13 +38,16 @@
             <MudLink Href="@SensorsPage.Path" Underline="Underline.None" Class="@GetNavLinkClass(SensorsPage.Path)">
                 Sensors
             </MudLink>
-            <MudLink Href="@HealthAlertsPage.Path" Underline="Underline.None" Class="@GetNavLinkClass(HealthAlertsPage.Path)">
+            <MudLink Href="@HealthAlertsPage.Path" Underline="Underline.None"
+                     Class="@GetNavLinkClass(HealthAlertsPage.Path)">
                 Alerts
             </MudLink>
-            <MudLink Href="/organizations/discover" Underline="Underline.None" Class="@GetNavLinkClass("/organizations")">
+            <MudLink Href="/organizations/discover" Underline="Underline.None"
+                     Class="@GetNavLinkClass("/organizations")">
                 Organizations
             </MudLink>
-            <MudLink Href="@GettingStartedPage.Path" Underline="Underline.None" Class="@GetNavLinkClass(GettingStartedPage.Path)">
+            <MudLink Href="@GettingStartedPage.Path" Underline="Underline.None"
+                     Class="@GetNavLinkClass(GettingStartedPage.Path)">
                 Getting Started
             </MudLink>
         </div>
@@ -76,83 +80,57 @@
             }
             else
             {
-                <MudButton Href="/login" Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small" Class="ml-2 gradient-btn">
+                <MudButton Href="/login" Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small"
+                           Class="ml-2 gradient-btn">
                     Sign In
                 </MudButton>
             }
         </div>
     </MudAppBar>
 
-    @* Mobile-only drawer *@
-    <MudDrawer @bind-Open="_drawerOpen" ClipMode="DrawerClipMode.Docked" Variant="DrawerVariant.Temporary"
-               Elevation="1" Breakpoint="Breakpoint.Md">
-        <MudToolBar Dense="true">
-            <MudIconButton Icon="@Icons.Material.Filled.Close" Color="Color.Inherit" OnClick="ToggleDrawer"
-                           Edge="Edge.Start" />
-            <MudSpacer />
-            <MudIconButton Icon="@Icons.Material.Outlined.Notifications" Color="Color.Inherit" Edge="Edge.End" />
-        </MudToolBar>
-
-        <MudNavMenu Class="pt-4">
-            <MudNavLink Href="@HomePage.Path" Match="NavLinkMatch.All" Icon="@Icons.Material.Outlined.Home">
-                Home
-            </MudNavLink>
-            <MudNavLink Href="@SensorsPage.Path" Icon="@Icons.Material.Outlined.Water">Sensors</MudNavLink>
-            <MudNavLink Href="@HealthAlertsPage.Path" Icon="@Icons.Material.Outlined.NotificationsActive">Alerts</MudNavLink>
-            <MudNavLink Href="/organizations/discover" Icon="@Icons.Material.Outlined.Business">Organizations</MudNavLink>
-            <MudNavLink Href="@GettingStartedPage.Path" Icon="@Icons.Material.Outlined.Help">Getting Started</MudNavLink>
-        </MudNavMenu>
-
-        <MudSpacer />
-
-        <MudDivider />
-        <MudList T="string" Dense="true">
-            @if (AuthState.IsAuthenticated)
-            {
-                <MudListItem>
-                    <ChildContent>
-                        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="3">
-                            <MudAvatar Color="Color.Tertiary" Variant="Variant.Filled" Size="Size.Small">
-                                @GetUserInitial()
-                            </MudAvatar>
-                            <MudStack Spacing="0">
-                                <MudText Typo="Typo.body2">@AuthState.CurrentUser?.DisplayName</MudText>
-                                <MudText Typo="Typo.caption" Color="Color.Secondary">@AuthState.CurrentUser?.Email</MudText>
-                            </MudStack>
-                        </MudStack>
-                    </ChildContent>
-                </MudListItem>
-                <MudListItem OnClick="LogoutAsync" Icon="@Icons.Material.Outlined.Logout">
-                    <ChildContent>
-                        <MudText Typo="Typo.body2">Sign Out</MudText>
-                    </ChildContent>
-                </MudListItem>
-            }
-            else
-            {
-                <MudListItem Href="/login" Icon="@Icons.Material.Outlined.Login">
-                    <ChildContent>
-                        <MudText Typo="Typo.body2">Sign In</MudText>
-                    </ChildContent>
-                </MudListItem>
-            }
-        </MudList>
-    </MudDrawer>
-
     <MudMainContent Class="main-content">
         <MudContainer MaxWidth="MaxWidth.Large" Class="py-6 px-4 content-container">
             @Body
         </MudContainer>
-        <Footer />
     </MudMainContent>
+
+    @* Mobile Bottom Navigation (hidden on md+) *@
+    <div class="d-md-none bottom-nav">
+        <MudStack Row="true" Justify="Justify.SpaceAround" AlignItems="AlignItems.Center" Class="bottom-nav-container">
+            <MudButton Variant="Variant.Text" Color="@GetBottomNavColor("/")" Class="bottom-nav-item"
+                       OnClick="@(() => NavigateToBottomNav("/"))">
+                <MudStack AlignItems="AlignItems.Center" Spacing="0">
+                    <MudIcon Icon="@Icons.Material.Filled.Home" Size="Size.Medium" />
+                    <MudText Typo="Typo.caption">Home</MudText>
+                </MudStack>
+            </MudButton>
+            <MudButton Variant="Variant.Text" Color="@GetBottomNavColor("/monitor")" Class="bottom-nav-item"
+                       OnClick="@(() => NavigateToBottomNav("/monitor"))">
+                <MudStack AlignItems="AlignItems.Center" Spacing="0">
+                    <MudIcon Icon="@Icons.Material.Filled.Sensors" Size="Size.Medium" />
+                    <MudText Typo="Typo.caption">Monitor</MudText>
+                </MudStack>
+            </MudButton>
+            <MudButton Variant="Variant.Text" Color="@GetBottomNavColor("/orgs")" Class="bottom-nav-item"
+                       OnClick="@(() => NavigateToBottomNav("/orgs"))">
+                <MudStack AlignItems="AlignItems.Center" Spacing="0">
+                    <MudIcon Icon="@Icons.Material.Filled.Groups" Size="Size.Medium" />
+                    <MudText Typo="Typo.caption">Orgs</MudText>
+                </MudStack>
+            </MudButton>
+            <MudButton Variant="Variant.Text" Color="@GetBottomNavColor("/account")" Class="bottom-nav-item"
+                       OnClick="@(() => NavigateToBottomNav("/account"))">
+                <MudStack AlignItems="AlignItems.Center" Spacing="0">
+                    <MudIcon Icon="@Icons.Material.Filled.Person" Size="Size.Medium" />
+                    <MudText Typo="Typo.caption">Account</MudText>
+                </MudStack>
+            </MudButton>
+        </MudStack>
+    </div>
 </MudLayout>
 
 @code {
-    private bool _drawerOpen = false;
     private bool _isDarkMode;
-
-    private void ToggleDrawer() => _drawerOpen = !_drawerOpen;
-    private void ToggleTheme() => _isDarkMode = !_isDarkMode;
 
     private async Task NavigateBackAsync()
     {
@@ -197,6 +175,30 @@
             : currentUri.StartsWith(path.TrimStart('/'), StringComparison.OrdinalIgnoreCase);
 
         return isActive ? "nav-link-active" : "nav-link";
+    }
+
+    private Color GetBottomNavColor(string path)
+    {
+        var currentUri = NavigationManager.ToBaseRelativePath(NavigationManager.Uri);
+
+        var isActive = path switch
+        {
+            "/" => string.IsNullOrEmpty(currentUri) || currentUri == "/",
+            "/monitor" => currentUri.StartsWith("monitor", StringComparison.OrdinalIgnoreCase)
+                       || currentUri.StartsWith("sensors", StringComparison.OrdinalIgnoreCase)
+                       || currentUri.StartsWith("alerts", StringComparison.OrdinalIgnoreCase),
+            "/orgs" => currentUri.StartsWith("orgs", StringComparison.OrdinalIgnoreCase)
+                    || currentUri.StartsWith("organizations", StringComparison.OrdinalIgnoreCase)
+                    || currentUri.StartsWith("access-requests", StringComparison.OrdinalIgnoreCase),
+            _ => currentUri.StartsWith(path.TrimStart('/'), StringComparison.OrdinalIgnoreCase)
+        };
+
+        return isActive ? Color.Primary : Color.Default;
+    }
+
+    private void NavigateToBottomNav(string path)
+    {
+        NavigationManager.NavigateTo(path);
     }
 
     [RelayCommand]

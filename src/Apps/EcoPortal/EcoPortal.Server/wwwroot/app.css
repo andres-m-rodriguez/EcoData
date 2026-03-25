@@ -197,6 +197,32 @@ h1:focus {
 }
 
 /* ==========================================================================
+   Utility Classes
+   ========================================================================== */
+.narrow-page {
+    max-width: 480px;
+    margin: 0 auto;
+}
+
+/* Mobile back button - outlined style */
+.back-btn-mobile {
+    background: transparent !important;
+    border: 1.5px solid #ccc !important;
+    border-radius: 10px !important;
+    width: 36px !important;
+    height: 36px !important;
+    min-width: 36px !important;
+}
+
+.back-btn-mobile:hover {
+    background: rgba(0, 0, 0, 0.04) !important;
+}
+
+.back-btn-mobile:disabled {
+    opacity: 0.5;
+}
+
+/* ==========================================================================
    Landing Page - Remove container constraints
    ========================================================================== */
 .content-container:has(.landing-page) {

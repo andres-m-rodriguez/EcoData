@@ -1,0 +1,34 @@
+@page "/orgs"
+@using EcoPortal.Client.Components
+@using EcoPortal.Client.Services
+@inject INavigationService Navigation
+@inject AuthStateService AuthState
+
+<PageTitle>Organizations - EcoData</PageTitle>
+
+<div class="narrow-page">
+    <PageHeader Label="Community" Title="Organizations" />
+
+    <MudStack Spacing="2">
+        <QuickActionCard Icon="@Icons.Material.Filled.Search"
+                         Title="Discover"
+                         Description="Find organizations"
+                         OnClick="@(() => Navigation.NavigateTo("/organizations/discover"))" />
+
+        @if (AuthState.IsAuthenticated)
+        {
+            <QuickActionCard Icon="@Icons.Material.Filled.Business"
+                             Title="My Organizations"
+                             Description="Your organizations"
+                             OnClick="@(() => Navigation.NavigateTo("/organizations/my"))" />
+
+            <QuickActionCard Icon="@Icons.Material.Filled.HowToReg"
+                             Title="My Access Requests"
+                             Description="Pending requests"
+                             OnClick="@(() => Navigation.NavigateTo("/organizations/requests"))" />
+        }
+    </MudStack>
+</div>
+
+@code {
+}
