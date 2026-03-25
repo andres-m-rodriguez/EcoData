@@ -12,43 +12,27 @@ public static class SensorsDatabaseExtensions
         string connectionName = "sensors"
     )
     {
-        // Register keyed NpgsqlDataSource with Azure AD auth and NetTopologySuite
-        builder.AddKeyedAzureNpgsqlDataSource(
+        // Use Aspire Azure EF Core integration - handles Azure AD auth automatically
+        builder.AddAzureNpgsqlDbContext<SensorsDbContext>(
             connectionName,
-            configureDataSourceBuilder: dsBuilder => dsBuilder.UseNetTopologySuite()
-        );
-
-        // Register pooled factory - this is the primary registration
-        builder.Services.AddPooledDbContextFactory<SensorsDbContext>(
-            (sp, options) =>
+            configureDbContextOptions: options =>
             {
-                var dataSource = sp.GetRequiredKeyedService<NpgsqlDataSource>(connectionName);
-                ConfigureNpgsqlOptions(options, dataSource);
+                options.UseNpgsql(npgsqlOptions =>
+                {
+                    npgsqlOptions.MigrationsAssembly("EcoData.Sensors.Database");
+                    npgsqlOptions.MigrationsHistoryTable("__ef_migrations_history", "public");
+                    npgsqlOptions.UseNetTopologySuite();
+                    npgsqlOptions.ConfigureDataSource(dsBuilder => dsBuilder.UseNetTopologySuite());
+                });
+                options.UseSnakeCaseNamingConvention();
+                options.UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking);
             }
         );
 
-        // Register DbContext as scoped, created from the factory
-        builder.Services.AddScoped<SensorsDbContext>(
-            sp => sp.GetRequiredService<IDbContextFactory<SensorsDbContext>>().CreateDbContext()
-        );
-
-        // Note: Aspire features (health checks, telemetry) are provided by AddKeyedAzureNpgsqlDataSource
+        // AddAzureNpgsqlDbContext registers a pooled DbContext
+        // Register IDbContextFactory for code that needs it
+        builder.Services.AddDbContextFactory<SensorsDbContext>();
 
         return builder;
-    }
-
-    private static void ConfigureNpgsqlOptions(DbContextOptionsBuilder options, NpgsqlDataSource dataSource)
-    {
-        options.UseNpgsql(
-            dataSource,
-            npgsqlOptions =>
-            {
-                npgsqlOptions.MigrationsAssembly("EcoData.Sensors.Database");
-                npgsqlOptions.MigrationsHistoryTable("__ef_migrations_history", "public");
-                npgsqlOptions.UseNetTopologySuite();
-            }
-        );
-        options.UseSnakeCaseNamingConvention();
-        options.UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking);
     }
 }
