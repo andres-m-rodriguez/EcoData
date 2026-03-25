@@ -12,7 +12,7 @@ public static class LocationsDatabaseExtensions
         string connectionName = "locations"
     )
     {
-        builder.AddAzureNpgsqlDataSource(
+        builder.AddKeyedAzureNpgsqlDataSource(
             connectionName,
             configureDataSourceBuilder: dsBuilder => dsBuilder.UseNetTopologySuite()
         );
@@ -20,7 +20,7 @@ public static class LocationsDatabaseExtensions
         builder.Services.AddDbContextPool<LocationsDbContext>(
             (sp, options) =>
             {
-                var dataSource = sp.GetRequiredService<NpgsqlDataSource>();
+                var dataSource = sp.GetRequiredKeyedService<NpgsqlDataSource>(connectionName);
                 options.UseNpgsql(
                     dataSource,
                     npgsqlOptions =>

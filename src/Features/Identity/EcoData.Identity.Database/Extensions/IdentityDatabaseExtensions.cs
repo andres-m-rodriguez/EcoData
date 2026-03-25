@@ -12,39 +12,29 @@ public static class IdentityDatabaseExtensions
         string connectionName = "identity"
     )
     {
-        // Register keyed NpgsqlDataSource with Azure AD auth
         builder.AddKeyedAzureNpgsqlDataSource(connectionName);
 
-        // Register pooled factory - this is the primary registration
         builder.Services.AddPooledDbContextFactory<IdentityDbContext>(
             (sp, options) =>
             {
                 var dataSource = sp.GetRequiredKeyedService<NpgsqlDataSource>(connectionName);
-                ConfigureNpgsqlOptions(options, dataSource);
+                options.UseNpgsql(
+                    dataSource,
+                    npgsqlOptions =>
+                    {
+                        npgsqlOptions.MigrationsAssembly("EcoData.Identity.Database");
+                        npgsqlOptions.MigrationsHistoryTable("__ef_migrations_history", "public");
+                    }
+                );
+                options.UseSnakeCaseNamingConvention();
+                options.UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking);
             }
         );
 
-        // Register DbContext as scoped, created from the factory
-        builder.Services.AddScoped<IdentityDbContext>(
-            sp => sp.GetRequiredService<IDbContextFactory<IdentityDbContext>>().CreateDbContext()
+        builder.Services.AddScoped<IdentityDbContext>(sp =>
+            sp.GetRequiredService<IDbContextFactory<IdentityDbContext>>().CreateDbContext()
         );
-
-        // Note: Aspire features (health checks, telemetry) are provided by AddKeyedAzureNpgsqlDataSource
 
         return builder;
-    }
-
-    private static void ConfigureNpgsqlOptions(DbContextOptionsBuilder options, NpgsqlDataSource dataSource)
-    {
-        options.UseNpgsql(
-            dataSource,
-            npgsqlOptions =>
-            {
-                npgsqlOptions.MigrationsAssembly("EcoData.Identity.Database");
-                npgsqlOptions.MigrationsHistoryTable("__ef_migrations_history", "public");
-            }
-        );
-        options.UseSnakeCaseNamingConvention();
-        options.UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking);
     }
 }
