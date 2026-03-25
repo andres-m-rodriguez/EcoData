@@ -12,43 +12,27 @@ public static class LocationsDatabaseExtensions
         string connectionName = "locations"
     )
     {
-        // Register keyed NpgsqlDataSource with Azure AD auth and NetTopologySuite
-        builder.AddKeyedAzureNpgsqlDataSource(
+        // Use Aspire Azure EF Core integration - handles Azure AD auth automatically
+        builder.AddAzureNpgsqlDbContext<LocationsDbContext>(
             connectionName,
-            configureDataSourceBuilder: dsBuilder => dsBuilder.UseNetTopologySuite()
-        );
-
-        // Register pooled factory - this is the primary registration
-        builder.Services.AddPooledDbContextFactory<LocationsDbContext>(
-            (sp, options) =>
+            configureDbContextOptions: options =>
             {
-                var dataSource = sp.GetRequiredKeyedService<NpgsqlDataSource>(connectionName);
-                ConfigureNpgsqlOptions(options, dataSource);
+                options.UseNpgsql(npgsqlOptions =>
+                {
+                    npgsqlOptions.MigrationsAssembly("EcoData.Locations.Database");
+                    npgsqlOptions.MigrationsHistoryTable("__ef_migrations_history", "public");
+                    npgsqlOptions.UseNetTopologySuite();
+                    npgsqlOptions.ConfigureDataSource(dsBuilder => dsBuilder.UseNetTopologySuite());
+                });
+                options.UseSnakeCaseNamingConvention();
+                options.UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking);
             }
         );
 
-        // Register DbContext as scoped, created from the factory
-        builder.Services.AddScoped<LocationsDbContext>(
-            sp => sp.GetRequiredService<IDbContextFactory<LocationsDbContext>>().CreateDbContext()
-        );
-
-        // Note: Aspire features (health checks, telemetry) are provided by AddKeyedAzureNpgsqlDataSource
+        // AddAzureNpgsqlDbContext registers a pooled DbContext
+        // Register IDbContextFactory for code that needs it
+        builder.Services.AddDbContextFactory<LocationsDbContext>();
 
         return builder;
-    }
-
-    private static void ConfigureNpgsqlOptions(DbContextOptionsBuilder options, NpgsqlDataSource dataSource)
-    {
-        options.UseNpgsql(
-            dataSource,
-            npgsqlOptions =>
-            {
-                npgsqlOptions.MigrationsAssembly("EcoData.Locations.Database");
-                npgsqlOptions.MigrationsHistoryTable("__ef_migrations_history", "public");
-                npgsqlOptions.UseNetTopologySuite();
-            }
-        );
-        options.UseSnakeCaseNamingConvention();
-        options.UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking);
     }
 }
