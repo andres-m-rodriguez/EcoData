@@ -1,7 +1,7 @@
 @using EcoPortal.Client.Services
 @inject INavigationService Navigation
 
-<MudContainer MaxWidth="@MaxWidth" Class="@ContainerClass">
+<div class="page-container mt-4 mb-8">
     @if (!string.IsNullOrEmpty(FallbackUrl))
     {
         <MudButton Variant="Variant.Text"
@@ -25,7 +25,7 @@
                     }
                     @if (!string.IsNullOrEmpty(Title))
                     {
-                        <MudText Typo="@TitleTypo" Color="Color.Primary"
+                        <MudText Typo="Typo.h5" Color="Color.Primary"
                                  Style="font-family: 'Newsreader', serif; font-weight: 500; letter-spacing: -0.02em;">
                             @Title
                         </MudText>
@@ -47,7 +47,7 @@
     <div class="page-content">
         @ChildContent
     </div>
-</MudContainer>
+</div>
 
 @code {
     [Parameter]
@@ -60,16 +60,10 @@
     public string? FallbackUrl { get; set; }
 
     [Parameter]
-    public MaxWidth MaxWidth { get; set; } = MaxWidth.Large;
-
-    [Parameter]
     public RenderFragment? Actions { get; set; }
 
     [Parameter]
     public RenderFragment? ChildContent { get; set; }
-
-    private string ContainerClass => MaxWidth == MaxWidth.Small ? "pa-4" : "page-container mt-4 mb-8";
-    private Typo TitleTypo => MaxWidth == MaxWidth.Small ? Typo.h5 : Typo.h4;
 
     private bool _fallbackSet;
 
