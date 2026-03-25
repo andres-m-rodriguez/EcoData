@@ -20,7 +20,7 @@ public static class SensorsDatabaseExtensions
         builder.Services.AddDbContextPool<SensorsDbContext>(
             (sp, options) =>
             {
-                var dataSource = sp.GetRequiredKeyedService<NpgsqlDataSource>(connectionName);
+                var dataSource = sp.GetRequiredService<NpgsqlDataSource>();
                 options.UseNpgsql(
                     dataSource,
                     npgsqlOptions =>
