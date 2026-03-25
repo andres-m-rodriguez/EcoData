@@ -33,4 +33,10 @@ public interface IReadingRepository
         ICollection<ReadingDtoForCreate> dtos,
         CancellationToken cancellationToken = default
     );
+
+    Task<SensorReadingStatsDto> GetStatsAsync(
+        Guid sensorId,
+        ReadingStatsParameters parameters,
+        CancellationToken cancellationToken = default
+    );
 }

@@ -2,8 +2,6 @@
 @using EcoData.Sensors.Application.Client
 @using EcoData.Locations.Application.Client
 @using EcoData.Locations.Contracts.Dtos
-@using EcoPortal.Client.Features.Sensors.Dialogs
-@using static EcoPortal.Client.Features.Sensors.Dialogs.ReadingFilterDialog
 @using EcoPortal.Client.Services
 @using EcoPortal.Client.Components
 @using EcoPortal.Client.Features.Organizations.Authorization
@@ -12,334 +10,294 @@
 @using SensorPermissions = EcoData.Sensors.Contracts.Permissions
 @implements IDisposable
 @inject ISensorHttpClient SensorClient
-@inject ISensorReadingHttpClient ReadingClient
 @inject ISensorHealthHttpClient HealthClient
+@inject ISensorReadingHttpClient ReadingClient
 @inject IMunicipalityHttpClient MunicipalityClient
 @inject IDialogService DialogService
 @inject INavigationService Navigation
 @inject ISnackbar Snackbar
 
 @* Header Card *@
-<MudPaper Elevation="0" Class="pa-4 pa-md-6 mb-4 rounded-lg" Style="border: 1px solid var(--mud-palette-lines-default);">
-    <MudStack Spacing="4">
-        @* Top row: Icon, title, status, actions *@
-        <MudGrid Spacing="3">
-            <MudItem xs="12" md="8">
-                <MudStack Row="true" Spacing="3" AlignItems="AlignItems.Start">
-                    <MudPaper Elevation="0" Class="pa-3 rounded-lg d-flex align-center justify-center"
-                              Style="background: var(--mud-palette-primary-lighten); min-width: 56px; min-height: 56px;">
-                        <MudIcon Icon="@Icons.Material.Filled.Water" Color="Color.Primary" Size="Size.Large" />
-                    </MudPaper>
-                    <MudStack Spacing="1">
-                        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Wrap="Wrap.Wrap">
-                            <MudText Typo="Typo.h5" Style="font-weight: 600;">@Sensor.Name</MudText>
-                            <MudChip T="string" Color="@(Sensor.IsActive ? Color.Success : Color.Default)"
-                                     Size="Size.Small" Variant="Variant.Filled">
-                                @(Sensor.IsActive ? "Online" : "Offline")
-                            </MudChip>
-                            @if (_healthStatus is not null)
-                            {
-                                <MudChip T="string" Color="@GetHealthStatusColor()" Size="Size.Small"
-                                         Variant="Variant.Outlined">
-                                    @_healthStatus
-                                </MudChip>
-                            }
-                        </MudStack>
-                        <MudStack Row="true" Spacing="3" AlignItems="AlignItems.Center" Wrap="Wrap.Wrap"
-                                  Class="mud-text-secondary" Style="font-size: 0.875rem;">
-                            <MudChip T="string" Size="Size.Small" Variant="Variant.Text" Class="px-0"
-                                     Style="font-family: monospace; background: var(--mud-palette-background-gray);">
-                                @Sensor.ExternalId
-                            </MudChip>
-                            <MudStack Row="true" Spacing="1" AlignItems="AlignItems.Center">
-                                <MudIcon Icon="@Icons.Material.Filled.LocationOn" Size="Size.Small" />
-                                @if (_locationFetch.IsLoading)
-                                {
-                                    <MudSkeleton Width="120px" Height="16px" />
-                                }
-                                else if (_locationFetch.Data is not null)
-                                {
-                                    <MudText Typo="Typo.body2">@_locationFetch.Data.Name, @_locationFetch.Data.StateCode</MudText>
-                                }
-                                else
-                                {
-                                    <MudText Typo="Typo.body2">@Sensor.Latitude.ToString("F4"), @Sensor.Longitude.ToString("F4")</MudText>
-                                }
-                            </MudStack>
-                            <MudStack Row="true" Spacing="1" AlignItems="AlignItems.Center">
-                                <MudIcon Icon="@Icons.Material.Filled.Schedule" Size="Size.Small" />
-                                <MudText Typo="Typo.body2">Created @Sensor.CreatedAt.LocalDateTime.ToString("MMM d, yyyy")</MudText>
-                            </MudStack>
-                        </MudStack>
-                    </MudStack>
-                </MudStack>
-            </MudItem>
-            <MudItem xs="12" md="4">
-                <MudStack Row="true" Justify="Justify.FlexEnd" Spacing="2">
-                    <RequireOrganizationPermission Permission="@SensorPermissions.Sensor.Delete"
-                                                   OrganizationId="Sensor.OrganizationId">
-                        <MudTooltip Text="Delete Sensor">
-                            <MudIconButton Icon="@Icons.Material.Outlined.Delete" Color="Color.Error"
-                                           Variant="Variant.Outlined" Size="Size.Medium" OnClick="ConfirmDelete" />
-                        </MudTooltip>
-                    </RequireOrganizationPermission>
-                </MudStack>
-            </MudItem>
-        </MudGrid>
-    </MudStack>
-</MudPaper>
-
-@* Live Readings Cards *@
-<MudStack Spacing="2" Class="mb-4">
-    <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center">
-        <MudStack Row="true" Spacing="2" AlignItems="AlignItems.Center">
-            <MudIcon Icon="@Icons.Material.Filled.Bolt" Color="Color.Primary" Size="Size.Small" />
-            <MudText Typo="Typo.subtitle1" Style="font-weight: 600;">Live Readings</MudText>
-        </MudStack>
-        <MudChip T="string" Size="Size.Small" Color="Color.Success" Variant="Variant.Text">
-            <MudIcon Icon="@Icons.Material.Filled.FiberManualRecord" Size="Size.Small" Class="mr-1"
-                     Style="font-size: 8px;" />
-            Streaming live
-        </MudChip>
-    </MudStack>
-    <MudGrid Spacing="3">
-        <MudItem xs="12" sm="6" md="3">
-            <MudPaper Elevation="0" Class="pa-4 rounded-lg" Style="border: 1px solid var(--mud-palette-lines-default);">
-                <MudStack Spacing="1">
-                    <MudText Typo="Typo.caption" Color="Color.Secondary" Style="text-transform: uppercase; letter-spacing: 0.03em; font-weight: 500;">
-                        <MudIcon Icon="@Icons.Material.Filled.Science" Size="Size.Small" Class="mr-1" Style="font-size: 12px;" />
-                        pH Level
-                    </MudText>
-                    <MudText Typo="Typo.h4" Style="font-weight: 600; letter-spacing: -1px;">
-                        7.2
-                    </MudText>
-                    <MudText Typo="Typo.caption" Color="Color.Secondary">
-                        <MudIcon Icon="@Icons.Material.Filled.Remove" Size="Size.Small" Style="font-size: 12px;" />
-                        No change
-                    </MudText>
-                </MudStack>
-            </MudPaper>
-        </MudItem>
-        <MudItem xs="12" sm="6" md="3">
-            <MudPaper Elevation="0" Class="pa-4 rounded-lg" Style="border: 1px solid var(--mud-palette-lines-default);">
-                <MudStack Spacing="1">
-                    <MudText Typo="Typo.caption" Color="Color.Secondary" Style="text-transform: uppercase; letter-spacing: 0.03em; font-weight: 500;">
-                        <MudIcon Icon="@Icons.Material.Filled.Thermostat" Size="Size.Small" Class="mr-1" Style="font-size: 12px;" />
-                        Temperature
-                    </MudText>
-                    <MudText Typo="Typo.h4" Style="font-weight: 600; letter-spacing: -1px;">
-                        28.4<span style="font-size: 0.5em; font-weight: 400; color: var(--mud-palette-text-secondary);">°C</span>
-                    </MudText>
-                    <MudText Typo="Typo.caption" Color="Color.Success">
-                        <MudIcon Icon="@Icons.Material.Filled.TrendingUp" Size="Size.Small" Style="font-size: 12px;" />
-                        +0.3° from avg
-                    </MudText>
-                </MudStack>
-            </MudPaper>
-        </MudItem>
-        <MudItem xs="12" sm="6" md="3">
-            <MudPaper Elevation="0" Class="pa-4 rounded-lg" Style="border: 1px solid var(--mud-palette-lines-default);">
-                <MudStack Spacing="1">
-                    <MudText Typo="Typo.caption" Color="Color.Secondary" Style="text-transform: uppercase; letter-spacing: 0.03em; font-weight: 500;">
-                        <MudIcon Icon="@Icons.Material.Filled.Air" Size="Size.Small" Class="mr-1" Style="font-size: 12px;" />
-                        Dissolved Oxygen
-                    </MudText>
-                    <MudText Typo="Typo.h4" Style="font-weight: 600; letter-spacing: -1px;">
-                        6.8<span style="font-size: 0.5em; font-weight: 400; color: var(--mud-palette-text-secondary);">mg/L</span>
-                    </MudText>
-                    <MudText Typo="Typo.caption" Color="Color.Error">
-                        <MudIcon Icon="@Icons.Material.Filled.TrendingDown" Size="Size.Small" Style="font-size: 12px;" />
-                        -0.2 from avg
-                    </MudText>
-                </MudStack>
-            </MudPaper>
-        </MudItem>
-        <MudItem xs="12" sm="6" md="3">
-            <MudPaper Elevation="0" Class="pa-4 rounded-lg" Style="border: 1px solid var(--mud-palette-warning-lighten); background: var(--mud-palette-warning-lighten);">
-                <MudStack Spacing="1">
-                    <MudText Typo="Typo.caption" Style="text-transform: uppercase; letter-spacing: 0.03em; font-weight: 500; color: var(--mud-palette-warning-darken);">
-                        <MudIcon Icon="@Icons.Material.Filled.Visibility" Size="Size.Small" Class="mr-1" Style="font-size: 12px;" />
-                        Turbidity
-                    </MudText>
-                    <MudText Typo="Typo.h4" Style="font-weight: 600; letter-spacing: -1px; color: var(--mud-palette-warning-darken);">
-                        18.3<span style="font-size: 0.5em; font-weight: 400;">NTU</span>
-                    </MudText>
-                    <MudText Typo="Typo.caption" Style="color: var(--mud-palette-warning-darken);">
-                        <MudIcon Icon="@Icons.Material.Filled.Warning" Size="Size.Small" Style="font-size: 12px;" />
-                        Above threshold
-                    </MudText>
-                </MudStack>
-            </MudPaper>
-        </MudItem>
-    </MudGrid>
-</MudStack>
-
-@* Two Column Layout *@
-<MudGrid Spacing="4">
-    @* Left: Readings History *@
-    <MudItem xs="12" lg="8">
-        <MudPaper Elevation="0" Class="pa-4 rounded-lg" Style="border: 1px solid var(--mud-palette-lines-default);">
-            <Tabs ActiveIndex="_activeTab" ActiveIndexChanged="OnTabChanged">
-                <Tab Title="History" Icon="@Icons.Material.Filled.History">
-                    <SensorReadingsList @ref="_readingsList" SensorId="Sensor.Id" ShowFilter="true"
-                                        OnFilterClick="OpenFilterDialog" ParameterFilter="@_parameterFilter"
-                                        FromDate="@_fromDate" ToDate="@_toDate">
-                        <ActionButtons>
-                            <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.Refresh"
-                                       OnClick="RefreshReadings" Size="Size.Small">
-                                Refresh
-                            </MudButton>
-                        </ActionButtons>
-                    </SensorReadingsList>
-                </Tab>
-                <Tab Title="Live" Icon="@Icons.Material.Filled.Stream"
-                     Badge="@(_liveReadings?.IsConnected == true ? "●" : null)">
-                    <SensorLiveReadings @ref="_liveReadings" SensorId="Sensor.Id" />
-                </Tab>
-            </Tabs>
-        </MudPaper>
-    </MudItem>
-
-    @* Right: Info Sidebar *@
-    <MudItem xs="12" lg="4">
-        <MudStack Spacing="3">
-            @* Location Card *@
-            <MudPaper Elevation="0" Class="pa-4 rounded-lg" Style="border: 1px solid var(--mud-palette-lines-default);">
-                <MudStack Row="true" Spacing="2" AlignItems="AlignItems.Center" Class="mb-3">
-                    <MudIcon Icon="@Icons.Material.Filled.LocationOn" Color="Color.Primary" Size="Size.Small" />
-                    <MudText Typo="Typo.subtitle2" Style="font-weight: 600;">Location</MudText>
-                </MudStack>
-                <MudStack Spacing="2">
-                    <SensorLocationMap Latitude="Sensor.Latitude" Longitude="Sensor.Longitude" />
-                    @if (_locationFetch.IsLoading)
+<MudPaper Elevation="0" Class="pa-5 pa-md-8 mb-4 rounded-lg border-solid border mud-border-lines-default">
+    <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Start">
+        <MudStack Row="true" Spacing="3" AlignItems="AlignItems.Start">
+            <div class="sensor-icon">
+                <MudIcon Icon="@Icons.Material.Filled.WaterDrop" Color="Color.Primary" Size="Size.Large" />
+            </div>
+            <MudStack Spacing="1">
+                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Wrap="Wrap.Wrap">
+                    <MudText Typo="Typo.body1" Class="font-weight-bold">@Sensor.Name</MudText>
+                    <MudChip T="string" Color="@(Sensor.IsActive? Color.Success: Color.Default)" Size="Size.Small"
+                             Variant="Variant.Filled">
+                        @(Sensor.IsActive ? "Online" : "Offline")
+                    </MudChip>
+                    @if (_healthFetch.IsLoading)
                     {
-                        <MudStack AlignItems="AlignItems.Center">
-                            <MudSkeleton Width="80%" Height="16px" />
-                        </MudStack>
+                        <MudSkeleton Width="60px" Height="24px" Class="rounded-pill" />
                     }
-                    else if (_locationFetch.Data is not null)
+                    else if (_healthFetch.Data is not null)
                     {
-                        <MudText Typo="Typo.body2" Align="Align.Center" Color="Color.Secondary">
-                            @_locationFetch.Data.Name, @_locationFetch.Data.StateName
-                        </MudText>
-                    }
-                    <MudText Typo="Typo.caption" Align="Align.Center" Style="font-family: monospace;" Color="Color.Secondary">
-                        @Sensor.Latitude.ToString("F4")° N, @Math.Abs(Sensor.Longitude).ToString("F4")° W
-                    </MudText>
-                </MudStack>
-            </MudPaper>
-
-            @* Sensor Information Card *@
-            <MudPaper Elevation="0" Class="pa-4 rounded-lg" Style="border: 1px solid var(--mud-palette-lines-default);">
-                <MudStack Row="true" Spacing="2" AlignItems="AlignItems.Center" Class="mb-3">
-                    <MudIcon Icon="@Icons.Material.Filled.Memory" Color="Color.Primary" Size="Size.Small" />
-                    <MudText Typo="Typo.subtitle2" Style="font-weight: 600;">Sensor Information</MudText>
-                </MudStack>
-                <MudStack Spacing="0">
-                    <MudStack Row="true" Justify="Justify.SpaceBetween" Class="py-2" Style="border-bottom: 1px solid var(--mud-palette-lines-default);">
-                        <MudText Typo="Typo.body2" Color="Color.Secondary">Sensor ID</MudText>
-                        <MudText Typo="Typo.body2" Style="font-family: monospace;">@Sensor.ExternalId</MudText>
-                    </MudStack>
-                    @if (Sensor.DataSourceName is not null)
-                    {
-                        <MudStack Row="true" Justify="Justify.SpaceBetween" Class="py-2" Style="border-bottom: 1px solid var(--mud-palette-lines-default);">
-                            <MudText Typo="Typo.body2" Color="Color.Secondary">Data Source</MudText>
-                            <MudText Typo="Typo.body2">@Sensor.DataSourceName</MudText>
-                        </MudStack>
-                    }
-                    <MudStack Row="true" Justify="Justify.SpaceBetween" Class="py-2" Style="border-bottom: 1px solid var(--mud-palette-lines-default);">
-                        <MudText Typo="Typo.body2" Color="Color.Secondary">Status</MudText>
-                        <MudChip T="string" Size="Size.Small" Color="@(Sensor.IsActive ? Color.Success : Color.Default)">
-                            @(Sensor.IsActive ? "Active" : "Inactive")
+                        <MudChip T="string" Color="@GetHealthStatusColor()" Size="Size.Small" Variant="Variant.Outlined">
+                            @_healthFetch.Data
                         </MudChip>
-                    </MudStack>
-                    <MudStack Row="true" Justify="Justify.SpaceBetween" Class="py-2" Style="border-bottom: 1px solid var(--mud-palette-lines-default);">
-                        <MudText Typo="Typo.body2" Color="Color.Secondary">Created</MudText>
-                        <MudText Typo="Typo.body2">@Sensor.CreatedAt.LocalDateTime.ToString("MMM d, yyyy")</MudText>
-                    </MudStack>
-                    <MudStack Row="true" Justify="Justify.SpaceBetween" Class="py-2">
-                        <MudText Typo="Typo.body2" Color="Color.Secondary">Coordinates</MudText>
-                        <MudText Typo="Typo.body2" Style="font-family: monospace;">
-                            @Sensor.Latitude.ToString("F4"), @Sensor.Longitude.ToString("F4")
-                        </MudText>
+                    }
+                </MudStack>
+                <MudStack Row="true" Spacing="3" AlignItems="AlignItems.Center" Wrap="Wrap.Wrap">
+                    <MudChip T="string" Size="Size.Small" Variant="Variant.Text"
+                             Class="px-0 mud-background-gray font-monospace">
+                        @Sensor.ExternalId
+                    </MudChip>
+                    <MudStack Row="true" Spacing="1" AlignItems="AlignItems.Center">
+                        <MudIcon Icon="@Icons.Material.Filled.LocationOn" Size="Size.Small" Color="Color.Secondary" />
+                        @if (_locationFetch.IsLoading)
+                        {
+                            <MudSkeleton Width="120px" Height="16px" />
+                        }
+                        else if (_locationFetch.Data is not null)
+                        {
+                            <MudText Typo="Typo.body2" Color="Color.Secondary">@_locationFetch.Data.Name,
+                                @_locationFetch.Data.StateCode</MudText>
+                            }
+                        else
+                            {
+                                <MudText Typo="Typo.body2" Color="Color.Secondary">@Sensor.Latitude.ToString("F4"),
+                                    @Sensor.Longitude.ToString("F4")</MudText>
+                                }
+                            </MudStack>
+                        </MudStack>
                     </MudStack>
                 </MudStack>
+                <RequireOrganizationPermission Permission="@SensorPermissions.Sensor.Delete"
+                                               OrganizationId="Sensor.OrganizationId">
+                    <MudTooltip Text="Delete Sensor">
+                        <MudIconButton Icon="@Icons.Material.Outlined.Delete" Color="Color.Error" Variant="Variant.Outlined"
+                                       Size="Size.Medium" OnClick="ConfirmDelete" />
+                    </MudTooltip>
+                </RequireOrganizationPermission>
+            </MudStack>
+        </MudPaper>
+
+        @* Live Readings Cards *@
+        <MudPaper Elevation="0" Class="pa-4 mb-4 rounded-lg border-solid border mud-border-lines-default">
+            <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Class="mb-3">
+                <MudStack Row="true" Spacing="2" AlignItems="AlignItems.Center">
+                    <MudIcon Icon="@Icons.Material.Filled.Bolt" Color="Color.Primary" Size="Size.Small" />
+                    <MudText Typo="Typo.subtitle2" Class="font-weight-bold">Live Readings</MudText>
+                </MudStack>
+                @if (_statsFetch.Data?.Parameters.Count > 0)
+                {
+                    <MudChip T="string" Size="Size.Small" Color="Color.Success" Variant="Variant.Text">
+                        <MudIcon Icon="@Icons.Material.Filled.FiberManualRecord" Size="Size.Small" Class="mr-1" />
+                        Live
+                    </MudChip>
+                }
+            </MudStack>
+            @if (_statsFetch.IsLoading)
+            {
+                <MudGrid Spacing="3">
+                    @for (var i = 0; i < 4; i++)
+                    {
+                        <MudItem xs="12" sm="6" md="3">
+                            <MudPaper Elevation="0" Class="pa-4 rounded-lg border-solid border mud-border-lines-default">
+                                <MudStack Spacing="1">
+                                    <MudSkeleton Width="80px" Height="14px" />
+                                    <MudSkeleton Width="60px" Height="32px" />
+                                    <MudSkeleton Width="100px" Height="12px" />
+                                </MudStack>
+                            </MudPaper>
+                        </MudItem>
+                    }
+                </MudGrid>
+            }
+            else if (_statsFetch.Data?.Parameters.Count > 0)
+            {
+                <MudGrid Spacing="3">
+                    @foreach (var param in _statsFetch.Data.Parameters)
+                    {
+                        var isWarning = param.ThresholdStatus is "Above" or "Below";
+
+                        <MudItem xs="12" sm="6" md="3">
+                            <MudPaper Elevation="0"
+                                      Class="@($"pa-4 rounded-lg border-solid border {(isWarning ? "mud-border-warning mud-warning-lighten" : "mud-border-lines-default")}")">
+                                <MudStack Spacing="1">
+                                    <MudText Typo="Typo.caption" Color="@(isWarning? Color.Warning: Color.Secondary)"
+                                             Class="text-uppercase">
+                                        <MudIcon Icon="@GetParameterIcon(param.Parameter)" Size="Size.Small" Class="mr-1" />
+                                        @param.Parameter
+                                    </MudText>
+                                    <MudText Typo="Typo.h6" Color="@(isWarning? Color.Warning: Color.Default)">
+                                        @param.LatestValue.ToString("F1") <span class="mud-typography-body2">@param.Unit</span>
+                                    </MudText>
+                                    @if (isWarning)
+                                    {
+                                        <MudText Typo="Typo.caption" Color="Color.Warning">
+                                            <MudIcon Icon="@Icons.Material.Filled.Warning" Size="Size.Small" />
+                                            @param.ThresholdStatus threshold
+                                        </MudText>
+                                    }
+                                    else if (param.ChangeFromAverage is not null)
+                                    {
+                                        var change = param.ChangeFromAverage.Value;
+                                        var changeColor = change > 0 ? Color.Success : change < 0 ? Color.Error : Color.Secondary;
+                                        var changeIcon = change > 0 ? Icons.Material.Filled.TrendingUp
+                                            : change < 0 ? Icons.Material.Filled.TrendingDown
+                                            : Icons.Material.Filled.Remove;
+                                        var changeText = change == 0 ? "No change" : $"{change:+0.0;-0.0} from avg";
+
+                                        <MudText Typo="Typo.caption" Color="@changeColor">
+                                            <MudIcon Icon="@changeIcon" Size="Size.Small" />
+                                            @changeText
+                                        </MudText>
+                                    }
+                                </MudStack>
+                            </MudPaper>
+                        </MudItem>
+                    }
+                </MudGrid>
+            }
+            else
+            {
+                <MudStack AlignItems="AlignItems.Center" Spacing="2" Class="pa-4">
+                    <MudIcon Icon="@Icons.Material.Filled.Assessment" Size="Size.Large" Color="Color.Secondary" />
+                    <MudText Typo="Typo.body2" Color="Color.Secondary">No readings available yet</MudText>
+                </MudStack>
+            }
+        </MudPaper>
+
+        @* Two Column Layout - Readings + Info Cards *@
+        <div class="sensor-detail-grid mb-4">
+            @* Left: Readings Preview *@
+            <MudPaper Elevation="0" Class="pa-4 rounded-lg readings-card border-solid border mud-border-lines-default">
+                <MudStack Row="true" Spacing="2" AlignItems="AlignItems.Center" Class="mb-3">
+                    <MudIcon Icon="@Icons.Material.Filled.History" Color="Color.Primary" Size="Size.Small" />
+                    <MudText Typo="Typo.subtitle2" Class="font-weight-bold">Recent Readings</MudText>
+                </MudStack>
+                <SensorReadingsPreview @ref="_readingsPreview" SensorId="Sensor.Id" />
             </MudPaper>
 
-            @* Quick Actions Card *@
-            <MudPaper Elevation="0" Class="pa-4 rounded-lg" Style="border: 1px solid var(--mud-palette-lines-default);">
-                <MudStack Row="true" Spacing="2" AlignItems="AlignItems.Center" Class="mb-3">
-                    <MudIcon Icon="@Icons.Material.Filled.Bolt" Color="Color.Primary" Size="Size.Small" />
-                    <MudText Typo="Typo.subtitle2" Style="font-weight: 600;">Quick Actions</MudText>
-                </MudStack>
-                <MudStack Spacing="2">
-                    <QuickActionCard Icon="@Icons.Material.Filled.Refresh"
-                                     Title="Refresh Readings"
-                                     Description="Reload latest data"
-                                     OnClick="RefreshReadings" />
-                    <QuickActionCard Icon="@Icons.Material.Filled.Download"
-                                     Title="Export Data"
-                                     Description="CSV, JSON, or PDF" />
-                    <RequireOrganizationPermission Permission="@SensorPermissions.Sensor.Update"
-                                                   OrganizationId="Sensor.OrganizationId">
-                        <QuickActionCard Icon="@Icons.Material.Filled.Settings"
-                                         Title="Configure Sensor"
-                                         Description="Edit settings"
-                                         OnClick="NavigateToEdit" />
-                    </RequireOrganizationPermission>
-                </MudStack>
-            </MudPaper>
-        </MudStack>
-    </MudItem>
-</MudGrid>
+            @* Right: Location + Sensor Info (stacked to match readings height) *@
+            <div class="info-cards-stack">
+                @* Location Card *@
+                <MudPaper Elevation="0" Class="pa-4 rounded-lg flex-1 border-solid border mud-border-lines-default">
+                    <MudStack Row="true" Spacing="2" AlignItems="AlignItems.Center" Class="mb-2">
+                        <MudIcon Icon="@Icons.Material.Filled.LocationOn" Color="Color.Primary" Size="Size.Small" />
+                        <MudText Typo="Typo.subtitle2" Class="font-weight-bold">Location</MudText>
+                    </MudStack>
+                    <MudStack Spacing="1">
+                        <SensorLocationMap Latitude="Sensor.Latitude" Longitude="Sensor.Longitude" />
+                        @if (_locationFetch.IsLoading)
+                        {
+                            <MudStack AlignItems="AlignItems.Center">
+                                <MudSkeleton Width="80%" Height="14px" />
+                            </MudStack>
+                        }
+                        else if (_locationFetch.Data is not null)
+                        {
+                            <MudText Typo="Typo.body2" Align="Align.Center" Color="Color.Secondary">
+                                @_locationFetch.Data.Name, @_locationFetch.Data.StateName
+                            </MudText>
+                        }
+                    </MudStack>
+                </MudPaper>
+
+                @* Sensor Information Card *@
+                <MudPaper Elevation="0" Class="pa-4 rounded-lg flex-1 border-solid border mud-border-lines-default">
+                    <MudStack Row="true" Spacing="2" AlignItems="AlignItems.Center" Class="mb-2">
+                        <MudIcon Icon="@Icons.Material.Filled.Memory" Color="Color.Primary" Size="Size.Small" />
+                        <MudText Typo="Typo.subtitle2" Class="font-weight-bold">Sensor Info</MudText>
+                    </MudStack>
+                    <MudStack Spacing="0">
+                        <MudStack Row="true" Justify="Justify.SpaceBetween" Class="py-1">
+                            <MudText Typo="Typo.body2" Color="Color.Secondary">ID</MudText>
+                            <MudText Typo="Typo.body2" Class="font-monospace">@Sensor.ExternalId</MudText>
+                        </MudStack>
+                        @if (Sensor.DataSourceName is not null)
+                        {
+                            <MudStack Row="true" Justify="Justify.SpaceBetween" Class="py-1">
+                                <MudText Typo="Typo.body2" Color="Color.Secondary">Source</MudText>
+                                <MudText Typo="Typo.body2">@Sensor.DataSourceName</MudText>
+                            </MudStack>
+                        }
+                        <MudStack Row="true" Justify="Justify.SpaceBetween" Class="py-1">
+                            <MudText Typo="Typo.body2" Color="Color.Secondary">Created</MudText>
+                            <MudText Typo="Typo.body2">@Sensor.CreatedAt.LocalDateTime.ToString("MMM d, yyyy")</MudText>
+                        </MudStack>
+                        <MudStack Row="true" Justify="Justify.SpaceBetween" Class="py-1">
+                            <MudText Typo="Typo.body2" Color="Color.Secondary">Coords</MudText>
+                            <MudText Typo="Typo.body2" Class="font-monospace">
+                                @Sensor.Latitude.ToString("F2"), @Sensor.Longitude.ToString("F2")
+                            </MudText>
+                        </MudStack>
+                    </MudStack>
+                </MudPaper>
+            </div>
+        </div>
+
+        @* Quick Actions Row *@
+        <MudPaper Elevation="0" Class="pa-4 rounded-lg border-solid border mud-border-lines-default">
+            <MudStack Row="true" Spacing="2" AlignItems="AlignItems.Center" Class="mb-3">
+                <MudIcon Icon="@Icons.Material.Filled.Bolt" Color="Color.Primary" Size="Size.Small" />
+                <MudText Typo="Typo.subtitle2" Class="font-weight-bold">Quick Actions</MudText>
+            </MudStack>
+            <div class="quick-actions-grid">
+                <QuickActionCard Icon="@Icons.Material.Filled.Refresh" Title="Refresh Readings" Description="Reload latest data"
+                                 OnClick="RefreshReadings" />
+                <QuickActionCard Icon="@Icons.Material.Filled.Download" Title="Export Data" Description="CSV, JSON, or PDF" />
+                <RequireOrganizationPermission Permission="@SensorPermissions.Sensor.Update"
+                                               OrganizationId="Sensor.OrganizationId">
+                    <QuickActionCard Icon="@Icons.Material.Filled.Settings" Title="Configure Sensor" Description="Edit settings"
+                                     OnClick="NavigateToEdit" />
+                </RequireOrganizationPermission>
+            </div>
+        </MudPaper>
 
 @code {
-    private SensorReadingsList? _readingsList;
-    private SensorLiveReadings? _liveReadings;
-    private IReadOnlyList<string> _availableParameters = [];
-    private int _activeTab;
-    private string? _healthStatus;
-
-    private string? _parameterFilter;
-    private DateTime? _fromDate;
-    private DateTime? _toDate;
-
+    private SensorReadingsPreview? _readingsPreview;
     private IFetch<MunicipalityDtoForDetail?> _locationFetch = default!;
+    private IFetch<string?> _healthFetch = default!;
+    private IFetch<SensorReadingStatsDto?> _statsFetch = default!;
 
     [Parameter, EditorRequired]
     public SensorDtoForDetail Sensor { get; set; } = default!;
 
-    protected override async Task OnInitializedAsync()
+    protected override void OnInitialized()
     {
         _locationFetch = new Fetch<MunicipalityDtoForDetail?>(
             ct => MunicipalityClient.GetByIdAsync(Sensor.MunicipalityId, ct),
             () => InvokeAsync(StateHasChanged)
         );
 
-        var parametersTask = ReadingClient.GetReadingParametersAsync(Sensor.Id);
-        var healthTask = HealthClient.GetSensorHealthAsync(Sensor.Id);
-
-        // Start location fetch in parallel
-        _ = _locationFetch.FetchAsync();
-
-        _availableParameters = await parametersTask;
-
-        var healthResult = await healthTask;
-        healthResult.Switch(
-            health => _healthStatus = health.Status,
-            _ => _healthStatus = null
+        _healthFetch = new Fetch<string?>(
+            async ct =>
+            {
+                var result = await HealthClient.GetSensorHealthAsync(Sensor.Id, ct);
+                return result.Match<string?>(
+                    health => health.Status,
+                    _ => null
+                );
+            },
+            () => InvokeAsync(StateHasChanged)
         );
+
+        _statsFetch = new Fetch<SensorReadingStatsDto?>(
+            ct => ReadingClient.GetStatsAsync(Sensor.Id, null, ct),
+            () => InvokeAsync(StateHasChanged)
+        );
+
+        // Start fetches in parallel
+        _ = _locationFetch.FetchAsync();
+        _ = _healthFetch.FetchAsync();
+        _ = _statsFetch.FetchAsync();
     }
 
     public void Dispose()
     {
-        if (_locationFetch is IDisposable disposable)
-        {
-            disposable.Dispose();
-        }
+        (_locationFetch as IDisposable)?.Dispose();
+        (_healthFetch as IDisposable)?.Dispose();
+        (_statsFetch as IDisposable)?.Dispose();
     }
 
-    private Color GetHealthStatusColor() => _healthStatus switch
+    private Color GetHealthStatusColor() => _healthFetch.Data switch
     {
         "Healthy" => Color.Success,
         "Stale" => Color.Warning,
@@ -347,40 +305,21 @@
         _ => Color.Default
     };
 
-    private void OnTabChanged(int index)
+    private static string GetParameterIcon(string parameter) => parameter.ToLowerInvariant() switch
     {
-        _activeTab = index;
-    }
+        "ph" => Icons.Material.Filled.Science,
+        "temperature" => Icons.Material.Filled.Thermostat,
+        "dissolved oxygen" => Icons.Material.Filled.Air,
+        "turbidity" => Icons.Material.Filled.Visibility,
+        "conductivity" => Icons.Material.Filled.ElectricBolt,
+        _ => Icons.Material.Filled.Sensors
+    };
 
-    private async Task OpenFilterDialog()
+    private void RefreshReadings()
     {
-        var parameters = new DialogParameters<ReadingFilterDialog>
-        {
-            { x => x.ParameterFilter, _parameterFilter },
-            { x => x.FromDate, _fromDate },
-            { x => x.ToDate, _toDate },
-            { x => x.AvailableParameters, _availableParameters }
-        };
-
-        var options = new DialogOptions
-        {
-            CloseOnEscapeKey = true,
-            MaxWidth = MaxWidth.Small,
-            FullWidth = true
-        };
-
-        var dialog = await DialogService.ShowAsync<ReadingFilterDialog>("Filters", parameters, options);
-        var result = await dialog.Result;
-
-        if (result is { Canceled: false, Data: ReadingFilterResult filter })
-        {
-            _parameterFilter = filter.Parameter;
-            _fromDate = filter.FromDate;
-            _toDate = filter.ToDate;
-        }
+        _readingsPreview?.Refresh();
+        _ = _statsFetch.FetchAsync();
     }
-
-    private void RefreshReadings() => _readingsList?.Refresh();
 
     private void NavigateToEdit() => Navigation.NavigateTo($"/sensors/{Sensor.Id}/edit", $"/sensors/{Sensor.Id}");
 
