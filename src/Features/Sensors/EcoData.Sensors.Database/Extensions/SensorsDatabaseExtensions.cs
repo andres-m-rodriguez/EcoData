@@ -12,7 +12,7 @@ public static class SensorsDatabaseExtensions
         string connectionName = "sensors"
     )
     {
-        builder.AddAzureNpgsqlDataSource(
+        builder.AddKeyedAzureNpgsqlDataSource(
             connectionName,
             configureDataSourceBuilder: dsBuilder => dsBuilder.UseNetTopologySuite()
         );
@@ -20,7 +20,7 @@ public static class SensorsDatabaseExtensions
         builder.Services.AddDbContextPool<SensorsDbContext>(
             (sp, options) =>
             {
-                var dataSource = sp.GetRequiredService<NpgsqlDataSource>();
+                var dataSource = sp.GetRequiredKeyedService<NpgsqlDataSource>(connectionName);
                 options.UseNpgsql(
                     dataSource,
                     npgsqlOptions =>
