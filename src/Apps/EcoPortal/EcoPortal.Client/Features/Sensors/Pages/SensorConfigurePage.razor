@@ -1,0 +1,359 @@
+@page "/sensors/{SensorId:guid}/configure"
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize]
+@using EcoData.Sensors.Application.Client
+@using EcoData.Sensors.Contracts.Dtos
+@using EcoData.Locations.Application.Client
+@using EcoData.Locations.Contracts.Dtos
+@using EcoPortal.Client.Services
+@using EcoPortal.Client.Components
+@using BlazingSingularity.Commands
+@using SensorPermissions = EcoData.Sensors.Contracts.Permissions
+@inject ISensorHttpClient SensorClient
+@inject ISensorHealthHttpClient HealthClient
+@inject IMunicipalityHttpClient MunicipalityClient
+@inject INavigationService Navigation
+@inject ISnackbar Snackbar
+@inject PermissionContextService PermissionContext
+@inject AuthStateService AuthState
+
+<PageTitle>Configure Sensor - EcoData</PageTitle>
+
+<EcoDataPageLayout Title="Configure Sensor" FallbackUrl="@($"/sensors/{SensorId}")">
+    <ChildContent>
+        @if (LoadCommand.IsLoading)
+        {
+            <MudStack Spacing="4">
+                <MudPaper Elevation="0" Class="pa-6 rounded-lg border-solid border mud-border-lines-default">
+                    <MudSkeleton Width="150px" Height="24px" Class="mb-4" />
+                    <MudGrid>
+                        @for (var i = 0; i < 6; i++)
+                        {
+                            <MudItem xs="12" sm="6">
+                                <MudSkeleton Width="80px" Height="14px" />
+                                <MudSkeleton Width="150px" Height="20px" Class="mt-1" />
+                            </MudItem>
+                        }
+                    </MudGrid>
+                </MudPaper>
+                <MudPaper Elevation="0" Class="pa-6 rounded-lg border-solid border mud-border-lines-default">
+                    <MudSkeleton Width="200px" Height="24px" Class="mb-4" />
+                    <MudSkeleton Width="100%" Height="56px" Class="mt-4" />
+                    <MudSkeleton Width="100%" Height="56px" Class="mt-4" />
+                </MudPaper>
+            </MudStack>
+        }
+        else if (_sensor is null || !_hasPermission)
+        {
+            <MudPaper Elevation="0" Class="pa-6 rounded-lg border-solid border mud-border-lines-default">
+                <MudStack AlignItems="AlignItems.Center">
+                    <MudIcon Icon="@Icons.Material.Filled.Error" Size="Size.Large" Color="Color.Error" />
+                    <MudText Typo="Typo.h6" Color="Color.Error" Class="mt-2">
+                        @(_sensor is null ? "Sensor not found" : "You don't have permission to configure this sensor")
+                    </MudText>
+                </MudStack>
+            </MudPaper>
+        }
+        else
+        {
+            <MudStack Spacing="4">
+                @* Sensor Details Card *@
+                <MudPaper Elevation="0" Class="pa-6 rounded-lg border-solid border mud-border-lines-default">
+                    <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Class="mb-4">
+                        <MudStack Row="true" Spacing="2" AlignItems="AlignItems.Center">
+                            <MudIcon Icon="@Icons.Material.Filled.Sensors" Color="Color.Primary" />
+                            <MudText Typo="Typo.h6">Sensor Details</MudText>
+                        </MudStack>
+                        <MudButton Variant="Variant.Outlined" Color="Color.Primary" Size="Size.Small"
+                                   StartIcon="@Icons.Material.Filled.Edit" OnClick="NavigateToEdit">
+                            Edit Details
+                        </MudButton>
+                    </MudStack>
+
+                    <MudGrid Spacing="3">
+                        <MudItem xs="12" sm="6" md="4">
+                            <MudText Typo="Typo.caption" Color="Color.Secondary">Name</MudText>
+                            <MudText Typo="Typo.body1">@_sensor.Name</MudText>
+                        </MudItem>
+                        <MudItem xs="12" sm="6" md="4">
+                            <MudText Typo="Typo.caption" Color="Color.Secondary">External ID</MudText>
+                            <MudText Typo="Typo.body1" Class="font-monospace">@_sensor.ExternalId</MudText>
+                        </MudItem>
+                        <MudItem xs="12" sm="6" md="4">
+                            <MudText Typo="Typo.caption" Color="Color.Secondary">Status</MudText>
+                            <MudChip T="string" Color="@(_sensor.IsActive ? Color.Success : Color.Default)" Size="Size.Small">
+                                @(_sensor.IsActive ? "Active" : "Inactive")
+                            </MudChip>
+                        </MudItem>
+                        <MudItem xs="12" sm="6" md="4">
+                            <MudText Typo="Typo.caption" Color="Color.Secondary">Location</MudText>
+                            <MudText Typo="Typo.body1">
+                                @if (_municipality is not null)
+                                {
+                                    @_municipality.Name@(", ")@_municipality.StateCode
+                                }
+                                else
+                                {
+                                    @_sensor.Latitude.ToString("F4")@(", ")@_sensor.Longitude.ToString("F4")
+                                }
+                            </MudText>
+                        </MudItem>
+                        <MudItem xs="12" sm="6" md="4">
+                            <MudText Typo="Typo.caption" Color="Color.Secondary">Coordinates</MudText>
+                            <MudText Typo="Typo.body1" Class="font-monospace">
+                                @_sensor.Latitude.ToString("F6"), @_sensor.Longitude.ToString("F6")
+                            </MudText>
+                        </MudItem>
+                        <MudItem xs="12" sm="6" md="4">
+                            <MudText Typo="Typo.caption" Color="Color.Secondary">Created</MudText>
+                            <MudText Typo="Typo.body1">@_sensor.CreatedAt.LocalDateTime.ToString("MMM d, yyyy")</MudText>
+                        </MudItem>
+                        @if (_sensor.DataSourceName is not null)
+                        {
+                            <MudItem xs="12" sm="6" md="4">
+                                <MudText Typo="Typo.caption" Color="Color.Secondary">Data Source</MudText>
+                                <MudText Typo="Typo.body1">@_sensor.DataSourceName</MudText>
+                            </MudItem>
+                        }
+                    </MudGrid>
+                </MudPaper>
+
+                @* Health Monitoring Configuration Card *@
+                <MudPaper Elevation="0" Class="pa-6 rounded-lg border-solid border mud-border-lines-default">
+                    <MudStack Row="true" Spacing="2" AlignItems="AlignItems.Center" Class="mb-4">
+                        <MudIcon Icon="@Icons.Material.Filled.MonitorHeart" Color="Color.Primary" />
+                        <MudText Typo="Typo.h6">Health Monitoring</MudText>
+                    </MudStack>
+
+                    @if (_healthConfig is null)
+                    {
+                        <MudStack AlignItems="AlignItems.Center" Class="pa-4" Spacing="2">
+                            <MudIcon Icon="@Icons.Material.Filled.HealthAndSafety" Size="Size.Large" Color="Color.Secondary" />
+                            <MudText Typo="Typo.body1" Color="Color.Secondary">
+                                Health monitoring is not configured for this sensor.
+                            </MudText>
+                            <MudButton Variant="Variant.Filled" Color="Color.Primary"
+                                       StartIcon="@Icons.Material.Filled.Add" OnClick="EnableHealthMonitoring"
+                                       Disabled="SaveCommand.IsLoading">
+                                Enable Health Monitoring
+                            </MudButton>
+                        </MudStack>
+                    }
+                    else
+                    {
+                        <MudForm @ref="_form">
+                            <MudGrid Spacing="3">
+                                <MudItem xs="12">
+                                    <MudSwitch @bind-Value="_isMonitoringEnabled" Color="Color.Primary"
+                                               Label="Enable Health Monitoring" />
+                                </MudItem>
+
+                                <MudItem xs="12" sm="6" md="4">
+                                    <MudNumericField @bind-Value="_expectedIntervalSeconds" Label="Expected Interval"
+                                                     Variant="Variant.Outlined" Adornment="Adornment.End"
+                                                     AdornmentText="seconds" Min="1" Required="true"
+                                                     HelperText="How often the sensor should report data" />
+                                </MudItem>
+
+                                <MudItem xs="12" sm="6" md="4">
+                                    <MudNumericField @bind-Value="_staleThresholdSeconds" Label="Stale Threshold"
+                                                     Variant="Variant.Outlined" Adornment="Adornment.End"
+                                                     AdornmentText="seconds" Min="1" Required="true"
+                                                     HelperText="Time before sensor is marked as stale" />
+                                </MudItem>
+
+                                <MudItem xs="12" sm="6" md="4">
+                                    <MudNumericField @bind-Value="_unhealthyThresholdSeconds" Label="Unhealthy Threshold"
+                                                     Variant="Variant.Outlined" Adornment="Adornment.End"
+                                                     AdornmentText="seconds" Min="1" Required="true"
+                                                     HelperText="Time before sensor is marked as unhealthy" />
+                                </MudItem>
+                            </MudGrid>
+
+                            @if (!string.IsNullOrEmpty(_errorMessage))
+                            {
+                                <MudAlert Severity="Severity.Error" Class="mt-4">@_errorMessage</MudAlert>
+                            }
+
+                            <MudStack Row="true" Justify="Justify.FlexEnd" Class="mt-6">
+                                <MudButton Variant="Variant.Filled" Color="Color.Primary"
+                                           StartIcon="@Icons.Material.Filled.Save" OnClick="SaveHealthConfig"
+                                           Disabled="SaveCommand.IsLoading">
+                                    @if (SaveCommand.IsLoading)
+                                    {
+                                        <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
+                                        @:Saving...
+                                    }
+                                    else
+                                    {
+                                        @:Save Changes
+                                    }
+                                </MudButton>
+                            </MudStack>
+                        </MudForm>
+                    }
+                </MudPaper>
+
+                @* Health Status Card (if monitoring is enabled) *@
+                @if (_healthStatus is not null)
+                {
+                    <MudPaper Elevation="0" Class="pa-6 rounded-lg border-solid border mud-border-lines-default">
+                        <MudStack Row="true" Spacing="2" AlignItems="AlignItems.Center" Class="mb-4">
+                            <MudIcon Icon="@Icons.Material.Filled.Analytics" Color="Color.Primary" />
+                            <MudText Typo="Typo.h6">Current Health Status</MudText>
+                        </MudStack>
+
+                        <MudGrid Spacing="3">
+                            <MudItem xs="12" sm="6" md="3">
+                                <MudText Typo="Typo.caption" Color="Color.Secondary">Status</MudText>
+                                <MudChip T="string" Color="@GetHealthStatusColor()" Size="Size.Small">
+                                    @_healthStatus.Status
+                                </MudChip>
+                            </MudItem>
+                            <MudItem xs="12" sm="6" md="3">
+                                <MudText Typo="Typo.caption" Color="Color.Secondary">Last Reading</MudText>
+                                <MudText Typo="Typo.body1">
+                                    @(_healthStatus.LastReadingAt?.LocalDateTime.ToString("g") ?? "Never")
+                                </MudText>
+                            </MudItem>
+                            <MudItem xs="12" sm="6" md="3">
+                                <MudText Typo="Typo.caption" Color="Color.Secondary">Consecutive Failures</MudText>
+                                <MudText Typo="Typo.body1">@_healthStatus.ConsecutiveFailures</MudText>
+                            </MudItem>
+                            <MudItem xs="12" sm="6" md="3">
+                                <MudText Typo="Typo.caption" Color="Color.Secondary">Last Updated</MudText>
+                                <MudText Typo="Typo.body1">@_healthStatus.UpdatedAt.LocalDateTime.ToString("g")</MudText>
+                            </MudItem>
+                            @if (!string.IsNullOrEmpty(_healthStatus.LastErrorMessage))
+                            {
+                                <MudItem xs="12">
+                                    <MudText Typo="Typo.caption" Color="Color.Secondary">Last Error</MudText>
+                                    <MudAlert Severity="Severity.Warning" Dense="true">
+                                        @_healthStatus.LastErrorMessage
+                                    </MudAlert>
+                                </MudItem>
+                            }
+                        </MudGrid>
+                    </MudPaper>
+                }
+            </MudStack>
+        }
+    </ChildContent>
+</EcoDataPageLayout>
+
+@code {
+    private MudForm? _form;
+    private SensorDtoForDetail? _sensor;
+    private MunicipalityDtoForDetail? _municipality;
+    private SensorHealthConfigDtoForDetail? _healthConfig;
+    private SensorHealthStatusDtoForDetail? _healthStatus;
+    private string? _errorMessage;
+    private bool _hasPermission;
+
+    // Form fields
+    private int _expectedIntervalSeconds = 300;
+    private int _staleThresholdSeconds = 600;
+    private int _unhealthyThresholdSeconds = 1800;
+    private bool _isMonitoringEnabled = true;
+
+    [Parameter]
+    public Guid SensorId { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadCommand.ExecuteAsync();
+    }
+
+    [RelayCommand]
+    private async Task Load()
+    {
+        _sensor = await SensorClient.GetByIdAsync(SensorId);
+
+        if (_sensor is null) return;
+
+        // Check permission
+        if (!AuthState.IsInitialized)
+        {
+            await AuthState.InitializeAsync();
+        }
+
+        _hasPermission = AuthState.IsGlobalAdmin ||
+            await PermissionContext.HasPermissionAsync(_sensor.OrganizationId, SensorPermissions.Sensor.Update);
+
+        if (!_hasPermission) return;
+
+        // Load municipality
+        _municipality = await MunicipalityClient.GetByIdAsync(_sensor.MunicipalityId);
+
+        // Load health config
+        var configResult = await HealthClient.GetSensorHealthConfigAsync(SensorId);
+        configResult.Switch(
+            config =>
+            {
+                _healthConfig = config;
+                _expectedIntervalSeconds = config.ExpectedIntervalSeconds;
+                _staleThresholdSeconds = config.StaleThresholdSeconds;
+                _unhealthyThresholdSeconds = config.UnhealthyThresholdSeconds;
+                _isMonitoringEnabled = config.IsMonitoringEnabled;
+            },
+            _ => _healthConfig = null // Config doesn't exist yet
+        );
+
+        // Load health status
+        var statusResult = await HealthClient.GetSensorHealthAsync(SensorId);
+        statusResult.Switch(
+            status => _healthStatus = status,
+            _ => _healthStatus = null
+        );
+    }
+
+    private async Task EnableHealthMonitoring()
+    {
+        // Set default values and save
+        _expectedIntervalSeconds = 300;
+        _staleThresholdSeconds = 600;
+        _unhealthyThresholdSeconds = 1800;
+        _isMonitoringEnabled = true;
+
+        await SaveHealthConfig();
+    }
+
+    private async Task SaveHealthConfig()
+    {
+        await SaveCommand.ExecuteAsync();
+    }
+
+    [RelayCommand]
+    private async Task Save()
+    {
+        _errorMessage = null;
+
+        var config = new SensorHealthConfigDtoForCreate(
+            _expectedIntervalSeconds,
+            _staleThresholdSeconds,
+            _unhealthyThresholdSeconds,
+            _isMonitoringEnabled
+        );
+
+        var result = await HealthClient.UpdateHealthConfigAsync(SensorId, config);
+
+        result.Switch(
+            updatedConfig =>
+            {
+                _healthConfig = updatedConfig;
+                Snackbar.Add("Health configuration saved successfully", Severity.Success);
+            },
+            problem => _errorMessage = problem.Detail ?? "Failed to save health configuration"
+        );
+    }
+
+    private void NavigateToEdit() => Navigation.NavigateTo($"/sensors/{SensorId}/edit", $"/sensors/{SensorId}/configure");
+
+    private Color GetHealthStatusColor() => _healthStatus?.Status switch
+    {
+        "Healthy" => Color.Success,
+        "Stale" => Color.Warning,
+        "Unhealthy" => Color.Error,
+        _ => Color.Default
+    };
+}

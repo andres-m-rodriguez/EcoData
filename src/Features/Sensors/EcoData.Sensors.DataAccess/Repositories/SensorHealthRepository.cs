@@ -442,9 +442,16 @@ public sealed class SensorHealthRepository(IDbContextFactory<SensorsDbContext> c
     {
         await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
 
+        // Only monitor push-based sensors that are not already unhealthy
+        // - Healthy sensors: check if they've become stale
+        // - Stale sensors: check if they've become unhealthy
+        // - Unhealthy sensors: skip (can only become healthy when they report via RecordReadingAsync)
         return await context
             .SensorHealthStatuses.Where(s =>
-                s.Sensor!.HealthConfig != null && s.Sensor.HealthConfig.IsMonitoringEnabled
+                s.Sensor!.ReportingMode == ReportingMode.Push &&
+                s.Status != SensorHealthStatusType.Unhealthy &&
+                s.Sensor.HealthConfig != null &&
+                s.Sensor.HealthConfig.IsMonitoringEnabled
             )
             .Select(s => new MonitoredSensorHealthStatusDto(
                 s.Id,
