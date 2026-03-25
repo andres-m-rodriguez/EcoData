@@ -1,0 +1,23 @@
+<header class="page-header">
+    <div class="page-header-title-section">
+        <span class="page-header-label">@Label</span>
+        <h1 class="page-header-heading">@Title</h1>
+    </div>
+    @if (ChildContent is not null)
+    {
+        <div class="page-header-actions">
+            @ChildContent
+        </div>
+    }
+</header>
+
+@code {
+    [Parameter, EditorRequired]
+    public string Label { get; set; } = default!;
+
+    [Parameter, EditorRequired]
+    public string Title { get; set; } = default!;
+
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+}

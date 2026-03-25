@@ -1,0 +1,117 @@
+@page "/account"
+@using BlazingSingularity
+@using BlazingSingularity.Commands
+@using EcoPortal.Client.Components
+@using EcoPortal.Client.Services
+@inject AuthStateService AuthState
+@inject NavigationManager NavigationManager
+
+<PageTitle>Account - EcoData</PageTitle>
+
+<div class="narrow-page">
+    <MudStack Spacing="4">
+        <PageHeader Label="Profile" Title="Account" />
+
+        @if (AuthState.IsAuthenticated)
+        {
+            <MudCard Elevation="0" Outlined="true">
+                <MudCardContent>
+                    <MudStack AlignItems="AlignItems.Center" Spacing="4" Class="py-4">
+                        <MudAvatar Color="Color.Primary" Size="Size.Large" Style="width: 80px; height: 80px; font-size: 2rem;">
+                            @GetUserInitial()
+                        </MudAvatar>
+                        <MudStack Spacing="1" AlignItems="AlignItems.Center">
+                            <MudText Typo="Typo.h6">@AuthState.CurrentUser?.DisplayName</MudText>
+                            <MudText Typo="Typo.body2" Color="Color.Secondary">@AuthState.CurrentUser?.Email</MudText>
+                        </MudStack>
+                    </MudStack>
+                </MudCardContent>
+            </MudCard>
+
+            <MudCard Elevation="0" Outlined="true">
+                <MudList T="string" Dense="false">
+                    <MudListItem Icon="@Icons.Material.Outlined.Help" Href="/getting-started">
+                        Getting Started
+                    </MudListItem>
+                    <MudDivider />
+                    <MudListItem Icon="@Icons.Material.Outlined.Business" Href="/organizations/my">
+                        My Organizations
+                    </MudListItem>
+                </MudList>
+            </MudCard>
+
+            <MudButton Variant="Variant.Outlined"
+                       Color="Color.Error"
+                       FullWidth="true"
+                       StartIcon="@Icons.Material.Outlined.Logout"
+                       OnClick="LogoutAsync"
+                       Disabled="LogoutCommand.IsLoading">
+                @if (LogoutCommand.IsLoading)
+                {
+                    <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
+                    <span>Signing out...</span>
+                }
+                else
+                {
+                    <span>Sign Out</span>
+                }
+            </MudButton>
+        }
+        else
+        {
+            <MudCard Elevation="0" Outlined="true">
+                <MudCardContent>
+                    <MudStack AlignItems="AlignItems.Center" Spacing="4" Class="py-6">
+                        <MudAvatar Color="Color.Default" Size="Size.Large" Style="width: 80px; height: 80px;">
+                            <MudIcon Icon="@Icons.Material.Filled.Person" Style="font-size: 2.5rem;" />
+                        </MudAvatar>
+                        <MudStack Spacing="1" AlignItems="AlignItems.Center">
+                            <MudText Typo="Typo.h6">Welcome to EcoData</MudText>
+                            <MudText Typo="Typo.body2" Color="Color.Secondary">Sign in to access your account</MudText>
+                        </MudStack>
+                        <MudStack Row="true" Spacing="2">
+                            <MudButton Variant="Variant.Filled"
+                                       Color="Color.Primary"
+                                       Href="/login">
+                                Sign In
+                            </MudButton>
+                            <MudButton Variant="Variant.Outlined"
+                                       Color="Color.Primary"
+                                       Href="/register">
+                                Register
+                            </MudButton>
+                        </MudStack>
+                    </MudStack>
+                </MudCardContent>
+            </MudCard>
+
+            <MudCard Elevation="0" Outlined="true">
+                <MudList T="string" Dense="false">
+                    <MudListItem Icon="@Icons.Material.Outlined.Help" Href="/getting-started">
+                        Getting Started
+                    </MudListItem>
+                </MudList>
+            </MudCard>
+        }
+    </MudStack>
+</div>
+
+@code {
+    private string GetUserInitial()
+    {
+        var name = AuthState.CurrentUser?.DisplayName;
+        return string.IsNullOrEmpty(name) ? "?" : name[0].ToString().ToUpper();
+    }
+
+    [RelayCommand]
+    private async Task Logout()
+    {
+        await AuthState.LogoutAsync();
+        NavigationManager.NavigateTo("/");
+    }
+
+    private async Task LogoutAsync()
+    {
+        await LogoutCommand.ExecuteAsync();
+    }
+}

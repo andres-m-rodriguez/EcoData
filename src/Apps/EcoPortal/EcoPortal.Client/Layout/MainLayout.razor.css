@@ -2,7 +2,6 @@
     background: var(--mud-palette-surface);
     border-radius: 12px;
     border: 1px solid var(--mud-palette-lines-default);
-    min-height: calc(100vh - 64px - 48px);
 }
 
 .main-content {
@@ -39,9 +38,42 @@
     text-decoration-thickness: 2px !important;
 }
 
-/* Drawer nav link active state */
-::deep .mud-nav-link.active {
-    color: var(--mud-palette-secondary) !important;
-    font-weight: 600 !important;
-    background-color: var(--mud-palette-secondary-lighten) !important;
+/* Bottom navigation styling */
+.bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: var(--mud-zindex-appbar);
+    background-color: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-top: 1px solid var(--mud-palette-lines-default);
+    padding-bottom: env(safe-area-inset-bottom, 0);
+}
+
+::deep .mud-theme-dark .bottom-nav {
+    background-color: rgba(28, 28, 30, 0.9);
+}
+
+.bottom-nav-container {
+    height: 64px;
+    padding: 4px 0;
+}
+
+::deep .bottom-nav-item {
+    min-width: 64px;
+    padding: 4px 12px;
+    text-transform: none !important;
+}
+
+::deep .bottom-nav-item .mud-icon-root {
+    margin-bottom: 2px;
+}
+
+/* Add padding to main content on mobile to avoid overlap with bottom nav */
+@media (max-width: 959.95px) {
+    .main-content {
+        padding-bottom: calc(64px + env(safe-area-inset-bottom, 16px)) !important;
+    }
 }
