@@ -74,7 +74,7 @@ public sealed class SensorHealthMonitorWorker(
 
             if (newStatus == previousStatus)
             {
-                logger.LogTrace(
+                logger.LogDebug(
                     "Sensor {SensorId} status unchanged: {Status}",
                     status.SensorId,
                     previousStatus
@@ -82,7 +82,7 @@ public sealed class SensorHealthMonitorWorker(
                 continue;
             }
 
-            logger.LogDebug(
+            logger.LogInformation(
                 "Sensor {SensorId} status changing from {PreviousStatus} to {NewStatus}",
                 status.SensorId,
                 previousStatus,
