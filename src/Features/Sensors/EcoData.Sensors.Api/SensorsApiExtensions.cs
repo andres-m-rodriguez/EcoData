@@ -13,6 +13,7 @@ public static class SensorsApiExtensions
         app.MapSensorHealthConfigEndpoints();
         app.MapSensorAlertEndpoints();
         app.MapReferenceDataEndpoints();
+        app.MapGeoTestEndpoints();
 
         return app;
     }
