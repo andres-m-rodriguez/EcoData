@@ -89,11 +89,20 @@
     </MudAppBar>
 
     <MudMainContent Class="main-content">
-        <MudContainer MaxWidth="MaxWidth.Large" Class="py-6 px-4 content-container">
+        @if (IsHomePage)
+        {
             <div class="@_pageTransitionClass" @key="_navigationKey">
                 @Body
             </div>
-        </MudContainer>
+        }
+        else
+        {
+            <MudContainer MaxWidth="MaxWidth.Large" Class="py-6 px-4 content-container">
+                <div class="@_pageTransitionClass" @key="_navigationKey">
+                    @Body
+                </div>
+            </MudContainer>
+        }
     </MudMainContent>
 
 </MudLayout>
@@ -136,6 +145,15 @@
     private bool _isDarkMode;
     private string _pageTransitionClass = "";
     private string _navigationKey = Guid.NewGuid().ToString();
+
+    private bool IsHomePage
+    {
+        get
+        {
+            var uri = NavigationManager.ToBaseRelativePath(NavigationManager.Uri);
+            return string.IsNullOrEmpty(uri) || uri == "/" || uri.StartsWith("?") || uri.StartsWith("#");
+        }
+    }
 
     private async Task NavigateBackAsync()
     {
