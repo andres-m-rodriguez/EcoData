@@ -2,7 +2,7 @@
 
 <div class="quick-action @Class" @onclick="HandleClick">
     <div class="quick-action-icon">
-        <MudIcon Icon="@Icon" Size="Size.Small" />
+        <MudIcon Icon="@Icon" Size="Size.Small" Color="IconColor" />
     </div>
     <div class="quick-action-text">
         <span class="quick-action-title">@Title</span>
@@ -20,6 +20,9 @@
 
     [Parameter]
     public string? Description { get; set; }
+
+    [Parameter]
+    public Color IconColor { get; set; } = Color.Primary;
 
     [Parameter]
     public EventCallback OnClick { get; set; }
