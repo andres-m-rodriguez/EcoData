@@ -53,6 +53,31 @@ public sealed class SensorReadingHttpClient(HttpClient httpClient) : ISensorRead
         return await response.Content.ReadFromJsonAsync<IReadOnlyList<string>>(cancellationToken) ?? [];
     }
 
+    public async Task<SensorReadingStatsDto?> GetStatsAsync(
+        Guid sensorId,
+        ReadingStatsParameters? parameters = null,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var queryString = new QueryStringBuilder()
+            .Add("fromDate", parameters?.FromDate)
+            .Add("toDate", parameters?.ToDate)
+            .Add("parameter", parameters?.Parameter)
+            .Build();
+
+        var response = await httpClient.GetAsync(
+            $"api/sensors/{sensorId}/readings/stats{queryString}",
+            cancellationToken
+        );
+
+        if (!response.IsSuccessStatusCode)
+        {
+            return null;
+        }
+
+        return await response.Content.ReadFromJsonAsync<SensorReadingStatsDto>(cancellationToken);
+    }
+
     public async Task<OneOf<ReadingBatchResult, ProblemDetail>> PostReadingsAsync(
         Guid sensorId,
         SensorReadingDto reading,

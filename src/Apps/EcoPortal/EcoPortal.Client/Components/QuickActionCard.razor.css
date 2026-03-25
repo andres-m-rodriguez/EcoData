@@ -11,7 +11,6 @@
 
 .quick-action:hover {
     background: var(--mud-palette-background-gray);
-    border-color: var(--mud-palette-lines-inputs);
 }
 
 .quick-action-icon {
