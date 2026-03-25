@@ -67,4 +67,19 @@ public sealed class SensorHealthHttpClient(HttpClient httpClient) : ISensorHealt
         var result = await response.Content.ReadFromJsonAsync<SensorHealthConfigDtoForDetail>(cancellationToken);
         return result!;
     }
+
+    public async Task<OneOf<SensorHealthConfigDtoForDetail, ProblemDetail>> UpdateHealthConfigAsync(
+        Guid sensorId,
+        SensorHealthConfigDtoForCreate config,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var response = await httpClient.PutAsJsonAsync($"/api/sensors/{sensorId}/health/config", config, cancellationToken);
+
+        if (!response.IsSuccessStatusCode)
+            return await response.ReadProblemAsync(cancellationToken);
+
+        var result = await response.Content.ReadFromJsonAsync<SensorHealthConfigDtoForDetail>(cancellationToken);
+        return result!;
+    }
 }

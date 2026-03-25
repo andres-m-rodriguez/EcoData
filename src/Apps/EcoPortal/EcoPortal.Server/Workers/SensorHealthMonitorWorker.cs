@@ -17,7 +17,7 @@ public sealed class SensorHealthMonitorWorker(
     ILogger<SensorHealthMonitorWorker> logger
 ) : BackgroundService
 {
-    private static readonly TimeSpan CheckInterval = TimeSpan.FromMinutes(1);
+    private static readonly TimeSpan CheckInterval = TimeSpan.FromSeconds(30);
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
