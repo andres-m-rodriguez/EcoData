@@ -43,6 +43,18 @@ public static class SensorReadingEndpoints
 
         group
             .MapGet(
+                "/stats",
+                (
+                    Guid sensorId,
+                    [AsParameters] ReadingStatsParameters parameters,
+                    IReadingRepository repository,
+                    CancellationToken ct
+                ) => repository.GetStatsAsync(sensorId, parameters, ct)
+            )
+            .WithName("GetSensorReadingStats");
+
+        group
+            .MapGet(
                 "/stream",
                 (Guid sensorId, IMessageBus messageBus, CancellationToken ct) =>
                     TypedResults.ServerSentEvents(

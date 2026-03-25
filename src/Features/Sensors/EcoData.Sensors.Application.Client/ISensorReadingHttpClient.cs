@@ -18,6 +18,12 @@ public interface ISensorReadingHttpClient
         CancellationToken cancellationToken = default
     );
 
+    Task<SensorReadingStatsDto?> GetStatsAsync(
+        Guid sensorId,
+        ReadingStatsParameters? parameters = null,
+        CancellationToken cancellationToken = default
+    );
+
     Task<OneOf<ReadingBatchResult, ProblemDetail>> PostReadingsAsync(
         Guid sensorId,
         SensorReadingDto reading,
