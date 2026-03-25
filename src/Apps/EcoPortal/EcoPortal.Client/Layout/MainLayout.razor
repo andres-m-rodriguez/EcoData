@@ -90,47 +90,52 @@
 
     <MudMainContent Class="main-content">
         <MudContainer MaxWidth="MaxWidth.Large" Class="py-6 px-4 content-container">
-            @Body
+            <div class="@_pageTransitionClass" @key="_navigationKey">
+                @Body
+            </div>
         </MudContainer>
     </MudMainContent>
 
-    @* Mobile Bottom Navigation (hidden on md+) *@
-    <div class="d-md-none bottom-nav">
-        <MudStack Row="true" Justify="Justify.SpaceAround" AlignItems="AlignItems.Center" Class="bottom-nav-container">
-            <MudButton Variant="Variant.Text" Color="@GetBottomNavColor("/")" Class="bottom-nav-item"
-                       OnClick="@(() => NavigateToBottomNav("/"))">
-                <MudStack AlignItems="AlignItems.Center" Spacing="0">
-                    <MudIcon Icon="@Icons.Material.Filled.Home" Size="Size.Medium" />
-                    <MudText Typo="Typo.caption">Home</MudText>
-                </MudStack>
-            </MudButton>
-            <MudButton Variant="Variant.Text" Color="@GetBottomNavColor("/monitor")" Class="bottom-nav-item"
-                       OnClick="@(() => NavigateToBottomNav("/monitor"))">
-                <MudStack AlignItems="AlignItems.Center" Spacing="0">
-                    <MudIcon Icon="@Icons.Material.Filled.Sensors" Size="Size.Medium" />
-                    <MudText Typo="Typo.caption">Monitor</MudText>
-                </MudStack>
-            </MudButton>
-            <MudButton Variant="Variant.Text" Color="@GetBottomNavColor("/orgs")" Class="bottom-nav-item"
-                       OnClick="@(() => NavigateToBottomNav("/orgs"))">
-                <MudStack AlignItems="AlignItems.Center" Spacing="0">
-                    <MudIcon Icon="@Icons.Material.Filled.Groups" Size="Size.Medium" />
-                    <MudText Typo="Typo.caption">Orgs</MudText>
-                </MudStack>
-            </MudButton>
-            <MudButton Variant="Variant.Text" Color="@GetBottomNavColor("/account")" Class="bottom-nav-item"
-                       OnClick="@(() => NavigateToBottomNav("/account"))">
-                <MudStack AlignItems="AlignItems.Center" Spacing="0">
-                    <MudIcon Icon="@Icons.Material.Filled.Person" Size="Size.Medium" />
-                    <MudText Typo="Typo.caption">Account</MudText>
-                </MudStack>
-            </MudButton>
-        </MudStack>
-    </div>
 </MudLayout>
+
+@* Mobile Bottom Navigation (hidden on md+) - Outside MudLayout for stability *@
+<div class="d-md-none bottom-nav">
+    <MudStack Row="true" Justify="Justify.SpaceAround" AlignItems="AlignItems.Center" Class="bottom-nav-container">
+        <MudButton Variant="Variant.Text" Color="@GetBottomNavColor("/")" Class="bottom-nav-item"
+                   OnClick="@(() => NavigateToBottomNav("/"))">
+            <MudStack AlignItems="AlignItems.Center" Spacing="0">
+                <MudIcon Icon="@Icons.Material.Filled.Home" Size="Size.Medium" />
+                <MudText Typo="Typo.caption">Home</MudText>
+            </MudStack>
+        </MudButton>
+        <MudButton Variant="Variant.Text" Color="@GetBottomNavColor("/monitor")" Class="bottom-nav-item"
+                   OnClick="@(() => NavigateToBottomNav("/monitor"))">
+            <MudStack AlignItems="AlignItems.Center" Spacing="0">
+                <MudIcon Icon="@Icons.Material.Filled.Sensors" Size="Size.Medium" />
+                <MudText Typo="Typo.caption">Monitor</MudText>
+            </MudStack>
+        </MudButton>
+        <MudButton Variant="Variant.Text" Color="@GetBottomNavColor("/orgs")" Class="bottom-nav-item"
+                   OnClick="@(() => NavigateToBottomNav("/orgs"))">
+            <MudStack AlignItems="AlignItems.Center" Spacing="0">
+                <MudIcon Icon="@Icons.Material.Filled.Groups" Size="Size.Medium" />
+                <MudText Typo="Typo.caption">Orgs</MudText>
+            </MudStack>
+        </MudButton>
+        <MudButton Variant="Variant.Text" Color="@GetBottomNavColor("/account")" Class="bottom-nav-item"
+                   OnClick="@(() => NavigateToBottomNav("/account"))">
+            <MudStack AlignItems="AlignItems.Center" Spacing="0">
+                <MudIcon Icon="@Icons.Material.Filled.Person" Size="Size.Medium" />
+                <MudText Typo="Typo.caption">Account</MudText>
+            </MudStack>
+        </MudButton>
+    </MudStack>
+</div>
 
 @code {
     private bool _isDarkMode;
+    private string _pageTransitionClass = "";
+    private string _navigationKey = Guid.NewGuid().ToString();
 
     private async Task NavigateBackAsync()
     {
@@ -148,6 +153,13 @@
 
     private void HandleLocationChanged(object? sender, Microsoft.AspNetCore.Components.Routing.LocationChangedEventArgs e)
     {
+        _pageTransitionClass = Navigation.Direction switch
+        {
+            NavigationDirection.Forward => "page-transition-forward",
+            NavigationDirection.Back => "page-transition-back",
+            _ => ""
+        };
+        _navigationKey = Guid.NewGuid().ToString();
         InvokeAsync(StateHasChanged);
     }
 
