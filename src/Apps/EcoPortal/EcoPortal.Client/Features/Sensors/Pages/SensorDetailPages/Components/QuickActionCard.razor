@@ -1,0 +1,37 @@
+@using MudBlazor
+
+<div class="quick-action @Class" @onclick="HandleClick">
+    <div class="quick-action-icon">
+        <MudIcon Icon="@Icon" Size="Size.Small" />
+    </div>
+    <div class="quick-action-text">
+        <span class="quick-action-title">@Title</span>
+        <span class="quick-action-desc">@Description</span>
+    </div>
+    <MudIcon Icon="@Icons.Material.Filled.ChevronRight" Size="Size.Small" Class="quick-action-arrow" />
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public string Icon { get; set; } = default!;
+
+    [Parameter, EditorRequired]
+    public string Title { get; set; } = default!;
+
+    [Parameter]
+    public string? Description { get; set; }
+
+    [Parameter]
+    public EventCallback OnClick { get; set; }
+
+    [Parameter]
+    public string? Class { get; set; }
+
+    private async Task HandleClick()
+    {
+        if (OnClick.HasDelegate)
+        {
+            await OnClick.InvokeAsync();
+        }
+    }
+}
