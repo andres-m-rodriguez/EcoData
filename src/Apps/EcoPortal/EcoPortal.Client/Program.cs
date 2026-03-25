@@ -1,4 +1,5 @@
 using EcoData.Identity.Application.Client;
+using EcoData.Locations.Application.Client;
 using EcoData.Organization.Application.Client;
 using EcoData.Sensors.Application.Client;
 using EcoPortal.Client.Authorization;
@@ -15,6 +16,7 @@ var baseAddress = new Uri(builder.HostEnvironment.BaseAddress);
 builder.Services.AddOrganizationClient(baseAddress);
 builder.Services.AddSensorsClient(baseAddress);
 builder.Services.AddIdentityClient(baseAddress);
+builder.Services.AddLocationsClient(baseAddress);
 
 builder.Services.AddHttpClient<ILocationHttpClient, LocationHttpClient>(client =>
 {

@@ -1,0 +1,56 @@
+.quick-action {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    border: 1px solid var(--mud-palette-lines-default);
+}
+
+.quick-action:hover {
+    background: var(--mud-palette-background-gray);
+}
+
+.quick-action-icon {
+    width: 36px;
+    height: 36px;
+    background: var(--mud-palette-background-gray);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--mud-palette-text-secondary);
+    flex-shrink: 0;
+    transition: all 0.15s ease;
+}
+
+.quick-action-text {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.quick-action-title {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--mud-palette-text-primary);
+}
+
+.quick-action-desc {
+    font-size: 11px;
+    color: var(--mud-palette-text-secondary);
+}
+
+::deep .quick-action-arrow {
+    color: var(--mud-palette-lines-inputs);
+    font-size: 16px;
+    flex-shrink: 0;
+}
+
+.quick-action:hover ::deep .quick-action-arrow {
+    color: var(--mud-palette-text-secondary);
+}

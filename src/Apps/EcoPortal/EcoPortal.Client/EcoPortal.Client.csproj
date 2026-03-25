@@ -25,6 +25,7 @@
     <ProjectReference Include="..\..\..\Features\Sensors\EcoData.Sensors.Contracts\EcoData.Sensors.Contracts.csproj" />
     <ProjectReference Include="..\..\..\Features\Identity\EcoData.Identity.Application.Client\EcoData.Identity.Application.Client.csproj" />
     <ProjectReference Include="..\..\..\Features\Locations\EcoData.Locations.Contracts\EcoData.Locations.Contracts.csproj" />
+    <ProjectReference Include="..\..\..\Features\Locations\EcoData.Locations.Application.Client\EcoData.Locations.Application.Client.csproj" />
     <ProjectReference Include="..\..\..\Features\Common\EcoData.Common.Pagination.Blazor\EcoData.Common.Pagination.Blazor.csproj" />
   </ItemGroup>
 

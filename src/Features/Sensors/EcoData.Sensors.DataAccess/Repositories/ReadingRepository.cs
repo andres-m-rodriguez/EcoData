@@ -171,4 +171,117 @@ public sealed class ReadingRepository(IDbContextFactory<SensorsDbContext> contex
         context.Readings.AddRange(entities);
         await context.SaveChangesAsync(cancellationToken);
     }
+
+    public async Task<SensorReadingStatsDto> GetStatsAsync(
+        Guid sensorId,
+        ReadingStatsParameters parameters,
+        CancellationToken cancellationToken = default
+    )
+    {
+        await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
+
+        var query = context.Readings.Where(r => r.SensorId == sensorId);
+
+        if (parameters.FromDate.HasValue)
+        {
+            var fromUtc = parameters.FromDate.Value.ToUniversalTime();
+            query = query.Where(r => r.RecordedAt >= fromUtc);
+        }
+
+        if (parameters.ToDate.HasValue)
+        {
+            var toUtc = parameters.ToDate.Value.ToUniversalTime();
+            query = query.Where(r => r.RecordedAt <= toUtc);
+        }
+
+        if (!string.IsNullOrWhiteSpace(parameters.Parameter))
+        {
+            query = query.Where(r => r.Parameter == parameters.Parameter);
+        }
+
+        // Get aggregates per parameter
+        var aggregates = await query
+            .GroupBy(r => r.Parameter)
+            .Select(g => new
+            {
+                Parameter = g.Key,
+                Unit = g.OrderByDescending(r => r.RecordedAt).First().Unit,
+                Average = g.Average(r => r.Value),
+                Min = g.Min(r => r.Value),
+                Max = g.Max(r => r.Value),
+                Count = g.Count()
+            })
+            .ToListAsync(cancellationToken);
+
+        // Get latest and second-latest readings per parameter
+        var latestReadings = await query
+            .GroupBy(r => r.Parameter)
+            .Select(g => new
+            {
+                Parameter = g.Key,
+                Latest = g.OrderByDescending(r => r.RecordedAt).First(),
+                Previous = g.OrderByDescending(r => r.RecordedAt).Skip(1).FirstOrDefault()
+            })
+            .ToListAsync(cancellationToken);
+
+        var parameterStats = aggregates.Select(agg =>
+        {
+            var latestInfo = latestReadings.FirstOrDefault(l => l.Parameter == agg.Parameter);
+            var latestValue = latestInfo?.Latest.Value ?? 0;
+            var latestReadingAt = latestInfo?.Latest.RecordedAt ?? DateTimeOffset.MinValue;
+            var previousValue = latestInfo?.Previous?.Value;
+
+            var changeFromAverage = latestValue - agg.Average;
+            var changeFromPrevious = previousValue.HasValue ? latestValue - previousValue.Value : (double?)null;
+
+            var (threshold, thresholdStatus) = GetThresholdInfo(agg.Parameter, latestValue);
+
+            return new ParameterStatsDto(
+                agg.Parameter,
+                agg.Unit,
+                latestValue,
+                latestReadingAt,
+                Math.Round(agg.Average, 2),
+                agg.Min,
+                agg.Max,
+                agg.Count,
+                Math.Round(changeFromAverage, 2),
+                changeFromPrevious.HasValue ? Math.Round(changeFromPrevious.Value, 2) : null,
+                threshold,
+                thresholdStatus
+            );
+        }).ToList();
+
+        return new SensorReadingStatsDto(parameterStats);
+    }
+
+    private static (double? Threshold, string? Status) GetThresholdInfo(string parameter, double value)
+    {
+        return parameter.ToLowerInvariant() switch
+        {
+            "ph" => value switch
+            {
+                < 6.5 => (6.5, "Below"),
+                > 8.5 => (8.5, "Above"),
+                _ => (null, "Normal")
+            },
+            "dissolved oxygen" => value switch
+            {
+                < 5.0 => (5.0, "Below"),
+                _ => (null, "Normal")
+            },
+            "turbidity" => value switch
+            {
+                > 25 => (25.0, "Above"),
+                _ => (null, "Normal")
+            },
+            "conductivity" => value switch
+            {
+                < 100 => (100.0, "Below"),
+                > 1500 => (1500.0, "Above"),
+                _ => (null, "Normal")
+            },
+            _ => (null, null)
+        };
+    }
 }
