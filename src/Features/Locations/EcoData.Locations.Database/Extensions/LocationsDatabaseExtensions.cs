@@ -12,25 +12,29 @@ public static class LocationsDatabaseExtensions
         string connectionName = "locations"
     )
     {
-        // Use Aspire Azure EF Core integration - handles Azure AD auth automatically
-        builder.AddAzureNpgsqlDbContext<LocationsDbContext>(
+        builder.AddAzureNpgsqlDataSource(
             connectionName,
-            configureDbContextOptions: options =>
+            configureDataSourceBuilder: dsBuilder => dsBuilder.UseNetTopologySuite()
+        );
+
+        builder.Services.AddDbContextPool<LocationsDbContext>(
+            (sp, options) =>
             {
-                options.UseNpgsql(npgsqlOptions =>
-                {
-                    npgsqlOptions.MigrationsAssembly("EcoData.Locations.Database");
-                    npgsqlOptions.MigrationsHistoryTable("__ef_migrations_history", "public");
-                    npgsqlOptions.UseNetTopologySuite();
-                    npgsqlOptions.ConfigureDataSource(dsBuilder => dsBuilder.UseNetTopologySuite());
-                });
+                var dataSource = sp.GetRequiredService<NpgsqlDataSource>();
+                options.UseNpgsql(
+                    dataSource,
+                    npgsqlOptions =>
+                    {
+                        npgsqlOptions.MigrationsAssembly("EcoData.Locations.Database");
+                        npgsqlOptions.MigrationsHistoryTable("__ef_migrations_history", "public");
+                        npgsqlOptions.UseNetTopologySuite();
+                    }
+                );
                 options.UseSnakeCaseNamingConvention();
                 options.UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking);
             }
         );
 
-        // AddAzureNpgsqlDbContext registers a pooled DbContext
-        // Register IDbContextFactory for code that needs it
         builder.Services.AddDbContextFactory<LocationsDbContext>();
 
         return builder;
