@@ -1,0 +1,104 @@
+@page "/sensors/{SensorId:guid}/readings"
+@using EcoData.Sensors.Contracts.Dtos
+@using EcoData.Sensors.Application.Client
+@using EcoPortal.Client.Features.Sensors.Dialogs
+@using static EcoPortal.Client.Features.Sensors.Dialogs.ReadingFilterDialog
+@using EcoPortal.Client.Features.Sensors.Pages.SensorDetailPages.Components
+@using EcoPortal.Client.Components
+@inject ISensorHttpClient SensorClient
+@inject ISensorReadingHttpClient ReadingClient
+@inject IDialogService DialogService
+
+<PageTitle>@(_sensor?.Name ?? "Sensor") Readings - EcoData</PageTitle>
+
+<EcoDataPageLayout FallbackUrl="@($"/sensors/{SensorId}")">
+    <ChildContent>
+        @if (_loading)
+        {
+            <MudPaper Elevation="0" Class="pa-4 rounded-lg" Style="border: 1px solid var(--mud-palette-lines-default);">
+                <MudSkeleton Width="200px" Height="32px" Class="mb-4" />
+                <MudStack Spacing="2">
+                    @for (var i = 0; i < 10; i++)
+                    {
+                        <MudSkeleton Width="100%" Height="48px" />
+                    }
+                </MudStack>
+            </MudPaper>
+        }
+        else if (_sensor is null)
+        {
+            <MudStack AlignItems="AlignItems.Center" Class="pa-8" Spacing="2">
+                <MudIcon Icon="@Icons.Material.Filled.SensorsOff" Size="Size.Large" Color="Color.Secondary" />
+                <MudText Typo="Typo.h6" Color="Color.Secondary">Sensor not found</MudText>
+            </MudStack>
+        }
+        else
+        {
+            <MudPaper Elevation="0" Class="pa-4 rounded-lg" Style="border: 1px solid var(--mud-palette-lines-default);">
+                <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Class="mb-4">
+                    <MudStack Spacing="0">
+                        <MudText Typo="Typo.h6">@_sensor.Name</MudText>
+                        <MudText Typo="Typo.body2" Color="Color.Secondary">All readings</MudText>
+                    </MudStack>
+                </MudStack>
+                <SensorReadingsList @ref="_readingsList" SensorId="SensorId" ShowFilter="true"
+                                    OnFilterClick="OpenFilterDialog" ParameterFilter="@_parameterFilter"
+                                    FromDate="@_fromDate" ToDate="@_toDate" />
+            </MudPaper>
+        }
+    </ChildContent>
+</EcoDataPageLayout>
+
+@code {
+    private SensorReadingsList? _readingsList;
+    private SensorDtoForDetail? _sensor;
+    private bool _loading = true;
+    private IReadOnlyList<string> _availableParameters = [];
+
+    private string? _parameterFilter;
+    private DateTime? _fromDate;
+    private DateTime? _toDate;
+
+    [Parameter]
+    public Guid SensorId { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        _sensor = await SensorClient.GetByIdAsync(SensorId);
+
+        if (_sensor is not null)
+        {
+            _availableParameters = await ReadingClient.GetReadingParametersAsync(SensorId);
+        }
+
+        _loading = false;
+    }
+
+    private async Task OpenFilterDialog()
+    {
+        var parameters = new DialogParameters<ReadingFilterDialog>
+        {
+            { x => x.ParameterFilter, _parameterFilter },
+            { x => x.FromDate, _fromDate },
+            { x => x.ToDate, _toDate },
+            { x => x.AvailableParameters, _availableParameters }
+        };
+
+        var options = new DialogOptions
+        {
+            CloseOnEscapeKey = true,
+            MaxWidth = MaxWidth.Small,
+            FullWidth = true
+        };
+
+        var dialog = await DialogService.ShowAsync<ReadingFilterDialog>("Filters", parameters, options);
+        var result = await dialog.Result;
+
+        if (result is { Canceled: false, Data: ReadingFilterResult filter })
+        {
+            _parameterFilter = filter.Parameter;
+            _fromDate = filter.FromDate;
+            _toDate = filter.ToDate;
+        }
+    }
+}
