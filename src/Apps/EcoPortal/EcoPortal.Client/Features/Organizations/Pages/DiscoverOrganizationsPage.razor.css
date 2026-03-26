@@ -5,16 +5,10 @@
 .organizations-header {
     margin-bottom: 1rem;
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
+    align-items: flex-end;
+    justify-content: space-between;
     gap: 1rem;
-}
-
-@media (min-width: 960px) {
-    .organizations-header {
-        flex-direction: row;
-        align-items: flex-end;
-        justify-content: space-between;
-    }
 }
 
 .header-title-section {
