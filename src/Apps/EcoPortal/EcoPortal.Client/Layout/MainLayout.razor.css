@@ -76,7 +76,7 @@
 /* Add padding to main content on mobile to avoid overlap with bottom nav */
 @media (max-width: 959.95px) {
     .main-content {
-        padding-bottom: calc(64px + env(safe-area-inset-bottom, 16px)) !important;
+        padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px)) !important;
     }
 }
 
@@ -88,30 +88,24 @@
 @keyframes slide-in-right {
     from {
         opacity: 0;
-        transform: translateX(20px);
     }
     to {
         opacity: 1;
-        transform: translateX(0);
     }
 }
 
 @keyframes slide-in-left {
     from {
         opacity: 0;
-        transform: translateX(-20px);
     }
     to {
         opacity: 1;
-        transform: translateX(0);
     }
 }
 
 .page-transition-forward,
 .page-transition-back {
-    will-change: transform, opacity;
-    backface-visibility: hidden;
-    transform-style: preserve-3d;
+    will-change: opacity;
 }
 
 .page-transition-forward {
@@ -122,8 +116,7 @@
     animation: slide-in-left 0.2s ease-out;
 }
 
-/* Prevent layout shifts during transitions */
+/* Ensure minimum height for content */
 .main-content {
-    overflow-x: hidden;
     min-height: 100vh;
 }

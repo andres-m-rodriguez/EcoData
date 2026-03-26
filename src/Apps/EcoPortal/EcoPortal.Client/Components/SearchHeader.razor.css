@@ -1,10 +1,13 @@
 .search-header-wrapper {
     position: sticky;
-    top: 64px;
+    top: 76px; /* 64px AppBar + 12px gap */
     z-index: 100;
-    background-color: var(--mud-palette-background);
+    background-color: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
     transition: box-shadow 0.2s ease;
     margin-top: 12px;
+    border-radius: 12px;
 }
 
 .search-header-wrapper.is-sticky {
@@ -32,14 +35,14 @@
 /* Tablet */
 @media (max-width: 960px) {
     .search-header-wrapper {
-        top: 56px;
+        top: 68px; /* 56px AppBar + 12px gap */
     }
 }
 
 /* Mobile */
 @media (max-width: 600px) {
     .search-header-wrapper {
-        top: 56px;
+        top: 68px; /* 56px AppBar + 12px gap */
     }
 
     .search-header-content {

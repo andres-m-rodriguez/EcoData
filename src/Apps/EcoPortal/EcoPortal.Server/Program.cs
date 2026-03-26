@@ -17,8 +17,8 @@ using EcoData.Sensors.Api;
 using EcoData.Sensors.Api.RateLimiting;
 using EcoData.Sensors.DataAccess;
 using EcoData.Sensors.Database.Extensions;
-using EcoPortal.Server.Workers;
 using EcoPortal.Server.Components;
+using EcoPortal.Server.Workers;
 using MudBlazor.Services;
 
 var builder = WebApplication.CreateBuilder(args);
