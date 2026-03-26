@@ -21,11 +21,12 @@
         </div>
         @if (AuthState.IsGlobalAdmin)
         {
-            <MudButton Variant="Variant.Filled" Color="Color.Primary"
-                       StartIcon="@Icons.Material.Filled.Add"
-                       Href="/organizations/create">
-                Create
-            </MudButton>
+            <MudIconButton Icon="@Icons.Material.Filled.Add"
+                           Variant="Variant.Filled"
+                           Color="Color.Primary"
+                           Size="Size.Medium"
+                           Href="/organizations/create"
+                           Style="border-radius: 10px;" />
         }
     </header>
 
