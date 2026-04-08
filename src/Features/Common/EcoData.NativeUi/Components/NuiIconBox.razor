@@ -1,0 +1,72 @@
+@namespace EcoData.NativeUi
+
+<div class="@GetContainerClass()">
+    <MudIcon Icon="@Icon" Size="@GetIconSize()" />
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public string Icon { get; set; } = default!;
+
+    [Parameter]
+    public Color Color { get; set; } = Color.Default;
+
+    [Parameter]
+    public NuiIconBoxSize Size { get; set; } = NuiIconBoxSize.Medium;
+
+    [Parameter]
+    public NuiIconBoxShape Shape { get; set; } = NuiIconBoxShape.Rounded;
+
+    [Parameter]
+    public string? Class { get; set; }
+
+    private string GetContainerClass()
+    {
+        var colorClass = Color switch
+        {
+            Color.Primary => "nui-iconbox-primary",
+            Color.Secondary => "nui-iconbox-secondary",
+            Color.Info => "nui-iconbox-info",
+            Color.Success => "nui-iconbox-success",
+            Color.Warning => "nui-iconbox-warning",
+            Color.Error => "nui-iconbox-error",
+            _ => "nui-iconbox-default"
+        };
+
+        var sizeClass = Size switch
+        {
+            NuiIconBoxSize.Small => "nui-iconbox-sm",
+            NuiIconBoxSize.Large => "nui-iconbox-lg",
+            NuiIconBoxSize.ExtraLarge => "nui-iconbox-xl",
+            _ => ""
+        };
+
+        var shapeClass = Shape switch
+        {
+            NuiIconBoxShape.Circle => "nui-iconbox-circle",
+            NuiIconBoxShape.Square => "nui-iconbox-square",
+            _ => ""
+        };
+
+        var classes = new List<string> { "nui-iconbox", colorClass };
+
+        if (!string.IsNullOrEmpty(sizeClass))
+            classes.Add(sizeClass);
+
+        if (!string.IsNullOrEmpty(shapeClass))
+            classes.Add(shapeClass);
+
+        if (!string.IsNullOrEmpty(Class))
+            classes.Add(Class);
+
+        return string.Join(" ", classes);
+    }
+
+    private Size GetIconSize() => Size switch
+    {
+        NuiIconBoxSize.Small => MudBlazor.Size.Small,
+        NuiIconBoxSize.Large => MudBlazor.Size.Medium,
+        NuiIconBoxSize.ExtraLarge => MudBlazor.Size.Large,
+        _ => MudBlazor.Size.Small
+    };
+}
