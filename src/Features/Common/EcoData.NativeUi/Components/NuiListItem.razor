@@ -1,0 +1,101 @@
+@namespace EcoData.NativeUi
+
+<div class="@GetContainerClass()" @onclick="HandleClick">
+    @if (!string.IsNullOrEmpty(Icon))
+    {
+        <div class="@GetIconBoxClass()">
+            <MudIcon Icon="@Icon" Size="IconSize" />
+        </div>
+    }
+    <div class="nui-list-item-content">
+        <span class="nui-list-item-title">@Title</span>
+        @if (!string.IsNullOrEmpty(Subtitle))
+        {
+            <span class="nui-list-item-subtitle">@Subtitle</span>
+        }
+    </div>
+    @if (ShowChevron)
+    {
+        <MudIcon Icon="@Icons.Material.Filled.ChevronRight" Size="Size.Small" Class="nui-list-item-chevron" />
+    }
+    @if (TrailingContent is not null)
+    {
+        <div class="nui-list-item-trailing">
+            @TrailingContent
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public string Title { get; set; } = default!;
+
+    [Parameter]
+    public string? Subtitle { get; set; }
+
+    [Parameter]
+    public string? Icon { get; set; }
+
+    [Parameter]
+    public Size IconSize { get; set; } = Size.Small;
+
+    [Parameter]
+    public Color IconColor { get; set; } = Color.Default;
+
+    [Parameter]
+    public bool ShowChevron { get; set; } = true;
+
+    [Parameter]
+    public bool Bordered { get; set; }
+
+    [Parameter]
+    public EventCallback OnClick { get; set; }
+
+    [Parameter]
+    public RenderFragment? TrailingContent { get; set; }
+
+    [Parameter]
+    public string? Class { get; set; }
+
+    private bool IsClickable => OnClick.HasDelegate;
+
+    private string GetContainerClass()
+    {
+        var classes = new List<string> { "nui-list-item" };
+
+        if (IsClickable)
+            classes.Add("nui-list-item-clickable");
+
+        if (Bordered)
+            classes.Add("nui-list-item-bordered");
+
+        if (!string.IsNullOrEmpty(Class))
+            classes.Add(Class);
+
+        return string.Join(" ", classes);
+    }
+
+    private string GetIconBoxClass()
+    {
+        var colorClass = IconColor switch
+        {
+            Color.Primary => "nui-icon-primary",
+            Color.Secondary => "nui-icon-secondary",
+            Color.Info => "nui-icon-info",
+            Color.Success => "nui-icon-success",
+            Color.Warning => "nui-icon-warning",
+            Color.Error => "nui-icon-error",
+            _ => "nui-icon-default"
+        };
+
+        return $"nui-list-item-icon {colorClass}";
+    }
+
+    private async Task HandleClick()
+    {
+        if (OnClick.HasDelegate)
+        {
+            await OnClick.InvokeAsync();
+        }
+    }
+}

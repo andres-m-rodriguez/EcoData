@@ -1,0 +1,104 @@
+.nui-list-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px;
+    border-radius: 10px;
+    transition: background-color 0.15s ease;
+}
+
+.nui-list-item-clickable {
+    cursor: pointer;
+}
+
+.nui-list-item-clickable:hover {
+    background-color: var(--mud-palette-action-default-hover);
+}
+
+.nui-list-item-bordered {
+    border: 1px solid var(--mud-palette-lines-default);
+}
+
+/* Icon box */
+.nui-list-item-icon {
+    flex-shrink: 0;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 10px;
+    transition: all 0.15s ease;
+}
+
+/* Icon color variants */
+.nui-icon-default {
+    background-color: var(--mud-palette-background-grey);
+    color: var(--mud-palette-text-secondary);
+}
+
+.nui-icon-primary {
+    background-color: var(--mud-palette-primary-lighten);
+    color: var(--mud-palette-primary);
+}
+
+.nui-icon-secondary {
+    background-color: var(--mud-palette-secondary-lighten);
+    color: var(--mud-palette-secondary);
+}
+
+.nui-icon-info {
+    background-color: var(--mud-palette-info-lighten);
+    color: var(--mud-palette-info);
+}
+
+.nui-icon-success {
+    background-color: var(--mud-palette-success-lighten);
+    color: var(--mud-palette-success);
+}
+
+.nui-icon-warning {
+    background-color: var(--mud-palette-warning-lighten);
+    color: var(--mud-palette-warning);
+}
+
+.nui-icon-error {
+    background-color: var(--mud-palette-error-lighten);
+    color: var(--mud-palette-error);
+}
+
+/* Content */
+.nui-list-item-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.nui-list-item-title {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--mud-palette-text-primary);
+}
+
+.nui-list-item-subtitle {
+    font-size: 12px;
+    color: var(--mud-palette-text-secondary);
+}
+
+/* Chevron */
+::deep .nui-list-item-chevron {
+    flex-shrink: 0;
+    color: var(--mud-palette-text-disabled);
+    transition: color 0.15s ease;
+}
+
+.nui-list-item-clickable:hover ::deep .nui-list-item-chevron {
+    color: var(--mud-palette-text-secondary);
+}
+
+/* Trailing content */
+.nui-list-item-trailing {
+    flex-shrink: 0;
+}

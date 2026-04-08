@@ -1,0 +1,27 @@
+.nui-section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 16px;
+}
+
+.nui-section-header-content {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+::deep .nui-section-title {
+    font-weight: 600;
+}
+
+.nui-section-header-action {
+    flex-shrink: 0;
+}
+
+::deep .nui-section-action-btn {
+    text-transform: none;
+    font-weight: 500;
+}

@@ -1,0 +1,60 @@
+@namespace EcoData.NativeUi
+
+<div class="@GetContainerClass()">
+    <div class="nui-section-header-content">
+        <MudText Typo="@TitleTypo" Class="nui-section-title">@Title</MudText>
+        @if (!string.IsNullOrEmpty(Subtitle))
+        {
+            <MudText Typo="Typo.body2" Color="Color.Secondary">@Subtitle</MudText>
+        }
+    </div>
+    @if (ActionContent is not null)
+    {
+        <div class="nui-section-header-action">
+            @ActionContent
+        </div>
+    }
+    else if (!string.IsNullOrEmpty(ActionText))
+    {
+        <MudButton Variant="Variant.Text"
+                   Color="Color.Primary"
+                   Size="Size.Small"
+                   OnClick="OnActionClick"
+                   Class="nui-section-action-btn">
+            @ActionText
+        </MudButton>
+    }
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public string Title { get; set; } = default!;
+
+    [Parameter]
+    public string? Subtitle { get; set; }
+
+    [Parameter]
+    public Typo TitleTypo { get; set; } = Typo.h6;
+
+    [Parameter]
+    public string? ActionText { get; set; }
+
+    [Parameter]
+    public EventCallback OnActionClick { get; set; }
+
+    [Parameter]
+    public RenderFragment? ActionContent { get; set; }
+
+    [Parameter]
+    public string? Class { get; set; }
+
+    private string GetContainerClass()
+    {
+        var classes = new List<string> { "nui-section-header" };
+
+        if (!string.IsNullOrEmpty(Class))
+            classes.Add(Class);
+
+        return string.Join(" ", classes);
+    }
+}
