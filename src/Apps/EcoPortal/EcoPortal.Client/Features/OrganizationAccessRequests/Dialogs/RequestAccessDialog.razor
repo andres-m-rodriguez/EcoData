@@ -14,13 +14,22 @@
     <DialogContent>
         <MudForm @ref="_form" @bind-IsValid="_isValid">
             <MudStack Spacing="4">
-                <MudText Typo="Typo.body2" Color="Color.Secondary">
-                    Select an organization to request access. An administrator will review your request.
-                </MudText>
-                <OrganizationSelect @bind-Value="_selectedOrganization"
-                                    Label="Organization"
-                                    Required="true"
-                                    RequiredError="Please select an organization" />
+                @if (IsOrganizationPreselected)
+                {
+                    <MudText Typo="Typo.body2" Color="Color.Secondary">
+                        Request access to <strong>@PreselectedOrganization!.Name</strong>. An administrator will review your request.
+                    </MudText>
+                }
+                else
+                {
+                    <MudText Typo="Typo.body2" Color="Color.Secondary">
+                        Select an organization to request access. An administrator will review your request.
+                    </MudText>
+                    <OrganizationSelect @bind-Value="_selectedOrganization"
+                                        Label="Organization"
+                                        Required="true"
+                                        RequiredError="Please select an organization" />
+                }
                 <MudTextField @bind-Value="_requestMessage"
                               Label="Message (Optional)"
                               Placeholder="Why would you like to join this organization?"
@@ -49,10 +58,24 @@
     [CascadingParameter]
     private IMudDialogInstance MudDialog { get; set; } = null!;
 
+    [Parameter]
+    public OrganizationDtoForList? PreselectedOrganization { get; set; }
+
     private MudForm _form = null!;
     private bool _isValid;
     private OrganizationDtoForList? _selectedOrganization;
     private string? _requestMessage;
+
+    private bool IsOrganizationPreselected => PreselectedOrganization is not null;
+
+    protected override void OnInitialized()
+    {
+        if (PreselectedOrganization is not null)
+        {
+            _selectedOrganization = PreselectedOrganization;
+            _isValid = true; // No required fields when org is preselected
+        }
+    }
 
     private void Cancel() => MudDialog.Cancel();
 
