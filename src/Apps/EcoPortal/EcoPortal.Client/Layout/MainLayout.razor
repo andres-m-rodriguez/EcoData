@@ -19,9 +19,9 @@
 <MudLayout>
     <MudAppBar Elevation="0" Fixed="true" Class="app-bar-blur">
 
-        @* Mobile: Back button only (hidden on md+) *@
+        @* Mobile: Back button only (hidden on md+ and on Home page) *@
         <div class="d-flex d-md-none">
-            @if (Navigation.CanGoBack)
+            @if (Navigation.CanGoBack && !IsHomePage)
             {
                 <MudIconButton Icon="@Icons.Material.Filled.ArrowBack" Color="Color.Dark"
                                Class="back-btn-mobile" OnClick="NavigateBackAsync" />
@@ -73,6 +73,8 @@
                     </ActivatorContent>
                     <ChildContent>
                         <MudMenuItem Icon="@Icons.Material.Outlined.Person">Profile</MudMenuItem>
+                        <MudMenuItem Href="/organizations/my" Icon="@Icons.Material.Outlined.Business">My Organizations</MudMenuItem>
+                        <MudMenuItem Href="/organizations/requests" Icon="@Icons.Material.Outlined.HowToReg">My Access Requests</MudMenuItem>
                         <MudDivider />
                         <MudMenuItem OnClick="LogoutAsync" Icon="@Icons.Material.Outlined.Logout">Sign Out</MudMenuItem>
                     </ChildContent>
