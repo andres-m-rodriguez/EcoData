@@ -18,16 +18,27 @@
 <MudLayout>
     <MudAppBar Elevation="0" Fixed="true" Class="app-bar-blur">
 
-        @* Mobile: Back button only (hidden on md+ and on Home page) *@
-        <div class="d-flex d-md-none">
-            @if (Navigation.CanGoBack && !IsHomePage)
+        @* Mobile: Back button + Title OR Logo *@
+        <div class="d-flex d-md-none align-center" style="flex: 1;">
+            @if (!IsHomePage)
             {
-                <MudIconButton Icon="@Icons.Material.Filled.ArrowBack" Color="Color.Dark"
-                               Class="back-btn-mobile" OnClick="NavigateBackAsync" />
+                @if (Navigation.CanGoBack)
+                {
+                    <MudIconButton Icon="@Icons.Material.Filled.ArrowBack" Color="Color.Dark"
+                                   OnClick="NavigateBackAsync" />
+                }
+                <MudText Typo="Typo.h6" Class="flex-grow-1 text-center pr-10">
+                    @Navigation.PageTitle
+                </MudText>
+            }
+            else
+            {
+                <span class="logo-text ml-2">Ecoportal</span>
             }
         </div>
 
-        <span class="logo-text ml-2">Ecoportal</span>
+        @* Desktop: Always show logo *@
+        <span class="logo-text ml-2 d-none d-md-inline">Ecoportal</span>
 
         @* Desktop: Navigation links (hidden on sm-) *@
         <div class="d-none d-md-flex align-center ml-6 gap-4">

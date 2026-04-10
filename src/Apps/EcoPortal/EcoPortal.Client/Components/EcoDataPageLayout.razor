@@ -67,9 +67,16 @@
 
     protected override void OnAfterRender(bool firstRender)
     {
-        if (firstRender && ParentPath is not null)
+        if (firstRender)
         {
-            Navigation.SetParentPath(ParentPath);
+            if (ParentPath is not null)
+            {
+                Navigation.SetParentPath(ParentPath);
+            }
+            if (Title is not null)
+            {
+                Navigation.SetPageTitle(Title);
+            }
         }
     }
 

@@ -20,6 +20,11 @@
 </div>
 
 @code {
+    protected override void OnInitialized()
+    {
+        Navigation.SetPageTitle("Sensors");
+    }
+
     private void NavigateToDetail(SensorDtoForList sensor)
     {
         Navigation.NavigateTo($"/sensors/{sensor.Id}");
