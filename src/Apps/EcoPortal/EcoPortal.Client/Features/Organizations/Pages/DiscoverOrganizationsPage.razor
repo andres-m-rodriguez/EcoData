@@ -12,9 +12,10 @@
 @inject AuthStateService AuthState
 
 <PageTitle>Discover Organizations - EcoData</PageTitle>
+<EcoPortalTitle Title="Organizations" />
 
 <div class="organizations-page">
-    <header class="organizations-header">
+    <header class="organizations-header d-none d-md-flex">
         <div class="header-title-section">
             <span class="header-label">Research Partners</span>
             <h1 class="header-heading">Organizations</h1>
@@ -95,7 +96,6 @@
 
     protected override void OnInitialized()
     {
-        Navigation.SetPageTitle("Organizations");
         SearchTextSignal.OnChange(_ => _virtualizedList?.Refresh());
     }
 
