@@ -5,8 +5,11 @@
     [Parameter, EditorRequired]
     public string Title { get; set; } = "";
 
-    protected override void OnInitialized()
+    protected override void OnParametersSet()
     {
-        Navigation.SetPageTitle(Title);
+        if (!string.IsNullOrEmpty(Title))
+        {
+            Navigation.SetPageTitle(Title);
+        }
     }
 }
