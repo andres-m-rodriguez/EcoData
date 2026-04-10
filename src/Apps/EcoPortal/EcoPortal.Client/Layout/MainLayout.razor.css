@@ -81,10 +81,6 @@
 }
 
 /* Page transition animations */
-.page-transition-wrapper {
-    min-height: 100%;
-}
-
 @keyframes slide-in-right {
     from {
         opacity: 0;
