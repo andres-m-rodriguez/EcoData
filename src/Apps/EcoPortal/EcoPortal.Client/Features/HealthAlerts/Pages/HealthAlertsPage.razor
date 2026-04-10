@@ -1,20 +1,13 @@
 @page "/alerts"
 @using BlazorStaticNavigation
 @using EcoPortal.Client.Features.HealthAlerts.Components
-@using EcoPortal.Client.Services
-@inject INavigationService Navigation
+@using EcoPortal.Client.Components
 
 <PageTitle>Health Alerts - EcoData</PageTitle>
-
-@code {
-    protected override void OnInitialized()
-    {
-        Navigation.SetPageTitle("Health Alerts");
-    }
-}
+<EcoPortalTitle Title="Health Alerts" />
 
 <div class="alerts-page">
-    <header class="alerts-header">
+    <header class="alerts-header d-none d-md-block">
         <div class="header-title-section">
             <span class="header-label">Monitoring</span>
             <h1 class="header-heading">Health Alerts</h1>

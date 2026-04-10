@@ -1,0 +1,12 @@
+@using EcoPortal.Client.Services
+@inject INavigationService Navigation
+
+@code {
+    [Parameter, EditorRequired]
+    public string Title { get; set; } = "";
+
+    protected override void OnInitialized()
+    {
+        Navigation.SetPageTitle(Title);
+    }
+}
