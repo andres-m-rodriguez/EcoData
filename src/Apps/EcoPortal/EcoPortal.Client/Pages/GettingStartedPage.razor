@@ -1,5 +1,7 @@
 @page "/getting-started"
 @using BlazorStaticNavigation
+@using EcoPortal.Client.Services
+@inject INavigationService Navigation
 
 <PageTitle>Getting Started - EcoData</PageTitle>
 
@@ -112,4 +114,8 @@
 </div>
 
 @code {
+    protected override void OnInitialized()
+    {
+        Navigation.SetPageTitle("Getting Started");
+    }
 }

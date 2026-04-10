@@ -97,6 +97,11 @@
 </div>
 
 @code {
+    protected override void OnInitialized()
+    {
+        Navigation.SetPageTitle("Account");
+    }
+
     private string GetUserInitial()
     {
         var name = AuthState.CurrentUser?.DisplayName;

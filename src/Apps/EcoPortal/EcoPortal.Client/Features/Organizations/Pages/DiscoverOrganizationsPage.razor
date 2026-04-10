@@ -95,6 +95,7 @@
 
     protected override void OnInitialized()
     {
+        Navigation.SetPageTitle("Organizations");
         SearchTextSignal.OnChange(_ => _virtualizedList?.Refresh());
     }
 

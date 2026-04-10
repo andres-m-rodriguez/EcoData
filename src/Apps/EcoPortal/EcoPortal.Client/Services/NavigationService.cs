@@ -27,6 +27,7 @@ public interface INavigationService
     NavigationTab CurrentTab { get; }
     bool CanGoBack { get; }
     NavigationDirection Direction { get; }
+    string? PageTitle { get; }
 
     // Navigation methods - these are the ONLY ways to navigate
     void NavigateTo(string uri);
@@ -37,6 +38,9 @@ public interface INavigationService
 
     // For deep link handling - pages can set their logical parent
     void SetParentPath(string parentPath);
+
+    // For page title in app bar
+    void SetPageTitle(string? title);
 
     event Action? OnStateChanged;
 }
@@ -49,6 +53,7 @@ public sealed class NavigationService : INavigationService, IDisposable
     private NavigationTab _currentTab;
     private int _depth;                    // 0 = at tab root
     private string? _parentPath;           // For deep link back navigation
+    private string? _pageTitle;            // Current page title for app bar
     private bool _isNavigatingBack;
     private NavigationDirection _direction = NavigationDirection.None;
 
@@ -73,6 +78,8 @@ public sealed class NavigationService : INavigationService, IDisposable
     public bool CanGoBack => _depth > 0 || _parentPath is not null;
 
     public NavigationDirection Direction => _direction;
+
+    public string? PageTitle => _pageTitle;
 
     public event Action? OnStateChanged;
 
@@ -127,6 +134,13 @@ public sealed class NavigationService : INavigationService, IDisposable
         }
     }
 
+    public void SetPageTitle(string? title)
+    {
+        if (_pageTitle == title) return;
+        _pageTitle = title;
+        OnStateChanged?.Invoke();
+    }
+
     private void OnLocationChanged(object? sender, LocationChangedEventArgs e)
     {
         var newPath = GetPathFromUri(e.Location);
@@ -160,6 +174,7 @@ public sealed class NavigationService : INavigationService, IDisposable
         }
 
         _parentPath = null;  // Will be set by new page if needed
+        _pageTitle = null;   // Will be set by new page if needed
         OnStateChanged?.Invoke();
     }
 
