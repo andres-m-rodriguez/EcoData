@@ -8,7 +8,7 @@ EcoData aggregates and manages environmental datasets including:
 
 - **Sensors** - Real-time water quality and environmental monitoring
 - **Organizations** - Multi-tenant organization management
-- **Locations** - Geographic data for Mexican states and municipalities
+- **Locations** - Geographic data for states and puerto rican municipalities
 
 ## Architecture
 
