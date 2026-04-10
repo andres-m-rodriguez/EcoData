@@ -4,12 +4,14 @@
 <div class="page-container mt-4 mb-8">
     @if (!string.IsNullOrEmpty(ParentPath))
     {
-        <MudButton Variant="Variant.Text"
-                   StartIcon="@Icons.Material.Filled.ArrowBack"
-                   OnClick="GoBack"
-                   Class="d-none d-sm-inline-flex mb-2">
-            Back
-        </MudButton>
+        <MudHidden Breakpoint="Breakpoint.Xs">
+            <MudButton Variant="Variant.Text"
+                       StartIcon="@Icons.Material.Filled.ArrowBack"
+                       OnClick="GoBack"
+                       Class="mb-2">
+                Back
+            </MudButton>
+        </MudHidden>
     }
 
     @if (!string.IsNullOrEmpty(Title) || Actions is not null)
