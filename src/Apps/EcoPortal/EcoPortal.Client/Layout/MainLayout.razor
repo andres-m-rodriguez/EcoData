@@ -37,8 +37,17 @@
             }
         </div>
 
-        @* Desktop: Always show logo *@
-        <span class="logo-text ml-2 d-none d-md-inline">Ecoportal</span>
+        @* Desktop: Logo + Page Title *@
+        <div class="d-none d-md-flex align-center">
+            <span class="logo-text ml-2">Ecoportal</span>
+            @if (!IsHomePage && Navigation.PageTitle is not null)
+            {
+                <MudDivider Vertical="true" FlexItem="true" Class="mx-4 my-3" />
+                <MudText Typo="Typo.h6" Color="Color.Primary" Style="font-weight: 600;">
+                    @Navigation.PageTitle
+                </MudText>
+            }
+        </div>
 
         @* Desktop: Navigation links (hidden on sm-) *@
         <div class="d-none d-md-flex align-center ml-6 gap-4">
