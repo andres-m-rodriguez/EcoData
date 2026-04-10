@@ -237,10 +237,11 @@
 
 ::deep .monitor-card {
     background: white !important;
-    padding: 2.5rem !important;
+    padding: 0 !important;
     border-radius: 0.75rem !important;
     border: 1px solid rgba(193, 200, 194, 0.2) !important;
     height: 100%;
+    overflow: hidden;
     transition: transform 0.3s ease, box-shadow 0.3s ease !important;
 }
 
@@ -249,35 +250,32 @@
     box-shadow: 0 20px 40px -12px rgba(0, 0, 0, 0.1) !important;
 }
 
-.monitor-icon {
-    width: 3.5rem;
-    height: 3.5rem;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-bottom: 2rem;
-    transition: background-color 0.3s ease, color 0.3s ease;
+.monitor-image-container {
+    width: 100%;
+    height: 200px;
+    overflow: hidden;
 }
 
-.monitor-icon.water {
-    background: rgba(0, 92, 145, 0.1);
-    color: #005c91;
+.monitor-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    filter: grayscale(100%);
+    transition: filter 0.7s ease;
 }
 
-.monitor-icon.air {
-    background: rgba(0, 92, 145, 0.1);
-    color: #005c91;
+/* Scroll reveal - when card is in view, remove grayscale */
+::deep .monitor-card.in-view .monitor-image {
+    filter: grayscale(0%);
 }
 
-.monitor-icon.bio {
-    background: rgba(0, 92, 145, 0.1);
-    color: #005c91;
+/* Also enable color on hover for desktop */
+::deep .monitor-card:hover .monitor-image {
+    filter: grayscale(0%);
 }
 
-::deep .monitor-card:hover .monitor-icon {
-    background: var(--mud-palette-secondary);
-    color: white;
+.monitor-card-content {
+    padding: 1.5rem;
 }
 
 .monitor-card-title {
