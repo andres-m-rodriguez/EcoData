@@ -1,0 +1,70 @@
+@namespace EcoData.NativeUi
+
+<div class="@GetBadgeClass()">
+    @if (ShowDot)
+    {
+        <span class="@GetDotClass()"></span>
+    }
+    <span class="nui-status-text">@Text</span>
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public string Text { get; set; } = default!;
+
+    [Parameter]
+    public NuiStatusType Status { get; set; } = NuiStatusType.Default;
+
+    [Parameter]
+    public bool ShowDot { get; set; }
+
+    [Parameter]
+    public bool Animate { get; set; }
+
+    [Parameter]
+    public NuiStatusSize Size { get; set; } = NuiStatusSize.Medium;
+
+    [Parameter]
+    public string? Class { get; set; }
+
+    private string GetBadgeClass()
+    {
+        var statusClass = Status switch
+        {
+            NuiStatusType.Active => "nui-status-active",
+            NuiStatusType.Inactive => "nui-status-inactive",
+            NuiStatusType.Pending => "nui-status-pending",
+            NuiStatusType.Success => "nui-status-success",
+            NuiStatusType.Warning => "nui-status-warning",
+            NuiStatusType.Error => "nui-status-error",
+            _ => "nui-status-default"
+        };
+
+        var sizeClass = Size switch
+        {
+            NuiStatusSize.Small => "nui-status-sm",
+            NuiStatusSize.Large => "nui-status-lg",
+            _ => ""
+        };
+
+        var classes = new List<string> { "nui-status-badge", statusClass };
+
+        if (!string.IsNullOrEmpty(sizeClass))
+            classes.Add(sizeClass);
+
+        if (!string.IsNullOrEmpty(Class))
+            classes.Add(Class);
+
+        return string.Join(" ", classes);
+    }
+
+    private string GetDotClass()
+    {
+        var classes = new List<string> { "nui-status-dot" };
+
+        if (Animate)
+            classes.Add("nui-status-dot-animate");
+
+        return string.Join(" ", classes);
+    }
+}

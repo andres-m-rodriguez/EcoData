@@ -1,0 +1,73 @@
+.nui-iconbox {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+}
+
+/* Size variants */
+.nui-iconbox-sm {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+}
+
+.nui-iconbox-lg {
+    width: 52px;
+    height: 52px;
+    border-radius: 12px;
+}
+
+.nui-iconbox-xl {
+    width: 64px;
+    height: 64px;
+    border-radius: 16px;
+}
+
+/* Shape variants */
+.nui-iconbox-circle {
+    border-radius: 50%;
+}
+
+.nui-iconbox-square {
+    border-radius: 0;
+}
+
+/* Color variants */
+.nui-iconbox-default {
+    background-color: var(--mud-palette-background-grey);
+    color: var(--mud-palette-text-secondary);
+}
+
+.nui-iconbox-primary {
+    background-color: var(--mud-palette-primary-lighten);
+    color: var(--mud-palette-primary);
+}
+
+.nui-iconbox-secondary {
+    background-color: var(--mud-palette-secondary-lighten);
+    color: var(--mud-palette-secondary);
+}
+
+.nui-iconbox-info {
+    background-color: var(--mud-palette-info-lighten);
+    color: var(--mud-palette-info);
+}
+
+.nui-iconbox-success {
+    background-color: var(--mud-palette-success-lighten);
+    color: var(--mud-palette-success);
+}
+
+.nui-iconbox-warning {
+    background-color: var(--mud-palette-warning-lighten);
+    color: var(--mud-palette-warning);
+}
+
+.nui-iconbox-error {
+    background-color: var(--mud-palette-error-lighten);
+    color: var(--mud-palette-error);
+}
