@@ -19,7 +19,7 @@
 
 <PageTitle>Configure Sensor - EcoData</PageTitle>
 
-<EcoDataPageLayout Title="Configure Sensor" FallbackUrl="@($"/sensors/{SensorId}")">
+<EcoDataPageLayout Title="Configure Sensor" ParentPath="@($"/sensors/{SensorId}")">
     <ChildContent>
         @if (LoadCommand.IsLoading)
         {
@@ -347,7 +347,7 @@
         );
     }
 
-    private void NavigateToEdit() => Navigation.NavigateTo($"/sensors/{SensorId}/edit", $"/sensors/{SensorId}/configure");
+    private void NavigateToEdit() => Navigation.NavigateTo($"/sensors/{SensorId}/edit");
 
     private Color GetHealthStatusColor() => _healthStatus?.Status switch
     {

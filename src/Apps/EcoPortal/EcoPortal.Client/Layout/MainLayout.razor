@@ -8,7 +8,6 @@
 @inject AuthStateService AuthState
 @inject ClientAuthStateProvider AuthStateProvider
 @inject INavigationService Navigation
-@inject NavigationManager NavigationManager
 @implements IDisposable
 
 <MudThemeProvider Theme="AppThemes.Azure" IsDarkMode="_isDarkMode" />
@@ -112,29 +111,29 @@
 @* Mobile Bottom Navigation (hidden on md+) - Outside MudLayout for stability *@
 <div class="d-md-none bottom-nav">
     <MudStack Row="true" Justify="Justify.SpaceAround" AlignItems="AlignItems.Center" Class="bottom-nav-container">
-        <MudButton Variant="Variant.Text" Color="@GetBottomNavColor("/")" Class="bottom-nav-item"
-                   OnClick="@(() => NavigateToBottomNav("/"))">
+        <MudButton Variant="Variant.Text" Color="@GetBottomNavColor(NavigationTab.Home)" Class="bottom-nav-item"
+                   OnClick="@(() => NavigateToBottomNav(NavigationTab.Home))">
             <MudStack AlignItems="AlignItems.Center" Spacing="0">
                 <MudIcon Icon="@Icons.Material.Filled.Home" Size="Size.Medium" />
                 <MudText Typo="Typo.caption">Home</MudText>
             </MudStack>
         </MudButton>
-        <MudButton Variant="Variant.Text" Color="@GetBottomNavColor("/monitor")" Class="bottom-nav-item"
-                   OnClick="@(() => NavigateToBottomNav("/monitor"))">
+        <MudButton Variant="Variant.Text" Color="@GetBottomNavColor(NavigationTab.Monitor)" Class="bottom-nav-item"
+                   OnClick="@(() => NavigateToBottomNav(NavigationTab.Monitor))">
             <MudStack AlignItems="AlignItems.Center" Spacing="0">
                 <MudIcon Icon="@Icons.Material.Filled.Sensors" Size="Size.Medium" />
                 <MudText Typo="Typo.caption">Monitor</MudText>
             </MudStack>
         </MudButton>
-        <MudButton Variant="Variant.Text" Color="@GetBottomNavColor("/orgs")" Class="bottom-nav-item"
-                   OnClick="@(() => NavigateToBottomNav("/orgs"))">
+        <MudButton Variant="Variant.Text" Color="@GetBottomNavColor(NavigationTab.Orgs)" Class="bottom-nav-item"
+                   OnClick="@(() => NavigateToBottomNav(NavigationTab.Orgs))">
             <MudStack AlignItems="AlignItems.Center" Spacing="0">
                 <MudIcon Icon="@Icons.Material.Filled.Groups" Size="Size.Medium" />
                 <MudText Typo="Typo.caption">Orgs</MudText>
             </MudStack>
         </MudButton>
-        <MudButton Variant="Variant.Text" Color="@GetBottomNavColor("/account")" Class="bottom-nav-item"
-                   OnClick="@(() => NavigateToBottomNav("/account"))">
+        <MudButton Variant="Variant.Text" Color="@GetBottomNavColor(NavigationTab.Account)" Class="bottom-nav-item"
+                   OnClick="@(() => NavigateToBottomNav(NavigationTab.Account))">
             <MudStack AlignItems="AlignItems.Center" Spacing="0">
                 <MudIcon Icon="@Icons.Material.Filled.Person" Size="Size.Medium" />
                 <MudText Typo="Typo.caption">Account</MudText>
@@ -148,14 +147,7 @@
     private string _pageTransitionClass = "";
     private string _navigationKey = Guid.NewGuid().ToString();
 
-    private bool IsHomePage
-    {
-        get
-        {
-            var uri = NavigationManager.ToBaseRelativePath(NavigationManager.Uri);
-            return string.IsNullOrEmpty(uri) || uri == "/" || uri.StartsWith("?") || uri.StartsWith("#");
-        }
-    }
+    private bool IsHomePage => Navigation.CurrentTab == NavigationTab.Home;
 
     private async Task NavigateBackAsync()
     {
@@ -167,11 +159,15 @@
         AuthState.SetAuthStateProvider(AuthStateProvider);
         AuthState.OnAuthStateChanged += HandleAuthStateChanged;
         Navigation.OnStateChanged += HandleNavigationStateChanged;
-        NavigationManager.LocationChanged += HandleLocationChanged;
         await AuthState.InitializeAsync();
     }
 
-    private void HandleLocationChanged(object? sender, Microsoft.AspNetCore.Components.Routing.LocationChangedEventArgs e)
+    private void HandleAuthStateChanged()
+    {
+        InvokeAsync(StateHasChanged);
+    }
+
+    private void HandleNavigationStateChanged()
     {
         _pageTransitionClass = Navigation.Direction switch
         {
@@ -183,16 +179,6 @@
         InvokeAsync(StateHasChanged);
     }
 
-    private void HandleAuthStateChanged()
-    {
-        InvokeAsync(StateHasChanged);
-    }
-
-    private void HandleNavigationStateChanged()
-    {
-        InvokeAsync(StateHasChanged);
-    }
-
     private string GetUserInitial()
     {
         var name = AuthState.CurrentUser?.DisplayName;
@@ -201,36 +187,22 @@
 
     private string GetNavLinkClass(string path)
     {
-        var currentUri = NavigationManager.ToBaseRelativePath(NavigationManager.Uri);
+        var currentPath = Navigation.CurrentPath;
         var isActive = path == "/"
-            ? string.IsNullOrEmpty(currentUri) || currentUri == "/"
-            : currentUri.StartsWith(path.TrimStart('/'), StringComparison.OrdinalIgnoreCase);
+            ? currentPath == "/"
+            : currentPath.StartsWith(path, StringComparison.OrdinalIgnoreCase);
 
         return isActive ? "nav-link-active" : "nav-link";
     }
 
-    private Color GetBottomNavColor(string path)
+    private Color GetBottomNavColor(NavigationTab tab)
     {
-        var currentUri = NavigationManager.ToBaseRelativePath(NavigationManager.Uri);
-
-        var isActive = path switch
-        {
-            "/" => string.IsNullOrEmpty(currentUri) || currentUri == "/",
-            "/monitor" => currentUri.StartsWith("monitor", StringComparison.OrdinalIgnoreCase)
-                       || currentUri.StartsWith("sensors", StringComparison.OrdinalIgnoreCase)
-                       || currentUri.StartsWith("alerts", StringComparison.OrdinalIgnoreCase),
-            "/orgs" => currentUri.StartsWith("orgs", StringComparison.OrdinalIgnoreCase)
-                    || currentUri.StartsWith("organizations", StringComparison.OrdinalIgnoreCase)
-                    || currentUri.StartsWith("access-requests", StringComparison.OrdinalIgnoreCase),
-            _ => currentUri.StartsWith(path.TrimStart('/'), StringComparison.OrdinalIgnoreCase)
-        };
-
-        return isActive ? Color.Primary : Color.Default;
+        return Navigation.CurrentTab == tab ? Color.Primary : Color.Default;
     }
 
-    private void NavigateToBottomNav(string path)
+    private void NavigateToBottomNav(NavigationTab tab)
     {
-        NavigationManager.NavigateTo(path);
+        Navigation.NavigateToTab(tab);
     }
 
     [RelayCommand]
@@ -248,6 +220,5 @@
     {
         AuthState.OnAuthStateChanged -= HandleAuthStateChanged;
         Navigation.OnStateChanged -= HandleNavigationStateChanged;
-        NavigationManager.LocationChanged -= HandleLocationChanged;
     }
 }

@@ -11,126 +11,182 @@ public enum NavigationDirection
     Back
 }
 
+public enum NavigationTab
+{
+    Home,
+    Monitor,
+    Orgs,
+    Account
+}
+
 public interface INavigationService
 {
+    // State (read-only)
     string CurrentUri { get; }
     string CurrentPath { get; }
-    string? ReturnUrl { get; }
+    NavigationTab CurrentTab { get; }
+    bool CanGoBack { get; }
     NavigationDirection Direction { get; }
 
-    void NavigateTo(string uri, bool replace = false);
-    void NavigateTo(string uri, string returnUrl);
-    Task GoBackAsync(string? fallback = null);
-    void GoBack(string? fallback = null);
+    // Navigation methods - these are the ONLY ways to navigate
+    void NavigateTo(string uri);
+    void NavigateWithReplace(string uri);
+    void NavigateToTab(NavigationTab tab);
+    Task GoBackAsync();
+    void GoBack();
 
-    void SetFallback(string? path);
-    void SetReturnUrlOrFallback(string fallback);
-    bool CanGoBack { get; }
+    // For deep link handling - pages can set their logical parent
+    void SetParentPath(string parentPath);
 
     event Action? OnStateChanged;
 }
 
 public sealed class NavigationService : INavigationService, IDisposable
 {
-    private readonly NavigationManager _navigationManager;
-    private readonly IJSRuntime _jsRuntime;
-    private readonly List<string> _history = [];
-    private string? _fallbackPath;
-    private string? _returnUrl;
+    private readonly NavigationManager _nav;  // Private, never exposed
+    private readonly IJSRuntime _js;
+
+    private NavigationTab _currentTab;
+    private int _depth;                    // 0 = at tab root
+    private string? _parentPath;           // For deep link back navigation
     private bool _isNavigatingBack;
     private NavigationDirection _direction = NavigationDirection.None;
 
     public NavigationService(NavigationManager navigationManager, IJSRuntime jsRuntime)
     {
-        _navigationManager = navigationManager;
-        _jsRuntime = jsRuntime;
-        _navigationManager.LocationChanged += OnLocationChanged;
+        _nav = navigationManager;
+        _js = jsRuntime;
+        _nav.LocationChanged += OnLocationChanged;
 
         // Initialize with current path
-        _history.Add(GetPathFromUri(_navigationManager.Uri));
+        var currentPath = GetPathFromUri(_nav.Uri);
+        _currentTab = GetTabFromPath(currentPath);
+        _depth = IsTabRoot(currentPath) ? 0 : 1; // Deep link starts at depth 1
     }
 
-    public string CurrentUri => _navigationManager.Uri;
+    public string CurrentUri => _nav.Uri;
 
-    public string CurrentPath => GetPathFromUri(_navigationManager.Uri);
+    public string CurrentPath => GetPathFromUri(_nav.Uri);
 
-    public string? ReturnUrl => _returnUrl;
+    public NavigationTab CurrentTab => _currentTab;
 
-    public bool CanGoBack => _history.Count > 1 || _fallbackPath is not null;
+    public bool CanGoBack => _depth > 0 || _parentPath is not null;
 
     public NavigationDirection Direction => _direction;
 
     public event Action? OnStateChanged;
 
-    public void NavigateTo(string uri, bool replace = false)
+    public void NavigateTo(string uri)
     {
-        _returnUrl = null; // Clear return URL for regular navigation
-        _navigationManager.NavigateTo(uri, replace: replace);
+        _parentPath = null;  // Clear - will be set by page if needed
+        _nav.NavigateTo(uri);
     }
 
-    public void NavigateTo(string uri, string returnUrl)
+    public void NavigateWithReplace(string uri)
     {
-        _returnUrl = returnUrl;
-        _navigationManager.NavigateTo(uri);
+        // Don't increment depth on replace
+        _nav.NavigateTo(uri, replace: true);
     }
 
-    public async Task GoBackAsync(string? fallback = null)
+    public void NavigateToTab(NavigationTab tab)
     {
-        // Prioritize explicit fallback over browser history
-        // This prevents going back to forms after create operations
-        var fallbackPath = fallback ?? _fallbackPath;
-        if (fallbackPath is not null)
+        _depth = 0;
+        _parentPath = null;
+        _currentTab = tab;
+        _nav.NavigateTo(GetTabRoot(tab));
+    }
+
+    public async Task GoBackAsync()
+    {
+        if (_depth > 0)
         {
-            _navigationManager.NavigateTo(fallbackPath);
-        }
-        else if (_history.Count > 1)
-        {
-            // Only use browser history when no fallback is set
             _isNavigatingBack = true;
-            await _jsRuntime.InvokeVoidAsync("history.back");
+            await _js.InvokeVoidAsync("history.back");
         }
+        else if (_parentPath is not null)
+        {
+            // Deep link - go to logical parent
+            _isNavigatingBack = true;
+            _nav.NavigateTo(_parentPath);
+        }
+        // At tab root with no parent - do nothing (button hidden anyway)
     }
 
-    public void GoBack(string? fallback = null)
+    public void GoBack()
     {
-        _ = GoBackAsync(fallback);
+        _ = GoBackAsync();
     }
 
-    public void SetFallback(string? path)
+    public void SetParentPath(string parentPath)
     {
-        _fallbackPath = path;
-        OnStateChanged?.Invoke();
-    }
-
-    public void SetReturnUrlOrFallback(string fallback)
-    {
-        _fallbackPath = _returnUrl ?? fallback;
-        _returnUrl = null;
-        OnStateChanged?.Invoke();
+        // Called by pages on init for deep link support
+        if (_depth == 0)
+        {
+            _parentPath = parentPath;
+            OnStateChanged?.Invoke();
+        }
     }
 
     private void OnLocationChanged(object? sender, LocationChangedEventArgs e)
     {
         var newPath = GetPathFromUri(e.Location);
+        var newTab = GetTabFromPath(newPath);
+        var isTabRoot = IsTabRoot(newPath);
 
-        if (_isNavigatingBack)
+        if (newTab != _currentTab)
         {
-            // Remove the current page from history when navigating back
-            if (_history.Count > 0)
-            {
-                _history.RemoveAt(_history.Count - 1);
-            }
-            _isNavigatingBack = false;
+            // Tab changed
+            _currentTab = newTab;
+            _depth = isTabRoot ? 0 : 1;  // Deep link = depth 1
+            _direction = NavigationDirection.Forward;
+        }
+        else if (_isNavigatingBack)
+        {
+            _depth = Math.Max(0, _depth - 1);
             _direction = NavigationDirection.Back;
+            _isNavigatingBack = false;
+        }
+        else if (!isTabRoot)
+        {
+            // Forward navigation within tab
+            _depth++;
+            _direction = NavigationDirection.Forward;
         }
         else
         {
-            // Add new path to history for forward navigation
-            _history.Add(newPath);
+            // Navigated to tab root (not back) - reset depth
+            _depth = 0;
             _direction = NavigationDirection.Forward;
         }
 
+        _parentPath = null;  // Will be set by new page if needed
         OnStateChanged?.Invoke();
+    }
+
+    private static NavigationTab GetTabFromPath(string path) => path switch
+    {
+        "/" or "" => NavigationTab.Home,
+        _ when path.StartsWith("/monitor") || path.StartsWith("/sensors") || path.StartsWith("/alerts")
+            => NavigationTab.Monitor,
+        _ when path.StartsWith("/orgs") || path.StartsWith("/organizations") || path.StartsWith("/access-requests")
+            => NavigationTab.Orgs,
+        _ when path.StartsWith("/account") || path.StartsWith("/login") || path.StartsWith("/register")
+            => NavigationTab.Account,
+        _ => NavigationTab.Home
+    };
+
+    private static string GetTabRoot(NavigationTab tab) => tab switch
+    {
+        NavigationTab.Home => "/",
+        NavigationTab.Monitor => "/monitor",
+        NavigationTab.Orgs => "/orgs",
+        NavigationTab.Account => "/account",
+        _ => "/"
+    };
+
+    private static bool IsTabRoot(string path)
+    {
+        return path is "/" or "" or "/monitor" or "/orgs" or "/account";
     }
 
     private static string GetPathFromUri(string uri)
@@ -141,6 +197,6 @@ public sealed class NavigationService : INavigationService, IDisposable
 
     public void Dispose()
     {
-        _navigationManager.LocationChanged -= OnLocationChanged;
+        _nav.LocationChanged -= OnLocationChanged;
     }
 }

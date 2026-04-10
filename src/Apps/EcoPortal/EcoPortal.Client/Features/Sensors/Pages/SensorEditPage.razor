@@ -17,7 +17,7 @@
 
 <PageTitle>Edit Sensor - EcoData</PageTitle>
 
-<EcoDataPageLayout Title="Edit Sensor" FallbackUrl="@($"/sensors/{SensorId}")">
+<EcoDataPageLayout Title="Edit Sensor" ParentPath="@($"/sensors/{SensorId}")">
     <ChildContent>
         @if (LoadCommand.IsLoading)
         {
@@ -128,7 +128,7 @@
             _ =>
             {
                 Snackbar.Add("Sensor updated successfully", Severity.Success);
-                Navigation.NavigateTo($"/sensors/{SensorId}", replace: true);
+                Navigation.NavigateWithReplace($"/sensors/{SensorId}");
             },
             problem => _errorMessage = problem.Detail ?? "Failed to update sensor"
         );

@@ -22,7 +22,7 @@
 
 <PageTitle>Members - @(_organization?.Name ?? "Organization") - EcoData</PageTitle>
 
-<EcoDataPageLayout Title="Team" FallbackUrl="@($"/organizations/{OrganizationId}")">
+<EcoDataPageLayout Title="Team" ParentPath="@($"/organizations/{OrganizationId}")">
     <Actions>
         <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Inbox"
                    Href="@($"/organizations/{OrganizationId}/requests")">
