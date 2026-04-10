@@ -251,40 +251,6 @@
         </MudContainer>
     </section>
 
-    @* Live Data Teaser *@
-    <section class="live-data-section">
-        <MudContainer MaxWidth="MaxWidth.Large">
-            <MudGrid Spacing="6">
-                <MudItem xs="12" lg="6" Class="order-2 order-lg-1">
-                    <div class="map-preview">
-                        <PuertoRicoMiniMap />
-                        <div class="map-overlay">
-                            <div class="map-badge live">
-                                <span class="pulse-dot"></span>
-                                LIVE SENSOR NETWORK
-                            </div>
-                            <div class="map-badge count">248 ACTIVE NODES</div>
-                        </div>
-                    </div>
-                </MudItem>
-                <MudItem xs="12" lg="6" Class="order-1 order-lg-2">
-                    <div class="section-header">
-                        <span class="section-label">Real-Time Visualization</span>
-                        <h2 class="section-title">Explore the Island's Vitals</h2>
-                    </div>
-                    <MudText Typo="Typo.body1" Color="Color.Secondary" Class="mb-6">
-                        Our interactive map allows you to drill down into specific regions of
-                        Puerto Rico, viewing live atmospheric and water metrics from any connected station.
-                    </MudText>
-                    <MudButton Variant="Variant.Filled" Color="Color.Secondary" StartIcon="@Icons.Material.Filled.Map"
-                               Href="@SensorsPage.Path" Size="Size.Large">
-                        View All Active Sensors
-                    </MudButton>
-                </MudItem>
-            </MudGrid>
-        </MudContainer>
-    </section>
-
 </div>
 
 @code {
