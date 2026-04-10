@@ -453,6 +453,15 @@
         font-size: 1rem;
     }
 
+    .hero-content {
+        display: flex;
+        flex-direction: column;
+    }
+
+    ::deep .hero-link {
+        align-self: flex-end;
+    }
+
     .monitor-section,
     .sources-section,
     .researchers-section,
