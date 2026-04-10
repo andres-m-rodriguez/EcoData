@@ -26,60 +26,32 @@
     <DataAnnotationsValidator />
 
     <MudStack Spacing="3">
-        <MudTextField @bind-Value="_model.DisplayName"
-                      Label="Display Name"
-                      Placeholder="Enter your name"
-                      Adornment="Adornment.Start"
-                      AdornmentIcon="@Icons.Material.Filled.Person"
-                      Variant="Variant.Outlined"
-                      Required="true"
-                      RequiredError="Display name is required"
+        <MudTextField @bind-Value="_model.DisplayName" Label="Display Name" Placeholder="Enter your name"
+                      Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Person" Variant="Variant.Outlined"
+                      Required="true" RequiredError="Display name is required" Disabled="RegisterCommand.IsLoading" />
+
+        <MudTextField @bind-Value="_model.Email" Label="Email" Placeholder="Enter your email"
+                      InputType="InputType.Email" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Email"
+                      Variant="Variant.Outlined" Required="true" RequiredError="Email is required"
                       Disabled="RegisterCommand.IsLoading" />
 
-        <MudTextField @bind-Value="_model.Email"
-                      Label="Email"
-                      Placeholder="Enter your email"
-                      InputType="InputType.Email"
-                      Adornment="Adornment.Start"
-                      AdornmentIcon="@Icons.Material.Filled.Email"
-                      Variant="Variant.Outlined"
-                      Required="true"
-                      RequiredError="Email is required"
-                      Disabled="RegisterCommand.IsLoading" />
-
-        <MudTextField @bind-Value="_model.Password"
-                      Label="Password"
-                      Placeholder="Create a password"
-                      InputType="@(_showPassword ? InputType.Text : InputType.Password)"
-                      Adornment="Adornment.End"
-                      AdornmentIcon="@(_showPassword ? Icons.Material.Filled.VisibilityOff : Icons.Material.Filled.Visibility)"
-                      OnAdornmentClick="() => _showPassword = !_showPassword"
-                      AdornmentAriaLabel="Toggle password visibility"
-                      Variant="Variant.Outlined"
-                      Required="true"
-                      RequiredError="Password is required"
+        <MudTextField @bind-Value="_model.Password" Label="Password" Placeholder="Create a password"
+                      InputType="@(_showPassword? InputType.Text: InputType.Password)" Adornment="Adornment.End"
+                      AdornmentIcon="@(_showPassword? Icons.Material.Filled.VisibilityOff : Icons.Material.Filled.Visibility)"
+                      OnAdornmentClick="() => _showPassword = !_showPassword" AdornmentAriaLabel="Toggle password visibility"
+                      Variant="Variant.Outlined" Required="true" RequiredError="Password is required"
                       HelperText="At least 8 characters with uppercase, lowercase, and a number"
                       Disabled="RegisterCommand.IsLoading" />
 
-        <MudTextField @bind-Value="_model.ConfirmPassword"
-                      Label="Confirm Password"
-                      Placeholder="Confirm your password"
-                      InputType="@(_showConfirmPassword ? InputType.Text : InputType.Password)"
-                      Adornment="Adornment.End"
-                      AdornmentIcon="@(_showConfirmPassword ? Icons.Material.Filled.VisibilityOff : Icons.Material.Filled.Visibility)"
+        <MudTextField @bind-Value="_model.ConfirmPassword" Label="Confirm Password" Placeholder="Confirm your password"
+                      InputType="@(_showConfirmPassword? InputType.Text: InputType.Password)" Adornment="Adornment.End"
+                      AdornmentIcon="@(_showConfirmPassword? Icons.Material.Filled.VisibilityOff : Icons.Material.Filled.Visibility)"
                       OnAdornmentClick="() => _showConfirmPassword = !_showConfirmPassword"
-                      AdornmentAriaLabel="Toggle password visibility"
-                      Variant="Variant.Outlined"
-                      Required="true"
-                      RequiredError="Please confirm your password"
-                      Disabled="RegisterCommand.IsLoading" />
+                      AdornmentAriaLabel="Toggle password visibility" Variant="Variant.Outlined" Required="true"
+                      RequiredError="Please confirm your password" Disabled="RegisterCommand.IsLoading" />
 
-        <MudButton ButtonType="ButtonType.Submit"
-                   Variant="Variant.Filled"
-                   Color="Color.Primary"
-                   FullWidth="true"
-                   Disabled="RegisterCommand.IsLoading"
-                   Class="mt-2">
+        <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" FullWidth="true"
+                   Disabled="RegisterCommand.IsLoading" Class="mt-2">
             @if (RegisterCommand.IsLoading)
             {
                 <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />

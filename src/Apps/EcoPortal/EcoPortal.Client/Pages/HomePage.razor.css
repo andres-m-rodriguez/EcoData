@@ -526,6 +526,45 @@
 
     ::deep .hero-btn,
     ::deep .hero-btn-secondary {
-        width: 100%;
+        width: auto;
+        padding: 0.75rem 1.5rem !important;
+        font-size: 0.875rem !important;
+    }
+
+    /* Mobile text size reductions */
+    .hero-label {
+        font-size: 0.625rem;
+    }
+
+    .hero-title {
+        font-size: 1.75rem;
+        margin-bottom: 1rem;
+    }
+
+    .hero-description {
+        font-size: 0.95rem;
+        line-height: 1.6;
+        margin-bottom: 1.5rem;
+    }
+
+    .mission-quote {
+        font-size: 0.95rem;
+        line-height: 1.7;
+    }
+
+    .section-label {
+        font-size: 0.625rem;
+    }
+
+    .section-title {
+        font-size: 1.35rem;
+    }
+
+    .monitor-card-title {
+        font-size: 1.2rem;
+    }
+
+    .floating-card-value {
+        font-size: 1.25rem;
     }
 }

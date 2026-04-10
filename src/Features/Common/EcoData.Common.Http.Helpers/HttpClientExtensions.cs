@@ -8,7 +8,8 @@ public static class HttpClientExtensions
     public static async Task<Result<T>> TryGetFromJsonAsync<T>(
         this HttpClient httpClient,
         string? requestUri,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default
+    )
     {
         try
         {
@@ -20,7 +21,8 @@ public static class HttpClientExtensions
         }
         catch (HttpRequestException ex)
         {
-            return CommonErrors.External("Http", ex.Message)
+            return CommonErrors
+                .External("Http", ex.Message)
                 .WithMetadata("StatusCode", ex.StatusCode?.ToString() ?? "Unknown");
         }
     }
@@ -28,7 +30,8 @@ public static class HttpClientExtensions
     public static async Task<Result<T>> TryGetFromJsonAsync<T>(
         this HttpClient httpClient,
         Uri? requestUri,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default
+    )
     {
         try
         {
@@ -40,7 +43,8 @@ public static class HttpClientExtensions
         }
         catch (HttpRequestException ex)
         {
-            return CommonErrors.External("Http", ex.Message)
+            return CommonErrors
+                .External("Http", ex.Message)
                 .WithMetadata("StatusCode", ex.StatusCode?.ToString() ?? "Unknown");
         }
     }

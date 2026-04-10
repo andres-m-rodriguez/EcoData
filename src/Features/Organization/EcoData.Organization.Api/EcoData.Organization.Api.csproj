@@ -19,5 +19,6 @@
     <ProjectReference Include="..\..\Identity\EcoData.Identity.Contracts\EcoData.Identity.Contracts.csproj" />
     <ProjectReference Include="..\..\Identity\EcoData.Identity.Application.Server\EcoData.Identity.Application.Server.csproj" />
     <ProjectReference Include="..\..\Sensors\EcoData.Sensors.DataAccess\EcoData.Sensors.DataAccess.csproj" />
+    <ProjectReference Include="..\..\Common\EcoData.Common.Messaging\EcoData.Common.Messaging.csproj" />
   </ItemGroup>
 </Project>
