@@ -16,9 +16,11 @@
 @using BlazingSingularity.Commands
 @using BlazingSingularity.Fetch
 @implements IDisposable
+@using EcoPortal.Client.Features.OrganizationAccessRequests.Dialogs
 @using OrgPermissions = EcoData.Organization.Contracts.Permissions
 @using SensorPermissions = EcoData.Sensors.Contracts.Permissions
 @inject IOrganizationHttpClient OrganizationClient
+@inject AuthStateService AuthState
 @inject ISensorHttpClient SensorClient
 @inject IOrganizationMemberHttpClient MemberClient
 @inject INavigationService Navigation
@@ -125,10 +127,23 @@
                                 </MudTooltip>
                                 <RequireOrganizationPermission Permission="@OrgPermissions.Organization.Update"
                                                                OrganizationId="Id">
-                                    <MudTooltip Text="Edit Organization">
-                                        <MudIconButton Icon="@Icons.Material.Outlined.Edit" Color="Color.Primary"
-                                                       Variant="Variant.Filled" Size="Size.Medium" OnClick="NavigateToEdit" />
-                                    </MudTooltip>
+                                    <Authorized>
+                                        <MudTooltip Text="Edit Organization">
+                                            <MudIconButton Icon="@Icons.Material.Outlined.Edit" Color="Color.Primary"
+                                                           Variant="Variant.Filled" Size="Size.Medium" OnClick="NavigateToEdit" />
+                                        </MudTooltip>
+                                    </Authorized>
+                                    <NotAuthorized>
+                                        @if (AuthState.IsAuthenticated)
+                                        {
+                                            <MudTooltip Text="Request to join this organization">
+                                                <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small"
+                                                           StartIcon="@Icons.Material.Outlined.PersonAdd" OnClick="OpenRequestAccessDialog">
+                                                    Request Access
+                                                </MudButton>
+                                            </MudTooltip>
+                                        }
+                                    </NotAuthorized>
                                 </RequireOrganizationPermission>
                                 <RequireOrganizationPermission Permission="@OrgPermissions.Organization.Delete"
                                                                OrganizationId="Id">
@@ -473,6 +488,29 @@
     public void Dispose()
     {
         _organizationFetch.Dispose();
+    }
+
+    private async Task OpenRequestAccessDialog()
+    {
+        if (_organizationFetch.Data is null) return;
+
+        var org = _organizationFetch.Data;
+        var orgForList = new OrganizationDtoForList(
+            Id: org.Id,
+            Name: org.Name,
+            ProfilePictureUrl: org.ProfilePictureUrl,
+            CardPictureUrl: org.CardPictureUrl,
+            AboutUs: org.AboutUs,
+            WebsiteUrl: org.WebsiteUrl,
+            CreatedAt: org.CreatedAt
+        );
+
+        var parameters = new DialogParameters<RequestAccessDialog>
+        {
+            { x => x.PreselectedOrganization, orgForList }
+        };
+
+        await DialogService.ShowAsync<RequestAccessDialog>("Request Access", parameters);
     }
 
     private void NavigateToEdit() => Navigation.NavigateTo($"/organizations/{Id}/edit", $"/organizations/{Id}");

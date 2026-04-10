@@ -1,0 +1,65 @@
+@namespace EcoData.NativeUi
+
+<div class="@GetContainerClass()">
+    @if (!string.IsNullOrEmpty(Icon))
+    {
+        <div class="nui-empty-icon">
+            <MudIcon Icon="@Icon" Size="Size.Large" Color="Color.Secondary" />
+        </div>
+    }
+    <MudText Typo="Typo.h6" Class="nui-empty-title">@Title</MudText>
+    @if (!string.IsNullOrEmpty(Description))
+    {
+        <MudText Typo="Typo.body2" Color="Color.Secondary" Class="nui-empty-description">
+            @Description
+        </MudText>
+    }
+    @if (ActionContent is not null)
+    {
+        <div class="nui-empty-action">
+            @ActionContent
+        </div>
+    }
+    else if (!string.IsNullOrEmpty(ActionText))
+    {
+        <MudButton Variant="Variant.Filled"
+                   Color="Color.Primary"
+                   OnClick="OnActionClick"
+                   Class="nui-empty-action-btn">
+            @ActionText
+        </MudButton>
+    }
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public string Title { get; set; } = default!;
+
+    [Parameter]
+    public string? Description { get; set; }
+
+    [Parameter]
+    public string? Icon { get; set; }
+
+    [Parameter]
+    public string? ActionText { get; set; }
+
+    [Parameter]
+    public EventCallback OnActionClick { get; set; }
+
+    [Parameter]
+    public RenderFragment? ActionContent { get; set; }
+
+    [Parameter]
+    public string? Class { get; set; }
+
+    private string GetContainerClass()
+    {
+        var classes = new List<string> { "nui-empty-state" };
+
+        if (!string.IsNullOrEmpty(Class))
+            classes.Add(Class);
+
+        return string.Join(" ", classes);
+    }
+}

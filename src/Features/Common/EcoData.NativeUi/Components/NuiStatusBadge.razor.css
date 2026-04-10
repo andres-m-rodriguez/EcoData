@@ -1,0 +1,97 @@
+.nui-status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    border-radius: 9999px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    line-height: 1;
+}
+
+/* Size variants */
+.nui-status-sm {
+    padding: 2px 8px;
+    font-size: 10px;
+    gap: 4px;
+}
+
+.nui-status-lg {
+    padding: 6px 14px;
+    font-size: 12px;
+    gap: 8px;
+}
+
+/* Status variants */
+.nui-status-default {
+    background-color: var(--mud-palette-background-grey);
+    color: var(--mud-palette-text-secondary);
+}
+
+.nui-status-active {
+    background-color: rgba(14, 165, 233, 0.1);
+    color: #0c4a6e;
+}
+
+.nui-status-inactive {
+    background-color: rgba(120, 113, 108, 0.1);
+    color: #78716c;
+}
+
+.nui-status-pending {
+    background-color: rgba(251, 191, 36, 0.1);
+    color: #92400e;
+}
+
+.nui-status-success {
+    background-color: var(--mud-palette-success-lighten);
+    color: var(--mud-palette-success-darken);
+}
+
+.nui-status-warning {
+    background-color: var(--mud-palette-warning-lighten);
+    color: var(--mud-palette-warning-darken);
+}
+
+.nui-status-error {
+    background-color: var(--mud-palette-error-lighten);
+    color: var(--mud-palette-error-darken);
+}
+
+/* Dot */
+.nui-status-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background-color: currentColor;
+}
+
+.nui-status-sm .nui-status-dot {
+    width: 5px;
+    height: 5px;
+}
+
+.nui-status-lg .nui-status-dot {
+    width: 8px;
+    height: 8px;
+}
+
+/* Animated dot */
+.nui-status-dot-animate {
+    animation: nui-pulse 2s infinite;
+}
+
+@keyframes nui-pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.5;
+    }
+}
+
+.nui-status-text {
+    line-height: 1;
+}
