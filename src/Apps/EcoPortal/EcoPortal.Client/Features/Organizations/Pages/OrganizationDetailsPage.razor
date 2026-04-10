@@ -29,6 +29,7 @@
 @inject IOrganizationCacheService OrganizationCache
 
 <PageTitle>@(_viewModel?.PageTitle ?? "Organization - EcoData")</PageTitle>
+<EcoPortalTitle Title="@(_viewModel?.Name ?? "")" />
 
 <EcoDataPageLayout ParentPath="/organizations/discover">
     <ChildContent>
