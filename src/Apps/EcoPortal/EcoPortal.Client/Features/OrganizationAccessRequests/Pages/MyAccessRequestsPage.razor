@@ -177,7 +177,7 @@
 
     private void NavigateToBrowse() => Navigation.NavigateTo("/organizations/discover");
 
-    private void NavigateToOrganization(Guid organizationId) => Navigation.NavigateTo($"/organizations/{organizationId}", "/organizations/requests");
+    private void NavigateToOrganization(Guid organizationId) => Navigation.NavigateTo($"/organizations/{organizationId}");
 
     private async Task OpenRequestAccessDialog()
     {

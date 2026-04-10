@@ -7,7 +7,7 @@
 
 <PageTitle>@(_sensor?.Name ?? "Sensor") - EcoData</PageTitle>
 
-<EcoDataPageLayout FallbackUrl="/sensors">
+<EcoDataPageLayout ParentPath="/sensors">
     <ChildContent>
         @if (_loading)
         {

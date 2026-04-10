@@ -7,7 +7,7 @@
 
 <PageTitle>Alert Details - EcoData</PageTitle>
 
-<EcoDataPageLayout FallbackUrl="/alerts">
+<EcoDataPageLayout ParentPath="/alerts">
     <ChildContent>
         @if (_loading)
         {
@@ -124,7 +124,7 @@
     {
         if (_alert is not null)
         {
-            Navigation.NavigateTo($"/sensors/{_alert.SensorId}", $"/alerts/{AlertId}");
+            Navigation.NavigateTo($"/sensors/{_alert.SensorId}");
         }
     }
 

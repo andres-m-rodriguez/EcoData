@@ -1,5 +1,6 @@
 @page "/not-found"
-@inject NavigationManager Navigation
+@using EcoPortal.Client.Services
+@inject INavigationService Navigation
 
 <PageTitle>Page Not Found - EcoData</PageTitle>
 
@@ -38,6 +39,6 @@
 @code {
     private void GoBack()
     {
-        Navigation.NavigateTo("/");
+        Navigation.NavigateToTab(NavigationTab.Home);
     }
 }

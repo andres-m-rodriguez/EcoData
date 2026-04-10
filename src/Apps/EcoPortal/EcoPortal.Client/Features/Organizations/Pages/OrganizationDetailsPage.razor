@@ -30,7 +30,7 @@
 
 <PageTitle>@(_viewModel?.PageTitle ?? "Organization - EcoData")</PageTitle>
 
-<EcoDataPageLayout FallbackUrl="/organizations/discover">
+<EcoDataPageLayout ParentPath="/organizations/discover">
     <ChildContent>
         @if (_viewModel is null && _organizationFetch.IsLoading)
         {
@@ -513,14 +513,12 @@
         await DialogService.ShowAsync<RequestAccessDialog>("Request Access", parameters);
     }
 
-    private void NavigateToEdit() => Navigation.NavigateTo($"/organizations/{Id}/edit", $"/organizations/{Id}");
-    private void NavigateToSensors() => Navigation.NavigateTo($"/organizations/{Id}/sensors", $"/organizations/{Id}");
-    private void NavigateToTeam() => Navigation.NavigateTo($"/organizations/{Id}/team", $"/organizations/{Id}");
-    private void NavigateToMap() => Navigation.NavigateTo($"/organizations/{Id}/map", $"/organizations/{Id}");
-    private void NavigateToSensor(SensorDtoForList sensor) => Navigation.NavigateTo($"/sensors/{sensor.Id}",
-    $"/organizations/{Id}");
-    private void NavigateToCreateSensor() => Navigation.NavigateTo($"/organizations/{Id}/sensors/create",
-    $"/organizations/{Id}");
+    private void NavigateToEdit() => Navigation.NavigateTo($"/organizations/{Id}/edit");
+    private void NavigateToSensors() => Navigation.NavigateTo($"/organizations/{Id}/sensors");
+    private void NavigateToTeam() => Navigation.NavigateTo($"/organizations/{Id}/team");
+    private void NavigateToMap() => Navigation.NavigateTo($"/organizations/{Id}/map");
+    private void NavigateToSensor(SensorDtoForList sensor) => Navigation.NavigateTo($"/sensors/{sensor.Id}");
+    private void NavigateToCreateSensor() => Navigation.NavigateTo($"/organizations/{Id}/sensors/create");
 
     private async Task ConfirmDelete()
     {
