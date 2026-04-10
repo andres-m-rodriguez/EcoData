@@ -10,7 +10,9 @@
 
 <div class="narrow-page">
     <MudStack Spacing="4">
-        <PageHeader Label="Profile" Title="Account" />
+        <div class="d-none">
+            <PageHeader Label="Profile" Title="Account" />
+        </div>
 
         @if (AuthState.IsAuthenticated)
         {
