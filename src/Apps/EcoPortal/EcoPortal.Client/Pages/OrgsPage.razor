@@ -5,12 +5,9 @@
 @inject AuthStateService AuthState
 
 <PageTitle>Organizations - EcoData</PageTitle>
+<EcoPortalTitle Title="Organizations" />
 
 <div class="narrow-page">
-    <div class="d-none">
-        <PageHeader Label="Community" Title="Organizations" />
-    </div>
-
     <MudStack Spacing="2">
         <QuickActionCard Icon="@Icons.Material.Filled.Search"
                          Title="Discover"
@@ -33,8 +30,4 @@
 </div>
 
 @code {
-    protected override void OnInitialized()
-    {
-        Navigation.SetPageTitle("Organizations");
-    }
 }

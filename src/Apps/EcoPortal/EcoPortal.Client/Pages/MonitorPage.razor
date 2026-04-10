@@ -4,12 +4,9 @@
 @inject INavigationService Navigation
 
 <PageTitle>Monitor - EcoData</PageTitle>
+<EcoPortalTitle Title="Monitor" />
 
 <div class="narrow-page">
-    <div class="d-none">
-        <PageHeader Label="Observatory Network" Title="Monitor" />
-    </div>
-
     <MudStack Spacing="2">
         <QuickActionCard Icon="@Icons.Material.Filled.Water"
                          Title="Sensors"
@@ -24,8 +21,4 @@
 </div>
 
 @code {
-    protected override void OnInitialized()
-    {
-        Navigation.SetPageTitle("Monitor");
-    }
 }
