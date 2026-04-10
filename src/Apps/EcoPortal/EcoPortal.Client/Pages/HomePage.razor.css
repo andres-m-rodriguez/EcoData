@@ -12,7 +12,7 @@
     min-height: 700px;
     display: flex;
     align-items: center;
-    padding: 2rem 1rem 4rem;
+    padding: 0 1rem 4rem;
     background: #f0f1f3;
     position: relative;
     overflow: hidden;
@@ -504,10 +504,9 @@
 @media (max-width: 960px) {
     .hero-section {
         min-height: auto;
-        padding: 4rem 1rem 3rem;
+        padding: 0 1rem 3rem;
     }
 
-    .hero-section,
     .monitor-section,
     .sources-section,
     .researchers-section,
