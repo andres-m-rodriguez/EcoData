@@ -67,19 +67,20 @@
     opacity: 0;
 }
 
-::deep .hero-actions {
-    flex-wrap: wrap;
+::deep .hero-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--mud-palette-primary) !important;
+    transition: gap 0.2s ease;
     animation: fadeInUp 0.6s ease-out 0.3s forwards;
     opacity: 0;
 }
 
-::deep .hero-btn {
-    padding: 1rem 2rem !important;
-}
-
-::deep .hero-btn-secondary {
-    padding: 1rem 2rem !important;
-    background: white !important;
+::deep .hero-link:hover {
+    gap: 0.75rem;
 }
 
 /* Hero Visual */
@@ -436,67 +437,6 @@
 }
 
 /* ==========================================================================
-   Partners Section
-   ========================================================================== */
-.partners-section {
-    padding: 6rem 1rem;
-    border-top: 1px solid rgba(193, 200, 194, 0.1);
-    border-bottom: 1px solid rgba(193, 200, 194, 0.1);
-}
-
-::deep .partners-label {
-    text-transform: uppercase;
-    letter-spacing: 0.3em;
-    color: var(--mud-palette-text-disabled);
-}
-
-::deep .partners-grid {
-    opacity: 0.6;
-    filter: grayscale(100%);
-    flex-wrap: wrap;
-}
-
-.partner-item {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 0.5rem;
-}
-
-.partner-icon {
-    width: 4rem;
-    height: 4rem;
-    border-radius: 50%;
-    background: #e1e3e2;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.partner-icon-placeholder {
-    width: 4rem;
-    height: 4rem;
-    border-radius: 50%;
-    border: 2px dashed rgba(193, 200, 194, 0.5);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: var(--mud-palette-text-disabled);
-}
-
-::deep .partner-name {
-    font-weight: 700;
-    text-transform: uppercase;
-    color: var(--mud-palette-primary);
-}
-
-::deep .partner-name-placeholder {
-    font-weight: 700;
-    text-transform: uppercase;
-    color: var(--mud-palette-text-disabled);
-}
-
-/* ==========================================================================
    Responsive
    ========================================================================== */
 @media (max-width: 960px) {
@@ -516,21 +456,11 @@
     .monitor-section,
     .sources-section,
     .researchers-section,
-    .live-data-section,
-    .partners-section {
+    .live-data-section {
         padding: 4rem 1rem;
     }
 
     .mission-section {
         padding: 1rem 1rem 2rem;
-    }
-
-    ::deep .hero-actions {
-        flex-direction: column;
-    }
-
-    ::deep .hero-btn,
-    ::deep .hero-btn-secondary {
-        width: 100%;
     }
 }
