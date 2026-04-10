@@ -16,7 +16,7 @@
 
 <PageTitle>Sensors - @(_organization?.Name ?? "Organization") - EcoData</PageTitle>
 
-<EcoDataPageLayout Title="Sensors" FallbackUrl="@($"/organizations/{OrganizationId}")">
+<EcoDataPageLayout Title="Sensors" ParentPath="@($"/organizations/{OrganizationId}")">
     <Actions>
         <RequireOrganizationPermission Permission="@Permissions.Sensor.Create" OrganizationId="OrganizationId">
             <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add"
@@ -54,10 +54,10 @@
         );
     }
 
-    private void NavigateToCreateSensor() => Navigation.NavigateTo($"/organizations/{OrganizationId}/sensors/create", $"/organizations/{OrganizationId}/sensors");
+    private void NavigateToCreateSensor() => Navigation.NavigateTo($"/organizations/{OrganizationId}/sensors/create");
 
     private void NavigateToDetail(SensorDtoForList sensor)
     {
-        Navigation.NavigateTo($"/sensors/{sensor.Id}", $"/organizations/{OrganizationId}/sensors");
+        Navigation.NavigateTo($"/sensors/{sensor.Id}");
     }
 }

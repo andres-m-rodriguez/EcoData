@@ -2,8 +2,9 @@
 @using EcoData.Sensors.Contracts.Parameters
 @using EcoData.Sensors.Application.Client
 @using EcoPortal.Client.Features.Sensors.Components
+@using EcoPortal.Client.Services
 @inject ISensorReadingHttpClient ReadingClient
-@inject NavigationManager NavigationManager
+@inject INavigationService Navigation
 
 @if (_loading)
 {
@@ -95,6 +96,6 @@ else
 
     private void NavigateToReadings()
     {
-        NavigationManager.NavigateTo($"/sensors/{SensorId}/readings");
+        Navigation.NavigateTo($"/sensors/{SensorId}/readings");
     }
 }
