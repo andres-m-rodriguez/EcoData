@@ -321,9 +321,9 @@
         _ = _statsFetch.FetchAsync();
     }
 
-    private void NavigateToConfigure() => Navigation.NavigateTo($"/sensors/{Sensor.Id}/configure", $"/sensors/{Sensor.Id}");
+    private void NavigateToConfigure() => Navigation.NavigateTo($"/sensors/{Sensor.Id}/configure");
 
-    private void NavigateToEdit() => Navigation.NavigateTo($"/sensors/{Sensor.Id}/edit", $"/sensors/{Sensor.Id}");
+    private void NavigateToEdit() => Navigation.NavigateTo($"/sensors/{Sensor.Id}/edit");
 
     private async Task ConfirmDelete()
     {
