@@ -1,9 +1,9 @@
 @page "/getting-started"
 @using BlazorStaticNavigation
-@using EcoPortal.Client.Services
-@inject INavigationService Navigation
+@using EcoPortal.Client.Components
 
 <PageTitle>Getting Started - EcoData</PageTitle>
+<EcoPortalTitle Title="Getting Started" />
 
 <div class="getting-started-page">
     <MudContainer MaxWidth="MaxWidth.Large" Class="py-6">
@@ -114,8 +114,4 @@
 </div>
 
 @code {
-    protected override void OnInitialized()
-    {
-        Navigation.SetPageTitle("Getting Started");
-    }
 }

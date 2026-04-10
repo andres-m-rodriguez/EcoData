@@ -7,13 +7,10 @@
 @inject INavigationService Navigation
 
 <PageTitle>Account - EcoData</PageTitle>
+<EcoPortalTitle Title="Account" />
 
 <div class="narrow-page">
     <MudStack Spacing="4">
-        <div class="d-none">
-            <PageHeader Label="Profile" Title="Account" />
-        </div>
-
         @if (AuthState.IsAuthenticated)
         {
             <MudCard Elevation="0" Outlined="true">
@@ -99,11 +96,6 @@
 </div>
 
 @code {
-    protected override void OnInitialized()
-    {
-        Navigation.SetPageTitle("Account");
-    }
-
     private string GetUserInitial()
     {
         var name = AuthState.CurrentUser?.DisplayName;
