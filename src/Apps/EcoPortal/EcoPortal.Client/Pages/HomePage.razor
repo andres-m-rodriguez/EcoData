@@ -20,11 +20,9 @@
                             researchers, and environmental agencies with real-time monitoring data from sensors
                             deployed across Puerto Rico's rivers, coastlines, and urban areas.
                         </p>
-                        <MudButton Variant="Variant.Filled" Color="Color.Primary"
-                                   StartIcon="@Icons.Material.Filled.Water" Href="@SensorsPage.Path" Size="Size.Large"
-                                   Class="gradient-btn hero-btn">
-                            Explore Sensors
-                        </MudButton>
+                        <MudLink Href="@SensorsPage.Path" Underline="Underline.None" Class="hero-link">
+                            Explore Sensors <MudIcon Icon="@Icons.Material.Filled.ArrowForward" Size="Size.Small" />
+                        </MudLink>
                     </div>
                 </MudItem>
                 <MudHidden Breakpoint="Breakpoint.MdAndDown">
@@ -284,36 +282,6 @@
                     </MudButton>
                 </MudItem>
             </MudGrid>
-        </MudContainer>
-    </section>
-
-    @* Partner Network *@
-    <section class="partners-section">
-        <MudContainer MaxWidth="MaxWidth.Large">
-            <MudText Typo="Typo.caption" Align="Align.Center" Class="partners-label mb-8">
-                Partnering Institutions
-            </MudText>
-            <MudStack Row="true" Justify="Justify.Center" AlignItems="AlignItems.Center" Spacing="8"
-                      Class="partners-grid">
-                <div class="partner-item active">
-                    <div class="partner-icon">
-                        <MudIcon Icon="@Icons.Material.Filled.AccountBalance" Size="Size.Large" Color="Color.Primary" />
-                    </div>
-                    <MudText Typo="Typo.caption" Class="partner-name">Inter American University</MudText>
-                </div>
-                <div class="partner-item placeholder">
-                    <div class="partner-icon-placeholder">
-                        <MudIcon Icon="@Icons.Material.Filled.Add" Color="Color.Default" />
-                    </div>
-                    <MudText Typo="Typo.caption" Class="partner-name-placeholder">Partner Slot</MudText>
-                </div>
-                <div class="partner-item placeholder">
-                    <div class="partner-icon-placeholder">
-                        <MudIcon Icon="@Icons.Material.Filled.Add" Color="Color.Default" />
-                    </div>
-                    <MudText Typo="Typo.caption" Class="partner-name-placeholder">Partner Slot</MudText>
-                </div>
-            </MudStack>
         </MudContainer>
     </section>
 
