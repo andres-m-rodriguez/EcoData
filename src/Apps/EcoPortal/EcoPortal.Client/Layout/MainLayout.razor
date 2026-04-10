@@ -27,9 +27,9 @@
                     <MudIconButton Icon="@Icons.Material.Filled.ArrowBack" Color="Color.Dark"
                                    OnClick="NavigateBackAsync" />
                 }
-                <MudText Typo="Typo.h6" Color="Color.Primary" Class="flex-grow-1 text-center pr-10">
+                <span class="logo-text flex-grow-1 text-center pr-10">
                     @Navigation.PageTitle
-                </MudText>
+                </span>
             }
             else
             {
@@ -43,9 +43,7 @@
             @if (!IsHomePage && Navigation.PageTitle is not null)
             {
                 <MudDivider Vertical="true" FlexItem="true" Class="mx-4 my-3" />
-                <MudText Typo="Typo.h6" Color="Color.Primary" Style="font-weight: 600;">
-                    @Navigation.PageTitle
-                </MudText>
+                <span class="logo-text">@Navigation.PageTitle</span>
             }
         </div>
 
