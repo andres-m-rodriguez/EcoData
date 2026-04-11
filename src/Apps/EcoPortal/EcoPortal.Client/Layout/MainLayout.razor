@@ -25,7 +25,8 @@
             <div class="d-flex align-center" style="flex: 1;">
                 @if (!IsHomePage)
                 {
-                    <NuiNativeNavbar ShowActions="false" TitleClass="page-title flex-grow-1 text-center" />
+                    <NuiNativeNavbar ShowBackButton="true" ShowTitle="false" ShowActions="false" />
+                    <span class="page-title">@Navbar.State.Title</span>
                 }
                 else
                 {
