@@ -32,7 +32,7 @@
                                        OnClick="NavigateBackAsync" />
                     }
                     <span class="page-title flex-grow-1 text-center">
-                        @Navbar.Title
+                        @Navbar.State.Title
                     </span>
                 }
                 else
@@ -46,10 +46,10 @@
         <MudHidden Breakpoint="Breakpoint.SmAndDown">
             <div class="d-flex align-center">
                 <span class="logo-text">Ecoportal</span>
-                @if (!IsHomePage && Navbar.Title is not null)
+                @if (!IsHomePage && Navbar.State.Title is not null)
                 {
                     <MudDivider Vertical="true" FlexItem="true" Class="mx-4 my-3" />
-                    <span class="logo-text">@Navbar.Title</span>
+                    <span class="logo-text">@Navbar.State.Title</span>
                 }
             </div>
         </MudHidden>
@@ -80,14 +80,23 @@
 
         <MudSpacer />
 
-        @* Mobile: Action button at far right *@
+        @* Mobile: Action button(s) at far right *@
         <MudHidden Breakpoint="Breakpoint.MdAndUp">
-            @if (!IsHomePage && Navbar.Action is not null)
+            @if (!IsHomePage && Navbar.State.Actions.Count == 1)
             {
                 <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small"
-                           OnClick="@(() => Navbar.Action.OnClick())">
-                    @Navbar.Action.Title
+                           OnClick="@(() => Navbar.State.Actions[0].OnClick())">
+                    @Navbar.State.Actions[0].Title
                 </MudButton>
+            }
+            else if (!IsHomePage && Navbar.State.Actions.Count > 1)
+            {
+                <MudMenu Icon="@Icons.Material.Filled.MoreVert" Color="Color.Dark" AnchorOrigin="Origin.BottomRight" TransformOrigin="Origin.TopRight">
+                    @foreach (var action in Navbar.State.Actions)
+                    {
+                        <MudMenuItem OnClick="@(() => action.OnClick())">@action.Title</MudMenuItem>
+                    }
+                </MudMenu>
             }
         </MudHidden>
 
