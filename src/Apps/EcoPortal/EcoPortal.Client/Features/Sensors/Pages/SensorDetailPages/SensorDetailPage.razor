@@ -7,7 +7,10 @@
 @inject ISensorHttpClient SensorClient
 
 <PageTitle>@(_sensor?.Name ?? "Sensor") - EcoData</PageTitle>
-<EcoPortalTitle Title="@(_sensor?.Name ?? "Sensor")" />
+@if (_sensor is not null)
+{
+    <EcoPortalTitle Title="@_sensor.Name" />
+}
 
 <EcoDataPageLayout ParentPath="/sensors">
     <ChildContent>
