@@ -70,8 +70,11 @@
 
     protected override void OnInitialized()
     {
-        // Set title immediately so it appears during page transition
-        Navigation.SetPageTitle(Title);
+        // Only set title if one is provided (some pages use EcoPortalTitle instead)
+        if (Title is not null)
+        {
+            Navigation.SetPageTitle(Title);
+        }
 
         if (ParentPath is not null)
         {
