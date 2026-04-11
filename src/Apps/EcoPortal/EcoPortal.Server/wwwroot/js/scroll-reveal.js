@@ -1,5 +1,7 @@
 // Scroll Reveal - adds 'in-view' class when elements scroll into viewport
 (function() {
+    const ANIMATIONS_SEEN_KEY = 'ecoportal-home-animations-seen';
+
     const observer = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
             if (entry.isIntersecting) {
@@ -7,11 +9,10 @@
             }
         });
     }, {
-        threshold: 0.3, // Trigger when 30% of element is visible
-        rootMargin: '0px 0px -50px 0px' // Trigger slightly before fully in view
+        threshold: 0.3,
+        rootMargin: '0px 0px -50px 0px'
     });
 
-    // Observe elements when DOM is ready and after Blazor updates
     function observeElements() {
         document.querySelectorAll('.scroll-reveal').forEach(el => {
             if (!el.dataset.observed) {
@@ -21,15 +22,32 @@
         });
     }
 
-    // Initial observation
+    // Check if we should skip hero animations on home page
+    function checkHeroAnimations() {
+        const isHomePage = window.location.pathname === '/';
+        if (isHomePage) {
+            if (sessionStorage.getItem(ANIMATIONS_SEEN_KEY) === 'true') {
+                // Skip animations - add class to disable them
+                document.body.classList.add('animations-seen');
+            } else {
+                // First visit - mark as seen
+                sessionStorage.setItem(ANIMATIONS_SEEN_KEY, 'true');
+            }
+        }
+    }
+
     if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', observeElements);
+        document.addEventListener('DOMContentLoaded', () => {
+            checkHeroAnimations();
+            observeElements();
+        });
     } else {
+        checkHeroAnimations();
         observeElements();
     }
 
-    // Re-observe after Blazor navigations/updates
     const mutationObserver = new MutationObserver(() => {
+        checkHeroAnimations();
         observeElements();
     });
 
