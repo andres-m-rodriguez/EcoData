@@ -1,4 +1,4 @@
-namespace EcoData.NativeUi.Services;
+namespace EcoData.NativeUi.Components.NativeNavigation;
 
 /// <summary>
 /// Platform-agnostic navigation manager for native UI applications.

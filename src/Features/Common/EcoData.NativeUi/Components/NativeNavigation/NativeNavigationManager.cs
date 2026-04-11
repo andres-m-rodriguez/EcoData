@@ -2,12 +2,12 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Routing;
 using Microsoft.JSInterop;
 
-namespace EcoData.NativeUi.Services;
+namespace EcoData.NativeUi.Components.NativeNavigation;
 
 /// <summary>
 /// Implementation of <see cref="INativeNavigationManager"/> that wraps Blazor's NavigationManager.
 /// </summary>
-public sealed class NativeNavigationManager : INativeNavigationManager, IDisposable
+internal sealed class NativeNavigationManager : INativeNavigationManager, IDisposable
 {
     private readonly NavigationManager _nav;
     private readonly IJSRuntime _js;
