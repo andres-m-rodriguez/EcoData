@@ -1,7 +1,5 @@
 // Scroll Reveal - adds 'in-view' class when elements scroll into viewport
 (function() {
-    const ANIMATIONS_SEEN_KEY = 'ecoportal-home-animations-seen';
-
     const observer = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
             if (entry.isIntersecting) {
@@ -22,35 +20,13 @@
         });
     }
 
-    // Check if we should skip hero animations on home page
-    function checkHeroAnimations() {
-        const isHomePage = window.location.pathname === '/';
-        if (isHomePage) {
-            if (sessionStorage.getItem(ANIMATIONS_SEEN_KEY) === 'true') {
-                // Skip animations - add class to disable them
-                document.body.classList.add('animations-seen');
-            } else {
-                // First visit - mark as seen
-                sessionStorage.setItem(ANIMATIONS_SEEN_KEY, 'true');
-            }
-        }
-    }
-
     if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', () => {
-            checkHeroAnimations();
-            observeElements();
-        });
+        document.addEventListener('DOMContentLoaded', observeElements);
     } else {
-        checkHeroAnimations();
         observeElements();
     }
 
-    const mutationObserver = new MutationObserver(() => {
-        checkHeroAnimations();
-        observeElements();
-    });
-
+    const mutationObserver = new MutationObserver(observeElements);
     mutationObserver.observe(document.body, {
         childList: true,
         subtree: true
