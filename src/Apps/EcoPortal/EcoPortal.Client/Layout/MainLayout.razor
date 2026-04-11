@@ -77,6 +77,17 @@
 
         <MudSpacer />
 
+        @* Mobile: Action button at far right *@
+        <MudHidden Breakpoint="Breakpoint.MdAndUp">
+            @if (!IsHomePage && Navigation.PageAction is not null)
+            {
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small"
+                           OnClick="@(() => Navigation.PageAction.OnClick())">
+                    @Navigation.PageAction.Title
+                </MudButton>
+            }
+        </MudHidden>
+
         @* Desktop: User menu *@
         <MudHidden Breakpoint="Breakpoint.SmAndDown">
             <div class="d-flex align-center">
@@ -174,6 +185,7 @@
     private bool _isDarkMode;
     private string _pageTransitionClass = "";
     private string _navigationKey = Guid.NewGuid().ToString();
+    private string _lastUri = "";
 
     private bool IsHomePage => Navigation.CurrentTab == NavigationTab.Home;
 
@@ -197,13 +209,18 @@
 
     private void HandleNavigationStateChanged()
     {
-        _pageTransitionClass = Navigation.Direction switch
+        // Only change key and transition class on actual navigation (URI change)
+        if (_lastUri != Navigation.CurrentUri)
         {
-            NavigationDirection.Forward => "page-transition-forward",
-            NavigationDirection.Back => "page-transition-back",
-            _ => ""
-        };
-        _navigationKey = Guid.NewGuid().ToString();
+            _lastUri = Navigation.CurrentUri;
+            _pageTransitionClass = Navigation.Direction switch
+            {
+                NavigationDirection.Forward => "page-transition-forward",
+                NavigationDirection.Back => "page-transition-back",
+                _ => ""
+            };
+            _navigationKey = Guid.NewGuid().ToString();
+        }
         InvokeAsync(StateHasChanged);
     }
 
