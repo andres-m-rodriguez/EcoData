@@ -1,12 +1,12 @@
 @page "/organizations/create"
 @using EcoData.Organization.Contracts.Dtos
 @using EcoData.Organization.Application.Client
-@using EcoPortal.Client.Services
+@using EcoData.NativeUi.Services
 @using EcoPortal.Client.Components
 @using EcoPortal.Client.Features.Organizations.Components
 @using BlazingSingularity.Commands
 @inject IOrganizationHttpClient OrganizationClient
-@inject INavigationService Navigation
+@inject INativeNavigationManager Navigation
 @inject ISnackbar Snackbar
 
 <PageTitle>Create Organization - EcoData</PageTitle>
@@ -60,5 +60,5 @@
         );
     }
 
-    private void NavigateBack() => Navigation.GoBack();
+    private void NavigateBack() => _ = Navigation.GoBackAsync();
 }

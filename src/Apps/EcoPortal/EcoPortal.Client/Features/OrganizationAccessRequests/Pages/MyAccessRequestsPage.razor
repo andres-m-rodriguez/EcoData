@@ -3,6 +3,7 @@
 @using EcoData.Organization.Contracts.Parameters
 @using EcoData.Organization.Application.Client
 @using EcoData.Common.Pagination.Blazor
+@using EcoData.NativeUi.Services
 @using EcoPortal.Client.Components
 @using EcoPortal.Client.Services
 @using EcoPortal.Client.Features.OrganizationAccessRequests.Dialogs
@@ -11,7 +12,7 @@
 @inject IDialogService DialogService
 @inject ISnackbar Snackbar
 @inject AuthStateService AuthState
-@inject INavigationService Navigation
+@inject INativeNavigationManager Navigation
 
 <PageTitle>My Access Requests - EcoData</PageTitle>
 

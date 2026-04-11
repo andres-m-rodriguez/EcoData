@@ -1,10 +1,10 @@
 @using EcoData.Sensors.Contracts.Dtos
 @using EcoData.Sensors.Contracts.Parameters
 @using EcoData.Sensors.Application.Client
+@using EcoData.NativeUi.Services
 @using EcoPortal.Client.Features.Sensors.Components
-@using EcoPortal.Client.Services
 @inject ISensorReadingHttpClient ReadingClient
-@inject INavigationService Navigation
+@inject INativeNavigationManager Navigation
 
 @if (_loading)
 {

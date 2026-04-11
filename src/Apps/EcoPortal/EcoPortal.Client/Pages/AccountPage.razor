@@ -4,7 +4,7 @@
 @using EcoPortal.Client.Components
 @using EcoPortal.Client.Services
 @inject AuthStateService AuthState
-@inject INavigationService Navigation
+@inject ITabNavigationService Tabs
 
 <PageTitle>Account - EcoData</PageTitle>
 <EcoPortalTitle Title="Account" />
@@ -106,7 +106,7 @@
     private async Task Logout()
     {
         await AuthState.LogoutAsync();
-        Navigation.NavigateToTab(NavigationTab.Home);
+        Tabs.NavigateToTab(NavigationTab.Home);
     }
 
     private async Task LogoutAsync()
