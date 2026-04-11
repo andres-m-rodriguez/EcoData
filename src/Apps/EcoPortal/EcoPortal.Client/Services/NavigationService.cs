@@ -1,148 +1,84 @@
-using Microsoft.AspNetCore.Components;
-using Microsoft.AspNetCore.Components.Routing;
-using Microsoft.JSInterop;
+using EcoData.NativeUi.Services;
 
 namespace EcoPortal.Client.Services;
 
-public enum NavigationDirection
-{
-    None,
-    Forward,
-    Back
-}
-
-public enum NavigationTab
-{
-    Home,
-    Monitor,
-    Orgs,
-    Account
-}
-
+/// <summary>
+/// Page action for the mobile app bar.
+/// </summary>
 public record PageAction(string Title, Action OnClick);
 
+/// <summary>
+/// Navigation service interface for EcoPortal.
+/// Combines native navigation with app-specific tab and navbar features.
+/// </summary>
 public interface INavigationService
 {
-    // State (read-only)
+    // Core navigation state (delegates to INativeNavigationManager)
     string CurrentUri { get; }
     string CurrentPath { get; }
-    NavigationTab CurrentTab { get; }
     bool CanGoBack { get; }
     NavigationDirection Direction { get; }
-    string? PageTitle { get; }
-    PageAction? PageAction { get; }
 
-    // Navigation methods - these are the ONLY ways to navigate
+    // Tab navigation (delegates to ITabNavigationService)
+    NavigationTab CurrentTab { get; }
+    void NavigateToTab(NavigationTab tab);
+
+    // Core navigation (delegates to INativeNavigationManager)
     void NavigateTo(string uri);
     void NavigateWithReplace(string uri);
-    void NavigateToTab(NavigationTab tab);
     Task GoBackAsync();
     void GoBack();
-
-    // For deep link handling - pages can set their logical parent
     void SetParentPath(string parentPath);
 
-    // For page title in app bar
+    // Page navbar state (will move to INativeNavbarManager in future)
+    string? PageTitle { get; }
+    PageAction? PageAction { get; }
     void SetPageTitle(string? title);
-
-    // For page action in app bar (mobile)
     void SetPageAction(string title, Action onClick);
     void ClearPageAction();
 
     event Action? OnStateChanged;
 }
 
+/// <summary>
+/// Implementation of <see cref="INavigationService"/> that delegates to native navigation
+/// and tab navigation services.
+/// </summary>
 public sealed class NavigationService : INavigationService, IDisposable
 {
-    private readonly NavigationManager _nav;  // Private, never exposed
-    private readonly IJSRuntime _js;
+    private readonly INativeNavigationManager _nav;
+    private readonly ITabNavigationService _tabs;
 
-    private NavigationTab _currentTab;
-    private int _depth;                    // 0 = at tab root
-    private string? _parentPath;           // For deep link back navigation
-    private string? _pageTitle;            // Current page title for app bar
-    private PageAction? _pageAction;       // Current page action for app bar
-    private bool _isNavigatingBack;
-    private NavigationDirection _direction = NavigationDirection.None;
+    private string? _pageTitle;
+    private PageAction? _pageAction;
 
-    public NavigationService(NavigationManager navigationManager, IJSRuntime jsRuntime)
+    public NavigationService(INativeNavigationManager nav, ITabNavigationService tabs)
     {
-        _nav = navigationManager;
-        _js = jsRuntime;
-        _nav.LocationChanged += OnLocationChanged;
-
-        // Initialize with current path
-        var currentPath = GetPathFromUri(_nav.Uri);
-        _currentTab = GetTabFromPath(currentPath);
-        _depth = IsTabRoot(currentPath) ? 0 : 1; // Deep link starts at depth 1
+        _nav = nav;
+        _tabs = tabs;
+        _nav.OnStateChanged += HandleNavigationStateChanged;
     }
 
-    public string CurrentUri => _nav.Uri;
+    // Core navigation state
+    public string CurrentUri => _nav.State.Uri;
+    public string CurrentPath => _nav.State.Path;
+    public bool CanGoBack => _nav.State.CanGoBack;
+    public NavigationDirection Direction => _nav.State.Direction;
 
-    public string CurrentPath => GetPathFromUri(_nav.Uri);
+    // Tab navigation
+    public NavigationTab CurrentTab => _tabs.CurrentTab;
+    public void NavigateToTab(NavigationTab tab) => _tabs.NavigateToTab(tab);
 
-    public NavigationTab CurrentTab => _currentTab;
+    // Core navigation
+    public void NavigateTo(string uri) => _nav.NavigateTo(uri);
+    public void NavigateWithReplace(string uri) => _nav.NavigateTo(uri, replace: true);
+    public Task GoBackAsync() => _nav.GoBackAsync();
+    public void GoBack() => _ = _nav.GoBackAsync();
+    public void SetParentPath(string parentPath) => _nav.SetParentPath(parentPath);
 
-    public bool CanGoBack => _depth > 0 || _parentPath is not null;
-
-    public NavigationDirection Direction => _direction;
-
+    // Page navbar state
     public string? PageTitle => _pageTitle;
-
     public PageAction? PageAction => _pageAction;
-
-    public event Action? OnStateChanged;
-
-    public void NavigateTo(string uri)
-    {
-        _parentPath = null;  // Clear - will be set by page if needed
-        _nav.NavigateTo(uri);
-    }
-
-    public void NavigateWithReplace(string uri)
-    {
-        // Don't increment depth on replace
-        _nav.NavigateTo(uri, replace: true);
-    }
-
-    public void NavigateToTab(NavigationTab tab)
-    {
-        _depth = 0;
-        _parentPath = null;
-        _currentTab = tab;
-        _nav.NavigateTo(GetTabRoot(tab));
-    }
-
-    public async Task GoBackAsync()
-    {
-        if (_depth > 0)
-        {
-            _isNavigatingBack = true;
-            await _js.InvokeVoidAsync("history.back");
-        }
-        else if (_parentPath is not null)
-        {
-            // Deep link - go to logical parent
-            _isNavigatingBack = true;
-            _nav.NavigateTo(_parentPath);
-        }
-        // At tab root with no parent - do nothing (button hidden anyway)
-    }
-
-    public void GoBack()
-    {
-        _ = GoBackAsync();
-    }
-
-    public void SetParentPath(string parentPath)
-    {
-        // Called by pages on init for deep link support
-        if (_depth == 0 && _parentPath != parentPath)
-        {
-            _parentPath = parentPath;
-            OnStateChanged?.Invoke();
-        }
-    }
 
     public void SetPageTitle(string? title)
     {
@@ -165,78 +101,15 @@ public sealed class NavigationService : INavigationService, IDisposable
         OnStateChanged?.Invoke();
     }
 
-    private void OnLocationChanged(object? sender, LocationChangedEventArgs e)
+    public event Action? OnStateChanged;
+
+    private void HandleNavigationStateChanged()
     {
-        var newPath = GetPathFromUri(e.Location);
-        var newTab = GetTabFromPath(newPath);
-        var isTabRoot = IsTabRoot(newPath);
-
-        if (newTab != _currentTab)
-        {
-            // Tab changed
-            _currentTab = newTab;
-            _depth = isTabRoot ? 0 : 1;  // Deep link = depth 1
-            _direction = NavigationDirection.Forward;
-        }
-        else if (_isNavigatingBack)
-        {
-            _depth = Math.Max(0, _depth - 1);
-            _direction = NavigationDirection.Back;
-            _isNavigatingBack = false;
-        }
-        else if (!isTabRoot)
-        {
-            // Forward navigation within tab
-            _depth++;
-            _direction = NavigationDirection.Forward;
-        }
-        else
-        {
-            // Navigated to tab root (not back) - reset depth
-            _depth = 0;
-            _direction = NavigationDirection.Forward;
-        }
-
-        _parentPath = null;  // Will be set by new page if needed
-        // Note: Don't clear _pageTitle or _pageAction here - let new page overwrite them
-        // This avoids timing issues where the clear happens after the new page tries to set them
         OnStateChanged?.Invoke();
-    }
-
-    private static NavigationTab GetTabFromPath(string path) => path switch
-    {
-        "/" or "" => NavigationTab.Home,
-        _ when path.StartsWith("/monitor") || path.StartsWith("/sensors") || path.StartsWith("/alerts")
-            => NavigationTab.Monitor,
-        _ when path.StartsWith("/orgs") || path.StartsWith("/organizations") || path.StartsWith("/access-requests")
-            => NavigationTab.Orgs,
-        _ when path.StartsWith("/account") || path.StartsWith("/login") || path.StartsWith("/register")
-            => NavigationTab.Account,
-        _ => NavigationTab.Home
-    };
-
-    private static string GetTabRoot(NavigationTab tab) => tab switch
-    {
-        NavigationTab.Home => "/",
-        NavigationTab.Monitor => "/monitor",
-        NavigationTab.Orgs => "/orgs",
-        NavigationTab.Account => "/account",
-        _ => "/"
-    };
-
-    private static bool IsTabRoot(string path)
-    {
-        return path is "/" or "" or "/monitor" or "/orgs" or "/account";
-    }
-
-    private static string GetPathFromUri(string uri)
-    {
-        var uriObj = new Uri(uri);
-        return uriObj.AbsolutePath;
     }
 
     public void Dispose()
     {
-        _nav.LocationChanged -= OnLocationChanged;
+        _nav.OnStateChanged -= HandleNavigationStateChanged;
     }
 }
