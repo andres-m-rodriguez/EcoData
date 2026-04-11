@@ -6,11 +6,8 @@
 @using Microsoft.AspNetCore.Components.Authorization
 @inject ISensorHttpClient SensorClient
 
-<PageTitle>@(_sensor?.Name ?? "Sensor") - EcoData</PageTitle>
-@if (_sensor is not null)
-{
-    <EcoPortalTitle Title="@_sensor.Name" />
-}
+<PageTitle>Sensor Details - EcoData</PageTitle>
+<EcoPortalTitle Title="Sensor Details" />
 
 <EcoDataPageLayout ParentPath="/sensors">
     <ChildContent>
