@@ -1,5 +1,6 @@
-@using EcoPortal.Client.Services
-@inject INavigationService Navigation
+@using EcoData.NativeUi.Services
+@inject INativeNavigationManager Navigation
+@inject INativeNavbarManager Navbar
 
 <div class="page-container mt-4 mb-8">
     @if (!string.IsNullOrEmpty(ParentPath))
@@ -73,7 +74,7 @@
         // Only set title if one is provided (some pages use EcoPortalTitle instead)
         if (Title is not null)
         {
-            Navigation.SetPageTitle(Title);
+            Navbar.SetTitle(Title);
         }
 
         if (ParentPath is not null)
@@ -84,13 +85,13 @@
         // Always set or clear the action to ensure proper state
         if (ActionTitle is not null && OnActionClick is not null)
         {
-            Navigation.SetPageAction(ActionTitle, OnActionClick);
+            Navbar.SetAction(ActionTitle, OnActionClick);
         }
         else
         {
-            Navigation.ClearPageAction();
+            Navbar.ClearAction();
         }
     }
 
-    private void GoBack() => Navigation.GoBack();
+    private void GoBack() => _ = Navigation.GoBackAsync();
 }

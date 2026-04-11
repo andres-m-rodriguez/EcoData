@@ -33,10 +33,10 @@ builder.Services.AddMemoryCache();
 builder.Services.AddSingleton<IOrganizationCacheService, OrganizationCacheService>();
 builder.Services.AddScoped<ILeafletMapService, LeafletMapService>();
 
-// Navigation services (order matters for DI)
+// Navigation services
 builder.Services.AddScoped<INativeNavigationManager, NativeNavigationManager>();
+builder.Services.AddScoped<INativeNavbarManager, NativeNavbarManager>();
 builder.Services.AddScoped<ITabNavigationService, TabNavigationService>();
-builder.Services.AddScoped<INavigationService, NavigationService>();
 
 builder.Services.AddScoped<AuthStateService>();
 builder.Services.AddScoped<PermissionContextService>();

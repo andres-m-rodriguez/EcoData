@@ -2,7 +2,7 @@
 @using EcoData.Sensors.Application.Client
 @using EcoData.Locations.Application.Client
 @using EcoData.Locations.Contracts.Dtos
-@using EcoPortal.Client.Services
+@using EcoData.NativeUi.Services
 @using EcoPortal.Client.Components
 @using EcoPortal.Client.Features.Organizations.Authorization
 @using EcoPortal.Client.Features.Sensors.Pages.SensorDetailPages.Components
@@ -14,7 +14,7 @@
 @inject ISensorReadingHttpClient ReadingClient
 @inject IMunicipalityHttpClient MunicipalityClient
 @inject IDialogService DialogService
-@inject INavigationService Navigation
+@inject INativeNavigationManager Navigation
 @inject ISnackbar Snackbar
 
 @* Header Card *@
@@ -340,13 +340,17 @@
         if (result is { Canceled: false })
         {
             var deleteResult = await SensorClient.DeleteAsync(Sensor.Id);
-            deleteResult.Switch(
-                _ =>
+            await deleteResult.Match(
+                async _ =>
                 {
                     Snackbar.Add("Sensor deleted successfully", Severity.Success);
-                    Navigation.GoBack();
+                    await Navigation.GoBackAsync();
                 },
-                problem => Snackbar.Add(problem.Detail ?? "Failed to delete sensor", Severity.Error)
+                problem =>
+                {
+                    Snackbar.Add(problem.Detail ?? "Failed to delete sensor", Severity.Error);
+                    return Task.CompletedTask;
+                }
             );
         }
     }
