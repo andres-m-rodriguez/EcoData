@@ -1,0 +1,89 @@
+/* === Design Tokens === */
+:root {
+    --nui-transition-fast: 150ms;
+    --nui-transition-normal: 250ms;
+    --nui-transition-slow: 350ms;
+    --nui-ease-out: cubic-bezier(0.0, 0.0, 0.2, 1);
+    --nui-ease-in-out: cubic-bezier(0.4, 0.0, 0.2, 1);
+}
+
+/* === Layout Container === */
+.nui-page-layout {
+    margin-top: 16px;
+    margin-bottom: 32px;
+}
+
+/* === Back Button === */
+.nui-back-button {
+    margin-bottom: 8px;
+}
+
+/* === Page Header === */
+.nui-page-header {
+    margin-bottom: 16px;
+    animation: nui-header-enter var(--nui-transition-normal) var(--nui-ease-out);
+}
+
+@keyframes nui-header-enter {
+    from {
+        opacity: 0;
+        transform: translateY(-8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* === Actions === */
+.nui-page-actions {
+    animation: nui-actions-enter var(--nui-transition-normal) var(--nui-ease-out);
+    animation-delay: 50ms;
+    animation-fill-mode: backwards;
+}
+
+@keyframes nui-actions-enter {
+    from {
+        opacity: 0;
+        transform: translateX(8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+/* === Content === */
+.nui-page-content {
+    animation: nui-content-enter var(--nui-transition-slow) var(--nui-ease-out);
+    animation-delay: 100ms;
+    animation-fill-mode: backwards;
+}
+
+@keyframes nui-content-enter {
+    from {
+        opacity: 0;
+        transform: translateY(12px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* === Mobile: Reduce top margin === */
+@media (max-width: 600px) {
+    .nui-page-layout {
+        margin-top: 8px;
+    }
+}
+
+/* === Accessibility === */
+@media (prefers-reduced-motion: reduce) {
+    .nui-page-header,
+    .nui-page-actions,
+    .nui-page-content {
+        animation: none;
+        transition: none;
+    }
+}

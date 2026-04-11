@@ -16,8 +16,8 @@
 
 <PageTitle>My Access Requests - EcoData</PageTitle>
 
-<EcoDataPageLayout Label="Organizations" Title="My Requests"
-                   NavbarActions="@([new("Request", OnRequestAction)])">
+<NuiPageLayout Label="Organizations" Title="My Requests"
+                 Actions="@([new("Request", OnRequestAction)])">
         <SearchHeader SearchSignal="SearchTextSignal" Placeholder="Search requests..." />
 
         <MudPaper Elevation="1" Class="rounded-lg">
@@ -124,7 +124,7 @@
                 </ItemTemplate>
             </EcoDataVirtualizedList>
         </MudPaper>
-</EcoDataPageLayout>
+</NuiPageLayout>
 
 @code {
     private EcoDataVirtualizedList<OrganizationAccessRequestDto, OrganizationAccessRequestParameters>? _listRef;

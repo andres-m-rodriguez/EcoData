@@ -22,8 +22,8 @@
 
 <PageTitle>Team - EcoData</PageTitle>
 
-<EcoDataPageLayout Title="Teams" ParentPath="@($"/organizations/{OrganizationId}")"
-                   NavbarActions="@([new("Requests", NavigateToRequests)])">
+<NuiPageLayout Title="Teams" ParentPath="@($"/organizations/{OrganizationId}")"
+                 Actions="@([new("Requests", NavigateToRequests)])">
         <SearchHeader SearchSignal="SearchTextSignal" Placeholder="Search members..." EnableSticky="true" />
 
         @if (LoadOrganizationCommand.IsLoading)
@@ -127,7 +127,7 @@
                 </EcoDataVirtualizedList>
             </MudPaper>
         }
-</EcoDataPageLayout>
+</NuiPageLayout>
 
 @code {
     private EcoDataVirtualizedList<OrganizationMemberDto, OrganizationMemberParameters>? _virtualizedList;

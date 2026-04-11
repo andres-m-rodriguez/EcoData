@@ -1,13 +1,20 @@
 @page "/alerts"
 @using BlazorStaticNavigation
+@using EcoData.NativeUi.Services
 @using EcoPortal.Client.Features.HealthAlerts.Components
-@using EcoPortal.Client.Components
+@inject INativeNavbarManager Navbar
 
 <PageTitle>Health Alerts - EcoData</PageTitle>
-<EcoPortalTitle Title="Alerts" />
 
 <div class="alerts-page">
     <section class="alerts-content">
         <HealthAlertList />
     </section>
 </div>
+
+@code {
+    protected override void OnInitialized()
+    {
+        Navbar.SetTitle("Alerts");
+    }
+}
