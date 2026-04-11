@@ -8,7 +8,9 @@
 @using EcoPortal.Client.Themes
 @inject AuthStateService AuthState
 @inject ClientAuthStateProvider AuthStateProvider
-@inject INavigationService Navigation
+@inject INativeNavigationManager Navigation
+@inject INativeNavbarManager Navbar
+@inject ITabNavigationService Tabs
 @implements IDisposable
 
 <MudThemeProvider Theme="AppThemes.Azure" IsDarkMode="_isDarkMode" />
@@ -24,13 +26,13 @@
             <div class="d-flex align-center" style="flex: 1;">
                 @if (!IsHomePage)
                 {
-                    @if (Navigation.CanGoBack)
+                    @if (Navigation.State.CanGoBack)
                     {
                         <MudIconButton Icon="@Icons.Material.Filled.ArrowBack" Color="Color.Dark"
                                        OnClick="NavigateBackAsync" />
                     }
                     <span class="page-title flex-grow-1 text-center">
-                        @Navigation.PageTitle
+                        @Navbar.Title
                     </span>
                 }
                 else
@@ -44,10 +46,10 @@
         <MudHidden Breakpoint="Breakpoint.SmAndDown">
             <div class="d-flex align-center">
                 <span class="logo-text">Ecoportal</span>
-                @if (!IsHomePage && Navigation.PageTitle is not null)
+                @if (!IsHomePage && Navbar.Title is not null)
                 {
                     <MudDivider Vertical="true" FlexItem="true" Class="mx-4 my-3" />
-                    <span class="logo-text">@Navigation.PageTitle</span>
+                    <span class="logo-text">@Navbar.Title</span>
                 }
             </div>
         </MudHidden>
@@ -80,11 +82,11 @@
 
         @* Mobile: Action button at far right *@
         <MudHidden Breakpoint="Breakpoint.MdAndUp">
-            @if (!IsHomePage && Navigation.PageAction is not null)
+            @if (!IsHomePage && Navbar.Action is not null)
             {
                 <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small"
-                           OnClick="@(() => Navigation.PageAction.OnClick())">
-                    @Navigation.PageAction.Title
+                           OnClick="@(() => Navbar.Action.OnClick())">
+                    @Navbar.Action.Title
                 </MudButton>
             }
         </MudHidden>
@@ -188,7 +190,7 @@
     private string _navigationKey = Guid.NewGuid().ToString();
     private string _lastUri = "";
 
-    private bool IsHomePage => Navigation.CurrentTab == NavigationTab.Home;
+    private bool IsHomePage => Tabs.CurrentTab == NavigationTab.Home;
 
     private async Task NavigateBackAsync()
     {
@@ -200,6 +202,7 @@
         AuthState.SetAuthStateProvider(AuthStateProvider);
         AuthState.OnAuthStateChanged += HandleAuthStateChanged;
         Navigation.OnStateChanged += HandleNavigationStateChanged;
+        Navbar.OnStateChanged += HandleNavbarStateChanged;
         await AuthState.InitializeAsync();
     }
 
@@ -211,10 +214,10 @@
     private void HandleNavigationStateChanged()
     {
         // Only change key and transition class on actual navigation (URI change)
-        if (_lastUri != Navigation.CurrentUri)
+        if (_lastUri != Navigation.State.Uri)
         {
-            _lastUri = Navigation.CurrentUri;
-            _pageTransitionClass = Navigation.Direction switch
+            _lastUri = Navigation.State.Uri;
+            _pageTransitionClass = Navigation.State.Direction switch
             {
                 NavigationDirection.Forward => "page-transition-forward",
                 NavigationDirection.Back => "page-transition-back",
@@ -222,6 +225,11 @@
             };
             _navigationKey = Guid.NewGuid().ToString();
         }
+        InvokeAsync(StateHasChanged);
+    }
+
+    private void HandleNavbarStateChanged()
+    {
         InvokeAsync(StateHasChanged);
     }
 
@@ -233,7 +241,7 @@
 
     private string GetNavLinkClass(string path)
     {
-        var currentPath = Navigation.CurrentPath;
+        var currentPath = Navigation.State.Path;
         var isActive = path == "/"
             ? currentPath == "/"
             : currentPath.StartsWith(path, StringComparison.OrdinalIgnoreCase);
@@ -243,12 +251,12 @@
 
     private Color GetBottomNavColor(NavigationTab tab)
     {
-        return Navigation.CurrentTab == tab ? Color.Primary : Color.Default;
+        return Tabs.CurrentTab == tab ? Color.Primary : Color.Default;
     }
 
     private void NavigateToBottomNav(NavigationTab tab)
     {
-        Navigation.NavigateToTab(tab);
+        Tabs.NavigateToTab(tab);
     }
 
     [RelayCommand]
@@ -266,5 +274,6 @@
     {
         AuthState.OnAuthStateChanged -= HandleAuthStateChanged;
         Navigation.OnStateChanged -= HandleNavigationStateChanged;
+        Navbar.OnStateChanged -= HandleNavbarStateChanged;
     }
 }

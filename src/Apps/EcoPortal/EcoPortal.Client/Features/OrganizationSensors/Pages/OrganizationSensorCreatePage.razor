@@ -6,15 +6,15 @@
 @using EcoData.Organization.Application.Client
 @using EcoData.Sensors.Contracts.Dtos
 @using EcoData.Sensors.Contracts.Requests
+@using EcoData.NativeUi.Services
 @using EcoData.Sensors.Application.Client
-@using EcoPortal.Client.Services
 @using BlazingSingularity.Commands
 @using EcoPortal.Client.Features.OrganizationSensors.Dialogs
 @using EcoPortal.Client.Features.Sensors.Components
 @using static EcoPortal.Client.Features.Sensors.Components.SensorForm
 @inject ISensorHttpClient SensorClient
 @inject IOrganizationHttpClient OrganizationClient
-@inject INavigationService Navigation
+@inject INativeNavigationManager Navigation
 @inject IDialogService DialogService
 
 <PageTitle>Add Sensor - EcoData</PageTitle>
@@ -141,5 +141,5 @@
         await dialog.Result;
     }
 
-    private void NavigateToSensors() => Navigation.GoBack();
+    private void NavigateToSensors() => _ = Navigation.GoBackAsync();
 }

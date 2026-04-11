@@ -1,5 +1,5 @@
-@using EcoPortal.Client.Services
-@inject INavigationService Navigation
+@using EcoData.NativeUi.Services
+@inject INativeNavbarManager Navbar
 
 @code {
     [Parameter, EditorRequired]
@@ -9,7 +9,7 @@
     {
         if (!string.IsNullOrEmpty(Title))
         {
-            Navigation.SetPageTitle(Title);
+            Navbar.SetTitle(Title);
         }
     }
 }
