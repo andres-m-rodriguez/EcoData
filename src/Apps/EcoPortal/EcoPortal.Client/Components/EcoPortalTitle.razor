@@ -5,7 +5,7 @@
     [Parameter, EditorRequired]
     public string Title { get; set; } = "";
 
-    protected override void OnParametersSet()
+    protected override void OnInitialized()
     {
         if (!string.IsNullOrEmpty(Title))
         {
