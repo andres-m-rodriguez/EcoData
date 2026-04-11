@@ -5,26 +5,6 @@
     background: var(--mud-palette-background);
 }
 
-/* Page enter animation - plays once per session */
-.page-enter {
-    opacity: 0;
-    animation: pageEnter 0.6s ease-out forwards;
-}
-
-:global(body.animations-seen) .page-enter {
-    opacity: 1;
-    animation: none;
-}
-
-@keyframes pageEnter {
-    from {
-        opacity: 0;
-    }
-    to {
-        opacity: 1;
-    }
-}
-
 /* ==========================================================================
    Hero Section
    ========================================================================== */
