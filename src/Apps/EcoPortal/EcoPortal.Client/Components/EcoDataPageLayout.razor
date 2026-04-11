@@ -14,33 +14,28 @@
         </MudHidden>
     }
 
-    @if (!string.IsNullOrEmpty(Title) || Actions is not null)
+    @if (!string.IsNullOrEmpty(Label) || Actions is not null)
     {
         <div class="page-header mb-4">
             <MudStack Row Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center">
                 <MudStack Spacing="1">
                     @if (!string.IsNullOrEmpty(Label))
                     {
-                        <MudText Typo="Typo.overline" Color="Color.Secondary" Style="letter-spacing: 0.15em;">
+                        <MudText Typo="Typo.overline" Color="Color.Secondary">
                             @Label
-                        </MudText>
-                    }
-                    @if (!string.IsNullOrEmpty(Title))
-                    {
-                        <MudText Typo="Typo.h5" Color="Color.Primary"
-                                 Style="font-family: 'Newsreader', serif; font-weight: 500; letter-spacing: -0.02em;">
-                            @Title
                         </MudText>
                     }
                 </MudStack>
 
                 @if (Actions is not null)
                 {
-                    <div class="page-actions">
-                        <MudStack Row Spacing="2">
-                            @Actions
-                        </MudStack>
-                    </div>
+                    <MudHidden Breakpoint="Breakpoint.Xs">
+                        <div class="page-actions">
+                            <MudStack Row Spacing="2">
+                                @Actions
+                            </MudStack>
+                        </div>
+                    </MudHidden>
                 }
             </MudStack>
         </div>
@@ -65,20 +60,32 @@
     public RenderFragment? Actions { get; set; }
 
     [Parameter]
+    public string? ActionTitle { get; set; }
+
+    [Parameter]
+    public Action? OnActionClick { get; set; }
+
+    [Parameter]
     public RenderFragment? ChildContent { get; set; }
 
-    protected override void OnAfterRender(bool firstRender)
+    protected override void OnInitialized()
     {
-        if (firstRender)
+        // Set title immediately so it appears during page transition
+        Navigation.SetPageTitle(Title);
+
+        if (ParentPath is not null)
         {
-            if (ParentPath is not null)
-            {
-                Navigation.SetParentPath(ParentPath);
-            }
-            if (Title is not null)
-            {
-                Navigation.SetPageTitle(Title);
-            }
+            Navigation.SetParentPath(ParentPath);
+        }
+
+        // Always set or clear the action to ensure proper state
+        if (ActionTitle is not null && OnActionClick is not null)
+        {
+            Navigation.SetPageAction(ActionTitle, OnActionClick);
+        }
+        else
+        {
+            Navigation.ClearPageAction();
         }
     }
 

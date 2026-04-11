@@ -19,6 +19,8 @@ public enum NavigationTab
     Account
 }
 
+public record PageAction(string Title, Action OnClick);
+
 public interface INavigationService
 {
     // State (read-only)
@@ -28,6 +30,7 @@ public interface INavigationService
     bool CanGoBack { get; }
     NavigationDirection Direction { get; }
     string? PageTitle { get; }
+    PageAction? PageAction { get; }
 
     // Navigation methods - these are the ONLY ways to navigate
     void NavigateTo(string uri);
@@ -42,6 +45,10 @@ public interface INavigationService
     // For page title in app bar
     void SetPageTitle(string? title);
 
+    // For page action in app bar (mobile)
+    void SetPageAction(string title, Action onClick);
+    void ClearPageAction();
+
     event Action? OnStateChanged;
 }
 
@@ -54,6 +61,7 @@ public sealed class NavigationService : INavigationService, IDisposable
     private int _depth;                    // 0 = at tab root
     private string? _parentPath;           // For deep link back navigation
     private string? _pageTitle;            // Current page title for app bar
+    private PageAction? _pageAction;       // Current page action for app bar
     private bool _isNavigatingBack;
     private NavigationDirection _direction = NavigationDirection.None;
 
@@ -80,6 +88,8 @@ public sealed class NavigationService : INavigationService, IDisposable
     public NavigationDirection Direction => _direction;
 
     public string? PageTitle => _pageTitle;
+
+    public PageAction? PageAction => _pageAction;
 
     public event Action? OnStateChanged;
 
@@ -127,7 +137,7 @@ public sealed class NavigationService : INavigationService, IDisposable
     public void SetParentPath(string parentPath)
     {
         // Called by pages on init for deep link support
-        if (_depth == 0)
+        if (_depth == 0 && _parentPath != parentPath)
         {
             _parentPath = parentPath;
             OnStateChanged?.Invoke();
@@ -138,6 +148,20 @@ public sealed class NavigationService : INavigationService, IDisposable
     {
         if (_pageTitle == title) return;
         _pageTitle = title;
+        OnStateChanged?.Invoke();
+    }
+
+    public void SetPageAction(string title, Action onClick)
+    {
+        if (_pageAction?.Title == title) return;
+        _pageAction = new PageAction(title, onClick);
+        OnStateChanged?.Invoke();
+    }
+
+    public void ClearPageAction()
+    {
+        if (_pageAction is null) return;
+        _pageAction = null;
         OnStateChanged?.Invoke();
     }
 
@@ -174,7 +198,8 @@ public sealed class NavigationService : INavigationService, IDisposable
         }
 
         _parentPath = null;  // Will be set by new page if needed
-        _pageTitle = null;   // Will be set by new page if needed
+        // Note: Don't clear _pageTitle or _pageAction here - let new page overwrite them
+        // This avoids timing issues where the clear happens after the new page tries to set them
         OnStateChanged?.Invoke();
     }
 
