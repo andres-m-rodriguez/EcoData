@@ -25,14 +25,7 @@
             <div class="d-flex align-center" style="flex: 1;">
                 @if (!IsHomePage)
                 {
-                    @if (Navigation.State.CanGoBack)
-                    {
-                        <MudIconButton Icon="@Icons.Material.Filled.ArrowBack" Color="Color.Dark"
-                                       OnClick="NavigateBackAsync" />
-                    }
-                    <span class="page-title flex-grow-1 text-center">
-                        @Navbar.State.Title
-                    </span>
+                    <NuiNativeNavbar ShowActions="false" TitleClass="page-title flex-grow-1 text-center" />
                 }
                 else
                 {
@@ -81,21 +74,9 @@
 
         @* Mobile: Action button(s) at far right *@
         <MudHidden Breakpoint="Breakpoint.MdAndUp">
-            @if (!IsHomePage && Navbar.State.Actions.Count == 1)
+            @if (!IsHomePage)
             {
-                <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small"
-                           OnClick="@(() => Navbar.State.Actions[0].OnClick())">
-                    @Navbar.State.Actions[0].Title
-                </MudButton>
-            }
-            else if (!IsHomePage && Navbar.State.Actions.Count > 1)
-            {
-                <MudMenu Icon="@Icons.Material.Filled.MoreVert" Color="Color.Dark" AnchorOrigin="Origin.BottomRight" TransformOrigin="Origin.TopRight">
-                    @foreach (var action in Navbar.State.Actions)
-                    {
-                        <MudMenuItem OnClick="@(() => action.OnClick())">@action.Title</MudMenuItem>
-                    }
-                </MudMenu>
+                <NuiNativeNavbar ShowBackButton="false" ShowTitle="false" />
             }
         </MudHidden>
 
@@ -199,11 +180,6 @@
     private string _lastUri = "";
 
     private bool IsHomePage => Tabs.CurrentTab == NavigationTab.Home;
-
-    private async Task NavigateBackAsync()
-    {
-        await Navigation.GoBackAsync();
-    }
 
     protected override async Task OnInitializedAsync()
     {
