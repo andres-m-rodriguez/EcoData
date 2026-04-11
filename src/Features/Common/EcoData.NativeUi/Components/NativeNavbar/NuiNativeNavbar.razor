@@ -1,0 +1,97 @@
+@namespace EcoData.NativeUi.Components.NativeNavbar
+@using EcoData.NativeUi.Components.NativeNavigation
+@inject INativeNavbarManager Navbar
+@inject INativeNavigationManager Navigation
+@implements IDisposable
+
+@* Back button *@
+@if (ShowBackButton && Navigation.State.CanGoBack)
+{
+    <MudIconButton Icon="@Icons.Material.Filled.ArrowBack"
+                   Color="Color.Dark"
+                   OnClick="GoBackAsync" />
+}
+
+@* Title *@
+@if (ShowTitle && Navbar.State.Title is not null)
+{
+    <span class="@TitleClass">
+        @Navbar.State.Title
+    </span>
+}
+
+@* Actions *@
+@if (ShowActions && Navbar.State.Actions.Count > 0)
+{
+    @if (Navbar.State.Actions.Count == 1)
+    {
+        <MudButton Variant="Variant.Filled"
+                   Color="Color.Primary"
+                   Size="Size.Small"
+                   OnClick="@(() => Navbar.State.Actions[0].OnClick())">
+            @Navbar.State.Actions[0].Title
+        </MudButton>
+    }
+    else
+    {
+        <MudMenu Icon="@Icons.Material.Filled.MoreVert"
+                 Color="Color.Dark"
+                 AnchorOrigin="Origin.BottomRight"
+                 TransformOrigin="Origin.TopRight">
+            @foreach (var action in Navbar.State.Actions)
+            {
+                <MudMenuItem OnClick="@(() => action.OnClick())">
+                    @action.Title
+                </MudMenuItem>
+            }
+        </MudMenu>
+    }
+}
+
+@code {
+    /// <summary>
+    /// Whether to show the back button when navigation allows going back.
+    /// </summary>
+    [Parameter]
+    public bool ShowBackButton { get; set; } = true;
+
+    /// <summary>
+    /// Whether to show the page title.
+    /// </summary>
+    [Parameter]
+    public bool ShowTitle { get; set; } = true;
+
+    /// <summary>
+    /// Whether to show action buttons.
+    /// </summary>
+    [Parameter]
+    public bool ShowActions { get; set; } = true;
+
+    /// <summary>
+    /// CSS class for the title element.
+    /// </summary>
+    [Parameter]
+    public string? TitleClass { get; set; }
+
+    protected override void OnInitialized()
+    {
+        Navbar.OnStateChanged += HandleStateChanged;
+        Navigation.OnStateChanged += HandleStateChanged;
+    }
+
+    private void HandleStateChanged()
+    {
+        InvokeAsync(StateHasChanged);
+    }
+
+    private async Task GoBackAsync()
+    {
+        await Navigation.GoBackAsync();
+    }
+
+    public void Dispose()
+    {
+        Navbar.OnStateChanged -= HandleStateChanged;
+        Navigation.OnStateChanged -= HandleStateChanged;
+    }
+}
