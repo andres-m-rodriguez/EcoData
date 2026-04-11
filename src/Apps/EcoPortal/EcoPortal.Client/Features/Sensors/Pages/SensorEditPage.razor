@@ -18,8 +18,7 @@
 
 <PageTitle>Edit Sensor - EcoData</PageTitle>
 
-<EcoDataPageLayout Title="Edit Sensor" ParentPath="@($"/sensors/{SensorId}")">
-    <ChildContent>
+<NuiPageLayout Title="Edit Sensor" ParentPath="@($"/sensors/{SensorId}")">
         @if (LoadCommand.IsLoading)
         {
             <MudPaper Elevation="1" Class="pa-6">
@@ -56,8 +55,7 @@
                             OnCancel="NavigateBack" />
             </MudPaper>
         }
-    </ChildContent>
-</EcoDataPageLayout>
+</NuiPageLayout>
 
 @code {
     [Parameter]

@@ -1,13 +1,13 @@
 @page "/account"
 @using BlazingSingularity
 @using BlazingSingularity.Commands
-@using EcoPortal.Client.Components
+@using EcoData.NativeUi.Services
 @using EcoPortal.Client.Services
 @inject AuthStateService AuthState
 @inject ITabNavigationService Tabs
+@inject INativeNavbarManager Navbar
 
 <PageTitle>Account - EcoData</PageTitle>
-<EcoPortalTitle Title="Account" />
 
 <div class="narrow-page">
     <MudStack Spacing="4">
@@ -96,6 +96,11 @@
 </div>
 
 @code {
+    protected override void OnInitialized()
+    {
+        Navbar.SetTitle("Account");
+    }
+
     private string GetUserInitial()
     {
         var name = AuthState.CurrentUser?.DisplayName;

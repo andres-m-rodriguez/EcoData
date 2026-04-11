@@ -16,8 +16,7 @@
 
 <PageTitle>Edit Organization - EcoData</PageTitle>
 
-<EcoDataPageLayout Title="Edit Organization" ParentPath="@($"/organizations/{Id}")">
-    <ChildContent>
+<NuiPageLayout Title="Edit Organization" ParentPath="@($"/organizations/{Id}")">
         @if (LoadCommand.IsLoading)
         {
             <MudPaper Elevation="1" Class="pa-6 rounded-lg">
@@ -44,8 +43,7 @@
                                   IsLoading="SaveCommand.IsLoading" OnSubmit="HandleSubmit" OnCancel="NavigateToDetails" />
             </MudPaper>
         }
-    </ChildContent>
-</EcoDataPageLayout>
+</NuiPageLayout>
 
 @code {
     [Parameter]
