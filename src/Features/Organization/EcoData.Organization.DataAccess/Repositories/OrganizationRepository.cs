@@ -1,4 +1,5 @@
 using System.Runtime.CompilerServices;
+using EcoData.Organization.Contracts;
 using EcoData.Organization.Contracts.Dtos;
 using EcoData.Organization.Contracts.Parameters;
 using EcoData.Organization.DataAccess.Interfaces;
@@ -123,28 +124,28 @@ public sealed class OrganizationRepository(IDbContextFactory<OrganizationDbConte
             {
                 Id = Guid.CreateVersion7(),
                 OrganizationId = entity.Id,
-                Name = "Owner",
+                Name = DefaultOrganizationRoles.Owner,
                 CreatedAt = now,
             },
             new OrganizationRole
             {
                 Id = Guid.CreateVersion7(),
                 OrganizationId = entity.Id,
-                Name = "Admin",
+                Name = DefaultOrganizationRoles.Admin,
                 CreatedAt = now,
             },
             new OrganizationRole
             {
                 Id = Guid.CreateVersion7(),
                 OrganizationId = entity.Id,
-                Name = "Contributor",
+                Name = DefaultOrganizationRoles.Contributor,
                 CreatedAt = now,
             },
             new OrganizationRole
             {
                 Id = Guid.CreateVersion7(),
                 OrganizationId = entity.Id,
-                Name = "Viewer",
+                Name = DefaultOrganizationRoles.Viewer,
                 CreatedAt = now,
             },
         };
