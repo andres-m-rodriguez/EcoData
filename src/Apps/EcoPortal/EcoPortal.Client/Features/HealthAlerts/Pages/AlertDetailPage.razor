@@ -1,11 +1,13 @@
 @page "/alerts/{AlertId:guid}"
 @using EcoData.Sensors.Contracts.Dtos
 @using EcoData.Sensors.Application.Client
+@using EcoPortal.Client.Components
 @using EcoPortal.Client.Services
 @inject ISensorAlertHttpClient AlertClient
 @inject INavigationService Navigation
 
 <PageTitle>Alert Details - EcoData</PageTitle>
+<EcoPortalTitle Title="Alert Details" />
 
 <EcoDataPageLayout ParentPath="/alerts">
     <ChildContent>

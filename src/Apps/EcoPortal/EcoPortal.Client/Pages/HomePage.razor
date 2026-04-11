@@ -4,29 +4,30 @@
 
 <PageTitle>EcoData - Modernizing Puerto Rico's Ecological Data</PageTitle>
 
-<div class="landing-page">
+<div class="landing-page page-enter">
     @* Hero Section *@
     <section class="hero-section">
         <MudContainer MaxWidth="MaxWidth.Large">
             <MudGrid Spacing="6" Class="hero-grid">
                 <MudItem xs="12" lg="6">
                     <div class="hero-content">
-                        <span class="hero-label">Environmental Intelligence</span>
+                        <MudHidden Breakpoint="Breakpoint.SmAndDown">
+                            <span class="hero-label">Environmental Intelligence</span>
+                        </MudHidden>
                         <h1 class="hero-title">Modernizing Puerto Rico's Ecological Data</h1>
                         <p class="hero-description">
                             Founded by Inter American University, this open-access platform provides students,
                             researchers, and environmental agencies with real-time monitoring data from sensors
                             deployed across Puerto Rico's rivers, coastlines, and urban areas.
                         </p>
-                        <MudButton Variant="Variant.Filled" Color="Color.Primary"
-                                   StartIcon="@Icons.Material.Filled.Water" Href="@SensorsPage.Path" Size="Size.Large"
-                                   Class="gradient-btn hero-btn">
-                            Explore Sensors
-                        </MudButton>
+                        <MudLink Href="@SensorsPage.Path" Underline="Underline.None" Class="hero-link">
+                            Explore Sensors <MudIcon Icon="@Icons.Material.Filled.ArrowForward" Size="Size.Small" />
+                        </MudLink>
                     </div>
                 </MudItem>
-                <MudItem xs="12" lg="6" Class="d-none d-lg-flex">
-                    <div class="hero-visual">
+                <MudHidden Breakpoint="Breakpoint.MdAndDown">
+                    <MudItem xs="12" lg="6">
+                        <div class="hero-visual">
                         <div class="hero-circle-outer">
                             <div class="hero-circle-inner">
                                 <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuDE6kUTMwGHe2konqf1KBDg69kGswP4lJoqKgGC_Sp4Cahomn5rFdQWo2dAN8A2WUIWZj8nqLJ_utlzeXe6xtfzXljkV_cyO_TELt6rHYaIAxHW-e38kD0XWYqNeycjwOcXt5qT0T6lBurU6JCjd5DVL7zY_sGyRQnkMfLjgXNatcvlLAl2zzebytiLn3wtuwK3SjEpA_8sxyyOSYaAmV39a6iCrhLRvZTGzqIvoj1vNHOnXFXXJTPx4PmKUzcJJp2yoUXcesdhLEY"
@@ -42,14 +43,15 @@
                                 </div>
                             </div>
                         </div>
-                    </div>
-                </MudItem>
+                        </div>
+                    </MudItem>
+                </MudHidden>
             </MudGrid>
         </MudContainer>
     </section>
 
     @* Mission Statement *@
-    <section id="mission" class="mission-section">
+    <section id="mission" class="mission-section scroll-reveal">
         <MudContainer MaxWidth="MaxWidth.Medium">
             <div class="mission-accent"></div>
             <h2 class="mission-quote">
@@ -63,45 +65,51 @@
     @* What We Monitor *@
     <section class="monitor-section">
         <MudContainer MaxWidth="MaxWidth.Large">
-            <div class="section-header">
+            <div class="section-header scroll-reveal">
                 <span class="section-label">Observation Fields</span>
                 <h2 class="section-title">What We Monitor</h2>
             </div>
             <MudGrid Spacing="4">
                 <MudItem xs="12" md="4">
-                    <MudPaper Elevation="0" Class="monitor-card">
-                        <div class="monitor-icon water">
-                            <MudIcon Icon="@Icons.Material.Filled.WaterDrop" Size="Size.Large" />
+                    <MudPaper Elevation="0" Class="monitor-card scroll-reveal">
+                        <div class="monitor-image-container">
+                            <img src="images/water-quality.jpg" alt="Water Quality" class="monitor-image" />
                         </div>
-                        <h3 class="monitor-card-title">Water Quality</h3>
-                        <MudText Typo="Typo.body2" Color="Color.Secondary">
-                            Monitoring pH levels, turbidity, and dissolved oxygen across major
-                            reservoirs and coastal estuaries to ensure ecosystem health.
-                        </MudText>
+                        <div class="monitor-card-content">
+                            <h3 class="monitor-card-title">Water Quality</h3>
+                            <MudText Typo="Typo.body2" Color="Color.Secondary">
+                                Monitoring pH levels, turbidity, and dissolved oxygen across major
+                                reservoirs and coastal estuaries to ensure ecosystem health.
+                            </MudText>
+                        </div>
                     </MudPaper>
                 </MudItem>
                 <MudItem xs="12" md="4">
-                    <MudPaper Elevation="0" Class="monitor-card">
-                        <div class="monitor-icon air">
-                            <MudIcon Icon="@Icons.Material.Filled.Air" Size="Size.Large" />
+                    <MudPaper Elevation="0" Class="monitor-card scroll-reveal">
+                        <div class="monitor-image-container">
+                            <img src="images/air-quality.jpg" alt="Air Quality" class="monitor-image" />
                         </div>
-                        <h3 class="monitor-card-title">Air Quality</h3>
-                        <MudText Typo="Typo.body2" Color="Color.Secondary">
-                            High-precision particulate matter (PM2.5/PM10) and ozone tracking within
-                            urban and industrial zones to safeguard public health.
-                        </MudText>
+                        <div class="monitor-card-content">
+                            <h3 class="monitor-card-title">Air Quality</h3>
+                            <MudText Typo="Typo.body2" Color="Color.Secondary">
+                                High-precision particulate matter (PM2.5/PM10) and ozone tracking within
+                                urban and industrial zones to safeguard public health.
+                            </MudText>
+                        </div>
                     </MudPaper>
                 </MudItem>
                 <MudItem xs="12" md="4">
-                    <MudPaper Elevation="0" Class="monitor-card">
-                        <div class="monitor-icon bio">
-                            <MudIcon Icon="@Icons.Material.Filled.Nature" Size="Size.Large" />
+                    <MudPaper Elevation="0" Class="monitor-card scroll-reveal">
+                        <div class="monitor-image-container">
+                            <img src="images/biodiversity.jpg" alt="Biodiversity" class="monitor-image" />
                         </div>
-                        <h3 class="monitor-card-title">Biodiversity</h3>
-                        <MudText Typo="Typo.body2" Color="Color.Secondary">
-                            Acoustic monitoring and soil composition analysis to track species
-                            migration and habitat shifts across our nature reserves.
-                        </MudText>
+                        <div class="monitor-card-content">
+                            <h3 class="monitor-card-title">Biodiversity</h3>
+                            <MudText Typo="Typo.body2" Color="Color.Secondary">
+                                Acoustic monitoring and soil composition analysis to track species
+                                migration and habitat shifts across our nature reserves.
+                            </MudText>
+                        </div>
                     </MudPaper>
                 </MudItem>
             </MudGrid>
@@ -109,7 +117,7 @@
     </section>
 
     @* Data Sources *@
-    <section class="sources-section">
+    <section class="sources-section scroll-reveal">
         <MudContainer MaxWidth="MaxWidth.Large">
             <MudGrid Spacing="6">
                 <MudItem xs="12" lg="6">
@@ -192,7 +200,7 @@
     </section>
 
     @* For Researchers *@
-    <section class="researchers-section">
+    <section class="researchers-section scroll-reveal">
         <MudContainer MaxWidth="MaxWidth.Large">
             <MudGrid Spacing="6">
                 <MudItem xs="12" lg="6">
@@ -240,70 +248,6 @@
                     </MudGrid>
                 </MudItem>
             </MudGrid>
-        </MudContainer>
-    </section>
-
-    @* Live Data Teaser *@
-    <section class="live-data-section">
-        <MudContainer MaxWidth="MaxWidth.Large">
-            <MudGrid Spacing="6">
-                <MudItem xs="12" lg="6" Class="order-2 order-lg-1">
-                    <div class="map-preview">
-                        <PuertoRicoMiniMap />
-                        <div class="map-overlay">
-                            <div class="map-badge live">
-                                <span class="pulse-dot"></span>
-                                LIVE SENSOR NETWORK
-                            </div>
-                            <div class="map-badge count">248 ACTIVE NODES</div>
-                        </div>
-                    </div>
-                </MudItem>
-                <MudItem xs="12" lg="6" Class="order-1 order-lg-2">
-                    <div class="section-header">
-                        <span class="section-label">Real-Time Visualization</span>
-                        <h2 class="section-title">Explore the Island's Vitals</h2>
-                    </div>
-                    <MudText Typo="Typo.body1" Color="Color.Secondary" Class="mb-6">
-                        Our interactive map allows you to drill down into specific regions of
-                        Puerto Rico, viewing live atmospheric and water metrics from any connected station.
-                    </MudText>
-                    <MudButton Variant="Variant.Filled" Color="Color.Secondary" StartIcon="@Icons.Material.Filled.Map"
-                               Href="@SensorsPage.Path" Size="Size.Large">
-                        View All Active Sensors
-                    </MudButton>
-                </MudItem>
-            </MudGrid>
-        </MudContainer>
-    </section>
-
-    @* Partner Network *@
-    <section class="partners-section">
-        <MudContainer MaxWidth="MaxWidth.Large">
-            <MudText Typo="Typo.caption" Align="Align.Center" Class="partners-label mb-8">
-                Partnering Institutions
-            </MudText>
-            <MudStack Row="true" Justify="Justify.Center" AlignItems="AlignItems.Center" Spacing="8"
-                      Class="partners-grid">
-                <div class="partner-item active">
-                    <div class="partner-icon">
-                        <MudIcon Icon="@Icons.Material.Filled.AccountBalance" Size="Size.Large" Color="Color.Primary" />
-                    </div>
-                    <MudText Typo="Typo.caption" Class="partner-name">Inter American University</MudText>
-                </div>
-                <div class="partner-item placeholder">
-                    <div class="partner-icon-placeholder">
-                        <MudIcon Icon="@Icons.Material.Filled.Add" Color="Color.Default" />
-                    </div>
-                    <MudText Typo="Typo.caption" Class="partner-name-placeholder">Partner Slot</MudText>
-                </div>
-                <div class="partner-item placeholder">
-                    <div class="partner-icon-placeholder">
-                        <MudIcon Icon="@Icons.Material.Filled.Add" Color="Color.Default" />
-                    </div>
-                    <MudText Typo="Typo.caption" Class="partner-name-placeholder">Partner Slot</MudText>
-                </div>
-            </MudStack>
         </MudContainer>
     </section>
 
