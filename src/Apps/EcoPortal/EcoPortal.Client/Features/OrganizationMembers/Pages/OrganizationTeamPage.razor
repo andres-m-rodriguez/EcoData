@@ -23,14 +23,7 @@
 <PageTitle>Team - EcoData</PageTitle>
 
 <EcoDataPageLayout Title="Teams" ParentPath="@($"/organizations/{OrganizationId}")"
-                   ActionTitle="Requests" OnActionClick="NavigateToRequests">
-    <Actions>
-        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Inbox"
-                   Href="@($"/organizations/{OrganizationId}/requests")">
-            Requests
-        </MudButton>
-    </Actions>
-    <ChildContent>
+                   NavbarActions="@([new("Requests", NavigateToRequests)])">
         <SearchHeader SearchSignal="SearchTextSignal" Placeholder="Search members..." EnableSticky="true" />
 
         @if (LoadOrganizationCommand.IsLoading)
@@ -134,7 +127,6 @@
                 </EcoDataVirtualizedList>
             </MudPaper>
         }
-    </ChildContent>
 </EcoDataPageLayout>
 
 @code {

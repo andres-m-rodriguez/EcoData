@@ -18,21 +18,11 @@
 <PageTitle>Sensors - EcoData</PageTitle>
 
 <EcoDataPageLayout Title="Sensors" ParentPath="@($"/organizations/{OrganizationId}")"
-                   ActionTitle="Add" OnActionClick="NavigateToCreateSensor">
-    <Actions>
-        <RequireOrganizationPermission Permission="@Permissions.Sensor.Create" OrganizationId="OrganizationId">
-            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add"
-                       OnClick="NavigateToCreateSensor">
-                Add
-            </MudButton>
-        </RequireOrganizationPermission>
-    </Actions>
-    <ChildContent>
-        <SensorList OrganizationId="OrganizationId"
-                    EmptyMessage="No sensors yet"
-                    EmptySubMessage="Add sensors to start monitoring water quality."
-                    OnSensorClick="NavigateToDetail" />
-    </ChildContent>
+                   NavbarActions="@([new("Add", NavigateToCreateSensor)])">
+    <SensorList OrganizationId="OrganizationId"
+                EmptyMessage="No sensors yet"
+                EmptySubMessage="Add sensors to start monitoring water quality."
+                OnSensorClick="NavigateToDetail" />
 </EcoDataPageLayout>
 
 @code {
