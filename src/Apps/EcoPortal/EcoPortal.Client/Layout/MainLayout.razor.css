@@ -19,6 +19,18 @@
     letter-spacing: -0.025em;
 }
 
+/* Mobile page title */
+.page-title {
+    font-family: 'Newsreader', serif;
+    font-weight: 700;
+    font-size: 1.25rem;
+    color: var(--mud-palette-primary);
+    letter-spacing: -0.025em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
 /* Nav link styling */
 ::deep .nav-link {
     color: var(--mud-palette-text-secondary) !important;
