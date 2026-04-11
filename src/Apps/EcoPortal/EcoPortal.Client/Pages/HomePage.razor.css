@@ -62,7 +62,6 @@
     letter-spacing: 0.2em;
     color: var(--mud-palette-secondary);
     margin-bottom: 1rem;
-    animation: fadeInUp 0.6s ease-out forwards;
 }
 
 .hero-title {
@@ -72,8 +71,6 @@
     line-height: 1.1;
     color: var(--mud-palette-primary);
     margin: 0 0 1.5rem;
-    animation: fadeInUp 0.6s ease-out 0.1s forwards;
-    opacity: 0;
 }
 
 .hero-description {
@@ -81,8 +78,6 @@
     line-height: 1.7;
     color: var(--mud-palette-text-secondary);
     margin: 0 0 2.5rem;
-    animation: fadeInUp 0.6s ease-out 0.2s forwards;
-    opacity: 0;
 }
 
 ::deep .hero-link {
@@ -93,8 +88,6 @@
     font-weight: 600;
     color: var(--mud-palette-primary) !important;
     transition: gap 0.2s ease;
-    animation: fadeInUp 0.6s ease-out 0.3s forwards;
-    opacity: 0;
 }
 
 ::deep .hero-link:hover {
@@ -107,8 +100,6 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    animation: fadeInScale 0.8s ease-out 0.2s forwards;
-    opacity: 0;
 }
 
 .hero-circle-outer {
