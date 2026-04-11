@@ -1,4 +1,5 @@
 @page "/organizations/{OrganizationId:guid}/requests"
+@using EcoData.Organization.Contracts
 @using EcoData.Organization.Contracts.Dtos
 @using EcoData.Organization.Contracts.Parameters
 @using EcoData.Organization.Contracts.Requests
@@ -188,7 +189,7 @@
     {
         var parameters = new DialogParameters<ConfirmDialog>
         {
-            { x => x.ContentText, $"Approve access request from {request.UserDisplayName}? They will be added as a Viewer." },
+            { x => x.ContentText, $"Approve access request from {request.UserDisplayName}? They will be added as a {DefaultOrganizationRoles.Viewer}." },
             { x => x.ButtonText, "Approve" },
             { x => x.Color, Color.Success }
         };

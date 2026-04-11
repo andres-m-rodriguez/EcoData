@@ -5,6 +5,7 @@ using EcoData.Organization.Contracts.Dtos;
 using EcoData.Organization.Contracts.Parameters;
 using EcoData.Organization.Contracts.Requests;
 using EcoData.Organization.DataAccess.Interfaces;
+using DefaultRoles = EcoData.Organization.Contracts.DefaultOrganizationRoles;
 using EcoData.Organization.Database.Models;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -246,7 +247,7 @@ public static class OrganizationAccessRequestEndpoints
                         await memberRepository.CreateAsync(
                             organizationId,
                             existingRequest.UserId,
-                            "Viewer",
+                            DefaultRoles.Viewer,
                             ct
                         );
                     }

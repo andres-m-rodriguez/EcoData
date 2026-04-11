@@ -1,3 +1,4 @@
+@using EcoData.Organization.Contracts
 @using EcoData.Organization.Contracts.Dtos
 
 <MudDialog>
@@ -16,9 +17,9 @@
                        @bind-Value="_role"
                        Label="Role"
                        Variant="Variant.Outlined">
-                <MudSelectItem Value="@("Viewer")">Viewer</MudSelectItem>
-                <MudSelectItem Value="@("Contributor")">Contributor</MudSelectItem>
-                <MudSelectItem Value="@("Admin")">Admin</MudSelectItem>
+                <MudSelectItem Value="@DefaultOrganizationRoles.Viewer">Viewer</MudSelectItem>
+                <MudSelectItem Value="@DefaultOrganizationRoles.Contributor">Contributor</MudSelectItem>
+                <MudSelectItem Value="@DefaultOrganizationRoles.Admin">Admin</MudSelectItem>
             </MudSelect>
         </MudStack>
     </DialogContent>
@@ -41,9 +42,9 @@
     public string MemberName { get; set; } = string.Empty;
 
     [Parameter]
-    public string CurrentRole { get; set; } = "Viewer";
+    public string CurrentRole { get; set; } = DefaultOrganizationRoles.Viewer;
 
-    private string _role = "Viewer";
+    private string _role = DefaultOrganizationRoles.Viewer;
 
     protected override void OnInitialized()
     {
