@@ -19,10 +19,14 @@
     letter-spacing: -0.025em;
 }
 
-/* Mobile page title - layout classes only, font styles come from NuiNativeNavbar */
-::deep .page-title {
-    flex-grow: 1;
-    text-align: center;
+/* Mobile page title */
+.page-title {
+    font-family: 'Newsreader', serif;
+    font-weight: 700;
+    font-size: 1.5rem;
+    color: var(--mud-palette-primary);
+    letter-spacing: -0.025em;
+    white-space: nowrap;
 }
 
 /* Nav link styling */
