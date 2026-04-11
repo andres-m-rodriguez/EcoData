@@ -18,43 +18,79 @@
 <MudLayout>
     <MudAppBar Elevation="0" Fixed="true" Class="app-bar-blur">
 
-        @* Mobile: Back button only (hidden on md+ and on Home page) *@
-        <div class="d-flex d-md-none">
-            @if (Navigation.CanGoBack && !IsHomePage)
-            {
-                <MudIconButton Icon="@Icons.Material.Filled.ArrowBack" Color="Color.Dark"
-                               Class="back-btn-mobile" OnClick="NavigateBackAsync" />
-            }
-        </div>
+        @* Mobile: Back button + Title OR Logo *@
+        <MudHidden Breakpoint="Breakpoint.MdAndUp">
+            <div class="d-flex align-center" style="flex: 1;">
+                @if (!IsHomePage)
+                {
+                    @if (Navigation.CanGoBack)
+                    {
+                        <MudIconButton Icon="@Icons.Material.Filled.ArrowBack" Color="Color.Dark"
+                                       OnClick="NavigateBackAsync" />
+                    }
+                    <span class="page-title flex-grow-1 text-center">
+                        @Navigation.PageTitle
+                    </span>
+                }
+                else
+                {
+                    <span class="logo-text">Ecoportal</span>
+                }
+            </div>
+        </MudHidden>
 
-        <span class="logo-text ml-2">Ecoportal</span>
+        @* Desktop: Logo + Page Title *@
+        <MudHidden Breakpoint="Breakpoint.SmAndDown">
+            <div class="d-flex align-center">
+                <span class="logo-text">Ecoportal</span>
+                @if (!IsHomePage && Navigation.PageTitle is not null)
+                {
+                    <MudDivider Vertical="true" FlexItem="true" Class="mx-4 my-3" />
+                    <span class="logo-text">@Navigation.PageTitle</span>
+                }
+            </div>
+        </MudHidden>
 
-        @* Desktop: Navigation links (hidden on sm-) *@
-        <div class="d-none d-md-flex align-center ml-6 gap-4">
-            <MudLink Href="@HomePage.Path" Underline="Underline.None" Class="@GetNavLinkClass(HomePage.Path)">
-                Home
-            </MudLink>
-            <MudLink Href="@SensorsPage.Path" Underline="Underline.None" Class="@GetNavLinkClass(SensorsPage.Path)">
-                Sensors
-            </MudLink>
-            <MudLink Href="@HealthAlertsPage.Path" Underline="Underline.None"
-                     Class="@GetNavLinkClass(HealthAlertsPage.Path)">
-                Alerts
-            </MudLink>
-            <MudLink Href="/organizations/discover" Underline="Underline.None"
-                     Class="@GetNavLinkClass("/organizations")">
-                Organizations
-            </MudLink>
-            <MudLink Href="@GettingStartedPage.Path" Underline="Underline.None"
-                     Class="@GetNavLinkClass(GettingStartedPage.Path)">
-                Getting Started
-            </MudLink>
-        </div>
+        @* Desktop: Navigation links *@
+        <MudHidden Breakpoint="Breakpoint.SmAndDown">
+            <div class="d-flex align-center ml-6 gap-4">
+                <MudLink Href="@HomePage.Path" Underline="Underline.None" Class="@GetNavLinkClass(HomePage.Path)">
+                    Home
+                </MudLink>
+                <MudLink Href="@SensorsPage.Path" Underline="Underline.None" Class="@GetNavLinkClass(SensorsPage.Path)">
+                    Sensors
+                </MudLink>
+                <MudLink Href="@HealthAlertsPage.Path" Underline="Underline.None"
+                         Class="@GetNavLinkClass(HealthAlertsPage.Path)">
+                    Alerts
+                </MudLink>
+                <MudLink Href="/organizations/discover" Underline="Underline.None"
+                         Class="@GetNavLinkClass("/organizations")">
+                    Organizations
+                </MudLink>
+                <MudLink Href="@GettingStartedPage.Path" Underline="Underline.None"
+                         Class="@GetNavLinkClass(GettingStartedPage.Path)">
+                    Getting Started
+                </MudLink>
+            </div>
+        </MudHidden>
 
         <MudSpacer />
 
-        @* Desktop: User menu (hidden on sm-) *@
-        <div class="d-none d-md-flex align-center">
+        @* Mobile: Action button at far right *@
+        <MudHidden Breakpoint="Breakpoint.MdAndUp">
+            @if (!IsHomePage && Navigation.PageAction is not null)
+            {
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small"
+                           OnClick="@(() => Navigation.PageAction.OnClick())">
+                    @Navigation.PageAction.Title
+                </MudButton>
+            }
+        </MudHidden>
+
+        @* Desktop: User menu *@
+        <MudHidden Breakpoint="Breakpoint.SmAndDown">
+            <div class="d-flex align-center">
             @if (AuthState.IsAuthenticated)
             {
                 <MudMenu AnchorOrigin="Origin.BottomRight" TransformOrigin="Origin.TopRight">
@@ -86,7 +122,8 @@
                     Sign In
                 </MudButton>
             }
-        </div>
+            </div>
+        </MudHidden>
     </MudAppBar>
 
     <MudMainContent Class="main-content">
@@ -108,8 +145,9 @@
 
 </MudLayout>
 
-@* Mobile Bottom Navigation (hidden on md+) - Outside MudLayout for stability *@
-<div class="d-md-none bottom-nav">
+@* Mobile Bottom Navigation - Outside MudLayout for stability *@
+<MudHidden Breakpoint="Breakpoint.MdAndUp">
+    <div class="bottom-nav">
     <MudStack Row="true" Justify="Justify.SpaceAround" AlignItems="AlignItems.Center" Class="bottom-nav-container">
         <MudButton Variant="Variant.Text" Color="@GetBottomNavColor(NavigationTab.Home)" Class="bottom-nav-item"
                    OnClick="@(() => NavigateToBottomNav(NavigationTab.Home))">
@@ -140,12 +178,14 @@
             </MudStack>
         </MudButton>
     </MudStack>
-</div>
+    </div>
+</MudHidden>
 
 @code {
     private bool _isDarkMode;
     private string _pageTransitionClass = "";
     private string _navigationKey = Guid.NewGuid().ToString();
+    private string _lastUri = "";
 
     private bool IsHomePage => Navigation.CurrentTab == NavigationTab.Home;
 
@@ -169,13 +209,18 @@
 
     private void HandleNavigationStateChanged()
     {
-        _pageTransitionClass = Navigation.Direction switch
+        // Only change key and transition class on actual navigation (URI change)
+        if (_lastUri != Navigation.CurrentUri)
         {
-            NavigationDirection.Forward => "page-transition-forward",
-            NavigationDirection.Back => "page-transition-back",
-            _ => ""
-        };
-        _navigationKey = Guid.NewGuid().ToString();
+            _lastUri = Navigation.CurrentUri;
+            _pageTransitionClass = Navigation.Direction switch
+            {
+                NavigationDirection.Forward => "page-transition-forward",
+                NavigationDirection.Back => "page-transition-back",
+                _ => ""
+            };
+            _navigationKey = Guid.NewGuid().ToString();
+        }
         InvokeAsync(StateHasChanged);
     }
 

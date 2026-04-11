@@ -12,24 +12,9 @@
 @inject AuthStateService AuthState
 
 <PageTitle>Discover Organizations - EcoData</PageTitle>
+<EcoPortalTitle Title="Organizations" />
 
 <div class="organizations-page">
-    <header class="organizations-header">
-        <div class="header-title-section">
-            <span class="header-label">Research Partners</span>
-            <h1 class="header-heading">Organizations</h1>
-        </div>
-        @if (AuthState.IsGlobalAdmin)
-        {
-            <MudIconButton Icon="@Icons.Material.Filled.Add"
-                           Variant="Variant.Filled"
-                           Color="Color.Primary"
-                           Size="Size.Medium"
-                           Href="/organizations/create"
-                           Style="border-radius: 10px;" />
-        }
-    </header>
-
     <section class="organizations-content">
         <SearchHeader SearchSignal="SearchTextSignal" Placeholder="Search organizations..." />
 

@@ -9,9 +9,9 @@
 @inject ISensorReadingHttpClient ReadingClient
 @inject IDialogService DialogService
 
-<PageTitle>@(_sensor?.Name ?? "Sensor") Readings - EcoData</PageTitle>
+<PageTitle>Sensor Readings - EcoData</PageTitle>
 
-<EcoDataPageLayout ParentPath="@($"/sensors/{SensorId}")">
+<EcoDataPageLayout Title="Readings" ParentPath="@($"/sensors/{SensorId}")">
     <ChildContent>
         @if (_loading)
         {

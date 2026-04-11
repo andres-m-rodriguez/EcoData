@@ -1,19 +1,14 @@
 @page "/sensors"
 @using EcoData.Sensors.Contracts.Dtos
 @using EcoPortal.Client.Features.Sensors.Components
+@using EcoPortal.Client.Components
 @using EcoPortal.Client.Services
 @inject INavigationService Navigation
 
 <PageTitle>Sensors - EcoData</PageTitle>
+<EcoPortalTitle Title="Sensors" />
 
 <div class="sensors-page">
-    <header class="sensors-header">
-        <div class="header-title-section">
-            <span class="header-label">Observatory Network</span>
-            <h1 class="header-heading">Sensors</h1>
-        </div>
-    </header>
-
     <section class="sensors-content">
         <SensorList OnSensorClick="NavigateToDetail" />
     </section>

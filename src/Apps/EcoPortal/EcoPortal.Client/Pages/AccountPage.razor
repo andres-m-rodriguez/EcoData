@@ -7,11 +7,10 @@
 @inject INavigationService Navigation
 
 <PageTitle>Account - EcoData</PageTitle>
+<EcoPortalTitle Title="Account" />
 
 <div class="narrow-page">
     <MudStack Spacing="4">
-        <PageHeader Label="Profile" Title="Account" />
-
         @if (AuthState.IsAuthenticated)
         {
             <MudCard Elevation="0" Outlined="true">
