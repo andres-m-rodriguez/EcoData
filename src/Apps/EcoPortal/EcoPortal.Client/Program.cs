@@ -1,5 +1,6 @@
 using EcoData.Identity.Application.Client;
 using EcoData.Locations.Application.Client;
+using EcoData.NativeUi.Services;
 using EcoData.Organization.Application.Client;
 using EcoData.Sensors.Application.Client;
 using EcoPortal.Client.Authorization;
@@ -31,7 +32,12 @@ builder.Services.AddHttpClient<IDataSourceHttpClient, DataSourceHttpClient>(clie
 builder.Services.AddMemoryCache();
 builder.Services.AddSingleton<IOrganizationCacheService, OrganizationCacheService>();
 builder.Services.AddScoped<ILeafletMapService, LeafletMapService>();
+
+// Navigation services (order matters for DI)
+builder.Services.AddScoped<INativeNavigationManager, NativeNavigationManager>();
+builder.Services.AddScoped<ITabNavigationService, TabNavigationService>();
 builder.Services.AddScoped<INavigationService, NavigationService>();
+
 builder.Services.AddScoped<AuthStateService>();
 builder.Services.AddScoped<PermissionContextService>();
 builder.Services.AddScoped<ClientAuthStateProvider>();
