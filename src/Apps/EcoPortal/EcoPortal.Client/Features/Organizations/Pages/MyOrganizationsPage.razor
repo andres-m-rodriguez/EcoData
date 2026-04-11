@@ -13,8 +13,7 @@
 
 <PageTitle>My Organizations - EcoData</PageTitle>
 
-<EcoDataPageLayout Label="Organizations" Title="My Organizations">
-    <ChildContent>
+<NuiPageLayout Label="Organizations" Title="My Organizations">
         <MudPaper Elevation="1" Class="pa-5 rounded-lg">
             @if (LoadMyOrganizationsCommand.IsLoading)
             {
@@ -83,8 +82,7 @@
                 </MudStack>
             }
         </MudPaper>
-    </ChildContent>
-</EcoDataPageLayout>
+</NuiPageLayout>
 
 @code {
     private List<MyOrganizationDto> _myOrganizations = [];

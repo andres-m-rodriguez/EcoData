@@ -30,10 +30,8 @@
 @inject IOrganizationCacheService OrganizationCache
 
 <PageTitle>Organization Details - EcoData</PageTitle>
-<EcoPortalTitle Title="Organization Details" />
 
-<EcoDataPageLayout ParentPath="/organizations/discover">
-    <ChildContent>
+<NuiPageLayout Title="Organization Details" ParentPath="/organizations/discover">
         @if (_viewModel is null && _organizationFetch.IsLoading)
         {
             <MudPaper Elevation="1" Class="pa-6 rounded-lg mb-6">
@@ -400,8 +398,7 @@
                 </Tabs>
             </MudPaper>
         }
-    </ChildContent>
-</EcoDataPageLayout>
+</NuiPageLayout>
 
 @code {
     [Parameter]

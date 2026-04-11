@@ -17,13 +17,13 @@
 
 <PageTitle>Sensors - EcoData</PageTitle>
 
-<EcoDataPageLayout Title="Sensors" ParentPath="@($"/organizations/{OrganizationId}")"
-                   NavbarActions="@([new("Add", NavigateToCreateSensor)])">
+<NuiPageLayout Title="Sensors" ParentPath="@($"/organizations/{OrganizationId}")"
+                 Actions="@([new("Add", NavigateToCreateSensor)])">
     <SensorList OrganizationId="OrganizationId"
                 EmptyMessage="No sensors yet"
                 EmptySubMessage="Add sensors to start monitoring water quality."
                 OnSensorClick="NavigateToDetail" />
-</EcoDataPageLayout>
+</NuiPageLayout>
 
 @code {
     [Parameter]

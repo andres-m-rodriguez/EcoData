@@ -1,12 +1,11 @@
 @page "/orgs"
 @using EcoData.NativeUi.Services
-@using EcoPortal.Client.Components
 @using EcoPortal.Client.Services
 @inject INativeNavigationManager Navigation
+@inject INativeNavbarManager Navbar
 @inject AuthStateService AuthState
 
 <PageTitle>Organizations - EcoData</PageTitle>
-<EcoPortalTitle Title="Organizations" />
 
 <div class="narrow-page">
     <MudStack Spacing="2">
@@ -31,4 +30,8 @@
 </div>
 
 @code {
+    protected override void OnInitialized()
+    {
+        Navbar.SetTitle("Organizations");
+    }
 }

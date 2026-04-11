@@ -7,10 +7,8 @@
 @inject INativeNavigationManager Navigation
 
 <PageTitle>Alert Details - EcoData</PageTitle>
-<EcoPortalTitle Title="Alert Details" />
 
-<EcoDataPageLayout ParentPath="/alerts">
-    <ChildContent>
+<NuiPageLayout Title="Alert Details" ParentPath="/alerts">
         @if (_loading)
         {
             <MudProgressCircular Color="Color.Primary" Indeterminate />
@@ -102,8 +100,7 @@
                 </div>
             </div>
         }
-    </ChildContent>
-</EcoDataPageLayout>
+</NuiPageLayout>
 
 @code {
     private SensorHealthAlertDtoForDetail? _alert;
