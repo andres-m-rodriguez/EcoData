@@ -11,14 +11,12 @@
 
 <PageTitle>Create Organization - EcoData</PageTitle>
 
-<EcoDataPageLayout Title="Create Organization" ParentPath="/organizations/discover">
-    <ChildContent>
+<NuiPageLayout Title="Create Organization" ParentPath="/organizations/discover">
         <MudPaper Elevation="1" Class="pa-6 rounded-lg">
             <OrganizationForm Model="_model" SubmitButtonText="Create" ErrorMessage="@_errorMessage"
                               IsLoading="CreateCommand.IsLoading" OnSubmit="HandleSubmit" OnCancel="NavigateBack" />
         </MudPaper>
-    </ChildContent>
-</EcoDataPageLayout>
+</NuiPageLayout>
 
 @code {
     private readonly OrganizationForm.OrganizationFormModel _model = new();

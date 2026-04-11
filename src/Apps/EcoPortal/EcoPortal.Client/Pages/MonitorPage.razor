@@ -1,10 +1,9 @@
 @page "/monitor"
 @using EcoData.NativeUi.Services
-@using EcoPortal.Client.Components
 @inject INativeNavigationManager Navigation
+@inject INativeNavbarManager Navbar
 
 <PageTitle>Monitor - EcoData</PageTitle>
-<EcoPortalTitle Title="Monitor" />
 
 <div class="narrow-page">
     <MudStack Spacing="2">
@@ -21,4 +20,8 @@
 </div>
 
 @code {
+    protected override void OnInitialized()
+    {
+        Navbar.SetTitle("Monitor");
+    }
 }

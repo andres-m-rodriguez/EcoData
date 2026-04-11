@@ -7,10 +7,8 @@
 @inject ISensorHttpClient SensorClient
 
 <PageTitle>Sensor Details - EcoData</PageTitle>
-<EcoPortalTitle Title="Sensor Details" />
 
-<EcoDataPageLayout ParentPath="/sensors">
-    <ChildContent>
+<NuiPageLayout Title="Sensor Details" ParentPath="/sensors">
         @if (_loading)
         {
             <SensorDetailSkeleton />
@@ -33,8 +31,7 @@
                 </NotAuthorized>
             </AuthorizeView>
         }
-    </ChildContent>
-</EcoDataPageLayout>
+</NuiPageLayout>
 
 @code {
     private SensorDtoForDetail? _sensor;

@@ -2,11 +2,10 @@
 @using EcoData.NativeUi.Services
 @using EcoData.Sensors.Contracts.Dtos
 @using EcoPortal.Client.Features.Sensors.Components
-@using EcoPortal.Client.Components
 @inject INativeNavigationManager Navigation
+@inject INativeNavbarManager Navbar
 
 <PageTitle>Sensors - EcoData</PageTitle>
-<EcoPortalTitle Title="Sensors" />
 
 <div class="sensors-page">
     <section class="sensors-content">
@@ -15,6 +14,11 @@
 </div>
 
 @code {
+    protected override void OnInitialized()
+    {
+        Navbar.SetTitle("Sensors");
+    }
+
     private void NavigateToDetail(SensorDtoForList sensor)
     {
         Navigation.NavigateTo($"/sensors/{sensor.Id}");
