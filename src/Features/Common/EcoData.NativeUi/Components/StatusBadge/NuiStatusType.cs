@@ -1,4 +1,4 @@
-namespace EcoData.NativeUi;
+namespace EcoData.NativeUi.Components.StatusBadge;
 
 public enum NuiStatusType
 {
@@ -9,11 +9,4 @@ public enum NuiStatusType
     Success,
     Warning,
     Error
-}
-
-public enum NuiStatusSize
-{
-    Small,
-    Medium,
-    Large
 }

@@ -1,4 +1,4 @@
-using EcoData.NativeUi.Services;
+using EcoData.NativeUi.Components.NativeNavigation;
 
 namespace EcoPortal.Client.Services;
 
