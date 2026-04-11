@@ -7,10 +7,12 @@
 
 /* Page enter animation - plays once per session */
 .page-enter {
+    opacity: 0;
     animation: pageEnter 0.6s ease-out forwards;
 }
 
 :global(body.animations-seen) .page-enter {
+    opacity: 1;
     animation: none;
 }
 
