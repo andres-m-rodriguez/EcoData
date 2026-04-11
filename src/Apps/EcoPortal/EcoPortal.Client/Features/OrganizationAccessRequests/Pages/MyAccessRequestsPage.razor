@@ -17,14 +17,7 @@
 <PageTitle>My Access Requests - EcoData</PageTitle>
 
 <EcoDataPageLayout Label="Organizations" Title="My Requests"
-                   ActionTitle="Request" OnActionClick="OnRequestAction">
-    <Actions>
-        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add"
-                   OnClick="OpenRequestAccessDialog">
-            Request
-        </MudButton>
-    </Actions>
-    <ChildContent>
+                   NavbarActions="@([new("Request", OnRequestAction)])">
         <SearchHeader SearchSignal="SearchTextSignal" Placeholder="Search requests..." />
 
         <MudPaper Elevation="1" Class="rounded-lg">
@@ -131,7 +124,6 @@
                 </ItemTemplate>
             </EcoDataVirtualizedList>
         </MudPaper>
-    </ChildContent>
 </EcoDataPageLayout>
 
 @code {
