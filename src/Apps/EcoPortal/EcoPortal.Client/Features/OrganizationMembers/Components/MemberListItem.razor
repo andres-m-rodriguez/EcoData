@@ -1,3 +1,4 @@
+@using EcoData.Organization.Contracts
 @using EcoData.Organization.Contracts.Dtos
 
 <MudPaper Elevation="0" Class="pa-3 border-b">
@@ -23,7 +24,7 @@
                      Size="Size.Small"
                      Color="@GetRoleColor(Member.RoleName)"
                      Variant="Variant.Filled">
-                @if (Member.RoleName == "Admin")
+                @if (Member.RoleName == DefaultOrganizationRoles.Admin)
                 {
                     <MudIcon Icon="@Icons.Material.Filled.Shield" Size="Size.Small" Class="mr-1" />
                 }
@@ -80,8 +81,8 @@
 
     private static Color GetRoleColor(string role) => role switch
     {
-        "Admin" => Color.Warning,
-        "Contributor" => Color.Info,
+        DefaultOrganizationRoles.Admin => Color.Warning,
+        DefaultOrganizationRoles.Contributor => Color.Info,
         _ => Color.Default
     };
 
