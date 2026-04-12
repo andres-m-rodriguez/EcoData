@@ -3,6 +3,7 @@
     <Project Path="src/Host/EcoData.AppHost/EcoData.AppHost.csproj" />
     <Project Path="src/Host/EcoData.ServiceDefaults/EcoData.ServiceDefaults.csproj" />
     <Project Path="src/Host/EcoData.Seeder/EcoData.Seeder.csproj" />
+    <Project Path="src/Host/Aspire.Hosting.Zig/Aspire.Hosting.Zig.csproj" />
   </Folder>
   <Folder Name="/Apps/EcoPortal/">
     <Project Path="src/Apps/EcoPortal/EcoPortal.Server/EcoPortal.Server.csproj" />

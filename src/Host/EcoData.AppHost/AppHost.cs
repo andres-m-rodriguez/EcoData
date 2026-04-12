@@ -1,6 +1,15 @@
+using Aspire.Hosting.ApplicationModel;
 using EcoData.AppHost.Extensions;
 
 var builder = DistributedApplication.CreateBuilder(args);
+
+// Zig Demo App (local development only)
+var zigDemo = builder
+    .AddZigApp("zig-demo", "../../Apps/ZigDemo")
+    .WithOptimization(ZigOptimizeMode.Debug)
+    .WithZigHttpEndpoint(8090)
+    .WithHttpHealthCheck("/health")
+    .ExcludeFromManifest();
 
 // Azure Container App Environment for deployment
 builder.AddAzureContainerAppEnvironment("aca-env");
