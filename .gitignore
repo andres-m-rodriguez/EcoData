@@ -485,3 +485,7 @@ $RECYCLE.BIN/
 # Deploy scripts generated files
 affected.txt
 deployable-resources.json
+
+# Zig
+.zig-cache/
+zig-out/
