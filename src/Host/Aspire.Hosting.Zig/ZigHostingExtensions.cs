@@ -9,7 +9,7 @@ namespace Aspire.Hosting;
 /// <summary>
 /// Extension methods for adding Zig application resources to the distributed application builder.
 /// </summary>
-public static class ZigAppResourceBuilderExtensions
+public static class ZigHostingExtensions
 {
     private static bool _buildEventRegistered;
 
@@ -37,7 +37,6 @@ public static class ZigAppResourceBuilderExtensions
         }
 
         var workingDirectory = Path.GetFullPath(projectDirectory);
-        var zigExecutable = zigPath ?? "zig";
 
         var resource = new ZigAppResource(name, workingDirectory) { ZigPath = zigPath };
 
