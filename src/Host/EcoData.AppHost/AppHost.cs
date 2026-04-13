@@ -3,12 +3,13 @@ using EcoData.AppHost.Extensions;
 
 var builder = DistributedApplication.CreateBuilder(args);
 
-// Zig Demo App (local development only)
-var zigDemo = builder
-    .AddZigApp("zig-demo", "../../Apps/ZigDemo")
+// Genomics Zig App (local development only)
+var genomics = builder
+    .AddZigApp("genomics", "../../Apps/EcoData.Genomics")
     .WithOptimization(ZigOptimizeMode.Debug)
-    .WithZigHttpEndpoint(8090)
-    .WithHttpHealthCheck("/health")
+    .WithZigHttpEndpoint(8080)
+    .WithEnvironment("PORT", "8080")
+    .WithExternalHttpEndpoints()
     .ExcludeFromManifest();
 
 // Azure Container App Environment for deployment
@@ -61,9 +62,9 @@ var ecoportal = builder
     .PublishAsAzureContainerApp(
         (infra, app) =>
         {
-            // Configure 2 min replicas for zero-downtime rolling deployments
-            app.Template.Scale.MinReplicas = 2;
-            app.Template.Scale.MaxReplicas = 10;
+            // Configure 2 max replicas
+            app.Template.Scale.MinReplicas = 1;
+            app.Template.Scale.MaxReplicas = 2;
         }
     );
 
