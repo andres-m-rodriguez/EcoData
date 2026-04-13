@@ -5,7 +5,7 @@ var builder = DistributedApplication.CreateBuilder(args);
 
 // Genomics Zig App (local development only)
 var genomics = builder
-    .AddZigApp("genomics", "../../Apps/EcoData.Genomics")
+    .AddZigApp("genomics", "../../Features/Genomics/EcoData.Genomics.Api")
     .WithOptimization(ZigOptimizeMode.Debug)
     .WithZigHttpEndpoint(8080)
     .WithEnvironment("PORT", "8080")
