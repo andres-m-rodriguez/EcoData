@@ -9,18 +9,18 @@
     <Project Path="src/Apps/EcoPortal/EcoPortal.Server/EcoPortal.Server.csproj" />
     <Project Path="src/Apps/EcoPortal/EcoPortal.Client/EcoPortal.Client.csproj" />
   </Folder>
-  <Folder Name="/Apps/EcoData.Genomics/">
-    <File Path="src/Apps/EcoData.Genomics/build.zig" />
-    <File Path="src/Apps/EcoData.Genomics/src/main.zig" />
-    <File Path="src/Apps/EcoData.Genomics/src/web/web.zig" />
-    <File Path="src/Apps/EcoData.Genomics/src/web/Application.zig" />
-    <File Path="src/Apps/EcoData.Genomics/src/web/ApplicationBuilder.zig" />
-    <File Path="src/Apps/EcoData.Genomics/src/web/Router.zig" />
-    <File Path="src/Apps/EcoData.Genomics/src/web/route.zig" />
-    <File Path="src/Apps/EcoData.Genomics/src/web/ServerContext.zig" />
-    <File Path="src/Apps/EcoData.Genomics/src/web/HttpResult.zig" />
-    <File Path="src/Apps/EcoData.Genomics/src/web/RouteParams.zig" />
-    <File Path="src/Apps/EcoData.Genomics/src/web/parsing.zig" />
+  <Folder Name="/Features/Genomics/">
+    <File Path="src/Features/Genomics/EcoData.Genomics.Api/build.zig" />
+    <File Path="src/Features/Genomics/EcoData.Genomics.Api/src/main.zig" />
+    <File Path="src/Features/Genomics/EcoData.Genomics.Api/src/web/web.zig" />
+    <File Path="src/Features/Genomics/EcoData.Genomics.Api/src/web/Application.zig" />
+    <File Path="src/Features/Genomics/EcoData.Genomics.Api/src/web/ApplicationBuilder.zig" />
+    <File Path="src/Features/Genomics/EcoData.Genomics.Api/src/web/Router.zig" />
+    <File Path="src/Features/Genomics/EcoData.Genomics.Api/src/web/route.zig" />
+    <File Path="src/Features/Genomics/EcoData.Genomics.Api/src/web/ServerContext.zig" />
+    <File Path="src/Features/Genomics/EcoData.Genomics.Api/src/web/HttpResult.zig" />
+    <File Path="src/Features/Genomics/EcoData.Genomics.Api/src/web/RouteParams.zig" />
+    <File Path="src/Features/Genomics/EcoData.Genomics.Api/src/web/parsing.zig" />
   </Folder>
   <Folder Name="/Features/Common/">
     <Project Path="src/Features/Common/EcoData.Common.Http.Helpers/EcoData.Common.Http.Helpers.csproj" />
