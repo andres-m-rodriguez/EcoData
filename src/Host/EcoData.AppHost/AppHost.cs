@@ -3,12 +3,10 @@ using EcoData.AppHost.Extensions;
 
 var builder = DistributedApplication.CreateBuilder(args);
 
-// Zig Demo App (local development only)
-var zigDemo = builder
-    .AddZigApp("zig-demo", "../../Apps/ZigDemo")
+// Genomics Zig App (local development only)
+var genomics = builder
+    .AddZigApp("genomics", "../../Apps/EcoData.Genomics")
     .WithOptimization(ZigOptimizeMode.Debug)
-    .WithZigHttpEndpoint(8090)
-    .WithHttpHealthCheck("/health")
     .ExcludeFromManifest();
 
 // Azure Container App Environment for deployment
