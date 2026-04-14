@@ -1,5 +1,4 @@
 using System.Security.Claims;
-using EcoData.Organization.Api.Authentication;
 using EcoData.Identity.Contracts.Authorization;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.DependencyInjection;
@@ -19,14 +18,6 @@ public static class AuthorizationExtensions
             options.AddPolicy(
                 PolicyNames.Admin,
                 policy => policy.RequireClaim(ClaimTypes.Role, "Admin")
-            );
-
-            options.AddPolicy(
-                PolicyNames.ApiKey,
-                policy =>
-                    policy
-                        .AddAuthenticationSchemes(ApiKeyAuthenticationOptions.DefaultScheme)
-                        .RequireAuthenticatedUser()
             );
         });
 

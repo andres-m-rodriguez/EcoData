@@ -11,7 +11,6 @@ public static class OrganizationApiExtensions
         app.MapOrganizationBlockedUserEndpoints();
         app.MapMemberEndpoints();
         app.MapPermissionEndpoints();
-        app.MapApiKeyEndpoints();
         app.MapDataSourceEndpoints();
 
         return app;

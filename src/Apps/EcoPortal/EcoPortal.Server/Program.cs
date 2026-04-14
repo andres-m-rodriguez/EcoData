@@ -9,7 +9,6 @@ using EcoData.Locations.Api;
 using EcoData.Locations.DataAccess.Extensions;
 using EcoData.Locations.Database.Extensions;
 using EcoData.Organization.Api;
-using EcoData.Organization.Api.Authentication;
 using EcoData.Organization.Api.Authorization;
 using EcoData.Organization.DataAccess;
 using EcoData.Organization.Database.Extensions;
@@ -55,7 +54,6 @@ builder
             .IdentityConstants
             .ApplicationScheme;
     })
-    .AddApiKeyAuthentication()
     .AddSensorJwtAuthentication(builder.Configuration);
 
 builder.Services.AddOrganizationAuthorization();
