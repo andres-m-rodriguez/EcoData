@@ -30,7 +30,7 @@ public static class SensorJwtAuthentication
                 ValidAudience = jwtSettings.Audience,
                 ValidateIssuerSigningKey = true,
                 IssuerSigningKey = new SymmetricSecurityKey(
-                    Encoding.UTF8.GetBytes(jwtSettings.SecretKey)
+                    Encoding.UTF8.GetBytes(jwtSettings.SensorSecretKey)
                 ),
                 ValidateLifetime = true,
                 ClockSkew = TimeSpan.FromMinutes(5),

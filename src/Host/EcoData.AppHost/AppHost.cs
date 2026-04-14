@@ -15,8 +15,9 @@ var genomics = builder
 // Azure Container App Environment for deployment
 builder.AddAzureContainerAppEnvironment("aca-env");
 
-// JWT secret - from Key Vault in production, parameter in development
-var jwtSecretKey = builder.AddParameter("jwt-secret-key", secret: true);
+// JWT secrets - from Key Vault in production, parameters in development
+var jwtSensorSecretKey = builder.AddParameter("jwt-sensor-secret-key", secret: true);
+var jwtUserSecretKey = builder.AddParameter("jwt-user-secret-key", secret: true);
 
 var postgres = builder
     .AddAzurePostgresFlexibleServer("postgres")
@@ -54,7 +55,8 @@ var ecoportal = builder
     .WithReference(sensorsDb)
     .WithReference(locationsDb)
     .WithReference(identityDb)
-    .WithEnvironment("Jwt__SecretKey", jwtSecretKey)
+    .WithEnvironment("Jwt__SensorSecretKey", jwtSensorSecretKey)
+    .WithEnvironment("Jwt__UserSecretKey", jwtUserSecretKey)
     .WithEnvironment("Jwt__Issuer", "EcoData")
     .WithEnvironment("Jwt__Audience", "EcoData")
     .WithEnvironment("Jwt__ExpirationHours", "24")

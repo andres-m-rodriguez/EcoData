@@ -37,12 +37,9 @@ builder.Services.AddScoped<ILeafletMapService, LeafletMapService>();
 builder.Services.AddNativeUi();
 builder.Services.AddScoped<ITabNavigationService, TabNavigationService>();
 
+builder.Services.AddAuthenticationStateDeserialization();
 builder.Services.AddScoped<AuthStateService>();
 builder.Services.AddScoped<PermissionContextService>();
-builder.Services.AddScoped<ClientAuthStateProvider>();
-builder.Services.AddScoped<AuthenticationStateProvider>(sp =>
-    sp.GetRequiredService<ClientAuthStateProvider>()
-);
 
 // Register custom policy provider BEFORE AddAuthorizationCore (uses TryAddSingleton)
 builder.Services.AddSingleton<IAuthorizationPolicyProvider, OrganizationPermissionPolicyProvider>();

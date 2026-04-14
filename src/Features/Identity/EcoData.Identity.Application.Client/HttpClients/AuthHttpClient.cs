@@ -8,14 +8,14 @@ namespace EcoData.Identity.Application.Client.HttpClients;
 
 public sealed class AuthHttpClient(HttpClient httpClient) : IAuthHttpClient
 {
-    public async Task<OneOf<UserInfo, ProblemDetail>> LoginAsync(LoginRequest request, CancellationToken cancellationToken = default)
+    public async Task<OneOf<LoginResponse, ProblemDetail>> LoginAsync(LoginRequest request, CancellationToken cancellationToken = default)
     {
         var response = await httpClient.PostAsJsonAsync("/api/auth/login", request, cancellationToken);
 
         if (response.IsSuccessStatusCode)
         {
-            var user = await response.Content.ReadFromJsonAsync<UserInfo>(cancellationToken);
-            return user!;
+            var loginResponse = await response.Content.ReadFromJsonAsync<LoginResponse>(cancellationToken);
+            return loginResponse!;
         }
 
         return await response.ReadProblemAsync(cancellationToken);
