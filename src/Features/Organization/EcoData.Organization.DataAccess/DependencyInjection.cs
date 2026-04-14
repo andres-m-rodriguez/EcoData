@@ -15,7 +15,6 @@ public static class DependencyInjection
         services.AddScoped<IOrganizationMembershipRepository, OrganizationMembershipRepository>();
         services.AddScoped<IOrganizationAccessRequestRepository, OrganizationAccessRequestRepository>();
         services.AddScoped<IOrganizationBlockedUserRepository, OrganizationBlockedUserRepository>();
-        services.AddScoped<IApiKeyRepository, ApiKeyRepository>();
         services.AddScoped<IDataSourceRepository, DataSourceRepository>();
         services.AddScoped<IOrganizationPermissionService, OrganizationPermissionService>();
 
