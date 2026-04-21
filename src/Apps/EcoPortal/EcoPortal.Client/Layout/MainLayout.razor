@@ -120,7 +120,7 @@
     </MudAppBar>
 
     <MudMainContent Class="main-content">
-        @* Desktop: Contextual user navigation for organization/account pages *@
+        @* Desktop: Contextual navigation for organization pages *@
         <MudHidden Breakpoint="Breakpoint.SmAndDown">
             @if (AuthState.IsAuthenticated && IsUserContextPage)
             {
@@ -145,13 +145,6 @@
                                StartIcon="@Icons.Material.Outlined.HowToReg"
                                Size="Size.Small">
                         Access Requests
-                    </MudButton>
-                    <MudButton Href="/account"
-                               Variant="@GetUserNavVariant("/account")"
-                               Color="Color.Primary"
-                               StartIcon="@Icons.Material.Outlined.Person"
-                               Size="Size.Small">
-                        Account
                     </MudButton>
                 </MudPaper>
             }
@@ -223,9 +216,7 @@
         get
         {
             var path = Navigation.State.Path;
-            return path.StartsWith("/organizations", StringComparison.OrdinalIgnoreCase) ||
-                   path.StartsWith("/account", StringComparison.OrdinalIgnoreCase) ||
-                   path.StartsWith("/access-requests", StringComparison.OrdinalIgnoreCase);
+            return path.StartsWith("/organizations", StringComparison.OrdinalIgnoreCase);
         }
     }
 
@@ -284,9 +275,7 @@
     private Variant GetUserNavVariant(string path)
     {
         var currentPath = Navigation.State.Path;
-        var isActive = currentPath.Equals(path, StringComparison.OrdinalIgnoreCase) ||
-                       (path == "/account" && currentPath.StartsWith("/account", StringComparison.OrdinalIgnoreCase));
-
+        var isActive = currentPath.Equals(path, StringComparison.OrdinalIgnoreCase);
         return isActive ? Variant.Filled : Variant.Text;
     }
 
