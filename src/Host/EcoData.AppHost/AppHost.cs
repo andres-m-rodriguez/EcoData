@@ -72,6 +72,14 @@ var ecoportal = builder
         }
     );
 
+// FaunaFinder app (local development only)
+var faunafinder = builder
+    .AddProject<Projects.FaunaFinder_Server>("faunafinder")
+    .WithReference(locationsDb)
+    .WithReference(wildlifeDb)
+    .WaitFor(seeder)
+    .ExcludeFromManifest();
+
 var sensorsIngestion = builder
     .AddProject<Projects.EcoData_Sensors_Ingestion>("sensors-ingestion")
     .WithReference(organizationDb)

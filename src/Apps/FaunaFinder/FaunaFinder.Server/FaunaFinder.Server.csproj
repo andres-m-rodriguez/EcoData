@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="MudBlazor" Version="9.1.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="10.0.3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\FaunaFinder.Client\FaunaFinder.Client.csproj" />
+    <ProjectReference Include="..\..\..\Host\EcoData.ServiceDefaults\EcoData.ServiceDefaults.csproj" />
+    <ProjectReference Include="..\..\..\Features\Wildlife\EcoData.Wildlife.Api\EcoData.Wildlife.Api.csproj" />
+    <ProjectReference Include="..\..\..\Features\Wildlife\EcoData.Wildlife.DataAccess\EcoData.Wildlife.DataAccess.csproj" />
+    <ProjectReference Include="..\..\..\Features\Wildlife\EcoData.Wildlife.Database\EcoData.Wildlife.Database.csproj" />
+    <ProjectReference Include="..\..\..\Features\Locations\EcoData.Locations.Api\EcoData.Locations.Api.csproj" />
+    <ProjectReference Include="..\..\..\Features\Locations\EcoData.Locations.DataAccess\EcoData.Locations.DataAccess.csproj" />
+    <ProjectReference Include="..\..\..\Features\Locations\EcoData.Locations.Database\EcoData.Locations.Database.csproj" />
+  </ItemGroup>
+
+</Project>
