@@ -20,6 +20,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\Apps\EcoPortal\EcoPortal.Server\EcoPortal.Server.csproj" />
+    <ProjectReference Include="..\..\Apps\FaunaFinder\FaunaFinder.Server\FaunaFinder.Server.csproj" />
     <ProjectReference Include="..\..\Features\Sensors\EcoData.Sensors.Ingestion\EcoData.Sensors.Ingestion.csproj" />
     <ProjectReference Include="..\EcoData.Seeder\EcoData.Seeder.csproj" />
     <ProjectReference Include="..\Aspire.Hosting.Zig\Aspire.Hosting.Zig.csproj" IsAspireProjectResource="false" />
