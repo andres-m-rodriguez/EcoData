@@ -105,7 +105,7 @@ public static class OrganizationBlockedUserEndpoints
                     );
 
                     return TypedResults.Created(
-                        $"/api/organizations/{organizationId}/blocked-users/{request.UserId}",
+                        $"/organization/organizations/{organizationId}/blocked-users/{request.UserId}",
                         blocked
                     );
                 }

@@ -22,13 +22,13 @@ public sealed class MunicipalityHttpClient(HttpClient httpClient) : IMunicipalit
             .Build();
 
         return httpClient.GetFromJsonAsAsyncEnumerable<MunicipalityDtoForList>(
-            $"api/municipalities{queryString}",
+            $"locations/municipalities{queryString}",
             ct)!;
     }
 
     public async Task<MunicipalityDtoForDetail?> GetByIdAsync(Guid id, CancellationToken ct = default)
     {
-        var response = await httpClient.GetAsync($"api/municipalities/{id}", ct);
+        var response = await httpClient.GetAsync($"locations/municipalities/{id}", ct);
 
         if (!response.IsSuccessStatusCode)
             return null;

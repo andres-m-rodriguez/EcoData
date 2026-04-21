@@ -87,7 +87,7 @@ public static class OrganizationEndpoints
                     }
 
                     var created = await repository.CreateAsync(dto, ct);
-                    return TypedResults.Created($"/api/organizations/{created.Id}", created);
+                    return TypedResults.Created($"/organization/organizations/{created.Id}", created);
                 }
             )
             .WithName("CreateOrganization")
