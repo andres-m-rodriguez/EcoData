@@ -10,6 +10,7 @@
     <PackageReference Include="OneOf.SourceGenerator" Version="3.0.271" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\Common\EcoData.Common.i18n\EcoData.Common.i18n.csproj" />
     <ProjectReference Include="..\..\Common\EcoData.Common.Pagination\EcoData.Common.Pagination.csproj" />
   </ItemGroup>
 </Project>

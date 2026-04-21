@@ -1,4 +1,4 @@
-using EcoData.Wildlife.Contracts;
+using EcoData.Common.i18n;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 

@@ -24,6 +24,7 @@
   </Folder>
   <Folder Name="/Features/Common/">
     <Project Path="src/Features/Common/EcoData.Common.Http.Helpers/EcoData.Common.Http.Helpers.csproj" />
+    <Project Path="src/Features/Common/EcoData.Common.i18n/EcoData.Common.i18n.csproj" />
     <Project Path="src/Features/Common/EcoData.Common.Messaging/EcoData.Common.Messaging.csproj" />
     <Project Path="src/Features/Common/EcoData.Common.Pagination/EcoData.Common.Pagination.csproj" />
     <Project Path="src/Features/Common/EcoData.Common.Pagination.Blazor/EcoData.Common.Pagination.Blazor.csproj" />
