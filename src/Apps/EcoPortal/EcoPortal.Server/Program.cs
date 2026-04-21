@@ -16,6 +16,9 @@ using EcoData.Sensors.Api;
 using EcoData.Sensors.Api.RateLimiting;
 using EcoData.Sensors.DataAccess;
 using EcoData.Sensors.Database.Extensions;
+using EcoData.Wildlife.Api;
+using EcoData.Wildlife.DataAccess;
+using EcoData.Wildlife.Database.Extensions;
 using EcoPortal.Server.Components;
 using EcoPortal.Server.Workers;
 using MudBlazor.Services;
@@ -27,6 +30,7 @@ builder.AddIdentityDatabase();
 builder.AddLocationsDatabase();
 builder.AddOrganizationDatabase();
 builder.AddSensorsDatabase();
+builder.AddWildlifeDatabase();
 
 builder.Services.AddRazorComponents().AddInteractiveWebAssemblyComponents();
 builder.Services.AddCascadingAuthenticationState();
@@ -37,6 +41,7 @@ builder.Services.AddIdentityApplication(builder.Configuration);
 builder.Services.AddLocationsDataAccess();
 builder.Services.AddOrganizationDataAccess();
 builder.Services.AddSensorsDataAccess();
+builder.Services.AddWildlifeDataAccess();
 builder.Services.AddMessaging(messaging => messaging.UseInMemoryTransport());
 builder.Services.AddHostedService<SensorHealthMonitorWorker>();
 
@@ -89,5 +94,6 @@ app.MapSensorsApiEndpoints();
 app.MapUserAuthEndpoints();
 app.MapStateEndpoints();
 app.MapMunicipalityEndpoints();
+app.MapWildlifeApiEndpoints();
 
 app.Run();

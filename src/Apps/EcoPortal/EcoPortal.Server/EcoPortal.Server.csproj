@@ -32,6 +32,9 @@
     <ProjectReference Include="..\..\..\Features\Sensors\EcoData.Sensors.Api\EcoData.Sensors.Api.csproj" />
     <ProjectReference Include="..\..\..\Features\Sensors\EcoData.Sensors.DataAccess\EcoData.Sensors.DataAccess.csproj" />
     <ProjectReference Include="..\..\..\Features\Sensors\EcoData.Sensors.Database\EcoData.Sensors.Database.csproj" />
+    <ProjectReference Include="..\..\..\Features\Wildlife\EcoData.Wildlife.Api\EcoData.Wildlife.Api.csproj" />
+    <ProjectReference Include="..\..\..\Features\Wildlife\EcoData.Wildlife.DataAccess\EcoData.Wildlife.DataAccess.csproj" />
+    <ProjectReference Include="..\..\..\Features\Wildlife\EcoData.Wildlife.Database\EcoData.Wildlife.Database.csproj" />
   </ItemGroup>
 
 </Project>
