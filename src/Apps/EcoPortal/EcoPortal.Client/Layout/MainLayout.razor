@@ -124,32 +124,36 @@
         <MudHidden Breakpoint="Breakpoint.SmAndDown">
             @if (AuthState.IsAuthenticated && IsUserContextPage)
             {
-                <div class="user-context-nav">
-                    <MudContainer MaxWidth="MaxWidth.Large" Class="px-4">
-                        <div class="user-nav-links">
-                            <MudLink Href="/organizations/discover" Underline="Underline.None"
-                                     Class="@GetUserNavClass("/organizations/discover")">
-                                <MudIcon Icon="@Icons.Material.Outlined.Explore" Size="Size.Small" Class="mr-1" />
-                                Discover
-                            </MudLink>
-                            <MudLink Href="/organizations/my" Underline="Underline.None"
-                                     Class="@GetUserNavClass("/organizations/my")">
-                                <MudIcon Icon="@Icons.Material.Outlined.Business" Size="Size.Small" Class="mr-1" />
-                                My Organizations
-                            </MudLink>
-                            <MudLink Href="/organizations/requests" Underline="Underline.None"
-                                     Class="@GetUserNavClass("/organizations/requests")">
-                                <MudIcon Icon="@Icons.Material.Outlined.HowToReg" Size="Size.Small" Class="mr-1" />
-                                My Access Requests
-                            </MudLink>
-                            <MudLink Href="/account" Underline="Underline.None"
-                                     Class="@GetUserNavClass("/account")">
-                                <MudIcon Icon="@Icons.Material.Outlined.Person" Size="Size.Small" Class="mr-1" />
-                                Account
-                            </MudLink>
-                        </div>
-                    </MudContainer>
-                </div>
+                <MudPaper Elevation="0" Class="mb-4 py-2 px-4 d-flex gap-2">
+                    <MudButton Href="/organizations/discover"
+                               Variant="@GetUserNavVariant("/organizations/discover")"
+                               Color="Color.Primary"
+                               StartIcon="@Icons.Material.Outlined.Explore"
+                               Size="Size.Small">
+                        Discover
+                    </MudButton>
+                    <MudButton Href="/organizations/my"
+                               Variant="@GetUserNavVariant("/organizations/my")"
+                               Color="Color.Primary"
+                               StartIcon="@Icons.Material.Outlined.Business"
+                               Size="Size.Small">
+                        My Organizations
+                    </MudButton>
+                    <MudButton Href="/organizations/requests"
+                               Variant="@GetUserNavVariant("/organizations/requests")"
+                               Color="Color.Primary"
+                               StartIcon="@Icons.Material.Outlined.HowToReg"
+                               Size="Size.Small">
+                        Access Requests
+                    </MudButton>
+                    <MudButton Href="/account"
+                               Variant="@GetUserNavVariant("/account")"
+                               Color="Color.Primary"
+                               StartIcon="@Icons.Material.Outlined.Person"
+                               Size="Size.Small">
+                        Account
+                    </MudButton>
+                </MudPaper>
             }
         </MudHidden>
         @if (IsHomePage)
@@ -277,13 +281,13 @@
         return isActive ? "nav-link-active" : "nav-link";
     }
 
-    private string GetUserNavClass(string path)
+    private Variant GetUserNavVariant(string path)
     {
         var currentPath = Navigation.State.Path;
         var isActive = currentPath.Equals(path, StringComparison.OrdinalIgnoreCase) ||
                        (path == "/account" && currentPath.StartsWith("/account", StringComparison.OrdinalIgnoreCase));
 
-        return isActive ? "user-nav-link user-nav-link-active" : "user-nav-link";
+        return isActive ? Variant.Filled : Variant.Text;
     }
 
     private Color GetBottomNavColor(NavigationTab tab)
