@@ -9,6 +9,7 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\EcoData.Wildlife.Application.Server\EcoData.Wildlife.Application.Server.csproj" />
+    <ProjectReference Include="..\EcoData.Wildlife.DataAccess\EcoData.Wildlife.DataAccess.csproj" />
     <ProjectReference Include="..\..\Locations\EcoData.Locations.DataAccess\EcoData.Locations.DataAccess.csproj" />
   </ItemGroup>
 </Project>
