@@ -126,28 +126,6 @@ namespace EcoData.Wildlife.Database.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "species_locations",
-                columns: table => new
-                {
-                    id = table.Column<Guid>(type: "uuid", nullable: false),
-                    species_id = table.Column<Guid>(type: "uuid", nullable: false),
-                    latitude = table.Column<double>(type: "double precision", nullable: false),
-                    longitude = table.Column<double>(type: "double precision", nullable: false),
-                    radius_meters = table.Column<double>(type: "double precision", nullable: false),
-                    description = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("pk_species_locations", x => x.id);
-                    table.ForeignKey(
-                        name: "fk_species_locations_species_species_id",
-                        column: x => x.species_id,
-                        principalTable: "species",
-                        principalColumn: "id",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
                 name: "species_category_links",
                 columns: table => new
                 {
@@ -237,11 +215,6 @@ namespace EcoData.Wildlife.Database.Migrations
                 table: "species_category_links",
                 columns: new[] { "species_id", "category_id" },
                 unique: true);
-
-            migrationBuilder.CreateIndex(
-                name: "species_locations_species_id_idx",
-                table: "species_locations",
-                column: "species_id");
         }
 
         /// <inheritdoc />
@@ -255,9 +228,6 @@ namespace EcoData.Wildlife.Database.Migrations
 
             migrationBuilder.DropTable(
                 name: "species_category_links");
-
-            migrationBuilder.DropTable(
-                name: "species_locations");
 
             migrationBuilder.DropTable(
                 name: "fws_actions");

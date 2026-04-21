@@ -6,7 +6,6 @@ namespace EcoData.Wildlife.Database;
 public sealed class WildlifeDbContext(DbContextOptions<WildlifeDbContext> options) : DbContext(options)
 {
     public DbSet<Species> Species => Set<Species>();
-    public DbSet<SpeciesLocation> SpeciesLocations => Set<SpeciesLocation>();
     public DbSet<MunicipalitySpecies> MunicipalitySpecies => Set<MunicipalitySpecies>();
     public DbSet<SpeciesCategory> SpeciesCategories => Set<SpeciesCategory>();
     public DbSet<SpeciesCategoryLink> SpeciesCategoryLinks => Set<SpeciesCategoryLink>();
@@ -18,7 +17,6 @@ public sealed class WildlifeDbContext(DbContextOptions<WildlifeDbContext> option
     {
         modelBuilder.HasPostgresExtension("postgis");
         modelBuilder.ApplyConfiguration(new Species.EntityConfiguration());
-        modelBuilder.ApplyConfiguration(new SpeciesLocation.EntityConfiguration());
         modelBuilder.ApplyConfiguration(new MunicipalitySpecies.EntityConfiguration());
         modelBuilder.ApplyConfiguration(new SpeciesCategory.EntityConfiguration());
         modelBuilder.ApplyConfiguration(new SpeciesCategoryLink.EntityConfiguration());

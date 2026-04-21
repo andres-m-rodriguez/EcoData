@@ -12,7 +12,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace EcoData.Wildlife.Database.Migrations
 {
     [DbContext(typeof(WildlifeDbContext))]
-    [Migration("20260421143040_Initial")]
+    [Migration("20260421143934_Initial")]
     partial class Initial
     {
         /// <inheritdoc />
@@ -247,43 +247,6 @@ namespace EcoData.Wildlife.Database.Migrations
                     b.ToTable("species_category_links", (string)null);
                 });
 
-            modelBuilder.Entity("EcoData.Wildlife.Database.Models.SpeciesLocation", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasColumnName("id");
-
-                    b.Property<string>("Description")
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)")
-                        .HasColumnName("description");
-
-                    b.Property<double>("Latitude")
-                        .HasColumnType("double precision")
-                        .HasColumnName("latitude");
-
-                    b.Property<double>("Longitude")
-                        .HasColumnType("double precision")
-                        .HasColumnName("longitude");
-
-                    b.Property<double>("RadiusMeters")
-                        .HasColumnType("double precision")
-                        .HasColumnName("radius_meters");
-
-                    b.Property<Guid>("SpeciesId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("species_id");
-
-                    b.HasKey("Id")
-                        .HasName("pk_species_locations");
-
-                    b.HasIndex("SpeciesId")
-                        .HasDatabaseName("species_locations_species_id_idx");
-
-                    b.ToTable("species_locations", (string)null);
-                });
-
             modelBuilder.Entity("EcoData.Wildlife.Database.Models.FwsAction", b =>
                 {
                     b.OwnsMany("EcoData.Common.i18n.LocaleValue", "Name", b1 =>
@@ -490,18 +453,6 @@ namespace EcoData.Wildlife.Database.Migrations
                     b.Navigation("Species");
                 });
 
-            modelBuilder.Entity("EcoData.Wildlife.Database.Models.SpeciesLocation", b =>
-                {
-                    b.HasOne("EcoData.Wildlife.Database.Models.Species", "Species")
-                        .WithMany("Locations")
-                        .HasForeignKey("SpeciesId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("fk_species_locations_species_species_id");
-
-                    b.Navigation("Species");
-                });
-
             modelBuilder.Entity("EcoData.Wildlife.Database.Models.FwsAction", b =>
                 {
                     b.Navigation("FwsLinks");
@@ -517,8 +468,6 @@ namespace EcoData.Wildlife.Database.Migrations
                     b.Navigation("CategoryLinks");
 
                     b.Navigation("FwsLinks");
-
-                    b.Navigation("Locations");
 
                     b.Navigation("MunicipalitySpecies");
                 });
