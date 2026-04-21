@@ -10,6 +10,7 @@
     private ElementReference _mapElement;
     private IJSObjectReference? _module;
     private IJSObjectReference? _mapInstance;
+    private DotNetObjectReference<NuiMap<TMarker>>? _dotNetRef;
     private bool _isInitialized;
 
     [Parameter, EditorRequired]
@@ -27,22 +28,18 @@
     [Parameter]
     public string Width { get; set; } = "100%";
 
-    [Parameter]
-    public EventCallback<TMarker> OnMarkerClick { get; set; }
-
-    [Parameter]
-    public EventCallback<MapCoordinate> OnMapClick { get; set; }
-
     protected override void OnInitialized()
     {
         Controller.OnMarkersChanged += HandleMarkersChanged;
         Controller.OnViewChanged += HandleViewChanged;
+        Controller.OnGeoJsonChanged += HandleGeoJsonChanged;
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
         {
+            _dotNetRef = DotNetObjectReference.Create(this);
             _module = await JS.InvokeAsync<IJSObjectReference>(
                 "import", "./_content/EcoData.Common.Maps/nuimap.js");
 
@@ -51,12 +48,36 @@
                 _mapElement,
                 Controller.Center.Latitude,
                 Controller.Center.Longitude,
-                Controller.Zoom);
+                Controller.Zoom,
+                _dotNetRef);
 
             _isInitialized = true;
             await UpdateMarkers();
+            await UpdateGeoJson();
         }
     }
+
+    // ===== JS Callbacks =====
+
+    [JSInvokable]
+    public void OnMarkerClickedFromJs(int index)
+    {
+        Controller.RaiseMarkerClicked(index);
+    }
+
+    [JSInvokable]
+    public void OnMapClickedFromJs(double lat, double lng)
+    {
+        Controller.RaiseMapClicked(new MapCoordinate(lat, lng));
+    }
+
+    [JSInvokable]
+    public void OnGeoJsonClickedFromJs(string layerId, string? properties)
+    {
+        Controller.RaiseGeoJsonClicked(layerId, properties);
+    }
+
+    // ===== Event Handlers =====
 
     private async void HandleMarkersChanged()
     {
@@ -82,12 +103,23 @@
         }
     }
 
+    private async void HandleGeoJsonChanged()
+    {
+        if (_isInitialized)
+        {
+            await InvokeAsync(async () => await UpdateGeoJson());
+        }
+    }
+
+    // ===== Update Methods =====
+
     private async Task UpdateMarkers()
     {
         if (_mapInstance is null || _module is null) return;
 
-        var markerData = Controller.Markers.Select(m => new
+        var markerData = Controller.Markers.Select((m, i) => new
         {
+            index = i,
             lat = m.Coordinate.Latitude,
             lng = m.Coordinate.Longitude,
             popup = m.PopupContent,
@@ -96,6 +128,28 @@
 
         await _module.InvokeVoidAsync("setMarkers", _mapInstance, markerData);
     }
+
+    private async Task UpdateGeoJson()
+    {
+        if (_mapInstance is null || _module is null) return;
+
+        if (Controller is MapController<TMarker> mapController)
+        {
+            var geoJsonLayers = mapController.GetGeoJsonLayers().Select(g => new
+            {
+                id = g.Id,
+                data = g.Data,
+                fillColor = g.FillColor,
+                fillOpacity = g.FillOpacity,
+                strokeColor = g.StrokeColor,
+                strokeWidth = g.StrokeWidth
+            }).ToArray();
+
+            await _module.InvokeVoidAsync("setGeoJson", _mapInstance, geoJsonLayers);
+        }
+    }
+
+    // ===== Helpers =====
 
     private string GetContainerClass()
     {
@@ -117,6 +171,7 @@
     {
         Controller.OnMarkersChanged -= HandleMarkersChanged;
         Controller.OnViewChanged -= HandleViewChanged;
+        Controller.OnGeoJsonChanged -= HandleGeoJsonChanged;
 
         if (_mapInstance is not null)
         {
@@ -144,5 +199,7 @@
                 // Ignore during disconnect
             }
         }
+
+        _dotNetRef?.Dispose();
     }
 }

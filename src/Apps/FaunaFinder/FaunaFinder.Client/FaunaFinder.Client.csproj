@@ -16,6 +16,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\..\Features\Wildlife\EcoData.Wildlife.Contracts\EcoData.Wildlife.Contracts.csproj" />
     <ProjectReference Include="..\..\..\Features\Locations\EcoData.Locations.Contracts\EcoData.Locations.Contracts.csproj" />
+    <ProjectReference Include="..\..\..\Features\Common\EcoData.Common.Maps\EcoData.Common.Maps.csproj" />
   </ItemGroup>
 
 </Project>

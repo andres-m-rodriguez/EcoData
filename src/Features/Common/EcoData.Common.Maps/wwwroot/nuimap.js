@@ -1,6 +1,6 @@
 // Leaflet map interop for NuiMap component
 
-export function initialize(element, lat, lng, zoom) {
+export function initialize(element, lat, lng, zoom, dotNetRef) {
     const map = L.map(element).setView([lat, lng], zoom);
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -8,6 +8,15 @@ export function initialize(element, lat, lng, zoom) {
     }).addTo(map);
 
     map._nuiMarkers = L.layerGroup().addTo(map);
+    map._nuiGeoJson = L.layerGroup().addTo(map);
+    map._dotNetRef = dotNetRef;
+
+    // Map click handler
+    map.on('click', (e) => {
+        if (map._dotNetRef) {
+            map._dotNetRef.invokeMethodAsync('OnMapClickedFromJs', e.latlng.lat, e.latlng.lng);
+        }
+    });
 
     return map;
 }
@@ -34,7 +43,49 @@ export function setMarkers(map, markers) {
             marker.bindTooltip(m.tooltip);
         }
 
+        // Marker click handler
+        marker.on('click', () => {
+            if (map._dotNetRef) {
+                map._dotNetRef.invokeMethodAsync('OnMarkerClickedFromJs', m.index);
+            }
+        });
+
         map._nuiMarkers.addLayer(marker);
+    });
+}
+
+export function setGeoJson(map, layers) {
+    if (!map) return;
+
+    map._nuiGeoJson.clearLayers();
+
+    layers.forEach(layer => {
+        try {
+            const geoJsonData = JSON.parse(layer.data);
+            const geoJsonLayer = L.geoJSON(geoJsonData, {
+                style: {
+                    fillColor: layer.fillColor,
+                    fillOpacity: layer.fillOpacity,
+                    color: layer.strokeColor,
+                    weight: layer.strokeWidth
+                },
+                onEachFeature: (feature, leafletLayer) => {
+                    // GeoJSON feature click handler
+                    leafletLayer.on('click', (e) => {
+                        L.DomEvent.stopPropagation(e);
+                        if (map._dotNetRef) {
+                            const properties = feature.properties
+                                ? JSON.stringify(feature.properties)
+                                : null;
+                            map._dotNetRef.invokeMethodAsync('OnGeoJsonClickedFromJs', layer.id, properties);
+                        }
+                    });
+                }
+            });
+            map._nuiGeoJson.addLayer(geoJsonLayer);
+        } catch (e) {
+            console.error('Failed to parse GeoJSON for layer:', layer.id, e);
+        }
     });
 }
 

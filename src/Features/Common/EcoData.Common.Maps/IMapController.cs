@@ -8,6 +8,8 @@ namespace EcoData.Common.Maps;
 /// <typeparam name="TMarker">The type of marker data.</typeparam>
 public interface IMapController<TMarker>
 {
+    // ===== Properties =====
+
     /// <summary>
     /// Current markers on the map.
     /// </summary>
@@ -22,6 +24,8 @@ public interface IMapController<TMarker>
     /// Current zoom level.
     /// </summary>
     int Zoom { get; }
+
+    // ===== Marker Methods =====
 
     /// <summary>
     /// Set all markers.
@@ -53,6 +57,25 @@ public interface IMapController<TMarker>
     /// </summary>
     int IndexOf(TMarker marker);
 
+    // ===== GeoJSON Methods =====
+
+    /// <summary>
+    /// Add a GeoJSON layer to the map.
+    /// </summary>
+    void AddGeoJson(MapGeoJson geoJson);
+
+    /// <summary>
+    /// Remove a GeoJSON layer by ID.
+    /// </summary>
+    bool RemoveGeoJson(string id);
+
+    /// <summary>
+    /// Clear all GeoJSON layers.
+    /// </summary>
+    void ClearGeoJson();
+
+    // ===== View Methods =====
+
     /// <summary>
     /// Set the map view (center and zoom).
     /// </summary>
@@ -68,6 +91,8 @@ public interface IMapController<TMarker>
     /// </summary>
     void FitToBounds(MapBounds bounds);
 
+    // ===== Events (internal, raised by component) =====
+
     /// <summary>
     /// Fired when markers change.
     /// </summary>
@@ -77,4 +102,41 @@ public interface IMapController<TMarker>
     /// Fired when the view changes.
     /// </summary>
     event Action? OnViewChanged;
+
+    /// <summary>
+    /// Fired when GeoJSON layers change.
+    /// </summary>
+    event Action? OnGeoJsonChanged;
+
+    /// <summary>
+    /// Fired when a marker is clicked. Receives the marker index.
+    /// </summary>
+    event Action<int>? OnMarkerClicked;
+
+    /// <summary>
+    /// Fired when the map is clicked. Receives the coordinate.
+    /// </summary>
+    event Action<MapCoordinate>? OnMapClicked;
+
+    /// <summary>
+    /// Fired when a GeoJSON feature is clicked. Receives the layer ID and feature properties as JSON.
+    /// </summary>
+    event Action<string, string?>? OnGeoJsonClicked;
+
+    // ===== Internal methods for component to raise events =====
+
+    /// <summary>
+    /// Called by the component when a marker is clicked.
+    /// </summary>
+    void RaiseMarkerClicked(int index);
+
+    /// <summary>
+    /// Called by the component when the map is clicked.
+    /// </summary>
+    void RaiseMapClicked(MapCoordinate coordinate);
+
+    /// <summary>
+    /// Called by the component when a GeoJSON feature is clicked.
+    /// </summary>
+    void RaiseGeoJsonClicked(string layerId, string? properties);
 }

@@ -9,6 +9,7 @@ namespace EcoData.Common.Maps;
 public class MapController<TMarker> : IMapController<TMarker>
 {
     private readonly List<TMarker> _markers = [];
+    private readonly Dictionary<string, MapGeoJson> _geoJsonLayers = [];
 
     public IReadOnlyList<TMarker> Markers => _markers;
 
@@ -16,8 +17,15 @@ public class MapController<TMarker> : IMapController<TMarker>
 
     public int Zoom { get; private set; } = 9;
 
+    // ===== Events =====
     public event Action? OnMarkersChanged;
     public event Action? OnViewChanged;
+    public event Action? OnGeoJsonChanged;
+    public event Action<int>? OnMarkerClicked;
+    public event Action<MapCoordinate>? OnMapClicked;
+    public event Action<string, string?>? OnGeoJsonClicked;
+
+    // ===== Marker Methods =====
 
     public void SetMarkers(IEnumerable<TMarker> markers)
     {
@@ -60,6 +68,34 @@ public class MapController<TMarker> : IMapController<TMarker>
 
     public int IndexOf(TMarker marker) => _markers.IndexOf(marker);
 
+    // ===== GeoJSON Methods =====
+
+    public void AddGeoJson(MapGeoJson geoJson)
+    {
+        _geoJsonLayers[geoJson.Id] = geoJson;
+        OnGeoJsonChanged?.Invoke();
+    }
+
+    public bool RemoveGeoJson(string id)
+    {
+        var removed = _geoJsonLayers.Remove(id);
+        if (removed)
+        {
+            OnGeoJsonChanged?.Invoke();
+        }
+        return removed;
+    }
+
+    public void ClearGeoJson()
+    {
+        _geoJsonLayers.Clear();
+        OnGeoJsonChanged?.Invoke();
+    }
+
+    internal IEnumerable<MapGeoJson> GetGeoJsonLayers() => _geoJsonLayers.Values;
+
+    // ===== View Methods =====
+
     public void SetView(MapCoordinate center, int zoom)
     {
         Center = center;
@@ -75,5 +111,22 @@ public class MapController<TMarker> : IMapController<TMarker>
     public void FitToBounds(MapBounds bounds)
     {
         OnViewChanged?.Invoke();
+    }
+
+    // ===== Event Raising (called by component) =====
+
+    public void RaiseMarkerClicked(int index)
+    {
+        OnMarkerClicked?.Invoke(index);
+    }
+
+    public void RaiseMapClicked(MapCoordinate coordinate)
+    {
+        OnMapClicked?.Invoke(coordinate);
+    }
+
+    public void RaiseGeoJsonClicked(string layerId, string? properties)
+    {
+        OnGeoJsonClicked?.Invoke(layerId, properties);
     }
 }

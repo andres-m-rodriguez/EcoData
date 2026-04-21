@@ -10,6 +10,7 @@
     <title>FaunaFinder - Puerto Rico Wildlife</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
     <link href="_content/MudBlazor/MudBlazor.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="" />
     <link rel="stylesheet" href="@Assets["app.css"]" />
     <link rel="stylesheet" href="@Assets["FaunaFinder.Server.styles.css"]" />
     <HeadOutlet @rendermode="renderMode" />
@@ -17,6 +18,7 @@
 
 <body>
     <FaunaFinder.Client.Routes @rendermode="renderMode" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
     <script src="_content/MudBlazor/MudBlazor.min.js"></script>
     <script src="_framework/blazor.web.js"></script>
 </body>

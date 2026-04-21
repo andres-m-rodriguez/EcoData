@@ -1,0 +1,255 @@
+@page "/sightings"
+@using EcoData.Common.Maps
+@using EcoData.Common.Maps.Components
+@using EcoData.Common.Maps.Models
+@using FaunaFinder.Client.Models
+
+<PageTitle>Wildlife Sightings - FaunaFinder</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.Large" Class="mt-4">
+    <MudText Typo="Typo.h4" GutterBottom="true">Wildlife Sightings</MudText>
+    <MudText Typo="Typo.body1" Class="mb-4">
+        Explore wildlife sightings across Puerto Rico. Click on markers to see details, or click the map to add a new sighting.
+    </MudText>
+
+    <MudPaper Elevation="2" Class="pa-2 mb-4">
+        <NuiMap TMarker="SightingMarker" Controller="_mapController" Height="500px" />
+    </MudPaper>
+
+    <MudStack Row="true" Spacing="2" Class="mb-4" Wrap="Wrap.Wrap">
+        <MudButton Variant="Variant.Outlined" Color="Color.Primary" OnClick="AddRandomSighting">
+            Add Random Sighting
+        </MudButton>
+        <MudButton Variant="Variant.Outlined" Color="Color.Secondary" OnClick="ClearSightings">
+            Clear All
+        </MudButton>
+        <MudButton Variant="Variant.Outlined" OnClick="FitToMarkers">
+            Fit to Markers
+        </MudButton>
+        <MudButton Variant="Variant.Outlined" Color="@(_showProtectedAreas ? Color.Success : Color.Default)"
+                   OnClick="ToggleProtectedAreas">
+            @(_showProtectedAreas ? "Hide" : "Show") Protected Areas
+        </MudButton>
+    </MudStack>
+
+    @if (_selectedMarker is not null)
+    {
+        <MudAlert Severity="Severity.Info" Class="mb-4" ShowCloseIcon="true" CloseIconClicked="() => _selectedMarker = null">
+            <strong>Selected:</strong> @_selectedMarker.SpeciesName — Spotted @_selectedMarker.SightedAt.ToLocalTime().ToString("g")
+        </MudAlert>
+    }
+
+    @if (_lastClickedArea is not null)
+    {
+        <MudAlert Severity="Severity.Success" Class="mb-4" ShowCloseIcon="true" CloseIconClicked="() => _lastClickedArea = null">
+            <strong>Protected Area:</strong> @_lastClickedArea
+        </MudAlert>
+    }
+
+    <MudText Typo="Typo.body2" Color="Color.Secondary">
+        Total sightings: @_mapController.Markers.Count
+    </MudText>
+</MudContainer>
+
+@code {
+    private readonly MapController<SightingMarker> _mapController = new();
+    private readonly Random _random = new();
+    private SightingMarker? _selectedMarker;
+    private string? _lastClickedArea;
+    private bool _showProtectedAreas;
+
+    private readonly string[] _species =
+    [
+        "Puerto Rican Parrot",
+        "Coquí Frog",
+        "Puerto Rican Boa",
+        "West Indian Manatee",
+        "Leatherback Sea Turtle",
+        "Puerto Rican Woodpecker",
+        "Yellow-shouldered Blackbird",
+        "Puerto Rican Nightjar"
+    ];
+
+    protected override void OnInitialized()
+    {
+        // Subscribe to click events
+        _mapController.OnMarkerClicked += OnMarkerClicked;
+        _mapController.OnMapClicked += OnMapClicked;
+        _mapController.OnGeoJsonClicked += OnGeoJsonClicked;
+
+        // Add some initial demo sightings
+        var demoSightings = new List<SightingMarker>
+        {
+            new()
+            {
+                SpeciesName = "Puerto Rican Parrot",
+                Coordinate = new MapCoordinate(18.3186, -65.8194),
+                SightedAt = DateTime.Now.AddDays(-2)
+            },
+            new()
+            {
+                SpeciesName = "Coquí Frog",
+                Coordinate = new MapCoordinate(18.2341, -66.0485),
+                SightedAt = DateTime.Now.AddDays(-1)
+            },
+            new()
+            {
+                SpeciesName = "West Indian Manatee",
+                Coordinate = new MapCoordinate(18.4655, -66.1057),
+                SightedAt = DateTime.Now.AddHours(-6)
+            },
+            new()
+            {
+                SpeciesName = "Leatherback Sea Turtle",
+                Coordinate = new MapCoordinate(18.4883, -67.1513),
+                SightedAt = DateTime.Now.AddDays(-5)
+            }
+        };
+
+        _mapController.SetMarkers(demoSightings);
+    }
+
+    private void OnMarkerClicked(int index)
+    {
+        if (index >= 0 && index < _mapController.Markers.Count)
+        {
+            _selectedMarker = _mapController.Markers[index];
+            InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private void OnMapClicked(MapCoordinate coordinate)
+    {
+        // Add a sighting where the user clicked
+        var species = _species[_random.Next(_species.Length)];
+        _mapController.AddMarker(new SightingMarker
+        {
+            SpeciesName = species,
+            Coordinate = coordinate,
+            SightedAt = DateTime.Now
+        });
+        InvokeAsync(StateHasChanged);
+    }
+
+    private void OnGeoJsonClicked(string layerId, string? properties)
+    {
+        _lastClickedArea = layerId;
+        InvokeAsync(StateHasChanged);
+    }
+
+    private void ToggleProtectedAreas()
+    {
+        _showProtectedAreas = !_showProtectedAreas;
+
+        if (_showProtectedAreas)
+        {
+            // El Yunque National Forest (simplified polygon)
+            _mapController.AddGeoJson(new MapGeoJson
+            {
+                Id = "El Yunque National Forest",
+                Data = """
+                {
+                    "type": "Feature",
+                    "properties": { "name": "El Yunque National Forest" },
+                    "geometry": {
+                        "type": "Polygon",
+                        "coordinates": [[
+                            [-65.85, 18.35],
+                            [-65.75, 18.35],
+                            [-65.75, 18.28],
+                            [-65.85, 18.28],
+                            [-65.85, 18.35]
+                        ]]
+                    }
+                }
+                """,
+                FillColor = "#228B22",
+                FillOpacity = 0.3,
+                StrokeColor = "#006400",
+                StrokeWidth = 2
+            });
+
+            // Guánica Dry Forest
+            _mapController.AddGeoJson(new MapGeoJson
+            {
+                Id = "Guánica Dry Forest",
+                Data = """
+                {
+                    "type": "Feature",
+                    "properties": { "name": "Guánica Dry Forest" },
+                    "geometry": {
+                        "type": "Polygon",
+                        "coordinates": [[
+                            [-66.95, 17.98],
+                            [-66.85, 17.98],
+                            [-66.85, 17.93],
+                            [-66.95, 17.93],
+                            [-66.95, 17.98]
+                        ]]
+                    }
+                }
+                """,
+                FillColor = "#DAA520",
+                FillOpacity = 0.3,
+                StrokeColor = "#B8860B",
+                StrokeWidth = 2
+            });
+
+            // Cabo Rojo Wildlife Refuge
+            _mapController.AddGeoJson(new MapGeoJson
+            {
+                Id = "Cabo Rojo Wildlife Refuge",
+                Data = """
+                {
+                    "type": "Feature",
+                    "properties": { "name": "Cabo Rojo Wildlife Refuge" },
+                    "geometry": {
+                        "type": "Polygon",
+                        "coordinates": [[
+                            [-67.20, 18.10],
+                            [-67.12, 18.10],
+                            [-67.12, 18.02],
+                            [-67.20, 18.02],
+                            [-67.20, 18.10]
+                        ]]
+                    }
+                }
+                """,
+                FillColor = "#4169E1",
+                FillOpacity = 0.3,
+                StrokeColor = "#0000CD",
+                StrokeWidth = 2
+            });
+        }
+        else
+        {
+            _mapController.ClearGeoJson();
+            _lastClickedArea = null;
+        }
+    }
+
+    private void AddRandomSighting()
+    {
+        var lat = 17.9 + _random.NextDouble() * 0.6;
+        var lng = -67.3 + _random.NextDouble() * 1.5;
+        var species = _species[_random.Next(_species.Length)];
+
+        _mapController.AddMarker(new SightingMarker
+        {
+            SpeciesName = species,
+            Coordinate = new MapCoordinate(lat, lng),
+            SightedAt = DateTime.Now
+        });
+    }
+
+    private void ClearSightings()
+    {
+        _mapController.ClearMarkers();
+        _selectedMarker = null;
+    }
+
+    private void FitToMarkers()
+    {
+        _mapController.FitToMarkers();
+    }
+}
