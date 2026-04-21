@@ -60,7 +60,11 @@ public static class ZigHostingExtensions
         builder.Eventing.Subscribe<BeforeStartEvent>(
             async (@event, ct) =>
             {
-                var zigResources = @event.Model.Resources.OfType<ZigAppResource>().ToList();
+                var zigResources = @event
+                    .Model.Resources.OfType<ZigAppResource>()
+                    .Where(r => !r.Annotations.OfType<ManifestPublishingCallbackAnnotation>()
+                        .Any(a => a.Callback is null))
+                    .ToList();
 
                 if (zigResources.Count == 0)
                 {
