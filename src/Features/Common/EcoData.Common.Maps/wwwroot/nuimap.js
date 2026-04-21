@@ -1,41 +1,28 @@
 // Leaflet map interop for NuiMap component
 
-const maps = new Map();
-
 export function initialize(element, lat, lng, zoom) {
-    // Create the map instance
     const map = L.map(element).setView([lat, lng], zoom);
 
-    // Add OpenStreetMap tile layer
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
     }).addTo(map);
 
-    // Store markers layer group
     map._nuiMarkers = L.layerGroup().addTo(map);
 
-    // Generate unique ID
-    const id = crypto.randomUUID();
-    maps.set(id, map);
-
-    return { id, map };
+    return map;
 }
 
-export function setView(mapRef, lat, lng, zoom) {
-    const map = mapRef.map || maps.get(mapRef.id);
+export function setView(map, lat, lng, zoom) {
     if (map) {
         map.setView([lat, lng], zoom);
     }
 }
 
-export function setMarkers(mapRef, markers) {
-    const map = mapRef.map || maps.get(mapRef.id);
+export function setMarkers(map, markers) {
     if (!map) return;
 
-    // Clear existing markers
     map._nuiMarkers.clearLayers();
 
-    // Add new markers
     markers.forEach(m => {
         const marker = L.marker([m.lat, m.lng]);
 
@@ -51,8 +38,7 @@ export function setMarkers(mapRef, markers) {
     });
 }
 
-export function fitToMarkers(mapRef) {
-    const map = mapRef.map || maps.get(mapRef.id);
+export function fitToMarkers(map) {
     if (!map) return;
 
     const layers = map._nuiMarkers.getLayers();
@@ -62,8 +48,7 @@ export function fitToMarkers(mapRef) {
     }
 }
 
-export function fitToBounds(mapRef, southWestLat, southWestLng, northEastLat, northEastLng) {
-    const map = mapRef.map || maps.get(mapRef.id);
+export function fitToBounds(map, southWestLat, southWestLng, northEastLat, northEastLng) {
     if (!map) return;
 
     const bounds = L.latLngBounds(
@@ -73,12 +58,8 @@ export function fitToBounds(mapRef, southWestLat, southWestLng, northEastLat, no
     map.fitBounds(bounds);
 }
 
-export function dispose(mapRef) {
-    const id = mapRef.id;
-    const map = mapRef.map || maps.get(id);
-
+export function dispose(map) {
     if (map) {
         map.remove();
-        maps.delete(id);
     }
 }

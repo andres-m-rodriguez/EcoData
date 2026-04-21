@@ -86,9 +86,8 @@
     {
         if (_mapInstance is null || _module is null) return;
 
-        var markerData = Controller.Markers.Select((m, i) => new
+        var markerData = Controller.Markers.Select(m => new
         {
-            id = i,
             lat = m.Coordinate.Latitude,
             lng = m.Coordinate.Longitude,
             popup = m.PopupContent,
