@@ -120,6 +120,38 @@
     </MudAppBar>
 
     <MudMainContent Class="main-content">
+        @* Desktop: Contextual user navigation for organization/account pages *@
+        <MudHidden Breakpoint="Breakpoint.SmAndDown">
+            @if (AuthState.IsAuthenticated && IsUserContextPage)
+            {
+                <div class="user-context-nav">
+                    <MudContainer MaxWidth="MaxWidth.Large" Class="px-4">
+                        <div class="user-nav-links">
+                            <MudLink Href="/organizations/discover" Underline="Underline.None"
+                                     Class="@GetUserNavClass("/organizations/discover")">
+                                <MudIcon Icon="@Icons.Material.Outlined.Explore" Size="Size.Small" Class="mr-1" />
+                                Discover
+                            </MudLink>
+                            <MudLink Href="/organizations/my" Underline="Underline.None"
+                                     Class="@GetUserNavClass("/organizations/my")">
+                                <MudIcon Icon="@Icons.Material.Outlined.Business" Size="Size.Small" Class="mr-1" />
+                                My Organizations
+                            </MudLink>
+                            <MudLink Href="/organizations/requests" Underline="Underline.None"
+                                     Class="@GetUserNavClass("/organizations/requests")">
+                                <MudIcon Icon="@Icons.Material.Outlined.HowToReg" Size="Size.Small" Class="mr-1" />
+                                My Access Requests
+                            </MudLink>
+                            <MudLink Href="/account" Underline="Underline.None"
+                                     Class="@GetUserNavClass("/account")">
+                                <MudIcon Icon="@Icons.Material.Outlined.Person" Size="Size.Small" Class="mr-1" />
+                                Account
+                            </MudLink>
+                        </div>
+                    </MudContainer>
+                </div>
+            }
+        </MudHidden>
         @if (IsHomePage)
         {
             <div class="@_pageTransitionClass" @key="_navigationKey">
@@ -182,6 +214,17 @@
 
     private bool IsHomePage => Tabs.CurrentTab == NavigationTab.Home;
 
+    private bool IsUserContextPage
+    {
+        get
+        {
+            var path = Navigation.State.Path;
+            return path.StartsWith("/organizations", StringComparison.OrdinalIgnoreCase) ||
+                   path.StartsWith("/account", StringComparison.OrdinalIgnoreCase) ||
+                   path.StartsWith("/access-requests", StringComparison.OrdinalIgnoreCase);
+        }
+    }
+
     protected override async Task OnInitializedAsync()
     {
         AuthState.SetAuthStateProvider(AuthStateProvider);
@@ -232,6 +275,15 @@
             : currentPath.StartsWith(path, StringComparison.OrdinalIgnoreCase);
 
         return isActive ? "nav-link-active" : "nav-link";
+    }
+
+    private string GetUserNavClass(string path)
+    {
+        var currentPath = Navigation.State.Path;
+        var isActive = currentPath.Equals(path, StringComparison.OrdinalIgnoreCase) ||
+                       (path == "/account" && currentPath.StartsWith("/account", StringComparison.OrdinalIgnoreCase));
+
+        return isActive ? "user-nav-link user-nav-link-active" : "user-nav-link";
     }
 
     private Color GetBottomNavColor(NavigationTab tab)
