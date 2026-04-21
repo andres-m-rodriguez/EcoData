@@ -1,4 +1,4 @@
-@page "/sensors/{SensorId:guid}/configure"
+@page "/sensor/{SensorId:guid}/configure"
 @using Microsoft.AspNetCore.Authorization
 @attribute [Authorize]
 @using EcoData.Sensors.Application.Client
@@ -19,7 +19,7 @@
 
 <PageTitle>Configure Sensor - EcoData</PageTitle>
 
-<NuiPageLayout Title="Configure Sensor" ParentPath="@($"/sensors/{SensorId}")">
+<NuiPageLayout Title="Configure Sensor" ParentPath="@($"/sensor/{SensorId}")">
         @if (LoadCommand.IsLoading)
         {
             <MudStack Spacing="4">
@@ -345,7 +345,7 @@
         );
     }
 
-    private void NavigateToEdit() => Navigation.NavigateTo($"/sensors/{SensorId}/edit");
+    private void NavigateToEdit() => Navigation.NavigateTo($"/sensor/{SensorId}/edit");
 
     private Color GetHealthStatusColor() => _healthStatus?.Status switch
     {

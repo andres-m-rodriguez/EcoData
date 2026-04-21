@@ -54,7 +54,7 @@ public sealed class TabNavigationService : ITabNavigationService
     private static NavigationTab GetTabFromPath(string path) => path switch
     {
         "/" or "" => NavigationTab.Home,
-        _ when path.StartsWith("/monitor") || path.StartsWith("/sensors") || path.StartsWith("/alerts")
+        _ when path.StartsWith("/monitor") || path.StartsWith("/sensor") || path.StartsWith("/alerts")
             => NavigationTab.Monitor,
         _ when path.StartsWith("/orgs") || path.StartsWith("/organizations") || path.StartsWith("/access-requests")
             => NavigationTab.Orgs,

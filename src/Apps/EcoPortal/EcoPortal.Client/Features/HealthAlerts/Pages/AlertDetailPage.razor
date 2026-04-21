@@ -44,7 +44,7 @@
                             <tr>
                                 <td><strong>Sensor</strong></td>
                                 <td>
-                                    <MudLink Href="@($"/sensors/{_alert.SensorId}")">
+                                    <MudLink Href="@($"/sensor/{_alert.SensorId}")">
                                         @_alert.SensorName
                                     </MudLink>
                                 </td>
@@ -122,7 +122,7 @@
     {
         if (_alert is not null)
         {
-            Navigation.NavigateTo($"/sensors/{_alert.SensorId}");
+            Navigation.NavigateTo($"/sensor/{_alert.SensorId}");
         }
     }
 
