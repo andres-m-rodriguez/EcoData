@@ -17,7 +17,7 @@ public static class OrganizationBlockedUserEndpoints
         this IEndpointRouteBuilder app
     )
     {
-        var group = app.MapGroup("/api/organizations/{organizationId:guid}/blocked-users")
+        var group = app.MapGroup("/organization/organizations/{organizationId:guid}/blocked-users")
             .WithTags("Organization Blocked Users")
             .RequireAuthorization();
 

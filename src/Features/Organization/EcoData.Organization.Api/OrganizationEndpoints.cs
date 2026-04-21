@@ -18,7 +18,7 @@ public static class OrganizationEndpoints
 {
     public static IEndpointRouteBuilder MapOrganizationEndpoints(this IEndpointRouteBuilder app)
     {
-        var group = app.MapGroup("/api/organizations").WithTags("Organizations");
+        var group = app.MapGroup("/organization/organizations").WithTags("Organizations");
 
         group
             .MapGet(

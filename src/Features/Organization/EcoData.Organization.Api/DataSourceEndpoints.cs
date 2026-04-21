@@ -9,7 +9,7 @@ public static class DataSourceEndpoints
 {
     public static IEndpointRouteBuilder MapDataSourceEndpoints(this IEndpointRouteBuilder app)
     {
-        var group = app.MapGroup("/api/datasources").WithTags("DataSources");
+        var group = app.MapGroup("/organization/datasources").WithTags("DataSources");
 
         group
             .MapGet(

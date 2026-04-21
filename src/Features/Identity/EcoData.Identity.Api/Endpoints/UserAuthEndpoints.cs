@@ -16,7 +16,7 @@ public static class UserAuthEndpoints
 {
     public static IEndpointRouteBuilder MapUserAuthEndpoints(this IEndpointRouteBuilder app)
     {
-        var group = app.MapGroup("/api/auth").WithTags("User Auth");
+        var group = app.MapGroup("/identity/auth").WithTags("User Auth");
 
         group
             .MapPost(

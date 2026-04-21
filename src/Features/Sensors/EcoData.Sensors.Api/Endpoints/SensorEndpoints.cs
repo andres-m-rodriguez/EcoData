@@ -18,7 +18,7 @@ public static class SensorEndpoints
 {
     public static IEndpointRouteBuilder MapSensorEndpoints(this IEndpointRouteBuilder app)
     {
-        var group = app.MapGroup("/api/sensors").WithTags("Sensors");
+        var group = app.MapGroup("/sensors").WithTags("Sensors");
 
         group
             .MapGet(

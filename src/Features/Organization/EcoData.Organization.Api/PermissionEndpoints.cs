@@ -14,7 +14,7 @@ public static class PermissionEndpoints
 {
     public static IEndpointRouteBuilder MapPermissionEndpoints(this IEndpointRouteBuilder app)
     {
-        var group = app.MapGroup("/api/organizations/{organizationId:guid}/my-permissions")
+        var group = app.MapGroup("/organization/organizations/{organizationId:guid}/my-permissions")
             .WithTags("Permissions")
             .RequireAuthorization();
 

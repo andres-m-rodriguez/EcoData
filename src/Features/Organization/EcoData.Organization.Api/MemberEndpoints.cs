@@ -16,7 +16,7 @@ public static class MemberEndpoints
 {
     public static IEndpointRouteBuilder MapMemberEndpoints(this IEndpointRouteBuilder app)
     {
-        var group = app.MapGroup("/api/organizations/{organizationId:guid}/members")
+        var group = app.MapGroup("/organization/organizations/{organizationId:guid}/members")
             .WithTags("Organization Members")
             .RequireAuthorization();
 

@@ -12,7 +12,7 @@ public static class StateEndpoints
 {
     public static IEndpointRouteBuilder MapStateEndpoints(this IEndpointRouteBuilder app)
     {
-        var group = app.MapGroup("/api/states").WithTags("States");
+        var group = app.MapGroup("/locations/states").WithTags("States");
 
         group
             .MapGet(

@@ -13,7 +13,7 @@ public static class GeoTestEndpoints
 {
     public static IEndpointRouteBuilder MapGeoTestEndpoints(this IEndpointRouteBuilder app)
     {
-        var group = app.MapGroup("/api/sensors/geo-test").WithTags("Geo Test");
+        var group = app.MapGroup("/sensors/geo-test").WithTags("Geo Test");
 
         // Test 1: Read a sensor's Location (Point geometry)
         group
