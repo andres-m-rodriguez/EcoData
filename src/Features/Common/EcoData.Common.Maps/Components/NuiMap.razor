@@ -1,0 +1,148 @@
+@namespace EcoData.Common.Maps.Components
+@using EcoData.Common.Maps.Models
+@typeparam TMarker where TMarker : IMapMarker
+@implements IAsyncDisposable
+@inject IJSRuntime JS
+
+<div @ref="_mapElement" class="@GetContainerClass()" style="@GetContainerStyle()"></div>
+
+@code {
+    private ElementReference _mapElement;
+    private IJSObjectReference? _module;
+    private IJSObjectReference? _mapInstance;
+    private bool _isInitialized;
+
+    [Parameter, EditorRequired]
+    public required IMapController<TMarker> Controller { get; set; }
+
+    [Parameter]
+    public string? Class { get; set; }
+
+    [Parameter]
+    public string? Style { get; set; }
+
+    [Parameter]
+    public string Height { get; set; } = "400px";
+
+    [Parameter]
+    public string Width { get; set; } = "100%";
+
+    [Parameter]
+    public EventCallback<TMarker> OnMarkerClick { get; set; }
+
+    [Parameter]
+    public EventCallback<MapCoordinate> OnMapClick { get; set; }
+
+    protected override void OnInitialized()
+    {
+        Controller.OnMarkersChanged += HandleMarkersChanged;
+        Controller.OnViewChanged += HandleViewChanged;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            _module = await JS.InvokeAsync<IJSObjectReference>(
+                "import", "./_content/EcoData.Common.Maps/nuimap.js");
+
+            _mapInstance = await _module.InvokeAsync<IJSObjectReference>(
+                "initialize",
+                _mapElement,
+                Controller.Center.Latitude,
+                Controller.Center.Longitude,
+                Controller.Zoom);
+
+            _isInitialized = true;
+            await UpdateMarkers();
+        }
+    }
+
+    private async void HandleMarkersChanged()
+    {
+        if (_isInitialized)
+        {
+            await InvokeAsync(async () => await UpdateMarkers());
+        }
+    }
+
+    private async void HandleViewChanged()
+    {
+        if (_isInitialized && _mapInstance is not null && _module is not null)
+        {
+            await InvokeAsync(async () =>
+            {
+                await _module.InvokeVoidAsync(
+                    "setView",
+                    _mapInstance,
+                    Controller.Center.Latitude,
+                    Controller.Center.Longitude,
+                    Controller.Zoom);
+            });
+        }
+    }
+
+    private async Task UpdateMarkers()
+    {
+        if (_mapInstance is null || _module is null) return;
+
+        var markerData = Controller.Markers.Select(m => new
+        {
+            lat = m.Coordinate.Latitude,
+            lng = m.Coordinate.Longitude,
+            popup = m.PopupContent,
+            tooltip = m.TooltipContent
+        }).ToArray();
+
+        await _module.InvokeVoidAsync("setMarkers", _mapInstance, markerData);
+    }
+
+    private string GetContainerClass()
+    {
+        var classes = new List<string> { "nui-map" };
+        if (!string.IsNullOrEmpty(Class))
+            classes.Add(Class);
+        return string.Join(" ", classes);
+    }
+
+    private string GetContainerStyle()
+    {
+        var style = $"height: {Height}; width: {Width};";
+        if (!string.IsNullOrEmpty(Style))
+            style += $" {Style}";
+        return style;
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        Controller.OnMarkersChanged -= HandleMarkersChanged;
+        Controller.OnViewChanged -= HandleViewChanged;
+
+        if (_mapInstance is not null)
+        {
+            try
+            {
+                if (_module is not null)
+                {
+                    await _module.InvokeVoidAsync("dispose", _mapInstance);
+                }
+            }
+            catch (JSDisconnectedException)
+            {
+                // Ignore during disconnect
+            }
+        }
+
+        if (_module is not null)
+        {
+            try
+            {
+                await _module.DisposeAsync();
+            }
+            catch (JSDisconnectedException)
+            {
+                // Ignore during disconnect
+            }
+        }
+    }
+}
