@@ -1,0 +1,47 @@
+@page "/"
+
+<PageTitle>FaunaFinder - Puerto Rico Wildlife</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.Large" Class="mt-4">
+    <MudText Typo="Typo.h3" GutterBottom="true">Welcome to FaunaFinder</MudText>
+    <MudText Typo="Typo.body1" Class="mb-4">
+        Discover the wildlife of Puerto Rico. Browse species, explore conservation efforts,
+        and learn about the diverse fauna and flora of the island.
+    </MudText>
+
+    <MudGrid>
+        <MudItem xs="12" sm="6" md="4">
+            <MudCard>
+                <MudCardContent>
+                    <MudText Typo="Typo.h6">Species</MudText>
+                    <MudText Typo="Typo.body2">Browse all species in our database</MudText>
+                </MudCardContent>
+                <MudCardActions>
+                    <MudButton Color="Color.Primary" Href="/species">Explore</MudButton>
+                </MudCardActions>
+            </MudCard>
+        </MudItem>
+        <MudItem xs="12" sm="6" md="4">
+            <MudCard>
+                <MudCardContent>
+                    <MudText Typo="Typo.h6">Categories</MudText>
+                    <MudText Typo="Typo.body2">View species by category</MudText>
+                </MudCardContent>
+                <MudCardActions>
+                    <MudButton Color="Color.Primary" Href="/categories">Browse</MudButton>
+                </MudCardActions>
+            </MudCard>
+        </MudItem>
+        <MudItem xs="12" sm="6" md="4">
+            <MudCard>
+                <MudCardContent>
+                    <MudText Typo="Typo.h6">Conservation</MudText>
+                    <MudText Typo="Typo.body2">FWS actions and NRCS practices</MudText>
+                </MudCardContent>
+                <MudCardActions>
+                    <MudButton Color="Color.Primary" Href="/conservation">Learn More</MudButton>
+                </MudCardActions>
+            </MudCard>
+        </MudItem>
+    </MudGrid>
+</MudContainer>
