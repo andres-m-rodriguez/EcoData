@@ -1,3 +1,4 @@
+using EcoData.Wildlife.Api.Endpoints;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Routing;
 
@@ -7,10 +8,9 @@ public static class WildlifeApiExtensions
 {
     public static IEndpointRouteBuilder MapWildlifeApiEndpoints(this IEndpointRouteBuilder app)
     {
-        // Endpoints will be mapped here as they are implemented
-        // Example:
-        // app.MapSpeciesEndpoints();
-        // app.MapSightingEndpoints();
+        app.MapSpeciesEndpoints();
+        app.MapSpeciesCategoryEndpoints();
+        app.MapConservationEndpoints();
 
         return app;
     }
