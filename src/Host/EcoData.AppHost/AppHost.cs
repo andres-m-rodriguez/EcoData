@@ -26,6 +26,7 @@ var organizationDb = postgres.AddDatabase("organization").WithDropDatabaseComman
 var sensorsDb = postgres.AddDatabase("sensors").WithDropDatabaseCommand();
 var locationsDb = postgres.AddDatabase("locations").WithDropDatabaseCommand();
 var identityDb = postgres.AddDatabase("identity").WithDropDatabaseCommand();
+var wildlifeDb = postgres.AddDatabase("wildlife").WithDropDatabaseCommand();
 
 var seeder = builder
     .AddProject<Projects.EcoData_Seeder>("seeder")
@@ -33,10 +34,12 @@ var seeder = builder
     .WithReference(sensorsDb)
     .WithReference(identityDb)
     .WithReference(locationsDb)
+    .WithReference(wildlifeDb)
     .WaitFor(organizationDb)
     .WaitFor(sensorsDb)
     .WaitFor(identityDb)
     .WaitFor(locationsDb)
+    .WaitFor(wildlifeDb)
     .PublishAsAzureContainerAppJob();
 
 if (builder.Environment.EnvironmentName == "Testing")
@@ -54,6 +57,7 @@ var ecoportal = builder
     .WithReference(sensorsDb)
     .WithReference(locationsDb)
     .WithReference(identityDb)
+    .WithReference(wildlifeDb)
     .WithEnvironment("Jwt__SecretKey", jwtSecretKey)
     .WithEnvironment("Jwt__Issuer", "EcoData")
     .WithEnvironment("Jwt__Audience", "EcoData")

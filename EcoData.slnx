@@ -24,6 +24,7 @@
   </Folder>
   <Folder Name="/Features/Common/">
     <Project Path="src/Features/Common/EcoData.Common.Http.Helpers/EcoData.Common.Http.Helpers.csproj" />
+    <Project Path="src/Features/Common/EcoData.Common.i18n/EcoData.Common.i18n.csproj" />
     <Project Path="src/Features/Common/EcoData.Common.Messaging/EcoData.Common.Messaging.csproj" />
     <Project Path="src/Features/Common/EcoData.Common.Pagination/EcoData.Common.Pagination.csproj" />
     <Project Path="src/Features/Common/EcoData.Common.Pagination.Blazor/EcoData.Common.Pagination.Blazor.csproj" />
@@ -62,6 +63,14 @@
     <Project Path="src/Features/Sensors/EcoData.Sensors.DataAccess/EcoData.Sensors.DataAccess.csproj" />
     <Project Path="src/Features/Sensors/EcoData.Sensors.Database/EcoData.Sensors.Database.csproj" />
     <Project Path="src/Features/Sensors/EcoData.Sensors.Ingestion/EcoData.Sensors.Ingestion.csproj" />
+  </Folder>
+  <Folder Name="/Features/Wildlife/">
+    <Project Path="src/Features/Wildlife/EcoData.Wildlife.Api/EcoData.Wildlife.Api.csproj" />
+    <Project Path="src/Features/Wildlife/EcoData.Wildlife.Application.Client/EcoData.Wildlife.Application.Client.csproj" />
+    <Project Path="src/Features/Wildlife/EcoData.Wildlife.Application.Server/EcoData.Wildlife.Application.Server.csproj" />
+    <Project Path="src/Features/Wildlife/EcoData.Wildlife.Contracts/EcoData.Wildlife.Contracts.csproj" />
+    <Project Path="src/Features/Wildlife/EcoData.Wildlife.DataAccess/EcoData.Wildlife.DataAccess.csproj" />
+    <Project Path="src/Features/Wildlife/EcoData.Wildlife.Database/EcoData.Wildlife.Database.csproj" />
   </Folder>
   <Folder Name="/Tests/">
     <Project Path="tests/EcoData.IntegrationTests/EcoData.IntegrationTests.csproj" />
