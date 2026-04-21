@@ -11,7 +11,7 @@ public sealed class PermissionHttpClient(HttpClient httpClient) : IPermissionHtt
     )
     {
         var result = await httpClient.GetFromJsonAsync<UserPermissionsDto>(
-            $"api/organizations/{organizationId}/my-permissions",
+            $"organization/organizations/{organizationId}/my-permissions",
             cancellationToken
         );
 

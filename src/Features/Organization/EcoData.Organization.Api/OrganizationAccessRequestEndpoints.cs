@@ -93,7 +93,7 @@ public static class OrganizationAccessRequestEndpoints
                     );
 
                     return TypedResults.Created(
-                        $"/api/organizations/{organizationId}/access-requests/{accessRequest.Id}",
+                        $"/organization/organizations/{organizationId}/access-requests/{accessRequest.Id}",
                         accessRequest
                     );
                 }

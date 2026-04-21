@@ -10,7 +10,7 @@ public sealed class DataSourceHttpClient(HttpClient httpClient) : IDataSourceHtt
     )
     {
         var result = await httpClient.GetFromJsonAsync<IReadOnlyList<DataSourceDtoForList>>(
-            "api/datasources",
+            "organization/datasources",
             cancellationToken
         );
         return result ?? [];

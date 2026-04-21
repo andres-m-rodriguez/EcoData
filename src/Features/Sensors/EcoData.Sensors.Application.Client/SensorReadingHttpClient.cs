@@ -30,7 +30,7 @@ public sealed class SensorReadingHttpClient(HttpClient httpClient) : ISensorRead
             .Build();
 
         return httpClient.GetFromJsonAsAsyncEnumerable<ReadingDtoForDetail>(
-            $"api/sensors/{sensorId}/readings{queryString}",
+            $"sensors/{sensorId}/readings{queryString}",
             cancellationToken
         )!;
     }
@@ -41,7 +41,7 @@ public sealed class SensorReadingHttpClient(HttpClient httpClient) : ISensorRead
     )
     {
         var response = await httpClient.GetAsync(
-            $"api/sensors/{sensorId}/readings/parameters",
+            $"sensors/{sensorId}/readings/parameters",
             cancellationToken
         );
 
@@ -66,7 +66,7 @@ public sealed class SensorReadingHttpClient(HttpClient httpClient) : ISensorRead
             .Build();
 
         var response = await httpClient.GetAsync(
-            $"api/sensors/{sensorId}/readings/stats{queryString}",
+            $"sensors/{sensorId}/readings/stats{queryString}",
             cancellationToken
         );
 
@@ -105,7 +105,7 @@ public sealed class SensorReadingHttpClient(HttpClient httpClient) : ISensorRead
         var batch = new ReadingBatchDtoForCreate(sensorId, readingItems);
 
         var response = await httpClient.PostAsJsonAsync(
-            $"api/sensors/{sensorId}/readings",
+            $"sensors/{sensorId}/readings",
             batch,
             cancellationToken
         );
@@ -125,7 +125,7 @@ public sealed class SensorReadingHttpClient(HttpClient httpClient) : ISensorRead
     )
     {
         using var response = await httpClient.GetAsync(
-            $"api/sensors/{sensorId}/readings/stream",
+            $"sensors/{sensorId}/readings/stream",
             HttpCompletionOption.ResponseHeadersRead,
             cancellationToken
         );

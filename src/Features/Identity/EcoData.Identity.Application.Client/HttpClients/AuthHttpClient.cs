@@ -10,7 +10,7 @@ public sealed class AuthHttpClient(HttpClient httpClient) : IAuthHttpClient
 {
     public async Task<OneOf<UserInfo, ProblemDetail>> LoginAsync(LoginRequest request, CancellationToken cancellationToken = default)
     {
-        var response = await httpClient.PostAsJsonAsync("/api/auth/login", request, cancellationToken);
+        var response = await httpClient.PostAsJsonAsync("/identity/auth/login", request, cancellationToken);
 
         if (response.IsSuccessStatusCode)
         {
@@ -23,7 +23,7 @@ public sealed class AuthHttpClient(HttpClient httpClient) : IAuthHttpClient
 
     public async Task<OneOf<UserInfo, ProblemDetail>> RegisterAsync(RegisterRequest request, CancellationToken cancellationToken = default)
     {
-        var response = await httpClient.PostAsJsonAsync("/api/auth/register", request, cancellationToken);
+        var response = await httpClient.PostAsJsonAsync("/identity/auth/register", request, cancellationToken);
 
         if (response.IsSuccessStatusCode)
         {
@@ -36,14 +36,14 @@ public sealed class AuthHttpClient(HttpClient httpClient) : IAuthHttpClient
 
     public async Task LogoutAsync(CancellationToken cancellationToken = default)
     {
-        await httpClient.PostAsync("/api/auth/logout", null, cancellationToken);
+        await httpClient.PostAsync("/identity/auth/logout", null, cancellationToken);
     }
 
     public async Task<UserInfo?> GetCurrentUserAsync(CancellationToken cancellationToken = default)
     {
         try
         {
-            return await httpClient.GetFromJsonAsync<UserInfo?>("/api/auth/me", cancellationToken);
+            return await httpClient.GetFromJsonAsync<UserInfo?>("/identity/auth/me", cancellationToken);
         }
         catch
         {

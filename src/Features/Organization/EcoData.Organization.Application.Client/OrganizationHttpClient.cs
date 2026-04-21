@@ -22,7 +22,7 @@ public sealed class OrganizationHttpClient(HttpClient httpClient) : IOrganizatio
             .Build();
 
         return httpClient.GetFromJsonAsAsyncEnumerable<OrganizationDtoForList>(
-            $"api/organizations{queryString}",
+            $"organization/organizations{queryString}",
             cancellationToken
         )!;
     }
@@ -32,7 +32,7 @@ public sealed class OrganizationHttpClient(HttpClient httpClient) : IOrganizatio
     )
     {
         return httpClient.GetFromJsonAsAsyncEnumerable<MyOrganizationDto>(
-            "api/organizations/my",
+            "organization/organizations/my",
             cancellationToken
         )!;
     }
@@ -42,7 +42,7 @@ public sealed class OrganizationHttpClient(HttpClient httpClient) : IOrganizatio
         CancellationToken cancellationToken = default
     )
     {
-        var response = await httpClient.GetAsync($"api/organizations/{id}", cancellationToken);
+        var response = await httpClient.GetAsync($"organization/organizations/{id}", cancellationToken);
 
         if (!response.IsSuccessStatusCode)
         {
@@ -61,7 +61,7 @@ public sealed class OrganizationHttpClient(HttpClient httpClient) : IOrganizatio
     )
     {
         var response = await httpClient.PostAsJsonAsync(
-            "api/organizations",
+            "organization/organizations",
             dto,
             cancellationToken
         );
@@ -84,7 +84,7 @@ public sealed class OrganizationHttpClient(HttpClient httpClient) : IOrganizatio
     )
     {
         var response = await httpClient.PutAsJsonAsync(
-            $"api/organizations/{id}",
+            $"organization/organizations/{id}",
             dto,
             cancellationToken
         );
@@ -105,7 +105,7 @@ public sealed class OrganizationHttpClient(HttpClient httpClient) : IOrganizatio
         CancellationToken cancellationToken = default
     )
     {
-        var response = await httpClient.DeleteAsync($"api/organizations/{id}", cancellationToken);
+        var response = await httpClient.DeleteAsync($"organization/organizations/{id}", cancellationToken);
 
         if (!response.IsSuccessStatusCode)
         {

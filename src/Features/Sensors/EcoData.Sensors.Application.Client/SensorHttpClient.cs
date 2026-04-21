@@ -16,7 +16,7 @@ public sealed class SensorHttpClient(HttpClient httpClient) : ISensorHttpClient
     )
     {
         var response = await httpClient.PostAsJsonAsync(
-            "api/sensors/register",
+            "sensors/register",
             request,
             cancellationToken
         );
@@ -48,7 +48,7 @@ public sealed class SensorHttpClient(HttpClient httpClient) : ISensorHttpClient
             .Build();
 
         return httpClient.GetFromJsonAsAsyncEnumerable<SensorDtoForList>(
-            $"api/sensors{queryString}",
+            $"sensors{queryString}",
             cancellationToken
         )!;
     }
@@ -69,7 +69,7 @@ public sealed class SensorHttpClient(HttpClient httpClient) : ISensorHttpClient
             .Build();
 
         return httpClient.GetFromJsonAsync<int>(
-            $"api/sensors/count{queryString}",
+            $"sensors/count{queryString}",
             cancellationToken
         )!;
     }
@@ -79,7 +79,7 @@ public sealed class SensorHttpClient(HttpClient httpClient) : ISensorHttpClient
         CancellationToken cancellationToken = default
     )
     {
-        var response = await httpClient.GetAsync($"api/sensors/{sensorId}", cancellationToken);
+        var response = await httpClient.GetAsync($"sensors/{sensorId}", cancellationToken);
 
         if (!response.IsSuccessStatusCode)
         {
@@ -96,7 +96,7 @@ public sealed class SensorHttpClient(HttpClient httpClient) : ISensorHttpClient
     )
     {
         var response = await httpClient.PutAsJsonAsync(
-            $"api/sensors/{sensorId}",
+            $"sensors/{sensorId}",
             request,
             cancellationToken
         );
@@ -117,7 +117,7 @@ public sealed class SensorHttpClient(HttpClient httpClient) : ISensorHttpClient
         CancellationToken cancellationToken = default
     )
     {
-        var response = await httpClient.DeleteAsync($"api/sensors/{sensorId}", cancellationToken);
+        var response = await httpClient.DeleteAsync($"sensors/{sensorId}", cancellationToken);
 
         if (!response.IsSuccessStatusCode)
         {

@@ -30,7 +30,7 @@ public sealed class SensorAlertHttpClient(HttpClient httpClient) : ISensorAlertH
             .Build();
 
         return httpClient.GetFromJsonAsAsyncEnumerable<SensorHealthAlertDtoForList>(
-            $"api/sensors/alerts{queryString}",
+            $"sensors/alerts{queryString}",
             cancellationToken
         )!;
     }
@@ -41,7 +41,7 @@ public sealed class SensorAlertHttpClient(HttpClient httpClient) : ISensorAlertH
     )
     {
         var response = await httpClient.GetAsync(
-            $"/api/sensors/alerts/{alertId}",
+            $"/sensors/alerts/{alertId}",
             cancellationToken
         );
 
@@ -59,7 +59,7 @@ public sealed class SensorAlertHttpClient(HttpClient httpClient) : ISensorAlertH
     )
     {
         using var response = await httpClient.GetAsync(
-            "api/sensors/alerts/stream",
+            "sensors/alerts/stream",
             HttpCompletionOption.ResponseHeadersRead,
             cancellationToken
         );
@@ -89,7 +89,7 @@ public sealed class SensorAlertHttpClient(HttpClient httpClient) : ISensorAlertH
     )
     {
         using var response = await httpClient.GetAsync(
-            $"api/sensors/{sensorId}/alerts/stream",
+            $"sensors/{sensorId}/alerts/stream",
             HttpCompletionOption.ResponseHeadersRead,
             cancellationToken
         );

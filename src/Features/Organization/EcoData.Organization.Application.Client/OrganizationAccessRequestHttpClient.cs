@@ -24,7 +24,7 @@ public sealed class OrganizationAccessRequestHttpClient(HttpClient httpClient)
             .Build();
 
         return httpClient.GetFromJsonAsAsyncEnumerable<OrganizationAccessRequestDto>(
-            $"api/organizations/{organizationId}/access-requests{query}",
+            $"organization/organizations/{organizationId}/access-requests{query}",
             cancellationToken
         )!;
     }
@@ -36,7 +36,7 @@ public sealed class OrganizationAccessRequestHttpClient(HttpClient httpClient)
     )
     {
         var response = await httpClient.GetAsync(
-            $"api/organizations/{organizationId}/access-requests/{id}",
+            $"organization/organizations/{organizationId}/access-requests/{id}",
             cancellationToken
         );
 
@@ -58,7 +58,7 @@ public sealed class OrganizationAccessRequestHttpClient(HttpClient httpClient)
     )
     {
         var response = await httpClient.PostAsJsonAsync(
-            $"api/organizations/{organizationId}/access-requests",
+            $"organization/organizations/{organizationId}/access-requests",
             request,
             cancellationToken
         );
@@ -82,7 +82,7 @@ public sealed class OrganizationAccessRequestHttpClient(HttpClient httpClient)
     )
     {
         var response = await httpClient.PutAsJsonAsync(
-            $"api/organizations/{organizationId}/access-requests/{id}/status",
+            $"organization/organizations/{organizationId}/access-requests/{id}/status",
             request,
             cancellationToken
         );
@@ -110,7 +110,7 @@ public sealed class OrganizationAccessRequestHttpClient(HttpClient httpClient)
             .Build();
 
         return httpClient.GetFromJsonAsAsyncEnumerable<OrganizationAccessRequestDto>(
-            $"api/me/access-requests{query}",
+            $"organization/me/access-requests{query}",
             cancellationToken
         )!;
     }
@@ -121,7 +121,7 @@ public sealed class OrganizationAccessRequestHttpClient(HttpClient httpClient)
     )
     {
         var response = await httpClient.PostAsync(
-            $"api/me/access-requests/{id}/cancel",
+            $"organization/me/access-requests/{id}/cancel",
             null,
             cancellationToken
         );

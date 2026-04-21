@@ -13,7 +13,7 @@ public sealed class SensorHealthHttpClient(HttpClient httpClient) : ISensorHealt
         CancellationToken cancellationToken = default
     )
     {
-        var response = await httpClient.GetAsync("/api/health/sensors/summary", cancellationToken);
+        var response = await httpClient.GetAsync("/sensors/health/summary", cancellationToken);
 
         if (!response.IsSuccessStatusCode)
             return await response.ReadProblemAsync(cancellationToken);
@@ -35,7 +35,7 @@ public sealed class SensorHealthHttpClient(HttpClient httpClient) : ISensorHealt
             .Build();
 
         return httpClient.GetFromJsonAsAsyncEnumerable<SensorHealthStatusDtoForList>(
-            $"api/health/sensors{queryString}",
+            $"sensors/health{queryString}",
             cancellationToken
         )!;
     }
@@ -45,7 +45,7 @@ public sealed class SensorHealthHttpClient(HttpClient httpClient) : ISensorHealt
         CancellationToken cancellationToken = default
     )
     {
-        var response = await httpClient.GetAsync($"/api/sensors/{sensorId}/health", cancellationToken);
+        var response = await httpClient.GetAsync($"/sensors/{sensorId}/health", cancellationToken);
 
         if (!response.IsSuccessStatusCode)
             return await response.ReadProblemAsync(cancellationToken);
@@ -59,7 +59,7 @@ public sealed class SensorHealthHttpClient(HttpClient httpClient) : ISensorHealt
         CancellationToken cancellationToken = default
     )
     {
-        var response = await httpClient.GetAsync($"/api/sensors/{sensorId}/health/config", cancellationToken);
+        var response = await httpClient.GetAsync($"/sensors/{sensorId}/health/config", cancellationToken);
 
         if (!response.IsSuccessStatusCode)
             return await response.ReadProblemAsync(cancellationToken);
@@ -74,7 +74,7 @@ public sealed class SensorHealthHttpClient(HttpClient httpClient) : ISensorHealt
         CancellationToken cancellationToken = default
     )
     {
-        var response = await httpClient.PutAsJsonAsync($"/api/sensors/{sensorId}/health/config", config, cancellationToken);
+        var response = await httpClient.PutAsJsonAsync($"/sensors/{sensorId}/health/config", config, cancellationToken);
 
         if (!response.IsSuccessStatusCode)
             return await response.ReadProblemAsync(cancellationToken);

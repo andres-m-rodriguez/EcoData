@@ -24,7 +24,7 @@ public sealed class OrganizationMemberHttpClient(HttpClient httpClient)
             .Build();
 
         return httpClient.GetFromJsonAsAsyncEnumerable<OrganizationMemberDto>(
-            $"api/organizations/{organizationId}/members{query}",
+            $"organization/organizations/{organizationId}/members{query}",
             cancellationToken
         )!;
     }
@@ -36,7 +36,7 @@ public sealed class OrganizationMemberHttpClient(HttpClient httpClient)
     )
     {
         var response = await httpClient.GetAsync(
-            $"api/organizations/{organizationId}/members/{userId}",
+            $"organization/organizations/{organizationId}/members/{userId}",
             cancellationToken
         );
 
@@ -59,7 +59,7 @@ public sealed class OrganizationMemberHttpClient(HttpClient httpClient)
     )
     {
         var response = await httpClient.PutAsJsonAsync(
-            $"api/organizations/{organizationId}/members/{userId}",
+            $"organization/organizations/{organizationId}/members/{userId}",
             request,
             cancellationToken
         );
@@ -82,7 +82,7 @@ public sealed class OrganizationMemberHttpClient(HttpClient httpClient)
     )
     {
         var response = await httpClient.DeleteAsync(
-            $"api/organizations/{organizationId}/members/{userId}",
+            $"organization/organizations/{organizationId}/members/{userId}",
             cancellationToken
         );
 

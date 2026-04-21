@@ -22,7 +22,7 @@ public sealed class LocationHttpClient(HttpClient httpClient) : ILocationHttpCli
                 .Build();
 
         return httpClient.GetFromJsonAsAsyncEnumerable<StateDtoForList>(
-            $"api/states{queryString}",
+            $"locations/states{queryString}",
             cancellationToken
         )!;
     }
@@ -43,7 +43,7 @@ public sealed class LocationHttpClient(HttpClient httpClient) : ILocationHttpCli
                 .Build();
 
         return httpClient.GetFromJsonAsAsyncEnumerable<MunicipalityDtoForList>(
-            $"api/municipalities{queryString}",
+            $"locations/municipalities{queryString}",
             cancellationToken
         )!;
     }
@@ -53,7 +53,7 @@ public sealed class LocationHttpClient(HttpClient httpClient) : ILocationHttpCli
         CancellationToken cancellationToken = default
     )
     {
-        var response = await httpClient.GetAsync($"api/municipalities/{id}", cancellationToken);
+        var response = await httpClient.GetAsync($"locations/municipalities/{id}", cancellationToken);
 
         if (!response.IsSuccessStatusCode)
         {
@@ -74,7 +74,7 @@ public sealed class LocationHttpClient(HttpClient httpClient) : ILocationHttpCli
             .Add("longitude", longitude)
             .Build();
 
-        var response = await httpClient.GetAsync($"api/municipalities/by-point{queryString}", cancellationToken);
+        var response = await httpClient.GetAsync($"locations/municipalities/by-point{queryString}", cancellationToken);
 
         if (!response.IsSuccessStatusCode)
         {
@@ -90,7 +90,7 @@ public sealed class LocationHttpClient(HttpClient httpClient) : ILocationHttpCli
     )
     {
         var response = await httpClient.GetAsync(
-            $"api/municipalities/geojson/state/{stateCode}",
+            $"locations/municipalities/geojson/state/{stateCode}",
             cancellationToken
         );
 

@@ -15,7 +15,7 @@ public sealed class OrganizationBlockedUserHttpClient(HttpClient httpClient)
     )
     {
         return httpClient.GetFromJsonAsAsyncEnumerable<OrganizationBlockedUserDto>(
-            $"api/organizations/{organizationId}/blocked-users",
+            $"organization/organizations/{organizationId}/blocked-users",
             cancellationToken
         )!;
     }
@@ -29,7 +29,7 @@ public sealed class OrganizationBlockedUserHttpClient(HttpClient httpClient)
     {
         var request = new BlockUserRequest(userId, reason);
         var response = await httpClient.PostAsJsonAsync(
-            $"api/organizations/{organizationId}/blocked-users",
+            $"organization/organizations/{organizationId}/blocked-users",
             request,
             cancellationToken
         );
@@ -52,7 +52,7 @@ public sealed class OrganizationBlockedUserHttpClient(HttpClient httpClient)
     )
     {
         var response = await httpClient.DeleteAsync(
-            $"api/organizations/{organizationId}/blocked-users/{userId}",
+            $"organization/organizations/{organizationId}/blocked-users/{userId}",
             cancellationToken
         );
 
