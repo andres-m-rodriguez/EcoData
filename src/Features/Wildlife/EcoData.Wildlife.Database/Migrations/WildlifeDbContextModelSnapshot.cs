@@ -4,7 +4,6 @@ using EcoData.Wildlife.Database;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
-using NetTopologySuite.Geometries;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
@@ -133,158 +132,6 @@ namespace EcoData.Wildlife.Database.Migrations
                         .HasDatabaseName("nrcs_practices_code_uidx");
 
                     b.ToTable("nrcs_practices", (string)null);
-                });
-
-            modelBuilder.Entity("EcoData.Wildlife.Database.Models.Sighting", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasColumnName("id");
-
-                    b.Property<string>("AudioContentType")
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)")
-                        .HasColumnName("audio_content_type");
-
-                    b.Property<byte[]>("AudioData")
-                        .HasColumnType("bytea")
-                        .HasColumnName("audio_data");
-
-                    b.Property<int>("Behaviors")
-                        .HasColumnType("integer")
-                        .HasColumnName("behaviors");
-
-                    b.Property<string>("Confidence")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("character varying(20)")
-                        .HasColumnName("confidence");
-
-                    b.Property<string>("Count")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("character varying(20)")
-                        .HasColumnName("count");
-
-                    b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("created_at");
-
-                    b.Property<int>("Evidence")
-                        .HasColumnType("integer")
-                        .HasColumnName("evidence");
-
-                    b.Property<bool>("IsFlaggedForReview")
-                        .HasColumnType("boolean")
-                        .HasColumnName("is_flagged_for_review");
-
-                    b.Property<bool>("IsNewMunicipalityRecord")
-                        .HasColumnType("boolean")
-                        .HasColumnName("is_new_municipality_record");
-
-                    b.Property<Point>("Location")
-                        .IsRequired()
-                        .HasColumnType("geometry(Point, 4326)")
-                        .HasColumnName("location");
-
-                    b.Property<string>("Mode")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("character varying(20)")
-                        .HasColumnName("mode");
-
-                    b.Property<Guid?>("MunicipalityId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("municipality_id");
-
-                    b.Property<string>("Notes")
-                        .HasMaxLength(2000)
-                        .HasColumnType("character varying(2000)")
-                        .HasColumnName("notes");
-
-                    b.Property<DateTimeOffset>("ObservedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("observed_at");
-
-                    b.Property<string>("PhotoContentType")
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)")
-                        .HasColumnName("photo_content_type");
-
-                    b.Property<byte[]>("PhotoData")
-                        .HasColumnType("bytea")
-                        .HasColumnName("photo_data");
-
-                    b.Property<Guid>("ReportedByUserId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("reported_by_user_id");
-
-                    b.Property<string>("ReviewNotes")
-                        .HasMaxLength(2000)
-                        .HasColumnType("character varying(2000)")
-                        .HasColumnName("review_notes");
-
-                    b.Property<DateTimeOffset?>("ReviewedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("reviewed_at");
-
-                    b.Property<Guid?>("ReviewedByUserId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("reviewed_by_user_id");
-
-                    b.Property<Guid?>("SpeciesId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("species_id");
-
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("character varying(20)")
-                        .HasColumnName("status");
-
-                    b.Property<Guid?>("UserSpeciesId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("user_species_id");
-
-                    b.Property<string>("Weather")
-                        .HasMaxLength(20)
-                        .HasColumnType("character varying(20)")
-                        .HasColumnName("weather");
-
-                    b.HasKey("Id")
-                        .HasName("pk_sightings");
-
-                    b.HasIndex("IsFlaggedForReview")
-                        .HasDatabaseName("sightings_is_flagged_for_review_idx");
-
-                    b.HasIndex("Location")
-                        .HasDatabaseName("sightings_location_gist_idx");
-
-                    NpgsqlIndexBuilderExtensions.HasMethod(b.HasIndex("Location"), "gist");
-
-                    b.HasIndex("MunicipalityId")
-                        .HasDatabaseName("sightings_municipality_id_idx");
-
-                    b.HasIndex("ObservedAt")
-                        .HasDatabaseName("sightings_observed_at_idx");
-
-                    b.HasIndex("ReportedByUserId")
-                        .HasDatabaseName("sightings_reported_by_user_id_idx");
-
-                    b.HasIndex("SpeciesId")
-                        .HasDatabaseName("ix_sightings_species_id");
-
-                    b.HasIndex("Status")
-                        .HasDatabaseName("sightings_status_idx");
-
-                    b.HasIndex("UserSpeciesId")
-                        .HasDatabaseName("ix_sightings_user_species_id");
-
-                    b.ToTable("sightings", null, t =>
-                        {
-                            t.HasCheckConstraint("CK_sightings_species_reference", "species_id IS NOT NULL OR user_species_id IS NOT NULL");
-                        });
                 });
 
             modelBuilder.Entity("EcoData.Wildlife.Database.Models.Species", b =>
@@ -434,87 +281,9 @@ namespace EcoData.Wildlife.Database.Migrations
                     b.ToTable("species_locations", (string)null);
                 });
 
-            modelBuilder.Entity("EcoData.Wildlife.Database.Models.UserSpecies", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasColumnName("id");
-
-                    b.Property<Guid?>("ApprovedSpeciesId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("approved_species_id");
-
-                    b.Property<string>("CommonName")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("character varying(200)")
-                        .HasColumnName("common_name");
-
-                    b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("created_at");
-
-                    b.Property<Guid>("CreatedByUserId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("created_by_user_id");
-
-                    b.Property<string>("Description")
-                        .HasMaxLength(2000)
-                        .HasColumnType("character varying(2000)")
-                        .HasColumnName("description");
-
-                    b.Property<bool>("IsEndangered")
-                        .HasColumnType("boolean")
-                        .HasColumnName("is_endangered");
-
-                    b.Property<bool>("IsVerified")
-                        .HasColumnType("boolean")
-                        .HasColumnName("is_verified");
-
-                    b.Property<string>("PhotoContentType")
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)")
-                        .HasColumnName("photo_content_type");
-
-                    b.Property<byte[]>("PhotoData")
-                        .HasColumnType("bytea")
-                        .HasColumnName("photo_data");
-
-                    b.Property<string>("ScientificName")
-                        .HasMaxLength(200)
-                        .HasColumnType("character varying(200)")
-                        .HasColumnName("scientific_name");
-
-                    b.Property<DateTimeOffset?>("VerifiedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("verified_at");
-
-                    b.Property<Guid?>("VerifiedByUserId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("verified_by_user_id");
-
-                    b.HasKey("Id")
-                        .HasName("pk_user_species");
-
-                    b.HasIndex("ApprovedSpeciesId")
-                        .HasDatabaseName("ix_user_species_approved_species_id");
-
-                    b.HasIndex("CommonName")
-                        .HasDatabaseName("user_species_common_name_idx");
-
-                    b.HasIndex("CreatedByUserId")
-                        .HasDatabaseName("user_species_created_by_user_id_idx");
-
-                    b.HasIndex("IsVerified")
-                        .HasDatabaseName("user_species_is_verified_idx");
-
-                    b.ToTable("user_species", (string)null);
-                });
-
             modelBuilder.Entity("EcoData.Wildlife.Database.Models.FwsAction", b =>
                 {
-                    b.OwnsMany("EcoData.Wildlife.Contracts.LocaleValue", "Name", b1 =>
+                    b.OwnsMany("EcoData.Common.i18n.LocaleValue", "Name", b1 =>
                         {
                             b1.Property<Guid>("FwsActionId");
 
@@ -564,7 +333,7 @@ namespace EcoData.Wildlife.Database.Migrations
                         .IsRequired()
                         .HasConstraintName("fk_fws_links_species_species_id");
 
-                    b.OwnsMany("EcoData.Wildlife.Contracts.LocaleValue", "Justification", b1 =>
+                    b.OwnsMany("EcoData.Common.i18n.LocaleValue", "Justification", b1 =>
                         {
                             b1.Property<Guid>("FwsLinkId");
 
@@ -611,7 +380,7 @@ namespace EcoData.Wildlife.Database.Migrations
 
             modelBuilder.Entity("EcoData.Wildlife.Database.Models.NrcsPractice", b =>
                 {
-                    b.OwnsMany("EcoData.Wildlife.Contracts.LocaleValue", "Name", b1 =>
+                    b.OwnsMany("EcoData.Common.i18n.LocaleValue", "Name", b1 =>
                         {
                             b1.Property<Guid>("NrcsPracticeId");
 
@@ -638,28 +407,9 @@ namespace EcoData.Wildlife.Database.Migrations
                     b.Navigation("Name");
                 });
 
-            modelBuilder.Entity("EcoData.Wildlife.Database.Models.Sighting", b =>
-                {
-                    b.HasOne("EcoData.Wildlife.Database.Models.Species", "Species")
-                        .WithMany()
-                        .HasForeignKey("SpeciesId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .HasConstraintName("fk_sightings_species_species_id");
-
-                    b.HasOne("EcoData.Wildlife.Database.Models.UserSpecies", "UserSpecies")
-                        .WithMany("Sightings")
-                        .HasForeignKey("UserSpeciesId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .HasConstraintName("fk_sightings_user_species_user_species_id");
-
-                    b.Navigation("Species");
-
-                    b.Navigation("UserSpecies");
-                });
-
             modelBuilder.Entity("EcoData.Wildlife.Database.Models.Species", b =>
                 {
-                    b.OwnsMany("EcoData.Wildlife.Contracts.LocaleValue", "CommonName", b1 =>
+                    b.OwnsMany("EcoData.Common.i18n.LocaleValue", "CommonName", b1 =>
                         {
                             b1.Property<Guid>("SpeciesId");
 
@@ -689,7 +439,7 @@ namespace EcoData.Wildlife.Database.Migrations
 
             modelBuilder.Entity("EcoData.Wildlife.Database.Models.SpeciesCategory", b =>
                 {
-                    b.OwnsMany("EcoData.Wildlife.Contracts.LocaleValue", "Name", b1 =>
+                    b.OwnsMany("EcoData.Common.i18n.LocaleValue", "Name", b1 =>
                         {
                             b1.Property<Guid>("SpeciesCategoryId");
 
@@ -749,17 +499,6 @@ namespace EcoData.Wildlife.Database.Migrations
                     b.Navigation("Species");
                 });
 
-            modelBuilder.Entity("EcoData.Wildlife.Database.Models.UserSpecies", b =>
-                {
-                    b.HasOne("EcoData.Wildlife.Database.Models.Species", "ApprovedSpecies")
-                        .WithMany()
-                        .HasForeignKey("ApprovedSpeciesId")
-                        .OnDelete(DeleteBehavior.SetNull)
-                        .HasConstraintName("fk_user_species_species_approved_species_id");
-
-                    b.Navigation("ApprovedSpecies");
-                });
-
             modelBuilder.Entity("EcoData.Wildlife.Database.Models.FwsAction", b =>
                 {
                     b.Navigation("FwsLinks");
@@ -784,11 +523,6 @@ namespace EcoData.Wildlife.Database.Migrations
             modelBuilder.Entity("EcoData.Wildlife.Database.Models.SpeciesCategory", b =>
                 {
                     b.Navigation("SpeciesLinks");
-                });
-
-            modelBuilder.Entity("EcoData.Wildlife.Database.Models.UserSpecies", b =>
-                {
-                    b.Navigation("Sightings");
                 });
 #pragma warning restore 612, 618
         }
