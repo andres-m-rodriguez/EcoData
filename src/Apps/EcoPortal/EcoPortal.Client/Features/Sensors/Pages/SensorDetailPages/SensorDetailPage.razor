@@ -1,4 +1,4 @@
-@page "/sensors/{SensorId:guid}"
+@page "/sensor/{SensorId:guid}"
 @using EcoData.Sensors.Contracts.Dtos
 @using EcoData.Sensors.Application.Client
 @using EcoPortal.Client.Components
@@ -8,7 +8,7 @@
 
 <PageTitle>Sensor Details - EcoData</PageTitle>
 
-<NuiPageLayout Title="Sensor Details" ParentPath="/sensors">
+<NuiPageLayout Title="Sensor Details" ParentPath="/sensor-dashboard">
         @if (_loading)
         {
             <SensorDetailSkeleton />

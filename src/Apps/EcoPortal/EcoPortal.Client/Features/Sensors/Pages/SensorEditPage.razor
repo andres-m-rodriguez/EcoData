@@ -1,4 +1,4 @@
-@page "/sensors/{SensorId:guid}/edit"
+@page "/sensor/{SensorId:guid}/edit"
 @using Microsoft.AspNetCore.Authorization
 @attribute [Authorize]
 @using EcoData.Sensors.Application.Client
@@ -17,7 +17,7 @@
 
 <PageTitle>Edit Sensor - EcoData</PageTitle>
 
-<NuiPageLayout Title="Edit Sensor" ParentPath="@($"/sensors/{SensorId}")">
+<NuiPageLayout Title="Edit Sensor" ParentPath="@($"/sensor/{SensorId}")">
         @if (LoadCommand.IsLoading)
         {
             <MudPaper Elevation="1" Class="pa-6">
@@ -126,7 +126,7 @@
             _ =>
             {
                 Snackbar.Add("Sensor updated successfully", Severity.Success);
-                Navigation.NavigateTo($"/sensors/{SensorId}", replace: true);
+                Navigation.NavigateTo($"/sensor/{SensorId}", replace: true);
             },
             problem => _errorMessage = problem.Detail ?? "Failed to update sensor"
         );

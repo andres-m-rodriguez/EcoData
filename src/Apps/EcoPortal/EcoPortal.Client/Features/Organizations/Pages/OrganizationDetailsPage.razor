@@ -515,7 +515,7 @@
     private void NavigateToSensors() => Navigation.NavigateTo($"/organizations/{Id}/sensors");
     private void NavigateToTeam() => Navigation.NavigateTo($"/organizations/{Id}/team");
     private void NavigateToMap() => Navigation.NavigateTo($"/organizations/{Id}/map");
-    private void NavigateToSensor(SensorDtoForList sensor) => Navigation.NavigateTo($"/sensors/{sensor.Id}");
+    private void NavigateToSensor(SensorDtoForList sensor) => Navigation.NavigateTo($"/sensor/{sensor.Id}");
     private void NavigateToCreateSensor() => Navigation.NavigateTo($"/organizations/{Id}/sensors/create");
 
     private async Task ConfirmDelete()

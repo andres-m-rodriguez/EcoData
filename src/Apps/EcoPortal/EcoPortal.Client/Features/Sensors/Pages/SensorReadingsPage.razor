@@ -1,4 +1,4 @@
-@page "/sensors/{SensorId:guid}/readings"
+@page "/sensor/{SensorId:guid}/readings"
 @using EcoData.Sensors.Contracts.Dtos
 @using EcoData.Sensors.Application.Client
 @using EcoPortal.Client.Features.Sensors.Dialogs
@@ -11,7 +11,7 @@
 
 <PageTitle>Sensor Readings - EcoData</PageTitle>
 
-<NuiPageLayout Title="Readings" ParentPath="@($"/sensors/{SensorId}")">
+<NuiPageLayout Title="Readings" ParentPath="@($"/sensor/{SensorId}")">
         @if (_loading)
         {
             <MudPaper Elevation="0" Class="pa-4 rounded-lg" Style="border: 1px solid var(--mud-palette-lines-default);">
