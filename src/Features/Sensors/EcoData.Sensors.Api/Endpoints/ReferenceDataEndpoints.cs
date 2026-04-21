@@ -11,7 +11,7 @@ public static class ReferenceDataEndpoints
 {
     public static IEndpointRouteBuilder MapReferenceDataEndpoints(this IEndpointRouteBuilder app)
     {
-        var sensorTypesGroup = app.MapGroup("/api/sensor-types").WithTags("Sensor Types");
+        var sensorTypesGroup = app.MapGroup("/sensors/types").WithTags("Sensor Types");
 
         sensorTypesGroup
             .MapGet(
@@ -38,7 +38,7 @@ public static class ReferenceDataEndpoints
             )
             .WithName("GetSensorTypeById");
 
-        var parametersGroup = app.MapGroup("/api/parameters").WithTags("Parameters");
+        var parametersGroup = app.MapGroup("/sensors/parameters").WithTags("Parameters");
 
         parametersGroup
             .MapGet(

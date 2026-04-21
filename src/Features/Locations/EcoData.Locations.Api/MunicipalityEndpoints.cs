@@ -13,7 +13,7 @@ public static class MunicipalityEndpoints
 {
     public static IEndpointRouteBuilder MapMunicipalityEndpoints(this IEndpointRouteBuilder app)
     {
-        var group = app.MapGroup("/api/municipalities").WithTags("Municipalities");
+        var group = app.MapGroup("/locations/municipalities").WithTags("Municipalities");
 
         group
             .MapGet(

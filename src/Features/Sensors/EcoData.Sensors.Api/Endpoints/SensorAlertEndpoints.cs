@@ -15,7 +15,7 @@ public static class SensorAlertEndpoints
 {
     public static IEndpointRouteBuilder MapSensorAlertEndpoints(this IEndpointRouteBuilder app)
     {
-        var group = app.MapGroup("/api/sensors/alerts").WithTags("Sensor Alerts");
+        var group = app.MapGroup("/sensors/alerts").WithTags("Sensor Alerts");
 
         group
             .MapGet(
@@ -62,7 +62,7 @@ public static class SensorAlertEndpoints
             )
             .WithName("StreamAllSensorAlerts");
 
-        var sensorGroup = app.MapGroup("/api/sensors/{sensorId:guid}/alerts")
+        var sensorGroup = app.MapGroup("/sensors/{sensorId:guid}/alerts")
             .WithTags("Sensor Alerts");
 
         sensorGroup

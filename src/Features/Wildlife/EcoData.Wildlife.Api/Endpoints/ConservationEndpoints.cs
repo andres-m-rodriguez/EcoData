@@ -11,7 +11,7 @@ public static class ConservationEndpoints
 {
     public static IEndpointRouteBuilder MapConservationEndpoints(this IEndpointRouteBuilder app)
     {
-        var fwsGroup = app.MapGroup("/api/fws-actions").WithTags("FWS Actions");
+        var fwsGroup = app.MapGroup("/wildlife/fws-actions").WithTags("FWS Actions");
 
         fwsGroup
             .MapGet(
@@ -27,7 +27,7 @@ public static class ConservationEndpoints
             )
             .WithName("GetFwsActions");
 
-        var nrcsGroup = app.MapGroup("/api/nrcs-practices").WithTags("NRCS Practices");
+        var nrcsGroup = app.MapGroup("/wildlife/nrcs-practices").WithTags("NRCS Practices");
 
         nrcsGroup
             .MapGet(
@@ -43,7 +43,7 @@ public static class ConservationEndpoints
             )
             .WithName("GetNrcsPractices");
 
-        var linksGroup = app.MapGroup("/api/conservation-links").WithTags("Conservation Links");
+        var linksGroup = app.MapGroup("/wildlife/conservation-links").WithTags("Conservation Links");
 
         linksGroup
             .MapGet(

@@ -21,7 +21,7 @@ public static class OrganizationAccessRequestEndpoints
         this IEndpointRouteBuilder app
     )
     {
-        var orgGroup = app.MapGroup("/api/organizations/{organizationId:guid}/access-requests")
+        var orgGroup = app.MapGroup("/organization/organizations/{organizationId:guid}/access-requests")
             .WithTags("Organization Access Requests")
             .RequireAuthorization();
 
@@ -257,7 +257,7 @@ public static class OrganizationAccessRequestEndpoints
             )
             .WithName("UpdateOrganizationAccessRequestStatus");
 
-        var meGroup = app.MapGroup("/api/me/access-requests")
+        var meGroup = app.MapGroup("/organization/me/access-requests")
             .WithTags("My Access Requests")
             .RequireAuthorization();
 

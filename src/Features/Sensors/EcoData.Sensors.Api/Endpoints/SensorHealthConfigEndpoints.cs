@@ -11,7 +11,7 @@ public static class SensorHealthConfigEndpoints
 {
     public static IEndpointRouteBuilder MapSensorHealthConfigEndpoints(this IEndpointRouteBuilder app)
     {
-        var group = app.MapGroup("/api/sensors/{sensorId:guid}/health/config")
+        var group = app.MapGroup("/sensors/{sensorId:guid}/health/config")
             .WithTags("Sensor Health Config");
 
         group

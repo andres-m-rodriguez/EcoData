@@ -11,7 +11,7 @@ public static class SpeciesCategoryEndpoints
 {
     public static IEndpointRouteBuilder MapSpeciesCategoryEndpoints(this IEndpointRouteBuilder app)
     {
-        var group = app.MapGroup("/api/species-categories").WithTags("Species Categories");
+        var group = app.MapGroup("/wildlife/species-categories").WithTags("Species Categories");
 
         group
             .MapGet(

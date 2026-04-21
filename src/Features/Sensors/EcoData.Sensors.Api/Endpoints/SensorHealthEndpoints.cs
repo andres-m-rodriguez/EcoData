@@ -14,7 +14,7 @@ public static class SensorHealthEndpoints
 
     public static IEndpointRouteBuilder MapSensorHealthEndpoints(this IEndpointRouteBuilder app)
     {
-        var group = app.MapGroup("/api/health/sensors").WithTags("Sensor Health");
+        var group = app.MapGroup("/sensors/health").WithTags("Sensor Health");
 
         group
             .MapGet(
@@ -35,7 +35,7 @@ public static class SensorHealthEndpoints
             )
             .WithName("GetSensorHealthSummary");
 
-        var sensorGroup = app.MapGroup("/api/sensors/{sensorId:guid}/health")
+        var sensorGroup = app.MapGroup("/sensors/{sensorId:guid}/health")
             .WithTags("Sensor Health");
 
         sensorGroup
