@@ -15,10 +15,10 @@ namespace EcoData.Identity.Application.Services;
 
 public sealed class AuthService(
     UserManager<User> userManager,
-    SignInManager<User> signInManager,
     IDbContextFactory<IdentityDbContext> contextFactory,
     IValidator<RegisterRequest> registerValidator,
-    IValidator<LoginRequest> loginValidator
+    IValidator<LoginRequest> loginValidator,
+    IJwtTokenService jwtTokenService
 ) : IAuthService
 {
     public async Task<RegisterResult> RegisterAsync(
@@ -92,36 +92,47 @@ public sealed class AuthService(
             return new AccountLocked();
         }
 
-        var result = await signInManager.PasswordSignInAsync(
-            user,
-            request.Password,
-            request.RememberMe,
-            lockoutOnFailure: true
-        );
-
-        if (!result.Succeeded)
+        var passwordValid = await userManager.CheckPasswordAsync(user, request.Password);
+        if (!passwordValid)
         {
-            if (result.IsLockedOut)
+            await userManager.AccessFailedAsync(user);
+
+            if (await userManager.IsLockedOutAsync(user))
             {
                 return new AccountLocked();
             }
+
             return new InvalidCredentials();
         }
 
-        return new UserInfo(
+        await userManager.ResetAccessFailedCountAsync(user);
+
+        var globalRole = user.GlobalRole.HasValue
+            ? (Contracts.Authorization.GlobalRole)user.GlobalRole.Value
+            : (Contracts.Authorization.GlobalRole?)null;
+
+        var (token, expiresAt) = jwtTokenService.GenerateUserToken(
             user.Id,
             user.Email!,
             user.DisplayName,
-            user.GlobalRole.HasValue
-                ? (Contracts.Authorization.GlobalRole)user.GlobalRole.Value
-                : null,
+            globalRole?.ToString()
+        );
+
+        var userInfo = new UserInfo(
+            user.Id,
+            user.Email!,
+            user.DisplayName,
+            globalRole,
             user.CreatedAt
         );
+
+        return new LoginResponse(token, expiresAt, userInfo);
     }
 
-    public async Task LogoutAsync(CancellationToken cancellationToken = default)
+    public Task LogoutAsync(CancellationToken cancellationToken = default)
     {
-        await signInManager.SignOutAsync();
+        // JWT-based auth: cookie clearing is handled by the endpoint
+        return Task.CompletedTask;
     }
 
     public async Task<UserInfo?> GetCurrentUserAsync(

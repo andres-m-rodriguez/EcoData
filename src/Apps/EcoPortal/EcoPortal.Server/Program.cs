@@ -33,7 +33,7 @@ builder.AddOrganizationDatabase();
 builder.AddSensorsDatabase();
 builder.AddWildlifeDatabase();
 
-builder.Services.AddRazorComponents().AddInteractiveWebAssemblyComponents();
+builder.Services.AddRazorComponents().AddInteractiveWebAssemblyComponents().AddAuthenticationStateSerialization();
 builder.Services.AddCascadingAuthenticationState();
 
 builder.Services.AddMudServices();
@@ -51,17 +51,10 @@ builder.Services.AddHostedService<NotificationDispatcherWorker>();
 builder
     .Services.AddAuthentication(options =>
     {
-        options.DefaultAuthenticateScheme = Microsoft
-            .AspNetCore
-            .Identity
-            .IdentityConstants
-            .ApplicationScheme;
-        options.DefaultChallengeScheme = Microsoft
-            .AspNetCore
-            .Identity
-            .IdentityConstants
-            .ApplicationScheme;
+        options.DefaultAuthenticateScheme = UserJwtAuthentication.SchemeName;
+        options.DefaultChallengeScheme = UserJwtAuthentication.SchemeName;
     })
+    .AddUserJwtAuthentication(builder.Configuration)
     .AddSensorJwtAuthentication(builder.Configuration);
 
 builder.Services.AddOrganizationAuthorization();

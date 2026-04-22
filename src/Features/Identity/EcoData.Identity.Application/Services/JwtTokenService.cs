@@ -14,6 +14,13 @@ public interface IJwtTokenService
         string organizationName,
         string sensorName
     );
+
+    (string Token, DateTimeOffset ExpiresAt) GenerateUserToken(
+        Guid userId,
+        string email,
+        string displayName,
+        string? role
+    );
 }
 
 public sealed class JwtTokenService(IOptions<JwtSettings> settings) : IJwtTokenService
@@ -27,7 +34,7 @@ public sealed class JwtTokenService(IOptions<JwtSettings> settings) : IJwtTokenS
         string sensorName
     )
     {
-        var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_settings.SecretKey));
+        var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_settings.SensorSecretKey));
         var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
 
         var expiresAt = DateTimeOffset.UtcNow.AddHours(_settings.ExpirationHours);
@@ -42,6 +49,43 @@ public sealed class JwtTokenService(IOptions<JwtSettings> settings) : IJwtTokenS
             new Claim("sensor_name", sensorName),
             new Claim("token_type", "sensor"),
         };
+
+        var token = new JwtSecurityToken(
+            issuer: _settings.Issuer,
+            audience: _settings.Audience,
+            claims: claims,
+            expires: expiresAt.UtcDateTime,
+            signingCredentials: credentials
+        );
+
+        return (new JwtSecurityTokenHandler().WriteToken(token), expiresAt);
+    }
+
+    public (string Token, DateTimeOffset ExpiresAt) GenerateUserToken(
+        Guid userId,
+        string email,
+        string displayName,
+        string? role
+    )
+    {
+        var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_settings.UserSecretKey));
+        var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
+
+        var expiresAt = DateTimeOffset.UtcNow.AddDays(7);
+
+        var claims = new List<Claim>
+        {
+            new(JwtRegisteredClaimNames.Sub, userId.ToString()),
+            new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+            new(JwtRegisteredClaimNames.Email, email),
+            new("DisplayName", displayName),
+            new("token_type", "user"),
+        };
+
+        if (role is not null)
+        {
+            claims.Add(new Claim(ClaimTypes.Role, role));
+        }
 
         var token = new JwtSecurityToken(
             issuer: _settings.Issuer,

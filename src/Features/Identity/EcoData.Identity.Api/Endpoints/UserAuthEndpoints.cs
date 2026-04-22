@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using EcoData.Identity.Api.Authentication;
 using EcoData.Identity.Api.RateLimiting;
 using EcoData.Identity.Application.Services;
 using EcoData.Identity.Contracts.Authorization;
@@ -43,12 +44,26 @@ public static class UserAuthEndpoints
         group
             .MapPost(
                 "/login",
-                async (LoginRequest request, IAuthService authService, CancellationToken ct) =>
+                async (LoginRequest request, IAuthService authService, HttpContext httpContext, CancellationToken ct) =>
                 {
                     var result = await authService.LoginAsync(request, ct);
 
-                    return result.Match<Results<Ok<UserInfo>, ProblemHttpResult>>(
-                        userInfo => TypedResults.Ok(userInfo),
+                    return result.Match<Results<Ok<LoginResponse>, ProblemHttpResult>>(
+                        loginResponse =>
+                        {
+                            httpContext.Response.Cookies.Append(
+                                UserJwtAuthentication.CookieName,
+                                loginResponse.Token,
+                                new CookieOptions
+                                {
+                                    HttpOnly = true,
+                                    Secure = true,
+                                    SameSite = SameSiteMode.Strict,
+                                    Expires = loginResponse.ExpiresAt
+                                }
+                            );
+                            return TypedResults.Ok(loginResponse);
+                        },
                         _ => TypedResults.Problem(
                             detail: "Invalid email or password",
                             statusCode: StatusCodes.Status401Unauthorized
@@ -84,9 +99,9 @@ public static class UserAuthEndpoints
         group
             .MapPost(
                 "/logout",
-                async (IAuthService authService, CancellationToken ct) =>
+                (HttpContext httpContext) =>
                 {
-                    await authService.LogoutAsync(ct);
+                    httpContext.Response.Cookies.Delete(UserJwtAuthentication.CookieName);
                     return TypedResults.Ok();
                 }
             )

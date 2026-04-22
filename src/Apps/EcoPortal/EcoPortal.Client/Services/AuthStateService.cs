@@ -11,7 +11,6 @@ public sealed class AuthStateService(IAuthHttpClient authClient)
 {
     private UserInfo? _currentUser;
     private bool _isInitialized;
-    private ClientAuthStateProvider? _authStateProvider;
 
     public UserInfo? CurrentUser => _currentUser;
     public bool IsAuthenticated => _currentUser is not null;
@@ -19,11 +18,6 @@ public sealed class AuthStateService(IAuthHttpClient authClient)
     public bool IsGlobalAdmin => _currentUser?.GlobalRole == GlobalRole.GlobalAdmin;
 
     public event Action? OnAuthStateChanged;
-
-    public void SetAuthStateProvider(ClientAuthStateProvider provider)
-    {
-        _authStateProvider = provider;
-    }
 
     public async Task InitializeAsync()
     {
@@ -41,11 +35,14 @@ public sealed class AuthStateService(IAuthHttpClient authClient)
 
         if (result.IsT0)
         {
-            _currentUser = result.AsT0;
+            _currentUser = result.AsT0.User;
         }
 
         NotifyStateChanged();
-        return result;
+        return result.Match<OneOf<UserInfo, ProblemDetail>>(
+            loginResponse => loginResponse.User,
+            problemDetail => problemDetail
+        );
     }
 
     public async Task LogoutAsync()
@@ -64,6 +61,5 @@ public sealed class AuthStateService(IAuthHttpClient authClient)
     private void NotifyStateChanged()
     {
         OnAuthStateChanged?.Invoke();
-        _authStateProvider?.NotifyAuthenticationStateChanged();
     }
 }

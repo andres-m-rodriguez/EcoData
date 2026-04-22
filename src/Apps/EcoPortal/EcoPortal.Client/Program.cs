@@ -38,17 +38,14 @@ builder.Services.AddNativeUi();
 builder.Services.AddScoped<ITabNavigationService, TabNavigationService>();
 
 builder.Services.AddScoped<AuthStateService>();
+builder.Services.AddScoped<AuthenticationStateProvider, EcoPortalAuthStateProvider>();
 builder.Services.AddScoped<PermissionContextService>();
-builder.Services.AddScoped<ClientAuthStateProvider>();
 builder.Services.AddScoped<NotificationService>();
-builder.Services.AddScoped<AuthenticationStateProvider>(sp =>
-    sp.GetRequiredService<ClientAuthStateProvider>()
-);
 
 // Register custom policy provider BEFORE AddAuthorizationCore (uses TryAddSingleton)
 builder.Services.AddSingleton<IAuthorizationPolicyProvider, OrganizationPermissionPolicyProvider>();
 builder.Services.AddScoped<IAuthorizationHandler, OrganizationPermissionHandler>();
-builder.Services.AddIdentityAuthorization();
+builder.Services.AddAuthorizationCore();
 
 builder.Services.AddMudServices();
 
