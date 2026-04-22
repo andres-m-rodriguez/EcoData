@@ -4,12 +4,13 @@ using EcoData.Identity.Contracts.Errors;
 using EcoData.Identity.Contracts.Parameters;
 using EcoData.Identity.Contracts.Requests;
 using EcoData.Identity.Contracts.Responses;
-using EcoData.Identity.Contracts.Results;
 using EcoData.Identity.Database;
 using EcoData.Identity.Database.Models;
 using FluentValidation;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using OneOf;
+using OneOf.Types;
 
 namespace EcoData.Identity.Application.Services;
 
@@ -18,10 +19,13 @@ public sealed class AuthService(
     IDbContextFactory<IdentityDbContext> contextFactory,
     IValidator<RegisterRequest> registerValidator,
     IValidator<LoginRequest> loginValidator,
+    IValidator<UpdateProfileRequest> updateProfileValidator,
+    IValidator<UpdateEmailRequest> updateEmailValidator,
+    IValidator<ChangePasswordRequest> changePasswordValidator,
     IJwtTokenService jwtTokenService
 ) : IAuthService
 {
-    public async Task<RegisterResult> RegisterAsync(
+    public async Task<OneOf<UserInfo, EmailAlreadyExists, ValidationFailed>> RegisterAsync(
         RegisterRequest request,
         CancellationToken cancellationToken = default
     )
@@ -68,7 +72,7 @@ public sealed class AuthService(
         );
     }
 
-    public async Task<LoginResult> LoginAsync(
+    public async Task<OneOf<LoginResponse, InvalidCredentials, AccountLocked, TooManyRequests, ValidationFailed>> LoginAsync(
         LoginRequest request,
         CancellationToken cancellationToken = default
     )
@@ -211,5 +215,121 @@ public sealed class AuthService(
         {
             yield return user;
         }
+    }
+
+    public async Task<OneOf<UserInfo, ValidationFailed>> UpdateProfileAsync(
+        Guid userId,
+        UpdateProfileRequest request,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var validationResult = await updateProfileValidator.ValidateAsync(request, cancellationToken);
+        if (!validationResult.IsValid)
+        {
+            return new ValidationFailed(
+                validationResult.Errors.Select(e => e.ErrorMessage).ToList()
+            );
+        }
+
+        var user = await userManager.FindByIdAsync(userId.ToString());
+        if (user is null)
+        {
+            return new ValidationFailed(["User not found"]);
+        }
+
+        user.DisplayName = request.DisplayName;
+        await userManager.UpdateAsync(user);
+
+        return new UserInfo(
+            user.Id,
+            user.Email!,
+            user.DisplayName,
+            user.GlobalRole.HasValue
+                ? (Contracts.Authorization.GlobalRole)user.GlobalRole.Value
+                : null,
+            user.CreatedAt
+        );
+    }
+
+    public async Task<OneOf<UserInfo, InvalidPassword, EmailAlreadyExists, ValidationFailed>> UpdateEmailAsync(
+        Guid userId,
+        UpdateEmailRequest request,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var validationResult = await updateEmailValidator.ValidateAsync(request, cancellationToken);
+        if (!validationResult.IsValid)
+        {
+            return new ValidationFailed(
+                validationResult.Errors.Select(e => e.ErrorMessage).ToList()
+            );
+        }
+
+        var user = await userManager.FindByIdAsync(userId.ToString());
+        if (user is null)
+        {
+            return new ValidationFailed(["User not found"]);
+        }
+
+        var passwordValid = await userManager.CheckPasswordAsync(user, request.CurrentPassword);
+        if (!passwordValid)
+        {
+            return new InvalidPassword();
+        }
+
+        var existingUser = await userManager.FindByEmailAsync(request.NewEmail);
+        if (existingUser is not null && existingUser.Id != userId)
+        {
+            return new EmailAlreadyExists();
+        }
+
+        user.Email = request.NewEmail;
+        user.UserName = request.NewEmail;
+        user.NormalizedEmail = request.NewEmail.ToUpperInvariant();
+        user.NormalizedUserName = request.NewEmail.ToUpperInvariant();
+        await userManager.UpdateAsync(user);
+
+        return new UserInfo(
+            user.Id,
+            user.Email!,
+            user.DisplayName,
+            user.GlobalRole.HasValue
+                ? (Contracts.Authorization.GlobalRole)user.GlobalRole.Value
+                : null,
+            user.CreatedAt
+        );
+    }
+
+    public async Task<OneOf<Success, InvalidPassword, ValidationFailed>> ChangePasswordAsync(
+        Guid userId,
+        ChangePasswordRequest request,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var validationResult = await changePasswordValidator.ValidateAsync(request, cancellationToken);
+        if (!validationResult.IsValid)
+        {
+            return new ValidationFailed(
+                validationResult.Errors.Select(e => e.ErrorMessage).ToList()
+            );
+        }
+
+        var user = await userManager.FindByIdAsync(userId.ToString());
+        if (user is null)
+        {
+            return new ValidationFailed(["User not found"]);
+        }
+
+        var result = await userManager.ChangePasswordAsync(user, request.CurrentPassword, request.NewPassword);
+        if (!result.Succeeded)
+        {
+            if (result.Errors.Any(e => e.Code == "PasswordMismatch"))
+            {
+                return new InvalidPassword();
+            }
+            return new ValidationFailed(result.Errors.Select(e => e.Description).ToList());
+        }
+
+        return new Success();
     }
 }

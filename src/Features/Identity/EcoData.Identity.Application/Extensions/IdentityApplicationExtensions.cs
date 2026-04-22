@@ -39,6 +39,9 @@ public static class IdentityApplicationExtensions
 
         services.AddScoped<IValidator<RegisterRequest>, RegisterRequestValidator>();
         services.AddScoped<IValidator<LoginRequest>, LoginRequestValidator>();
+        services.AddScoped<IValidator<UpdateProfileRequest>, UpdateProfileRequestValidator>();
+        services.AddScoped<IValidator<UpdateEmailRequest>, UpdateEmailRequestValidator>();
+        services.AddScoped<IValidator<ChangePasswordRequest>, ChangePasswordRequestValidator>();
 
         services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<IJwtTokenService, JwtTokenService>();

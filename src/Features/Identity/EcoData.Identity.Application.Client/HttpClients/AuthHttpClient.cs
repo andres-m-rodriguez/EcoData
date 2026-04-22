@@ -3,6 +3,7 @@ using EcoData.Common.Problems.Contracts;
 using EcoData.Identity.Contracts.Requests;
 using EcoData.Identity.Contracts.Responses;
 using OneOf;
+using OneOf.Types;
 
 namespace EcoData.Identity.Application.Client.HttpClients;
 
@@ -49,5 +50,43 @@ public sealed class AuthHttpClient(HttpClient httpClient) : IAuthHttpClient
         {
             return null;
         }
+    }
+
+    public async Task<OneOf<UserInfo, ProblemDetail>> UpdateProfileAsync(UpdateProfileRequest request, CancellationToken cancellationToken = default)
+    {
+        var response = await httpClient.PatchAsJsonAsync("/identity/auth/profile", request, cancellationToken);
+
+        if (response.IsSuccessStatusCode)
+        {
+            var user = await response.Content.ReadFromJsonAsync<UserInfo>(cancellationToken);
+            return user!;
+        }
+
+        return await response.ReadProblemAsync(cancellationToken);
+    }
+
+    public async Task<OneOf<UserInfo, ProblemDetail>> UpdateEmailAsync(UpdateEmailRequest request, CancellationToken cancellationToken = default)
+    {
+        var response = await httpClient.PatchAsJsonAsync("/identity/auth/email", request, cancellationToken);
+
+        if (response.IsSuccessStatusCode)
+        {
+            var user = await response.Content.ReadFromJsonAsync<UserInfo>(cancellationToken);
+            return user!;
+        }
+
+        return await response.ReadProblemAsync(cancellationToken);
+    }
+
+    public async Task<OneOf<Success, ProblemDetail>> ChangePasswordAsync(ChangePasswordRequest request, CancellationToken cancellationToken = default)
+    {
+        var response = await httpClient.PatchAsJsonAsync("/identity/auth/password", request, cancellationToken);
+
+        if (response.IsSuccessStatusCode)
+        {
+            return new Success();
+        }
+
+        return await response.ReadProblemAsync(cancellationToken);
     }
 }

@@ -1,0 +1,322 @@
+@using BlazingSingularity.Commands
+@using EcoData.Identity.Application.Client.HttpClients
+@using EcoData.Identity.Contracts.Requests
+@using EcoData.Identity.Contracts.Responses
+@using EcoPortal.Client.Services
+@inject IAuthHttpClient AuthClient
+@inject AuthStateService AuthState
+@inject ISnackbar Snackbar
+
+<MudCard Elevation="0" Outlined="true">
+    <MudCardHeader>
+        <CardHeaderContent>
+            <MudText Typo="Typo.h6">Account Settings</MudText>
+        </CardHeaderContent>
+    </MudCardHeader>
+    <MudCardContent>
+        <MudStack Spacing="4">
+            @* Display Name *@
+            <div>
+                <MudText Typo="Typo.caption" Color="Color.Secondary">Display Name</MudText>
+                @if (_isEditingDisplayName)
+                {
+                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                        <MudTextField @bind-Value="_displayName"
+                                      Variant="Variant.Outlined"
+                                      Margin="Margin.Dense"
+                                      Immediate="true"
+                                      Disabled="UpdateDisplayNameCommand.IsLoading" />
+                        <MudIconButton Icon="@Icons.Material.Filled.Check"
+                                       Color="Color.Success"
+                                       Size="Size.Small"
+                                       OnClick="SaveDisplayNameAsync"
+                                       Disabled="UpdateDisplayNameCommand.IsLoading" />
+                        <MudIconButton Icon="@Icons.Material.Filled.Close"
+                                       Color="Color.Default"
+                                       Size="Size.Small"
+                                       OnClick="CancelEditDisplayName"
+                                       Disabled="UpdateDisplayNameCommand.IsLoading" />
+                    </MudStack>
+                }
+                else
+                {
+                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                        <MudText>@AuthState.CurrentUser?.DisplayName</MudText>
+                        <MudIconButton Icon="@Icons.Material.Filled.Edit"
+                                       Color="Color.Default"
+                                       Size="Size.Small"
+                                       OnClick="StartEditDisplayName" />
+                    </MudStack>
+                }
+            </div>
+
+            <MudDivider />
+
+            @* Email *@
+            <div>
+                <MudText Typo="Typo.caption" Color="Color.Secondary">Email</MudText>
+                @if (_isEditingEmail)
+                {
+                    <MudStack Spacing="2">
+                        <MudTextField @bind-Value="_newEmail"
+                                      Label="New Email"
+                                      Variant="Variant.Outlined"
+                                      Margin="Margin.Dense"
+                                      InputType="InputType.Email"
+                                      Disabled="UpdateEmailCommand.IsLoading" />
+                        <MudTextField @bind-Value="_emailPassword"
+                                      Label="Current Password"
+                                      Variant="Variant.Outlined"
+                                      Margin="Margin.Dense"
+                                      InputType="InputType.Password"
+                                      Disabled="UpdateEmailCommand.IsLoading" />
+                        <MudStack Row="true" Spacing="2">
+                            <MudButton Variant="Variant.Filled"
+                                       Color="Color.Primary"
+                                       Size="Size.Small"
+                                       OnClick="SaveEmailAsync"
+                                       Disabled="UpdateEmailCommand.IsLoading">
+                                @if (UpdateEmailCommand.IsLoading)
+                                {
+                                    <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
+                                }
+                                Save
+                            </MudButton>
+                            <MudButton Variant="Variant.Outlined"
+                                       Color="Color.Default"
+                                       Size="Size.Small"
+                                       OnClick="CancelEditEmail"
+                                       Disabled="UpdateEmailCommand.IsLoading">
+                                Cancel
+                            </MudButton>
+                        </MudStack>
+                    </MudStack>
+                }
+                else
+                {
+                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                        <MudText>@AuthState.CurrentUser?.Email</MudText>
+                        <MudIconButton Icon="@Icons.Material.Filled.Edit"
+                                       Color="Color.Default"
+                                       Size="Size.Small"
+                                       OnClick="StartEditEmail" />
+                    </MudStack>
+                }
+            </div>
+
+            <MudDivider />
+
+            @* Password *@
+            <div>
+                <MudText Typo="Typo.caption" Color="Color.Secondary">Password</MudText>
+                @if (_isChangingPassword)
+                {
+                    <MudStack Spacing="2">
+                        <MudTextField @bind-Value="_currentPassword"
+                                      Label="Current Password"
+                                      Variant="Variant.Outlined"
+                                      Margin="Margin.Dense"
+                                      InputType="InputType.Password"
+                                      Disabled="ChangePasswordCommand.IsLoading" />
+                        <MudTextField @bind-Value="_newPassword"
+                                      Label="New Password"
+                                      Variant="Variant.Outlined"
+                                      Margin="Margin.Dense"
+                                      InputType="InputType.Password"
+                                      Disabled="ChangePasswordCommand.IsLoading" />
+                        <MudTextField @bind-Value="_confirmPassword"
+                                      Label="Confirm New Password"
+                                      Variant="Variant.Outlined"
+                                      Margin="Margin.Dense"
+                                      InputType="InputType.Password"
+                                      Disabled="ChangePasswordCommand.IsLoading" />
+                        <MudStack Row="true" Spacing="2">
+                            <MudButton Variant="Variant.Filled"
+                                       Color="Color.Primary"
+                                       Size="Size.Small"
+                                       OnClick="SavePasswordAsync"
+                                       Disabled="ChangePasswordCommand.IsLoading">
+                                @if (ChangePasswordCommand.IsLoading)
+                                {
+                                    <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
+                                }
+                                Change Password
+                            </MudButton>
+                            <MudButton Variant="Variant.Outlined"
+                                       Color="Color.Default"
+                                       Size="Size.Small"
+                                       OnClick="CancelChangePassword"
+                                       Disabled="ChangePasswordCommand.IsLoading">
+                                Cancel
+                            </MudButton>
+                        </MudStack>
+                    </MudStack>
+                }
+                else
+                {
+                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                        <MudText>********</MudText>
+                        <MudButton Variant="Variant.Text"
+                                   Color="Color.Primary"
+                                   Size="Size.Small"
+                                   OnClick="StartChangePassword">
+                            Change
+                        </MudButton>
+                    </MudStack>
+                }
+            </div>
+        </MudStack>
+    </MudCardContent>
+</MudCard>
+
+@code {
+    private bool _isEditingDisplayName;
+    private string _displayName = string.Empty;
+
+    private bool _isEditingEmail;
+    private string _newEmail = string.Empty;
+    private string _emailPassword = string.Empty;
+
+    private bool _isChangingPassword;
+    private string _currentPassword = string.Empty;
+    private string _newPassword = string.Empty;
+    private string _confirmPassword = string.Empty;
+
+    private void StartEditDisplayName()
+    {
+        _displayName = AuthState.CurrentUser?.DisplayName ?? string.Empty;
+        _isEditingDisplayName = true;
+    }
+
+    private void CancelEditDisplayName()
+    {
+        _isEditingDisplayName = false;
+        _displayName = string.Empty;
+    }
+
+    [RelayCommand]
+    private async Task UpdateDisplayName()
+    {
+        if (string.IsNullOrWhiteSpace(_displayName))
+        {
+            Snackbar.Add("Display name cannot be empty", Severity.Warning);
+            return;
+        }
+
+        var request = new UpdateProfileRequest(_displayName.Trim());
+        var result = await AuthClient.UpdateProfileAsync(request);
+
+        result.Switch(
+            userInfo =>
+            {
+                AuthState.UpdateCurrentUser(userInfo);
+                Snackbar.Add("Display name updated", Severity.Success);
+                _isEditingDisplayName = false;
+            },
+            problem => Snackbar.Add(problem.Detail ?? "Failed to update display name", Severity.Error)
+        );
+    }
+
+    private async Task SaveDisplayNameAsync() => await UpdateDisplayNameCommand.ExecuteAsync();
+
+    private void StartEditEmail()
+    {
+        _newEmail = AuthState.CurrentUser?.Email ?? string.Empty;
+        _emailPassword = string.Empty;
+        _isEditingEmail = true;
+    }
+
+    private void CancelEditEmail()
+    {
+        _isEditingEmail = false;
+        _newEmail = string.Empty;
+        _emailPassword = string.Empty;
+    }
+
+    [RelayCommand]
+    private async Task UpdateEmail()
+    {
+        if (string.IsNullOrWhiteSpace(_newEmail))
+        {
+            Snackbar.Add("Email cannot be empty", Severity.Warning);
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(_emailPassword))
+        {
+            Snackbar.Add("Current password is required", Severity.Warning);
+            return;
+        }
+
+        var request = new UpdateEmailRequest(_newEmail.Trim(), _emailPassword);
+        var result = await AuthClient.UpdateEmailAsync(request);
+
+        result.Switch(
+            userInfo =>
+            {
+                AuthState.UpdateCurrentUser(userInfo);
+                Snackbar.Add("Email updated", Severity.Success);
+                _isEditingEmail = false;
+                _emailPassword = string.Empty;
+            },
+            problem => Snackbar.Add(problem.Detail ?? "Failed to update email", Severity.Error)
+        );
+    }
+
+    private async Task SaveEmailAsync() => await UpdateEmailCommand.ExecuteAsync();
+
+    private void StartChangePassword()
+    {
+        _currentPassword = string.Empty;
+        _newPassword = string.Empty;
+        _confirmPassword = string.Empty;
+        _isChangingPassword = true;
+    }
+
+    private void CancelChangePassword()
+    {
+        _isChangingPassword = false;
+        _currentPassword = string.Empty;
+        _newPassword = string.Empty;
+        _confirmPassword = string.Empty;
+    }
+
+    [RelayCommand]
+    private async Task ChangePassword()
+    {
+        if (string.IsNullOrWhiteSpace(_currentPassword))
+        {
+            Snackbar.Add("Current password is required", Severity.Warning);
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(_newPassword))
+        {
+            Snackbar.Add("New password is required", Severity.Warning);
+            return;
+        }
+
+        if (_newPassword != _confirmPassword)
+        {
+            Snackbar.Add("Passwords do not match", Severity.Warning);
+            return;
+        }
+
+        var request = new ChangePasswordRequest(_currentPassword, _newPassword);
+        var result = await AuthClient.ChangePasswordAsync(request);
+
+        result.Switch(
+            _ =>
+            {
+                Snackbar.Add("Password changed successfully", Severity.Success);
+                _isChangingPassword = false;
+                _currentPassword = string.Empty;
+                _newPassword = string.Empty;
+                _confirmPassword = string.Empty;
+            },
+            problem => Snackbar.Add(problem.Detail ?? "Failed to change password", Severity.Error)
+        );
+    }
+
+    private async Task SavePasswordAsync() => await ChangePasswordCommand.ExecuteAsync();
+}

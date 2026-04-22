@@ -2,6 +2,8 @@ namespace EcoData.Identity.Contracts.Errors;
 
 public sealed record InvalidCredentials;
 
+public sealed record InvalidPassword;
+
 public sealed record EmailAlreadyExists;
 
 public sealed record AccountLocked;
