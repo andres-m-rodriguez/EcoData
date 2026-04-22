@@ -52,6 +52,7 @@ jobs:
           Azure__Location: ${{ env.AZURE_LOCATION }}
           Azure__ResourceGroup: ${{ env.AZURE_RESOURCE_GROUP }}
           Parameters__jwt-secret-key: ${{ secrets.JWT_SECRET_KEY }}
+          Parameters__jwt-sensor-secret-key: ${{ secrets.JWT_SENSOR_SECRET_KEY }}
           Parameters__customDomain: ${{ vars.CUSTOM_DOMAIN }}
           Parameters__certificateName: ${{ vars.CERTIFICATE_NAME }}
         run: dotnet run scripts/deploy-affected.cs -- --from ${{ github.event.before }} --to ${{ github.sha }}
