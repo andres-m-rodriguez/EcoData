@@ -6,7 +6,6 @@
 @using EcoPortal.Client.Services
 @using EcoPortal.Client.Themes
 @inject AuthStateService AuthState
-@inject ClientAuthStateProvider AuthStateProvider
 @inject INativeNavigationManager Navigation
 @inject INativeNavbarManager Navbar
 @inject ITabNavigationService Tabs
@@ -207,7 +206,6 @@
 
     protected override async Task OnInitializedAsync()
     {
-        AuthState.SetAuthStateProvider(AuthStateProvider);
         AuthState.OnAuthStateChanged += HandleAuthStateChanged;
         Navigation.OnStateChanged += HandleNavigationStateChanged;
         Navbar.OnStateChanged += HandleNavbarStateChanged;

@@ -4,19 +4,23 @@ using EcoData.AppHost.Extensions;
 var builder = DistributedApplication.CreateBuilder(args);
 
 // Genomics Zig App (local development only)
-var genomics = builder
-    .AddZigApp("genomics", "../../Features/Genomics/EcoData.Genomics.Api")
-    .WithOptimization(ZigOptimizeMode.Debug)
-    .WithZigHttpEndpoint(8080)
-    .WithEnvironment("PORT", "8080")
-    .WithExternalHttpEndpoints()
-    .ExcludeFromManifest();
+if (builder.ExecutionContext.IsRunMode)
+{
+    var genomics = builder
+        .AddZigApp("genomics", "../../Features/Genomics/EcoData.Genomics.Api")
+        .WithOptimization(ZigOptimizeMode.Debug)
+        .WithZigHttpEndpoint(8080)
+        .WithEnvironment("PORT", "8080")
+        .WithExternalHttpEndpoints()
+        .ExcludeFromManifest();
+}
 
 // Azure Container App Environment for deployment
 builder.AddAzureContainerAppEnvironment("aca-env");
 
-// JWT secret - from Key Vault in production, parameter in development
-var jwtSecretKey = builder.AddParameter("jwt-secret-key", secret: true);
+// JWT secrets - from Key Vault in production, parameters in development
+var jwtSensorSecretKey = builder.AddParameter("jwt-sensor-secret-key", secret: true);
+var jwtUserSecretKey = builder.AddParameter("jwt-user-secret-key", secret: true);
 
 var postgres = builder
     .AddAzurePostgresFlexibleServer("postgres")
@@ -58,7 +62,8 @@ var ecoportal = builder
     .WithReference(locationsDb)
     .WithReference(identityDb)
     .WithReference(wildlifeDb)
-    .WithEnvironment("Jwt__SecretKey", jwtSecretKey)
+    .WithEnvironment("Jwt__SensorSecretKey", jwtSensorSecretKey)
+    .WithEnvironment("Jwt__UserSecretKey", jwtUserSecretKey)
     .WithEnvironment("Jwt__Issuer", "EcoData")
     .WithEnvironment("Jwt__Audience", "EcoData")
     .WithEnvironment("Jwt__ExpirationHours", "24")

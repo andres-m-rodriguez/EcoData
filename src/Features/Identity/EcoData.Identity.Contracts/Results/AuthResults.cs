@@ -9,4 +9,4 @@ public partial class RegisterResult : OneOfBase<UserInfo, EmailAlreadyExists, Va
 
 [GenerateOneOf]
 public partial class LoginResult
-    : OneOfBase<UserInfo, InvalidCredentials, AccountLocked, TooManyRequests, ValidationFailed>;
+    : OneOfBase<LoginResponse, InvalidCredentials, AccountLocked, TooManyRequests, ValidationFailed>;
