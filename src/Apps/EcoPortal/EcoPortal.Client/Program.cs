@@ -40,6 +40,7 @@ builder.Services.AddScoped<ITabNavigationService, TabNavigationService>();
 builder.Services.AddScoped<AuthStateService>();
 builder.Services.AddScoped<PermissionContextService>();
 builder.Services.AddScoped<ClientAuthStateProvider>();
+builder.Services.AddScoped<NotificationService>();
 builder.Services.AddScoped<AuthenticationStateProvider>(sp =>
     sp.GetRequiredService<ClientAuthStateProvider>()
 );

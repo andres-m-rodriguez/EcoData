@@ -14,6 +14,8 @@ public sealed class SensorsDbContext(DbContextOptions<SensorsDbContext> options)
     public DbSet<SensorHealthStatus> SensorHealthStatuses => Set<SensorHealthStatus>();
     public DbSet<SensorHealthAlert> SensorHealthAlerts => Set<SensorHealthAlert>();
     public DbSet<IngestionLog> IngestionLogs => Set<IngestionLog>();
+    public DbSet<UserSensorSubscription> UserSensorSubscriptions => Set<UserSensorSubscription>();
+    public DbSet<UserNotification> UserNotifications => Set<UserNotification>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -27,5 +29,7 @@ public sealed class SensorsDbContext(DbContextOptions<SensorsDbContext> options)
         modelBuilder.ApplyConfiguration(new SensorHealthStatus.EntityConfiguration());
         modelBuilder.ApplyConfiguration(new SensorHealthAlert.EntityConfiguration());
         modelBuilder.ApplyConfiguration(new IngestionLog.EntityConfiguration());
+        modelBuilder.ApplyConfiguration(new UserSensorSubscription.EntityConfiguration());
+        modelBuilder.ApplyConfiguration(new UserNotification.EntityConfiguration());
     }
 }

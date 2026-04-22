@@ -29,6 +29,16 @@ public static class DependencyInjection
             configureClient?.Invoke(client);
         });
 
+        services.AddHttpClient<IUserSubscriptionHttpClient, UserSubscriptionHttpClient>(client =>
+        {
+            configureClient?.Invoke(client);
+        });
+
+        services.AddHttpClient<IUserNotificationHttpClient, UserNotificationHttpClient>(client =>
+        {
+            configureClient?.Invoke(client);
+        });
+
         return services;
     }
 

@@ -10,7 +10,8 @@
 @inject INativeNavigationManager Navigation
 @inject INativeNavbarManager Navbar
 @inject ITabNavigationService Tabs
-@implements IDisposable
+@inject NotificationService NotificationService
+@implements IAsyncDisposable
 
 <MudThemeProvider Theme="AppThemes.Azure" IsDarkMode="_isDarkMode" />
 <MudPopoverProvider />
@@ -86,6 +87,7 @@
             <div class="d-flex align-center">
             @if (AuthState.IsAuthenticated)
             {
+                <NotificationBell />
                 <MudButton Href="/account" Variant="Variant.Text" Color="Color.Default" Class="ml-2 text-transform-none">
                     <MudAvatar Color="Color.Tertiary" Size="Size.Small" Class="mr-2">
                         @GetUserInitial()
@@ -212,11 +214,27 @@
         Navigation.OnStateChanged += HandleNavigationStateChanged;
         Navbar.OnStateChanged += HandleNavbarStateChanged;
         await AuthState.InitializeAsync();
+
+        if (AuthState.IsAuthenticated)
+        {
+            await NotificationService.InitializeAsync();
+        }
     }
 
     private void HandleAuthStateChanged()
     {
-        InvokeAsync(StateHasChanged);
+        InvokeAsync(async () =>
+        {
+            if (AuthState.IsAuthenticated)
+            {
+                await NotificationService.InitializeAsync();
+            }
+            else
+            {
+                NotificationService.Stop();
+            }
+            StateHasChanged();
+        });
     }
 
     private void HandleNavigationStateChanged()
@@ -285,10 +303,11 @@
         await LogoutCommand.ExecuteAsync();
     }
 
-    public void Dispose()
+    public async ValueTask DisposeAsync()
     {
         AuthState.OnAuthStateChanged -= HandleAuthStateChanged;
         Navigation.OnStateChanged -= HandleNavigationStateChanged;
         Navbar.OnStateChanged -= HandleNavbarStateChanged;
+        await NotificationService.DisposeAsync();
     }
 }

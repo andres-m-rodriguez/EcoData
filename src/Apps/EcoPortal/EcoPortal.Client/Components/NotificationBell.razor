@@ -1,0 +1,68 @@
+@using EcoPortal.Client.Services
+@inject NotificationService NotificationService
+@implements IDisposable
+
+<MudBadge Content="@UnreadCountDisplay"
+          Visible="@HasUnread"
+          Color="Color.Error"
+          Overlap="true"
+          Class="notification-bell">
+    <MudIconButton Icon="@Icons.Material.Outlined.Notifications"
+                   Color="Color.Default"
+                   Size="Size.Medium"
+                   OnClick="TogglePanel" />
+</MudBadge>
+
+<MudPopover Open="@_isPanelOpen"
+            Fixed="true"
+            AnchorOrigin="Origin.BottomRight"
+            TransformOrigin="Origin.TopRight"
+            Class="notification-popover">
+    <NotificationPanel OnClose="ClosePanel" />
+</MudPopover>
+
+@code {
+    private bool _isPanelOpen;
+
+    private bool HasUnread => NotificationService.UnreadCount > 0;
+
+    private string UnreadCountDisplay =>
+        NotificationService.UnreadCount > 99 ? "99+" : NotificationService.UnreadCount.ToString();
+
+    protected override void OnInitialized()
+    {
+        NotificationService.OnUnreadCountChanged += HandleUnreadCountChanged;
+    }
+
+    private void HandleUnreadCountChanged()
+    {
+        InvokeAsync(StateHasChanged);
+    }
+
+    private void TogglePanel()
+    {
+        _isPanelOpen = !_isPanelOpen;
+    }
+
+    private void ClosePanel()
+    {
+        _isPanelOpen = false;
+    }
+
+    public void Dispose()
+    {
+        NotificationService.OnUnreadCountChanged -= HandleUnreadCountChanged;
+    }
+}
+
+<style>
+    .notification-bell {
+        margin-right: 8px;
+    }
+
+    .notification-popover {
+        width: 360px;
+        max-height: 480px;
+        overflow: hidden;
+    }
+</style>

@@ -1,0 +1,144 @@
+@using EcoData.Sensors.Application.Client
+@using EcoData.Sensors.Contracts.Dtos
+@inject IUserSubscriptionHttpClient SubscriptionClient
+@inject ISnackbar Snackbar
+
+<MudDialog>
+    <DialogContent>
+        <MudText Typo="Typo.body2" Class="mb-4">
+            Choose which health alerts you want to receive notifications for:
+        </MudText>
+
+        <MudStack Spacing="3">
+            <div class="d-flex justify-space-between align-center">
+                <MudText>Stale Alerts</MudText>
+                <MudSwitch @bind-Value="_notifyOnStale" Color="Color.Warning" />
+            </div>
+            <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mt-n2 ml-0">
+                Notify when sensor stops reporting data
+            </MudText>
+
+            <div class="d-flex justify-space-between align-center">
+                <MudText>Unhealthy Alerts</MudText>
+                <MudSwitch @bind-Value="_notifyOnUnhealthy" Color="Color.Error" />
+            </div>
+            <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mt-n2 ml-0">
+                Notify when sensor becomes unhealthy
+            </MudText>
+
+            <div class="d-flex justify-space-between align-center">
+                <MudText>Recovery Alerts</MudText>
+                <MudSwitch @bind-Value="_notifyOnRecovered" Color="Color.Success" />
+            </div>
+            <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mt-n2 ml-0">
+                Notify when sensor recovers from issues
+            </MudText>
+        </MudStack>
+    </DialogContent>
+    <DialogActions>
+        <MudButton Color="Color.Error"
+                   Variant="Variant.Text"
+                   OnClick="UnsubscribeAsync"
+                   Disabled="_isSaving">
+            Unsubscribe
+        </MudButton>
+        <MudSpacer />
+        <MudButton OnClick="Cancel" Disabled="_isSaving">Cancel</MudButton>
+        <MudButton Color="Color.Primary"
+                   Variant="Variant.Filled"
+                   OnClick="SaveAsync"
+                   Disabled="_isSaving">
+            @if (_isSaving)
+            {
+                <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
+            }
+            Save
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter]
+    private IMudDialogInstance MudDialog { get; set; } = default!;
+
+    [Parameter, EditorRequired]
+    public Guid SensorId { get; set; }
+
+    [Parameter]
+    public UserSensorSubscriptionDto? CurrentSubscription { get; set; }
+
+    private bool _notifyOnStale;
+    private bool _notifyOnUnhealthy;
+    private bool _notifyOnRecovered;
+    private bool _isSaving;
+
+    protected override void OnInitialized()
+    {
+        if (CurrentSubscription is not null)
+        {
+            _notifyOnStale = CurrentSubscription.NotifyOnStale;
+            _notifyOnUnhealthy = CurrentSubscription.NotifyOnUnhealthy;
+            _notifyOnRecovered = CurrentSubscription.NotifyOnRecovered;
+        }
+        else
+        {
+            _notifyOnStale = true;
+            _notifyOnUnhealthy = true;
+            _notifyOnRecovered = true;
+        }
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+
+    private async Task SaveAsync()
+    {
+        _isSaving = true;
+        try
+        {
+            var request = new UserSensorSubscriptionDtoForUpdate(
+                _notifyOnStale,
+                _notifyOnUnhealthy,
+                _notifyOnRecovered
+            );
+
+            var result = await SubscriptionClient.UpdateSubscriptionAsync(SensorId, request);
+
+            if (result.IsT0)
+            {
+                Snackbar.Add("Preferences updated", Severity.Success);
+                MudDialog.Close(DialogResult.Ok(result.AsT0));
+            }
+            else
+            {
+                Snackbar.Add(result.AsT1.Detail ?? "Failed to update preferences", Severity.Error);
+            }
+        }
+        finally
+        {
+            _isSaving = false;
+        }
+    }
+
+    private async Task UnsubscribeAsync()
+    {
+        _isSaving = true;
+        try
+        {
+            var result = await SubscriptionClient.UnsubscribeAsync(SensorId);
+
+            if (result.IsT0)
+            {
+                Snackbar.Add("Unsubscribed from sensor alerts", Severity.Success);
+                MudDialog.Close(DialogResult.Ok(true));
+            }
+            else
+            {
+                Snackbar.Add(result.AsT1.Detail ?? "Failed to unsubscribe", Severity.Error);
+            }
+        }
+        finally
+        {
+            _isSaving = false;
+        }
+    }
+}
