@@ -88,19 +88,16 @@
             {
                 <MudMenu AnchorOrigin="Origin.BottomRight" TransformOrigin="Origin.TopRight">
                     <ActivatorContent>
-                        <MudChip T="string" Color="Color.Default" Variant="Variant.Text" Class="ml-2 cursor-pointer">
-                            <AvatarContent>
-                                <MudAvatar Color="Color.Tertiary" Size="Size.Small">
-                                    @GetUserInitial()
-                                </MudAvatar>
-                            </AvatarContent>
-                            <ChildContent>
-                                @AuthState.CurrentUser?.DisplayName
-                            </ChildContent>
-                        </MudChip>
+                        <MudButton Variant="Variant.Text" Color="Color.Default" Class="ml-2 text-transform-none"
+                                   EndIcon="@Icons.Material.Filled.ArrowDropDown">
+                            <MudAvatar Color="Color.Tertiary" Size="Size.Small" Class="mr-2">
+                                @GetUserInitial()
+                            </MudAvatar>
+                            @AuthState.CurrentUser?.DisplayName
+                        </MudButton>
                     </ActivatorContent>
                     <ChildContent>
-                        <MudMenuItem Icon="@Icons.Material.Outlined.Person">Profile</MudMenuItem>
+                        <MudMenuItem Href="/account" Icon="@Icons.Material.Outlined.Person">Account</MudMenuItem>
                         <MudMenuItem Href="/organizations/my" Icon="@Icons.Material.Outlined.Business">My Organizations</MudMenuItem>
                         <MudMenuItem Href="/organizations/requests" Icon="@Icons.Material.Outlined.HowToReg">My Access Requests</MudMenuItem>
                         <MudDivider />
