@@ -86,24 +86,12 @@
             <div class="d-flex align-center">
             @if (AuthState.IsAuthenticated)
             {
-                <MudMenu AnchorOrigin="Origin.BottomRight" TransformOrigin="Origin.TopRight">
-                    <ActivatorContent>
-                        <MudButton Variant="Variant.Text" Color="Color.Default" Class="ml-2 text-transform-none"
-                                   EndIcon="@Icons.Material.Filled.ArrowDropDown">
-                            <MudAvatar Color="Color.Tertiary" Size="Size.Small" Class="mr-2">
-                                @GetUserInitial()
-                            </MudAvatar>
-                            @AuthState.CurrentUser?.DisplayName
-                        </MudButton>
-                    </ActivatorContent>
-                    <ChildContent>
-                        <MudMenuItem Href="/account" Icon="@Icons.Material.Outlined.Person">Account</MudMenuItem>
-                        <MudMenuItem Href="/organizations/my" Icon="@Icons.Material.Outlined.Business">My Organizations</MudMenuItem>
-                        <MudMenuItem Href="/organizations/requests" Icon="@Icons.Material.Outlined.HowToReg">My Access Requests</MudMenuItem>
-                        <MudDivider />
-                        <MudMenuItem OnClick="LogoutAsync" Icon="@Icons.Material.Outlined.Logout">Sign Out</MudMenuItem>
-                    </ChildContent>
-                </MudMenu>
+                <MudButton Href="/account" Variant="Variant.Text" Color="Color.Default" Class="ml-2 text-transform-none">
+                    <MudAvatar Color="Color.Tertiary" Size="Size.Small" Class="mr-2">
+                        @GetUserInitial()
+                    </MudAvatar>
+                    @AuthState.CurrentUser?.DisplayName
+                </MudButton>
             }
             else
             {
