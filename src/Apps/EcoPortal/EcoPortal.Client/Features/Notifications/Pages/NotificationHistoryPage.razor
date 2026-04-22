@@ -1,158 +1,25 @@
 @page "/notifications"
-@using BlazingSingularity
 @using EcoData.Sensors.Contracts.Dtos
 @using EcoPortal.Client.Services
 @using EcoPortal.Client.Components
 @inject NotificationService NotificationService
 @inject NavigationManager Navigation
 @inject INativeNavbarManager Navbar
-@implements IDisposable
 
-<PageHeader Label="Account" Title="Notifications" />
+<PageTitle>Notifications - EcoData</PageTitle>
 
-<MudStack Spacing="4">
-    @if (NotificationService.UnreadCount > 0)
-    {
-        <div class="d-flex justify-end">
-            <MudButton Variant="Variant.Text"
-                       Color="Color.Primary"
-                       Size="Size.Small"
-                       OnClick="MarkAllAsReadAsync">
-                Mark all as read
-            </MudButton>
-        </div>
-    }
-
-    @if (_isLoading && _notifications.Count == 0)
-    {
-        <MudStack Spacing="2">
-            @for (var i = 0; i < 5; i++)
-            {
-                <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="72px" />
-            }
-        </MudStack>
-    }
-    else if (_notifications.Count == 0)
-    {
-        <MudPaper Class="pa-8 d-flex flex-column align-center" Elevation="0">
-            <MudIcon Icon="@Icons.Material.Outlined.NotificationsNone"
-                     Size="Size.Large"
-                     Color="Color.Secondary"
-                     Class="mb-4" />
-            <MudText Typo="Typo.h6" Color="Color.Secondary">No notifications</MudText>
-            <MudText Typo="Typo.body2" Color="Color.Secondary">
-                Subscribe to sensors to receive health alerts
-            </MudText>
-        </MudPaper>
-    }
-    else
-    {
-        <MudStack Spacing="2">
-            @foreach (var notification in _notifications)
-            {
-                <MudPaper Class="@GetNotificationClass(notification)"
-                          Elevation="0"
-                          @onclick="() => HandleNotificationClick(notification)">
-                    <div class="d-flex align-start">
-                        <MudAvatar Color="@GetAvatarColor(notification.Type)"
-                                   Size="Size.Medium"
-                                   Class="mr-3">
-                            <MudIcon Icon="@GetNotificationIcon(notification.Type)" />
-                        </MudAvatar>
-                        <div class="flex-grow-1">
-                            <MudText Typo="Typo.subtitle1">@notification.Title</MudText>
-                            <MudText Typo="Typo.body2" Color="Color.Secondary">
-                                @notification.Message
-                            </MudText>
-                            <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mt-1">
-                                @notification.SensorName &bull; @FormatTime(notification.CreatedAt)
-                            </MudText>
-                        </div>
-                        @if (!notification.IsRead)
-                        {
-                            <MudIcon Icon="@Icons.Material.Filled.FiberManualRecord"
-                                     Color="Color.Primary"
-                                     Size="Size.Small" />
-                        }
-                    </div>
-                </MudPaper>
-            }
-        </MudStack>
-
-        @if (_hasMore)
-        {
-            <div class="d-flex justify-center">
-                <MudButton Variant="Variant.Outlined"
-                           Color="Color.Primary"
-                           OnClick="LoadMoreAsync"
-                           Disabled="_isLoadingMore">
-                    @if (_isLoadingMore)
-                    {
-                        <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
-                    }
-                    Load more
-                </MudButton>
-            </div>
-        }
-    }
-</MudStack>
+<div class="notifications-page">
+    <section class="notifications-content">
+        <NotificationList OnNotificationClick="HandleNotificationClick" />
+    </section>
+</div>
 
 @code {
     public const string Path = "/notifications";
 
-    private List<UserNotificationDto> _notifications = [];
-    private bool _isLoading = true;
-    private bool _isLoadingMore;
-    private bool _hasMore;
-    private const int PageSize = 20;
-
-    protected override async Task OnInitializedAsync()
+    protected override void OnInitialized()
     {
         Navbar.SetTitle("Notifications");
-        NotificationService.OnNotificationReceived += HandleNewNotification;
-        await LoadNotificationsAsync();
-    }
-
-    private async Task LoadNotificationsAsync()
-    {
-        _isLoading = true;
-        try
-        {
-            var notifications = await NotificationService.GetNotificationsAsync(PageSize + 1);
-            _hasMore = notifications.Count > PageSize;
-            _notifications = notifications.Take(PageSize).ToList();
-        }
-        finally
-        {
-            _isLoading = false;
-        }
-    }
-
-    private async Task LoadMoreAsync()
-    {
-        if (_isLoadingMore || _notifications.Count == 0) return;
-
-        _isLoadingMore = true;
-        try
-        {
-            var cursor = _notifications.Last().Id;
-            var notifications = await NotificationService.GetNotificationsAsync(PageSize + 1, cursor);
-            _hasMore = notifications.Count > PageSize;
-            _notifications.AddRange(notifications.Take(PageSize));
-        }
-        finally
-        {
-            _isLoadingMore = false;
-        }
-    }
-
-    private void HandleNewNotification()
-    {
-        InvokeAsync(async () =>
-        {
-            await LoadNotificationsAsync();
-            StateHasChanged();
-        });
     }
 
     private async Task HandleNotificationClick(UserNotificationDto notification)
@@ -160,80 +27,8 @@
         if (!notification.IsRead)
         {
             await NotificationService.MarkAsReadAsync(notification.Id);
-            var index = _notifications.FindIndex(n => n.Id == notification.Id);
-            if (index >= 0)
-            {
-                _notifications[index] = notification with { IsRead = true };
-            }
         }
 
         Navigation.NavigateTo($"/sensors/{notification.SensorId}");
     }
-
-    private async Task MarkAllAsReadAsync()
-    {
-        await NotificationService.MarkAllAsReadAsync();
-        for (int i = 0; i < _notifications.Count; i++)
-        {
-            _notifications[i] = _notifications[i] with { IsRead = true };
-        }
-    }
-
-    private string GetNotificationClass(UserNotificationDto notification)
-    {
-        var baseClass = "pa-4 cursor-pointer notification-item";
-        return notification.IsRead ? baseClass : $"{baseClass} notification-unread";
-    }
-
-    private string GetNotificationIcon(string type) => type switch
-    {
-        "SensorStale" => Icons.Material.Filled.Warning,
-        "SensorUnhealthy" => Icons.Material.Filled.Error,
-        "SensorRecovered" => Icons.Material.Filled.CheckCircle,
-        _ => Icons.Material.Filled.Notifications
-    };
-
-    private Color GetAvatarColor(string type) => type switch
-    {
-        "SensorStale" => Color.Warning,
-        "SensorUnhealthy" => Color.Error,
-        "SensorRecovered" => Color.Success,
-        _ => Color.Default
-    };
-
-    private string FormatTime(DateTimeOffset time)
-    {
-        var diff = DateTimeOffset.UtcNow - time;
-
-        if (diff.TotalMinutes < 1)
-            return "Just now";
-        if (diff.TotalMinutes < 60)
-            return $"{(int)diff.TotalMinutes} minutes ago";
-        if (diff.TotalHours < 24)
-            return $"{(int)diff.TotalHours} hours ago";
-        if (diff.TotalDays < 7)
-            return $"{(int)diff.TotalDays} days ago";
-
-        return time.ToLocalTime().ToString("MMMM d, yyyy");
-    }
-
-    public void Dispose()
-    {
-        NotificationService.OnNotificationReceived -= HandleNewNotification;
-    }
 }
-
-<style>
-    .notification-item {
-        transition: background-color 0.15s;
-        border-radius: 8px;
-    }
-
-    .notification-item:hover {
-        background-color: var(--mud-palette-action-default-hover);
-    }
-
-    .notification-unread {
-        background-color: var(--mud-palette-primary-lighten);
-    }
-</style>
