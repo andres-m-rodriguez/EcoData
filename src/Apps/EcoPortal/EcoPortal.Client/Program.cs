@@ -8,6 +8,7 @@ using EcoPortal.Client.Features.Organizations.Services;
 using EcoPortal.Client.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Components.Authorization;
+using Microsoft.AspNetCore.Components.WebAssembly.Authentication;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using MudBlazor.Services;
 
@@ -44,7 +45,7 @@ builder.Services.AddScoped<PermissionContextService>();
 // Register custom policy provider BEFORE AddAuthorizationCore (uses TryAddSingleton)
 builder.Services.AddSingleton<IAuthorizationPolicyProvider, OrganizationPermissionPolicyProvider>();
 builder.Services.AddScoped<IAuthorizationHandler, OrganizationPermissionHandler>();
-builder.Services.AddIdentityAuthorization();
+builder.Services.AddAuthorizationCore();
 
 builder.Services.AddMudServices();
 

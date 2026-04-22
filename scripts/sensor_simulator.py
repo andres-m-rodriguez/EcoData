@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Sensor simulator script that logs in, creates a sensor, and sends readings every 10 seconds.
+Sensor simulator script that logs in with JWT, creates a sensor, and sends readings every 10 seconds.
 """
 
 import requests
@@ -20,10 +20,10 @@ def main():
     session = requests.Session()
     session.verify = False  # Allow self-signed certs for local dev
 
-    # 1. Login as admin
+    # 1. Login as admin and get JWT token
     print("Logging in as admin...")
     login_response = session.post(
-        f"{BASE_URL}/api/auth/login",
+        f"{BASE_URL}/identity/auth/login",
         json={"email": "admin@gmail.com", "password": "Admin@123"}
     )
 
@@ -31,11 +31,18 @@ def main():
         print(f"Login failed: {login_response.status_code} - {login_response.text}")
         sys.exit(1)
 
-    print("Login successful!")
+    login_data = login_response.json()
+    user_token = login_data["token"]
+    user_info = login_data["user"]
+    print(f"Login successful! Welcome {user_info['displayName']}")
+    print(f"User JWT: {user_token[:30]}...")
+
+    # Set JWT token in Authorization header for all subsequent requests
+    session.headers.update({"Authorization": f"Bearer {user_token}"})
 
     # 2. Get organizations to find one to use
     print("Fetching organizations...")
-    orgs_response = session.get(f"{BASE_URL}/api/organizations")
+    orgs_response = session.get(f"{BASE_URL}/organization/organizations")
 
     if orgs_response.status_code != 200:
         print(f"Failed to get organizations: {orgs_response.status_code}")
@@ -53,7 +60,7 @@ def main():
 
     # 3. Get municipalities for location
     print("Fetching municipalities...")
-    municipalities_response = session.get(f"{BASE_URL}/api/municipalities?pageSize=1")
+    municipalities_response = session.get(f"{BASE_URL}/locations/municipalities?pageSize=1")
 
     if municipalities_response.status_code != 200:
         print(f"Failed to get municipalities: {municipalities_response.status_code}")
@@ -75,7 +82,7 @@ def main():
     sensor_name = f"Simulator-{uuid.uuid4().hex[:8]}"
     reading_interval = 10  # seconds between readings
     register_response = session.post(
-        f"{BASE_URL}/api/sensors/register",
+        f"{BASE_URL}/sensors/sensors/register",
         json={
             "organizationId": org_id,
             "organizationName": org_name,
@@ -94,11 +101,11 @@ def main():
 
     credentials = register_response.json()
     sensor_id = credentials["sensorId"]
-    access_token = credentials["accessToken"]
+    sensor_token = credentials["accessToken"]
     print(f"Sensor registered: {sensor_name} ({sensor_id})")
-    print(f"Access token: {access_token[:20]}...")
+    print(f"Sensor JWT: {sensor_token[:30]}...")
 
-    # 5. Send readings every 10 seconds
+    # 5. Send readings every 10 seconds using sensor JWT
     print(f"\nStarting to send readings every 10 seconds...")
     print(f"View live at: {BASE_URL}/sensors/{sensor_id}")
     print("Press Ctrl+C to stop\n")
@@ -111,11 +118,11 @@ def main():
             ph = round(7 + random.uniform(-1, 1), 2)
             dissolved_oxygen = round(8 + random.uniform(-2, 2), 2)
 
-            # Use sensor JWT auth for posting readings
-            headers = {"Authorization": f"Bearer {access_token}"}
+            # Use sensor JWT for posting readings
+            headers = {"Authorization": f"Bearer {sensor_token}"}
 
             reading_response = session.post(
-                f"{BASE_URL}/api/sensors/{sensor_id}/readings",
+                f"{BASE_URL}/sensors/sensors/{sensor_id}/readings",
                 json={
                     "sensorId": sensor_id,
                     "readings": [
