@@ -1,0 +1,91 @@
+@using EcoData.Sensors.Application.Client
+@using EcoData.Sensors.Contracts.Dtos
+@inject IUserSubscriptionHttpClient SubscriptionClient
+@inject INativeNavigationManager Navigation
+
+<MudCard Elevation="0" Outlined="true">
+    <MudCardHeader>
+        <CardHeaderContent>
+            <MudText Typo="Typo.h6">My Sensors</MudText>
+        </CardHeaderContent>
+    </MudCardHeader>
+    <MudCardContent Class="pa-0">
+        @if (_isLoading)
+        {
+            <MudStack Spacing="2" Class="pa-4">
+                @for (int i = 0; i < 3; i++)
+                {
+                    <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="48px" />
+                }
+            </MudStack>
+        }
+        else if (_subscriptions.Count == 0)
+        {
+            <MudStack AlignItems="AlignItems.Center" Spacing="2" Class="py-6">
+                <MudIcon Icon="@Icons.Material.Outlined.Sensors" Size="Size.Large" Color="Color.Secondary" />
+                <MudText Typo="Typo.body2" Color="Color.Secondary">No subscriptions yet</MudText>
+                <MudButton Variant="Variant.Text"
+                           Color="Color.Primary"
+                           Size="Size.Small"
+                           OnClick="@(() => Navigation.NavigateTo("/sensor-dashboard"))">
+                    Discover Sensors
+                </MudButton>
+            </MudStack>
+        }
+        else
+        {
+            <MudList T="UserSensorSubscriptionDto" Dense="true" Class="py-0">
+                @foreach (var subscription in _subscriptions)
+                {
+                    <MudListItem OnClick="@(() => NavigateToSensor(subscription.SensorId))">
+                        <div class="d-flex align-center gap-3">
+                            <MudIcon Icon="@Icons.Material.Filled.WaterDrop" Color="Color.Primary" Size="Size.Small" />
+                            <MudText>@subscription.SensorName</MudText>
+                        </div>
+                    </MudListItem>
+                    @if (subscription != _subscriptions.Last())
+                    {
+                        <MudDivider />
+                    }
+                }
+            </MudList>
+            @if (_hasMore)
+            {
+                <MudDivider />
+                <div class="pa-2">
+                    <MudButton Variant="Variant.Text"
+                               Color="Color.Primary"
+                               FullWidth="true"
+                               OnClick="@(() => Navigation.NavigateTo("/notifications/history"))">
+                        View All Subscriptions
+                    </MudButton>
+                </div>
+            }
+        }
+    </MudCardContent>
+</MudCard>
+
+@code {
+    private bool _isLoading = true;
+    private List<UserSensorSubscriptionDto> _subscriptions = new();
+    private bool _hasMore;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var allSubscriptions = await SubscriptionClient.GetSubscriptionsAsync();
+            _subscriptions = allSubscriptions.Take(5).ToList();
+            _hasMore = allSubscriptions.Count > 5;
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private void NavigateToSensor(Guid sensorId)
+    {
+        Navigation.NavigateTo($"/sensors/{sensorId}");
+    }
+}

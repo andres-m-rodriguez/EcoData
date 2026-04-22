@@ -28,14 +28,16 @@ public static class UserAuthEndpoints
 
                     return result.Match<Results<Ok<UserInfo>, ProblemHttpResult>>(
                         userInfo => TypedResults.Ok(userInfo),
-                        _ => TypedResults.Problem(
-                            detail: "An account with this email already exists",
-                            statusCode: StatusCodes.Status409Conflict
-                        ),
-                        validationFailed => TypedResults.Problem(
-                            detail: string.Join(", ", validationFailed.Errors),
-                            statusCode: StatusCodes.Status400BadRequest
-                        )
+                        _ =>
+                            TypedResults.Problem(
+                                detail: "An account with this email already exists",
+                                statusCode: StatusCodes.Status409Conflict
+                            ),
+                        validationFailed =>
+                            TypedResults.Problem(
+                                detail: string.Join(", ", validationFailed.Errors),
+                                statusCode: StatusCodes.Status400BadRequest
+                            )
                     );
                 }
             )
@@ -44,7 +46,12 @@ public static class UserAuthEndpoints
         group
             .MapPost(
                 "/login",
-                async (LoginRequest request, IAuthService authService, HttpContext httpContext, CancellationToken ct) =>
+                async (
+                    LoginRequest request,
+                    IAuthService authService,
+                    HttpContext httpContext,
+                    CancellationToken ct
+                ) =>
                 {
                     var result = await authService.LoginAsync(request, ct);
 
@@ -59,29 +66,33 @@ public static class UserAuthEndpoints
                                     HttpOnly = true,
                                     Secure = true,
                                     SameSite = SameSiteMode.Strict,
-                                    Expires = loginResponse.ExpiresAt
+                                    Expires = loginResponse.ExpiresAt,
                                 }
                             );
                             return TypedResults.Ok(loginResponse);
                         },
-                        _ => TypedResults.Problem(
-                            detail: "Invalid email or password",
-                            statusCode: StatusCodes.Status401Unauthorized
-                        ),
-                        _ => TypedResults.Problem(
-                            detail: "Your account has been locked. Please try again later.",
-                            statusCode: 423
-                        ),
-                        tooMany => TypedResults.Problem(
-                            detail: tooMany.RetryAfterMinutes > 1
-                                ? $"Too many login attempts. Please try again in {tooMany.RetryAfterMinutes} minutes."
-                                : "Too many login attempts. Please try again in 1 minute.",
-                            statusCode: StatusCodes.Status429TooManyRequests
-                        ),
-                        validationFailed => TypedResults.Problem(
-                            detail: string.Join(", ", validationFailed.Errors),
-                            statusCode: StatusCodes.Status400BadRequest
-                        )
+                        _ =>
+                            TypedResults.Problem(
+                                detail: "Invalid email or password",
+                                statusCode: StatusCodes.Status401Unauthorized
+                            ),
+                        _ =>
+                            TypedResults.Problem(
+                                detail: "Your account has been locked. Please try again later.",
+                                statusCode: 423
+                            ),
+                        tooMany =>
+                            TypedResults.Problem(
+                                detail: tooMany.RetryAfterMinutes > 1
+                                    ? $"Too many login attempts. Please try again in {tooMany.RetryAfterMinutes} minutes."
+                                    : "Too many login attempts. Please try again in 1 minute.",
+                                statusCode: StatusCodes.Status429TooManyRequests
+                            ),
+                        validationFailed =>
+                            TypedResults.Problem(
+                                detail: string.Join(", ", validationFailed.Errors),
+                                statusCode: StatusCodes.Status400BadRequest
+                            )
                     );
                 }
             )
@@ -106,6 +117,123 @@ public static class UserAuthEndpoints
                 }
             )
             .WithName("Logout")
+            .RequireAuthorization();
+
+        group
+            .MapPatch(
+                "/profile",
+                async (
+                    UpdateProfileRequest request,
+                    ClaimsPrincipal user,
+                    IAuthService authService,
+                    CancellationToken ct
+                ) =>
+                {
+                    var userIdClaim = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                    if (!Guid.TryParse(userIdClaim, out var userId))
+                    {
+                        return Results.Problem(
+                            detail: "Invalid user",
+                            statusCode: StatusCodes.Status401Unauthorized
+                        );
+                    }
+
+                    var result = await authService.UpdateProfileAsync(userId, request, ct);
+
+                    return result.Match<IResult>(
+                        userInfo => TypedResults.Ok(userInfo),
+                        validationFailed =>
+                            TypedResults.Problem(
+                                detail: string.Join(", ", validationFailed.Errors),
+                                statusCode: StatusCodes.Status400BadRequest
+                            )
+                    );
+                }
+            )
+            .WithName("UpdateProfile")
+            .RequireAuthorization();
+
+        group
+            .MapPatch(
+                "/email",
+                async (
+                    UpdateEmailRequest request,
+                    ClaimsPrincipal user,
+                    IAuthService authService,
+                    CancellationToken ct
+                ) =>
+                {
+                    var userIdClaim = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                    if (!Guid.TryParse(userIdClaim, out var userId))
+                    {
+                        return Results.Problem(
+                            detail: "Invalid user",
+                            statusCode: StatusCodes.Status401Unauthorized
+                        );
+                    }
+
+                    var result = await authService.UpdateEmailAsync(userId, request, ct);
+
+                    return result.Match<IResult>(
+                        userInfo => TypedResults.Ok(userInfo),
+                        _ =>
+                            TypedResults.Problem(
+                                detail: "Invalid password",
+                                statusCode: StatusCodes.Status401Unauthorized
+                            ),
+                        _ =>
+                            TypedResults.Problem(
+                                detail: "An account with this email already exists",
+                                statusCode: StatusCodes.Status409Conflict
+                            ),
+                        validationFailed =>
+                            TypedResults.Problem(
+                                detail: string.Join(", ", validationFailed.Errors),
+                                statusCode: StatusCodes.Status400BadRequest
+                            )
+                    );
+                }
+            )
+            .WithName("UpdateEmail")
+            .RequireAuthorization();
+
+        group
+            .MapPatch(
+                "/password",
+                async (
+                    ChangePasswordRequest request,
+                    ClaimsPrincipal user,
+                    IAuthService authService,
+                    CancellationToken ct
+                ) =>
+                {
+                    var userIdClaim = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                    if (!Guid.TryParse(userIdClaim, out var userId))
+                    {
+                        return Results.Problem(
+                            detail: "Invalid user",
+                            statusCode: StatusCodes.Status401Unauthorized
+                        );
+                    }
+
+                    var result = await authService.ChangePasswordAsync(userId, request, ct);
+
+                    return result.Match<IResult>(
+                        _ => TypedResults.Ok(),
+                        _ =>
+                            TypedResults.Problem(
+                                detail: "Invalid current password",
+                                statusCode: StatusCodes.Status401Unauthorized
+                            ),
+                        validationFailed =>
+                            TypedResults.Problem(
+                                detail: string.Join(", ", validationFailed.Errors),
+                                statusCode: StatusCodes.Status400BadRequest
+                            )
+                    );
+                }
+            )
+            .WithName("ChangePassword")
             .RequireAuthorization();
 
         // Admin endpoints

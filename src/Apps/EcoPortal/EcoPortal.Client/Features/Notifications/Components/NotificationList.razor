@@ -1,0 +1,116 @@
+@using EcoData.Sensors.Contracts.Dtos
+@using EcoData.Sensors.Contracts.Parameters
+@using EcoData.Common.Pagination.Blazor
+@using EcoPortal.Client.Services
+@using EcoPortal.Client.Components
+@using BlazingSingularity.Signals
+@inject NotificationService NotificationService
+@implements IDisposable
+
+<SearchHeader SearchSignal="SearchTextSignal" Placeholder="Search by sensor name..." />
+
+<MudStack Spacing="2">
+    <EcoDataVirtualizedList @ref="_virtualizedList"
+                            TItem="UserNotificationDto"
+                            TParams="NotificationParameters"
+                            ItemsProvider="GetNotificationsAsync"
+                            ParametersBuilder="BuildParameters"
+                            CursorSelector="n => n.Id"
+                            ItemSize="80"
+                            OverscanCount="3">
+        <LoadingTemplate>
+            @for (var i = 0; i < 5; i++)
+            {
+                <MudStack Row="true" AlignItems="AlignItems.Start" Spacing="3" Class="pa-3 mb-2">
+                    <MudSkeleton SkeletonType="SkeletonType.Circle" Width="40px" Height="40px" />
+                    <MudStack Spacing="0" Style="flex: 1; min-width: 0;">
+                        <MudSkeleton Width="60%" Height="16px" />
+                        <MudSkeleton Width="90%" Height="14px" Class="mt-2" />
+                        <MudSkeleton Width="40%" Height="12px" Class="mt-2" />
+                    </MudStack>
+                </MudStack>
+            }
+        </LoadingTemplate>
+        <EmptyTemplate>
+            <MudStack AlignItems="AlignItems.Center" Justify="Justify.Center" Class="pa-8" Style="text-align: center;">
+                <MudAvatar Color="Color.Default" Size="Size.Large" Style="width: 6rem; height: 6rem;">
+                    <MudIcon Icon="@Icons.Material.Outlined.NotificationsNone" Size="Size.Large" />
+                </MudAvatar>
+                @if (!string.IsNullOrWhiteSpace(SearchText))
+                {
+                    <MudText Typo="Typo.h6">No matching notifications</MudText>
+                    <MudText Typo="Typo.body2" Color="Color.Secondary">Try a different search term to find notifications.</MudText>
+                }
+                else
+                {
+                    <MudText Typo="Typo.h6">No notifications</MudText>
+                    <MudText Typo="Typo.body2" Color="Color.Secondary">Subscribe to sensors to receive health alerts when issues are detected.</MudText>
+                }
+            </MudStack>
+        </EmptyTemplate>
+        <ItemTemplate Context="notification">
+            <NotificationListItem Notification="notification" OnClick="HandleClick" />
+        </ItemTemplate>
+        <PlaceholderTemplate>
+            <MudStack Row="true" AlignItems="AlignItems.Start" Spacing="3" Class="pa-3 mb-2">
+                <MudSkeleton SkeletonType="SkeletonType.Circle" Width="40px" Height="40px" />
+                <MudStack Spacing="0" Style="flex: 1; min-width: 0;">
+                    <MudSkeleton Width="60%" Height="16px" />
+                    <MudSkeleton Width="90%" Height="14px" Class="mt-2" />
+                    <MudSkeleton Width="40%" Height="12px" Class="mt-2" />
+                </MudStack>
+            </MudStack>
+        </PlaceholderTemplate>
+    </EcoDataVirtualizedList>
+</MudStack>
+
+@code {
+    private EcoDataVirtualizedList<UserNotificationDto, NotificationParameters>? _virtualizedList;
+
+    [Signal]
+    private string? _searchText;
+
+    [Parameter]
+    public EventCallback<UserNotificationDto> OnNotificationClick { get; set; }
+
+    protected override void OnInitialized()
+    {
+        SearchTextSignal.OnChange(_ => _virtualizedList?.Refresh());
+        NotificationService.OnNotificationReceived += HandleNewNotification;
+    }
+
+    private NotificationParameters BuildParameters(Guid? cursor)
+    {
+        return new NotificationParameters(
+            PageSize: 50,
+            Cursor: cursor,
+            SensorName: string.IsNullOrWhiteSpace(SearchText) ? null : SearchText
+        );
+    }
+
+    private IAsyncEnumerable<UserNotificationDto> GetNotificationsAsync(
+        NotificationParameters parameters,
+        CancellationToken cancellationToken)
+    {
+        return NotificationService.GetNotificationsAsync(parameters, cancellationToken);
+    }
+
+    private void HandleNewNotification()
+    {
+        InvokeAsync(() => _virtualizedList?.Refresh());
+    }
+
+    private async Task HandleClick(UserNotificationDto notification)
+    {
+        if (!notification.IsRead)
+        {
+            await NotificationService.MarkAsReadAsync(notification.Id);
+        }
+        await OnNotificationClick.InvokeAsync(notification);
+    }
+
+    public void Dispose()
+    {
+        NotificationService.OnNotificationReceived -= HandleNewNotification;
+    }
+}

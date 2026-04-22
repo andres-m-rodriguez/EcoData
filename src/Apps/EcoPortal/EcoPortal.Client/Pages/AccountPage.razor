@@ -2,6 +2,7 @@
 @using BlazingSingularity
 @using BlazingSingularity.Commands
 @using EcoPortal.Client.Services
+@implements IDisposable
 @inject AuthStateService AuthState
 @inject ITabNavigationService Tabs
 @inject INativeNavbarManager Navbar
@@ -12,6 +13,7 @@
     <MudStack Spacing="4">
         @if (AuthState.IsAuthenticated)
         {
+            @* Profile Card *@
             <MudCard Elevation="0" Outlined="true">
                 <MudCardContent>
                     <MudStack AlignItems="AlignItems.Center" Spacing="4" Class="py-4">
@@ -26,18 +28,37 @@
                 </MudCardContent>
             </MudCard>
 
+            @* Account Settings Section *@
+            <AccountSettingsSection />
+
+            @* Subscribed Sensors Section *@
+            <SubscribedSensorsSection />
+
+            @* Quick Links *@
             <MudCard Elevation="0" Outlined="true">
-                <MudList T="string" Dense="false">
-                    <MudListItem Icon="@Icons.Material.Outlined.Help" Href="/getting-started">
-                        Getting Started
-                    </MudListItem>
-                    <MudDivider />
-                    <MudListItem Icon="@Icons.Material.Outlined.Business" Href="/organizations/my">
-                        My Organizations
-                    </MudListItem>
-                </MudList>
+                <MudCardHeader>
+                    <CardHeaderContent>
+                        <MudText Typo="Typo.h6">Quick Links</MudText>
+                    </CardHeaderContent>
+                </MudCardHeader>
+                <MudCardContent Class="pa-0">
+                    <MudList T="string" Dense="false">
+                        <MudListItem Icon="@Icons.Material.Outlined.Help" Href="/getting-started">
+                            Getting Started
+                        </MudListItem>
+                        <MudDivider />
+                        <MudListItem Icon="@Icons.Material.Outlined.Business" Href="/organizations/my">
+                            My Organizations
+                        </MudListItem>
+                        <MudDivider />
+                        <MudListItem Icon="@Icons.Material.Outlined.Notifications" Href="/notifications/history">
+                            Notifications
+                        </MudListItem>
+                    </MudList>
+                </MudCardContent>
             </MudCard>
 
+            @* Sign Out Button *@
             <MudButton Variant="Variant.Outlined"
                        Color="Color.Error"
                        FullWidth="true"
@@ -98,6 +119,12 @@
     protected override void OnInitialized()
     {
         Navbar.SetTitle("Account");
+        AuthState.OnAuthStateChanged += StateHasChanged;
+    }
+
+    public void Dispose()
+    {
+        AuthState.OnAuthStateChanged -= StateHasChanged;
     }
 
     private string GetUserInitial()
