@@ -1,4 +1,5 @@
 using EcoData.Sensors.Contracts.Dtos;
+using EcoData.Sensors.Contracts.Parameters;
 using EcoData.Sensors.DataAccess.Interfaces;
 using EcoData.Sensors.Database;
 using EcoData.Sensors.Database.Models;
@@ -9,25 +10,29 @@ namespace EcoData.Sensors.DataAccess.Repositories;
 public sealed class UserNotificationRepository(IDbContextFactory<SensorsDbContext> contextFactory)
     : IUserNotificationRepository
 {
-    public async Task<IReadOnlyList<UserNotificationDto>> GetByUserAsync(
+    public async IAsyncEnumerable<UserNotificationDto> GetByUserAsync(
         Guid userId,
-        int pageSize,
-        Guid? cursor,
-        CancellationToken cancellationToken = default)
+        NotificationParameters parameters,
+        [System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
         await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
 
         var query = context.UserNotifications
             .Where(n => n.UserId == userId);
 
-        if (cursor.HasValue)
+        if (parameters.Cursor.HasValue)
         {
-            query = query.Where(n => n.Id < cursor.Value);
+            query = query.Where(n => n.Id < parameters.Cursor.Value);
         }
 
-        return await query
+        if (!string.IsNullOrWhiteSpace(parameters.SensorName))
+        {
+            query = query.Where(n => n.Sensor!.Name.Contains(parameters.SensorName));
+        }
+
+        await foreach (var n in query
             .OrderByDescending(n => n.Id)
-            .Take(pageSize)
+            .Take(parameters.PageSize)
             .Select(n => new UserNotificationDto(
                 n.Id,
                 n.SensorId,
@@ -40,7 +45,11 @@ public sealed class UserNotificationRepository(IDbContextFactory<SensorsDbContex
                 n.CreatedAt,
                 n.ReadAt
             ))
-            .ToListAsync(cancellationToken);
+            .AsAsyncEnumerable()
+            .WithCancellation(cancellationToken))
+        {
+            yield return n;
+        }
     }
 
     public async Task<int> GetUnreadCountAsync(

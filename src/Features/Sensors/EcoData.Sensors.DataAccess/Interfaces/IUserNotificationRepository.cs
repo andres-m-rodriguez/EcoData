@@ -1,14 +1,14 @@
 using EcoData.Sensors.Contracts.Dtos;
+using EcoData.Sensors.Contracts.Parameters;
 using EcoData.Sensors.Database.Models;
 
 namespace EcoData.Sensors.DataAccess.Interfaces;
 
 public interface IUserNotificationRepository
 {
-    Task<IReadOnlyList<UserNotificationDto>> GetByUserAsync(
+    IAsyncEnumerable<UserNotificationDto> GetByUserAsync(
         Guid userId,
-        int pageSize,
-        Guid? cursor,
+        NotificationParameters parameters,
         CancellationToken cancellationToken = default
     );
 

@@ -2,32 +2,27 @@ using System.Net.Http.Json;
 using EcoData.Common.Http.Helpers;
 using EcoData.Common.Problems.Contracts;
 using EcoData.Sensors.Contracts.Dtos;
+using EcoData.Sensors.Contracts.Parameters;
 using OneOf;
 
 namespace EcoData.Sensors.Application.Client;
 
 public sealed class UserNotificationHttpClient(HttpClient httpClient) : IUserNotificationHttpClient
 {
-    public async Task<IReadOnlyList<UserNotificationDto>> GetNotificationsAsync(
-        int pageSize = 20,
-        Guid? cursor = null,
+    public IAsyncEnumerable<UserNotificationDto> GetNotificationsAsync(
+        NotificationParameters parameters,
         CancellationToken cancellationToken = default)
     {
         var queryString = new QueryStringBuilder()
-            .Add("pageSize", pageSize != 20 ? pageSize : null)
-            .Add("cursor", cursor)
+            .Add("pageSize", parameters.PageSize != 20 ? parameters.PageSize : null)
+            .Add("cursor", parameters.Cursor)
+            .Add("sensorName", parameters.SensorName)
             .Build();
 
-        var response = await httpClient.GetAsync(
+        return httpClient.GetFromJsonAsAsyncEnumerable<UserNotificationDto>(
             $"users/me/notifications{queryString}",
             cancellationToken
-        );
-        response.EnsureSuccessStatusCode();
-
-        var result = await response.Content.ReadFromJsonAsync<List<UserNotificationDto>>(
-            cancellationToken
-        );
-        return result ?? [];
+        )!;
     }
 
     public async Task<int> GetUnreadCountAsync(CancellationToken cancellationToken = default)

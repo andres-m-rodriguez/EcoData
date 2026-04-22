@@ -10,7 +10,7 @@ public interface IUserSensorSubscriptionRepository
         CancellationToken cancellationToken = default
     );
 
-    Task<IReadOnlyList<UserSensorSubscriptionDto>> GetByUserAsync(
+    IAsyncEnumerable<UserSensorSubscriptionDto> GetByUserAsync(
         Guid userId,
         CancellationToken cancellationToken = default
     );

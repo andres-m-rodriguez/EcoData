@@ -1,4 +1,5 @@
 @using EcoData.Sensors.Contracts.Dtos
+@using EcoData.Sensors.Contracts.Parameters
 @using EcoPortal.Client.Services
 @inject NotificationService NotificationService
 @inject NavigationManager Navigation
@@ -120,7 +121,8 @@
         _isLoading = true;
         try
         {
-            var notifications = await NotificationService.GetNotificationsAsync(PageSize + 1);
+            var parameters = new NotificationParameters(PageSize: PageSize + 1);
+            var notifications = await NotificationService.GetNotificationsAsync(parameters).ToListAsync();
             _hasMore = notifications.Count > PageSize;
             _notifications = notifications.Take(PageSize).ToList();
         }
@@ -138,7 +140,8 @@
         try
         {
             var cursor = _notifications.Last().Id;
-            var notifications = await NotificationService.GetNotificationsAsync(PageSize + 1, cursor);
+            var parameters = new NotificationParameters(PageSize: PageSize + 1, Cursor: cursor);
+            var notifications = await NotificationService.GetNotificationsAsync(parameters).ToListAsync();
             _hasMore = notifications.Count > PageSize;
             _notifications.AddRange(notifications.Take(PageSize));
         }

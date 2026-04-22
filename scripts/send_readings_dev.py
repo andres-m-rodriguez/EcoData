@@ -1,19 +1,23 @@
 #!/usr/bin/env python3
 """
 Sensor reading simulator for EcoData (Development).
-Sends random readings to the local API using a sensor JWT token.
+Logs in with user credentials, registers a sensor, and sends readings using sensor JWT.
 """
 
 import requests
 import random
 import time
+import uuid
+import sys
 from datetime import datetime, timezone
 
-# Configuration - Development defaults
+# Configuration
 BASE_URL = "https://localhost:5000"
 INTERVAL = 30
-JWT_TOKEN = ""
-SENSOR_ID = ""
+
+# Disable SSL warnings for local dev
+import urllib3
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 # Simulated parameters
 PARAMETERS = [
@@ -35,23 +39,82 @@ def generate_reading(param_config: dict) -> dict:
     }
 
 
-def send_readings():
-    """Send a batch of readings to the API."""
-    url = f"{BASE_URL}/api/sensors/{SENSOR_ID}/readings"
-    headers = {
-        "Authorization": f"Bearer {JWT_TOKEN}",
-        "Content-Type": "application/json",
-    }
+def login(session: requests.Session, email: str, password: str) -> dict | None:
+    """Login and return user info with token."""
+    response = session.post(
+        f"{BASE_URL}/identity/auth/login",
+        json={"email": email, "password": password}
+    )
+
+    if response.status_code != 200:
+        print(f"Login failed: {response.status_code} - {response.text}")
+        return None
+
+    return response.json()
+
+
+def get_organization(session: requests.Session) -> dict | None:
+    """Get first available organization."""
+    response = session.get(f"{BASE_URL}/organization/organizations")
+
+    if response.status_code != 200:
+        print(f"Failed to get organizations: {response.status_code}")
+        return None
+
+    orgs = response.json()
+    return orgs[0] if orgs else None
+
+
+def get_municipality(session: requests.Session) -> dict | None:
+    """Get first available municipality."""
+    response = session.get(f"{BASE_URL}/locations/municipalities?pageSize=1")
+
+    if response.status_code != 200:
+        print(f"Failed to get municipalities: {response.status_code}")
+        return None
+
+    municipalities = response.json()
+    return municipalities[0] if municipalities else None
+
+
+def register_sensor(session: requests.Session, org: dict, municipality: dict) -> dict | None:
+    """Register a new sensor and return credentials."""
+    sensor_name = f"DevSimulator-{uuid.uuid4().hex[:8]}"
+
+    response = session.post(
+        f"{BASE_URL}/sensors/register",
+        json={
+            "organizationId": org["id"],
+            "organizationName": org["name"],
+            "name": sensor_name,
+            "externalId": str(uuid.uuid4()),
+            "latitude": municipality.get("centroidLatitude", 18.4655),
+            "longitude": municipality.get("centroidLongitude", -66.1057),
+            "municipalityId": municipality["id"],
+            "expectedIntervalSeconds": INTERVAL
+        }
+    )
+
+    if response.status_code != 200:
+        print(f"Failed to register sensor: {response.status_code} - {response.text}")
+        return None
+
+    return response.json()
+
+
+def send_readings(session: requests.Session, sensor_id: str, sensor_token: str):
+    """Send a batch of readings to the API using sensor JWT."""
+    url = f"{BASE_URL}/sensors/sensors/{sensor_id}/readings"
+    headers = {"Authorization": f"Bearer {sensor_token}"}
 
     readings = [generate_reading(param) for param in PARAMETERS]
     payload = {
-        "sensorId": SENSOR_ID,
+        "sensorId": sensor_id,
         "readings": readings,
     }
 
     try:
-        # Disable SSL verification for local development
-        response = requests.post(url, json=payload, headers=headers, verify=False)
+        response = session.post(url, json=payload, headers=headers)
         response.raise_for_status()
         result = response.json()
         print(f"[{datetime.now().strftime('%H:%M:%S')}] Sent {result['accepted']}/{result['totalSubmitted']} readings")
@@ -62,56 +125,64 @@ def send_readings():
         print(f"[{datetime.now().strftime('%H:%M:%S')}] Error: {e}")
 
 
-def parse_jwt_sensor_id(token: str) -> str | None:
-    """Extract sensor_id from JWT token payload."""
-    try:
-        import base64
-        import json
-        # JWT is header.payload.signature - we want the payload
-        payload = token.split(".")[1]
-        # Add padding if needed
-        padding = 4 - len(payload) % 4
-        if padding != 4:
-            payload += "=" * padding
-        decoded = base64.urlsafe_b64decode(payload)
-        data = json.loads(decoded)
-        return data.get("sensor_id") or data.get("sub")
-    except Exception:
-        return None
-
-
 def main():
-    global JWT_TOKEN, SENSOR_ID
-
     print("Development Sensor Simulator")
     print("============================\n")
 
-    # Get JWT token from input
-    JWT_TOKEN = input("Paste JWT token: ").strip()
+    session = requests.Session()
+    session.verify = False
 
-    if not JWT_TOKEN:
-        print("Error: JWT token required")
-        return
+    # Get credentials
+    email = input("Email [admin@gmail.com]: ").strip() or "admin@gmail.com"
+    password = input("Password [Admin@123]: ").strip() or "Admin@123"
 
-    # Extract sensor ID from JWT
-    SENSOR_ID = parse_jwt_sensor_id(JWT_TOKEN)
+    # Login
+    print("\nLogging in...")
+    login_data = login(session, email, password)
+    if not login_data:
+        sys.exit(1)
 
-    if not SENSOR_ID:
-        print("Error: Could not extract sensor ID from token")
-        return
+    user_token = login_data["token"]
+    user_info = login_data["user"]
+    print(f"Welcome {user_info['displayName']}!")
 
-    # Suppress SSL warnings for local dev
-    import urllib3
-    urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+    session.headers.update({"Authorization": f"Bearer {user_token}"})
 
-    print(f"\nAPI URL:   {BASE_URL}")
-    print(f"Sensor ID: {SENSOR_ID}")
-    print(f"Interval:  {INTERVAL} seconds")
-    print("\nPress Ctrl+C to stop\n")
+    # Get organization
+    print("Fetching organization...")
+    org = get_organization(session)
+    if not org:
+        print("No organizations found!")
+        sys.exit(1)
+    print(f"Using: {org['name']}")
 
-    while True:
-        send_readings()
-        time.sleep(INTERVAL)
+    # Get municipality
+    print("Fetching municipality...")
+    municipality = get_municipality(session)
+    if not municipality:
+        print("No municipalities found!")
+        sys.exit(1)
+    print(f"Using: {municipality['name']}")
+
+    # Register sensor
+    print("Registering sensor...")
+    credentials = register_sensor(session, org, municipality)
+    if not credentials:
+        sys.exit(1)
+
+    sensor_id = credentials["sensorId"]
+    sensor_token = credentials["accessToken"]
+    print(f"Sensor ID: {sensor_id}")
+
+    print(f"\nSending readings every {INTERVAL} seconds...")
+    print("Press Ctrl+C to stop\n")
+
+    try:
+        while True:
+            send_readings(session, sensor_id, sensor_token)
+            time.sleep(INTERVAL)
+    except KeyboardInterrupt:
+        print("\n\nStopping simulator...")
 
 
 if __name__ == "__main__":

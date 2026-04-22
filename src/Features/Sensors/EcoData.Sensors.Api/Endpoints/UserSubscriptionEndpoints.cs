@@ -21,7 +21,7 @@ public static class UserSubscriptionEndpoints
         userGroup
             .MapGet(
                 "/",
-                async Task<Results<Ok<IReadOnlyList<UserSensorSubscriptionDto>>, UnauthorizedHttpResult>> (
+                (
                     ClaimsPrincipal user,
                     IUserSensorSubscriptionRepository repository,
                     CancellationToken ct
@@ -30,11 +30,10 @@ public static class UserSubscriptionEndpoints
                     var token = new RequestClaimToken(user);
                     if (!token.IsAuthenticated)
                     {
-                        return TypedResults.Unauthorized();
+                        return Results.Unauthorized();
                     }
 
-                    var subscriptions = await repository.GetByUserAsync(token.UserId.Value, ct);
-                    return TypedResults.Ok(subscriptions);
+                    return Results.Ok(repository.GetByUserAsync(token.UserId.Value, ct));
                 }
             )
             .WithName("GetUserSubscriptions");

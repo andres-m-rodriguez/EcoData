@@ -4,6 +4,7 @@ using EcoData.Identity.Contracts.Claims;
 using EcoData.Sensors.Contracts;
 using EcoData.Sensors.Contracts.Dtos;
 using EcoData.Sensors.Contracts.Events;
+using EcoData.Sensors.Contracts.Parameters;
 using EcoData.Sensors.DataAccess.Interfaces;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -23,28 +24,20 @@ public static class UserNotificationEndpoints
         group
             .MapGet(
                 "/",
-                async Task<Results<Ok<IReadOnlyList<UserNotificationDto>>, UnauthorizedHttpResult>> (
+                (
                     ClaimsPrincipal user,
+                    [AsParameters] NotificationParameters parameters,
                     IUserNotificationRepository repository,
-                    int pageSize = 20,
-                    Guid? cursor = null,
-                    CancellationToken ct = default
+                    CancellationToken ct
                 ) =>
                 {
                     var token = new RequestClaimToken(user);
                     if (!token.IsAuthenticated)
                     {
-                        return TypedResults.Unauthorized();
+                        return Results.Unauthorized();
                     }
 
-                    var notifications = await repository.GetByUserAsync(
-                        token.UserId.Value,
-                        Math.Min(pageSize, 100),
-                        cursor,
-                        ct
-                    );
-
-                    return TypedResults.Ok(notifications);
+                    return Results.Ok(repository.GetByUserAsync(token.UserId.Value, parameters, ct));
                 }
             )
             .WithName("GetUserNotifications");

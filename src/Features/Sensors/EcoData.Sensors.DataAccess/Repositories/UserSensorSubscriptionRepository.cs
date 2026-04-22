@@ -30,13 +30,13 @@ public sealed class UserSensorSubscriptionRepository(IDbContextFactory<SensorsDb
             .FirstOrDefaultAsync(cancellationToken);
     }
 
-    public async Task<IReadOnlyList<UserSensorSubscriptionDto>> GetByUserAsync(
+    public async IAsyncEnumerable<UserSensorSubscriptionDto> GetByUserAsync(
         Guid userId,
-        CancellationToken cancellationToken = default)
+        [System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
         await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
 
-        return await context.UserSensorSubscriptions
+        await foreach (var s in context.UserSensorSubscriptions
             .Where(s => s.UserId == userId)
             .OrderByDescending(s => s.CreatedAt)
             .Select(s => new UserSensorSubscriptionDto(
@@ -48,7 +48,11 @@ public sealed class UserSensorSubscriptionRepository(IDbContextFactory<SensorsDb
                 s.NotifyOnRecovered,
                 s.CreatedAt
             ))
-            .ToListAsync(cancellationToken);
+            .AsAsyncEnumerable()
+            .WithCancellation(cancellationToken))
+        {
+            yield return s;
+        }
     }
 
     public async Task<IReadOnlyList<Guid>> GetSubscribedUserIdsAsync(
