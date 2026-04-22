@@ -86,27 +86,12 @@
             <div class="d-flex align-center">
             @if (AuthState.IsAuthenticated)
             {
-                <MudMenu AnchorOrigin="Origin.BottomRight" TransformOrigin="Origin.TopRight">
-                    <ActivatorContent>
-                        <MudChip T="string" Color="Color.Default" Variant="Variant.Text" Class="ml-2 cursor-pointer">
-                            <AvatarContent>
-                                <MudAvatar Color="Color.Tertiary" Size="Size.Small">
-                                    @GetUserInitial()
-                                </MudAvatar>
-                            </AvatarContent>
-                            <ChildContent>
-                                @AuthState.CurrentUser?.DisplayName
-                            </ChildContent>
-                        </MudChip>
-                    </ActivatorContent>
-                    <ChildContent>
-                        <MudMenuItem Icon="@Icons.Material.Outlined.Person">Profile</MudMenuItem>
-                        <MudMenuItem Href="/organizations/my" Icon="@Icons.Material.Outlined.Business">My Organizations</MudMenuItem>
-                        <MudMenuItem Href="/organizations/requests" Icon="@Icons.Material.Outlined.HowToReg">My Access Requests</MudMenuItem>
-                        <MudDivider />
-                        <MudMenuItem OnClick="LogoutAsync" Icon="@Icons.Material.Outlined.Logout">Sign Out</MudMenuItem>
-                    </ChildContent>
-                </MudMenu>
+                <MudButton Href="/account" Variant="Variant.Text" Color="Color.Default" Class="ml-2 text-transform-none">
+                    <MudAvatar Color="Color.Tertiary" Size="Size.Small" Class="mr-2">
+                        @GetUserInitial()
+                    </MudAvatar>
+                    @AuthState.CurrentUser?.DisplayName
+                </MudButton>
             }
             else
             {
@@ -120,6 +105,35 @@
     </MudAppBar>
 
     <MudMainContent Class="main-content">
+        @* Desktop: Contextual navigation for organization pages *@
+        <MudHidden Breakpoint="Breakpoint.SmAndDown">
+            @if (AuthState.IsAuthenticated && IsUserContextPage)
+            {
+                <MudContainer MaxWidth="MaxWidth.Large" Class="py-2 px-4 d-flex gap-2">
+                    <MudButton Href="/organizations/discover"
+                               Variant="@GetUserNavVariant("/organizations/discover")"
+                               Color="Color.Primary"
+                               StartIcon="@Icons.Material.Outlined.Explore"
+                               Size="Size.Small">
+                        Discover
+                    </MudButton>
+                    <MudButton Href="/organizations/my"
+                               Variant="@GetUserNavVariant("/organizations/my")"
+                               Color="Color.Primary"
+                               StartIcon="@Icons.Material.Outlined.Business"
+                               Size="Size.Small">
+                        My Organizations
+                    </MudButton>
+                    <MudButton Href="/organizations/requests"
+                               Variant="@GetUserNavVariant("/organizations/requests")"
+                               Color="Color.Primary"
+                               StartIcon="@Icons.Material.Outlined.HowToReg"
+                               Size="Size.Small">
+                        Access Requests
+                    </MudButton>
+                </MudContainer>
+            }
+        </MudHidden>
         @if (IsHomePage)
         {
             <div class="@_pageTransitionClass" @key="_navigationKey">
@@ -182,6 +196,15 @@
 
     private bool IsHomePage => Tabs.CurrentTab == NavigationTab.Home;
 
+    private bool IsUserContextPage
+    {
+        get
+        {
+            var path = Navigation.State.Path;
+            return path.StartsWith("/organizations", StringComparison.OrdinalIgnoreCase);
+        }
+    }
+
     protected override async Task OnInitializedAsync()
     {
         AuthState.SetAuthStateProvider(AuthStateProvider);
@@ -232,6 +255,13 @@
             : currentPath.StartsWith(path, StringComparison.OrdinalIgnoreCase);
 
         return isActive ? "nav-link-active" : "nav-link";
+    }
+
+    private Variant GetUserNavVariant(string path)
+    {
+        var currentPath = Navigation.State.Path;
+        var isActive = currentPath.Equals(path, StringComparison.OrdinalIgnoreCase);
+        return isActive ? Variant.Filled : Variant.Text;
     }
 
     private Color GetBottomNavColor(NavigationTab tab)
