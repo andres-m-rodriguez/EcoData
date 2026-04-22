@@ -8,7 +8,6 @@ using EcoPortal.Client.Features.Organizations.Services;
 using EcoPortal.Client.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Components.Authorization;
-using Microsoft.AspNetCore.Components.WebAssembly.Authentication;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using MudBlazor.Services;
 
@@ -38,8 +37,8 @@ builder.Services.AddScoped<ILeafletMapService, LeafletMapService>();
 builder.Services.AddNativeUi();
 builder.Services.AddScoped<ITabNavigationService, TabNavigationService>();
 
-builder.Services.AddAuthenticationStateDeserialization();
 builder.Services.AddScoped<AuthStateService>();
+builder.Services.AddScoped<AuthenticationStateProvider, EcoPortalAuthStateProvider>();
 builder.Services.AddScoped<PermissionContextService>();
 
 // Register custom policy provider BEFORE AddAuthorizationCore (uses TryAddSingleton)
