@@ -13,6 +13,8 @@
                    OnClick="TogglePanel" />
 </MudBadge>
 
+<MudOverlay Visible="_isPanelOpen" OnClick="ClosePanel" LockScroll="false" />
+
 <MudPopover Open="@_isPanelOpen"
             Fixed="true"
             AnchorOrigin="Origin.BottomRight"

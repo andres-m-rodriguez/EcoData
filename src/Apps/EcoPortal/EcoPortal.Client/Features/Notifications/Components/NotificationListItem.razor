@@ -1,0 +1,65 @@
+@using EcoData.Sensors.Contracts.Dtos
+
+<div class="notification-item @(_notification.IsRead ? "" : "unread")" @onclick="HandleClick">
+    <MudAvatar Color="@GetAvatarColor()" Size="Size.Medium" Class="notification-avatar">
+        <MudIcon Icon="@GetIcon()" />
+    </MudAvatar>
+    <div class="notification-content">
+        <MudText Typo="Typo.subtitle2">@_notification.Title</MudText>
+        <MudText Typo="Typo.body2" Color="Color.Secondary">@_notification.Message</MudText>
+        <MudText Typo="Typo.caption" Color="Color.Secondary">
+            @_notification.SensorName &bull; @FormatTime(_notification.CreatedAt)
+        </MudText>
+    </div>
+    @if (!_notification.IsRead)
+    {
+        <div class="unread-indicator"></div>
+    }
+</div>
+
+@code {
+    private UserNotificationDto _notification = null!;
+
+    [Parameter, EditorRequired]
+    public required UserNotificationDto Notification
+    {
+        get => _notification;
+        set => _notification = value;
+    }
+
+    [Parameter]
+    public EventCallback<UserNotificationDto> OnClick { get; set; }
+
+    private async Task HandleClick()
+    {
+        await OnClick.InvokeAsync(_notification);
+    }
+
+    private string GetIcon() => _notification.Type switch
+    {
+        "SensorStale" => Icons.Material.Filled.Warning,
+        "SensorUnhealthy" => Icons.Material.Filled.Error,
+        "SensorRecovered" => Icons.Material.Filled.CheckCircle,
+        _ => Icons.Material.Filled.Notifications
+    };
+
+    private Color GetAvatarColor() => _notification.Type switch
+    {
+        "SensorStale" => Color.Warning,
+        "SensorUnhealthy" => Color.Error,
+        "SensorRecovered" => Color.Success,
+        _ => Color.Default
+    };
+
+    private static string FormatTime(DateTimeOffset time)
+    {
+        var diff = DateTimeOffset.UtcNow - time;
+
+        if (diff.TotalMinutes < 1) return "Just now";
+        if (diff.TotalMinutes < 60) return $"{(int)diff.TotalMinutes}m ago";
+        if (diff.TotalHours < 24) return $"{(int)diff.TotalHours}h ago";
+        if (diff.TotalDays < 7) return $"{(int)diff.TotalDays}d ago";
+
+        return time.ToLocalTime().ToString("MMM d");
+    }
+}

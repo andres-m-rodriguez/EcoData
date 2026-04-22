@@ -3,6 +3,7 @@ using System.Text.Json;
 using EcoData.Sensors.Application.Client;
 using EcoData.Sensors.Contracts.Dtos;
 using EcoData.Sensors.Contracts.Events;
+using EcoData.Sensors.Contracts.Parameters;
 using Microsoft.JSInterop;
 using MudBlazor;
 
@@ -65,9 +66,17 @@ public sealed class NotificationService : IAsyncDisposable
 
     public async Task<IReadOnlyList<UserNotificationDto>> GetNotificationsAsync(
         int pageSize = 20,
-        Guid? cursor = null)
+        Guid? cursor = null,
+        string? sensorName = null)
     {
-        return await _notificationClient.GetNotificationsAsync(pageSize, cursor);
+        return await _notificationClient.GetNotificationsAsync(pageSize, cursor, sensorName);
+    }
+
+    public IAsyncEnumerable<UserNotificationDto> GetNotificationsAsync(
+        NotificationParameters parameters,
+        CancellationToken cancellationToken = default)
+    {
+        return _notificationClient.GetNotificationsAsync(parameters, cancellationToken);
     }
 
     public async Task MarkAsReadAsync(Guid notificationId)
