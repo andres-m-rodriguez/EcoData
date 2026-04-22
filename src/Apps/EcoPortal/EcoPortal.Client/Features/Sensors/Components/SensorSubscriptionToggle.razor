@@ -1,0 +1,160 @@
+@using EcoData.Sensors.Application.Client
+@using EcoData.Sensors.Contracts.Dtos
+@using EcoPortal.Client.Services
+@using EcoPortal.Client.Features.Sensors.Dialogs
+@inject IUserSubscriptionHttpClient SubscriptionClient
+@inject AuthStateService AuthState
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+
+@if (AuthState.IsAuthenticated && HealthMonitoringEnabled)
+{
+    <div class="subscription-toggle">
+        @if (_isLoading)
+        {
+            <MudProgressCircular Size="Size.Small" Indeterminate="true" />
+        }
+        else if (_subscription is not null)
+        {
+            <MudButton Variant="Variant.Outlined"
+                       Color="Color.Primary"
+                       Size="Size.Small"
+                       StartIcon="@Icons.Material.Filled.NotificationsActive"
+                       OnClick="OpenPreferencesDialog">
+                Subscribed
+            </MudButton>
+        }
+        else
+        {
+            <MudButton Variant="Variant.Filled"
+                       Color="Color.Primary"
+                       Size="Size.Small"
+                       StartIcon="@Icons.Material.Outlined.NotificationAdd"
+                       OnClick="SubscribeAsync"
+                       Disabled="_isSubscribing">
+                @if (_isSubscribing)
+                {
+                    <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
+                }
+                Subscribe
+            </MudButton>
+        }
+    </div>
+}
+
+@code {
+    [Parameter, EditorRequired]
+    public Guid SensorId { get; set; }
+
+    [Parameter]
+    public bool HealthMonitoringEnabled { get; set; }
+
+    private UserSensorSubscriptionDto? _subscription;
+    private bool _isLoading = true;
+    private bool _isSubscribing;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (AuthState.IsAuthenticated && HealthMonitoringEnabled)
+        {
+            await LoadSubscriptionAsync();
+        }
+        else
+        {
+            _isLoading = false;
+        }
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (AuthState.IsAuthenticated && HealthMonitoringEnabled)
+        {
+            await LoadSubscriptionAsync();
+        }
+    }
+
+    private async Task LoadSubscriptionAsync()
+    {
+        _isLoading = true;
+        try
+        {
+            _subscription = await SubscriptionClient.GetSubscriptionAsync(SensorId);
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private async Task SubscribeAsync()
+    {
+        _isSubscribing = true;
+        try
+        {
+            var request = new UserSensorSubscriptionDtoForCreate(
+                NotifyOnStale: true,
+                NotifyOnUnhealthy: true,
+                NotifyOnRecovered: true
+            );
+
+            var result = await SubscriptionClient.SubscribeAsync(SensorId, request);
+
+            if (result.IsT0)
+            {
+                _subscription = result.AsT0;
+                Snackbar.Add("Subscribed to sensor alerts", Severity.Success);
+            }
+            else
+            {
+                Snackbar.Add(result.AsT1.Detail ?? "Failed to subscribe", Severity.Error);
+            }
+        }
+        finally
+        {
+            _isSubscribing = false;
+        }
+    }
+
+    private async Task OpenPreferencesDialog()
+    {
+        var parameters = new DialogParameters
+        {
+            ["SensorId"] = SensorId,
+            ["CurrentSubscription"] = _subscription
+        };
+
+        var options = new DialogOptions
+        {
+            CloseButton = true,
+            MaxWidth = MaxWidth.Small,
+            FullWidth = true
+        };
+
+        var dialog = await DialogService.ShowAsync<SubscriptionPreferencesDialog>(
+            "Notification Preferences",
+            parameters,
+            options
+        );
+
+        var result = await dialog.Result;
+
+        if (result is not null && !result.Canceled)
+        {
+            if (result.Data is UserSensorSubscriptionDto updatedSubscription)
+            {
+                _subscription = updatedSubscription;
+            }
+            else if (result.Data is bool unsubscribed && unsubscribed)
+            {
+                _subscription = null;
+            }
+        }
+    }
+}
+
+<style>
+    .subscription-toggle {
+        display: inline-flex;
+        align-items: center;
+    }
+</style>

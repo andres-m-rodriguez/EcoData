@@ -20,6 +20,7 @@ using EcoData.Wildlife.Api;
 using EcoData.Wildlife.DataAccess;
 using EcoData.Wildlife.Database.Extensions;
 using EcoPortal.Server.Components;
+using EcoPortal.Server.Services;
 using EcoPortal.Server.Workers;
 using MudBlazor.Services;
 
@@ -43,7 +44,9 @@ builder.Services.AddOrganizationDataAccess();
 builder.Services.AddSensorsDataAccess();
 builder.Services.AddWildlifeDataAccess();
 builder.Services.AddMessaging(messaging => messaging.UseInMemoryTransport());
+builder.Services.AddScoped<INotificationRoutingService, NotificationRoutingService>();
 builder.Services.AddHostedService<SensorHealthMonitorWorker>();
+builder.Services.AddHostedService<NotificationDispatcherWorker>();
 
 builder
     .Services.AddAuthentication(options =>

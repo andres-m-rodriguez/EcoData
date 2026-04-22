@@ -5,6 +5,7 @@
 @using EcoPortal.Client.Components
 @using EcoPortal.Client.Features.Organizations.Authorization
 @using EcoPortal.Client.Features.Sensors.Pages.SensorDetailPages.Components
+@using EcoPortal.Client.Features.Sensors.Components
 @using BlazingSingularity.Fetch
 @using SensorPermissions = EcoData.Sensors.Contracts.Permissions
 @implements IDisposable
@@ -66,13 +67,17 @@
                         </MudStack>
                     </MudStack>
                 </MudStack>
-                <RequireOrganizationPermission Permission="@SensorPermissions.Sensor.Delete"
-                                               OrganizationId="Sensor.OrganizationId">
-                    <MudTooltip Text="Delete Sensor">
-                        <MudIconButton Icon="@Icons.Material.Outlined.Delete" Color="Color.Error" Variant="Variant.Outlined"
-                                       Size="Size.Medium" OnClick="ConfirmDelete" />
-                    </MudTooltip>
-                </RequireOrganizationPermission>
+                <MudStack Row="true" Spacing="2" AlignItems="AlignItems.Center">
+                    <SensorSubscriptionToggle SensorId="Sensor.Id"
+                                              HealthMonitoringEnabled="@(_healthFetch.Data is not null)" />
+                    <RequireOrganizationPermission Permission="@SensorPermissions.Sensor.Delete"
+                                                   OrganizationId="Sensor.OrganizationId">
+                        <MudTooltip Text="Delete Sensor">
+                            <MudIconButton Icon="@Icons.Material.Outlined.Delete" Color="Color.Error" Variant="Variant.Outlined"
+                                           Size="Size.Medium" OnClick="ConfirmDelete" />
+                        </MudTooltip>
+                    </RequireOrganizationPermission>
+                </MudStack>
             </MudStack>
         </MudPaper>
 

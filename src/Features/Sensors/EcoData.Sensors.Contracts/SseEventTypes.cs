@@ -22,6 +22,11 @@ public static class SseEventTypes
     /// Event type for sensor health alerts (stale, unhealthy, recovered).
     /// </summary>
     public const string HealthAlert = "sensor.health.alert";
+
+    /// <summary>
+    /// Event type for user notifications.
+    /// </summary>
+    public const string UserNotification = "user.notification";
 }
 
 /// <summary>
@@ -33,4 +38,16 @@ public static class MessageTopics
     /// Topic for all health alerts (global subscription).
     /// </summary>
     public const string AllHealthAlerts = "all-health-alerts";
+
+    /// <summary>
+    /// Prefix for user-specific notification topics.
+    /// Format: user-notifications:{userId}
+    /// </summary>
+    public const string UserNotificationsPrefix = "user-notifications";
+
+    /// <summary>
+    /// Gets the topic for a specific user's notifications.
+    /// </summary>
+    public static string GetUserNotificationsTopic(Guid userId) =>
+        $"{UserNotificationsPrefix}:{userId}";
 }

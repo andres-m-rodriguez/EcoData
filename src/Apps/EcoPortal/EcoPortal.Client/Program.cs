@@ -40,6 +40,7 @@ builder.Services.AddScoped<ITabNavigationService, TabNavigationService>();
 builder.Services.AddScoped<AuthStateService>();
 builder.Services.AddScoped<AuthenticationStateProvider, EcoPortalAuthStateProvider>();
 builder.Services.AddScoped<PermissionContextService>();
+builder.Services.AddScoped<NotificationService>();
 
 // Register custom policy provider BEFORE AddAuthorizationCore (uses TryAddSingleton)
 builder.Services.AddSingleton<IAuthorizationPolicyProvider, OrganizationPermissionPolicyProvider>();

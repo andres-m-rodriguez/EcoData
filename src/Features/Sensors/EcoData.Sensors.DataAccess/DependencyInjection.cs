@@ -14,6 +14,8 @@ public static class DependencyInjection
         services.AddScoped<ISensorHealthRepository, SensorHealthRepository>();
         services.AddScoped<IReadingRepository, ReadingRepository>();
         services.AddScoped<IIngestionLogRepository, IngestionLogRepository>();
+        services.AddScoped<IUserSensorSubscriptionRepository, UserSensorSubscriptionRepository>();
+        services.AddScoped<IUserNotificationRepository, UserNotificationRepository>();
 
         return services;
     }
