@@ -1,0 +1,185 @@
+@page "/categories"
+@page "/categories/{Id:guid}"
+@using EcoData.Wildlife.Contracts.Dtos
+@using BlazingSingularity.Fetch
+@implements IDisposable
+@inject ISpeciesCategoryHttpClient CategoryHttpClient
+@inject ISpeciesHttpClient SpeciesHttpClient
+@inject INativeNavbarManager Navbar
+@inject NavigationManager NavigationManager
+
+<PageTitle>FaunaFinder - Categories</PageTitle>
+
+@if (Id is not null)
+{
+    @* Category Detail - Show species in this category *@
+    <NuiPageLayout Title="@_categoryName" ParentPath="/categories">
+        @if (_speciesInCategoryFetch?.IsLoading is not false)
+        {
+            @for (int i = 0; i < 8; i++)
+            {
+                <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="72px" Class="mb-2 rounded" />
+            }
+        }
+        else if ((_speciesInCategoryFetch.Data?.Count ?? 0) == 0)
+        {
+            <NuiEmptyState Icon="@Icons.Material.Outlined.Pets"
+                           Title="No species"
+                           Description="No species have been categorized here yet." />
+        }
+        else
+        {
+            <NuiSectionHeader Title="@($"{_speciesInCategoryFetch.Data!.Count} Species")" />
+            <MudList T="SpeciesDtoForList" Dense="true">
+                @foreach (var species in _speciesInCategoryFetch.Data!)
+                {
+                    <NuiListItem Title="@GetSpeciesName(species)"
+                                 Subtitle="@species.ScientificName"
+                                 Icon="@(species.IsFauna ? Icons.Material.Filled.Pets : Icons.Material.Filled.Park)"
+                                 ShowChevron="true"
+                                 OnClick="@(() => NavigateToSpecies(species.Id))">
+                        <TrailingContent>
+                            <NuiStatusBadge Status="@GetConservationStatus(species.GRank)"
+                                            Text="@(species.GRank ?? "-")"
+                                            Size="NuiStatusSize.Small" />
+                        </TrailingContent>
+                    </NuiListItem>
+                }
+            </MudList>
+        }
+    </NuiPageLayout>
+}
+else
+{
+    @* Categories List *@
+    <NuiPageLayout Title="Categories">
+        @if (_categoriesFetch.IsLoading)
+        {
+            @for (int i = 0; i < 6; i++)
+            {
+                <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="72px" Class="mb-2 rounded" />
+            }
+        }
+        else if ((_categoriesFetch.Data?.Count ?? 0) == 0)
+        {
+            <NuiEmptyState Icon="@Icons.Material.Outlined.Category"
+                           Title="No categories"
+                           Description="No species categories have been created yet." />
+        }
+        else
+        {
+            <MudList T="SpeciesCategoryDtoForList" Dense="true">
+                @foreach (var category in _categoriesFetch.Data!)
+                {
+                    <NuiListItem Title="@GetCategoryName(category)"
+                                 Subtitle="@category.Code"
+                                 Icon="@GetCategoryIcon(category.Code)"
+                                 ShowChevron="true"
+                                 OnClick="@(() => NavigateToCategory(category.Id, category))">
+                    </NuiListItem>
+                }
+            </MudList>
+        }
+    </NuiPageLayout>
+}
+
+@code {
+    [Parameter] public Guid? Id { get; set; }
+
+    private string? _categoryName;
+    private IFetch<IReadOnlyList<SpeciesCategoryDtoForList>> _categoriesFetch = default!;
+    private IFetch<IReadOnlyList<SpeciesDtoForList>>? _speciesInCategoryFetch;
+    private Guid? _loadedCategoryId;
+
+    protected override void OnInitialized()
+    {
+        Navbar.SetTitle("Categories");
+        _categoriesFetch = new Fetch<IReadOnlyList<SpeciesCategoryDtoForList>>(
+            CategoryHttpClient.GetAllAsync,
+            () => InvokeAsync(StateHasChanged)
+        );
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (Id is { } id)
+        {
+            if (_loadedCategoryId == id) return;
+            _loadedCategoryId = id;
+
+            (_speciesInCategoryFetch as IDisposable)?.Dispose();
+            _speciesInCategoryFetch = new Fetch<IReadOnlyList<SpeciesDtoForList>>(
+                ct => SpeciesHttpClient.GetByCategoryAsync(id, ct),
+                () => InvokeAsync(StateHasChanged)
+            );
+            await _speciesInCategoryFetch.FetchAsync();
+        }
+        else
+        {
+            _loadedCategoryId = null;
+            if (_categoriesFetch.Data is null && !_categoriesFetch.IsLoading)
+            {
+                await _categoriesFetch.FetchAsync();
+            }
+        }
+    }
+
+    public void Dispose()
+    {
+        (_categoriesFetch as IDisposable)?.Dispose();
+        (_speciesInCategoryFetch as IDisposable)?.Dispose();
+    }
+
+    private void NavigateToCategory(Guid categoryId, SpeciesCategoryDtoForList category)
+    {
+        _categoryName = GetCategoryName(category);
+        Navbar.SetTitle(_categoryName);
+        NavigationManager.NavigateTo($"/categories/{categoryId}");
+    }
+
+    private void NavigateToSpecies(Guid speciesId)
+    {
+        NavigationManager.NavigateTo($"/species/{speciesId}");
+    }
+
+    private static string GetCategoryName(SpeciesCategoryDtoForList category)
+    {
+        var englishName = category.Name.FirstOrDefault(n => n.Code == "en");
+        return englishName?.Value ?? category.Name.FirstOrDefault()?.Value ?? category.Code;
+    }
+
+    private static string GetSpeciesName(SpeciesDtoForList species)
+    {
+        var englishName = species.CommonName.FirstOrDefault(n => n.Code == "en");
+        return englishName?.Value ?? species.CommonName.FirstOrDefault()?.Value ?? species.ScientificName;
+    }
+
+    private static NuiStatusType GetConservationStatus(string? gRank)
+    {
+        if (string.IsNullOrEmpty(gRank)) return NuiStatusType.Inactive;
+
+        return gRank.ToUpperInvariant() switch
+        {
+            "G1" or "G2" => NuiStatusType.Error,
+            "G3" => NuiStatusType.Warning,
+            "G4" or "G5" => NuiStatusType.Success,
+            _ => NuiStatusType.Inactive
+        };
+    }
+
+    private static string GetCategoryIcon(string code)
+    {
+        return code.ToLowerInvariant() switch
+        {
+            "bird" => Icons.Material.Filled.FlutterDash,
+            "mammal" => Icons.Material.Filled.Pets,
+            "reptile" => Icons.Material.Filled.Coronavirus,
+            "amphibian" => Icons.Material.Filled.Water,
+            "fish" => Icons.Material.Filled.Phishing,
+            "invertebrate" => Icons.Material.Filled.BugReport,
+            "plant" => Icons.Material.Filled.Park,
+            "fern" => Icons.Material.Filled.Grass,
+            _ => Icons.Material.Filled.Category
+        };
+    }
+}

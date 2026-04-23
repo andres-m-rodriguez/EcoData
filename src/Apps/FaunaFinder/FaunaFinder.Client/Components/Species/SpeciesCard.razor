@@ -1,0 +1,57 @@
+@namespace FaunaFinder.Client.Components.Species
+@using EcoData.Wildlife.Contracts.Dtos
+
+<MudPaper Elevation="0" Class="pa-3 rounded-lg border-solid border mud-border-lines-default species-card"
+          @onclick="HandleClick">
+    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="3">
+        <div class="species-card-thumb">
+            @if (Species.HasProfileImage)
+            {
+                <img src="@($"/wildlife/species/{Species.Id}/image")"
+                     alt="@CommonName"
+                     loading="lazy" />
+            }
+            else
+            {
+                <MudIcon Icon="@(Species.IsFauna ? Icons.Material.Filled.Pets : Icons.Material.Filled.Park)"
+                         Color="Color.Primary" Size="Size.Medium" />
+            }
+        </div>
+        <MudStack Spacing="0" Class="species-card-text">
+            <MudText Typo="Typo.subtitle1" Class="font-weight-medium mud-text-truncate">@CommonName</MudText>
+            <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mud-text-truncate font-italic">
+                @Species.ScientificName
+            </MudText>
+        </MudStack>
+        <NuiStatusBadge Status="@RankStatus" Text="@RankText" Size="NuiStatusSize.Small" />
+        <MudIcon Icon="@Icons.Material.Filled.ChevronRight" Color="Color.Default" Size="Size.Small" />
+    </MudStack>
+</MudPaper>
+
+@code {
+    [Parameter, EditorRequired]
+    public required SpeciesDtoForList Species { get; set; }
+
+    [Parameter]
+    public EventCallback<SpeciesDtoForList> OnClick { get; set; }
+
+    private string CommonName => ResolveCommonName(Species);
+
+    private string RankText => string.IsNullOrEmpty(Species.GRank) ? "-" : Species.GRank;
+
+    private NuiStatusType RankStatus => Species.GRank?.ToUpperInvariant() switch
+    {
+        "G1" or "G2" => NuiStatusType.Error,
+        "G3" => NuiStatusType.Warning,
+        "G4" or "G5" => NuiStatusType.Success,
+        _ => NuiStatusType.Inactive
+    };
+
+    private Task HandleClick() => OnClick.InvokeAsync(Species);
+
+    private static string ResolveCommonName(SpeciesDtoForList species)
+    {
+        var en = species.CommonName.FirstOrDefault(n => n.Code == "en");
+        return en?.Value ?? species.CommonName.FirstOrDefault()?.Value ?? species.ScientificName;
+    }
+}

@@ -1,0 +1,160 @@
+@page "/species"
+@page "/species/{Id:guid}"
+@using EcoData.Wildlife.Contracts.Dtos
+@using EcoData.Locations.Contracts.Dtos
+@using EcoData.Locations.Application.Client
+@using EcoData.NativeUi.Components.NativeNavbar
+@using BlazingSingularity.Fetch
+@implements IDisposable
+@inject ISpeciesHttpClient SpeciesHttpClient
+@inject IMunicipalityHttpClient MunicipalityHttpClient
+@inject INativeNavbarManager Navbar
+@inject NavigationManager NavigationManager
+
+<PageTitle>FaunaFinder - Species</PageTitle>
+
+@if (Id is not null)
+{
+    <NuiPageLayout Title="@_detailFetch?.Data?.ScientificName" ParentPath="/species">
+        @if (_detailFetch?.IsLoading is not false)
+        {
+            <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="240px" Class="mb-4 rounded-lg" />
+            <MudSkeleton SkeletonType="SkeletonType.Text" Width="60%" Class="mb-2" />
+            <MudSkeleton SkeletonType="SkeletonType.Text" Width="40%" />
+        }
+        else if (_detailFetch.Data is { } detail)
+        {
+            <SpeciesHero Species="detail" />
+
+            <MudPaper Elevation="0" Class="pa-4 pa-md-6 rounded-lg border-solid border mud-border-lines-default mb-4">
+                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Class="mb-4">
+                    <MudIcon Icon="@Icons.Material.Filled.LocationCity" Color="Color.Primary" />
+                    <MudText Typo="Typo.h6">Municipalities</MudText>
+                    <MudSpacer />
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">
+                        @detail.MunicipalityIds.Count
+                    </MudText>
+                </MudStack>
+
+                @if (_municipalitiesFetch?.IsLoading is not false)
+                {
+                    <MudGrid Spacing="2">
+                        @for (var i = 0; i < Math.Min(6, detail.MunicipalityIds.Count); i++)
+                        {
+                            <MudItem xs="12" sm="6" md="4">
+                                <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="60px" Class="rounded-lg" />
+                            </MudItem>
+                        }
+                    </MudGrid>
+                }
+                else if ((_municipalitiesFetch.Data?.Count ?? 0) == 0)
+                {
+                    <NuiEmptyState Icon="@Icons.Material.Outlined.LocationOff"
+                                   Title="No municipalities"
+                                   Description="This species has no recorded municipality associations yet." />
+                }
+                else
+                {
+                    <MudGrid Spacing="2">
+                        @foreach (var muni in _municipalitiesFetch.Data!)
+                        {
+                            <MudItem xs="12" sm="6" md="4">
+                                <MunicipalityCard Municipality="muni"
+                                                  OnClick="@(m => NavigateToMunicipality(m.Id))" />
+                            </MudItem>
+                        }
+                    </MudGrid>
+                }
+            </MudPaper>
+
+            <ConservationLinksPanel SpeciesId="detail.Id" />
+        }
+        else
+        {
+            <NuiEmptyState Icon="@Icons.Material.Outlined.SearchOff" Title="Species not found"
+                           Description="The species you're looking for doesn't exist or has been removed." />
+        }
+    </NuiPageLayout>
+}
+else
+{
+    <NuiPageLayout Title="Species">
+        <SpeciesList OnSpeciesClick="NavigateToSpeciesDetail" />
+    </NuiPageLayout>
+}
+
+@code {
+    [Parameter] public Guid? Id { get; set; }
+
+    private IFetch<SpeciesDtoForDetail?>? _detailFetch;
+    private IFetch<IReadOnlyList<MunicipalityDtoForList>>? _municipalitiesFetch;
+    private Guid? _loadedDetailId;
+
+    protected override void OnInitialized()
+    {
+        Navbar.SetTitle("Species");
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (Id is { } id)
+        {
+            if (_loadedDetailId == id) return;
+            _loadedDetailId = id;
+
+            (_detailFetch as IDisposable)?.Dispose();
+            (_municipalitiesFetch as IDisposable)?.Dispose();
+
+            _detailFetch = new Fetch<SpeciesDtoForDetail?>(
+                async ct =>
+                {
+                    var detail = await SpeciesHttpClient.GetByIdAsync(id, ct);
+                    if (detail is not null)
+                    {
+                        _ = LoadMunicipalitiesAsync(detail.MunicipalityIds);
+                    }
+                    return detail;
+                },
+                () =>
+                {
+                    if (_detailFetch?.Data is { } detail)
+                    {
+                        Navbar.SetTitle(GetSpeciesName(detail));
+                    }
+                    return InvokeAsync(StateHasChanged);
+                }
+            );
+            await _detailFetch.FetchAsync();
+        }
+        else
+        {
+            _loadedDetailId = null;
+        }
+    }
+
+    private Task LoadMunicipalitiesAsync(IReadOnlyList<Guid> ids)
+    {
+        _municipalitiesFetch = new Fetch<IReadOnlyList<MunicipalityDtoForList>>(
+            ct => MunicipalityHttpClient.GetByIdsAsync(ids, ct),
+            () => InvokeAsync(StateHasChanged));
+        return _municipalitiesFetch.FetchAsync();
+    }
+
+    private void NavigateToSpeciesDetail(SpeciesDtoForList species) =>
+        NavigationManager.NavigateTo($"/species/{species.Id}");
+
+    private void NavigateToMunicipality(Guid municipalityId) =>
+        NavigationManager.NavigateTo($"/municipalities/{municipalityId}");
+
+    public void Dispose()
+    {
+        (_detailFetch as IDisposable)?.Dispose();
+        (_municipalitiesFetch as IDisposable)?.Dispose();
+    }
+
+    private static string GetSpeciesName(SpeciesDtoForDetail species)
+    {
+        var englishName = species.CommonName.FirstOrDefault(n => n.Code == "en");
+        return englishName?.Value ?? species.CommonName.FirstOrDefault()?.Value ?? species.ScientificName;
+    }
+}

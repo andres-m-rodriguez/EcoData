@@ -1,0 +1,213 @@
+@namespace FaunaFinder.Client.Components.Species
+@using EcoData.Wildlife.Contracts.Dtos
+@using EcoData.Wildlife.Application.Client
+@using EcoData.Common.i18n
+@using BlazingSingularity.Fetch
+@implements IDisposable
+@inject IConservationLinkHttpClient LinkClient
+@inject IFwsActionHttpClient FwsClient
+@inject INrcsPracticeHttpClient NrcsClient
+
+<MudPaper Elevation="0" Class="pa-4 pa-md-6 rounded-lg border-solid border mud-border-lines-default mb-4">
+    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Class="mb-4">
+        <MudIcon Icon="@Icons.Material.Filled.Gavel" Color="Color.Primary" />
+        <MudText Typo="Typo.h6">Conservation Actions</MudText>
+        <MudSpacer />
+        <MudText Typo="Typo.caption" Color="Color.Secondary">
+            @if (_linksFetch.Data is { } links)
+            {
+                <span>@FilteredLinks.Count / @links.Links.Count</span>
+            }
+        </MudText>
+    </MudStack>
+
+    @if (_linksFetch.IsLoading || _fwsFetch.IsLoading || _nrcsFetch.IsLoading)
+    {
+        @for (var i = 0; i < 3; i++)
+        {
+            <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="88px" Class="mb-2 rounded-lg" />
+        }
+    }
+    else if (_linksFetch.Data is { Links.Count: 0 })
+    {
+        <NuiEmptyState Icon="@Icons.Material.Outlined.SearchOff"
+                       Title="No conservation actions"
+                       Description="This species doesn't have any FWS/NRCS recommendations yet." />
+    }
+    else
+    {
+        <MudStack Spacing="3" Class="mb-4">
+            <MudTextField T="string" @bind-Value="_search" Placeholder="Search actions..."
+                          Variant="Variant.Outlined" Margin="Margin.Dense" Immediate="true"
+                          Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" />
+
+            <MudStack Row="true" Spacing="3" Wrap="Wrap.Wrap">
+                <MudSelect T="Guid?" Value="_practiceId" ValueChanged="OnPracticeChanged"
+                           Label="NRCS practice" Variant="Variant.Outlined" Margin="Margin.Dense"
+                           AnchorOrigin="Origin.BottomCenter" Class="conservation-filter-field">
+                    <MudSelectItem T="Guid?" Value="@(null as Guid?)">All practices</MudSelectItem>
+                    @foreach (var p in _nrcsFetch.Data ?? [])
+                    {
+                        <MudSelectItem T="Guid?" Value="@((Guid?)p.Id)">@p.Code — @ResolveLocale(p.Name)</MudSelectItem>
+                    }
+                </MudSelect>
+
+                <MudSelect T="Guid?" Value="_actionId" ValueChanged="OnActionChanged"
+                           Label="FWS action" Variant="Variant.Outlined" Margin="Margin.Dense"
+                           AnchorOrigin="Origin.BottomCenter" Class="conservation-filter-field">
+                    <MudSelectItem T="Guid?" Value="@(null as Guid?)">All actions</MudSelectItem>
+                    @foreach (var a in _fwsFetch.Data ?? [])
+                    {
+                        <MudSelectItem T="Guid?" Value="@((Guid?)a.Id)">@a.Code — @ResolveLocale(a.Name)</MudSelectItem>
+                    }
+                </MudSelect>
+            </MudStack>
+
+            @if (_practiceId is not null || _actionId is not null)
+            {
+                <MudStack Row="true" Spacing="1" Wrap="Wrap.Wrap">
+                    @if (_practiceId is not null)
+                    {
+                        <MudChip T="string" Size="Size.Small" Color="Color.Primary" Variant="Variant.Outlined"
+                                 OnClose="@(() => OnPracticeChanged(null))">
+                            @GetPracticeLabel(_practiceId.Value)
+                        </MudChip>
+                    }
+                    @if (_actionId is not null)
+                    {
+                        <MudChip T="string" Size="Size.Small" Color="Color.Primary" Variant="Variant.Outlined"
+                                 OnClose="@(() => OnActionChanged(null))">
+                            @GetActionLabel(_actionId.Value)
+                        </MudChip>
+                    }
+                </MudStack>
+            }
+        </MudStack>
+
+        @if (FilteredLinks.Count == 0)
+        {
+            <NuiEmptyState Icon="@Icons.Material.Outlined.FilterAltOff"
+                           Title="No matches"
+                           Description="Try adjusting the filters or search term." />
+        }
+        else
+        {
+            <MudStack Spacing="2">
+                @foreach (var link in FilteredLinks)
+                {
+                    <MudPaper Elevation="0" Class="pa-3 rounded-lg mud-background-gray">
+                        <MudStack Spacing="1">
+                            <MudStack Row="true" Spacing="2" Wrap="Wrap.Wrap">
+                                <MudChip T="string" Size="Size.Small" Color="Color.Secondary" Variant="Variant.Filled">
+                                    @link.NrcsPractice.Code
+                                </MudChip>
+                                <MudText Typo="Typo.subtitle2">@ResolveLocale(link.NrcsPractice.Name)</MudText>
+                            </MudStack>
+                            <MudStack Row="true" Spacing="2" Wrap="Wrap.Wrap">
+                                <MudChip T="string" Size="Size.Small" Color="Color.Tertiary" Variant="Variant.Outlined">
+                                    FWS @link.FwsAction.Code
+                                </MudChip>
+                                <MudText Typo="Typo.body2" Color="Color.Secondary">@ResolveLocale(link.FwsAction.Name)</MudText>
+                            </MudStack>
+                            @if (link.Justification is { Count: > 0 } &&
+                                 ResolveLocale(link.Justification) is { Length: > 0 } justification)
+                            {
+                                <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mt-1">
+                                    @justification
+                                </MudText>
+                            }
+                        </MudStack>
+                    </MudPaper>
+                }
+            </MudStack>
+        }
+    }
+</MudPaper>
+
+@code {
+    [Parameter, EditorRequired]
+    public Guid SpeciesId { get; set; }
+
+    private IFetch<ConservationLinksDtoForSpecies> _linksFetch = default!;
+    private IFetch<IReadOnlyList<FwsActionDtoForList>> _fwsFetch = default!;
+    private IFetch<IReadOnlyList<NrcsPracticeDtoForList>> _nrcsFetch = default!;
+
+    private string _search = "";
+    private Guid? _practiceId;
+    private Guid? _actionId;
+
+    private IReadOnlyList<FwsLinkDtoForDetail> FilteredLinks
+    {
+        get
+        {
+            var links = _linksFetch.Data?.Links ?? [];
+            if (links.Count == 0) return links;
+
+            IEnumerable<FwsLinkDtoForDetail> filtered = links;
+            if (_practiceId is { } pid) filtered = filtered.Where(l => l.NrcsPractice.Id == pid);
+            if (_actionId is { } aid) filtered = filtered.Where(l => l.FwsAction.Id == aid);
+            if (!string.IsNullOrWhiteSpace(_search))
+            {
+                var s = _search.Trim();
+                filtered = filtered.Where(l =>
+                    l.NrcsPractice.Code.Contains(s, StringComparison.OrdinalIgnoreCase) ||
+                    l.FwsAction.Code.Contains(s, StringComparison.OrdinalIgnoreCase) ||
+                    ResolveLocale(l.NrcsPractice.Name).Contains(s, StringComparison.OrdinalIgnoreCase) ||
+                    ResolveLocale(l.FwsAction.Name).Contains(s, StringComparison.OrdinalIgnoreCase));
+            }
+            return filtered.ToList();
+        }
+    }
+
+    protected override void OnInitialized()
+    {
+        _linksFetch = new Fetch<ConservationLinksDtoForSpecies>(
+            ct => LinkClient.GetBySpeciesAsync(SpeciesId, ct),
+            () => InvokeAsync(StateHasChanged));
+        _fwsFetch = new Fetch<IReadOnlyList<FwsActionDtoForList>>(
+            FwsClient.GetAllAsync,
+            () => InvokeAsync(StateHasChanged));
+        _nrcsFetch = new Fetch<IReadOnlyList<NrcsPracticeDtoForList>>(
+            NrcsClient.GetAllAsync,
+            () => InvokeAsync(StateHasChanged));
+
+        _ = _linksFetch.FetchAsync();
+        _ = _fwsFetch.FetchAsync();
+        _ = _nrcsFetch.FetchAsync();
+    }
+
+    private void OnPracticeChanged(Guid? id)
+    {
+        _practiceId = id;
+    }
+
+    private void OnActionChanged(Guid? id)
+    {
+        _actionId = id;
+    }
+
+    private string GetPracticeLabel(Guid id)
+    {
+        var p = (_nrcsFetch.Data ?? []).FirstOrDefault(x => x.Id == id);
+        return p is null ? "" : $"{p.Code} — {ResolveLocale(p.Name)}";
+    }
+
+    private string GetActionLabel(Guid id)
+    {
+        var a = (_fwsFetch.Data ?? []).FirstOrDefault(x => x.Id == id);
+        return a is null ? "" : $"{a.Code} — {ResolveLocale(a.Name)}";
+    }
+
+    public void Dispose()
+    {
+        (_linksFetch as IDisposable)?.Dispose();
+        (_fwsFetch as IDisposable)?.Dispose();
+        (_nrcsFetch as IDisposable)?.Dispose();
+    }
+
+    private static string ResolveLocale(IReadOnlyList<LocaleValue> values)
+    {
+        var en = values.FirstOrDefault(n => n.Code == "en");
+        return en?.Value ?? values.FirstOrDefault()?.Value ?? "";
+    }
+}

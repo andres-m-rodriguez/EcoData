@@ -1,0 +1,127 @@
+/* Map fills viewport below MudAppBar and above bottom nav.
+   Top offsets mirror MudBlazor's responsive appbar height (--mud-appbar-height defaults to 64px). */
+.map-page {
+    position: fixed;
+    top: calc(var(--mud-appbar-height) - var(--mud-appbar-height) / 8);
+    left: 0;
+    right: 0;
+    bottom: calc(64px + env(safe-area-inset-bottom, 0px));
+    width: 100%;
+}
+
+@media (orientation: landscape) {
+    .map-page {
+        top: calc(var(--mud-appbar-height) - var(--mud-appbar-height) / 4);
+    }
+}
+
+@media (min-width: 600px) {
+    .map-page {
+        top: var(--mud-appbar-height);
+    }
+}
+
+@media (min-width: 960px) {
+    .map-page {
+        /* Desktop: no bottom nav */
+        bottom: 0;
+    }
+}
+
+.map-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+}
+
+.map-loading-overlay {
+    background-color: rgba(255, 255, 255, 0.8);
+}
+
+/* Desktop Sidebar */
+.desktop-sidebar {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 380px;
+    height: 100%;
+    background-color: var(--mud-palette-surface);
+    box-shadow: -2px 0 8px rgba(0, 0, 0, 0.1);
+    z-index: 500;
+    display: flex;
+    flex-direction: column;
+    transform: translateX(100%);
+    transition: transform 0.3s ease;
+}
+
+.desktop-sidebar.open {
+    transform: translateX(0);
+}
+
+.sidebar-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px;
+    border-bottom: 1px solid var(--mud-palette-lines-default);
+}
+
+.sidebar-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 8px 0;
+}
+
+/* Mobile Bottom Sheet */
+.mobile-sheet-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 600;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+}
+
+.mobile-sheet-backdrop.open {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.mobile-sheet {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: calc(64px + env(safe-area-inset-bottom, 0px));
+    max-height: 60vh;
+    background-color: var(--mud-palette-surface);
+    border-radius: 16px 16px 0 0;
+    box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.15);
+    z-index: 700;
+    display: flex;
+    flex-direction: column;
+    transform: translateY(100%);
+    transition: transform 0.3s ease;
+}
+
+.mobile-sheet.open {
+    transform: translateY(0);
+}
+
+.mobile-sheet-header {
+    display: flex;
+    align-items: center;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--mud-palette-lines-default);
+}
+
+.mobile-sheet-content {
+    flex: 1;
+    overflow-y: auto;
+    padding-bottom: 16px;
+}

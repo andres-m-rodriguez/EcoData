@@ -1,0 +1,57 @@
+@namespace FaunaFinder.Client.Components.Municipalities
+@using EcoData.Locations.Contracts.Dtos
+@using EcoData.Wildlife.Application.Client
+@using EcoData.Wildlife.Contracts.Parameters
+@using BlazingSingularity.Fetch
+@implements IDisposable
+@inject ISpeciesHttpClient SpeciesClient
+
+<MudPaper Elevation="0" Class="pa-3 rounded-lg border-solid border mud-border-lines-default municipality-card"
+          @onclick="HandleClick">
+    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="3">
+        <NuiIconBox Icon="@Icons.Material.Filled.LocationCity" Color="Color.Primary" />
+        <MudStack Spacing="0" Class="municipality-card-text">
+            <MudText Typo="Typo.subtitle1" Class="font-weight-medium mud-text-truncate">
+                @Municipality.Name
+            </MudText>
+            <MudText Typo="Typo.caption" Color="Color.Secondary">
+                @if (_countFetch.IsLoading)
+                {
+                    <MudSkeleton Width="60px" Height="14px" />
+                }
+                else
+                {
+                    <span>@_countFetch.Data species</span>
+                }
+            </MudText>
+        </MudStack>
+        <MudIcon Icon="@Icons.Material.Filled.ChevronRight" Color="Color.Default" Size="Size.Small" />
+    </MudStack>
+</MudPaper>
+
+@code {
+    [Parameter, EditorRequired]
+    public required MunicipalityDtoForList Municipality { get; set; }
+
+    [Parameter]
+    public EventCallback<MunicipalityDtoForList> OnClick { get; set; }
+
+    private IFetch<int> _countFetch = default!;
+
+    protected override void OnInitialized()
+    {
+        _countFetch = new Fetch<int>(
+            ct => SpeciesClient.GetCountAsync(
+                new SpeciesParameters(MunicipalityId: Municipality.Id),
+                ct),
+            () => InvokeAsync(StateHasChanged));
+        _ = _countFetch.FetchAsync();
+    }
+
+    private Task HandleClick() => OnClick.InvokeAsync(Municipality);
+
+    public void Dispose()
+    {
+        (_countFetch as IDisposable)?.Dispose();
+    }
+}

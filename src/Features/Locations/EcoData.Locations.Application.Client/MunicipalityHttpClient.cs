@@ -26,6 +26,22 @@ public sealed class MunicipalityHttpClient(HttpClient httpClient) : IMunicipalit
             ct)!;
     }
 
+    public async Task<IReadOnlyList<MunicipalityDtoForList>> GetByIdsAsync(
+        IReadOnlyCollection<Guid> ids,
+        CancellationToken ct = default)
+    {
+        if (ids.Count == 0) return [];
+
+        var idParam = string.Join(",", ids);
+        var response = await httpClient.GetAsync(
+            $"locations/municipalities/by-ids?ids={Uri.EscapeDataString(idParam)}",
+            ct);
+
+        if (!response.IsSuccessStatusCode) return [];
+
+        return await response.Content.ReadFromJsonAsync<IReadOnlyList<MunicipalityDtoForList>>(ct) ?? [];
+    }
+
     public async Task<MunicipalityDtoForDetail?> GetByIdAsync(Guid id, CancellationToken ct = default)
     {
         var response = await httpClient.GetAsync($"locations/municipalities/{id}", ct);
@@ -34,5 +50,15 @@ public sealed class MunicipalityHttpClient(HttpClient httpClient) : IMunicipalit
             return null;
 
         return await response.Content.ReadFromJsonAsync<MunicipalityDtoForDetail>(ct);
+    }
+
+    public async Task<string?> GetGeoJsonByStateCodeAsync(string stateCode, CancellationToken ct = default)
+    {
+        var response = await httpClient.GetAsync($"locations/municipalities/geojson/state/{stateCode}", ct);
+
+        if (!response.IsSuccessStatusCode)
+            return null;
+
+        return await response.Content.ReadAsStringAsync(ct);
     }
 }

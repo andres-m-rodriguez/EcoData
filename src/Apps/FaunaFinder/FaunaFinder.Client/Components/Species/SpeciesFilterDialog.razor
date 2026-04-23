@@ -1,0 +1,95 @@
+@namespace FaunaFinder.Client.Components.Species
+@using EcoData.Wildlife.Contracts.Dtos
+@using BlazingSingularity.Fetch
+@implements IDisposable
+@inject ISpeciesCategoryHttpClient CategoryClient
+
+<MudDialog>
+    <TitleContent>
+        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+            <MudIcon Icon="@Icons.Material.Filled.FilterList" />
+            <MudText Typo="Typo.h6">Filters</MudText>
+        </MudStack>
+    </TitleContent>
+    <DialogContent>
+        <MudStack Spacing="4" Class="pt-2">
+            @if (ShowCategory)
+            {
+                <MudSelect T="Guid?" Label="Category" @bind-Value="CategoryId"
+                           Variant="Variant.Outlined" AnchorOrigin="Origin.BottomCenter">
+                    <MudSelectItem T="Guid?" Value="@(null as Guid?)">All categories</MudSelectItem>
+                    @if (_categoriesFetch.Data is not null)
+                    {
+                        @foreach (var category in _categoriesFetch.Data)
+                        {
+                            <MudSelectItem T="Guid?" Value="@((Guid?)category.Id)">@ResolveName(category)</MudSelectItem>
+                        }
+                    }
+                </MudSelect>
+            }
+
+            <MudSelect T="FaunaFilter" Label="Kingdom" @bind-Value="Fauna"
+                       Variant="Variant.Outlined" AnchorOrigin="Origin.BottomCenter">
+                <MudSelectItem Value="FaunaFilter.All">All</MudSelectItem>
+                <MudSelectItem Value="FaunaFilter.Fauna">Fauna (animals)</MudSelectItem>
+                <MudSelectItem Value="FaunaFilter.Flora">Flora (plants)</MudSelectItem>
+            </MudSelect>
+        </MudStack>
+    </DialogContent>
+    <DialogActions>
+        <MudButton Variant="Variant.Text" Color="Color.Default" OnClick="Clear">Clear</MudButton>
+        <MudSpacer />
+        <MudButton Variant="Variant.Text" OnClick="Cancel">Cancel</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="Apply">Apply</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter]
+    private IMudDialogInstance MudDialog { get; set; } = null!;
+
+    [Parameter]
+    public Guid? CategoryId { get; set; }
+
+    [Parameter]
+    public FaunaFilter Fauna { get; set; } = FaunaFilter.All;
+
+    [Parameter]
+    public bool ShowCategory { get; set; } = true;
+
+    private IFetch<IReadOnlyList<SpeciesCategoryDtoForList>> _categoriesFetch = default!;
+
+    protected override void OnInitialized()
+    {
+        _categoriesFetch = new Fetch<IReadOnlyList<SpeciesCategoryDtoForList>>(
+            CategoryClient.GetAllAsync,
+            () => InvokeAsync(StateHasChanged)
+        );
+        if (ShowCategory)
+        {
+            _ = _categoriesFetch.FetchAsync();
+        }
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+
+    private void Clear()
+    {
+        CategoryId = null;
+        Fauna = FaunaFilter.All;
+        MudDialog.Close(DialogResult.Ok(new SpeciesFilterResult(null, FaunaFilter.All)));
+    }
+
+    private void Apply() => MudDialog.Close(DialogResult.Ok(new SpeciesFilterResult(CategoryId, Fauna)));
+
+    public void Dispose()
+    {
+        (_categoriesFetch as IDisposable)?.Dispose();
+    }
+
+    private static string ResolveName(SpeciesCategoryDtoForList category)
+    {
+        var en = category.Name.FirstOrDefault(n => n.Code == "en");
+        return en?.Value ?? category.Name.FirstOrDefault()?.Value ?? category.Code;
+    }
+}

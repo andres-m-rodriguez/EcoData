@@ -1,3 +1,5 @@
+using EcoData.Common.Pagination;
+
 namespace EcoData.Locations.Contracts.Parameters;
 
 public sealed record MunicipalityParameters(
@@ -6,4 +8,4 @@ public sealed record MunicipalityParameters(
     string? Search = null,
     string? StateCode = null,
     Guid? StateId = null
-);
+) : CursorParameters(PageSize, Cursor);
