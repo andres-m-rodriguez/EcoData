@@ -75,54 +75,78 @@
     background: rgba(255, 255, 255, 0.1);
 }
 
-/* Language picker — native <select> styled as a pill for the dark bar.
-   Chevron is an inline SVG data URI so we don't drag in an asset. */
-.ff-lang-select {
-    appearance: none;
-    -webkit-appearance: none;
-    -moz-appearance: none;
-    background-color: rgba(255, 255, 255, 0.08);
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    border-radius: 999px;
-    color: #ffffff;
-    cursor: pointer;
-    font: 600 11px/1 'Inter', sans-serif;
-    letter-spacing: 0.06em;
-    padding: 6px 26px 6px 14px;
-    min-width: 0;
-    width: auto;
-    transition: background-color 0.2s ease, border-color 0.2s ease;
-    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 6' fill='none'><path d='M1 1l4 4 4-4' stroke='white' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/></svg>");
-    background-repeat: no-repeat;
-    background-position: right 10px center;
-    background-size: 10px 6px;
+/* Language dropdown — MudMenu in built-in activator mode. MudMenu
+   renders an internal MudButton; we style it as a pine pill and
+   leave the popover to MudBlazor. Scoped ::deep reaches into
+   MudBlazor's DOM. */
+::deep .ff-lang-menu {
+    margin-left: 0;
 }
 
-.ff-lang-select:hover {
-    background-color: rgba(255, 255, 255, 0.14);
-    border-color: rgba(255, 255, 255, 0.22);
+::deep .ff-lang-menu > .mud-button-root {
+    background: rgba(255, 255, 255, 0.08) !important;
+    border: 1px solid rgba(255, 255, 255, 0.12) !important;
+    border-radius: 999px !important;
+    color: rgba(255, 255, 255, 0.9) !important;
+    font: 600 11px/1 'Inter', sans-serif !important;
+    letter-spacing: 0.06em !important;
+    text-transform: none !important;
+    padding: 4px 8px 4px 12px !important;
+    min-width: 0 !important;
+    transition: background-color 0.2s ease, border-color 0.2s ease,
+                color 0.2s ease;
 }
 
-.ff-lang-select:focus {
-    outline: none;
-    border-color: rgba(255, 255, 255, 0.4);
+::deep .ff-lang-menu > .mud-button-root:hover {
+    background: rgba(255, 255, 255, 0.14) !important;
+    border-color: rgba(255, 255, 255, 0.22) !important;
+    color: #ffffff !important;
 }
 
-/* The dropdown list (option nodes) is rendered by the OS so we can't
-   style it deeply; make the options use the app surface colour at least. */
-.ff-lang-select option {
-    background: var(--fauna-surface, #ffffff);
-    color: var(--fauna-fg, #111);
+::deep .ff-lang-menu > .mud-button-root .mud-icon-root {
+    color: currentColor !important;
+    font-size: 16px !important;
+}
+
+/* Menu item layout: check + name + code */
+.ff-lang-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 180px;
+}
+
+.ff-lang-item ::deep .mud-icon-root {
+    visibility: hidden;
+    font-size: 16px !important;
+    color: var(--fauna-primary, #1f4d3a);
+}
+
+.ff-lang-item.is-active ::deep .mud-icon-root {
+    visibility: visible;
+}
+
+.ff-lang-item-name {
+    flex: 1;
     font: 500 13px/1.3 'Inter', sans-serif;
     letter-spacing: 0;
 }
 
-/* Mobile — smaller, tucked next to the back/title */
+.ff-lang-item-code {
+    font: 600 10px/1 'JetBrains Mono', monospace;
+    letter-spacing: 0.08em;
+    color: var(--fauna-fg-4, #888);
+}
+
+/* Mobile — tighter pill */
 @media (max-width: 959.95px) {
-    .ff-lang-select {
+    ::deep .ff-lang-menu {
         margin-left: auto;
-        font-size: 10px;
-        padding: 5px 22px 5px 10px;
+    }
+
+    ::deep .ff-lang-menu > .mud-button-root {
+        font-size: 10px !important;
+        padding: 3px 6px 3px 10px !important;
     }
 }
 

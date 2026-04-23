@@ -52,20 +52,33 @@
 
             <MudSpacer />
 
-            @* Language picker — native <select>. Styled as a compact pill
-               via scoped CSS; the OS provides the dropdown UI which sidesteps
-               every MudBlazor popover quirk we've been hitting. *@
-            <select class="ff-lang-select"
-                    value="@L.CurrentLanguage"
-                    @onchange="OnLanguageSelected"
-                    aria-label="Language">
+            @* Language dropdown — MudMenu using its built-in activator
+               (Label + StartIcon + EndIcon) instead of ActivatorContent.
+               The Activator-content route wouldn't open inside MudAppBar;
+               built-in mode uses MudBlazor's tested internal wiring. *@
+            <MudMenu Label="@L.CurrentLanguage.ToUpperInvariant()"
+                     StartIcon="@Icons.Material.Filled.Language"
+                     EndIcon="@Icons.Material.Filled.KeyboardArrowDown"
+                     Variant="Variant.Text"
+                     Color="Color.Inherit"
+                     Size="Size.Small"
+                     AriaLabel="Language"
+                     AnchorOrigin="Origin.BottomRight"
+                     TransformOrigin="Origin.TopRight"
+                     Class="ff-lang-menu">
                 @foreach (var lang in L.GetAvailableLanguages())
                 {
-                    <option value="@lang.Code" selected="@(lang.Code == L.CurrentLanguage)">
-                        @lang.Code.ToUpperInvariant() · @lang.Name
-                    </option>
+                    var langCode = lang.Code;
+                    var isActive = string.Equals(langCode, L.CurrentLanguage, StringComparison.OrdinalIgnoreCase);
+                    <MudMenuItem OnClick="@(() => L.SetLanguage(langCode))">
+                        <div class="@(isActive ? "ff-lang-item is-active" : "ff-lang-item")">
+                            <MudIcon Icon="@Icons.Material.Filled.Check" Size="Size.Small" />
+                            <span class="ff-lang-item-name">@lang.Name</span>
+                            <span class="ff-lang-item-code">@langCode.ToUpperInvariant()</span>
+                        </div>
+                    </MudMenuItem>
                 }
-            </select>
+            </MudMenu>
 
             @* Mobile: Action button(s) at far right *@
             <MudHidden Breakpoint="Breakpoint.MdAndUp">
@@ -213,14 +226,6 @@
     }
 
     private void SetLocale(string code) => L.SetLanguage(code);
-
-    private void OnLanguageSelected(ChangeEventArgs e)
-    {
-        if (e.Value is string code && !string.IsNullOrEmpty(code))
-        {
-            L.SetLanguage(code);
-        }
-    }
 
     public void Dispose()
     {
