@@ -1,32 +1,32 @@
 @namespace FaunaFinder.Client.Components.Species
+@inherits LocalizedComponentBase
 @using EcoData.Wildlife.Contracts.Dtos
 
 <section class="ff-hero">
     <div class="ff-hero-main">
-        <div class="ff-hero-eyebrow">@Eyebrow</div>
+        <div class="ff-hero-eyebrow">@L["Hero_Eyebrow"]</div>
         <h1 class="ff-hero-heading">
-            Species of <em>Puerto Rico</em>,<br /> catalogued and observed.
+            @L["Species_Hero_HeadingLead"] <em>Puerto Rico</em>@L["Species_Hero_HeadingTail"]
         </h1>
-        <p class="ff-hero-lede">@Lede</p>
+        <p class="ff-hero-lede">@LedeText</p>
     </div>
     <div class="ff-hero-meta">
-        <span>Last sync · @LastSync</span>
+        <span>@L["Hero_LastSync", LastSync]</span>
         <span>@RecordsLine</span>
-        <span>Updated daily</span>
+        <span>@L["Species_Hero_UpdatedDaily"]</span>
     </div>
 </section>
 
 @code {
     [Parameter] public SpeciesStatsDto? Stats { get; set; }
 
-    [Parameter] public string Eyebrow { get; set; } = "Volume 03 · Living Atlas";
+    [Parameter] public string? Lede { get; set; }
 
-    [Parameter] public string Lede { get; set; } =
-        "A living field guide to the island's flora and fauna — drawn from verified sightings across 78 municipios. Browse by taxon, conservation status, or habitat; follow any record through to its distribution map and source observations.";
+    private string LedeText => Lede ?? L["Species_Hero_Lede"];
 
     private string LastSync => DateTime.Now.ToString("HH:mm") + " local";
 
     private string RecordsLine => Stats is null
-        ? "— records · — municipios"
-        : $"{Stats.TotalSpecies:N0} records · {Stats.MunicipalitiesCovered} municipios";
+        ? L["Species_Hero_RecordsPending"]
+        : L["Species_Hero_RecordsLine", Stats.TotalSpecies.ToString("N0"), Stats.MunicipalitiesCovered];
 }

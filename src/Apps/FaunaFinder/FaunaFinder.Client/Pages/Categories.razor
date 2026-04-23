@@ -7,8 +7,9 @@
 @inject ISpeciesHttpClient SpeciesHttpClient
 @inject INativeNavbarManager Navbar
 @inject NavigationManager NavigationManager
+@inject ILocalizer L
 
-<PageTitle>FaunaFinder - Categories</PageTitle>
+<PageTitle>FaunaFinder — @L["Categories_PageTitle"]</PageTitle>
 
 @if (Id is not null)
 {
@@ -24,12 +25,12 @@
         else if ((_speciesInCategoryFetch.Data?.Count ?? 0) == 0)
         {
             <NuiEmptyState Icon="@Icons.Material.Outlined.Pets"
-                           Title="No species"
-                           Description="No species have been categorized here yet." />
+                           Title="@L[CategoryDetailEmptyTitle]"
+                           Description="@L[CategoryDetailEmptyDescription]" />
         }
         else
         {
-            <NuiSectionHeader Title="@($"{_speciesInCategoryFetch.Data!.Count} Species")" />
+            <NuiSectionHeader Title="@SpeciesCountHeading" />
             <MudList T="SpeciesDtoForList" Dense="true">
                 @foreach (var species in _speciesInCategoryFetch.Data!)
                 {
@@ -63,8 +64,8 @@ else
         else if ((_categoriesFetch.Data?.Count ?? 0) == 0)
         {
             <NuiEmptyState Icon="@Icons.Material.Outlined.Category"
-                           Title="No categories"
-                           Description="No species categories have been created yet." />
+                           Title="@L[CategoriesEmptyTitle]"
+                           Description="@L[CategoriesEmptyDescription]" />
         }
         else
         {
@@ -86,18 +87,35 @@ else
 @code {
     [Parameter] public Guid? Id { get; set; }
 
+    // Keys exposed as consts so the Razor attribute form (`Title="@L[Key]"`)
+    // compiles without nested-quote issues.
+    private const string CategoriesEmptyTitle = "Categories_Empty_Title";
+    private const string CategoriesEmptyDescription = "Categories_Empty_Description";
+    private const string CategoryDetailEmptyTitle = "CategoryDetail_Empty_Title";
+    private const string CategoryDetailEmptyDescription = "CategoryDetail_Empty_Description";
+
     private string? _categoryName;
     private IFetch<IReadOnlyList<SpeciesCategoryDtoForList>> _categoriesFetch = default!;
     private IFetch<IReadOnlyList<SpeciesDtoForList>>? _speciesInCategoryFetch;
     private Guid? _loadedCategoryId;
 
+    private string SpeciesCountHeading =>
+        L["CategoryDetail_SpeciesCount", _speciesInCategoryFetch?.Data?.Count ?? 0];
+
     protected override void OnInitialized()
     {
-        Navbar.SetTitle("Categories");
+        Navbar.SetTitle(L["Nav_Categories"]);
+        L.LanguageChanged += OnLanguageChanged;
         _categoriesFetch = new Fetch<IReadOnlyList<SpeciesCategoryDtoForList>>(
             CategoryHttpClient.GetAllAsync,
             () => InvokeAsync(StateHasChanged)
         );
+    }
+
+    private void OnLanguageChanged()
+    {
+        if (Id is null) Navbar.SetTitle(L["Nav_Categories"]);
+        InvokeAsync(StateHasChanged);
     }
 
     protected override async Task OnParametersSetAsync()
@@ -126,6 +144,7 @@ else
 
     public void Dispose()
     {
+        L.LanguageChanged -= OnLanguageChanged;
         (_categoriesFetch as IDisposable)?.Dispose();
         (_speciesInCategoryFetch as IDisposable)?.Dispose();
     }

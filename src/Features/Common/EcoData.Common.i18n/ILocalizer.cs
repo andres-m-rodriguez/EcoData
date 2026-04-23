@@ -35,4 +35,10 @@ public interface ILocalizer
     /// Gets all available languages.
     /// </summary>
     IReadOnlyList<ILanguage> GetAvailableLanguages();
+
+    /// <summary>
+    /// Fired whenever <see cref="SetLanguage"/> actually changes the locale.
+    /// Components subscribe to re-render their localized content.
+    /// </summary>
+    event Action LanguageChanged;
 }

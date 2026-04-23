@@ -1,14 +1,15 @@
 @namespace FaunaFinder.Client.Components.Map
+@inherits LocalizedComponentBase
 @using EcoData.Wildlife.Contracts
 @using EcoData.Wildlife.Contracts.Dtos
 @using FaunaFinder.Client.Components.Species
 
 <header class="msp-head">
     <div class="msp-head-meta">
-        <div class="msp-eyebrow">Municipio</div>
+        <div class="msp-eyebrow">@L["Map_Panel_Eyebrow"]</div>
         <div class="msp-title">@(Title ?? "—")</div>
     </div>
-    <button type="button" class="msp-close" @onclick="HandleClose" aria-label="Close">
+    <button type="button" class="msp-close" @onclick="HandleClose" aria-label="@CloseLabel">
         <MudIcon Icon="@Icons.Material.Filled.Close" Size="Size.Small" />
     </button>
 </header>
@@ -29,13 +30,13 @@ else if (Species is null || Species.Count == 0)
 {
     <div class="msp-empty">
         <MudIcon Icon="@Icons.Material.Outlined.Pets" Size="Size.Medium" />
-        <div class="msp-empty-title">No species recorded</div>
-        <div class="msp-empty-sub">No species have been observed in this municipio yet.</div>
+        <div class="msp-empty-title">@L["Map_Panel_NoSpecies_Title"]</div>
+        <div class="msp-empty-sub">@L["Map_Panel_NoSpecies_Description"]</div>
     </div>
 }
 else
 {
-    <div class="msp-meta">@Species.Count @(Species.Count == 1 ? "species" : "species") observed</div>
+    <div class="msp-meta">@L["Map_Panel_SpeciesObserved", Species.Count]</div>
     <div class="msp-list">
         @{
             var idx = 0;
@@ -46,7 +47,7 @@ else
             var current = s;
             <div class="msp-row" @onclick="@(() => HandleClick(current))">
                 <div class="msp-row-idx">@position.ToString("00")</div>
-                <div class="msp-row-icon" title="@TaxonIcons.GetLabel(current.TaxonCode)">
+                <div class="msp-row-icon" title="@L[TaxonIcons.GetLabelKey(current.TaxonCode)]">
                     <i class="@TaxonIcons.GetIcon(current.TaxonCode)"></i>
                 </div>
                 <div class="msp-row-body">
@@ -74,6 +75,8 @@ else
     [Parameter] public EventCallback<SpeciesDtoForList> OnSpeciesClick { get; set; }
 
     [CascadingParameter] public LocaleContext Locale { get; set; } = LocaleContext.English;
+
+    private string CloseLabel => L["Common_Close"];
 
     private Task HandleClose() => OnClose.InvokeAsync();
     private Task HandleClick(SpeciesDtoForList s) => OnSpeciesClick.InvokeAsync(s);

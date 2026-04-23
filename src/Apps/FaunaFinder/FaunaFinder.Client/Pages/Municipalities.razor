@@ -12,8 +12,9 @@
 @inject ISpeciesHttpClient SpeciesClient
 @inject INativeNavbarManager Navbar
 @inject NavigationManager NavigationManager
+@inject ILocalizer L
 
-<PageTitle>FaunaFinder - Municipios</PageTitle>
+<PageTitle>@L["Muni_PageTitle"]</PageTitle>
 
 @if (Id is not null)
 {
@@ -29,17 +30,19 @@
             <MudPaper Elevation="0" Class="pa-4 pa-md-6 rounded-lg border-solid border mud-border-lines-default mb-4">
                 <MudText Typo="Typo.h5" GutterBottom="true">@detail.Name</MudText>
                 <MudText Typo="Typo.subtitle1" Color="Color.Secondary" Class="mb-2">
-                    @detail.StateName · FIPS @detail.CountyFipsCode
+                    @L["MuniDetail_Subline", detail.StateName, detail.CountyFipsCode]
                 </MudText>
                 <MudText Typo="Typo.caption" Color="Color.Secondary">
-                    Centroid · @detail.CentroidLatitude.ToString("0.0000")″N @Math.Abs(detail.CentroidLongitude).ToString("0.0000")″W
+                    @L["MuniDetail_Centroid",
+                        detail.CentroidLatitude.ToString("0.0000"),
+                        Math.Abs(detail.CentroidLongitude).ToString("0.0000")]
                 </MudText>
             </MudPaper>
 
             <MudPaper Elevation="0" Class="pa-4 pa-md-6 rounded-lg border-solid border mud-border-lines-default">
                 <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Class="mb-4">
                     <MudIcon Icon="@Icons.Material.Filled.Pets" Color="Color.Primary" />
-                    <MudText Typo="Typo.h6">Species</MudText>
+                    <MudText Typo="Typo.h6">@L["MuniDetail_Species_Heading"]</MudText>
                     <MudSpacer />
                     @if (_detailSpeciesFetch?.Data is { Count: > 0 } list)
                     {
@@ -63,8 +66,8 @@
                 else if (_detailSpeciesFetch.Data is null || _detailSpeciesFetch.Data.Count == 0)
                 {
                     <NuiEmptyState Icon="@Icons.Material.Outlined.Pets"
-                                   Title="No species recorded"
-                                   Description="No species have been associated with this municipio yet." />
+                                   Title="@L[MuniDetailSpeciesEmptyTitle]"
+                                   Description="@L[MuniDetailSpeciesEmptyDescription]" />
                 }
                 else
                 {
@@ -81,8 +84,8 @@
         else
         {
             <NuiEmptyState Icon="@Icons.Material.Outlined.SearchOff"
-                           Title="Municipio not found"
-                           Description="The municipio you're looking for doesn't exist or has been removed." />
+                           Title="@L[MuniDetailNotFoundTitle]"
+                           Description="@L[MuniDetailNotFoundDescription]" />
         }
     </NuiPageLayout>
 }
@@ -101,11 +104,11 @@ else
         <nav class="mm-tabs" role="tablist" aria-label="Municipios view">
             <label for="mm-tab-map" class="mm-tab" role="tab">
                 <MudIcon Icon="@Icons.Material.Filled.Map" Size="Size.Small" />
-                Map
+                @L["Muni_Tab_Map"]
             </label>
             <label for="mm-tab-list" class="mm-tab" role="tab">
                 <MudIcon Icon="@Icons.Material.Filled.List" Size="Size.Small" />
-                List
+                @L["Muni_Tab_List"]
                 <span class="count">@(_municipalities?.Count ?? 0)</span>
             </label>
         </nav>
@@ -130,6 +133,13 @@ else
 @code {
     [Parameter] public Guid? Id { get; set; }
 
+    // Keys held as consts so they can appear in Razor attribute forms
+    // (`Title="@L[SomeKey]"`) without tripping the nested-quote rule.
+    private const string MuniDetailSpeciesEmptyTitle = "MuniDetail_Species_Empty_Title";
+    private const string MuniDetailSpeciesEmptyDescription = "MuniDetail_Species_Empty_Description";
+    private const string MuniDetailNotFoundTitle = "MuniDetail_NotFound_Title";
+    private const string MuniDetailNotFoundDescription = "MuniDetail_NotFound_Description";
+
     private IFetch<SpeciesStatsDto?>? _statsFetch;
     private IReadOnlyList<MunicipalityDtoForList>? _municipalities;
     private IReadOnlyDictionary<Guid, int>? _countsMap;
@@ -143,7 +153,8 @@ else
 
     protected override void OnInitialized()
     {
-        Navbar.SetTitle("Municipios");
+        Navbar.SetTitle(L["Nav_Municipios"]);
+        L.LanguageChanged += OnLanguageChanged;
 
         _statsFetch = new Fetch<SpeciesStatsDto?>(
             SpeciesClient.GetStatsAsync,
@@ -238,8 +249,15 @@ else
         return Task.CompletedTask;
     }
 
+    private void OnLanguageChanged()
+    {
+        if (Id is null) Navbar.SetTitle(L["Nav_Municipios"]);
+        InvokeAsync(StateHasChanged);
+    }
+
     public void Dispose()
     {
+        L.LanguageChanged -= OnLanguageChanged;
         _listCts?.Cancel();
         _listCts?.Dispose();
         (_statsFetch as IDisposable)?.Dispose();

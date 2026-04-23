@@ -1,4 +1,5 @@
 @namespace FaunaFinder.Client.Components.Species
+@inherits LocalizedComponentBase
 @using EcoData.Wildlife.Contracts.Dtos
 @using EcoData.Common.i18n
 
@@ -28,33 +29,37 @@
     <MudStack Row="true" Spacing="2" Wrap="Wrap.Wrap" Class="mb-2">
         @if (!string.IsNullOrEmpty(Species.GRank))
         {
-            <NuiStatusBadge Status="@GetRankStatus(Species.GRank)" Text="@($"Global: {Species.GRank}")" Size="NuiStatusSize.Small" />
+            <NuiStatusBadge Status="@GetRankStatus(Species.GRank)"
+                            Text="@GlobalRankText"
+                            Size="NuiStatusSize.Small" />
         }
         @if (!string.IsNullOrEmpty(Species.SRank))
         {
-            <NuiStatusBadge Status="@GetRankStatus(Species.SRank)" Text="@($"State: {Species.SRank}")" Size="NuiStatusSize.Small" />
+            <NuiStatusBadge Status="@GetRankStatus(Species.SRank)"
+                            Text="@StateRankText"
+                            Size="NuiStatusSize.Small" />
         }
         <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined">
-            @(Species.IsFauna ? "Fauna" : "Flora")
+            @(Species.IsFauna ? L["SpeciesDetail_Kingdom_Fauna"] : L["SpeciesDetail_Kingdom_Flora"])
         </MudChip>
     </MudStack>
 
     @if (!string.IsNullOrEmpty(Species.ElCode))
     {
         <MudText Typo="Typo.caption" Color="Color.Secondary">
-            Element Code: @Species.ElCode
+            @L["SpeciesDetail_ElCode", Species.ElCode]
         </MudText>
     }
 
     @if (Species.Categories is { Count: > 0 })
     {
         <MudDivider Class="my-4" />
-        <MudText Typo="Typo.subtitle2" Class="mb-2">Categories</MudText>
+        <MudText Typo="Typo.subtitle2" Class="mb-2">@L["SpeciesDetail_Categories_Heading"]</MudText>
         <MudStack Row="true" Spacing="1" Wrap="Wrap.Wrap">
             @foreach (var category in Species.Categories)
             {
                 <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined">
-                    @ResolveLocale(category.Name)
+                    @Locale.Resolve(category.Name)
                 </MudChip>
             }
         </MudStack>
@@ -65,20 +70,12 @@
     [Parameter, EditorRequired]
     public required SpeciesDtoForDetail Species { get; set; }
 
-    private string CommonName
-    {
-        get
-        {
-            var en = Species.CommonName.FirstOrDefault(n => n.Code == "en");
-            return en?.Value ?? Species.CommonName.FirstOrDefault()?.Value ?? Species.ScientificName;
-        }
-    }
+    [CascadingParameter] public LocaleContext Locale { get; set; } = LocaleContext.English;
 
-    private static string ResolveLocale(IReadOnlyList<LocaleValue> values)
-    {
-        var en = values.FirstOrDefault(n => n.Code == "en");
-        return en?.Value ?? values.FirstOrDefault()?.Value ?? "";
-    }
+    private string CommonName => Locale.Resolve(Species.CommonName, fallback: Species.ScientificName);
+
+    private string GlobalRankText => L["SpeciesDetail_Rank_Global", Species.GRank];
+    private string StateRankText => L["SpeciesDetail_Rank_State", Species.SRank];
 
     private static NuiStatusType GetRankStatus(string rank) => rank.ToUpperInvariant() switch
     {

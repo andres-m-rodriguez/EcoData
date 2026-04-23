@@ -1,11 +1,12 @@
 @namespace FaunaFinder.Client.Components.Species
+@inherits LocalizedComponentBase
 @using EcoData.Wildlife.Contracts
 @using EcoData.Wildlife.Contracts.Dtos
 
 <MudDialog>
     <TitleContent>
         <div class="ff-modal-head">
-            <h3>Refine the catalogue</h3>
+            <h3>@L["Species_Filter_Heading"]</h3>
             @if (Facets is not null)
             {
                 <span class="ff-modal-head-meta">@TotalFacetCountsLabel</span>
@@ -18,9 +19,9 @@
             @* Taxonomic group *@
             <section class="ff-modal-section">
                 <div class="ff-modal-section-title">
-                    <span>Taxonomic group</span>
+                    <span>@L["Species_Filter_Section_Taxa"]</span>
                     <button type="button" class="ff-link-btn" @onclick="ToggleSelectAllTaxa">
-                        @(AllTaxaSelected ? "Clear all" : "Select all")
+                        @(AllTaxaSelected ? L["Common_ClearAll"] : L["Common_SelectAll"])
                     </button>
                 </div>
                 <div class="ff-taxa-grid">
@@ -31,7 +32,7 @@
                                 class="@("ff-taxa-chip" + (on ? " is-on" : ""))"
                                 @onclick="@(() => ToggleTaxa(code))">
                             <i class="@TaxonIcons.GetIcon(code)"></i>
-                            <span>@TaxonIcons.GetLabel(code)</span>
+                            <span>@L[TaxonIcons.GetLabelKey(code)]</span>
                             <span class="count">@TaxaCountFor(code)</span>
                         </button>
                     }
@@ -41,8 +42,8 @@
             @* Conservation status *@
             <section class="ff-modal-section">
                 <div class="ff-modal-section-title">
-                    <span>Conservation status (IUCN)</span>
-                    <span class="ff-modal-section-meta">@(_selectedStatuses.Count) selected</span>
+                    <span>@L["Species_Filter_Section_Status"]</span>
+                    <span class="ff-modal-section-meta">@L["Species_Filter_StatusMeta_Selected", _selectedStatuses.Count]</span>
                 </div>
                 <div class="ff-status-list">
                     @foreach (var status in StatusOptions)
@@ -52,7 +53,7 @@
                                 class="@("ff-status-row" + (on ? " is-on" : ""))"
                                 @onclick="@(() => ToggleStatus(status))">
                             <span class="ff-status-pill @($"status-{status}")">@status</span>
-                            <span class="label">@StatusLabel(status)</span>
+                            <span class="label">@L[$"Species_Iucn_{status}"]</span>
                             <span class="n">@StatusCountFor(status)</span>
                         </button>
                     }
@@ -62,27 +63,27 @@
             @* Qualifiers *@
             <section class="ff-modal-section">
                 <div class="ff-modal-section-title">
-                    <span>Qualifiers</span>
+                    <span>@L["Species_Filter_Section_Qualifiers"]</span>
                 </div>
                 <div class="ff-checkbox-row">
                     <MudCheckBox T="bool" Value="_isEndemic"
                                  ValueChanged="@((bool v) => _isEndemic = v)"
                                  Color="Color.Primary" Dense="true" />
-                    <label>Endemic to Puerto Rico only</label>
+                    <label>@L["Species_Filter_Qualifier_EndemicLabel"]</label>
                     <span class="n">@(Facets?.EndemicCount.ToString("N0") ?? "—")</span>
                 </div>
                 <div class="ff-checkbox-row">
                     <MudCheckBox T="bool" Value="_observedRecently"
                                  ValueChanged="@((bool v) => _observedRecently = v)"
                                  Color="Color.Primary" Dense="true" />
-                    <label>Observed in the last 12 months</label>
+                    <label>@L["Species_Filter_Qualifier_ObservedLabel"]</label>
                     <span class="n">@(Facets?.RecentlyObservedCount.ToString("N0") ?? "—")</span>
                 </div>
                 <div class="ff-checkbox-row">
                     <MudCheckBox T="bool" Value="_hasPhoto"
                                  ValueChanged="@((bool v) => _hasPhoto = v)"
                                  Color="Color.Primary" Dense="true" />
-                    <label>Has photo</label>
+                    <label>@L["Species_Filter_Qualifier_HasPhotoLabel"]</label>
                     <span class="n">@(Facets?.WithImageCount.ToString("N0") ?? "—")</span>
                 </div>
             </section>
@@ -90,16 +91,16 @@
             @* Range *@
             <section class="ff-modal-section">
                 <div class="ff-modal-section-title">
-                    <span>Minimum municipios present</span>
-                    <span class="ff-modal-section-meta">≥ @_minMunicipalities</span>
+                    <span>@L["Species_Filter_Section_MinMunicipios"]</span>
+                    <span class="ff-modal-section-meta">@L["Species_Filter_MinMunicipios_Meta", _minMunicipalities]</span>
                 </div>
                 <div class="ff-range-row">
                     <MudSlider T="int" @bind-Value="_minMunicipalities"
                                Min="1" Max="78" Step="1" Color="Color.Primary" />
                     <div class="ff-range-labels">
-                        <span>1 (rare)</span>
+                        <span>@L["Species_Filter_MinMunicipios_Rare"]</span>
                         <span>39</span>
-                        <span>78 (ubiquitous)</span>
+                        <span>@L["Species_Filter_MinMunicipios_Ubiquitous"]</span>
                     </div>
                 </div>
             </section>
@@ -107,10 +108,10 @@
     </DialogContent>
 
     <DialogActions>
-        <button type="button" class="ff-modal-reset" @onclick="Reset">Reset all filters</button>
+        <button type="button" class="ff-modal-reset" @onclick="Reset">@L["Species_Filter_Reset"]</button>
         <MudSpacer />
-        <MudButton OnClick="Cancel" Variant="Variant.Text">Cancel</MudButton>
-        <MudButton OnClick="Apply" Variant="Variant.Filled" Color="Color.Primary">Apply</MudButton>
+        <MudButton OnClick="Cancel" Variant="Variant.Text">@L["Common_Cancel"]</MudButton>
+        <MudButton OnClick="Apply" Variant="Variant.Filled" Color="Color.Primary">@L["Common_Apply"]</MudButton>
     </DialogActions>
 </MudDialog>
 
@@ -139,6 +140,7 @@
 
     protected override void OnInitialized()
     {
+        base.OnInitialized();
         _selectedTaxa = new HashSet<string>(Initial.TaxonCodes, StringComparer.OrdinalIgnoreCase);
         _selectedStatuses = new HashSet<IucnStatus>(Initial.IucnStatuses);
         _isEndemic = Initial.IsEndemic;
@@ -188,20 +190,8 @@
     private int? StatusCountFor(IucnStatus status) =>
         Facets?.Statuses.FirstOrDefault(s => s.Status == status)?.Count;
 
-    private static string StatusLabel(IucnStatus s) => s switch
-    {
-        IucnStatus.LC => "Least Concern",
-        IucnStatus.NT => "Near Threatened",
-        IucnStatus.VU => "Vulnerable",
-        IucnStatus.EN => "Endangered",
-        IucnStatus.CR => "Critically Endangered",
-        IucnStatus.DD => "Data Deficient",
-        IucnStatus.EX => "Extinct",
-        _ => s.ToString()
-    };
-
     private string TotalFacetCountsLabel =>
-        Facets is null ? "" : $"{Facets.Taxa.Sum(t => t.Count):N0} records";
+        Facets is null ? "" : L["Species_Filter_TotalRecords", Facets.Taxa.Sum(t => t.Count).ToString("N0")];
 
     private void Reset()
     {

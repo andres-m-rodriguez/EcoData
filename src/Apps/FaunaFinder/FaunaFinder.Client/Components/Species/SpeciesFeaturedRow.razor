@@ -1,16 +1,16 @@
 @namespace FaunaFinder.Client.Components.Species
+@inherits LocalizedComponentBase
 @using EcoData.Wildlife.Contracts.Dtos
 @using EcoData.Wildlife.Application.Client
 @using BlazingSingularity.Fetch
-@implements IDisposable
 @inject ISpeciesHttpClient SpeciesClient
 
 @if (_fetch is null || _fetch.IsLoading)
 {
     <section class="ff-featured">
         <div class="ff-featured-head">
-            <h2>Featured this week</h2>
-            <span class="meta">Curated · updated Mondays</span>
+            <h2>@L["Species_Featured_Heading"]</h2>
+            <span class="meta">@L["Species_Featured_Meta"]</span>
         </div>
         <div class="ff-featured-grid">
             <MudSkeleton SkeletonType="SkeletonType.Rectangle" Class="ff-featured-skeleton" />
@@ -23,8 +23,8 @@ else if (_fetch.Data is { Count: > 0 } featured)
 {
     <section class="ff-featured">
         <div class="ff-featured-head">
-            <h2>Featured this week</h2>
-            <span class="meta">Curated · updated Mondays</span>
+            <h2>@L["Species_Featured_Heading"]</h2>
+            <span class="meta">@L["Species_Featured_Meta"]</span>
         </div>
         <div class="ff-featured-grid">
             <SpeciesCard Species="@featured[0]" Variant="SpeciesCardVariant.Featured"
@@ -45,6 +45,7 @@ else if (_fetch.Data is { Count: > 0 } featured)
 
     protected override void OnInitialized()
     {
+        base.OnInitialized();
         _fetch = new Fetch<IReadOnlyList<SpeciesDtoForList>>(
             SpeciesClient.GetFeaturedAsync,
             () => InvokeAsync(StateHasChanged));
@@ -54,5 +55,9 @@ else if (_fetch.Data is { Count: > 0 } featured)
     private Task HandleClick(SpeciesDtoForList species) =>
         OnSpeciesClick.InvokeAsync(species);
 
-    public void Dispose() => (_fetch as IDisposable)?.Dispose();
+    public override void Dispose()
+    {
+        base.Dispose();
+        (_fetch as IDisposable)?.Dispose();
+    }
 }

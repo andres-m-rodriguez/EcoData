@@ -1,9 +1,9 @@
 @namespace FaunaFinder.Client.Components.Municipalities
+@inherits LocalizedComponentBase
 @using EcoData.Locations.Contracts.Dtos
 @using EcoData.Wildlife.Application.Client
 @using EcoData.Wildlife.Contracts.Parameters
 @using BlazingSingularity.Fetch
-@implements IDisposable
 @inject ISpeciesHttpClient SpeciesClient
 
 <MudPaper Elevation="0" Class="pa-3 rounded-lg border-solid border mud-border-lines-default municipality-card"
@@ -21,7 +21,7 @@
                 }
                 else
                 {
-                    <span>@_countFetch.Data species</span>
+                    <span>@L["Muni_Card_SpeciesCount", _countFetch.Data]</span>
                 }
             </MudText>
         </MudStack>
@@ -40,6 +40,7 @@
 
     protected override void OnInitialized()
     {
+        base.OnInitialized();
         _countFetch = new Fetch<int>(
             ct => SpeciesClient.GetCountAsync(
                 new SpeciesParameters(MunicipalityId: Municipality.Id),
@@ -50,8 +51,9 @@
 
     private Task HandleClick() => OnClick.InvokeAsync(Municipality);
 
-    public void Dispose()
+    public override void Dispose()
     {
+        base.Dispose();
         (_countFetch as IDisposable)?.Dispose();
     }
 }

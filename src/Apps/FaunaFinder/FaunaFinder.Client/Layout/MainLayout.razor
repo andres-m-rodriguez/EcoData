@@ -1,6 +1,8 @@
+@using EcoData.Common.i18n
 @inherits LayoutComponentBase
 @inject INativeNavigationManager Navigation
 @inject INativeNavbarManager Navbar
+@inject ILocalizer L
 @implements IDisposable
 
 <MudThemeProvider Theme="FaunaFinderTheme.Default" />
@@ -41,10 +43,10 @@
             @* Desktop: Navigation links *@
             <MudHidden Breakpoint="Breakpoint.SmAndDown">
                 <nav class="ff-nav ml-6">
-                    <a href="/" class="@GetNavLinkClass("/", exact: true)">Map</a>
-                    <a href="/species" class="@GetNavLinkClass("/species")">Species</a>
-                    <a href="/municipalities" class="@GetNavLinkClass("/municipalities")">Municipalities</a>
-                    <a href="/categories" class="@GetNavLinkClass("/categories")">Categories</a>
+                    <a href="/" class="@GetNavLinkClass("/", exact: true)">@L["Nav_Map"]</a>
+                    <a href="/species" class="@GetNavLinkClass("/species")">@L["Nav_Species"]</a>
+                    <a href="/municipalities" class="@GetNavLinkClass("/municipalities")">@L["Nav_Municipios"]</a>
+                    <a href="/categories" class="@GetNavLinkClass("/categories")">@L["Nav_Categories"]</a>
                 </nav>
             </MudHidden>
 
@@ -53,13 +55,13 @@
             @* EN/ES toggle — shown on every breakpoint *@
             <div class="ff-lang-toggle" role="group" aria-label="Language">
                 <button type="button"
-                        class="@(_locale.Code == "en" ? "is-on" : "")"
-                        @onclick="@(() => SetLocale(LocaleContext.English))">
+                        class="@(L.CurrentLanguage == "en" ? "is-on" : "")"
+                        @onclick="@(() => SetLocale("en"))">
                     EN
                 </button>
                 <button type="button"
-                        class="@(_locale.Code == "es" ? "is-on" : "")"
-                        @onclick="@(() => SetLocale(LocaleContext.Spanish))">
+                        class="@(L.CurrentLanguage == "es" ? "is-on" : "")"
+                        @onclick="@(() => SetLocale("es"))">
                     ES
                 </button>
             </div>
@@ -95,28 +97,28 @@
                            OnClick="@(() => NavigateToTab(NavigationTab.Map))">
                     <MudStack AlignItems="AlignItems.Center" Spacing="0">
                         <MudIcon Icon="@Icons.Material.Filled.Map" Size="Size.Medium" />
-                        <MudText Typo="Typo.caption">Map</MudText>
+                        <MudText Typo="Typo.caption">@L["Nav_Map"]</MudText>
                     </MudStack>
                 </MudButton>
                 <MudButton Variant="Variant.Text" Color="@GetBottomNavColor(NavigationTab.Species)" Class="bottom-nav-item"
                            OnClick="@(() => NavigateToTab(NavigationTab.Species))">
                     <MudStack AlignItems="AlignItems.Center" Spacing="0">
                         <MudIcon Icon="@Icons.Material.Filled.Pets" Size="Size.Medium" />
-                        <MudText Typo="Typo.caption">Species</MudText>
+                        <MudText Typo="Typo.caption">@L["Nav_Species"]</MudText>
                     </MudStack>
                 </MudButton>
                 <MudButton Variant="Variant.Text" Color="@GetBottomNavColor(NavigationTab.Municipalities)" Class="bottom-nav-item"
                            OnClick="@(() => NavigateToTab(NavigationTab.Municipalities))">
                     <MudStack AlignItems="AlignItems.Center" Spacing="0">
                         <MudIcon Icon="@Icons.Material.Filled.LocationCity" Size="Size.Medium" />
-                        <MudText Typo="Typo.caption">Municipios</MudText>
+                        <MudText Typo="Typo.caption">@L["Nav_Municipios"]</MudText>
                     </MudStack>
                 </MudButton>
                 <MudButton Variant="Variant.Text" Color="@GetBottomNavColor(NavigationTab.Categories)" Class="bottom-nav-item"
                            OnClick="@(() => NavigateToTab(NavigationTab.Categories))">
                     <MudStack AlignItems="AlignItems.Center" Spacing="0">
                         <MudIcon Icon="@Icons.Material.Filled.Category" Size="Size.Medium" />
-                        <MudText Typo="Typo.caption">Categories</MudText>
+                        <MudText Typo="Typo.caption">@L["Nav_Categories"]</MudText>
                     </MudStack>
                 </MudButton>
             </MudStack>
@@ -146,6 +148,8 @@
     {
         Navigation.OnStateChanged += HandleNavigationStateChanged;
         Navbar.OnStateChanged += HandleNavbarStateChanged;
+        L.LanguageChanged += HandleLanguageChanged;
+        _locale = L.CurrentLanguage == "es" ? LocaleContext.Spanish : LocaleContext.English;
         UpdateCurrentTab();
     }
 
@@ -157,6 +161,12 @@
 
     private void HandleNavbarStateChanged()
     {
+        InvokeAsync(StateHasChanged);
+    }
+
+    private void HandleLanguageChanged()
+    {
+        _locale = L.CurrentLanguage == "es" ? LocaleContext.Spanish : LocaleContext.English;
         InvokeAsync(StateHasChanged);
     }
 
@@ -201,15 +211,12 @@
         Navigation.NavigateTo(path);
     }
 
-    private void SetLocale(LocaleContext locale)
-    {
-        if (_locale.Code == locale.Code) return;
-        _locale = locale;
-    }
+    private void SetLocale(string code) => L.SetLanguage(code);
 
     public void Dispose()
     {
         Navigation.OnStateChanged -= HandleNavigationStateChanged;
         Navbar.OnStateChanged -= HandleNavbarStateChanged;
+        L.LanguageChanged -= HandleLanguageChanged;
     }
 }

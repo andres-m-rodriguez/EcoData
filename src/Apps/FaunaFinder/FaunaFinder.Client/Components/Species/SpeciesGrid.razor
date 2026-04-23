@@ -6,6 +6,7 @@
 @implements IAsyncDisposable
 @inject ISpeciesHttpClient SpeciesClient
 @inject IBrowserViewportService Viewport
+@inject ILocalizer L
 
 <NuiVirtualizedGrid @ref="_grid"
                     TItem="SpeciesDtoForList"
@@ -33,8 +34,8 @@
     </LoadingTemplate>
     <EmptyTemplate>
         <NuiEmptyState Icon="@Icons.Material.Outlined.SearchOff"
-                       Title="No species match"
-                       Description="Try adjusting your filters or search terms." />
+                       Title="@L[EmptyTitleKey]"
+                       Description="@L[EmptyDescriptionKey]" />
     </EmptyTemplate>
     <ItemTemplate Context="species">
         <SpeciesCard Species="species" OnClick="HandleClick" />
@@ -53,6 +54,10 @@
 @code {
     private const int PageSize = 24;
 
+    // Kept as const keys so the Razor attribute form compiles; L resolves them at render.
+    private const string EmptyTitleKey = "Species_Grid_Empty_Title";
+    private const string EmptyDescriptionKey = "Species_Grid_Empty_Description";
+
     [Parameter] public SpeciesFilterResult Filter { get; set; } = SpeciesFilterResult.Empty;
     [Parameter] public string? Search { get; set; }
     [Parameter] public SpeciesSort Sort { get; set; } = SpeciesSort.ScientificNameAsc;
@@ -70,10 +75,13 @@
 
     protected override async Task OnInitializedAsync()
     {
+        L.LanguageChanged += OnLanguageChanged;
         ApplyBreakpoint(await Viewport.GetCurrentBreakpointAsync());
         _viewportSubscriptionId = Guid.NewGuid();
         await Viewport.SubscribeAsync(_viewportSubscriptionId, OnBreakpointChanged);
     }
+
+    private void OnLanguageChanged() => InvokeAsync(StateHasChanged);
 
     private Task OnBreakpointChanged(BrowserViewportEventArgs args)
     {
@@ -125,6 +133,7 @@
 
     public async ValueTask DisposeAsync()
     {
+        L.LanguageChanged -= OnLanguageChanged;
         if (_viewportSubscriptionId != Guid.Empty)
         {
             await Viewport.UnsubscribeAsync(_viewportSubscriptionId);

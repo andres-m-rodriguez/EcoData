@@ -1,11 +1,12 @@
 @namespace FaunaFinder.Client.Components.Municipalities
+@inherits LocalizedComponentBase
 @using EcoData.Locations.Contracts.Dtos
 
 <aside class="mm-rail">
     <div class="mm-rail-head">
         <div class="mm-search">
             <MudIcon Icon="@Icons.Material.Filled.Search" Size="Size.Small" />
-            <input placeholder="Search municipios by name…"
+            <input placeholder="@SearchPlaceholder"
                    value="@_search"
                    @oninput="OnSearchInput" />
         </div>
@@ -15,7 +16,7 @@
                 <ActivatorContent>
                     <button type="button" class="mm-sort">
                         <MudIcon Icon="@Icons.Material.Filled.Sort" Size="Size.Small" />
-                        Sort: @SortLabel
+                        @L["Muni_List_Sort_Prefix"] @SortLabel
                     </button>
                 </ActivatorContent>
                 <ChildContent>
@@ -30,7 +31,7 @@
                             {
                                 <MudIcon Icon="@Icons.Material.Filled.Check" Size="Size.Small" Class="mr-2" Style="visibility:hidden" />
                             }
-                            @option.Label
+                            @L[option.LabelKey]
                         </MudMenuItem>
                     }
                 </ChildContent>
@@ -52,7 +53,7 @@
         {
             <div class="mm-row-empty">
                 <MudIcon Icon="@Icons.Material.Outlined.SearchOff" Size="Size.Medium" />
-                <span>No municipios match "@_search"</span>
+                <span>@L["Muni_List_Empty", _search]</span>
             </div>
         }
         else
@@ -74,7 +75,7 @@
                         @(count is { } c ? c.ToString() : "—")
                     </div>
                     <button type="button" class="mm-row-details"
-                            title="View details"
+                            title="@ViewDetailsTitle"
                             @onclick="@((MouseEventArgs _) => OnDetails.InvokeAsync(muni))"
                             @onclick:stopPropagation="true">
                         <MudIcon Icon="@Icons.Material.Filled.ArrowForward" Size="Size.Small" />
@@ -99,14 +100,23 @@
 
     private IReadOnlyList<MunicipalityDtoForList> _visible = [];
 
-    private static readonly (MunicipalitySort Value, string Label)[] SortOptions =
+    private string SearchPlaceholder => L["Muni_List_SearchPlaceholder"];
+    private string ViewDetailsTitle => L["Common_ViewDetails"];
+
+    private static readonly (MunicipalitySort Value, string LabelKey)[] SortOptions =
     [
-        (MunicipalitySort.SpeciesCountDesc, "species count ↓"),
-        (MunicipalitySort.NameAsc, "name A–Z"),
+        (MunicipalitySort.SpeciesCountDesc, "Muni_List_Sort_SpeciesCountDesc"),
+        (MunicipalitySort.NameAsc, "Muni_List_Sort_NameAsc"),
     ];
 
-    private string SortLabel => SortOptions.FirstOrDefault(o => o.Value == _sort).Label
-        ?? "species count ↓";
+    private string SortLabel
+    {
+        get
+        {
+            var entry = SortOptions.FirstOrDefault(o => o.Value == _sort);
+            return L[entry.LabelKey ?? "Muni_List_Sort_SpeciesCountDesc"];
+        }
+    }
 
     protected override void OnParametersSet() => RecomputeVisible();
 
@@ -152,17 +162,21 @@
     private static string CoordsLabel(MunicipalityDtoForList muni) =>
         $"{muni.CentroidLatitude:0.00}″N · {Math.Abs(muni.CentroidLongitude):0.00}″W";
 
-    private string VisibleLabel =>
-        Municipalities is null
-            ? "Loading…"
-            : _visible.Count == Municipalities.Count
-                ? $"{Municipalities.Count} municipios"
-                : $"{_visible.Count} of {Municipalities.Count}";
+    private string VisibleLabel
+    {
+        get
+        {
+            if (Municipalities is null) return L["Muni_List_Loading"];
+            if (_visible.Count == Municipalities.Count)
+                return L["Muni_List_VisibleAll", Municipalities.Count];
+            return L["Muni_List_VisibleFiltered", _visible.Count, Municipalities.Count];
+        }
+    }
 
     private string TotalLabel =>
         Municipalities is null
-            ? "loading municipios"
-            : $"{Municipalities.Count} municipios tracked";
+            ? L["Muni_List_Foot_Loading"]
+            : L["Muni_List_Foot_Total", Municipalities.Count];
 
     public enum MunicipalitySort
     {

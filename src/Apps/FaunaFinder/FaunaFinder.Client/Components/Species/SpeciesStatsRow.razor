@@ -1,45 +1,46 @@
 @namespace FaunaFinder.Client.Components.Species
+@inherits LocalizedComponentBase
 @using EcoData.Wildlife.Contracts.Dtos
 
 <section class="ff-stats">
     <div class="ff-stat">
-        <div class="ff-stat-label">Total species</div>
+        <div class="ff-stat-label">@L["Species_Stats_Total_Label"]</div>
         <div class="ff-stat-value">@FormatNumber(Stats?.TotalSpecies)</div>
         <div class="ff-stat-sub">
             @if (Stats is { AddedThisQuarter: > 0 } s)
             {
-                <span class="up">▲ @s.AddedThisQuarter</span> <text>this quarter</text>
+                @((MarkupString)L["Species_Stats_Total_Sub_Delta", DeltaMarkup(s.AddedThisQuarter)])
             }
             else
             {
-                <text>—</text>
+                @L["Species_Stats_Total_Sub_None"]
             }
         </div>
     </div>
 
     <div class="ff-stat">
-        <div class="ff-stat-label">Endemic to P.R.</div>
+        <div class="ff-stat-label">@L["Species_Stats_Endemic_Label"]</div>
         <div class="ff-stat-value">@FormatNumber(Stats?.EndemicCount)</div>
         <div class="ff-stat-sub">@EndemicShare</div>
     </div>
 
     <div class="ff-stat">
-        <div class="ff-stat-label">Threatened · VU–CR</div>
+        <div class="ff-stat-label">@L["Species_Stats_Threatened_Label"]</div>
         <div class="ff-stat-value">@FormatNumber(Stats?.ThreatenedCount)</div>
         <div class="ff-stat-sub">
             @if (Stats is { ReclassifiedThisQuarter: > 0 } r)
             {
-                <span class="up">▲ @r.ReclassifiedThisQuarter</span> <text>reclassified</text>
+                @((MarkupString)L["Species_Stats_Threatened_Sub_Delta", DeltaMarkup(r.ReclassifiedThisQuarter)])
             }
             else
             {
-                <text>—</text>
+                @L["Species_Stats_Total_Sub_None"]
             }
         </div>
     </div>
 
     <div class="ff-stat">
-        <div class="ff-stat-label">Municipios covered</div>
+        <div class="ff-stat-label">@L["Species_Stats_Municipios_Label"]</div>
         <div class="ff-stat-value">
             @FormatNumber(Stats?.MunicipalitiesCovered)
             <span class="unit">/ @(Stats?.TotalMunicipalities ?? 78)</span>
@@ -53,13 +54,17 @@
 
     private static string FormatNumber(int? n) => n is { } v ? v.ToString("N0") : "—";
 
+    // Wraps the delta number in the "up" span so the translated sentence can
+    // still colour the ▲N portion via `.up` CSS without losing localization.
+    private static string DeltaMarkup(int n) => $"<span class=\"up\">▲ {n}</span>";
+
     private string EndemicShare
     {
         get
         {
             if (Stats is null || Stats.TotalSpecies == 0) return "—";
             var pct = 100.0 * Stats.EndemicCount / Stats.TotalSpecies;
-            return $"{pct:0.0}% of catalogue";
+            return L["Species_Stats_Endemic_Sub", pct.ToString("0.0")];
         }
     }
 
@@ -69,7 +74,7 @@
         {
             if (Stats is null || Stats.TotalMunicipalities == 0) return "—";
             var pct = 100.0 * Stats.MunicipalitiesCovered / Stats.TotalMunicipalities;
-            return $"{pct:0}% island coverage";
+            return L["Species_Stats_Municipios_Sub", pct.ToString("0")];
         }
     }
 }
