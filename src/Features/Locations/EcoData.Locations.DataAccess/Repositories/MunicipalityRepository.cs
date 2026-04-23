@@ -93,6 +93,28 @@ public sealed class MunicipalityRepository(IDbContextFactory<LocationsDbContext>
             .FirstOrDefaultAsync(cancellationToken);
     }
 
+    public async Task<IReadOnlyList<MunicipalityDtoForList>> GetByIdsAsync(
+        IReadOnlyCollection<Guid> ids,
+        CancellationToken cancellationToken = default)
+    {
+        if (ids.Count == 0) return [];
+
+        await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
+
+        return await context.Municipalities
+            .Where(m => ids.Contains(m.Id))
+            .OrderBy(m => m.Name)
+            .Select(m => new MunicipalityDtoForList(
+                m.Id,
+                m.Name,
+                m.GeoJsonId,
+                m.CountyFipsCode,
+                m.CentroidLatitude,
+                m.CentroidLongitude
+            ))
+            .ToListAsync(cancellationToken);
+    }
+
     public async Task<MunicipalityDtoForDetail?> GetByGeoJsonIdAsync(
         string geoJsonId,
         CancellationToken cancellationToken = default)

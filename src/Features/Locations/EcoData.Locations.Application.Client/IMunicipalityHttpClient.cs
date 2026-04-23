@@ -10,4 +10,10 @@ public interface IMunicipalityHttpClient
         CancellationToken ct = default);
 
     Task<MunicipalityDtoForDetail?> GetByIdAsync(Guid id, CancellationToken ct = default);
+
+    Task<IReadOnlyList<MunicipalityDtoForList>> GetByIdsAsync(
+        IReadOnlyCollection<Guid> ids,
+        CancellationToken ct = default);
+
+    Task<string?> GetGeoJsonByStateCodeAsync(string stateCode, CancellationToken ct = default);
 }

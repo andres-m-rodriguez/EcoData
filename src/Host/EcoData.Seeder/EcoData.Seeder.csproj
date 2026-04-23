@@ -21,10 +21,11 @@
     <ProjectReference Include="..\..\Features\Sensors\EcoData.Sensors.Database\EcoData.Sensors.Database.csproj" />
     <ProjectReference Include="..\..\Features\Identity\EcoData.Identity.Database\EcoData.Identity.Database.csproj" />
     <ProjectReference Include="..\..\Features\Locations\EcoData.Locations.Database\EcoData.Locations.Database.csproj" />
+    <ProjectReference Include="..\..\Features\Wildlife\EcoData.Wildlife.Database\EcoData.Wildlife.Database.csproj" />
   </ItemGroup>
 
   <ItemGroup>
-    <Content Include="Data\**\*">
+    <Content Update="Data\**\*">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>

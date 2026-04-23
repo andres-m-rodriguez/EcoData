@@ -1,3 +1,395 @@
+/* ==========================================================================
+   Base Typography
+   ========================================================================== */
 html, body {
     font-family: 'Inter', sans-serif;
+}
+
+h1:focus {
+    outline: none;
+}
+
+/* ==========================================================================
+   Form Validation
+   ========================================================================== */
+.valid.modified:not([type=checkbox]) {
+    outline: 1px solid #26b050;
+}
+
+.invalid {
+    outline: 1px solid #e50000;
+}
+
+.validation-message {
+    color: #e50000;
+}
+
+/* ==========================================================================
+   Blazor Error Boundary
+   ========================================================================== */
+.blazor-error-boundary {
+    background: url(data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTYiIGhlaWdodD0iNDkiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgeG1sbnM6eGxpbms9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkveGxpbmsiIG92ZXJmbG93PSJoaWRkZW4iPjxkZWZzPjxjbGlwUGF0aCBpZD0iY2xpcDAiPjxyZWN0IHg9IjIzNSIgeT0iNTEiIHdpZHRoPSI1NiIgaGVpZ2h0PSI0OSIvPjwvY2xpcFBhdGg+PC9kZWZzPjxnIGNsaXAtcGF0aD0idXJsKCNjbGlwMCkiIHRyYW5zZm9ybT0idHJhbnNsYXRlKC0yMzUgLTUxKSI+PHBhdGggZD0iTTI2My41MDYgNTFDMjY0LjcxNyA1MSAyNjUuODEzIDUxLjQ4MzcgMjY2LjYwNiA1Mi4yNjU4TDI2Ny4wNTIgNTIuNzk4NyAyNjcuNTM5IDUzLjYyODMgMjkwLjE4NSA5Mi4xODMxIDI5MC41NDUgOTIuNzk1IDI5MC42NTYgOTIuOTk2QzI5MC44NzcgOTMuNTEzIDI5MSA5NC4wODE1IDI5MSA5NC42NzgyIDI5MSA5Ny4wNjUxIDI4OS4wMzggOTkgMjg2LjYxNyA5OUwyNDAuMzgzIDk5QzIzNy45NjMgOTkgMjM2IDk3LjA2NTEgMjM2IDk0LjY3ODIgMjM2IDk0LjM3OTkgMjM2LjAzMSA5NC4wODg2IDIzNi4wODkgOTMuODA3MkwyMzYuMzM4IDkzLjAxNjIgMjM2Ljg1OCA5Mi4xMzE0IDI1OS40NzMgNTMuNjI5NCAyNTkuOTYxIDUyLjc5ODUgMjYwLjQwNyA1Mi4yNjU4QzI2MS4yIDUxLjQ4MzcgMjYyLjI5NiA1MSAyNjMuNTA2IDUxWk0yNjMuNTg2IDY2LjAxODNDMjYwLjczNyA2Ni4wMTgzIDI1OS4zMTMgNjcuMTI0NSAyNTkuMzEzIDY5LjMzNyAyNTkuMzEzIDY5LjYxMDIgMjU5LjMzMiA2OS44NjA4IDI1OS4zNzEgNzAuMDg4N0wyNjEuNzk1IDg0LjAxNjEgMjY1LjM4IDg0LjAxNjEgMjY3LjgyMSA2OS43NDc1QzI2Ny44NiA2OS43MzA5IDI2Ny44NzkgNjkuNTg3NyAyNjcuODc5IDY5LjMxNzkgMjY3Ljg3OSA2Ny4xMTgyIDI2Ni40NDggNjYuMDE4MyAyNjMuNTg2IDY2LjAxODNaTTI2My41NzYgODYuMDU0N0MyNjEuMDQ5IDg2LjA1NDcgMjU5Ljc4NiA4Ny4zMDA1IDI1OS43ODYgODkuNzkyMSAyNTkuNzg2IDkyLjI4MzcgMjYxLjA0OSA5My41Mjk1IDI2My41NzYgOTMuNTI5NSAyNjYuMTE2IDkzLjUyOTUgMjY3LjM4NyA5Mi4yODM3IDI2Ny4zODcgODkuNzkyMSAyNjcuMzg3IDg3LjMwMDUgMjY2LjExNiA4Ni4wNTQ3IDI2My41NzYgODYuMDU0N1oiIGZpbGw9IiNGRkU1MDAiIGZpbGwtcnVsZT0iZXZlbm9kZCIvPjwvZz48L3N2Zz4=) no-repeat 1rem/1.8rem, #b32121;
+    padding: 1rem 1rem 1rem 3.7rem;
+    color: white;
+}
+
+.blazor-error-boundary::after {
+    content: "An error has occurred."
+}
+
+/* ==========================================================================
+   Form Floating Labels
+   ========================================================================== */
+.darker-border-checkbox.form-check-input {
+    border-color: #929292;
+}
+
+.form-floating > .form-control-plaintext::placeholder,
+.form-floating > .form-control::placeholder {
+    color: var(--bs-secondary-color);
+    text-align: end;
+}
+
+.form-floating > .form-control-plaintext:focus::placeholder,
+.form-floating > .form-control:focus::placeholder {
+    text-align: start;
+}
+
+/* ==========================================================================
+   Map Layout - AppBar is 48px when Dense="true"
+   ========================================================================== */
+.map-page {
+    display: flex;
+    flex: 1;
+    position: relative;
+    height: calc(100vh - 48px);
+}
+
+.map-container {
+    flex: 1;
+    position: relative;
+}
+
+.map {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+}
+
+/* ==========================================================================
+   Leaflet Overrides
+   ========================================================================== */
+.leaflet-container {
+    width: 100% !important;
+    height: 100% !important;
+    z-index: 1 !important;
+}
+
+.leaflet-popup-content-wrapper {
+    border-radius: 8px;
+    padding: 0;
+    background: var(--mud-palette-surface);
+    color: var(--mud-palette-text-primary);
+}
+
+.leaflet-popup-tip {
+    background: var(--mud-palette-surface);
+}
+
+/* Leaflet Controls Dark Mode Support */
+.leaflet-control-zoom a,
+.leaflet-control-attribution {
+    background-color: var(--mud-palette-surface) !important;
+    color: var(--mud-palette-text-primary) !important;
+    border-color: var(--mud-palette-lines-default) !important;
+}
+
+.leaflet-control-zoom a:hover {
+    background-color: var(--mud-palette-background) !important;
+}
+
+.leaflet-control-attribution {
+    background-color: var(--mud-palette-surface) !important;
+}
+
+.leaflet-control-attribution a {
+    color: var(--mud-palette-primary) !important;
+}
+
+/* ==========================================================================
+   Map Filter Panel
+   ========================================================================== */
+.map-filter-panel {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    z-index: 1000;
+    min-width: 200px;
+    max-width: 280px;
+    max-height: calc(100vh - 100px);
+    overflow-y: auto;
+}
+
+.map-filter-panel .mud-paper {
+    background-color: var(--mud-palette-surface);
+}
+
+.map-filter-panel .mud-checkbox {
+    margin-left: -8px;
+}
+
+/* Custom scrollbar for filter panel */
+.map-filter-panel::-webkit-scrollbar {
+    width: 6px;
+}
+
+.map-filter-panel::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.map-filter-panel::-webkit-scrollbar-thumb {
+    background-color: var(--mud-palette-lines-default);
+    border-radius: 3px;
+}
+
+/* ==========================================================================
+   Map Title Bar Overlay
+   ========================================================================== */
+.map-title-bar {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    z-index: 1000;
+    background-color: var(--mud-palette-surface);
+    padding: 8px 16px;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* ==========================================================================
+   Map Loading Overlay
+   ========================================================================== */
+.map-loading-overlay {
+    z-index: 1001;
+}
+
+/* ==========================================================================
+   Stat Cards
+   ========================================================================== */
+.stat-card {
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+
+.stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
+}
+
+/* ==========================================================================
+   Breadcrumb Adjustments
+   ========================================================================== */
+.mud-breadcrumbs {
+    padding-left: 0 !important;
+}
+
+/* ==========================================================================
+   Gradient Button (FaunaFinder green gradient)
+   ========================================================================== */
+.gradient-btn {
+    background: linear-gradient(135deg, var(--mud-palette-primary) 0%, var(--mud-palette-secondary) 100%) !important;
+    color: white !important;
+    border: none !important;
+}
+
+/* ==========================================================================
+   AppBar with Backdrop Blur (FaunaFinder uses colored navbar)
+   ========================================================================== */
+.app-bar-blur {
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+}
+
+/* ==========================================================================
+   Utility Classes
+   ========================================================================== */
+.narrow-page {
+    max-width: 480px;
+    margin: 0 auto;
+}
+
+/* Mobile back button - outlined style */
+.back-btn-mobile {
+    background: transparent !important;
+    border: 1.5px solid #ccc !important;
+    border-radius: 10px !important;
+    width: 36px !important;
+    height: 36px !important;
+    min-width: 36px !important;
+}
+
+.back-btn-mobile:hover {
+    background: rgba(0, 0, 0, 0.04) !important;
+}
+
+.back-btn-mobile:disabled {
+    opacity: 0.5;
+}
+
+/* ==========================================================================
+   Mobile Bottom Navigation Spacing
+   ========================================================================== */
+@media (max-width: 959.95px) {
+    /* Ensure content doesn't get hidden behind fixed bottom nav (64px + safe area) */
+    .mud-main-content {
+        padding-bottom: 80px !important;
+    }
+}
+
+/* ==========================================================================
+   Species/Category List Items
+   ========================================================================== */
+.species-list-item {
+    transition: background-color 0.15s ease;
+}
+
+.species-list-item:hover {
+    background-color: var(--mud-palette-action-default-hover);
+}
+
+/* ==========================================================================
+   Image Thumbnails
+   ========================================================================== */
+.species-thumbnail {
+    width: 64px;
+    height: 64px;
+    object-fit: cover;
+    border-radius: 8px;
+    background-color: var(--mud-palette-background-gray);
+}
+
+.species-thumbnail-placeholder {
+    width: 64px;
+    height: 64px;
+    border-radius: 8px;
+    background-color: var(--mud-palette-background-gray);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--mud-palette-text-disabled);
+}
+
+/* ==========================================================================
+   Search Header Glassmorphic Dark Mode
+   ========================================================================== */
+.mud-theme-dark .search-header-wrapper {
+    background-color: rgba(28, 28, 30, 0.85);
+}
+
+/* ==========================================================================
+   Conservation Status Badges
+   ========================================================================== */
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+.status-badge--endangered {
+    background-color: var(--mud-palette-error-lighten);
+    color: var(--mud-palette-error);
+}
+
+.status-badge--threatened {
+    background-color: var(--mud-palette-warning-lighten);
+    color: var(--mud-palette-warning);
+}
+
+.status-badge--stable {
+    background-color: var(--mud-palette-success-lighten);
+    color: var(--mud-palette-success);
+}
+
+/* ==========================================================================
+   Detail Page Hero
+   ========================================================================== */
+.detail-hero {
+    position: relative;
+    height: 240px;
+    overflow: hidden;
+    border-radius: 12px;
+    margin-bottom: 16px;
+}
+
+.detail-hero img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.detail-hero-placeholder {
+    height: 240px;
+    background: linear-gradient(135deg, var(--mud-palette-primary-lighten) 0%, var(--mud-palette-secondary) 100%);
+    border-radius: 12px;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* ==========================================================================
+   Info Cards
+   ========================================================================== */
+.info-card {
+    padding: 16px;
+    border-radius: 12px;
+    background-color: var(--mud-palette-surface);
+    border: 1px solid var(--mud-palette-lines-default);
+}
+
+.info-card-label {
+    font-size: 0.75rem;
+    color: var(--mud-palette-text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 4px;
+}
+
+.info-card-value {
+    font-size: 1rem;
+    font-weight: 500;
+    color: var(--mud-palette-text-primary);
+}
+
+/* ==========================================================================
+   Empty States
+   ========================================================================== */
+.empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 48px 24px;
+    text-align: center;
+}
+
+.empty-state-icon {
+    font-size: 64px;
+    color: var(--mud-palette-text-disabled);
+    margin-bottom: 16px;
+}
+
+.empty-state-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--mud-palette-text-primary);
+    margin-bottom: 8px;
+}
+
+.empty-state-description {
+    font-size: 0.875rem;
+    color: var(--mud-palette-text-secondary);
+    max-width: 320px;
 }

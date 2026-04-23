@@ -9,14 +9,19 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="BlazingSingularity" Version="1.0.0-beta.5" />
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="10.0.3" />
     <PackageReference Include="MudBlazor" Version="9.1.0" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\..\Features\Wildlife\EcoData.Wildlife.Contracts\EcoData.Wildlife.Contracts.csproj" />
-    <ProjectReference Include="..\..\..\Features\Locations\EcoData.Locations.Contracts\EcoData.Locations.Contracts.csproj" />
+    <ProjectReference Include="..\..\..\Features\Common\EcoData.NativeUi\EcoData.NativeUi.csproj" />
     <ProjectReference Include="..\..\..\Features\Common\EcoData.Common.Maps\EcoData.Common.Maps.csproj" />
+    <ProjectReference Include="..\..\..\Features\Common\EcoData.Common.Pagination.Blazor\EcoData.Common.Pagination.Blazor.csproj" />
+    <ProjectReference Include="..\..\..\Features\Wildlife\EcoData.Wildlife.Contracts\EcoData.Wildlife.Contracts.csproj" />
+    <ProjectReference Include="..\..\..\Features\Wildlife\EcoData.Wildlife.Application.Client\EcoData.Wildlife.Application.Client.csproj" />
+    <ProjectReference Include="..\..\..\Features\Locations\EcoData.Locations.Contracts\EcoData.Locations.Contracts.csproj" />
+    <ProjectReference Include="..\..\..\Features\Locations\EcoData.Locations.Application.Client\EcoData.Locations.Application.Client.csproj" />
   </ItemGroup>
 
 </Project>

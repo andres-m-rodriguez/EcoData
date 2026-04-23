@@ -1,0 +1,90 @@
+@namespace FaunaFinder.Client.Components.Species
+@using EcoData.Wildlife.Contracts.Dtos
+@using EcoData.Common.i18n
+
+<MudPaper Elevation="0" Class="pa-4 pa-md-6 rounded-lg border-solid border mud-border-lines-default mb-4">
+    @if (Species.HasProfileImage)
+    {
+        <div class="species-hero-image mb-4">
+            <img src="@($"/wildlife/species/{Species.Id}/image")"
+                 alt="@CommonName"
+                 loading="lazy" />
+        </div>
+    }
+    else
+    {
+        <div class="species-hero-placeholder mb-4">
+            <MudIcon Icon="@(Species.IsFauna ? Icons.Material.Outlined.Pets : Icons.Material.Outlined.Park)"
+                     Size="Size.Large"
+                     Color="Color.Default" />
+        </div>
+    }
+
+    <MudText Typo="Typo.h5" GutterBottom="true">@CommonName</MudText>
+    <MudText Typo="Typo.subtitle1" Color="Color.Secondary" Class="mb-4 font-italic">
+        @Species.ScientificName
+    </MudText>
+
+    <MudStack Row="true" Spacing="2" Wrap="Wrap.Wrap" Class="mb-2">
+        @if (!string.IsNullOrEmpty(Species.GRank))
+        {
+            <NuiStatusBadge Status="@GetRankStatus(Species.GRank)" Text="@($"Global: {Species.GRank}")" Size="NuiStatusSize.Small" />
+        }
+        @if (!string.IsNullOrEmpty(Species.SRank))
+        {
+            <NuiStatusBadge Status="@GetRankStatus(Species.SRank)" Text="@($"State: {Species.SRank}")" Size="NuiStatusSize.Small" />
+        }
+        <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined">
+            @(Species.IsFauna ? "Fauna" : "Flora")
+        </MudChip>
+    </MudStack>
+
+    @if (!string.IsNullOrEmpty(Species.ElCode))
+    {
+        <MudText Typo="Typo.caption" Color="Color.Secondary">
+            Element Code: @Species.ElCode
+        </MudText>
+    }
+
+    @if (Species.Categories is { Count: > 0 })
+    {
+        <MudDivider Class="my-4" />
+        <MudText Typo="Typo.subtitle2" Class="mb-2">Categories</MudText>
+        <MudStack Row="true" Spacing="1" Wrap="Wrap.Wrap">
+            @foreach (var category in Species.Categories)
+            {
+                <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined">
+                    @ResolveLocale(category.Name)
+                </MudChip>
+            }
+        </MudStack>
+    }
+</MudPaper>
+
+@code {
+    [Parameter, EditorRequired]
+    public required SpeciesDtoForDetail Species { get; set; }
+
+    private string CommonName
+    {
+        get
+        {
+            var en = Species.CommonName.FirstOrDefault(n => n.Code == "en");
+            return en?.Value ?? Species.CommonName.FirstOrDefault()?.Value ?? Species.ScientificName;
+        }
+    }
+
+    private static string ResolveLocale(IReadOnlyList<LocaleValue> values)
+    {
+        var en = values.FirstOrDefault(n => n.Code == "en");
+        return en?.Value ?? values.FirstOrDefault()?.Value ?? "";
+    }
+
+    private static NuiStatusType GetRankStatus(string rank) => rank.ToUpperInvariant() switch
+    {
+        "G1" or "S1" or "G2" or "S2" => NuiStatusType.Error,
+        "G3" or "S3" => NuiStatusType.Warning,
+        "G4" or "S4" or "G5" or "S5" => NuiStatusType.Success,
+        _ => NuiStatusType.Inactive
+    };
+}

@@ -48,6 +48,29 @@ public static class MunicipalityEndpoints
 
         group
             .MapGet(
+                "/by-ids",
+                async Task<Ok<IReadOnlyList<MunicipalityDtoForList>>> (
+                    string ids,
+                    IMunicipalityRepository repository,
+                    CancellationToken ct
+                ) =>
+                {
+                    var parsed = ids
+                        .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                        .Select(s => Guid.TryParse(s, out var g) ? g : (Guid?)null)
+                        .Where(g => g.HasValue)
+                        .Select(g => g!.Value)
+                        .Distinct()
+                        .ToList();
+
+                    var municipalities = await repository.GetByIdsAsync(parsed, ct);
+                    return TypedResults.Ok(municipalities);
+                }
+            )
+            .WithName("GetMunicipalitiesByIds");
+
+        group
+            .MapGet(
                 "/geojson-id/{geoJsonId}",
                 async Task<Results<Ok<MunicipalityDtoForDetail>, ProblemHttpResult>> (
                     string geoJsonId,

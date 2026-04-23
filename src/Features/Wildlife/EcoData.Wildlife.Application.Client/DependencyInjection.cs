@@ -4,11 +4,32 @@ namespace EcoData.Wildlife.Application.Client;
 
 public static class DependencyInjection
 {
-    public static IServiceCollection AddWildlifeApplicationClient(this IServiceCollection services)
+    public static IServiceCollection AddWildlifeClient(this IServiceCollection services, Uri baseAddress)
     {
-        // HTTP clients will be registered here as they are implemented
-        // Example:
-        // services.AddHttpClient<ISpeciesHttpClient, SpeciesHttpClient>();
+        services.AddHttpClient<ISpeciesHttpClient, SpeciesHttpClient>(client =>
+        {
+            client.BaseAddress = baseAddress;
+        });
+
+        services.AddHttpClient<ISpeciesCategoryHttpClient, SpeciesCategoryHttpClient>(client =>
+        {
+            client.BaseAddress = baseAddress;
+        });
+
+        services.AddHttpClient<IFwsActionHttpClient, FwsActionHttpClient>(client =>
+        {
+            client.BaseAddress = baseAddress;
+        });
+
+        services.AddHttpClient<INrcsPracticeHttpClient, NrcsPracticeHttpClient>(client =>
+        {
+            client.BaseAddress = baseAddress;
+        });
+
+        services.AddHttpClient<IConservationLinkHttpClient, ConservationLinkHttpClient>(client =>
+        {
+            client.BaseAddress = baseAddress;
+        });
 
         return services;
     }

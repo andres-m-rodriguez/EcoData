@@ -1,58 +1,283 @@
 @page "/"
+@using EcoData.Common.Maps
+@using EcoData.Common.Maps.Models
+@using EcoData.Locations.Application.Client
+@using EcoData.Locations.Contracts.Dtos
+@using EcoData.Wildlife.Application.Client
+@using EcoData.Wildlife.Contracts.Dtos
+@using BlazingSingularity.Fetch
+@inject IMunicipalityHttpClient MunicipalityHttpClient
+@inject ISpeciesHttpClient SpeciesHttpClient
+@inject NavigationManager NavigationManager
+@implements IDisposable
 
-<PageTitle>FaunaFinder - Puerto Rico Wildlife</PageTitle>
+<PageTitle>FaunaFinder - Map</PageTitle>
 
-<MudContainer MaxWidth="MaxWidth.Large" Class="mt-4">
-    <MudText Typo="Typo.h3" GutterBottom="true">Welcome to FaunaFinder</MudText>
-    <MudText Typo="Typo.body1" Class="mb-4">
-        Discover the wildlife of Puerto Rico. Browse species, explore conservation efforts,
-        and learn about the diverse fauna and flora of the island.
-    </MudText>
+<div class="map-page">
+    <div class="map-container">
+        @if (_mapInitFetch.IsLoading)
+        {
+            <MudOverlay Visible="true" DarkBackground="false" Absolute="true" Class="map-loading-overlay" ZIndex="1000">
+                <MudStack AlignItems="AlignItems.Center">
+                    <MudProgressCircular Indeterminate="true" Color="Color.Primary" />
+                    <MudText Typo="Typo.body2">Loading map...</MudText>
+                </MudStack>
+            </MudOverlay>
+        }
+        <NuiMap TMarker="MunicipalityMarker"
+                Controller="_mapController"
+                Height="100%"
+                Width="100%" />
+    </div>
 
-    <MudGrid>
-        <MudItem xs="12" sm="6" md="4">
-            <MudCard>
-                <MudCardContent>
-                    <MudText Typo="Typo.h6">Species</MudText>
-                    <MudText Typo="Typo.body2">Browse all species in our database</MudText>
-                </MudCardContent>
-                <MudCardActions>
-                    <MudButton Color="Color.Primary" Href="/species">Explore</MudButton>
-                </MudCardActions>
-            </MudCard>
-        </MudItem>
-        <MudItem xs="12" sm="6" md="4">
-            <MudCard>
-                <MudCardContent>
-                    <MudText Typo="Typo.h6">Categories</MudText>
-                    <MudText Typo="Typo.body2">View species by category</MudText>
-                </MudCardContent>
-                <MudCardActions>
-                    <MudButton Color="Color.Primary" Href="/categories">Browse</MudButton>
-                </MudCardActions>
-            </MudCard>
-        </MudItem>
-        <MudItem xs="12" sm="6" md="4">
-            <MudCard>
-                <MudCardContent>
-                    <MudText Typo="Typo.h6">Conservation</MudText>
-                    <MudText Typo="Typo.body2">FWS actions and NRCS practices</MudText>
-                </MudCardContent>
-                <MudCardActions>
-                    <MudButton Color="Color.Primary" Href="/conservation">Learn More</MudButton>
-                </MudCardActions>
-            </MudCard>
-        </MudItem>
-        <MudItem xs="12" sm="6" md="4">
-            <MudCard>
-                <MudCardContent>
-                    <MudText Typo="Typo.h6">Sightings Map</MudText>
-                    <MudText Typo="Typo.body2">Explore wildlife sightings on a map</MudText>
-                </MudCardContent>
-                <MudCardActions>
-                    <MudButton Color="Color.Primary" Href="/sightings">View Map</MudButton>
-                </MudCardActions>
-            </MudCard>
-        </MudItem>
-    </MudGrid>
-</MudContainer>
+    @* Desktop Sidebar *@
+    <MudHidden Breakpoint="Breakpoint.SmAndDown">
+        @if (_selectedMunicipality is not null)
+        {
+            <div class="desktop-sidebar @(_sidebarOpen ? "open" : "")">
+                <div class="sidebar-header">
+                    <MudText Typo="Typo.h6">@_selectedMunicipality.Name</MudText>
+                    <MudIconButton Icon="@Icons.Material.Filled.Close"
+                                   Size="Size.Small"
+                                   OnClick="CloseSidebar" />
+                </div>
+
+                @if (_speciesFetch?.IsLoading is not false)
+                {
+                    <div class="pa-3">
+                        @for (int i = 0; i < 5; i++)
+                        {
+                            <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="60px" Class="mb-3 rounded" />
+                        }
+                    </div>
+                }
+                else if ((_speciesFetch.Data?.Count ?? 0) == 0)
+                {
+                    <NuiEmptyState Icon="@Icons.Material.Outlined.Pets"
+                                   Title="No species found"
+                                   Description="No species have been recorded in this municipality yet." />
+                }
+                else
+                {
+                    <div class="sidebar-content">
+                        <NuiSectionHeader Title="@($"{_speciesFetch.Data!.Count} Species")" />
+                        <MudList T="SpeciesDtoForList" Dense="true">
+                            @foreach (var species in _speciesFetch.Data!)
+                            {
+                                <NuiListItem Title="@GetSpeciesName(species)"
+                                             Subtitle="@species.ScientificName"
+                                             Icon="@(species.IsFauna ? Icons.Material.Filled.Pets : Icons.Material.Filled.Park)"
+                                             ShowChevron="true"
+                                             OnClick="@(() => NavigateToSpecies(species.Id))">
+                                    <TrailingContent>
+                                        <NuiStatusBadge Status="@GetConservationStatus(species.GRank)"
+                                                        Text="@(species.GRank ?? "-")"
+                                                        Size="NuiStatusSize.Small" />
+                                    </TrailingContent>
+                                </NuiListItem>
+                            }
+                        </MudList>
+                    </div>
+                }
+            </div>
+        }
+    </MudHidden>
+
+    @* Mobile Bottom Sheet *@
+    <MudHidden Breakpoint="Breakpoint.MdAndUp">
+        @if (_selectedMunicipality is not null)
+        {
+            <div class="mobile-sheet-backdrop @(_sheetOpen ? "open" : "")" @onclick="CloseSheet"></div>
+            <div class="mobile-sheet @(_sheetOpen ? "open" : "")">
+                <div class="mobile-sheet-header">
+                    <MudText Typo="Typo.subtitle1">@_selectedMunicipality.Name</MudText>
+                    <MudSpacer />
+                    <MudIconButton Icon="@Icons.Material.Filled.Close"
+                                   Size="Size.Medium"
+                                   OnClick="CloseSheet" />
+                </div>
+
+                @if (_speciesFetch?.IsLoading is not false)
+                {
+                    <div class="pa-3">
+                        @for (int i = 0; i < 5; i++)
+                        {
+                            <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="60px" Class="mb-3 rounded" />
+                        }
+                    </div>
+                }
+                else if ((_speciesFetch.Data?.Count ?? 0) == 0)
+                {
+                    <NuiEmptyState Icon="@Icons.Material.Outlined.Pets"
+                                   Title="No species found"
+                                   Description="No species have been recorded in this municipality yet." />
+                }
+                else
+                {
+                    <div class="mobile-sheet-content">
+                        <MudText Typo="Typo.caption" Color="Color.Secondary" Class="px-3 mb-2">
+                            @_speciesFetch.Data!.Count species found
+                        </MudText>
+                        <MudList T="SpeciesDtoForList" Dense="true">
+                            @foreach (var species in _speciesFetch.Data!)
+                            {
+                                <NuiListItem Title="@GetSpeciesName(species)"
+                                             Subtitle="@species.ScientificName"
+                                             Icon="@(species.IsFauna ? Icons.Material.Filled.Pets : Icons.Material.Filled.Park)"
+                                             ShowChevron="true"
+                                             OnClick="@(() => NavigateToSpecies(species.Id))">
+                                    <TrailingContent>
+                                        <NuiStatusBadge Status="@GetConservationStatus(species.GRank)"
+                                                        Text="@(species.GRank ?? "-")"
+                                                        Size="NuiStatusSize.Small" />
+                                    </TrailingContent>
+                                </NuiListItem>
+                            }
+                        </MudList>
+                    </div>
+                }
+            </div>
+        }
+    </MudHidden>
+</div>
+
+@code {
+    private MapController<MunicipalityMarker> _mapController = new();
+    private bool _sidebarOpen;
+    private bool _sheetOpen;
+    private MunicipalityDtoForList? _selectedMunicipality;
+    private Dictionary<string, MunicipalityDtoForList> _municipalitiesByGeoJsonId = new();
+
+    private IFetch<bool> _mapInitFetch = default!;
+    private IFetch<IReadOnlyList<SpeciesDtoForList>>? _speciesFetch;
+
+    protected override void OnInitialized()
+    {
+        _mapController.OnGeoJsonClicked += OnGeoJsonClicked;
+        _mapInitFetch = new Fetch<bool>(
+            InitMapAsync,
+            () => InvokeAsync(StateHasChanged)
+        );
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await _mapInitFetch.FetchAsync();
+    }
+
+    private async Task<bool> InitMapAsync(CancellationToken ct)
+    {
+        await foreach (var municipality in MunicipalityHttpClient.GetMunicipalitiesAsync(ct: ct))
+        {
+            _municipalitiesByGeoJsonId[municipality.GeoJsonId] = municipality;
+        }
+
+        var geoJson = await MunicipalityHttpClient.GetGeoJsonByStateCodeAsync("PR", ct);
+        if (!string.IsNullOrEmpty(geoJson))
+        {
+            _mapController.AddGeoJson(new MapGeoJson
+            {
+                Id = "municipalities",
+                Data = geoJson,
+                FillColor = "#40916c",
+                FillOpacity = 0.3,
+                StrokeColor = "#2d6a4f",
+                StrokeWidth = 2
+            });
+        }
+        return true;
+    }
+
+    private async void OnGeoJsonClicked(string layerId, string? properties)
+    {
+        if (layerId != "municipalities" || string.IsNullOrEmpty(properties))
+            return;
+
+        try
+        {
+            var props = System.Text.Json.JsonDocument.Parse(properties);
+            if (props.RootElement.TryGetProperty("geoJsonId", out var geoJsonIdElement))
+            {
+                var geoJsonId = geoJsonIdElement.GetString();
+                if (geoJsonId is not null && _municipalitiesByGeoJsonId.TryGetValue(geoJsonId, out var municipality))
+                {
+                    await InvokeAsync(async () => await SelectMunicipalityAsync(municipality));
+                }
+            }
+        }
+        catch
+        {
+            // Ignore parse errors
+        }
+    }
+
+    private async Task SelectMunicipalityAsync(MunicipalityDtoForList municipality)
+    {
+        _selectedMunicipality = municipality;
+        _sidebarOpen = true;
+        _sheetOpen = true;
+
+        (_speciesFetch as IDisposable)?.Dispose();
+        _speciesFetch = new Fetch<IReadOnlyList<SpeciesDtoForList>>(
+            ct => SpeciesHttpClient.GetByMunicipalityAsync(municipality.Id, ct),
+            () => InvokeAsync(StateHasChanged)
+        );
+        await _speciesFetch.FetchAsync();
+    }
+
+    private void CloseSidebar()
+    {
+        _sidebarOpen = false;
+        _selectedMunicipality = null;
+        (_speciesFetch as IDisposable)?.Dispose();
+        _speciesFetch = null;
+    }
+
+    private async Task CloseSheet()
+    {
+        _sheetOpen = false;
+        StateHasChanged();
+
+        await Task.Delay(300);
+        _selectedMunicipality = null;
+        (_speciesFetch as IDisposable)?.Dispose();
+        _speciesFetch = null;
+        StateHasChanged();
+    }
+
+    private void NavigateToSpecies(Guid speciesId)
+    {
+        NavigationManager.NavigateTo($"/species/{speciesId}");
+    }
+
+    private static string GetSpeciesName(SpeciesDtoForList species)
+    {
+        var englishName = species.CommonName.FirstOrDefault(n => n.Code == "en");
+        return englishName?.Value ?? species.CommonName.FirstOrDefault()?.Value ?? species.ScientificName;
+    }
+
+    private static NuiStatusType GetConservationStatus(string? gRank)
+    {
+        if (string.IsNullOrEmpty(gRank)) return NuiStatusType.Inactive;
+
+        return gRank.ToUpperInvariant() switch
+        {
+            "G1" or "G2" => NuiStatusType.Error,
+            "G3" => NuiStatusType.Warning,
+            "G4" or "G5" => NuiStatusType.Success,
+            _ => NuiStatusType.Inactive
+        };
+    }
+
+    public void Dispose()
+    {
+        _mapController.OnGeoJsonClicked -= OnGeoJsonClicked;
+        (_mapInitFetch as IDisposable)?.Dispose();
+        (_speciesFetch as IDisposable)?.Dispose();
+    }
+
+    public record MunicipalityMarker(
+        MapCoordinate Coordinate,
+        string? PopupContent,
+        string? TooltipContent) : IMapMarker;
+}

@@ -15,6 +15,11 @@ public interface IMunicipalityRepository
         CancellationToken cancellationToken = default
     );
 
+    Task<IReadOnlyList<MunicipalityDtoForList>> GetByIdsAsync(
+        IReadOnlyCollection<Guid> ids,
+        CancellationToken cancellationToken = default
+    );
+
     Task<MunicipalityDtoForDetail?> GetByGeoJsonIdAsync(
         string geoJsonId,
         CancellationToken cancellationToken = default

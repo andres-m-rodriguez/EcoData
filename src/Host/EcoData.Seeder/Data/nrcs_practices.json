@@ -1,0 +1,247 @@
+[
+  {
+    "code": "311",
+    "name": [
+      { "code": "en", "value": "Alley Cropping" },
+      { "code": "es", "value": "Cultivo en Callejones" }
+    ]
+  },
+  {
+    "code": "379",
+    "name": [
+      { "code": "en", "value": "Multi-Story Cropping" },
+      { "code": "es", "value": "Cultivo Multiestrato" }
+    ]
+  },
+  {
+    "code": "380",
+    "name": [
+      { "code": "en", "value": "Windbreak/Shelterbelt Establishment and Renovation" },
+      { "code": "es", "value": "Establecimiento y Renovación de Cortavientos/Cinturones de Protección" }
+    ]
+  },
+  {
+    "code": "381",
+    "name": [
+      { "code": "en", "value": "Silvopasture" },
+      { "code": "es", "value": "Silvopastoreo" }
+    ]
+  },
+  {
+    "code": "383",
+    "name": [
+      { "code": "en", "value": "Fuel Break" },
+      { "code": "es", "value": "Cortafuegos de Combustible" }
+    ]
+  },
+  {
+    "code": "384",
+    "name": [
+      { "code": "en", "value": "Woody Residue Treatment" },
+      { "code": "es", "value": "Tratamiento de Residuos Leñosos" }
+    ]
+  },
+  {
+    "code": "390",
+    "name": [
+      { "code": "en", "value": "Riparian Herbaceous Cover" },
+      { "code": "es", "value": "Cobertura Herbácea Ribereña" }
+    ]
+  },
+  {
+    "code": "391",
+    "name": [
+      { "code": "en", "value": "Riparian Forest Buffer" },
+      { "code": "es", "value": "Zona de Amortiguamiento Forestal Ribereña" }
+    ]
+  },
+  {
+    "code": "394",
+    "name": [
+      { "code": "en", "value": "Firebreak" },
+      { "code": "es", "value": "Cortafuegos" }
+    ]
+  },
+  {
+    "code": "395",
+    "name": [
+      { "code": "en", "value": "Stream Habitat Improvement and Management" },
+      { "code": "es", "value": "Mejoramiento y Manejo del Hábitat de Arroyos" }
+    ]
+  },
+  {
+    "code": "396",
+    "name": [
+      { "code": "en", "value": "Aquatic Organism Passage" },
+      { "code": "es", "value": "Paso para Organismos Acuáticos" }
+    ]
+  },
+  {
+    "code": "398",
+    "name": [
+      { "code": "en", "value": "Fish Raceway or Tank" },
+      { "code": "es", "value": "Canal o Tanque para Peces" }
+    ]
+  },
+  {
+    "code": "399",
+    "name": [
+      { "code": "en", "value": "Fishpond Management" },
+      { "code": "es", "value": "Manejo de Estanques de Peces" }
+    ]
+  },
+  {
+    "code": "400",
+    "name": [
+      { "code": "en", "value": "Bivalve Aquaculture Gear and Biofouling Control" },
+      { "code": "es", "value": "Equipos de Acuicultura de Bivalvos y Control de Bioincrustación" }
+    ]
+  },
+  {
+    "code": "420",
+    "name": [
+      { "code": "en", "value": "Wildlife Habitat Planting" },
+      { "code": "es", "value": "Siembra para Hábitat de Vida Silvestre" }
+    ]
+  },
+  {
+    "code": "422",
+    "name": [
+      { "code": "en", "value": "Hedgerow Planting" },
+      { "code": "es", "value": "Siembra de Setos" }
+    ]
+  },
+  {
+    "code": "472",
+    "name": [
+      { "code": "en", "value": "Access Control" },
+      { "code": "es", "value": "Control de Acceso" }
+    ]
+  },
+  {
+    "code": "490",
+    "name": [
+      { "code": "en", "value": "Tree/Shrub Site Preparation" },
+      { "code": "es", "value": "Preparación de Sitio para Árboles/Arbustos" }
+    ]
+  },
+  {
+    "code": "562",
+    "name": [
+      { "code": "en", "value": "Recreation Area Improvement" },
+      { "code": "es", "value": "Mejoramiento de Áreas Recreativas" }
+    ]
+  },
+  {
+    "code": "612",
+    "name": [
+      { "code": "en", "value": "Tree-Shrub Establishment" },
+      { "code": "es", "value": "Establecimiento de Árboles y Arbustos" }
+    ]
+  },
+  {
+    "code": "614",
+    "name": [
+      { "code": "en", "value": "Watering Facility" },
+      { "code": "es", "value": "Instalación de Abrevadero" }
+    ]
+  },
+  {
+    "code": "643",
+    "name": [
+      { "code": "en", "value": "Restoration of Rare or Declining Natural Communities" },
+      { "code": "es", "value": "Restauración de Comunidades Naturales Raras o en Declive" }
+    ]
+  },
+  {
+    "code": "644",
+    "name": [
+      { "code": "en", "value": "Wetland Wildlife Habitat Management" },
+      { "code": "es", "value": "Manejo del Hábitat de Vida Silvestre en Humedales" }
+    ]
+  },
+  {
+    "code": "645",
+    "name": [
+      { "code": "en", "value": "Upland Wildlife Habitat Management" },
+      { "code": "es", "value": "Manejo del Hábitat de Vida Silvestre en Tierras Altas" }
+    ]
+  },
+  {
+    "code": "646",
+    "name": [
+      { "code": "en", "value": "Shallow Water Development and Management" },
+      { "code": "es", "value": "Desarrollo y Manejo de Aguas Someras" }
+    ]
+  },
+  {
+    "code": "647",
+    "name": [
+      { "code": "en", "value": "Early Successional Habitat Development/Management" },
+      { "code": "es", "value": "Desarrollo/Manejo de Hábitat de Sucesión Temprana" }
+    ]
+  },
+  {
+    "code": "649",
+    "name": [
+      { "code": "en", "value": "Structures for Wildlife" },
+      { "code": "es", "value": "Estructuras para Vida Silvestre" }
+    ]
+  },
+  {
+    "code": "650",
+    "name": [
+      { "code": "en", "value": "Windbreak-Shelterbelt Renovation" },
+      { "code": "es", "value": "Renovación de Cortavientos y Cinturones de Protección" }
+    ]
+  },
+  {
+    "code": "654",
+    "name": [
+      { "code": "en", "value": "Road-Trail-Landing Closure and Treatment" },
+      { "code": "es", "value": "Cierre y Tratamiento de Caminos, Senderos y Plataformas" }
+    ]
+  },
+  {
+    "code": "655",
+    "name": [
+      { "code": "en", "value": "Forest Trails and Landings" },
+      { "code": "es", "value": "Senderos y Plataformas Forestales" }
+    ]
+  },
+  {
+    "code": "657",
+    "name": [
+      { "code": "en", "value": "Wetland Restoration" },
+      { "code": "es", "value": "Restauración de Humedales" }
+    ]
+  },
+  {
+    "code": "658",
+    "name": [
+      { "code": "en", "value": "Wetland Creation" },
+      { "code": "es", "value": "Creación de Humedales" }
+    ]
+  },
+  {
+    "code": "659",
+    "name": [
+      { "code": "en", "value": "Wetland Enhancement" },
+      { "code": "es", "value": "Mejoramiento de Humedales" }
+    ]
+  },
+  {
+    "code": "660",
+    "name": [
+      { "code": "en", "value": "Tree-Shrub Pruning" },
+      { "code": "es", "value": "Poda de Árboles y Arbustos" }
+    ]
+  },
+  {
+    "code": "666",
+    "name": [
+      { "code": "en", "value": "Forest Stand Improvement" },
+      { "code": "es", "value": "Mejoramiento de Rodales Forestales" }
+    ]
+  }
+]

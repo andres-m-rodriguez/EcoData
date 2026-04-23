@@ -8,7 +8,8 @@ public sealed record SpeciesDtoForList(
     string ScientificName,
     bool IsFauna,
     string GRank,
-    string SRank
+    string SRank,
+    bool HasProfileImage
 );
 
 public sealed record SpeciesDtoForDetail(

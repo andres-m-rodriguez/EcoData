@@ -1,17 +1,178 @@
 @inherits LayoutComponentBase
+@inject INativeNavigationManager Navigation
+@inject INativeNavbarManager Navbar
+@implements IDisposable
 
-<MudThemeProvider />
+<MudThemeProvider Theme="FaunaFinderTheme.Default" />
 <MudPopoverProvider />
 <MudDialogProvider />
 <MudSnackbarProvider />
 
 <MudLayout>
-    <MudAppBar Elevation="1" Fixed="true">
-        <MudText Typo="Typo.h5" Class="ml-3">FaunaFinder</MudText>
+    <MudAppBar Color="Color.Primary" Elevation="0" Fixed="true" Class="app-bar-blur">
+        @* Mobile: Back button + Title OR Logo *@
+        <MudHidden Breakpoint="Breakpoint.MdAndUp">
+            <div class="d-flex align-center" style="flex: 1;">
+                @if (!IsHomePage)
+                {
+                    <NuiNativeNavbar ShowBackButton="true" ShowTitle="false" ShowActions="false" />
+                    <span class="page-title">@Navbar.State.Title</span>
+                }
+                else
+                {
+                    <span class="logo-text">FaunaFinder</span>
+                }
+            </div>
+        </MudHidden>
+
+        @* Desktop: Logo + Page Title *@
+        <MudHidden Breakpoint="Breakpoint.SmAndDown">
+            <div class="d-flex align-center">
+                <span class="logo-text">FaunaFinder</span>
+                @if (!IsHomePage && Navbar.State.Title is not null)
+                {
+                    <MudDivider Vertical="true" FlexItem="true" Class="mx-4 my-3" />
+                    <span class="page-title">@Navbar.State.Title</span>
+                }
+            </div>
+        </MudHidden>
+
+        @* Desktop: Navigation links *@
+        <MudHidden Breakpoint="Breakpoint.SmAndDown">
+            <div class="d-flex align-center ml-6 gap-4">
+                <MudButton Href="/" Color="Color.Inherit" Variant="Variant.Text">
+                    Map
+                </MudButton>
+                <MudButton Href="/species" Color="Color.Inherit" Variant="Variant.Text">
+                    Species
+                </MudButton>
+                <MudButton Href="/categories" Color="Color.Inherit" Variant="Variant.Text">
+                    Categories
+                </MudButton>
+            </div>
+        </MudHidden>
+
         <MudSpacer />
-        <MudIconButton Icon="@Icons.Material.Filled.Search" Color="Color.Inherit" />
+
+        @* Mobile: Action button(s) at far right *@
+        <MudHidden Breakpoint="Breakpoint.MdAndUp">
+            @if (!IsHomePage)
+            {
+                <NuiNativeNavbar ShowBackButton="false" ShowTitle="false" />
+            }
+        </MudHidden>
     </MudAppBar>
-    <MudMainContent Class="pt-16 pa-4">
-        @Body
+
+    <MudMainContent Class="main-content">
+        @if (IsHomePage)
+        {
+            @Body
+        }
+        else
+        {
+            <MudContainer MaxWidth="MaxWidth.Large" Class="py-6 px-4 content-container">
+                @Body
+            </MudContainer>
+        }
     </MudMainContent>
 </MudLayout>
+
+@* Mobile Bottom Navigation - Outside MudLayout for stability *@
+<MudHidden Breakpoint="Breakpoint.MdAndUp">
+    <div class="bottom-nav">
+        <MudStack Row="true" Justify="Justify.SpaceAround" AlignItems="AlignItems.Center" Class="bottom-nav-container">
+            <MudButton Variant="Variant.Text" Color="@GetBottomNavColor(NavigationTab.Map)" Class="bottom-nav-item"
+                       OnClick="@(() => NavigateToTab(NavigationTab.Map))">
+                <MudStack AlignItems="AlignItems.Center" Spacing="0">
+                    <MudIcon Icon="@Icons.Material.Filled.Map" Size="Size.Medium" />
+                    <MudText Typo="Typo.caption">Map</MudText>
+                </MudStack>
+            </MudButton>
+            <MudButton Variant="Variant.Text" Color="@GetBottomNavColor(NavigationTab.Species)" Class="bottom-nav-item"
+                       OnClick="@(() => NavigateToTab(NavigationTab.Species))">
+                <MudStack AlignItems="AlignItems.Center" Spacing="0">
+                    <MudIcon Icon="@Icons.Material.Filled.Pets" Size="Size.Medium" />
+                    <MudText Typo="Typo.caption">Species</MudText>
+                </MudStack>
+            </MudButton>
+            <MudButton Variant="Variant.Text" Color="@GetBottomNavColor(NavigationTab.Categories)" Class="bottom-nav-item"
+                       OnClick="@(() => NavigateToTab(NavigationTab.Categories))">
+                <MudStack AlignItems="AlignItems.Center" Spacing="0">
+                    <MudIcon Icon="@Icons.Material.Filled.Category" Size="Size.Medium" />
+                    <MudText Typo="Typo.caption">Categories</MudText>
+                </MudStack>
+            </MudButton>
+        </MudStack>
+    </div>
+</MudHidden>
+
+@code {
+    private enum NavigationTab { Map, Species, Categories }
+
+    private NavigationTab _currentTab = NavigationTab.Map;
+
+    private bool IsHomePage => Navigation.State.Path == "/" || Navigation.State.Path == "";
+
+    protected override void OnInitialized()
+    {
+        Navigation.OnStateChanged += HandleNavigationStateChanged;
+        Navbar.OnStateChanged += HandleNavbarStateChanged;
+        UpdateCurrentTab();
+    }
+
+    private void HandleNavigationStateChanged()
+    {
+        UpdateCurrentTab();
+        InvokeAsync(StateHasChanged);
+    }
+
+    private void HandleNavbarStateChanged()
+    {
+        InvokeAsync(StateHasChanged);
+    }
+
+    private void UpdateCurrentTab()
+    {
+        var path = Navigation.State.Path;
+        _currentTab = path switch
+        {
+            "/" or "" => NavigationTab.Map,
+            var p when p.StartsWith("/species", StringComparison.OrdinalIgnoreCase) => NavigationTab.Species,
+            var p when p.StartsWith("/categories", StringComparison.OrdinalIgnoreCase) => NavigationTab.Categories,
+            _ => NavigationTab.Map
+        };
+    }
+
+    private string GetNavLinkClass(string path)
+    {
+        var currentPath = Navigation.State.Path;
+        var isActive = path == "/"
+            ? currentPath == "/" || string.IsNullOrEmpty(currentPath)
+            : currentPath.StartsWith(path, StringComparison.OrdinalIgnoreCase);
+
+        return isActive ? "nav-link-active" : "nav-link";
+    }
+
+    private Color GetBottomNavColor(NavigationTab tab)
+    {
+        return _currentTab == tab ? Color.Primary : Color.Default;
+    }
+
+    private void NavigateToTab(NavigationTab tab)
+    {
+        var path = tab switch
+        {
+            NavigationTab.Map => "/",
+            NavigationTab.Species => "/species",
+            NavigationTab.Categories => "/categories",
+            _ => "/"
+        };
+        Navigation.NavigateTo(path);
+    }
+
+    public void Dispose()
+    {
+        Navigation.OnStateChanged -= HandleNavigationStateChanged;
+        Navbar.OnStateChanged -= HandleNavbarStateChanged;
+    }
+}

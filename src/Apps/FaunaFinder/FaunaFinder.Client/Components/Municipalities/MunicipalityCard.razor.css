@@ -1,0 +1,14 @@
+.municipality-card {
+    cursor: pointer;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.municipality-card:hover {
+    border-color: var(--mud-palette-primary);
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+}
+
+.municipality-card-text {
+    flex: 1 1 0;
+    min-width: 0;
+}

@@ -5,9 +5,9 @@
 <div class="search-header-wrapper @(_isSticky ? "is-sticky" : "")" @ref="_headerRef">
     <div class="search-header-content">
         <div class="search-wrapper">
-            <SearchBar @bind-Value="SearchSignal.Value" Placeholder="@Placeholder" ShowFilterButton="ShowFilterButton"
-                       HasActiveFilters="HasActiveFilters" FilterCount="FilterCount" OnFilterClick="OnFilterClick"
-                       EnableSticky="false" />
+            <NuiSearchBar @bind-Value="SearchSignal.Value" Placeholder="@Placeholder" ShowFilterButton="ShowFilterButton"
+                          HasActiveFilters="HasActiveFilters" FilterCount="FilterCount" OnFilterClick="OnFilterClick"
+                          EnableSticky="false" />
         </div>
         @if (ActionButtons is not null)
         {

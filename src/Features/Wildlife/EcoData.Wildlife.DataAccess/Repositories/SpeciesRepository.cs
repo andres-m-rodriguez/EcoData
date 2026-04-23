@@ -67,7 +67,8 @@ public sealed class SpeciesRepository(IDbContextFactory<WildlifeDbContext> conte
                     s.ScientificName,
                     s.IsFauna,
                     s.GRank,
-                    s.SRank
+                    s.SRank,
+                    s.ProfileImageData != null
                 ))
                 .AsAsyncEnumerable()
                 .WithCancellation(cancellationToken)
@@ -105,7 +106,8 @@ public sealed class SpeciesRepository(IDbContextFactory<WildlifeDbContext> conte
                 ms.Species.ScientificName,
                 ms.Species.IsFauna,
                 ms.Species.GRank,
-                ms.Species.SRank
+                ms.Species.SRank,
+                ms.Species.ProfileImageData != null
             ))
             .ToListAsync(cancellationToken);
     }
@@ -125,7 +127,8 @@ public sealed class SpeciesRepository(IDbContextFactory<WildlifeDbContext> conte
                 scl.Species.ScientificName,
                 scl.Species.IsFauna,
                 scl.Species.GRank,
-                scl.Species.SRank
+                scl.Species.SRank,
+                scl.Species.ProfileImageData != null
             ))
             .ToListAsync(cancellationToken);
     }
