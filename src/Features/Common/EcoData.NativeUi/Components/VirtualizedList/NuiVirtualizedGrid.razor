@@ -20,21 +20,31 @@ else if (_isEmpty)
 }
 else
 {
-    <div class="@ComputedClass" style="@ComputedStyle">
-        <Virtualize @ref="_virtualizeRef"
+    <div class="@ComputedClass" style="@GridStyle">
+        <Virtualize TItem="IReadOnlyList<TItem>"
+                    @ref="_virtualizeRef"
                     @key="_generation"
-                    ItemsProvider="LoadItemsAsync"
+                    ItemsProvider="LoadRowsAsync"
                     ItemSize="ItemSize"
-                    OverscanCount="OverscanCount"
-                    Context="item">
-            <ItemContent>
-                @ItemTemplate(item)
+                    OverscanCount="OverscanCount">
+            <ItemContent Context="row">
+                <div class="nui-virtualized-grid-row" style="@RowStyle">
+                    @foreach (var item in row)
+                    {
+                        @ItemTemplate(item)
+                    }
+                </div>
             </ItemContent>
             <Placeholder>
-                @if (PlaceholderTemplate is not null)
-                {
-                    @PlaceholderTemplate
-                }
+                <div class="nui-virtualized-grid-row" style="@RowStyle">
+                    @for (var i = 0; i < EffectiveColumns; i++)
+                    {
+                        @if (PlaceholderTemplate is not null)
+                        {
+                            @PlaceholderTemplate
+                        }
+                    }
+                </div>
             </Placeholder>
         </Virtualize>
     </div>

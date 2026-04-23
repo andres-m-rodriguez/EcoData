@@ -13,8 +13,8 @@
                     ItemsProvider="Fetch"
                     ParametersBuilder="BuildParameters"
                     CursorSelector="@(s => s.Id)"
-                    ItemSize="360"
-                    OverscanCount="4"
+                    ItemSize="@_rowHeight"
+                    OverscanCount="2"
                     Columns="@_columns"
                     GridClass="ff-grid">
     <LoadingTemplate>
@@ -65,31 +65,46 @@
     private SpeciesSort _lastSort = SpeciesSort.ScientificNameAsc;
 
     private int _columns = 3;
+    private float _rowHeight = 460;
     private Guid _viewportSubscriptionId;
 
     protected override async Task OnInitializedAsync()
     {
-        var breakpoint = await Viewport.GetCurrentBreakpointAsync();
-        _columns = BreakpointToColumns(breakpoint);
-
+        ApplyBreakpoint(await Viewport.GetCurrentBreakpointAsync());
         _viewportSubscriptionId = Guid.NewGuid();
         await Viewport.SubscribeAsync(_viewportSubscriptionId, OnBreakpointChanged);
     }
 
     private Task OnBreakpointChanged(BrowserViewportEventArgs args)
     {
-        var next = BreakpointToColumns(args.Breakpoint);
-        if (next == _columns) return Task.CompletedTask;
-        _columns = next;
-        return InvokeAsync(StateHasChanged);
+        var prevCols = _columns;
+        var prevRow = _rowHeight;
+        ApplyBreakpoint(args.Breakpoint);
+        if (prevCols == _columns && Math.Abs(prevRow - _rowHeight) < 0.5f)
+        {
+            return Task.CompletedTask;
+        }
+        return InvokeAsync(() =>
+        {
+            StateHasChanged();
+            _grid?.Refresh(); // row geometry changed — Virtualize needs fresh math
+        });
     }
 
-    private static int BreakpointToColumns(Breakpoint breakpoint) => breakpoint switch
+    /// <summary>
+    /// Row height tracks column count because cards are 4:3 — fewer columns
+    /// means wider, therefore taller cards. Values approximate measured
+    /// heights; off-by-20px is fine for Virtualize.
+    /// </summary>
+    private void ApplyBreakpoint(Breakpoint breakpoint)
     {
-        Breakpoint.Xs => 1,
-        Breakpoint.Sm => 2,
-        _ => 3,
-    };
+        (_columns, _rowHeight) = breakpoint switch
+        {
+            Breakpoint.Xs => (1, 480f),
+            Breakpoint.Sm => (2, 500f),
+            _ => (3, 460f),
+        };
+    }
 
     protected override void OnParametersSet()
     {

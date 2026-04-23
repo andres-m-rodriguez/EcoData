@@ -5,15 +5,17 @@ using Microsoft.AspNetCore.Components.Web.Virtualization;
 namespace EcoData.NativeUi.Components.VirtualizedList;
 
 /// <summary>
-/// Cursor-paginated virtualized grid. Wraps Blazor's <see cref="Virtualize{TItem}"/>
-/// inside a container styled via <see cref="GridClass"/> / <see cref="GridStyle"/>.
+/// Cursor-paginated virtualized grid. Internally groups items into rows of
+/// <see cref="Columns"/> and hands Blazor's <see cref="Virtualize{TItem}"/>
+/// a row at a time — this is what keeps Virtualize's scrollbar math correct
+/// in a multi-column layout.
 ///
-/// To compose with a multi-column CSS grid, make the two spacer &lt;div&gt;s that
-/// Virtualize renders span the full width, e.g.:
-/// <code>
-///   .my-grid > div { grid-column: 1 / -1; }
-///   .my-grid > .my-card { grid-column: auto; }
-/// </code>
+/// <para>
+/// <see cref="ItemSize"/> is the pixel height of a <em>row</em> (card
+/// height + vertical gap), not a single card. Consumers should measure and
+/// provide this; if it's too small or large, virtualization will jitter or
+/// render blank bands during scroll.
+/// </para>
 /// </summary>
 public partial class NuiVirtualizedGrid<TItem, TParams> : ComponentBase
     where TParams : CursorParameters
@@ -24,7 +26,7 @@ public partial class NuiVirtualizedGrid<TItem, TParams> : ComponentBase
     private bool _isEmpty;
     private bool _isInitialLoading = true;
     private int _generation;
-    private Virtualize<TItem>? _virtualizeRef;
+    private Virtualize<IReadOnlyList<TItem>>? _virtualizeRef;
 
     [Parameter, EditorRequired]
     public required Func<TParams, CancellationToken, IAsyncEnumerable<TItem>> ItemsProvider { get; set; }
@@ -44,41 +46,31 @@ public partial class NuiVirtualizedGrid<TItem, TParams> : ComponentBase
 
     [Parameter] public RenderFragment? EmptyTemplate { get; set; }
 
-    [Parameter] public float ItemSize { get; set; } = 300;
+    /// <summary>Height of a single row in pixels. Used by Virtualize for scroll math.</summary>
+    [Parameter] public float ItemSize { get; set; } = 400;
 
-    [Parameter] public int OverscanCount { get; set; } = 6;
+    /// <summary>Number of extra rows rendered before and after the visible range.</summary>
+    [Parameter] public int OverscanCount { get; set; } = 4;
 
-    /// <summary>
-    /// Number of grid columns. When set, the component emits
-    /// <c>grid-template-columns: repeat(N, 1fr)</c> on the host container
-    /// and makes the Virtualize spacers span the full row. Leave null to
-    /// provide your own grid layout via <see cref="GridClass"/>.
-    /// </summary>
+    /// <summary>Columns per row. Defaults to 1 (single-column list).</summary>
     [Parameter] public int? Columns { get; set; }
 
-    /// <summary>
-    /// Gap between grid tracks. Only applied when <see cref="Columns"/> is set.
-    /// </summary>
+    /// <summary>Gap between columns within a row.</summary>
     [Parameter] public string Gap { get; set; } = "20px";
 
     [Parameter] public string? GridClass { get; set; }
 
     [Parameter] public string? GridStyle { get; set; }
 
-    private string ComputedClass =>
-        Columns is not null
-            ? $"nui-virtualized-grid {GridClass}".Trim()
-            : GridClass ?? string.Empty;
+    private int EffectiveColumns => Math.Max(1, Columns ?? 1);
 
-    private string? ComputedStyle
-    {
-        get
-        {
-            if (Columns is not int cols) return GridStyle;
-            var layout = $"display:grid;grid-template-columns:repeat({cols},1fr);gap:{Gap};";
-            return string.IsNullOrEmpty(GridStyle) ? layout : layout + GridStyle;
-        }
-    }
+    private string ComputedClass =>
+        string.IsNullOrEmpty(GridClass)
+            ? "nui-virtualized-grid"
+            : $"nui-virtualized-grid {GridClass}";
+
+    private string RowStyle =>
+        $"display:grid;grid-template-columns:repeat({EffectiveColumns},1fr);gap:{Gap};";
 
     public bool IsInitialLoading => _isInitialLoading;
 
@@ -108,16 +100,20 @@ public partial class NuiVirtualizedGrid<TItem, TParams> : ComponentBase
         _isInitialLoading = false;
     }
 
-    private async ValueTask<ItemsProviderResult<TItem>> LoadItemsAsync(ItemsProviderRequest request)
+    private async ValueTask<ItemsProviderResult<IReadOnlyList<TItem>>> LoadRowsAsync(
+        ItemsProviderRequest request)
     {
-        var startIndex = request.StartIndex;
-        var endIndex = startIndex + request.Count;
+        var cols = EffectiveColumns;
+        var firstItemIndex = request.StartIndex * cols;
+        var lastItemIndex = (request.StartIndex + request.Count) * cols;
         var currentGeneration = _generation;
 
-        while (_hasMoreItems && _cachedItems.Count < endIndex)
+        while (_hasMoreItems && _cachedItems.Count < lastItemIndex)
         {
             if (_generation != currentGeneration)
-                return CreateResult(startIndex, request.Count);
+            {
+                return EmptyResult();
+            }
 
             var parameters = ParametersBuilder(_lastCursor);
 
@@ -125,7 +121,9 @@ public partial class NuiVirtualizedGrid<TItem, TParams> : ComponentBase
             await foreach (var item in ItemsProvider(parameters, request.CancellationToken))
             {
                 if (_generation != currentGeneration)
-                    return CreateResult(startIndex, request.Count);
+                {
+                    return EmptyResult();
+                }
 
                 _cachedItems.Add(item);
                 _lastCursor = CursorSelector(item);
@@ -138,15 +136,27 @@ public partial class NuiVirtualizedGrid<TItem, TParams> : ComponentBase
             }
         }
 
-        return CreateResult(startIndex, request.Count);
+        var rows = new List<IReadOnlyList<TItem>>(request.Count);
+        for (var rowIndex = request.StartIndex; rowIndex < request.StartIndex + request.Count; rowIndex++)
+        {
+            var rowStart = rowIndex * cols;
+            if (rowStart >= _cachedItems.Count)
+            {
+                break;
+            }
+
+            var rowEnd = Math.Min(rowStart + cols, _cachedItems.Count);
+            rows.Add(_cachedItems.GetRange(rowStart, rowEnd - rowStart));
+        }
+
+        var knownRows = (_cachedItems.Count + cols - 1) / cols;
+        var totalRowCount = _hasMoreItems ? knownRows + 1 : knownRows;
+
+        return new ItemsProviderResult<IReadOnlyList<TItem>>(rows, totalRowCount);
     }
 
-    private ItemsProviderResult<TItem> CreateResult(int startIndex, int count)
-    {
-        var items = _cachedItems.Skip(startIndex).Take(count).ToList();
-        var totalCount = _hasMoreItems ? _cachedItems.Count + 1 : _cachedItems.Count;
-        return new ItemsProviderResult<TItem>(items, totalCount);
-    }
+    private static ItemsProviderResult<IReadOnlyList<TItem>> EmptyResult() =>
+        new([], 0);
 
     /// <summary>
     /// Clears the cache and reloads from the beginning. Call when filter/search params change.
