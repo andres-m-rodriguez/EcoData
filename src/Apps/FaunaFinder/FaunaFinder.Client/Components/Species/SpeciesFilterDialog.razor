@@ -94,8 +94,7 @@
                     <span class="ff-modal-section-meta">≥ @_minMunicipalities</span>
                 </div>
                 <div class="ff-range-row">
-                    <MudSlider T="int" Value="_minMunicipalities"
-                               ValueChanged="@((int v) => _minMunicipalities = v)"
+                    <MudSlider T="int" @bind-Value="_minMunicipalities"
                                Min="1" Max="78" Step="1" Color="Color.Primary" />
                     <div class="ff-range-labels">
                         <span>1 (rare)</span>
