@@ -48,9 +48,37 @@ public partial class NuiVirtualizedGrid<TItem, TParams> : ComponentBase
 
     [Parameter] public int OverscanCount { get; set; } = 6;
 
+    /// <summary>
+    /// Number of grid columns. When set, the component emits
+    /// <c>grid-template-columns: repeat(N, 1fr)</c> on the host container
+    /// and makes the Virtualize spacers span the full row. Leave null to
+    /// provide your own grid layout via <see cref="GridClass"/>.
+    /// </summary>
+    [Parameter] public int? Columns { get; set; }
+
+    /// <summary>
+    /// Gap between grid tracks. Only applied when <see cref="Columns"/> is set.
+    /// </summary>
+    [Parameter] public string Gap { get; set; } = "20px";
+
     [Parameter] public string? GridClass { get; set; }
 
     [Parameter] public string? GridStyle { get; set; }
+
+    private string ComputedClass =>
+        Columns is not null
+            ? $"nui-virtualized-grid {GridClass}".Trim()
+            : GridClass ?? string.Empty;
+
+    private string? ComputedStyle
+    {
+        get
+        {
+            if (Columns is not int cols) return GridStyle;
+            var layout = $"display:grid;grid-template-columns:repeat({cols},1fr);gap:{Gap};";
+            return string.IsNullOrEmpty(GridStyle) ? layout : layout + GridStyle;
+        }
+    }
 
     public bool IsInitialLoading => _isInitialLoading;
 

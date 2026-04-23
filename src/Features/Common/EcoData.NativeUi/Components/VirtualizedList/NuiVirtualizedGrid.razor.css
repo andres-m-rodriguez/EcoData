@@ -1,0 +1,9 @@
+/* Blazor's <Virtualize> renders two spacer <div>s (top/bottom) plus the
+   visible item templates in between, all as direct children of the host.
+   In a multi-column grid those spacer divs would each take one cell and
+   shove the real items out of alignment. Forcing them to span every
+   column keeps the grid flow correct. Items (<article>, custom elements)
+   fall through to auto placement. */
+.nui-virtualized-grid ::deep > div {
+    grid-column: 1 / -1;
+}

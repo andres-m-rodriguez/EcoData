@@ -3,7 +3,9 @@
 @using EcoData.Wildlife.Contracts.Parameters
 @using EcoData.Wildlife.Application.Client
 @using EcoData.NativeUi.Components.VirtualizedList
+@implements IAsyncDisposable
 @inject ISpeciesHttpClient SpeciesClient
+@inject IBrowserViewportService Viewport
 
 <NuiVirtualizedGrid @ref="_grid"
                     TItem="SpeciesDtoForList"
@@ -13,6 +15,7 @@
                     CursorSelector="@(s => s.Id)"
                     ItemSize="360"
                     OverscanCount="4"
+                    Columns="@_columns"
                     GridClass="ff-grid">
     <LoadingTemplate>
         <div class="ff-grid">
@@ -61,6 +64,33 @@
     private string? _lastSearch;
     private SpeciesSort _lastSort = SpeciesSort.ScientificNameAsc;
 
+    private int _columns = 3;
+    private Guid _viewportSubscriptionId;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var breakpoint = await Viewport.GetCurrentBreakpointAsync();
+        _columns = BreakpointToColumns(breakpoint);
+
+        _viewportSubscriptionId = Guid.NewGuid();
+        await Viewport.SubscribeAsync(_viewportSubscriptionId, OnBreakpointChanged);
+    }
+
+    private Task OnBreakpointChanged(BrowserViewportEventArgs args)
+    {
+        var next = BreakpointToColumns(args.Breakpoint);
+        if (next == _columns) return Task.CompletedTask;
+        _columns = next;
+        return InvokeAsync(StateHasChanged);
+    }
+
+    private static int BreakpointToColumns(Breakpoint breakpoint) => breakpoint switch
+    {
+        Breakpoint.Xs => 1,
+        Breakpoint.Sm => 2,
+        _ => 3,
+    };
+
     protected override void OnParametersSet()
     {
         if (_grid is null) return;
@@ -75,6 +105,14 @@
             _lastSearch = Search;
             _lastSort = Sort;
             _grid.Refresh();
+        }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (_viewportSubscriptionId != Guid.Empty)
+        {
+            await Viewport.UnsubscribeAsync(_viewportSubscriptionId);
         }
     }
 
