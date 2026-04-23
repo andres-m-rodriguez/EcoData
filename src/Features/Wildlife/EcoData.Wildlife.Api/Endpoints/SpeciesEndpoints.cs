@@ -104,6 +104,37 @@ public static class SpeciesEndpoints
             )
             .WithName("GetSpeciesByCategory");
 
+        group
+            .MapGet(
+                "/stats",
+                async Task<Ok<SpeciesStatsDto>> (
+                    ISpeciesRepository repository,
+                    CancellationToken ct
+                ) => TypedResults.Ok(await repository.GetStatsAsync(ct))
+            )
+            .WithName("GetSpeciesStats");
+
+        group
+            .MapGet(
+                "/facets",
+                async Task<Ok<SpeciesFacetsDto>> (
+                    [AsParameters] SpeciesParameters parameters,
+                    ISpeciesRepository repository,
+                    CancellationToken ct
+                ) => TypedResults.Ok(await repository.GetFacetsAsync(parameters, ct))
+            )
+            .WithName("GetSpeciesFacets");
+
+        group
+            .MapGet(
+                "/featured",
+                async Task<Ok<IReadOnlyList<SpeciesDtoForList>>> (
+                    ISpeciesRepository repository,
+                    CancellationToken ct
+                ) => TypedResults.Ok(await repository.GetFeaturedAsync(ct))
+            )
+            .WithName("GetFeaturedSpecies");
+
         return app;
     }
 }

@@ -7,6 +7,7 @@ using EcoData.Locations.Database;
 using EcoData.Locations.Database.Models;
 using EcoData.Organization.Database;
 using EcoData.Sensors.Database;
+using EcoData.Wildlife.Contracts;
 using EcoData.Wildlife.Database;
 using EcoData.Wildlife.Database.Models;
 using Microsoft.AspNetCore.Identity;
@@ -343,16 +344,18 @@ public sealed class DatabaseSeederWorker(
         CancellationToken stoppingToken
     )
     {
+        // Fixed 8-code taxonomy backing the FaunaFinder filter chips.
+        // Any legacy SpeciesCategory rows from earlier deploys coexist harmlessly.
         var defaultCategories = new[]
         {
             ("bird", "Bird", "Ave"),
-            ("mammal", "Mammal", "Mamífero"),
-            ("reptile", "Reptile", "Reptil"),
-            ("amphibian", "Amphibian", "Anfibio"),
-            ("fish", "Fish", "Pez"),
-            ("invertebrate", "Invertebrate", "Invertebrado"),
             ("plant", "Plant", "Planta"),
-            ("fern", "Fern", "Helecho"),
+            ("reptile", "Reptile", "Reptil"),
+            ("amphib", "Amphibian", "Anfibio"),
+            ("fish", "Fish", "Pez"),
+            ("mammal", "Mammal", "Mamífero"),
+            ("invert", "Invertebrate", "Invertebrado"),
+            ("fungi", "Fungus", "Hongo"),
         };
 
         var existing = await context.SpeciesCategories.ToDictionaryAsync(
@@ -524,6 +527,7 @@ public sealed class DatabaseSeederWorker(
             }
             else
             {
+                var gRank = dto.GRank ?? "";
                 species = new Species
                 {
                     Id = Guid.CreateVersion7(),
@@ -540,8 +544,18 @@ public sealed class DatabaseSeederWorker(
                     ImageSourceUrl = dto.ImageSourceUrl,
                     IsFauna = dto.IsFauna,
                     ElCode = dto.ElCode ?? "",
-                    GRank = dto.GRank ?? "",
+                    GRank = gRank,
                     SRank = dto.SRank ?? "",
+                    // GRank → IUCN mapping is advisory: NatureServe ranks don't align
+                    // 1:1 with IUCN categories. Good enough for UI seed data.
+                    IucnStatus = dto.IucnStatus ?? MapGRankToIucn(gRank),
+                    // Treat subspecies-level "T" ranks (e.g. G5T2) as endemic-by-proxy
+                    // until the JSON carries an explicit flag.
+                    IsEndemic = dto.IsEndemic ?? gRank.Contains('T'),
+                    IsFeatured = dto.IsFeatured ?? false,
+                    Habitat = dto.Habitat,
+                    LastObservedAtUtc = null,
+                    CreatedAtUtc = DateTimeOffset.UtcNow,
                 };
                 context.Species.Add(species);
                 await context.SaveChangesAsync(stoppingToken);
@@ -584,8 +598,9 @@ public sealed class DatabaseSeederWorker(
                     .Select(scl => scl.CategoryId)
                     .ToHashSetAsync(stoppingToken);
 
-                foreach (var categoryCode in dto.CategoryCodes)
+                foreach (var rawCode in dto.CategoryCodes)
                 {
+                    var categoryCode = NormalizeCategoryCode(rawCode);
                     if (
                         categories.TryGetValue(categoryCode, out var category)
                         && !existingCategoryLinks.Contains(category.Id)
@@ -599,6 +614,7 @@ public sealed class DatabaseSeederWorker(
                                 CategoryId = category.Id,
                             }
                         );
+                        existingCategoryLinks.Add(category.Id);
                     }
                 }
             }
@@ -606,11 +622,90 @@ public sealed class DatabaseSeederWorker(
             await context.SaveChangesAsync(stoppingToken);
         }
 
+        await SeedFeaturedSpeciesAsync(context, stoppingToken);
+
         logger.LogInformation(
             "Species seeded: {Count} new, {Total} total",
             seededCount,
             speciesList.Count
         );
+    }
+
+    private async Task SeedFeaturedSpeciesAsync(
+        WildlifeDbContext context,
+        CancellationToken stoppingToken
+    )
+    {
+        var alreadyFeatured = await context.Species.CountAsync(s => s.IsFeatured, stoppingToken);
+        if (alreadyFeatured >= 3)
+        {
+            return;
+        }
+
+        // Pick the 3 most threatened species with images — they make the best editorial picks.
+        var picks = await context
+            .Species.Where(s => !s.IsFeatured)
+            .OrderBy(s => s.IucnStatus == IucnStatus.CR ? 0
+                : s.IucnStatus == IucnStatus.EN ? 1
+                : s.IucnStatus == IucnStatus.VU ? 2
+                : 3)
+            .ThenByDescending(s => s.ProfileImageData != null)
+            .ThenBy(s => s.ScientificName)
+            .Take(3 - alreadyFeatured)
+            .ToListAsync(stoppingToken);
+
+        var now = DateTimeOffset.UtcNow;
+        for (var i = 0; i < picks.Count; i++)
+        {
+            picks[i].IsFeatured = true;
+            picks[i].LastObservedAtUtc ??= now.AddDays(-(i * 7 + 3));
+        }
+
+        if (picks.Count > 0)
+        {
+            await context.SaveChangesAsync(stoppingToken);
+            logger.LogInformation("Marked {Count} species as featured.", picks.Count);
+        }
+    }
+
+    private static string NormalizeCategoryCode(string code) => code switch
+    {
+        "amphibian" => "amphib",
+        "invertebrate" => "invert",
+        "fern" => "plant",
+        _ => code,
+    };
+
+    private static IucnStatus? MapGRankToIucn(string gRank)
+    {
+        if (string.IsNullOrWhiteSpace(gRank))
+        {
+            return null;
+        }
+
+        if (gRank.StartsWith("GH", StringComparison.OrdinalIgnoreCase)
+            || gRank.StartsWith("GX", StringComparison.OrdinalIgnoreCase))
+        {
+            return IucnStatus.EX;
+        }
+
+        if (gRank.StartsWith("GNR", StringComparison.OrdinalIgnoreCase)
+            || gRank.StartsWith("GU", StringComparison.OrdinalIgnoreCase))
+        {
+            return IucnStatus.DD;
+        }
+
+        return gRank.Length >= 2 && gRank[0] is 'G' or 'g'
+            ? gRank[1] switch
+            {
+                '1' => IucnStatus.CR,
+                '2' => IucnStatus.EN,
+                '3' => IucnStatus.VU,
+                '4' => IucnStatus.NT,
+                '5' => IucnStatus.LC,
+                _ => IucnStatus.DD,
+            }
+            : null;
     }
 
     private async Task SeedFwsLinksAsync(WildlifeDbContext context, CancellationToken stoppingToken)
@@ -767,6 +862,18 @@ public sealed class DatabaseSeederWorker(
 
         [JsonPropertyName("sRank")]
         public string? SRank { get; init; }
+
+        [JsonPropertyName("isEndemic")]
+        public bool? IsEndemic { get; init; }
+
+        [JsonPropertyName("iucnStatus")]
+        public IucnStatus? IucnStatus { get; init; }
+
+        [JsonPropertyName("isFeatured")]
+        public bool? IsFeatured { get; init; }
+
+        [JsonPropertyName("habitat")]
+        public string? Habitat { get; init; }
     }
 
     private sealed class FwsLinkDto

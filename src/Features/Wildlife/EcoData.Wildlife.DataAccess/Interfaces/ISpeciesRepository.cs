@@ -25,4 +25,15 @@ public interface ISpeciesRepository
     );
 
     Task<byte[]?> GetProfileImageAsync(Guid id, CancellationToken cancellationToken = default);
+
+    Task<SpeciesStatsDto> GetStatsAsync(CancellationToken cancellationToken = default);
+
+    Task<SpeciesFacetsDto> GetFacetsAsync(
+        SpeciesParameters parameters,
+        CancellationToken cancellationToken = default
+    );
+
+    Task<IReadOnlyList<SpeciesDtoForList>> GetFeaturedAsync(
+        CancellationToken cancellationToken = default
+    );
 }

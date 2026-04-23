@@ -1,4 +1,5 @@
 using EcoData.Common.i18n;
+using EcoData.Wildlife.Contracts;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -29,6 +30,13 @@ public sealed class Species
     /// </summary>
     public required string SRank { get; set; }
 
+    public required bool IsEndemic { get; set; }
+    public required IucnStatus? IucnStatus { get; set; }
+    public required bool IsFeatured { get; set; }
+    public required string? Habitat { get; set; }
+    public required DateTimeOffset? LastObservedAtUtc { get; set; }
+    public required DateTimeOffset CreatedAtUtc { get; set; }
+
     public ICollection<FwsLink> FwsLinks { get; set; } = [];
     public ICollection<MunicipalitySpecies> MunicipalitySpecies { get; set; } = [];
     public ICollection<SpeciesCategoryLink> CategoryLinks { get; set; } = [];
@@ -54,10 +62,35 @@ public sealed class Species
 
             builder.Property(static e => e.SRank).HasMaxLength(20);
 
+            builder.Property(static e => e.Habitat).HasMaxLength(200);
+
+            builder
+                .Property(static e => e.IucnStatus)
+                .HasConversion<string>()
+                .HasMaxLength(8);
+
+            builder
+                .Property(static e => e.CreatedAtUtc)
+                .HasDefaultValueSql("now()");
+
             builder
                 .HasIndex(static e => e.ScientificName)
                 .IsUnique()
                 .HasDatabaseName("species_scientific_name_uidx");
+
+            builder
+                .HasIndex(static e => e.IsFeatured)
+                .HasFilter("is_featured = true")
+                .HasDatabaseName("species_is_featured_ix");
+
+            builder
+                .HasIndex(static e => e.IsEndemic)
+                .HasFilter("is_endemic = true")
+                .HasDatabaseName("species_is_endemic_ix");
+
+            builder
+                .HasIndex(static e => e.IucnStatus)
+                .HasDatabaseName("species_iucn_status_ix");
         }
     }
 }

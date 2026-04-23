@@ -16,7 +16,7 @@ builder.AddWildlifeDatabase();
 builder.Services.AddRazorComponents().AddInteractiveWebAssemblyComponents();
 builder.Services.AddMudServices();
 builder.Services.AddLocationsDataAccess();
-builder.Services.AddWildlifeDataAccess();
+builder.Services.AddWildlifeDataAccess(builder.Configuration);
 
 var app = builder.Build();
 

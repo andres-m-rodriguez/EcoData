@@ -22,4 +22,12 @@ public interface ISpeciesHttpClient
     Task<IReadOnlyList<SpeciesDtoForList>> GetByCategoryAsync(
         Guid categoryId,
         CancellationToken ct = default);
+
+    Task<SpeciesStatsDto?> GetStatsAsync(CancellationToken ct = default);
+
+    Task<SpeciesFacetsDto?> GetFacetsAsync(
+        SpeciesParameters? parameters = null,
+        CancellationToken ct = default);
+
+    Task<IReadOnlyList<SpeciesDtoForList>> GetFeaturedAsync(CancellationToken ct = default);
 }
