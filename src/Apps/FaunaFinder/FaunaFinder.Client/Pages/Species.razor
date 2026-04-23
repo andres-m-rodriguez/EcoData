@@ -8,6 +8,7 @@
 @using BlazingSingularity.Fetch
 @implements IDisposable
 @inject ISpeciesHttpClient SpeciesHttpClient
+@inject ISpeciesCategoryHttpClient SpeciesCategoryHttpClient
 @inject IMunicipalityHttpClient MunicipalityHttpClient
 @inject INativeNavbarManager Navbar
 @inject NavigationManager NavigationManager
@@ -111,6 +112,7 @@ else
     private IFetch<IReadOnlyList<MunicipalityDtoForList>>? _municipalitiesFetch;
     private IFetch<SpeciesStatsDto?>? _statsFetch;
     private IFetch<SpeciesFacetsDto?>? _facetsFetch;
+    private IFetch<IReadOnlyList<TaxonFacetDto>>? _taxaCountsFetch;
     private Guid? _loadedDetailId;
 
     private SpeciesFilterResult _filter = SpeciesFilterResult.Empty;
@@ -130,6 +132,11 @@ else
             ct => SpeciesHttpClient.GetFacetsAsync(BuildFacetParameters(), ct),
             () => InvokeAsync(StateHasChanged));
         _ = _facetsFetch.FetchAsync();
+
+        _taxaCountsFetch = new Fetch<IReadOnlyList<TaxonFacetDto>>(
+            SpeciesCategoryHttpClient.GetCountsAsync,
+            () => InvokeAsync(StateHasChanged));
+        _ = _taxaCountsFetch.FetchAsync();
     }
 
     protected override async Task OnParametersSetAsync()
@@ -229,7 +236,8 @@ else
         var parameters = new DialogParameters<SpeciesFilterDialog>
         {
             { x => x.Initial, _filter },
-            { x => x.Facets, _facetsFetch?.Data }
+            { x => x.Facets, _facetsFetch?.Data },
+            { x => x.TaxaCounts, _taxaCountsFetch?.Data }
         };
 
         var dialog = await Dialogs.ShowAsync<SpeciesFilterDialog>("Filters", parameters, options);
@@ -253,6 +261,7 @@ else
         (_municipalitiesFetch as IDisposable)?.Dispose();
         (_statsFetch as IDisposable)?.Dispose();
         (_facetsFetch as IDisposable)?.Dispose();
+        (_taxaCountsFetch as IDisposable)?.Dispose();
     }
 
     private static string GetSpeciesName(SpeciesDtoForDetail species)

@@ -58,4 +58,17 @@ public sealed class SpeciesCategoryRepository(IDbContextFactory<WildlifeDbContex
             ))
             .FirstOrDefaultAsync(cancellationToken);
     }
+
+    public async Task<IReadOnlyList<TaxonFacetDto>> GetCountsAsync(
+        CancellationToken cancellationToken = default
+    )
+    {
+        await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
+
+        return await context
+            .SpeciesCategories
+            .OrderBy(c => c.Code)
+            .Select(c => new TaxonFacetDto(c.Code, c.SpeciesLinks.Count))
+            .ToListAsync(cancellationToken);
+    }
 }

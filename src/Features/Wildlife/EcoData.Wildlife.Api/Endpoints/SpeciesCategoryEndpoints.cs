@@ -61,6 +61,16 @@ public static class SpeciesCategoryEndpoints
             )
             .WithName("GetSpeciesCategoryByCode");
 
+        group
+            .MapGet(
+                "/counts",
+                async Task<Ok<IReadOnlyList<TaxonFacetDto>>> (
+                    ISpeciesCategoryRepository repository,
+                    CancellationToken ct
+                ) => TypedResults.Ok(await repository.GetCountsAsync(ct))
+            )
+            .WithName("GetSpeciesCategoryCounts");
+
         return app;
     }
 }

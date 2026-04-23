@@ -120,6 +120,13 @@
     [Parameter] public SpeciesFilterResult Initial { get; set; } = SpeciesFilterResult.Empty;
     [Parameter] public SpeciesFacetsDto? Facets { get; set; }
 
+    /// <summary>
+    /// Unfiltered taxon counts (total species per category). Preferred over
+    /// <see cref="Facets"/>.Taxa for the chip badges because those reflect the
+    /// current filter and collapse to zero when the user hasn't selected a taxon.
+    /// </summary>
+    [Parameter] public IReadOnlyList<TaxonFacetDto>? TaxaCounts { get; set; }
+
     private static readonly IucnStatus[] StatusOptions =
         [IucnStatus.LC, IucnStatus.NT, IucnStatus.VU, IucnStatus.EN, IucnStatus.CR, IucnStatus.DD];
 
@@ -175,7 +182,8 @@
     }
 
     private int? TaxaCountFor(string code) =>
-        Facets?.Taxa.FirstOrDefault(t => string.Equals(t.Code, code, StringComparison.OrdinalIgnoreCase))?.Count;
+        TaxaCounts?.FirstOrDefault(t => string.Equals(t.Code, code, StringComparison.OrdinalIgnoreCase))?.Count
+            ?? Facets?.Taxa.FirstOrDefault(t => string.Equals(t.Code, code, StringComparison.OrdinalIgnoreCase))?.Count;
 
     private int? StatusCountFor(IucnStatus status) =>
         Facets?.Statuses.FirstOrDefault(s => s.Status == status)?.Count;

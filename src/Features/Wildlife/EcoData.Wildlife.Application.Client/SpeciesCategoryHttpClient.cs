@@ -34,4 +34,14 @@ public sealed class SpeciesCategoryHttpClient(HttpClient httpClient) : ISpeciesC
 
         return await response.Content.ReadFromJsonAsync<SpeciesCategoryDtoForDetail>(ct);
     }
+
+    public async Task<IReadOnlyList<TaxonFacetDto>> GetCountsAsync(CancellationToken ct = default)
+    {
+        var response = await httpClient.GetAsync("wildlife/species-categories/counts", ct);
+
+        if (!response.IsSuccessStatusCode)
+            return [];
+
+        return await response.Content.ReadFromJsonAsync<IReadOnlyList<TaxonFacetDto>>(ct) ?? [];
+    }
 }
