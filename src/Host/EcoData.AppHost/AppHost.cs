@@ -77,12 +77,19 @@ var ecoportal = builder
         }
     );
 
-// FaunaFinder app (local development only)
 var faunafinder = builder
     .AddProject<Projects.FaunaFinder_Server>("faunafinder")
     .WithReference(locationsDb)
     .WithReference(wildlifeDb)
-    .WaitFor(seeder);
+    .WaitFor(seeder)
+    .PublishAsAzureContainerApp(
+        (infra, app) =>
+        {
+            // Configure 2 max replicas
+            app.Template.Scale.MinReplicas = 1;
+            app.Template.Scale.MaxReplicas = 2;
+        }
+    );
 
 var sensorsIngestion = builder
     .AddProject<Projects.EcoData_Sensors_Ingestion>("sensors-ingestion")
