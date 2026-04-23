@@ -52,42 +52,26 @@
 
             <MudSpacer />
 
-            @* Language dropdown — shown on every breakpoint. Driven off
-               L.GetAvailableLanguages() so new locales register themselves
-               in the menu without touching this markup. *@
-            <MudMenu AnchorOrigin="Origin.BottomRight" TransformOrigin="Origin.TopRight"
-                     ActivationEvent="@MouseEvent.LeftClick">
-                <ActivatorContent>
-                    <MudButton Variant="Variant.Text"
-                               Color="Color.Inherit"
-                               Size="Size.Small"
-                               StartIcon="@Icons.Material.Filled.Language"
-                               EndIcon="@Icons.Material.Filled.KeyboardArrowDown"
-                               Class="ff-lang-btn">
-                        @L.CurrentLanguage.ToUpperInvariant()
-                    </MudButton>
-                </ActivatorContent>
-                <ChildContent>
-                    @foreach (var lang in L.GetAvailableLanguages())
-                    {
-                        var langCode = lang.Code;
-                        var isActive = string.Equals(langCode, L.CurrentLanguage, StringComparison.OrdinalIgnoreCase);
-                        <MudMenuItem OnClick="@(() => SetLocale(langCode))">
-                            @if (isActive)
-                            {
-                                <MudIcon Icon="@Icons.Material.Filled.Check" Size="Size.Small" Class="mr-2" />
-                            }
-                            else
-                            {
-                                <MudIcon Icon="@Icons.Material.Filled.Check" Size="Size.Small"
-                                         Class="mr-2" Style="visibility:hidden" />
-                            }
-                            <span class="ff-lang-item-name">@lang.Name</span>
-                            <span class="ff-lang-item-code">@langCode.ToUpperInvariant()</span>
-                        </MudMenuItem>
-                    }
-                </ChildContent>
-            </MudMenu>
+            @* Language dropdown — MudSelect keeps the activator wiring
+               simple and works reliably inside the MudAppBar. Driven off
+               L.GetAvailableLanguages() so new locales show up automatically. *@
+            <MudSelect T="string"
+                       Value="@L.CurrentLanguage"
+                       ValueChanged="OnLanguageSelected"
+                       Variant="Variant.Text"
+                       Margin="Margin.Dense"
+                       Dense="true"
+                       Class="ff-lang-select"
+                       AdornmentIcon="@Icons.Material.Filled.Language"
+                       AdornmentColor="Color.Inherit"
+                       Adornment="Adornment.Start">
+                @foreach (var lang in L.GetAvailableLanguages())
+                {
+                    <MudSelectItem T="string" Value="@lang.Code">
+                        @lang.Name
+                    </MudSelectItem>
+                }
+            </MudSelect>
 
             @* Mobile: Action button(s) at far right *@
             <MudHidden Breakpoint="Breakpoint.MdAndUp">
@@ -235,6 +219,11 @@
     }
 
     private void SetLocale(string code) => L.SetLanguage(code);
+
+    private void OnLanguageSelected(string? code)
+    {
+        if (!string.IsNullOrEmpty(code)) L.SetLanguage(code);
+    }
 
     public void Dispose()
     {
