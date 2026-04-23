@@ -36,7 +36,10 @@
 }
 
 @media (max-width: 900px) {
-    .ff-featured-grid {
-        grid-template-columns: 1fr;
+    /* Featured row is an editorial luxury — on small viewports the three
+       cards would stack to a tall column that pushes the toolbar + grid
+       off-screen. Hide the whole section instead. */
+    .ff-featured {
+        display: none;
     }
 }

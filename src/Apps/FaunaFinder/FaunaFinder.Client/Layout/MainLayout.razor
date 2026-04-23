@@ -134,9 +134,11 @@
 
     private bool IsEditorialListPage =>
         string.Equals(Navigation.State.Path, "/species", StringComparison.OrdinalIgnoreCase) ||
-        string.Equals(Navigation.State.Path, "/municipalities", StringComparison.OrdinalIgnoreCase);
+        string.Equals(Navigation.State.Path, "/municipalities", StringComparison.OrdinalIgnoreCase) ||
+        string.Equals(Navigation.State.Path, "/categories", StringComparison.OrdinalIgnoreCase);
 
-    // Hide the divider+title on pages with their own editorial hero (home, species list, muni list).
+    // Hide the divider+title on top-level list pages (home, species, muni, categories).
+    // Each either renders its own root heading or relies on the active nav pill for context.
     private bool ShowTitleDivider =>
         !IsHomePage && !IsEditorialListPage && Navbar.State.Title is not null;
 

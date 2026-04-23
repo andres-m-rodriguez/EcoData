@@ -61,7 +61,10 @@
     transform: translateX(0);
 }
 
-/* Mobile bottom sheet shell */
+/* Mobile bottom sheet shell.
+   Bottom nav sits at z-index 9999 (MainLayout.razor.css). The sheet has to
+   stack above that so tapping a pin while the nav is visible doesn't send
+   the sheet behind the nav strip. */
 .mobile-sheet-backdrop {
     position: fixed;
     top: 0;
@@ -69,7 +72,7 @@
     right: 0;
     bottom: 0;
     background-color: rgba(17, 17, 17, 0.45);
-    z-index: 600;
+    z-index: 10000;
     opacity: 0;
     pointer-events: none;
     transition: opacity var(--fauna-t-slow) var(--fauna-ease);
@@ -84,17 +87,23 @@
     position: fixed;
     left: 0;
     right: 0;
-    bottom: calc(64px + env(safe-area-inset-bottom, 0px));
-    max-height: 70vh;
+    bottom: 0;
+    /* Always fill from the bottom edge up to ~75% of the viewport so the
+       sheet's top edge is consistent regardless of how much content it
+       holds. Inner content scrolls inside. */
+    height: 75vh;
+    max-height: calc(100vh - 64px);
     background: var(--fauna-surface);
     border-top: 1px solid var(--fauna-line);
     border-radius: 16px 16px 0 0;
     box-shadow: 0 -4px 24px rgba(17, 17, 17, 0.18);
-    z-index: 700;
+    z-index: 10001;
     display: flex;
     flex-direction: column;
+    overflow: hidden;
     transform: translateY(100%);
     transition: transform var(--fauna-t-slow) var(--fauna-ease);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 
 .mobile-sheet.open {
