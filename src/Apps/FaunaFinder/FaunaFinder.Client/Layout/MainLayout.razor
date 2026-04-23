@@ -58,11 +58,14 @@
             <MudMenu AnchorOrigin="Origin.BottomRight" TransformOrigin="Origin.TopRight"
                      ActivationEvent="@MouseEvent.LeftClick">
                 <ActivatorContent>
-                    <button type="button" class="ff-lang-btn" aria-label="Language">
-                        <MudIcon Icon="@Icons.Material.Filled.Language" Size="Size.Small" />
-                        <span class="ff-lang-btn-code">@L.CurrentLanguage.ToUpperInvariant()</span>
-                        <MudIcon Icon="@Icons.Material.Filled.KeyboardArrowDown" Size="Size.Small" />
-                    </button>
+                    <MudButton Variant="Variant.Text"
+                               Color="Color.Inherit"
+                               Size="Size.Small"
+                               StartIcon="@Icons.Material.Filled.Language"
+                               EndIcon="@Icons.Material.Filled.KeyboardArrowDown"
+                               Class="ff-lang-btn">
+                        @L.CurrentLanguage.ToUpperInvariant()
+                    </MudButton>
                 </ActivatorContent>
                 <ChildContent>
                     @foreach (var lang in L.GetAvailableLanguages())

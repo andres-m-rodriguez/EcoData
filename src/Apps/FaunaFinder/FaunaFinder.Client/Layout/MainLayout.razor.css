@@ -75,34 +75,29 @@
     background: rgba(255, 255, 255, 0.1);
 }
 
-/* Language dropdown — activator button */
+/* Language dropdown — MudButton activator, themed as a pill */
 ::deep .ff-lang-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    background: rgba(255, 255, 255, 0.08);
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    border-radius: 999px;
-    padding: 5px 8px 5px 10px;
-    color: rgba(255, 255, 255, 0.85);
-    cursor: pointer;
-    font: 600 11px/1 'Inter', sans-serif;
-    letter-spacing: 0.08em;
+    background: rgba(255, 255, 255, 0.08) !important;
+    border: 1px solid rgba(255, 255, 255, 0.12) !important;
+    border-radius: 999px !important;
+    padding: 4px 10px 4px 12px !important;
+    min-width: 0 !important;
+    color: rgba(255, 255, 255, 0.85) !important;
+    font: 600 11px/1 'Inter', sans-serif !important;
+    letter-spacing: 0.08em !important;
+    text-transform: none !important;
     transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
 }
 
 ::deep .ff-lang-btn:hover {
-    color: #ffffff;
-    background: rgba(255, 255, 255, 0.14);
-    border-color: rgba(255, 255, 255, 0.22);
+    color: #ffffff !important;
+    background: rgba(255, 255, 255, 0.14) !important;
+    border-color: rgba(255, 255, 255, 0.22) !important;
 }
 
-::deep .ff-lang-btn .ff-lang-btn-code {
-    min-width: 18px;
-    text-align: center;
-}
-
-::deep .ff-lang-btn .mud-icon-root {
+::deep .ff-lang-btn .mud-button-icon-start,
+::deep .ff-lang-btn .mud-button-icon-end {
+    font-size: 16px !important;
     color: currentColor !important;
 }
 
