@@ -3,6 +3,7 @@ using System;
 using EcoData.Wildlife.Database;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace EcoData.Wildlife.Database.Migrations
 {
     [DbContext(typeof(WildlifeDbContext))]
-    partial class WildlifeDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260423164154_AddSpeciesEditorialFields")]
+    partial class AddSpeciesEditorialFields
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

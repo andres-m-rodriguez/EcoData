@@ -13,14 +13,7 @@ public sealed class SpeciesHttpClient(HttpClient httpClient) : ISpeciesHttpClien
     {
         parameters ??= new SpeciesParameters();
 
-        var queryString = new QueryStringBuilder()
-            .Add("pageSize", parameters.PageSize != 20 ? parameters.PageSize : null)
-            .Add("cursor", parameters.Cursor)
-            .Add("search", parameters.Search)
-            .Add("categoryId", parameters.CategoryId)
-            .Add("municipalityId", parameters.MunicipalityId)
-            .Add("isFauna", parameters.IsFauna)
-            .Build();
+        var queryString = BuildListQueryString(parameters, includePageSize: true);
 
         return httpClient.GetFromJsonAsAsyncEnumerable<SpeciesDtoForList>(
             $"wildlife/species{queryString}",
@@ -33,12 +26,7 @@ public sealed class SpeciesHttpClient(HttpClient httpClient) : ISpeciesHttpClien
     {
         parameters ??= new SpeciesParameters();
 
-        var queryString = new QueryStringBuilder()
-            .Add("search", parameters.Search)
-            .Add("categoryId", parameters.CategoryId)
-            .Add("municipalityId", parameters.MunicipalityId)
-            .Add("isFauna", parameters.IsFauna)
-            .Build();
+        var queryString = BuildListQueryString(parameters, includePageSize: false);
 
         var response = await httpClient.GetAsync($"wildlife/species/count{queryString}", ct);
         if (!response.IsSuccessStatusCode) return 0;
@@ -83,6 +71,71 @@ public sealed class SpeciesHttpClient(HttpClient httpClient) : ISpeciesHttpClien
             return [];
 
         return await response.Content.ReadFromJsonAsync<IReadOnlyList<SpeciesDtoForList>>(ct) ?? [];
+    }
+
+    public async Task<SpeciesStatsDto?> GetStatsAsync(CancellationToken ct = default)
+    {
+        var response = await httpClient.GetAsync("wildlife/species/stats", ct);
+
+        if (!response.IsSuccessStatusCode)
+            return null;
+
+        return await response.Content.ReadFromJsonAsync<SpeciesStatsDto>(ct);
+    }
+
+    public async Task<SpeciesFacetsDto?> GetFacetsAsync(
+        SpeciesParameters? parameters = null,
+        CancellationToken ct = default)
+    {
+        parameters ??= new SpeciesParameters();
+
+        var queryString = BuildListQueryString(parameters, includePageSize: false);
+
+        var response = await httpClient.GetAsync($"wildlife/species/facets{queryString}", ct);
+
+        if (!response.IsSuccessStatusCode)
+            return null;
+
+        return await response.Content.ReadFromJsonAsync<SpeciesFacetsDto>(ct);
+    }
+
+    public async Task<IReadOnlyList<SpeciesDtoForList>> GetFeaturedAsync(
+        CancellationToken ct = default)
+    {
+        var response = await httpClient.GetAsync("wildlife/species/featured", ct);
+
+        if (!response.IsSuccessStatusCode)
+            return [];
+
+        return await response.Content.ReadFromJsonAsync<IReadOnlyList<SpeciesDtoForList>>(ct) ?? [];
+    }
+
+    private static string BuildListQueryString(SpeciesParameters parameters, bool includePageSize)
+    {
+        var builder = new QueryStringBuilder()
+            .Add("cursor", parameters.Cursor)
+            .Add("search", parameters.Search)
+            .Add("categoryId", parameters.CategoryId)
+            .Add("municipalityId", parameters.MunicipalityId)
+            .Add("isFauna", parameters.IsFauna)
+            .Add("isEndemic", parameters.IsEndemic)
+            .Add("hasProfileImage", parameters.HasProfileImage)
+            .Add("iucnStatuses", parameters.IucnStatuses)
+            .Add("taxonCodes", parameters.TaxonCodes)
+            .Add("minMunicipalityCount", parameters.MinMunicipalityCount)
+            .Add("observedSinceUtc", parameters.ObservedSinceUtc);
+
+        if (parameters.Sort != SpeciesSort.ScientificNameAsc)
+        {
+            builder.Add<SpeciesSort>("sort", parameters.Sort);
+        }
+
+        if (includePageSize && parameters.PageSize != 20)
+        {
+            builder.Add("pageSize", parameters.PageSize);
+        }
+
+        return builder.Build();
     }
 
     private sealed record CountPayload(int Count);
