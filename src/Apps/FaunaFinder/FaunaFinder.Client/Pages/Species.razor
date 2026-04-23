@@ -12,6 +12,7 @@
 @inject INativeNavbarManager Navbar
 @inject NavigationManager NavigationManager
 @inject IDialogService Dialogs
+@inject IBrowserViewportService Viewport
 
 <PageTitle>FaunaFinder - Species</PageTitle>
 
@@ -214,11 +215,15 @@ else
 
     private async Task OpenFilterDialog()
     {
+        var breakpoint = await Viewport.GetCurrentBreakpointAsync();
+        var isMobile = breakpoint is Breakpoint.Xs or Breakpoint.Sm;
+
         var options = new DialogOptions
         {
             CloseOnEscapeKey = true,
             MaxWidth = MaxWidth.Small,
-            FullWidth = true
+            FullWidth = true,
+            FullScreen = isMobile,
         };
 
         var parameters = new DialogParameters<SpeciesFilterDialog>

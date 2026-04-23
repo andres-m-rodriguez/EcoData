@@ -206,3 +206,59 @@
     color: var(--fauna-primary);
     text-decoration: underline;
 }
+
+/* Responsive — below sm breakpoint the dialog hits the viewport edges and
+   the inner grids need to collapse so chips and rows stay legible. */
+@media (max-width: 600px) {
+    .ff-modal-head {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 4px;
+        padding: 4px 0 8px;
+    }
+
+    .ff-modal-head h3 {
+        font-size: 1.125rem;
+    }
+
+    .ff-modal-body {
+        gap: 20px;
+    }
+
+    .ff-modal-section-title {
+        margin-bottom: 10px;
+    }
+
+    .ff-taxa-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 6px;
+    }
+
+    .ff-taxa-chip {
+        padding: 12px 6px;
+        gap: 4px;
+    }
+
+    .ff-status-list {
+        grid-template-columns: 1fr;
+    }
+
+    .ff-status-row {
+        padding: 10px 12px;
+    }
+
+    .ff-checkbox-row {
+        padding: 10px 12px;
+    }
+}
+
+/* Very narrow phones — 3-col taxa is still too cramped, go further. */
+@media (max-width: 380px) {
+    .ff-taxa-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .ff-taxa-chip span:not(.count) {
+        font-size: 11px;
+    }
+}
