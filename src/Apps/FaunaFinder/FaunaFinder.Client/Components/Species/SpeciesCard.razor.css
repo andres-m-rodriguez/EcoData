@@ -1,33 +1,166 @@
-.species-card {
-    cursor: pointer;
-    transition: border-color 0.15s ease, box-shadow 0.15s ease;
-}
-
-.species-card:hover {
-    border-color: var(--mud-palette-primary);
-    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
-}
-
-.species-card-text {
-    flex: 1 1 0;
-    min-width: 0;
-}
-
-.species-card-thumb {
-    flex: 0 0 auto;
-    width: 56px;
-    height: 56px;
-    border-radius: 8px;
+.ff-card {
+    position: relative;
+    background: var(--fauna-surface);
+    border: 1px solid var(--fauna-line);
+    border-radius: 14px;
     overflow: hidden;
-    background-color: var(--mud-palette-background-gray);
+    transition: transform var(--fauna-t-slow) var(--fauna-ease),
+                border-color var(--fauna-t-slow) var(--fauna-ease),
+                box-shadow var(--fauna-t-slow) var(--fauna-ease);
+    cursor: pointer;
     display: flex;
-    align-items: center;
-    justify-content: center;
+    flex-direction: column;
 }
 
-.species-card-thumb img {
+.ff-card:hover {
+    transform: translateY(-3px);
+    border-color: var(--fauna-primary-200);
+    box-shadow: var(--fauna-shadow-4);
+}
+
+.ff-card:hover .ff-card-img img {
+    filter: grayscale(0%);
+    transform: scale(1.02);
+}
+
+.ff-card-img {
+    position: relative;
+    aspect-ratio: 4 / 3;
+    overflow: hidden;
+    background-color: var(--fauna-bg-alt);
+    background-image:
+        radial-gradient(circle at 20% 30%, rgba(63, 125, 95, 0.12) 0, transparent 40%),
+        radial-gradient(circle at 80% 70%, rgba(138, 111, 62, 0.10) 0, transparent 45%),
+        repeating-linear-gradient(45deg, rgba(31, 77, 58, 0.04) 0 2px, transparent 2px 8px);
+}
+
+.ff-card-img img {
     width: 100%;
     height: 100%;
     object-fit: cover;
     display: block;
+    filter: grayscale(35%);
+    transition: filter var(--fauna-t-grayscale) var(--fauna-ease),
+                transform var(--fauna-t-slow) var(--fauna-ease);
+}
+
+.ff-card-img-placeholder {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    color: var(--fauna-primary-300);
+}
+
+.ff-card-img-placeholder ::deep .mud-icon-root {
+    font-size: 48px !important;
+}
+
+.ff-card-status {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    backdrop-filter: blur(6px);
+}
+
+.ff-card-taxa {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.94);
+    display: grid;
+    place-items: center;
+    color: var(--fauna-primary);
+    backdrop-filter: blur(6px);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+}
+
+.ff-card-taxa ::deep .mud-icon-root {
+    font-size: 16px !important;
+}
+
+.ff-card-endemic {
+    position: absolute;
+    top: 10px;
+    left: 46px;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 7px;
+    background: rgba(138, 111, 62, 0.95);
+    color: #fff;
+    border-radius: 6px;
+    font: 700 9px/1 var(--fauna-font-sans);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+}
+
+.ff-card-endemic ::deep .mud-icon-root {
+    font-size: 11px !important;
+    color: #fff;
+}
+
+.ff-card-body {
+    padding: 14px 16px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    flex: 1;
+}
+
+.ff-card-name {
+    font: 600 1.0625rem/1.2 var(--fauna-font-serif);
+    color: var(--fauna-fg);
+    letter-spacing: -0.015em;
+}
+
+.ff-card-sci {
+    font: italic 400 0.8125rem/1.3 var(--fauna-font-serif);
+    color: var(--fauna-fg-4);
+}
+
+.ff-card-foot {
+    margin-top: auto;
+    padding-top: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font: var(--fauna-mono);
+    font-size: 11px;
+    color: var(--fauna-fg-4);
+}
+
+.ff-card-foot .muni {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    color: var(--fauna-primary-500);
+}
+
+.ff-card-foot .muni ::deep .mud-icon-root {
+    font-size: 13px !important;
+    color: var(--fauna-primary-500);
+}
+
+/* Featured — larger treatment */
+.ff-card.is-featured .ff-card-name {
+    font-size: 1.25rem;
+    line-height: 1.15;
+}
+
+.ff-card.is-featured .ff-card-body {
+    padding: 18px 20px 20px;
+    gap: 7px;
+}
+
+.ff-card.is-featured .ff-card-sci {
+    font-size: 0.875rem;
+}
+
+.ff-card.is-featured .ff-card-foot {
+    padding-top: 12px;
+    border-top: 1px solid var(--fauna-line);
 }

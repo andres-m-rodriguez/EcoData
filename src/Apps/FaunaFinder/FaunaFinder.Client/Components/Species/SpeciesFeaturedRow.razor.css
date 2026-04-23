@@ -1,0 +1,42 @@
+.ff-featured {
+    padding: 28px 0 8px;
+}
+
+.ff-featured-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    padding: 0 0 16px;
+}
+
+.ff-featured-head h2 {
+    font: 600 1rem/1 var(--fauna-font-sans);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--fauna-primary);
+    margin: 0;
+}
+
+.ff-featured-head .meta {
+    font: var(--fauna-mono);
+    color: var(--fauna-fg-4);
+    font-size: 12px;
+}
+
+.ff-featured-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+}
+
+.ff-featured-skeleton {
+    aspect-ratio: 4 / 3;
+    border-radius: 14px;
+    min-height: 240px;
+}
+
+@media (max-width: 900px) {
+    .ff-featured-grid {
+        grid-template-columns: 1fr;
+    }
+}

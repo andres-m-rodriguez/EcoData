@@ -1,0 +1,58 @@
+@namespace FaunaFinder.Client.Components.Species
+@using EcoData.Wildlife.Contracts.Dtos
+@using EcoData.Wildlife.Application.Client
+@using BlazingSingularity.Fetch
+@implements IDisposable
+@inject ISpeciesHttpClient SpeciesClient
+
+@if (_fetch is null || _fetch.IsLoading)
+{
+    <section class="ff-featured">
+        <div class="ff-featured-head">
+            <h2>Featured this week</h2>
+            <span class="meta">Curated · updated Mondays</span>
+        </div>
+        <div class="ff-featured-grid">
+            <MudSkeleton SkeletonType="SkeletonType.Rectangle" Class="ff-featured-skeleton" />
+            <MudSkeleton SkeletonType="SkeletonType.Rectangle" Class="ff-featured-skeleton" />
+            <MudSkeleton SkeletonType="SkeletonType.Rectangle" Class="ff-featured-skeleton" />
+        </div>
+    </section>
+}
+else if (_fetch.Data is { Count: > 0 } featured)
+{
+    <section class="ff-featured">
+        <div class="ff-featured-head">
+            <h2>Featured this week</h2>
+            <span class="meta">Curated · updated Mondays</span>
+        </div>
+        <div class="ff-featured-grid">
+            <SpeciesCard Species="@featured[0]" Variant="SpeciesCardVariant.Featured"
+                         OnClick="HandleClick" />
+            @foreach (var s in featured.Skip(1).Take(2))
+            {
+                <SpeciesCard Species="@s" Variant="SpeciesCardVariant.Medium"
+                             OnClick="HandleClick" />
+            }
+        </div>
+    </section>
+}
+
+@code {
+    [Parameter] public EventCallback<SpeciesDtoForList> OnSpeciesClick { get; set; }
+
+    private IFetch<IReadOnlyList<SpeciesDtoForList>>? _fetch;
+
+    protected override void OnInitialized()
+    {
+        _fetch = new Fetch<IReadOnlyList<SpeciesDtoForList>>(
+            SpeciesClient.GetFeaturedAsync,
+            () => InvokeAsync(StateHasChanged));
+        _ = _fetch.FetchAsync();
+    }
+
+    private Task HandleClick(SpeciesDtoForList species) =>
+        OnSpeciesClick.InvokeAsync(species);
+
+    public void Dispose() => (_fetch as IDisposable)?.Dispose();
+}

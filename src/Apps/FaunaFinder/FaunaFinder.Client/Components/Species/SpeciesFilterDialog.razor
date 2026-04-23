@@ -1,95 +1,223 @@
 @namespace FaunaFinder.Client.Components.Species
+@using EcoData.Wildlife.Contracts
 @using EcoData.Wildlife.Contracts.Dtos
-@using BlazingSingularity.Fetch
-@implements IDisposable
-@inject ISpeciesCategoryHttpClient CategoryClient
 
 <MudDialog>
     <TitleContent>
-        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
-            <MudIcon Icon="@Icons.Material.Filled.FilterList" />
-            <MudText Typo="Typo.h6">Filters</MudText>
-        </MudStack>
-    </TitleContent>
-    <DialogContent>
-        <MudStack Spacing="4" Class="pt-2">
-            @if (ShowCategory)
+        <div class="ff-modal-head">
+            <h3>Refine the catalogue</h3>
+            @if (Facets is not null)
             {
-                <MudSelect T="Guid?" Label="Category" @bind-Value="CategoryId"
-                           Variant="Variant.Outlined" AnchorOrigin="Origin.BottomCenter">
-                    <MudSelectItem T="Guid?" Value="@(null as Guid?)">All categories</MudSelectItem>
-                    @if (_categoriesFetch.Data is not null)
-                    {
-                        @foreach (var category in _categoriesFetch.Data)
-                        {
-                            <MudSelectItem T="Guid?" Value="@((Guid?)category.Id)">@ResolveName(category)</MudSelectItem>
-                        }
-                    }
-                </MudSelect>
+                <span class="ff-modal-head-meta">@TotalFacetCountsLabel</span>
             }
+        </div>
+    </TitleContent>
 
-            <MudSelect T="FaunaFilter" Label="Kingdom" @bind-Value="Fauna"
-                       Variant="Variant.Outlined" AnchorOrigin="Origin.BottomCenter">
-                <MudSelectItem Value="FaunaFilter.All">All</MudSelectItem>
-                <MudSelectItem Value="FaunaFilter.Fauna">Fauna (animals)</MudSelectItem>
-                <MudSelectItem Value="FaunaFilter.Flora">Flora (plants)</MudSelectItem>
-            </MudSelect>
-        </MudStack>
+    <DialogContent>
+        <div class="ff-modal-body">
+            @* Taxonomic group *@
+            <section class="ff-modal-section">
+                <div class="ff-modal-section-title">
+                    <span>Taxonomic group</span>
+                    <button type="button" class="ff-link-btn" @onclick="ToggleSelectAllTaxa">
+                        @(AllTaxaSelected ? "Clear all" : "Select all")
+                    </button>
+                </div>
+                <div class="ff-taxa-grid">
+                    @foreach (var code in TaxonIcons.OrderedCodes)
+                    {
+                        var on = _selectedTaxa.Contains(code);
+                        <button type="button"
+                                class="@("ff-taxa-chip" + (on ? " is-on" : ""))"
+                                @onclick="@(() => ToggleTaxa(code))">
+                            <MudIcon Icon="@TaxonIcons.GetIcon(code)" />
+                            <span>@TaxonIcons.GetLabel(code)</span>
+                            <span class="count">@TaxaCountFor(code)</span>
+                        </button>
+                    }
+                </div>
+            </section>
+
+            @* Conservation status *@
+            <section class="ff-modal-section">
+                <div class="ff-modal-section-title">
+                    <span>Conservation status (IUCN)</span>
+                    <span class="ff-modal-section-meta">@(_selectedStatuses.Count) selected</span>
+                </div>
+                <div class="ff-status-list">
+                    @foreach (var status in StatusOptions)
+                    {
+                        var on = _selectedStatuses.Contains(status);
+                        <button type="button"
+                                class="@("ff-status-row" + (on ? " is-on" : ""))"
+                                @onclick="@(() => ToggleStatus(status))">
+                            <span class="ff-status-pill @($"status-{status}")">@status</span>
+                            <span class="label">@StatusLabel(status)</span>
+                            <span class="n">@StatusCountFor(status)</span>
+                        </button>
+                    }
+                </div>
+            </section>
+
+            @* Qualifiers *@
+            <section class="ff-modal-section">
+                <div class="ff-modal-section-title">
+                    <span>Qualifiers</span>
+                </div>
+                <div class="ff-checkbox-row">
+                    <MudCheckBox T="bool" Value="_isEndemic"
+                                 ValueChanged="@((bool v) => _isEndemic = v)"
+                                 Color="Color.Primary" Dense="true" />
+                    <label>Endemic to Puerto Rico only</label>
+                    <span class="n">@(Facets?.EndemicCount.ToString("N0") ?? "—")</span>
+                </div>
+                <div class="ff-checkbox-row">
+                    <MudCheckBox T="bool" Value="_observedRecently"
+                                 ValueChanged="@((bool v) => _observedRecently = v)"
+                                 Color="Color.Primary" Dense="true" />
+                    <label>Observed in the last 12 months</label>
+                    <span class="n">@(Facets?.RecentlyObservedCount.ToString("N0") ?? "—")</span>
+                </div>
+                <div class="ff-checkbox-row">
+                    <MudCheckBox T="bool" Value="_hasPhoto"
+                                 ValueChanged="@((bool v) => _hasPhoto = v)"
+                                 Color="Color.Primary" Dense="true" />
+                    <label>Has photo</label>
+                    <span class="n">@(Facets?.WithImageCount.ToString("N0") ?? "—")</span>
+                </div>
+            </section>
+
+            @* Range *@
+            <section class="ff-modal-section">
+                <div class="ff-modal-section-title">
+                    <span>Minimum municipios present</span>
+                    <span class="ff-modal-section-meta">≥ @_minMunicipalities</span>
+                </div>
+                <div class="ff-range-row">
+                    <MudSlider T="int" Value="_minMunicipalities"
+                               ValueChanged="@((int v) => _minMunicipalities = v)"
+                               Min="1" Max="78" Step="1" Color="Color.Primary" />
+                    <div class="ff-range-labels">
+                        <span>1 (rare)</span>
+                        <span>39</span>
+                        <span>78 (ubiquitous)</span>
+                    </div>
+                </div>
+            </section>
+        </div>
     </DialogContent>
+
     <DialogActions>
-        <MudButton Variant="Variant.Text" Color="Color.Default" OnClick="Clear">Clear</MudButton>
+        <button type="button" class="ff-modal-reset" @onclick="Reset">Reset all filters</button>
         <MudSpacer />
-        <MudButton Variant="Variant.Text" OnClick="Cancel">Cancel</MudButton>
-        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="Apply">Apply</MudButton>
+        <MudButton OnClick="Cancel" Variant="Variant.Text">Cancel</MudButton>
+        <MudButton OnClick="Apply" Variant="Variant.Filled" Color="Color.Primary">Apply</MudButton>
     </DialogActions>
 </MudDialog>
 
 @code {
-    [CascadingParameter]
-    private IMudDialogInstance MudDialog { get; set; } = null!;
+    [CascadingParameter] private IMudDialogInstance MudDialog { get; set; } = null!;
 
-    [Parameter]
-    public Guid? CategoryId { get; set; }
+    [Parameter] public SpeciesFilterResult Initial { get; set; } = SpeciesFilterResult.Empty;
+    [Parameter] public SpeciesFacetsDto? Facets { get; set; }
 
-    [Parameter]
-    public FaunaFilter Fauna { get; set; } = FaunaFilter.All;
+    private static readonly IucnStatus[] StatusOptions =
+        [IucnStatus.LC, IucnStatus.NT, IucnStatus.VU, IucnStatus.EN, IucnStatus.CR, IucnStatus.DD];
 
-    [Parameter]
-    public bool ShowCategory { get; set; } = true;
-
-    private IFetch<IReadOnlyList<SpeciesCategoryDtoForList>> _categoriesFetch = default!;
+    private HashSet<string> _selectedTaxa = new(StringComparer.OrdinalIgnoreCase);
+    private HashSet<IucnStatus> _selectedStatuses = new();
+    private bool _isEndemic;
+    private bool _observedRecently;
+    private bool _hasPhoto;
+    private int _minMunicipalities = 1;
 
     protected override void OnInitialized()
     {
-        _categoriesFetch = new Fetch<IReadOnlyList<SpeciesCategoryDtoForList>>(
-            CategoryClient.GetAllAsync,
-            () => InvokeAsync(StateHasChanged)
-        );
-        if (ShowCategory)
+        _selectedTaxa = new HashSet<string>(Initial.TaxonCodes, StringComparer.OrdinalIgnoreCase);
+        _selectedStatuses = new HashSet<IucnStatus>(Initial.IucnStatuses);
+        _isEndemic = Initial.IsEndemic;
+        _observedRecently = Initial.ObservedRecently;
+        _hasPhoto = Initial.HasPhoto;
+        _minMunicipalities = Initial.MinMunicipalityCount ?? 1;
+    }
+
+    private bool AllTaxaSelected =>
+        TaxonIcons.OrderedCodes.All(code => _selectedTaxa.Contains(code));
+
+    private void ToggleTaxa(string code)
+    {
+        if (!_selectedTaxa.Add(code))
         {
-            _ = _categoriesFetch.FetchAsync();
+            _selectedTaxa.Remove(code);
         }
+    }
+
+    private void ToggleSelectAllTaxa()
+    {
+        if (AllTaxaSelected)
+        {
+            _selectedTaxa.Clear();
+        }
+        else
+        {
+            foreach (var code in TaxonIcons.OrderedCodes)
+            {
+                _selectedTaxa.Add(code);
+            }
+        }
+    }
+
+    private void ToggleStatus(IucnStatus status)
+    {
+        if (!_selectedStatuses.Add(status))
+        {
+            _selectedStatuses.Remove(status);
+        }
+    }
+
+    private int? TaxaCountFor(string code) =>
+        Facets?.Taxa.FirstOrDefault(t => string.Equals(t.Code, code, StringComparison.OrdinalIgnoreCase))?.Count;
+
+    private int? StatusCountFor(IucnStatus status) =>
+        Facets?.Statuses.FirstOrDefault(s => s.Status == status)?.Count;
+
+    private static string StatusLabel(IucnStatus s) => s switch
+    {
+        IucnStatus.LC => "Least Concern",
+        IucnStatus.NT => "Near Threatened",
+        IucnStatus.VU => "Vulnerable",
+        IucnStatus.EN => "Endangered",
+        IucnStatus.CR => "Critically Endangered",
+        IucnStatus.DD => "Data Deficient",
+        IucnStatus.EX => "Extinct",
+        _ => s.ToString()
+    };
+
+    private string TotalFacetCountsLabel =>
+        Facets is null ? "" : $"{Facets.Taxa.Sum(t => t.Count):N0} records";
+
+    private void Reset()
+    {
+        _selectedTaxa.Clear();
+        _selectedStatuses.Clear();
+        _isEndemic = false;
+        _observedRecently = false;
+        _hasPhoto = false;
+        _minMunicipalities = 1;
     }
 
     private void Cancel() => MudDialog.Cancel();
 
-    private void Clear()
+    private void Apply()
     {
-        CategoryId = null;
-        Fauna = FaunaFilter.All;
-        MudDialog.Close(DialogResult.Ok(new SpeciesFilterResult(null, FaunaFilter.All)));
-    }
-
-    private void Apply() => MudDialog.Close(DialogResult.Ok(new SpeciesFilterResult(CategoryId, Fauna)));
-
-    public void Dispose()
-    {
-        (_categoriesFetch as IDisposable)?.Dispose();
-    }
-
-    private static string ResolveName(SpeciesCategoryDtoForList category)
-    {
-        var en = category.Name.FirstOrDefault(n => n.Code == "en");
-        return en?.Value ?? category.Name.FirstOrDefault()?.Value ?? category.Code;
+        var result = new SpeciesFilterResult(
+            TaxonCodes: _selectedTaxa.ToList(),
+            IucnStatuses: _selectedStatuses.ToList(),
+            IsEndemic: _isEndemic,
+            ObservedRecently: _observedRecently,
+            HasPhoto: _hasPhoto,
+            MinMunicipalityCount: _minMunicipalities > 1 ? _minMunicipalities : null
+        );
+        MudDialog.Close(DialogResult.Ok(result));
     }
 }

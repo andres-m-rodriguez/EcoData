@@ -1,0 +1,58 @@
+.ff-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+}
+
+.ff-grid-skeleton {
+    background: var(--fauna-surface);
+    border: 1px solid var(--fauna-line);
+    border-radius: 14px;
+    overflow: hidden;
+}
+
+.ff-grid-skeleton-img {
+    aspect-ratio: 4 / 3;
+    width: 100%;
+}
+
+.ff-grid-skeleton-body {
+    padding: 14px 16px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.ff-grid-status {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 40px 0 64px;
+    font: var(--fauna-mono);
+    font-size: 11px;
+    color: var(--fauna-fg-4);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.ff-grid-end {
+    font: var(--fauna-mono);
+    font-size: 11px;
+    color: var(--fauna-fg-5);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+@media (max-width: 900px) {
+    .ff-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 14px;
+    }
+}
+
+@media (max-width: 600px) {
+    .ff-grid {
+        grid-template-columns: 1fr;
+    }
+}

@@ -8,110 +8,137 @@
 <MudDialogProvider />
 <MudSnackbarProvider />
 
-<MudLayout>
-    <MudAppBar Color="Color.Primary" Elevation="0" Fixed="true" Class="app-bar-blur">
-        @* Mobile: Back button + Title OR Logo *@
-        <MudHidden Breakpoint="Breakpoint.MdAndUp">
-            <div class="d-flex align-center" style="flex: 1;">
+<CascadingValue Value="_locale" IsFixed="false">
+    <MudLayout>
+        <MudAppBar Color="Color.Primary" Elevation="0" Fixed="true" Class="app-bar-blur ff-appbar">
+            @* Mobile: Back button + Title OR Logo *@
+            <MudHidden Breakpoint="Breakpoint.MdAndUp">
+                <div class="d-flex align-center" style="flex: 1;">
+                    @if (!IsHomePage)
+                    {
+                        <NuiNativeNavbar ShowBackButton="true" ShowTitle="false" ShowActions="false" />
+                        <span class="page-title">@Navbar.State.Title</span>
+                    }
+                    else
+                    {
+                        <span class="logo-text">FaunaFinder</span>
+                    }
+                </div>
+            </MudHidden>
+
+            @* Desktop: Logo + Page Title *@
+            <MudHidden Breakpoint="Breakpoint.SmAndDown">
+                <div class="d-flex align-center">
+                    <span class="logo-text">FaunaFinder</span>
+                    @if (ShowTitleDivider)
+                    {
+                        <MudDivider Vertical="true" FlexItem="true" Class="mx-4 my-3" />
+                        <span class="page-title">@Navbar.State.Title</span>
+                    }
+                </div>
+            </MudHidden>
+
+            @* Desktop: Navigation links *@
+            <MudHidden Breakpoint="Breakpoint.SmAndDown">
+                <nav class="ff-nav ml-6">
+                    <a href="/" class="@GetNavLinkClass("/", exact: true)">Map</a>
+                    <a href="/species" class="@GetNavLinkClass("/species")">Species</a>
+                    <a href="/categories" class="@GetNavLinkClass("/categories")">Categories</a>
+                </nav>
+            </MudHidden>
+
+            <MudSpacer />
+
+            @* Desktop: EN/ES toggle *@
+            <MudHidden Breakpoint="Breakpoint.SmAndDown">
+                <div class="ff-lang-toggle" role="group" aria-label="Language">
+                    <button type="button"
+                            class="@(_locale.Code == "en" ? "is-on" : "")"
+                            @onclick="@(() => SetLocale(LocaleContext.English))">
+                        EN
+                    </button>
+                    <button type="button"
+                            class="@(_locale.Code == "es" ? "is-on" : "")"
+                            @onclick="@(() => SetLocale(LocaleContext.Spanish))">
+                        ES
+                    </button>
+                </div>
+            </MudHidden>
+
+            @* Mobile: Action button(s) at far right *@
+            <MudHidden Breakpoint="Breakpoint.MdAndUp">
                 @if (!IsHomePage)
                 {
-                    <NuiNativeNavbar ShowBackButton="true" ShowTitle="false" ShowActions="false" />
-                    <span class="page-title">@Navbar.State.Title</span>
+                    <NuiNativeNavbar ShowBackButton="false" ShowTitle="false" />
                 }
-                else
-                {
-                    <span class="logo-text">FaunaFinder</span>
-                }
-            </div>
-        </MudHidden>
+            </MudHidden>
+        </MudAppBar>
 
-        @* Desktop: Logo + Page Title *@
-        <MudHidden Breakpoint="Breakpoint.SmAndDown">
-            <div class="d-flex align-center">
-                <span class="logo-text">FaunaFinder</span>
-                @if (!IsHomePage && Navbar.State.Title is not null)
-                {
-                    <MudDivider Vertical="true" FlexItem="true" Class="mx-4 my-3" />
-                    <span class="page-title">@Navbar.State.Title</span>
-                }
-            </div>
-        </MudHidden>
-
-        @* Desktop: Navigation links *@
-        <MudHidden Breakpoint="Breakpoint.SmAndDown">
-            <div class="d-flex align-center ml-6 gap-4">
-                <MudButton Href="/" Color="Color.Inherit" Variant="Variant.Text">
-                    Map
-                </MudButton>
-                <MudButton Href="/species" Color="Color.Inherit" Variant="Variant.Text">
-                    Species
-                </MudButton>
-                <MudButton Href="/categories" Color="Color.Inherit" Variant="Variant.Text">
-                    Categories
-                </MudButton>
-            </div>
-        </MudHidden>
-
-        <MudSpacer />
-
-        @* Mobile: Action button(s) at far right *@
-        <MudHidden Breakpoint="Breakpoint.MdAndUp">
-            @if (!IsHomePage)
+        <MudMainContent Class="main-content">
+            @if (IsHomePage || IsSpeciesListPage)
             {
-                <NuiNativeNavbar ShowBackButton="false" ShowTitle="false" />
-            }
-        </MudHidden>
-    </MudAppBar>
-
-    <MudMainContent Class="main-content">
-        @if (IsHomePage)
-        {
-            @Body
-        }
-        else
-        {
-            <MudContainer MaxWidth="MaxWidth.Large" Class="py-6 px-4 content-container">
                 @Body
-            </MudContainer>
-        }
-    </MudMainContent>
-</MudLayout>
+            }
+            else
+            {
+                <MudContainer MaxWidth="MaxWidth.Large" Class="py-6 px-4 content-container">
+                    @Body
+                </MudContainer>
+            }
+        </MudMainContent>
+    </MudLayout>
 
-@* Mobile Bottom Navigation - Outside MudLayout for stability *@
-<MudHidden Breakpoint="Breakpoint.MdAndUp">
-    <div class="bottom-nav">
-        <MudStack Row="true" Justify="Justify.SpaceAround" AlignItems="AlignItems.Center" Class="bottom-nav-container">
-            <MudButton Variant="Variant.Text" Color="@GetBottomNavColor(NavigationTab.Map)" Class="bottom-nav-item"
-                       OnClick="@(() => NavigateToTab(NavigationTab.Map))">
-                <MudStack AlignItems="AlignItems.Center" Spacing="0">
-                    <MudIcon Icon="@Icons.Material.Filled.Map" Size="Size.Medium" />
-                    <MudText Typo="Typo.caption">Map</MudText>
-                </MudStack>
-            </MudButton>
-            <MudButton Variant="Variant.Text" Color="@GetBottomNavColor(NavigationTab.Species)" Class="bottom-nav-item"
-                       OnClick="@(() => NavigateToTab(NavigationTab.Species))">
-                <MudStack AlignItems="AlignItems.Center" Spacing="0">
-                    <MudIcon Icon="@Icons.Material.Filled.Pets" Size="Size.Medium" />
-                    <MudText Typo="Typo.caption">Species</MudText>
-                </MudStack>
-            </MudButton>
-            <MudButton Variant="Variant.Text" Color="@GetBottomNavColor(NavigationTab.Categories)" Class="bottom-nav-item"
-                       OnClick="@(() => NavigateToTab(NavigationTab.Categories))">
-                <MudStack AlignItems="AlignItems.Center" Spacing="0">
-                    <MudIcon Icon="@Icons.Material.Filled.Category" Size="Size.Medium" />
-                    <MudText Typo="Typo.caption">Categories</MudText>
-                </MudStack>
-            </MudButton>
-        </MudStack>
-    </div>
-</MudHidden>
+    @* Mobile Bottom Navigation - Outside MudLayout for stability *@
+    <MudHidden Breakpoint="Breakpoint.MdAndUp">
+        <div class="bottom-nav">
+            <MudStack Row="true" Justify="Justify.SpaceAround" AlignItems="AlignItems.Center" Class="bottom-nav-container">
+                <MudButton Variant="Variant.Text" Color="@GetBottomNavColor(NavigationTab.Map)" Class="bottom-nav-item"
+                           OnClick="@(() => NavigateToTab(NavigationTab.Map))">
+                    <MudStack AlignItems="AlignItems.Center" Spacing="0">
+                        <MudIcon Icon="@Icons.Material.Filled.Map" Size="Size.Medium" />
+                        <MudText Typo="Typo.caption">Map</MudText>
+                    </MudStack>
+                </MudButton>
+                <MudButton Variant="Variant.Text" Color="@GetBottomNavColor(NavigationTab.Species)" Class="bottom-nav-item"
+                           OnClick="@(() => NavigateToTab(NavigationTab.Species))">
+                    <MudStack AlignItems="AlignItems.Center" Spacing="0">
+                        <MudIcon Icon="@Icons.Material.Filled.Pets" Size="Size.Medium" />
+                        <MudText Typo="Typo.caption">Species</MudText>
+                    </MudStack>
+                </MudButton>
+                <MudButton Variant="Variant.Text" Color="@GetBottomNavColor(NavigationTab.Categories)" Class="bottom-nav-item"
+                           OnClick="@(() => NavigateToTab(NavigationTab.Categories))">
+                    <MudStack AlignItems="AlignItems.Center" Spacing="0">
+                        <MudIcon Icon="@Icons.Material.Filled.Category" Size="Size.Medium" />
+                        <MudText Typo="Typo.caption">Categories</MudText>
+                    </MudStack>
+                </MudButton>
+                <MudButton Variant="Variant.Text" Color="Color.Default" Class="bottom-nav-item"
+                           OnClick="ToggleLocale">
+                    <MudStack AlignItems="AlignItems.Center" Spacing="0">
+                        <MudIcon Icon="@Icons.Material.Filled.Translate" Size="Size.Medium" />
+                        <MudText Typo="Typo.caption">@_locale.Code.ToUpperInvariant()</MudText>
+                    </MudStack>
+                </MudButton>
+            </MudStack>
+        </div>
+    </MudHidden>
+</CascadingValue>
 
 @code {
     private enum NavigationTab { Map, Species, Categories }
 
     private NavigationTab _currentTab = NavigationTab.Map;
+    private LocaleContext _locale = LocaleContext.English;
 
     private bool IsHomePage => Navigation.State.Path == "/" || Navigation.State.Path == "";
+
+    private bool IsSpeciesListPage =>
+        string.Equals(Navigation.State.Path, "/species", StringComparison.OrdinalIgnoreCase);
+
+    // Hide the divider+title on pages with their own editorial hero (home, species list).
+    private bool ShowTitleDivider =>
+        !IsHomePage && !IsSpeciesListPage && Navbar.State.Title is not null;
 
     protected override void OnInitialized()
     {
@@ -143,14 +170,14 @@
         };
     }
 
-    private string GetNavLinkClass(string path)
+    private string GetNavLinkClass(string path, bool exact = false)
     {
         var currentPath = Navigation.State.Path;
-        var isActive = path == "/"
-            ? currentPath == "/" || string.IsNullOrEmpty(currentPath)
+        var isActive = exact
+            ? (path == "/" ? currentPath == "/" || string.IsNullOrEmpty(currentPath) : string.Equals(currentPath, path, StringComparison.OrdinalIgnoreCase))
             : currentPath.StartsWith(path, StringComparison.OrdinalIgnoreCase);
 
-        return isActive ? "nav-link-active" : "nav-link";
+        return isActive ? "ff-nav-link is-active" : "ff-nav-link";
     }
 
     private Color GetBottomNavColor(NavigationTab tab)
@@ -168,6 +195,17 @@
             _ => "/"
         };
         Navigation.NavigateTo(path);
+    }
+
+    private void SetLocale(LocaleContext locale)
+    {
+        if (_locale.Code == locale.Code) return;
+        _locale = locale;
+    }
+
+    private void ToggleLocale()
+    {
+        _locale = _locale.Code == "en" ? LocaleContext.Spanish : LocaleContext.English;
     }
 
     public void Dispose()

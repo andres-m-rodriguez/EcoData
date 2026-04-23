@@ -1,0 +1,109 @@
+/* ==========================================================================
+   FaunaFinder — design tokens
+   Ported from FaunaMockup/styles/fauna-tokens.css + eco-base.css
+   ========================================================================== */
+
+:root {
+    /* --- Brand: forest-green family ------------------------------------- */
+    --fauna-primary: #1f4d3a;
+    --fauna-primary-700: #2a6049;
+    --fauna-primary-600: #356b52;
+    --fauna-primary-500: #3f7d5f;
+    --fauna-primary-400: #5a9b7a;
+    --fauna-primary-300: #86b8a0;
+    --fauna-primary-200: #bcd6c7;
+    --fauna-primary-100: #dbe8e0;
+    --fauna-primary-50: #eef3ef;
+
+    --fauna-accent: #3f7d5f;
+    --fauna-accent-warm: #8a6f3e; /* brass — endemic */
+
+    /* --- Surfaces ------------------------------------------------------- */
+    --fauna-bg: #f4f4ef;
+    --fauna-bg-alt: #eceae1;
+    --fauna-surface: #ffffff;
+    --fauna-surface-alt: #faf9f5;
+    --fauna-line: #e5e3dc;
+    --fauna-line-soft: rgba(63, 125, 95, 0.15);
+
+    /* --- Typography ----------------------------------------------------- */
+    --fauna-font-serif: 'Newsreader', 'Source Serif Pro', Georgia, serif;
+    --fauna-font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+    --fauna-font-mono: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+
+    --fauna-eyebrow: 700 0.75rem/1.4 var(--fauna-font-sans);
+    --fauna-body: 400 0.9375rem/1.55 var(--fauna-font-sans);
+    --fauna-body-sm: 400 0.875rem/1.5 var(--fauna-font-sans);
+    --fauna-mono: 400 0.8125rem/1.4 var(--fauna-font-mono);
+
+    --fauna-tracking-eyebrow: 0.2em;
+    --fauna-tracking-pill: 0.1em;
+    --fauna-tracking-tight: -0.025em;
+
+    /* --- Text --------------------------------------------------------- */
+    --fauna-fg: #111111;
+    --fauna-fg-2: #333333;
+    --fauna-fg-3: #666666;
+    --fauna-fg-4: #888888;
+    --fauna-fg-5: #999999;
+
+    /* --- Motion ------------------------------------------------------- */
+    --fauna-ease: cubic-bezier(0.4, 0, 0.2, 1);
+    --fauna-t-fast: 0.15s;
+    --fauna-t-base: 0.2s;
+    --fauna-t-slow: 0.3s;
+    --fauna-t-grayscale: 0.7s;
+
+    /* --- Shadows ------------------------------------------------------ */
+    --fauna-shadow-1: 0 1px 3px rgba(0, 0, 0, 0.05);
+    --fauna-shadow-4: 0 12px 32px -4px rgba(25, 28, 28, 0.06);
+    --fauna-shadow-hero: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+
+    /* --- IUCN conservation status ------------------------------------- */
+    --status-lc: #4b8a5f;
+    --status-nt: #a8a14a;
+    --status-vu: #c89742;
+    --status-en: #c26a3a;
+    --status-cr: #a93e3e;
+    --status-ex: #3a3a3a;
+    --status-dd: #8a8a8a;
+
+    --status-lc-bg: #e5efe7;
+    --status-nt-bg: #f2f0e0;
+    --status-vu-bg: #f7ebd4;
+    --status-en-bg: #f4dfd0;
+    --status-cr-bg: #f1d9d9;
+    --status-dd-bg: #ededed;
+    --status-ex-bg: #dcdcdc;
+}
+
+/* Page frame shared by editorial species page */
+.ff-page {
+    max-width: 1360px;
+    margin: 0 auto;
+    padding: 0 32px;
+}
+
+@media (max-width: 600px) {
+    .ff-page {
+        padding: 0 16px;
+    }
+}
+
+/* IUCN status pill — used by SpeciesCard and SpeciesFilterDialog */
+.ff-status-pill {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 8px;
+    border-radius: 6px;
+    font: 700 10px/1 var(--fauna-font-mono);
+    letter-spacing: var(--fauna-tracking-pill);
+}
+
+.ff-status-pill.status-LC { background: var(--status-lc-bg); color: var(--status-lc); }
+.ff-status-pill.status-NT { background: var(--status-nt-bg); color: #6a6430; }
+.ff-status-pill.status-VU { background: var(--status-vu-bg); color: #7d5c20; }
+.ff-status-pill.status-EN { background: var(--status-en-bg); color: #8b4a25; }
+.ff-status-pill.status-CR { background: var(--status-cr-bg); color: var(--status-cr); }
+.ff-status-pill.status-EX { background: var(--status-ex-bg); color: var(--status-ex); }
+.ff-status-pill.status-DD { background: var(--status-dd-bg); color: var(--status-ex); }

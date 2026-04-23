@@ -1,0 +1,169 @@
+@namespace FaunaFinder.Client.Components.Species
+@using EcoData.Wildlife.Contracts.Dtos
+@using EcoData.Wildlife.Contracts.Parameters
+@using EcoData.Wildlife.Application.Client
+@implements IDisposable
+@inject ISpeciesHttpClient SpeciesClient
+
+@if (_isInitialLoading)
+{
+    <div class="ff-grid">
+        @for (var i = 0; i < 8; i++)
+        {
+            <div class="ff-grid-skeleton">
+                <MudSkeleton SkeletonType="SkeletonType.Rectangle" Class="ff-grid-skeleton-img" />
+                <div class="ff-grid-skeleton-body">
+                    <MudSkeleton SkeletonType="SkeletonType.Text" Width="70%" />
+                    <MudSkeleton SkeletonType="SkeletonType.Text" Width="50%" />
+                </div>
+            </div>
+        }
+    </div>
+}
+else if (_items.Count == 0)
+{
+    <NuiEmptyState Icon="@Icons.Material.Outlined.SearchOff"
+                   Title="No species match"
+                   Description="Try adjusting your filters or search terms." />
+}
+else
+{
+    <div class="ff-grid">
+        @foreach (var species in _items)
+        {
+            <SpeciesCard Species="@species" OnClick="HandleClick" />
+        }
+    </div>
+
+    <div class="ff-grid-status">
+        @if (_isPaging)
+        {
+            <MudProgressCircular Indeterminate="true" Size="Size.Small" Color="Color.Primary" />
+            <span>Loading more records…</span>
+        }
+        else if (_hasMore)
+        {
+            <MudButton Variant="Variant.Text" Color="Color.Primary" OnClick="LoadNextPage">
+                Load more records
+            </MudButton>
+        }
+        else
+        {
+            <span class="ff-grid-end">— end of catalogue —</span>
+        }
+    </div>
+}
+
+@code {
+    private const int PageSize = 24;
+
+    [Parameter] public SpeciesFilterResult Filter { get; set; } = SpeciesFilterResult.Empty;
+    [Parameter] public string? Search { get; set; }
+    [Parameter] public SpeciesSort Sort { get; set; } = SpeciesSort.ScientificNameAsc;
+    [Parameter] public EventCallback<SpeciesDtoForList> OnSpeciesClick { get; set; }
+
+    private readonly List<SpeciesDtoForList> _items = [];
+    private bool _isInitialLoading = true;
+    private bool _isPaging;
+    private bool _hasMore = true;
+    private Guid? _cursor;
+    private CancellationTokenSource? _cts;
+    private SpeciesFilterResult _lastFilter = SpeciesFilterResult.Empty;
+    private string? _lastSearch;
+    private SpeciesSort _lastSort = SpeciesSort.ScientificNameAsc;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        var filterChanged = !ReferenceEquals(_lastFilter, Filter) && _lastFilter != Filter;
+        var searchChanged = !string.Equals(_lastSearch, Search, StringComparison.Ordinal);
+        var sortChanged = _lastSort != Sort;
+
+        if (filterChanged || searchChanged || sortChanged)
+        {
+            _lastFilter = Filter;
+            _lastSearch = Search;
+            _lastSort = Sort;
+            await ResetAndLoadAsync();
+        }
+    }
+
+    protected override Task OnInitializedAsync() => ResetAndLoadAsync();
+
+    private async Task ResetAndLoadAsync()
+    {
+        CancelInFlight();
+        _items.Clear();
+        _cursor = null;
+        _hasMore = true;
+        _isInitialLoading = true;
+        StateHasChanged();
+
+        await LoadPageAsync();
+        _isInitialLoading = false;
+        StateHasChanged();
+    }
+
+    private async Task LoadNextPage()
+    {
+        if (_isPaging || !_hasMore) return;
+        _isPaging = true;
+        StateHasChanged();
+
+        await LoadPageAsync();
+
+        _isPaging = false;
+        StateHasChanged();
+    }
+
+    private async Task LoadPageAsync()
+    {
+        _cts?.Cancel();
+        _cts = new CancellationTokenSource();
+        var ct = _cts.Token;
+
+        var parameters = new SpeciesParameters(
+            PageSize: PageSize,
+            Cursor: _cursor,
+            Search: string.IsNullOrWhiteSpace(Search) ? null : Search,
+            IsEndemic: Filter.IsEndemic ? true : null,
+            HasProfileImage: Filter.HasPhoto ? true : null,
+            IucnStatuses: Filter.IucnStatuses.Count > 0 ? Filter.IucnStatuses : null,
+            TaxonCodes: Filter.TaxonCodes.Count > 0 ? Filter.TaxonCodes : null,
+            MinMunicipalityCount: Filter.MinMunicipalityCount,
+            ObservedSinceUtc: Filter.ObservedRecently
+                ? DateTimeOffset.UtcNow.AddYears(-1)
+                : null,
+            Sort: Sort
+        );
+
+        var fetched = 0;
+        try
+        {
+            await foreach (var species in SpeciesClient.GetSpeciesAsync(parameters, ct))
+            {
+                ct.ThrowIfCancellationRequested();
+                _items.Add(species);
+                _cursor = species.Id;
+                fetched++;
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            return;
+        }
+
+        _hasMore = fetched >= PageSize;
+    }
+
+    private void CancelInFlight()
+    {
+        _cts?.Cancel();
+        _cts?.Dispose();
+        _cts = null;
+    }
+
+    private Task HandleClick(SpeciesDtoForList species) =>
+        OnSpeciesClick.InvokeAsync(species);
+
+    public void Dispose() => CancelInFlight();
+}
