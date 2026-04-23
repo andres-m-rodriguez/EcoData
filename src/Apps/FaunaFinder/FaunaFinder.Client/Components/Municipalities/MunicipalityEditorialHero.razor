@@ -7,6 +7,7 @@
         <h1 class="mm-hero-heading">
             Municipios of <em>Puerto Rico</em>,<br /> mapped and observed.
         </h1>
+        <p class="mm-hero-lede">@Lede</p>
     </div>
     <div class="mm-hero-meta">
         <span>Last sync · @LastSync</span>
@@ -19,6 +20,9 @@
     [Parameter] public SpeciesStatsDto? Stats { get; set; }
 
     [Parameter] public string Eyebrow { get; set; } = "Volume 03 · Living Atlas";
+
+    [Parameter] public string Lede { get; set; } =
+        "A geographic index to Puerto Rico's 78 municipios — each annotated with the species recorded inside its boundaries. Search by name, sort by biodiversity, or tap any pin to pull up a municipio's full roster and its notable residents.";
 
     private string LastSync => DateTime.Now.ToString("HH:mm") + " local";
 

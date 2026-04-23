@@ -1,0 +1,80 @@
+@namespace FaunaFinder.Client.Components.Map
+@using EcoData.Wildlife.Contracts
+@using EcoData.Wildlife.Contracts.Dtos
+@using FaunaFinder.Client.Components.Species
+
+<header class="msp-head">
+    <div class="msp-head-meta">
+        <div class="msp-eyebrow">Municipio</div>
+        <div class="msp-title">@(Title ?? "—")</div>
+    </div>
+    <button type="button" class="msp-close" @onclick="HandleClose" aria-label="Close">
+        <MudIcon Icon="@Icons.Material.Filled.Close" Size="Size.Small" />
+    </button>
+</header>
+
+@if (IsLoading)
+{
+    <div class="msp-list">
+        @for (var i = 0; i < 6; i++)
+        {
+            <div class="msp-row msp-row-skeleton">
+                <MudSkeleton SkeletonType="SkeletonType.Text" Width="80%" Height="20px" />
+                <MudSkeleton SkeletonType="SkeletonType.Text" Width="55%" Height="14px" />
+            </div>
+        }
+    </div>
+}
+else if (Species is null || Species.Count == 0)
+{
+    <div class="msp-empty">
+        <MudIcon Icon="@Icons.Material.Outlined.Pets" Size="Size.Medium" />
+        <div class="msp-empty-title">No species recorded</div>
+        <div class="msp-empty-sub">No species have been observed in this municipio yet.</div>
+    </div>
+}
+else
+{
+    <div class="msp-meta">@Species.Count @(Species.Count == 1 ? "species" : "species") observed</div>
+    <div class="msp-list">
+        @{
+            var idx = 0;
+        }
+        @foreach (var s in Species)
+        {
+            var position = ++idx;
+            var current = s;
+            <div class="msp-row" @onclick="@(() => HandleClick(current))">
+                <div class="msp-row-idx">@position.ToString("00")</div>
+                <div class="msp-row-icon" title="@TaxonIcons.GetLabel(current.TaxonCode)">
+                    <i class="@TaxonIcons.GetIcon(current.TaxonCode)"></i>
+                </div>
+                <div class="msp-row-body">
+                    <div class="msp-row-name">@Locale.Resolve(current.CommonName, fallback: current.ScientificName)</div>
+                    <div class="msp-row-sci">@current.ScientificName</div>
+                </div>
+                @if (current.IucnStatus is { } status)
+                {
+                    <span class="ff-status-pill @($"status-{status}")">@status</span>
+                }
+                else
+                {
+                    <span class="ff-status-pill status-DD">DD</span>
+                }
+            </div>
+        }
+    </div>
+}
+
+@code {
+    [Parameter] public string? Title { get; set; }
+    [Parameter] public IReadOnlyList<SpeciesDtoForList>? Species { get; set; }
+    [Parameter] public bool IsLoading { get; set; }
+    [Parameter] public EventCallback OnClose { get; set; }
+    [Parameter] public EventCallback<SpeciesDtoForList> OnSpeciesClick { get; set; }
+
+    [CascadingParameter] public LocaleContext Locale { get; set; } = LocaleContext.English;
+
+    private Task HandleClose() => OnClose.InvokeAsync();
+    private Task HandleClick(SpeciesDtoForList s) => OnSpeciesClick.InvokeAsync(s);
+}

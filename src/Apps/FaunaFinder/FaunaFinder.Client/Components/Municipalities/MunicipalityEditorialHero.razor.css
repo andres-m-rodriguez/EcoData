@@ -1,8 +1,8 @@
 .mm-hero {
-    padding: 40px 0 24px;
+    padding: 56px 0 32px;
     display: grid;
     grid-template-columns: 1fr auto;
-    gap: 32px;
+    gap: 48px;
     align-items: end;
     border-bottom: 1px solid var(--fauna-line);
 }
@@ -15,7 +15,7 @@
     text-transform: uppercase;
     letter-spacing: var(--fauna-tracking-eyebrow);
     color: var(--fauna-accent);
-    margin-bottom: 14px;
+    margin-bottom: 20px;
 }
 
 .mm-hero-eyebrow::before {
@@ -26,8 +26,8 @@
 }
 
 .mm-hero-heading {
-    font: 700 clamp(1.875rem, 4vw, 3.25rem)/1.05 var(--fauna-font-serif);
-    letter-spacing: -0.03em;
+    font: 700 clamp(2.25rem, 5vw, 4.25rem)/1.02 var(--fauna-font-serif);
+    letter-spacing: -0.035em;
     color: var(--fauna-primary);
     margin: 0;
 }
@@ -36,6 +36,13 @@
     font-style: italic;
     font-weight: 500;
     color: var(--fauna-accent);
+}
+
+.mm-hero-lede {
+    font: 400 1.0625rem/1.55 var(--fauna-font-sans);
+    color: var(--fauna-fg-3);
+    max-width: 520px;
+    margin: 16px 0 0;
 }
 
 .mm-hero-meta {
@@ -55,8 +62,8 @@
 @media (max-width: 900px) {
     .mm-hero {
         grid-template-columns: 1fr;
-        gap: 12px;
-        padding: 24px 0 16px;
+        gap: 20px;
+        padding: 32px 0 24px;
     }
 
     .mm-hero-meta {

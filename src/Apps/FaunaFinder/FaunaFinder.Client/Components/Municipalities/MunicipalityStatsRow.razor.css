@@ -2,12 +2,12 @@
     display: grid;
     grid-template-columns: repeat(4, 1fr);
     gap: 0;
-    padding: 20px 0 24px;
+    padding: 28px 0 36px;
     border-bottom: 1px solid var(--fauna-line);
 }
 
 .mm-stat {
-    padding: 0 28px;
+    padding: 0 32px;
     border-left: 1px solid var(--fauna-line);
 }
 
@@ -24,16 +24,16 @@
 }
 
 .mm-stat-value {
-    font: 600 2rem/1 var(--fauna-font-serif);
+    font: 600 2.75rem/1 var(--fauna-font-serif);
     color: var(--fauna-primary);
     letter-spacing: -0.025em;
-    margin-top: 6px;
+    margin-top: 10px;
 }
 
 .mm-stat-value .unit {
-    font: 500 0.75rem/1 var(--fauna-font-sans);
+    font: 500 0.875rem/1 var(--fauna-font-sans);
     color: var(--fauna-fg-4);
-    margin-left: 4px;
+    margin-left: 6px;
     letter-spacing: 0;
 }
 
@@ -41,30 +41,43 @@
     font: var(--fauna-mono);
     font-size: 11px;
     color: var(--fauna-fg-4);
-    margin-top: 6px;
+    margin-top: 8px;
 }
 
 @media (max-width: 900px) {
     .mm-stats {
         grid-template-columns: repeat(2, 1fr);
-        padding: 12px 0 0;
+        gap: 12px;
+        padding: 20px 0 24px;
+        border-bottom: 0;
     }
 
-    .mm-stat {
-        padding: 12px;
-        border-left: 0;
-        border-top: 1px solid var(--fauna-line);
+    /* Mobile renders each stat as its own tile instead of a bordered strip.
+       The :first-child rule on desktop strips padding + border-left, so we
+       re-declare both here to ensure every card matches. */
+    .mm-stat,
+    .mm-stat:first-child {
+        padding: 14px 16px;
+        background: var(--fauna-surface);
+        border: 1px solid var(--fauna-line);
+        border-radius: 12px;
     }
 
-    .mm-stat:nth-child(-n+2) {
-        border-top: 0;
+    .mm-stat-label {
+        font-size: 10px;
     }
 
-    .mm-stat:nth-child(odd) {
-        padding-left: 0;
+    .mm-stat-value {
+        font-size: 1.75rem;
+        margin-top: 6px;
     }
 
-    .mm-stat:nth-child(even) {
-        border-left: 1px solid var(--fauna-line);
+    .mm-stat-sub {
+        margin-top: 6px;
+        font-size: 10px;
+    }
+
+    .mm-stat-value .unit {
+        font-size: 0.75rem;
     }
 }
