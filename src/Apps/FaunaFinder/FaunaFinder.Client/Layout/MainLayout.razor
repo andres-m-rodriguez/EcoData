@@ -49,21 +49,19 @@
 
             <MudSpacer />
 
-            @* Desktop: EN/ES toggle *@
-            <MudHidden Breakpoint="Breakpoint.SmAndDown">
-                <div class="ff-lang-toggle" role="group" aria-label="Language">
-                    <button type="button"
-                            class="@(_locale.Code == "en" ? "is-on" : "")"
-                            @onclick="@(() => SetLocale(LocaleContext.English))">
-                        EN
-                    </button>
-                    <button type="button"
-                            class="@(_locale.Code == "es" ? "is-on" : "")"
-                            @onclick="@(() => SetLocale(LocaleContext.Spanish))">
-                        ES
-                    </button>
-                </div>
-            </MudHidden>
+            @* EN/ES toggle — shown on every breakpoint *@
+            <div class="ff-lang-toggle" role="group" aria-label="Language">
+                <button type="button"
+                        class="@(_locale.Code == "en" ? "is-on" : "")"
+                        @onclick="@(() => SetLocale(LocaleContext.English))">
+                    EN
+                </button>
+                <button type="button"
+                        class="@(_locale.Code == "es" ? "is-on" : "")"
+                        @onclick="@(() => SetLocale(LocaleContext.Spanish))">
+                    ES
+                </button>
+            </div>
 
             @* Mobile: Action button(s) at far right *@
             <MudHidden Breakpoint="Breakpoint.MdAndUp">
@@ -111,13 +109,6 @@
                     <MudStack AlignItems="AlignItems.Center" Spacing="0">
                         <MudIcon Icon="@Icons.Material.Filled.Category" Size="Size.Medium" />
                         <MudText Typo="Typo.caption">Categories</MudText>
-                    </MudStack>
-                </MudButton>
-                <MudButton Variant="Variant.Text" Color="Color.Default" Class="bottom-nav-item"
-                           OnClick="ToggleLocale">
-                    <MudStack AlignItems="AlignItems.Center" Spacing="0">
-                        <MudIcon Icon="@Icons.Material.Filled.Translate" Size="Size.Medium" />
-                        <MudText Typo="Typo.caption">@_locale.Code.ToUpperInvariant()</MudText>
                     </MudStack>
                 </MudButton>
             </MudStack>
@@ -201,11 +192,6 @@
     {
         if (_locale.Code == locale.Code) return;
         _locale = locale;
-    }
-
-    private void ToggleLocale()
-    {
-        _locale = _locale.Code == "en" ? LocaleContext.Spanish : LocaleContext.English;
     }
 
     public void Dispose()

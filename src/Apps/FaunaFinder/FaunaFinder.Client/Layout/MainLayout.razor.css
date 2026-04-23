@@ -111,6 +111,19 @@
     color: var(--fauna-primary, #1f4d3a);
 }
 
+/* Mobile — compact pill so it sits alongside back/title */
+@media (max-width: 959.95px) {
+    ::deep .ff-lang-toggle {
+        margin-left: auto;
+        font-size: 9px;
+    }
+
+    ::deep .ff-lang-toggle button {
+        padding: 4px 8px;
+        min-width: 28px;
+    }
+}
+
 /* App bar backdrop blur (kept from before) */
 ::deep .app-bar-blur {
     backdrop-filter: blur(8px);
