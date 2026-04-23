@@ -74,7 +74,7 @@
         </MudAppBar>
 
         <MudMainContent Class="main-content">
-            @if (IsHomePage || IsSpeciesListPage)
+            @if (IsHomePage || IsEditorialListPage)
             {
                 @Body
             }
@@ -105,6 +105,13 @@
                         <MudText Typo="Typo.caption">Species</MudText>
                     </MudStack>
                 </MudButton>
+                <MudButton Variant="Variant.Text" Color="@GetBottomNavColor(NavigationTab.Municipalities)" Class="bottom-nav-item"
+                           OnClick="@(() => NavigateToTab(NavigationTab.Municipalities))">
+                    <MudStack AlignItems="AlignItems.Center" Spacing="0">
+                        <MudIcon Icon="@Icons.Material.Filled.LocationCity" Size="Size.Medium" />
+                        <MudText Typo="Typo.caption">Municipios</MudText>
+                    </MudStack>
+                </MudButton>
                 <MudButton Variant="Variant.Text" Color="@GetBottomNavColor(NavigationTab.Categories)" Class="bottom-nav-item"
                            OnClick="@(() => NavigateToTab(NavigationTab.Categories))">
                     <MudStack AlignItems="AlignItems.Center" Spacing="0">
@@ -118,19 +125,22 @@
 </CascadingValue>
 
 @code {
-    private enum NavigationTab { Map, Species, Categories }
+    private enum NavigationTab { Map, Species, Municipalities, Categories }
 
     private NavigationTab _currentTab = NavigationTab.Map;
     private LocaleContext _locale = LocaleContext.English;
 
     private bool IsHomePage => Navigation.State.Path == "/" || Navigation.State.Path == "";
 
-    private bool IsSpeciesListPage =>
-        string.Equals(Navigation.State.Path, "/species", StringComparison.OrdinalIgnoreCase);
+    private bool IsEditorialListPage =>
+        string.Equals(Navigation.State.Path, "/species", StringComparison.OrdinalIgnoreCase) ||
+        string.Equals(Navigation.State.Path, "/municipalities", StringComparison.OrdinalIgnoreCase) ||
+        string.Equals(Navigation.State.Path, "/categories", StringComparison.OrdinalIgnoreCase);
 
-    // Hide the divider+title on pages with their own editorial hero (home, species list).
+    // Hide the divider+title on top-level list pages (home, species, muni, categories).
+    // Each either renders its own root heading or relies on the active nav pill for context.
     private bool ShowTitleDivider =>
-        !IsHomePage && !IsSpeciesListPage && Navbar.State.Title is not null;
+        !IsHomePage && !IsEditorialListPage && Navbar.State.Title is not null;
 
     protected override void OnInitialized()
     {
@@ -157,6 +167,7 @@
         {
             "/" or "" => NavigationTab.Map,
             var p when p.StartsWith("/species", StringComparison.OrdinalIgnoreCase) => NavigationTab.Species,
+            var p when p.StartsWith("/municipalities", StringComparison.OrdinalIgnoreCase) => NavigationTab.Municipalities,
             var p when p.StartsWith("/categories", StringComparison.OrdinalIgnoreCase) => NavigationTab.Categories,
             _ => NavigationTab.Map
         };
@@ -183,6 +194,7 @@
         {
             NavigationTab.Map => "/",
             NavigationTab.Species => "/species",
+            NavigationTab.Municipalities => "/municipalities",
             NavigationTab.Categories => "/categories",
             _ => "/"
         };

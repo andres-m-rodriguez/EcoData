@@ -37,55 +37,45 @@
 }
 
 .map-loading-overlay {
-    background-color: rgba(255, 255, 255, 0.8);
+    background-color: rgba(244, 244, 239, 0.85);
 }
 
-/* Desktop Sidebar */
+/* Desktop sidebar shell — inner chrome lives in MapSpeciesPanel */
 .desktop-sidebar {
     position: absolute;
     top: 0;
     right: 0;
-    width: 380px;
+    width: 400px;
     height: 100%;
-    background-color: var(--mud-palette-surface);
-    box-shadow: -2px 0 8px rgba(0, 0, 0, 0.1);
+    background: var(--fauna-surface);
+    border-left: 1px solid var(--fauna-line);
+    box-shadow: var(--fauna-shadow-4);
     z-index: 500;
     display: flex;
     flex-direction: column;
     transform: translateX(100%);
-    transition: transform 0.3s ease;
+    transition: transform var(--fauna-t-slow) var(--fauna-ease);
 }
 
 .desktop-sidebar.open {
     transform: translateX(0);
 }
 
-.sidebar-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 16px;
-    border-bottom: 1px solid var(--mud-palette-lines-default);
-}
-
-.sidebar-content {
-    flex: 1;
-    overflow-y: auto;
-    padding: 8px 0;
-}
-
-/* Mobile Bottom Sheet */
+/* Mobile bottom sheet shell.
+   Bottom nav sits at z-index 9999 (MainLayout.razor.css). The sheet has to
+   stack above that so tapping a pin while the nav is visible doesn't send
+   the sheet behind the nav strip. */
 .mobile-sheet-backdrop {
     position: fixed;
     top: 0;
     left: 0;
     right: 0;
     bottom: 0;
-    background-color: rgba(0, 0, 0, 0.5);
-    z-index: 600;
+    background-color: rgba(17, 17, 17, 0.45);
+    z-index: 10000;
     opacity: 0;
     pointer-events: none;
-    transition: opacity 0.3s ease;
+    transition: opacity var(--fauna-t-slow) var(--fauna-ease);
 }
 
 .mobile-sheet-backdrop.open {
@@ -97,31 +87,25 @@
     position: fixed;
     left: 0;
     right: 0;
-    bottom: calc(64px + env(safe-area-inset-bottom, 0px));
-    max-height: 60vh;
-    background-color: var(--mud-palette-surface);
+    bottom: 0;
+    /* Always fill from the bottom edge up to ~75% of the viewport so the
+       sheet's top edge is consistent regardless of how much content it
+       holds. Inner content scrolls inside. */
+    height: 75vh;
+    max-height: calc(100vh - 64px);
+    background: var(--fauna-surface);
+    border-top: 1px solid var(--fauna-line);
     border-radius: 16px 16px 0 0;
-    box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.15);
-    z-index: 700;
+    box-shadow: 0 -4px 24px rgba(17, 17, 17, 0.18);
+    z-index: 10001;
     display: flex;
     flex-direction: column;
+    overflow: hidden;
     transform: translateY(100%);
-    transition: transform 0.3s ease;
+    transition: transform var(--fauna-t-slow) var(--fauna-ease);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 
 .mobile-sheet.open {
     transform: translateY(0);
-}
-
-.mobile-sheet-header {
-    display: flex;
-    align-items: center;
-    padding: 12px 16px;
-    border-bottom: 1px solid var(--mud-palette-lines-default);
-}
-
-.mobile-sheet-content {
-    flex: 1;
-    overflow-y: auto;
-    padding-bottom: 16px;
 }
