@@ -82,8 +82,7 @@ var faunafinder = builder
     .AddProject<Projects.FaunaFinder_Server>("faunafinder")
     .WithReference(locationsDb)
     .WithReference(wildlifeDb)
-    .WaitFor(seeder)
-    .ExcludeFromManifest();
+    .WaitFor(seeder);
 
 var sensorsIngestion = builder
     .AddProject<Projects.EcoData_Sensors_Ingestion>("sensors-ingestion")
