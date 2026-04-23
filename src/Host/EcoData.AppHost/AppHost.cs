@@ -79,6 +79,7 @@ var ecoportal = builder
 
 var faunafinder = builder
     .AddProject<Projects.FaunaFinder_Server>("faunafinder")
+    .WithExternalHttpEndpoints()
     .WithReference(locationsDb)
     .WithReference(wildlifeDb)
     .WaitFor(seeder)
