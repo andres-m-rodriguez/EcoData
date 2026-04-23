@@ -1,0 +1,47 @@
+@namespace FaunaFinder.Client.Components.Municipalities
+@using EcoData.Wildlife.Contracts.Dtos
+
+<section class="mm-stats">
+    <div class="mm-stat">
+        <div class="mm-stat-label">Total municipios</div>
+        <div class="mm-stat-value">
+            @FormatNumber(Stats?.TotalMunicipalities)
+            <span class="unit">/ @(Stats?.TotalMunicipalities ?? 78) tracked</span>
+        </div>
+        <div class="mm-stat-sub">100% island coverage</div>
+    </div>
+
+    <div class="mm-stat">
+        <div class="mm-stat-label">Species catalogued</div>
+        <div class="mm-stat-value">@FormatNumber(Stats?.TotalSpecies)</div>
+        <div class="mm-stat-sub">across the island</div>
+    </div>
+
+    <div class="mm-stat">
+        <div class="mm-stat-label">Avg · species / municipio</div>
+        <div class="mm-stat-value">@AverageLabel</div>
+        <div class="mm-stat-sub">@Stats?.MunicipalitiesCovered municipios contribute</div>
+    </div>
+
+    <div class="mm-stat">
+        <div class="mm-stat-label">Endemic hotspots</div>
+        <div class="mm-stat-value">@FormatNumber(Stats?.EndemicHotspotCount)</div>
+        <div class="mm-stat-sub">≥ 10 endemic species present</div>
+    </div>
+</section>
+
+@code {
+    [Parameter] public SpeciesStatsDto? Stats { get; set; }
+
+    private static string FormatNumber(int? n) => n is { } v ? v.ToString("N0") : "—";
+
+    private string AverageLabel
+    {
+        get
+        {
+            if (Stats is null || Stats.MunicipalitiesCovered == 0) return "—";
+            var avg = (double)Stats.TotalSpecies / Stats.MunicipalitiesCovered;
+            return avg.ToString("0.0");
+        }
+    }
+}

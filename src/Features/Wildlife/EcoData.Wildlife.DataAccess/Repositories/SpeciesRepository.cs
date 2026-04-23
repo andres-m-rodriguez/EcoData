@@ -198,6 +198,15 @@ public sealed class SpeciesRepository(
         var addedThisQuarter = await context
             .Species.CountAsync(s => s.CreatedAtUtc >= quarterAgo, cancellationToken);
 
+        // Municipalities with ≥10 endemic species recorded — the "biodiversity hotspot"
+        // metric surfaced on the Municipios page.
+        const int endemicHotspotThreshold = 10;
+        var endemicHotspotCount = await context
+            .MunicipalitySpecies.Where(ms => ms.Species.IsEndemic)
+            .GroupBy(ms => ms.MunicipalityId)
+            .Where(g => g.Count() >= endemicHotspotThreshold)
+            .CountAsync(cancellationToken);
+
         return new SpeciesStatsDto(
             totalSpecies,
             endemicCount,
@@ -205,8 +214,21 @@ public sealed class SpeciesRepository(
             municipalitiesCovered,
             options.Value.TotalMunicipalitiesInRegion,
             addedThisQuarter,
-            ReclassifiedThisQuarter: 0
+            ReclassifiedThisQuarter: 0,
+            endemicHotspotCount
         );
+    }
+
+    public async Task<IReadOnlyList<MunicipalitySpeciesCountDto>> GetCountsByMunicipalityAsync(
+        CancellationToken cancellationToken = default
+    )
+    {
+        await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
+
+        return await context
+            .MunicipalitySpecies.GroupBy(ms => ms.MunicipalityId)
+            .Select(g => new MunicipalitySpeciesCountDto(g.Key, g.Count()))
+            .ToListAsync(cancellationToken);
     }
 
     public async Task<SpeciesFacetsDto> GetFacetsAsync(

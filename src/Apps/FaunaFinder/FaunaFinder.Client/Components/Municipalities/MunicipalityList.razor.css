@@ -1,0 +1,199 @@
+.mm-rail {
+    display: flex;
+    flex-direction: column;
+    background: var(--fauna-surface);
+    border: 1px solid var(--fauna-line);
+    border-radius: 14px;
+    overflow: hidden;
+    height: 100%;
+}
+
+.mm-rail-head {
+    padding: 16px 18px 12px;
+    border-bottom: 1px solid var(--fauna-line);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.mm-search {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--fauna-surface-alt);
+    border: 1px solid var(--fauna-line);
+    border-radius: 10px;
+    padding: 0 12px;
+    height: 38px;
+    transition: border-color var(--fauna-t-base) var(--fauna-ease),
+                box-shadow var(--fauna-t-base) var(--fauna-ease);
+}
+
+.mm-search:focus-within {
+    border-color: var(--fauna-primary);
+    box-shadow: 0 0 0 4px var(--fauna-primary-50);
+}
+
+.mm-search ::deep .mud-icon-root {
+    color: var(--fauna-fg-4);
+}
+
+.mm-search input {
+    flex: 1;
+    border: 0;
+    outline: 0;
+    background: transparent;
+    font: var(--fauna-body-sm);
+    color: var(--fauna-fg);
+}
+
+.mm-search input::placeholder {
+    color: var(--fauna-fg-5);
+}
+
+.mm-rail-head-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    font: var(--fauna-mono);
+    font-size: 11px;
+    color: var(--fauna-fg-4);
+}
+
+.mm-sort {
+    background: transparent;
+    border: 0;
+    cursor: pointer;
+    font: inherit;
+    color: var(--fauna-primary);
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 0;
+}
+
+.mm-sort ::deep .mud-icon-root {
+    font-size: 14px !important;
+    color: var(--fauna-primary);
+}
+
+.mm-list {
+    flex: 1;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+}
+
+.mm-row {
+    padding: 12px 14px 12px 18px;
+    display: grid;
+    grid-template-columns: 32px 1fr auto auto;
+    gap: 12px;
+    align-items: center;
+    cursor: pointer;
+    border-bottom: 1px solid var(--fauna-line);
+    transition: background-color var(--fauna-t-base) var(--fauna-ease);
+}
+
+.mm-row:hover {
+    background: var(--fauna-primary-50);
+}
+
+.mm-row.is-active {
+    background: var(--fauna-primary-50);
+    box-shadow: inset 3px 0 0 var(--fauna-primary);
+}
+
+.mm-row-idx {
+    font: var(--fauna-mono);
+    font-size: 11px;
+    color: var(--fauna-fg-5);
+    letter-spacing: 0.05em;
+    text-align: right;
+}
+
+.mm-row-name {
+    font: 500 14px/1.2 var(--fauna-font-sans);
+    color: var(--fauna-fg);
+}
+
+.mm-row-sub {
+    font: var(--fauna-mono);
+    font-size: 11px;
+    color: var(--fauna-fg-4);
+    margin-top: 2px;
+}
+
+.mm-row-count {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font: 500 13px/1 var(--fauna-font-mono);
+    color: var(--fauna-primary-500);
+}
+
+.mm-row-count ::deep .mud-icon-root {
+    font-size: 11px !important;
+    color: var(--fauna-primary-500);
+}
+
+.mm-row-details {
+    width: 30px;
+    height: 30px;
+    border-radius: 8px;
+    border: 1px solid var(--fauna-line);
+    background: var(--fauna-surface);
+    color: var(--fauna-primary);
+    cursor: pointer;
+    display: grid;
+    place-items: center;
+    transition: background-color var(--fauna-t-base) var(--fauna-ease),
+                border-color var(--fauna-t-base) var(--fauna-ease);
+}
+
+.mm-row-details:hover {
+    background: var(--fauna-primary);
+    border-color: var(--fauna-primary);
+    color: #fff;
+}
+
+.mm-row-details ::deep .mud-icon-root {
+    font-size: 14px !important;
+}
+
+.mm-row-details:hover ::deep .mud-icon-root {
+    color: #fff;
+}
+
+.mm-row-skeleton {
+    grid-template-columns: 1fr;
+    padding: 14px 18px;
+}
+
+.mm-row-empty {
+    padding: 32px 18px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    font: var(--fauna-mono);
+    font-size: 12px;
+    color: var(--fauna-fg-4);
+}
+
+.mm-row-empty ::deep .mud-icon-root {
+    color: var(--fauna-fg-5);
+}
+
+.mm-rail-foot {
+    padding: 10px 18px;
+    border-top: 1px solid var(--fauna-line);
+    background: var(--fauna-surface-alt);
+    font: var(--fauna-mono);
+    font-size: 11px;
+    color: var(--fauna-fg-4);
+    text-align: center;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}

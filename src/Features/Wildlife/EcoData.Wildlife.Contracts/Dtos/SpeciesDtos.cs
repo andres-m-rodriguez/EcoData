@@ -73,8 +73,11 @@ public sealed record SpeciesStatsDto(
     int MunicipalitiesCovered,
     int TotalMunicipalities,
     int AddedThisQuarter,
-    int ReclassifiedThisQuarter
+    int ReclassifiedThisQuarter,
+    int EndemicHotspotCount
 );
+
+public sealed record MunicipalitySpeciesCountDto(Guid MunicipalityId, int Count);
 
 public sealed record TaxonFacetDto(string Code, int Count);
 

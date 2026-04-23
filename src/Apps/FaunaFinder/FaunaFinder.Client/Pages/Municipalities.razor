@@ -1,0 +1,249 @@
+@page "/municipalities"
+@page "/municipalities/{Id:guid}"
+@using EcoData.Locations.Application.Client
+@using EcoData.Locations.Contracts.Dtos
+@using EcoData.Locations.Contracts.Parameters
+@using EcoData.Wildlife.Application.Client
+@using EcoData.Wildlife.Contracts.Dtos
+@using BlazingSingularity.Fetch
+@using FaunaFinder.Client.Components.Municipalities
+@implements IDisposable
+@inject IMunicipalityHttpClient MunicipalityClient
+@inject ISpeciesHttpClient SpeciesClient
+@inject INativeNavbarManager Navbar
+@inject NavigationManager NavigationManager
+
+<PageTitle>FaunaFinder - Municipios</PageTitle>
+
+@if (Id is not null)
+{
+    <NuiPageLayout Title="@_detailFetch?.Data?.Name" ParentPath="/municipalities">
+        @if (_detailFetch?.IsLoading is not false)
+        {
+            <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="180px" Class="mb-4 rounded-lg" />
+            <MudSkeleton SkeletonType="SkeletonType.Text" Width="60%" Class="mb-2" />
+            <MudSkeleton SkeletonType="SkeletonType.Text" Width="40%" />
+        }
+        else if (_detailFetch.Data is { } detail)
+        {
+            <MudPaper Elevation="0" Class="pa-4 pa-md-6 rounded-lg border-solid border mud-border-lines-default mb-4">
+                <MudText Typo="Typo.h5" GutterBottom="true">@detail.Name</MudText>
+                <MudText Typo="Typo.subtitle1" Color="Color.Secondary" Class="mb-2">
+                    @detail.StateName · FIPS @detail.CountyFipsCode
+                </MudText>
+                <MudText Typo="Typo.caption" Color="Color.Secondary">
+                    Centroid · @detail.CentroidLatitude.ToString("0.0000")″N @Math.Abs(detail.CentroidLongitude).ToString("0.0000")″W
+                </MudText>
+            </MudPaper>
+
+            <MudPaper Elevation="0" Class="pa-4 pa-md-6 rounded-lg border-solid border mud-border-lines-default">
+                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Class="mb-4">
+                    <MudIcon Icon="@Icons.Material.Filled.Pets" Color="Color.Primary" />
+                    <MudText Typo="Typo.h6">Species</MudText>
+                    <MudSpacer />
+                    @if (_detailSpeciesFetch?.Data is { Count: > 0 } list)
+                    {
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">
+                            @list.Count
+                        </MudText>
+                    }
+                </MudStack>
+
+                @if (_detailSpeciesFetch?.IsLoading is not false)
+                {
+                    <MudGrid Spacing="2">
+                        @for (var i = 0; i < 6; i++)
+                        {
+                            <MudItem xs="12" sm="6" md="4">
+                                <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="200px" Class="rounded-lg" />
+                            </MudItem>
+                        }
+                    </MudGrid>
+                }
+                else if (_detailSpeciesFetch.Data is null || _detailSpeciesFetch.Data.Count == 0)
+                {
+                    <NuiEmptyState Icon="@Icons.Material.Outlined.Pets"
+                                   Title="No species recorded"
+                                   Description="No species have been associated with this municipio yet." />
+                }
+                else
+                {
+                    <div class="mm-detail-grid">
+                        @foreach (var species in _detailSpeciesFetch.Data)
+                        {
+                            <SpeciesCard Species="species"
+                                         OnClick="@(s => NavigationManager.NavigateTo($"/species/{s.Id}"))" />
+                        }
+                    </div>
+                }
+            </MudPaper>
+        }
+        else
+        {
+            <NuiEmptyState Icon="@Icons.Material.Outlined.SearchOff"
+                           Title="Municipio not found"
+                           Description="The municipio you're looking for doesn't exist or has been removed." />
+        }
+    </NuiPageLayout>
+}
+else
+{
+    <div class="ff-page mm-page">
+        <MunicipalityEditorialHero Stats="@_statsFetch?.Data" />
+
+        <MunicipalityStatsRow Stats="@_statsFetch?.Data" />
+
+        @* Mobile tab toggle — radio-input driven, no JS. Inputs must live as
+           siblings of .mm-tabs and .mm-layout so `:checked ~` can target them. *@
+        <input type="radio" name="mm-tab" id="mm-tab-map" class="mm-tab-input" checked />
+        <input type="radio" name="mm-tab" id="mm-tab-list" class="mm-tab-input" />
+
+        <nav class="mm-tabs" role="tablist" aria-label="Municipios view">
+            <label for="mm-tab-map" class="mm-tab" role="tab">
+                <MudIcon Icon="@Icons.Material.Filled.Map" Size="Size.Small" />
+                Map
+            </label>
+            <label for="mm-tab-list" class="mm-tab" role="tab">
+                <MudIcon Icon="@Icons.Material.Filled.List" Size="Size.Small" />
+                List
+                <span class="count">@(_municipalities?.Count ?? 0)</span>
+            </label>
+        </nav>
+
+        <section class="mm-layout">
+            <MunicipalityList Municipalities="@_municipalities"
+                              Counts="@_countsMap"
+                              SelectedId="@_selected?.Id"
+                              OnSelected="HandleSelected"
+                              OnDetails="HandleViewDetails" />
+
+            <MunicipalityMap Municipalities="@_municipalities"
+                             Counts="@_countsMap"
+                             SelectedMunicipality="@_selected"
+                             OnSelected="HandleSelected"
+                             OnCleared="HandleCleared"
+                             OnViewDetails="HandleViewDetails" />
+        </section>
+    </div>
+}
+
+@code {
+    [Parameter] public Guid? Id { get; set; }
+
+    private IFetch<SpeciesStatsDto?>? _statsFetch;
+    private IReadOnlyList<MunicipalityDtoForList>? _municipalities;
+    private IReadOnlyDictionary<Guid, int>? _countsMap;
+    private CancellationTokenSource? _listCts;
+
+    private MunicipalityDtoForList? _selected;
+
+    private IFetch<MunicipalityDtoForDetail?>? _detailFetch;
+    private IFetch<IReadOnlyList<SpeciesDtoForList>>? _detailSpeciesFetch;
+    private Guid? _loadedDetailId;
+
+    protected override void OnInitialized()
+    {
+        Navbar.SetTitle("Municipios");
+
+        _statsFetch = new Fetch<SpeciesStatsDto?>(
+            SpeciesClient.GetStatsAsync,
+            () => InvokeAsync(StateHasChanged));
+        _ = _statsFetch.FetchAsync();
+
+        _ = LoadMunicipalitiesAndCountsAsync();
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (Id is { } id)
+        {
+            if (_loadedDetailId == id) return;
+            _loadedDetailId = id;
+
+            (_detailFetch as IDisposable)?.Dispose();
+            (_detailSpeciesFetch as IDisposable)?.Dispose();
+
+            _detailFetch = new Fetch<MunicipalityDtoForDetail?>(
+                ct => MunicipalityClient.GetByIdAsync(id, ct),
+                () =>
+                {
+                    if (_detailFetch?.Data is { } detail)
+                    {
+                        Navbar.SetTitle(detail.Name);
+                    }
+                    return InvokeAsync(StateHasChanged);
+                });
+
+            _detailSpeciesFetch = new Fetch<IReadOnlyList<SpeciesDtoForList>>(
+                ct => SpeciesClient.GetByMunicipalityAsync(id, ct),
+                () => InvokeAsync(StateHasChanged));
+
+            await Task.WhenAll(
+                _detailFetch.FetchAsync(),
+                _detailSpeciesFetch.FetchAsync()
+            );
+        }
+        else
+        {
+            _loadedDetailId = null;
+        }
+    }
+
+    private async Task LoadMunicipalitiesAndCountsAsync()
+    {
+        _listCts?.Cancel();
+        _listCts = new CancellationTokenSource();
+        var ct = _listCts.Token;
+
+        // Run the list stream + count fetch in parallel.
+        var countsTask = SpeciesClient.GetCountsByMunicipalityAsync(ct);
+
+        var collected = new List<MunicipalityDtoForList>();
+        try
+        {
+            await foreach (var m in MunicipalityClient.GetMunicipalitiesAsync(
+                               new MunicipalityParameters(PageSize: 200, StateCode: "PR"),
+                               ct))
+            {
+                collected.Add(m);
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            return;
+        }
+
+        var counts = await countsTask;
+
+        _municipalities = collected;
+        _countsMap = counts.ToDictionary(c => c.MunicipalityId, c => c.Count);
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private Task HandleSelected(MunicipalityDtoForList muni)
+    {
+        _selected = muni;
+        return InvokeAsync(StateHasChanged);
+    }
+
+    private Task HandleCleared()
+    {
+        _selected = null;
+        return InvokeAsync(StateHasChanged);
+    }
+
+    private Task HandleViewDetails(MunicipalityDtoForList muni)
+    {
+        NavigationManager.NavigateTo($"/municipalities/{muni.Id}");
+        return Task.CompletedTask;
+    }
+
+    public void Dispose()
+    {
+        _listCts?.Cancel();
+        _listCts?.Dispose();
+        (_statsFetch as IDisposable)?.Dispose();
+        (_detailFetch as IDisposable)?.Dispose();
+        (_detailSpeciesFetch as IDisposable)?.Dispose();
+    }
+}

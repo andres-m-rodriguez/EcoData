@@ -1,0 +1,108 @@
+/* =========================================================================
+   Municipios — split layout (desktop) + tabbed panels (mobile)
+   ========================================================================= */
+
+.mm-page {
+    padding-bottom: 48px;
+}
+
+.mm-layout {
+    display: grid;
+    grid-template-columns: 420px 1fr;
+    gap: 24px;
+    padding: 28px 0 0;
+    min-height: 640px;
+    height: calc(100vh - 64px - 320px);
+}
+
+.mm-detail-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+}
+
+/* --- Mobile tab pill (hidden on desktop) --------------------------- */
+.mm-tab-input { display: none; }
+
+.mm-tabs {
+    display: none;
+    align-items: center;
+    gap: 4px;
+    padding: 4px;
+    margin: 20px 0 0;
+    background: var(--fauna-bg-alt);
+    border: 1px solid var(--fauna-line);
+    border-radius: 999px;
+    position: sticky;
+    top: 64px; /* sits below the fixed AppBar */
+    z-index: 20;
+}
+
+.mm-tab {
+    flex: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 8px 12px;
+    border-radius: 999px;
+    font: 600 11px/1 var(--fauna-font-sans);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--fauna-fg-3);
+    cursor: pointer;
+    transition: background-color var(--fauna-t-base) var(--fauna-ease),
+                color var(--fauna-t-base) var(--fauna-ease);
+}
+
+.mm-tab ::deep .mud-icon-root {
+    font-size: 14px !important;
+    color: currentColor;
+}
+
+.mm-tab .count {
+    font: var(--fauna-mono);
+    font-size: 10px;
+    padding: 2px 6px;
+    border-radius: 999px;
+    background: rgba(0, 0, 0, 0.06);
+    letter-spacing: 0;
+    text-transform: none;
+}
+
+#mm-tab-map:checked ~ .mm-tabs label[for="mm-tab-map"],
+#mm-tab-list:checked ~ .mm-tabs label[for="mm-tab-list"] {
+    background: var(--fauna-primary);
+    color: #fff;
+}
+
+#mm-tab-map:checked ~ .mm-tabs label[for="mm-tab-map"] .count,
+#mm-tab-list:checked ~ .mm-tabs label[for="mm-tab-list"] .count {
+    background: rgba(255, 255, 255, 0.2);
+    color: #fff;
+}
+
+/* --- Responsive: one panel at a time ------------------------------ */
+@media (max-width: 960px) {
+    .mm-tabs { display: flex; }
+
+    .mm-layout {
+        grid-template-columns: 1fr;
+        gap: 0;
+        padding: 16px 0 0;
+        min-height: auto;
+        height: calc(100vh - 64px - 160px);
+    }
+
+    /* MunicipalityList and MunicipalityMap are child components, so their
+       root elements (.mm-rail / .mm-map) live outside this file's scope —
+       ::deep bridges the boundary. */
+    #mm-tab-map:checked ~ .mm-layout ::deep .mm-rail { display: none; }
+    #mm-tab-list:checked ~ .mm-layout ::deep .mm-map { display: none; }
+
+    .mm-detail-grid { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 600px) {
+    .mm-layout { height: calc(100vh - 56px - 140px); }
+}

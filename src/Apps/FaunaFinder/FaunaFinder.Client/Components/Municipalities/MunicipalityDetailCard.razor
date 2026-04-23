@@ -1,0 +1,51 @@
+@namespace FaunaFinder.Client.Components.Municipalities
+@using EcoData.Locations.Contracts.Dtos
+
+<aside class="mm-detail">
+    <div class="mm-detail-head">
+        <div>
+            <div class="mm-detail-title">@Municipality.Name</div>
+            <div class="mm-detail-sub">@CoordsLabel</div>
+        </div>
+        <button type="button" class="mm-detail-close" title="Close" @onclick="HandleClose">
+            <MudIcon Icon="@Icons.Material.Filled.Close" Size="Size.Small" />
+        </button>
+    </div>
+
+    <div class="mm-detail-stats">
+        <div>
+            <div class="mm-detail-stat-label">Species</div>
+            <div class="mm-detail-stat-value">@(SpeciesCount?.ToString("N0") ?? "—")</div>
+        </div>
+        <div>
+            <div class="mm-detail-stat-label">FIPS</div>
+            <div class="mm-detail-stat-value mm-detail-stat-mono">@Municipality.CountyFipsCode</div>
+        </div>
+    </div>
+
+    <div class="mm-detail-cta">
+        <span class="count">@(SpeciesCount is { } c ? $"{c:N0} species recorded" : "Species count pending")</span>
+        <button type="button" class="mm-detail-link" @onclick="HandleViewDetails">
+            View details
+            <MudIcon Icon="@Icons.Material.Filled.ArrowForward" Size="Size.Small" />
+        </button>
+    </div>
+</aside>
+
+@code {
+    [Parameter, EditorRequired]
+    public required MunicipalityDtoForList Municipality { get; set; }
+
+    [Parameter] public int? SpeciesCount { get; set; }
+
+    [Parameter] public EventCallback OnClose { get; set; }
+
+    [Parameter] public EventCallback<MunicipalityDtoForList> OnViewDetails { get; set; }
+
+    private string CoordsLabel =>
+        $"{Municipality.CentroidLatitude:0.000}″N · {Math.Abs(Municipality.CentroidLongitude):0.000}″W";
+
+    private Task HandleClose() => OnClose.InvokeAsync();
+
+    private Task HandleViewDetails() => OnViewDetails.InvokeAsync(Municipality);
+}
