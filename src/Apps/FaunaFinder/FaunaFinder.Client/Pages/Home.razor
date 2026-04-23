@@ -2,7 +2,6 @@
 @using EcoData.Common.Maps
 @using EcoData.Common.Maps.Models
 @using EcoData.Locations.Application.Client
-@using EcoData.Locations.Contracts.Dtos
 @using EcoData.Wildlife.Application.Client
 @using EcoData.Wildlife.Contracts.Dtos
 @using BlazingSingularity.Fetch
@@ -64,8 +63,7 @@
     private MapController<MunicipalityMarker> _mapController = new();
     private bool _sidebarOpen;
     private bool _sheetOpen;
-    private MunicipalityDtoForList? _selectedMunicipality;
-    private Dictionary<string, MunicipalityDtoForList> _municipalitiesByGeoJsonId = new();
+    private SelectedMunicipality? _selectedMunicipality;
 
     private IFetch<bool> _mapInitFetch = default!;
     private IFetch<IReadOnlyList<SpeciesDtoForList>>? _speciesFetch;
@@ -86,11 +84,6 @@
 
     private async Task<bool> InitMapAsync(CancellationToken ct)
     {
-        await foreach (var municipality in MunicipalityHttpClient.GetMunicipalitiesAsync(ct: ct))
-        {
-            _municipalitiesByGeoJsonId[municipality.GeoJsonId] = municipality;
-        }
-
         var geoJson = await MunicipalityHttpClient.GetGeoJsonByStateCodeAsync("PR", ct);
         if (!string.IsNullOrEmpty(geoJson))
         {
@@ -114,23 +107,28 @@
 
         try
         {
-            var props = System.Text.Json.JsonDocument.Parse(properties);
-            if (props.RootElement.TryGetProperty("geoJsonId", out var geoJsonIdElement))
+            using var props = System.Text.Json.JsonDocument.Parse(properties);
+            var root = props.RootElement;
+
+            if (!root.TryGetProperty("id", out var idEl) ||
+                !root.TryGetProperty("name", out var nameEl))
             {
-                var geoJsonId = geoJsonIdElement.GetString();
-                if (geoJsonId is not null && _municipalitiesByGeoJsonId.TryGetValue(geoJsonId, out var municipality))
-                {
-                    await InvokeAsync(async () => await SelectMunicipalityAsync(municipality));
-                }
+                return;
             }
+
+            var id = idEl.GetGuid();
+            if (id == Guid.Empty) return;
+
+            var name = nameEl.GetString() ?? string.Empty;
+            await InvokeAsync(() => SelectMunicipalityAsync(new SelectedMunicipality(id, name)));
         }
-        catch
+        catch (Exception ex)
         {
-            // Ignore parse errors
+            Console.Error.WriteLine($"Failed to handle municipality click: {ex.Message}");
         }
     }
 
-    private async Task SelectMunicipalityAsync(MunicipalityDtoForList municipality)
+    private async Task SelectMunicipalityAsync(SelectedMunicipality municipality)
     {
         _selectedMunicipality = municipality;
         _sidebarOpen = true;
@@ -143,6 +141,8 @@
         );
         await _speciesFetch.FetchAsync();
     }
+
+    private sealed record SelectedMunicipality(Guid Id, string Name);
 
     private void CloseSidebar()
     {
