@@ -1,7 +1,22 @@
-.ff-grid {
+/* Host context: NuiVirtualizedGrid renders a <div class="ff-grid"> whose
+   children are Blazor's Virtualize spacer <div>s plus our <article> cards.
+   The spacers must span the full row so the multi-column grid isn't
+   shifted out of alignment by their presence as single grid cells. */
+
+::deep .ff-grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
     gap: 20px;
+    padding-bottom: 48px;
+}
+
+::deep .ff-grid > div {
+    grid-column: 1 / -1;
+}
+
+::deep .ff-grid > article,
+::deep .ff-grid > .ff-grid-skeleton {
+    grid-column: auto;
 }
 
 .ff-grid-skeleton {
@@ -23,36 +38,15 @@
     gap: 6px;
 }
 
-.ff-grid-status {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-    padding: 40px 0 64px;
-    font: var(--fauna-mono);
-    font-size: 11px;
-    color: var(--fauna-fg-4);
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-}
-
-.ff-grid-end {
-    font: var(--fauna-mono);
-    font-size: 11px;
-    color: var(--fauna-fg-5);
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-}
-
 @media (max-width: 900px) {
-    .ff-grid {
+    ::deep .ff-grid {
         grid-template-columns: repeat(2, 1fr);
         gap: 14px;
     }
 }
 
 @media (max-width: 600px) {
-    .ff-grid {
+    ::deep .ff-grid {
         grid-template-columns: 1fr;
     }
 }

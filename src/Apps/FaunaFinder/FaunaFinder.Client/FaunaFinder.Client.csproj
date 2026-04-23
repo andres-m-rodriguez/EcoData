@@ -17,7 +17,6 @@
   <ItemGroup>
     <ProjectReference Include="..\..\..\Features\Common\EcoData.NativeUi\EcoData.NativeUi.csproj" />
     <ProjectReference Include="..\..\..\Features\Common\EcoData.Common.Maps\EcoData.Common.Maps.csproj" />
-    <ProjectReference Include="..\..\..\Features\Common\EcoData.Common.Pagination.Blazor\EcoData.Common.Pagination.Blazor.csproj" />
     <ProjectReference Include="..\..\..\Features\Wildlife\EcoData.Wildlife.Contracts\EcoData.Wildlife.Contracts.csproj" />
     <ProjectReference Include="..\..\..\Features\Wildlife\EcoData.Wildlife.Application.Client\EcoData.Wildlife.Application.Client.csproj" />
     <ProjectReference Include="..\..\..\Features\Locations\EcoData.Locations.Contracts\EcoData.Locations.Contracts.csproj" />
