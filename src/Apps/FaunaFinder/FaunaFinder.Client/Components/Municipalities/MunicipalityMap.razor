@@ -1,11 +1,11 @@
 @namespace FaunaFinder.Client.Components.Municipalities
+@inherits LocalizedComponentBase
 @using System.Text.Json
 @using EcoData.Common.Maps
 @using EcoData.Common.Maps.Components
 @using EcoData.Common.Maps.Models
 @using EcoData.Locations.Application.Client
 @using EcoData.Locations.Contracts.Dtos
-@implements IDisposable
 @inject IMunicipalityHttpClient MunicipalityClient
 
 <div class="mm-map">
@@ -23,14 +23,14 @@
     }
 
     <div class="mm-legend">
-        <div class="mm-legend-title">Municipios</div>
+        <div class="mm-legend-title">@L["Muni_Map_Legend_Title"]</div>
         <div class="mm-legend-row">
             <span class="mm-legend-dot" style="background: var(--fauna-accent-warm);"></span>
-            <span>Selected</span>
+            <span>@L["Muni_Map_Legend_Selected"]</span>
         </div>
         <div class="mm-legend-row">
             <span class="mm-legend-dot" style="background: var(--fauna-primary);"></span>
-            <span>Boundary</span>
+            <span>@L["Muni_Map_Legend_Boundary"]</span>
         </div>
     </div>
 </div>
@@ -49,6 +49,7 @@
 
     protected override void OnInitialized()
     {
+        base.OnInitialized();
         _controller.OnGeoJsonClicked += HandleGeoJsonClicked;
         _ = LoadGeoJsonAsync();
     }
@@ -119,8 +120,9 @@
     private Task HandleViewDetails(MunicipalityDtoForList muni) =>
         OnViewDetails.InvokeAsync(muni);
 
-    public void Dispose()
+    public override void Dispose()
     {
+        base.Dispose();
         _controller.OnGeoJsonClicked -= HandleGeoJsonClicked;
     }
 

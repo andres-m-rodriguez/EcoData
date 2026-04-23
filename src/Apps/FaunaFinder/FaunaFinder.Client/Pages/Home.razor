@@ -8,9 +8,10 @@
 @inject IMunicipalityHttpClient MunicipalityHttpClient
 @inject ISpeciesHttpClient SpeciesHttpClient
 @inject NavigationManager NavigationManager
+@inject ILocalizer L
 @implements IDisposable
 
-<PageTitle>FaunaFinder - Map</PageTitle>
+<PageTitle>FaunaFinder — @L["Nav_Map"]</PageTitle>
 
 <div class="map-page">
     <div class="map-container">
@@ -19,7 +20,7 @@
             <MudOverlay Visible="true" DarkBackground="false" Absolute="true" Class="map-loading-overlay" ZIndex="1000">
                 <MudStack AlignItems="AlignItems.Center">
                     <MudProgressCircular Indeterminate="true" Color="Color.Primary" />
-                    <MudText Typo="Typo.body2">Loading map...</MudText>
+                    <MudText Typo="Typo.body2">@L["Home_MapLoading"]</MudText>
                 </MudStack>
             </MudOverlay>
         }
@@ -70,12 +71,15 @@
 
     protected override void OnInitialized()
     {
+        L.LanguageChanged += OnLanguageChanged;
         _mapController.OnGeoJsonClicked += OnGeoJsonClicked;
         _mapInitFetch = new Fetch<bool>(
             InitMapAsync,
             () => InvokeAsync(StateHasChanged)
         );
     }
+
+    private void OnLanguageChanged() => InvokeAsync(StateHasChanged);
 
     protected override async Task OnInitializedAsync()
     {
@@ -169,6 +173,7 @@
 
     public void Dispose()
     {
+        L.LanguageChanged -= OnLanguageChanged;
         _mapController.OnGeoJsonClicked -= OnGeoJsonClicked;
         (_mapInitFetch as IDisposable)?.Dispose();
         (_speciesFetch as IDisposable)?.Dispose();

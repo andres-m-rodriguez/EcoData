@@ -3,9 +3,11 @@ using System.Collections.Frozen;
 namespace FaunaFinder.Client.Components.Species;
 
 /// <summary>
-/// Maps taxon codes to Font Awesome 6 free class names, loaded via CDN in App.razor.
-/// Material Icons lacks proper taxonomic iconography (no bird/frog/dragon), so we fall
-/// through to FA for the taxon badges specifically.
+/// Maps taxon codes to Font Awesome 6 free class names + translation keys.
+/// Material Icons lacks proper taxonomic iconography (no bird/frog/dragon),
+/// so we fall through to FA for the taxon badges. Labels are indirected
+/// through ILocalizer keys (<see cref="GetLabelKey"/>) so call-sites can
+/// translate them at render time.
 /// </summary>
 public static class TaxonIcons
 {
@@ -22,17 +24,17 @@ public static class TaxonIcons
             ["fungi"] = "fa-solid fa-seedling",
         }.ToFrozenDictionary(StringComparer.OrdinalIgnoreCase);
 
-    private static readonly FrozenDictionary<string, string> Labels =
+    private static readonly FrozenDictionary<string, string> LabelKeys =
         new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
         {
-            ["bird"] = "Bird",
-            ["plant"] = "Plant",
-            ["reptile"] = "Reptile",
-            ["amphib"] = "Amphibian",
-            ["fish"] = "Fish",
-            ["mammal"] = "Mammal",
-            ["invert"] = "Invertebrate",
-            ["fungi"] = "Fungus",
+            ["bird"] = "Species_Taxa_Bird",
+            ["plant"] = "Species_Taxa_Plant",
+            ["reptile"] = "Species_Taxa_Reptile",
+            ["amphib"] = "Species_Taxa_Amphib",
+            ["fish"] = "Species_Taxa_Fish",
+            ["mammal"] = "Species_Taxa_Mammal",
+            ["invert"] = "Species_Taxa_Invert",
+            ["fungi"] = "Species_Taxa_Fungi",
         }.ToFrozenDictionary(StringComparer.OrdinalIgnoreCase);
 
     public static IReadOnlyList<string> OrderedCodes { get; } =
@@ -43,8 +45,12 @@ public static class TaxonIcons
             ? icon
             : "fa-solid fa-paw";
 
-    public static string GetLabel(string? code) =>
-        code is not null && Labels.TryGetValue(code, out var label)
-            ? label
-            : code ?? "—";
+    /// <summary>
+    /// Returns the translation key for the taxon label (e.g. <c>"Species_Taxa_Bird"</c>).
+    /// Resolve via <c>ILocalizer</c> at the call site.
+    /// </summary>
+    public static string GetLabelKey(string? code) =>
+        code is not null && LabelKeys.TryGetValue(code, out var key)
+            ? key
+            : "Species_Taxa_Bird";
 }

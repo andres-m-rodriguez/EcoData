@@ -1,4 +1,5 @@
 @namespace FaunaFinder.Client.Components.Species
+@inherits LocalizedComponentBase
 @using EcoData.Wildlife.Contracts
 @using EcoData.Wildlife.Contracts.Dtos
 
@@ -17,7 +18,7 @@
             </div>
         }
 
-        <span class="ff-card-taxa" title="@TaxonIcons.GetLabel(Species.TaxonCode)">
+        <span class="ff-card-taxa" title="@L[TaxonIcons.GetLabelKey(Species.TaxonCode)]">
             <i class="@TaxonIcons.GetIcon(Species.TaxonCode)"></i>
         </span>
 
@@ -25,7 +26,7 @@
         {
             <span class="ff-card-endemic">
                 <MudIcon Icon="@Icons.Material.Filled.Star" Size="Size.Small" />
-                Endemic PR
+                @L["Species_Card_EndemicBadge"]
             </span>
         }
 
@@ -41,7 +42,7 @@
         <div class="ff-card-foot">
             <span class="muni">
                 <MudIcon Icon="@Icons.Material.Filled.LocationOn" Size="Size.Small" />
-                @Species.MunicipalityCount municipios
+                @L["Species_Card_Municipios", Species.MunicipalityCount]
             </span>
             <span>@FormatLastSeen(Species.LastObservedAtUtc)</span>
         </div>
@@ -69,18 +70,18 @@
 
     private Task HandleClick() => OnClick.InvokeAsync(Species);
 
-    private static string FormatLastSeen(DateTimeOffset? lastSeen)
+    private string FormatLastSeen(DateTimeOffset? lastSeen)
     {
-        if (lastSeen is null) return "Verified";
+        if (lastSeen is null) return L["Common_Verified"];
 
         var delta = DateTimeOffset.UtcNow - lastSeen.Value;
         return delta switch
         {
-            { TotalMinutes: < 60 } => $"{Math.Max(1, (int)delta.TotalMinutes)}m ago",
-            { TotalHours: < 24 } => $"{(int)delta.TotalHours}h ago",
-            { TotalDays: < 30 } => $"{(int)delta.TotalDays}d ago",
-            { TotalDays: < 365 } => $"{(int)(delta.TotalDays / 30)}mo ago",
-            _ => $"{(int)(delta.TotalDays / 365)}y ago"
+            { TotalMinutes: < 60 } => L["Time_MinutesAgo", Math.Max(1, (int)delta.TotalMinutes)],
+            { TotalHours: < 24 } => L["Time_HoursAgo", (int)delta.TotalHours],
+            { TotalDays: < 30 } => L["Time_DaysAgo", (int)delta.TotalDays],
+            { TotalDays: < 365 } => L["Time_MonthsAgo", (int)(delta.TotalDays / 30)],
+            _ => L["Time_YearsAgo", (int)(delta.TotalDays / 365)]
         };
     }
 }

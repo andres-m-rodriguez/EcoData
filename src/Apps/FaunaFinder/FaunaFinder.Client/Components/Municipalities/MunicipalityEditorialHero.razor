@@ -1,32 +1,35 @@
 @namespace FaunaFinder.Client.Components.Municipalities
+@inherits LocalizedComponentBase
 @using EcoData.Wildlife.Contracts.Dtos
 
 <section class="mm-hero">
     <div class="mm-hero-main">
-        <div class="mm-hero-eyebrow">@Eyebrow</div>
+        <div class="mm-hero-eyebrow">@EyebrowText</div>
         <h1 class="mm-hero-heading">
-            Municipios of <em>Puerto Rico</em>,<br /> mapped and observed.
+            @L["Muni_Hero_HeadingLead"] <em>Puerto Rico</em>@L["Muni_Hero_HeadingTail"]
         </h1>
-        <p class="mm-hero-lede">@Lede</p>
+        <p class="mm-hero-lede">@LedeText</p>
     </div>
     <div class="mm-hero-meta">
-        <span>Last sync · @LastSync</span>
+        <span>@L["Hero_LastSync", LastSync]</span>
         <span>@RecordsLine</span>
-        <span>Tap a pin or row to drill in</span>
+        <span>@L["Muni_Hero_Hint"]</span>
     </div>
 </section>
 
 @code {
     [Parameter] public SpeciesStatsDto? Stats { get; set; }
 
-    [Parameter] public string Eyebrow { get; set; } = "Volume 03 · Living Atlas";
+    [Parameter] public string? Eyebrow { get; set; }
 
-    [Parameter] public string Lede { get; set; } =
-        "A geographic index to Puerto Rico's 78 municipios — each annotated with the species recorded inside its boundaries. Search by name, sort by biodiversity, or tap any pin to pull up a municipio's full roster and its notable residents.";
+    [Parameter] public string? Lede { get; set; }
+
+    private string EyebrowText => Eyebrow ?? L["Hero_Eyebrow"];
+    private string LedeText => Lede ?? L["Muni_Hero_Lede"];
 
     private string LastSync => DateTime.Now.ToString("HH:mm") + " local";
 
     private string RecordsLine => Stats is null
-        ? "— municipios · — records"
-        : $"{Stats.TotalMunicipalities} municipios · {Stats.TotalSpecies:N0} records";
+        ? L["Muni_Hero_RecordsPending"]
+        : L["Muni_Hero_RecordsLine", Stats.TotalMunicipalities, Stats.TotalSpecies.ToString("N0")];
 }

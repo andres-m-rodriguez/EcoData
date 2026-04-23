@@ -1,4 +1,5 @@
 @namespace FaunaFinder.Client.Components.Municipalities
+@inherits LocalizedComponentBase
 @using EcoData.Locations.Contracts.Dtos
 
 <aside class="mm-detail">
@@ -7,26 +8,30 @@
             <div class="mm-detail-title">@Municipality.Name</div>
             <div class="mm-detail-sub">@CoordsLabel</div>
         </div>
-        <button type="button" class="mm-detail-close" title="Close" @onclick="HandleClose">
+        <button type="button" class="mm-detail-close" title="@CloseTitle" @onclick="HandleClose">
             <MudIcon Icon="@Icons.Material.Filled.Close" Size="Size.Small" />
         </button>
     </div>
 
     <div class="mm-detail-stats">
         <div>
-            <div class="mm-detail-stat-label">Species</div>
+            <div class="mm-detail-stat-label">@L["Muni_DetailCard_Species_Label"]</div>
             <div class="mm-detail-stat-value">@(SpeciesCount?.ToString("N0") ?? "—")</div>
         </div>
         <div>
-            <div class="mm-detail-stat-label">FIPS</div>
+            <div class="mm-detail-stat-label">@L["Muni_DetailCard_Fips_Label"]</div>
             <div class="mm-detail-stat-value mm-detail-stat-mono">@Municipality.CountyFipsCode</div>
         </div>
     </div>
 
     <div class="mm-detail-cta">
-        <span class="count">@(SpeciesCount is { } c ? $"{c:N0} species recorded" : "Species count pending")</span>
+        <span class="count">
+            @(SpeciesCount is { } c
+                ? L["Muni_DetailCard_CountRecorded", c.ToString("N0")]
+                : L["Muni_DetailCard_CountPending"])
+        </span>
         <button type="button" class="mm-detail-link" @onclick="HandleViewDetails">
-            View details
+            @L["Common_ViewDetails"]
             <MudIcon Icon="@Icons.Material.Filled.ArrowForward" Size="Size.Small" />
         </button>
     </div>
@@ -44,6 +49,8 @@
 
     private string CoordsLabel =>
         $"{Municipality.CentroidLatitude:0.000}″N · {Math.Abs(Municipality.CentroidLongitude):0.000}″W";
+
+    private string CloseTitle => L["Common_Close"];
 
     private Task HandleClose() => OnClose.InvokeAsync();
 
