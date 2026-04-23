@@ -52,19 +52,38 @@
 
             <MudSpacer />
 
-            @* EN/ES toggle — shown on every breakpoint *@
-            <div class="ff-lang-toggle" role="group" aria-label="Language">
-                <button type="button"
-                        class="@(L.CurrentLanguage == "en" ? "is-on" : "")"
-                        @onclick="@(() => SetLocale("en"))">
-                    EN
-                </button>
-                <button type="button"
-                        class="@(L.CurrentLanguage == "es" ? "is-on" : "")"
-                        @onclick="@(() => SetLocale("es"))">
-                    ES
-                </button>
-            </div>
+            @* Language dropdown — shown on every breakpoint. Driven off
+               L.GetAvailableLanguages() so new locales register themselves
+               in the menu without touching this markup. *@
+            <MudMenu AnchorOrigin="Origin.BottomRight" TransformOrigin="Origin.TopRight">
+                <ActivatorContent>
+                    <button type="button" class="ff-lang-btn" aria-label="Language">
+                        <MudIcon Icon="@Icons.Material.Filled.Language" Size="Size.Small" />
+                        <span class="ff-lang-btn-code">@L.CurrentLanguage.ToUpperInvariant()</span>
+                        <MudIcon Icon="@Icons.Material.Filled.KeyboardArrowDown" Size="Size.Small" />
+                    </button>
+                </ActivatorContent>
+                <ChildContent>
+                    @foreach (var lang in L.GetAvailableLanguages())
+                    {
+                        var langCode = lang.Code;
+                        var isActive = string.Equals(langCode, L.CurrentLanguage, StringComparison.OrdinalIgnoreCase);
+                        <MudMenuItem OnClick="@(() => SetLocale(langCode))">
+                            @if (isActive)
+                            {
+                                <MudIcon Icon="@Icons.Material.Filled.Check" Size="Size.Small" Class="mr-2" />
+                            }
+                            else
+                            {
+                                <MudIcon Icon="@Icons.Material.Filled.Check" Size="Size.Small"
+                                         Class="mr-2" Style="visibility:hidden" />
+                            }
+                            <span class="ff-lang-item-name">@lang.Name</span>
+                            <span class="ff-lang-item-code">@langCode.ToUpperInvariant()</span>
+                        </MudMenuItem>
+                    }
+                </ChildContent>
+            </MudMenu>
 
             @* Mobile: Action button(s) at far right *@
             <MudHidden Breakpoint="Breakpoint.MdAndUp">
