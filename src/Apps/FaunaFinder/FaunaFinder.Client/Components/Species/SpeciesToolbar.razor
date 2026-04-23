@@ -1,0 +1,181 @@
+@namespace FaunaFinder.Client.Components.Species
+@using EcoData.Wildlife.Contracts
+@using EcoData.Wildlife.Contracts.Dtos
+@using EcoData.Wildlife.Contracts.Parameters
+
+<div class="ff-grid-head">
+    <h2>Find what you're looking for</h2>
+    <span class="meta">@RecordsMeta</span>
+</div>
+
+<NuiSearchBar Value="@SearchText"
+              ValueChanged="OnSearchChanged"
+              Placeholder="Search by common name, scientific name, or species…"
+              ShowFilterButton="true"
+              HasActiveFilters="@HasActiveFilters"
+              FilterCount="@ActiveFilterCount"
+              OnFilterClick="OnFilterClick"
+              EnableSticky="false" />
+
+<div class="ff-toolbar-sort-row">
+    <MudMenu AnchorOrigin="Origin.BottomLeft" TransformOrigin="Origin.TopLeft"
+             ActivationEvent="@MouseEvent.LeftClick">
+        <ActivatorContent>
+            <button type="button" class="ff-sort-btn">
+                <MudIcon Icon="@Icons.Material.Filled.Sort" Size="Size.Small" />
+                <span>Sort: @SortLabel</span>
+            </button>
+        </ActivatorContent>
+        <ChildContent>
+            @foreach (var option in SortOptions)
+            {
+                <MudMenuItem OnClick="@(() => OnSortChangedInternal(option.Value))">
+                    @if (option.Value == Sort)
+                    {
+                        <MudIcon Icon="@Icons.Material.Filled.Check" Size="Size.Small" Class="mr-2" />
+                    }
+                    else
+                    {
+                        <MudIcon Icon="@Icons.Material.Filled.Check" Size="Size.Small"
+                                 Class="mr-2" Style="visibility:hidden" />
+                    }
+                    @option.Label
+                </MudMenuItem>
+            }
+        </ChildContent>
+    </MudMenu>
+</div>
+
+@if (HasActiveFilters)
+{
+    <div class="ff-active-chips">
+        @if (Filter.TaxonCodes.Count > 0)
+        {
+            <span class="ff-active-chip">
+                Taxon: @TaxaLabel
+                <button type="button" @onclick="ClearTaxa" aria-label="Clear taxa filter">
+                    <MudIcon Icon="@Icons.Material.Filled.Close" Size="Size.Small" />
+                </button>
+            </span>
+        }
+        @if (Filter.IucnStatuses.Count > 0)
+        {
+            <span class="ff-active-chip">
+                Status: @string.Join(", ", Filter.IucnStatuses)
+                <button type="button" @onclick="ClearStatuses" aria-label="Clear status filter">
+                    <MudIcon Icon="@Icons.Material.Filled.Close" Size="Size.Small" />
+                </button>
+            </span>
+        }
+        @if (Filter.IsEndemic)
+        {
+            <span class="ff-active-chip">
+                Endemic only
+                <button type="button" @onclick="ClearEndemic" aria-label="Clear endemic filter">
+                    <MudIcon Icon="@Icons.Material.Filled.Close" Size="Size.Small" />
+                </button>
+            </span>
+        }
+        @if (Filter.ObservedRecently)
+        {
+            <span class="ff-active-chip">
+                Observed in last 12 months
+                <button type="button" @onclick="ClearObservedRecently" aria-label="Clear recently observed">
+                    <MudIcon Icon="@Icons.Material.Filled.Close" Size="Size.Small" />
+                </button>
+            </span>
+        }
+        @if (Filter.HasPhoto)
+        {
+            <span class="ff-active-chip">
+                Has photo
+                <button type="button" @onclick="ClearHasPhoto" aria-label="Clear has-photo filter">
+                    <MudIcon Icon="@Icons.Material.Filled.Close" Size="Size.Small" />
+                </button>
+            </span>
+        }
+        @if (Filter.MinMunicipalityCount is > 1)
+        {
+            <span class="ff-active-chip">
+                ≥ @Filter.MinMunicipalityCount municipios
+                <button type="button" @onclick="ClearMinMunicipalities" aria-label="Clear minimum municipios">
+                    <MudIcon Icon="@Icons.Material.Filled.Close" Size="Size.Small" />
+                </button>
+            </span>
+        }
+        <span class="ff-active-chips-counter">@VisibleCounterText</span>
+    </div>
+}
+
+@code {
+    [Parameter] public SpeciesFilterResult Filter { get; set; } = SpeciesFilterResult.Empty;
+    [Parameter] public EventCallback<SpeciesFilterResult> FilterChanged { get; set; }
+
+    [Parameter] public string? SearchText { get; set; }
+    [Parameter] public EventCallback<string?> SearchTextChanged { get; set; }
+
+    [Parameter] public SpeciesSort Sort { get; set; } = SpeciesSort.ScientificNameAsc;
+    [Parameter] public EventCallback<SpeciesSort> SortChanged { get; set; }
+
+    [Parameter] public EventCallback OnFilterClick { get; set; }
+
+    [Parameter] public SpeciesStatsDto? Stats { get; set; }
+
+    private static readonly (SpeciesSort Value, string Label)[] SortOptions =
+    [
+        (SpeciesSort.ScientificNameAsc, "Scientific name ↑"),
+        (SpeciesSort.ScientificNameDesc, "Scientific name ↓"),
+        (SpeciesSort.RecentlyObserved, "Recently observed"),
+        (SpeciesSort.MostMunicipalities, "Most widespread"),
+    ];
+
+    private string SortLabel => SortOptions.FirstOrDefault(o => o.Value == Sort).Label
+        ?? "Scientific name ↑";
+
+    private bool HasActiveFilters =>
+        Filter.TaxonCodes.Count > 0
+        || Filter.IucnStatuses.Count > 0
+        || Filter.IsEndemic
+        || Filter.ObservedRecently
+        || Filter.HasPhoto
+        || Filter.MinMunicipalityCount is > 1;
+
+    private int ActiveFilterCount
+    {
+        get
+        {
+            var count = 0;
+            if (Filter.TaxonCodes.Count > 0) count++;
+            if (Filter.IucnStatuses.Count > 0) count++;
+            if (Filter.IsEndemic) count++;
+            if (Filter.ObservedRecently) count++;
+            if (Filter.HasPhoto) count++;
+            if (Filter.MinMunicipalityCount is > 1) count++;
+            return count;
+        }
+    }
+
+    private string TaxaLabel => string.Join(", ",
+        Filter.TaxonCodes.Select(TaxonIcons.GetLabel));
+
+    private string RecordsMeta => Stats is null
+        ? "Loading catalogue…"
+        : $"{Stats.TotalSpecies:N0} records · {Stats.MunicipalitiesCovered} municipios";
+
+    private string VisibleCounterText => Stats is null
+        ? ""
+        : $"of {Stats.TotalSpecies:N0}";
+
+    private Task OnSearchChanged(string? value) => SearchTextChanged.InvokeAsync(value);
+
+    private Task OnSortChangedInternal(SpeciesSort value) => SortChanged.InvokeAsync(value);
+
+    private Task Emit(SpeciesFilterResult next) => FilterChanged.InvokeAsync(next);
+
+    private Task ClearTaxa() => Emit(Filter with { TaxonCodes = [] });
+    private Task ClearStatuses() => Emit(Filter with { IucnStatuses = [] });
+    private Task ClearEndemic() => Emit(Filter with { IsEndemic = false });
+    private Task ClearObservedRecently() => Emit(Filter with { ObservedRecently = false });
+    private Task ClearHasPhoto() => Emit(Filter with { HasPhoto = false });
+    private Task ClearMinMunicipalities() => Emit(Filter with { MinMunicipalityCount = null });
+}

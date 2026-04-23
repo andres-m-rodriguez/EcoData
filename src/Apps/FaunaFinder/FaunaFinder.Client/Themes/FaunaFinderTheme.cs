@@ -9,16 +9,16 @@ public static class FaunaFinderTheme
     {
         PaletteLight = new PaletteLight
         {
-            // Primary - Deep forest green
-            Primary = "#2d6a4f",
+            // Primary - Deep pine
+            Primary = "#1f4d3a",
             PrimaryContrastText = "#ffffff",
-            PrimaryDarken = "#1b4332",
-            PrimaryLighten = "#40916c",
-            // Secondary - Medium green
-            Secondary = "#40916c",
+            PrimaryDarken = "#163b2c",
+            PrimaryLighten = "#3f7d5f",
+            // Secondary - Sage accent (links / secondary actions)
+            Secondary = "#3f7d5f",
             SecondaryContrastText = "#ffffff",
-            // Tertiary - Earth tone
-            Tertiary = "#74542c",
+            // Tertiary - Field-guide brass (endemic flags)
+            Tertiary = "#8a6f3e",
             TertiaryContrastText = "#ffffff",
             // Semantic colors
             Info = "#0077b6",
@@ -30,23 +30,23 @@ public static class FaunaFinderTheme
             Error = "#ba1a1a",
             ErrorLighten = "#ffdad6",
             // App bar
-            AppbarBackground = "#2d6a4f",
+            AppbarBackground = "#1f4d3a",
             AppbarText = "#ffffff",
             // Drawer
-            DrawerBackground = "#f8f9fa",
-            DrawerText = "#1b4332",
-            // Surfaces
-            Background = "#f8f9fa",
-            BackgroundGray = "#f0f1f3",
+            DrawerBackground = "#f4f4ef",
+            DrawerText = "#163b2c",
+            // Surfaces - warm paper
+            Background = "#f4f4ef",
+            BackgroundGray = "#eceae1",
             Surface = "#ffffff",
             // Text
             TextPrimary = "#1a1c1a",
             TextSecondary = "#414844",
             TextDisabled = "#717973",
             // Lines and dividers
-            Divider = "#c1c8c2",
-            LinesDefault = "#c1c8c2",
-            LinesInputs = "#717973",
+            Divider = "#e5e3dc",
+            LinesDefault = "#e5e3dc",
+            LinesInputs = "#c1c8c2",
             // Actions
             ActionDefault = "#717973",
             ActionDisabled = "#c1c8c2",
@@ -54,16 +54,16 @@ public static class FaunaFinderTheme
         },
         PaletteDark = new PaletteDark
         {
-            // Primary - Light green for dark mode
-            Primary = "#52b788",
-            PrimaryContrastText = "#1b4332",
-            PrimaryDarken = "#40916c",
-            PrimaryLighten = "#74c69d",
+            // Primary - Soft pine for dark mode
+            Primary = "#5a9b7a",
+            PrimaryContrastText = "#163b2c",
+            PrimaryDarken = "#3f7d5f",
+            PrimaryLighten = "#86b8a0",
             // Secondary
-            Secondary = "#74c69d",
-            SecondaryContrastText = "#1b4332",
-            // Tertiary
-            Tertiary = "#d4a373",
+            Secondary = "#86b8a0",
+            SecondaryContrastText = "#163b2c",
+            // Tertiary — brass
+            Tertiary = "#c8a670",
             TertiaryContrastText = "#2f1500",
             // Semantic colors
             Info = "#90e0ef",

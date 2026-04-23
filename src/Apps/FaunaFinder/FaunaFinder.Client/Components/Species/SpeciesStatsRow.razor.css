@@ -1,0 +1,73 @@
+.ff-stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0;
+    padding: 28px 0 36px;
+    border-bottom: 1px solid var(--fauna-line);
+}
+
+.ff-stat {
+    padding: 0 32px;
+    border-left: 1px solid var(--fauna-line);
+}
+
+.ff-stat:first-child {
+    padding-left: 0;
+    border-left: 0;
+}
+
+.ff-stat-label {
+    font: var(--fauna-eyebrow);
+    text-transform: uppercase;
+    letter-spacing: var(--fauna-tracking-eyebrow);
+    color: var(--fauna-fg-4);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.ff-stat-value {
+    font: 600 2.75rem/1 var(--fauna-font-serif);
+    color: var(--fauna-primary);
+    letter-spacing: -0.025em;
+    margin-top: 10px;
+}
+
+.ff-stat-value .unit {
+    font: 500 0.875rem/1 var(--fauna-font-sans);
+    color: var(--fauna-fg-4);
+    margin-left: 6px;
+    letter-spacing: 0;
+}
+
+.ff-stat-sub {
+    font: var(--fauna-mono);
+    color: var(--fauna-fg-4);
+    margin-top: 8px;
+    font-size: 11px;
+}
+
+.ff-stat-sub .up {
+    color: var(--status-en);
+}
+
+.ff-stat-sub .down {
+    color: var(--status-lc);
+}
+
+@media (max-width: 900px) {
+    .ff-stats {
+        grid-template-columns: repeat(2, 1fr);
+        padding: 20px 0 24px;
+    }
+
+    .ff-stat {
+        padding: 16px;
+        border-left: 0;
+        border-top: 1px solid var(--fauna-line);
+    }
+
+    .ff-stat:nth-child(-n+2) {
+        border-top: 0;
+    }
+}

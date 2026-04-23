@@ -1,15 +1,19 @@
 @page "/species"
 @page "/species/{Id:guid}"
 @using EcoData.Wildlife.Contracts.Dtos
+@using EcoData.Wildlife.Contracts.Parameters
 @using EcoData.Locations.Contracts.Dtos
 @using EcoData.Locations.Application.Client
 @using EcoData.NativeUi.Components.NativeNavbar
 @using BlazingSingularity.Fetch
 @implements IDisposable
 @inject ISpeciesHttpClient SpeciesHttpClient
+@inject ISpeciesCategoryHttpClient SpeciesCategoryHttpClient
 @inject IMunicipalityHttpClient MunicipalityHttpClient
 @inject INativeNavbarManager Navbar
 @inject NavigationManager NavigationManager
+@inject IDialogService Dialogs
+@inject IBrowserViewportService Viewport
 
 <PageTitle>FaunaFinder - Species</PageTitle>
 
@@ -78,9 +82,27 @@
 }
 else
 {
-    <NuiPageLayout Title="Species">
-        <SpeciesList OnSpeciesClick="NavigateToSpeciesDetail" />
-    </NuiPageLayout>
+    <div class="ff-page">
+        <SpeciesEditorialHero Stats="@_statsFetch?.Data" />
+
+        <SpeciesStatsRow Stats="@_statsFetch?.Data" />
+
+        <SpeciesFeaturedRow OnSpeciesClick="NavigateToSpeciesDetail" />
+
+        <SpeciesToolbar Filter="@_filter"
+                        FilterChanged="OnFilterChanged"
+                        SearchText="@_search"
+                        SearchTextChanged="OnSearchChanged"
+                        Sort="@_sort"
+                        SortChanged="OnSortChanged"
+                        Stats="@_statsFetch?.Data"
+                        OnFilterClick="OpenFilterDialog" />
+
+        <SpeciesGrid Filter="@_filter"
+                     Search="@_search"
+                     Sort="@_sort"
+                     OnSpeciesClick="NavigateToSpeciesDetail" />
+    </div>
 }
 
 @code {
@@ -88,11 +110,33 @@ else
 
     private IFetch<SpeciesDtoForDetail?>? _detailFetch;
     private IFetch<IReadOnlyList<MunicipalityDtoForList>>? _municipalitiesFetch;
+    private IFetch<SpeciesStatsDto?>? _statsFetch;
+    private IFetch<SpeciesFacetsDto?>? _facetsFetch;
+    private IFetch<IReadOnlyList<TaxonFacetDto>>? _taxaCountsFetch;
     private Guid? _loadedDetailId;
+
+    private SpeciesFilterResult _filter = SpeciesFilterResult.Empty;
+    private string? _search;
+    private SpeciesSort _sort = SpeciesSort.ScientificNameAsc;
 
     protected override void OnInitialized()
     {
         Navbar.SetTitle("Species");
+
+        _statsFetch = new Fetch<SpeciesStatsDto?>(
+            SpeciesHttpClient.GetStatsAsync,
+            () => InvokeAsync(StateHasChanged));
+        _ = _statsFetch.FetchAsync();
+
+        _facetsFetch = new Fetch<SpeciesFacetsDto?>(
+            ct => SpeciesHttpClient.GetFacetsAsync(BuildFacetParameters(), ct),
+            () => InvokeAsync(StateHasChanged));
+        _ = _facetsFetch.FetchAsync();
+
+        _taxaCountsFetch = new Fetch<IReadOnlyList<TaxonFacetDto>>(
+            SpeciesCategoryHttpClient.GetCountsAsync,
+            () => InvokeAsync(StateHasChanged));
+        _ = _taxaCountsFetch.FetchAsync();
     }
 
     protected override async Task OnParametersSetAsync()
@@ -140,6 +184,71 @@ else
         return _municipalitiesFetch.FetchAsync();
     }
 
+    private SpeciesParameters BuildFacetParameters() => new(
+        Search: string.IsNullOrWhiteSpace(_search) ? null : _search,
+        IsEndemic: _filter.IsEndemic ? true : null,
+        HasProfileImage: _filter.HasPhoto ? true : null,
+        IucnStatuses: _filter.IucnStatuses.Count > 0 ? _filter.IucnStatuses.ToArray() : null,
+        TaxonCodes: _filter.TaxonCodes.Count > 0 ? _filter.TaxonCodes.ToArray() : null,
+        MinMunicipalityCount: _filter.MinMunicipalityCount,
+        ObservedSinceUtc: _filter.ObservedRecently ? DateTimeOffset.UtcNow.AddYears(-1) : null
+    );
+
+    private void RefreshFacets()
+    {
+        (_facetsFetch as IDisposable)?.Dispose();
+        _facetsFetch = new Fetch<SpeciesFacetsDto?>(
+            ct => SpeciesHttpClient.GetFacetsAsync(BuildFacetParameters(), ct),
+            () => InvokeAsync(StateHasChanged));
+        _ = _facetsFetch.FetchAsync();
+    }
+
+    private void OnFilterChanged(SpeciesFilterResult filter)
+    {
+        _filter = filter;
+        RefreshFacets();
+    }
+
+    private void OnSearchChanged(string? value)
+    {
+        _search = value;
+        RefreshFacets();
+    }
+
+    private void OnSortChanged(SpeciesSort sort)
+    {
+        _sort = sort;
+    }
+
+    private async Task OpenFilterDialog()
+    {
+        var breakpoint = await Viewport.GetCurrentBreakpointAsync();
+        var isMobile = breakpoint is Breakpoint.Xs or Breakpoint.Sm;
+
+        var options = new DialogOptions
+        {
+            CloseOnEscapeKey = true,
+            MaxWidth = MaxWidth.Small,
+            FullWidth = true,
+            FullScreen = isMobile,
+        };
+
+        var parameters = new DialogParameters<SpeciesFilterDialog>
+        {
+            { x => x.Initial, _filter },
+            { x => x.Facets, _facetsFetch?.Data },
+            { x => x.TaxaCounts, _taxaCountsFetch?.Data }
+        };
+
+        var dialog = await Dialogs.ShowAsync<SpeciesFilterDialog>("Filters", parameters, options);
+        var result = await dialog.Result;
+
+        if (result is { Canceled: false, Data: SpeciesFilterResult next })
+        {
+            OnFilterChanged(next);
+        }
+    }
+
     private void NavigateToSpeciesDetail(SpeciesDtoForList species) =>
         NavigationManager.NavigateTo($"/species/{species.Id}");
 
@@ -150,6 +259,9 @@ else
     {
         (_detailFetch as IDisposable)?.Dispose();
         (_municipalitiesFetch as IDisposable)?.Dispose();
+        (_statsFetch as IDisposable)?.Dispose();
+        (_facetsFetch as IDisposable)?.Dispose();
+        (_taxaCountsFetch as IDisposable)?.Dispose();
     }
 
     private static string GetSpeciesName(SpeciesDtoForDetail species)

@@ -1,0 +1,75 @@
+@namespace FaunaFinder.Client.Components.Species
+@using EcoData.Wildlife.Contracts.Dtos
+
+<section class="ff-stats">
+    <div class="ff-stat">
+        <div class="ff-stat-label">Total species</div>
+        <div class="ff-stat-value">@FormatNumber(Stats?.TotalSpecies)</div>
+        <div class="ff-stat-sub">
+            @if (Stats is { AddedThisQuarter: > 0 } s)
+            {
+                <span class="up">▲ @s.AddedThisQuarter</span> <text>this quarter</text>
+            }
+            else
+            {
+                <text>—</text>
+            }
+        </div>
+    </div>
+
+    <div class="ff-stat">
+        <div class="ff-stat-label">Endemic to P.R.</div>
+        <div class="ff-stat-value">@FormatNumber(Stats?.EndemicCount)</div>
+        <div class="ff-stat-sub">@EndemicShare</div>
+    </div>
+
+    <div class="ff-stat">
+        <div class="ff-stat-label">Threatened · VU–CR</div>
+        <div class="ff-stat-value">@FormatNumber(Stats?.ThreatenedCount)</div>
+        <div class="ff-stat-sub">
+            @if (Stats is { ReclassifiedThisQuarter: > 0 } r)
+            {
+                <span class="up">▲ @r.ReclassifiedThisQuarter</span> <text>reclassified</text>
+            }
+            else
+            {
+                <text>—</text>
+            }
+        </div>
+    </div>
+
+    <div class="ff-stat">
+        <div class="ff-stat-label">Municipios covered</div>
+        <div class="ff-stat-value">
+            @FormatNumber(Stats?.MunicipalitiesCovered)
+            <span class="unit">/ @(Stats?.TotalMunicipalities ?? 78)</span>
+        </div>
+        <div class="ff-stat-sub">@CoverageShare</div>
+    </div>
+</section>
+
+@code {
+    [Parameter] public SpeciesStatsDto? Stats { get; set; }
+
+    private static string FormatNumber(int? n) => n is { } v ? v.ToString("N0") : "—";
+
+    private string EndemicShare
+    {
+        get
+        {
+            if (Stats is null || Stats.TotalSpecies == 0) return "—";
+            var pct = 100.0 * Stats.EndemicCount / Stats.TotalSpecies;
+            return $"{pct:0.0}% of catalogue";
+        }
+    }
+
+    private string CoverageShare
+    {
+        get
+        {
+            if (Stats is null || Stats.TotalMunicipalities == 0) return "—";
+            var pct = 100.0 * Stats.MunicipalitiesCovered / Stats.TotalMunicipalities;
+            return $"{pct:0}% island coverage";
+        }
+    }
+}

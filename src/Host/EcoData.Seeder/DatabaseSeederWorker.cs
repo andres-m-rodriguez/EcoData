@@ -524,6 +524,16 @@ public sealed class DatabaseSeederWorker(
                 {
                     species.ImageSourceUrl = dto.ImageSourceUrl;
                 }
+
+                // Backfill editorial fields for rows that predated the Plan 1 migration.
+                if (species.IucnStatus is null)
+                {
+                    species.IucnStatus = dto.IucnStatus ?? MapGRankToIucn(species.GRank);
+                }
+                if (!species.IsEndemic)
+                {
+                    species.IsEndemic = dto.IsEndemic ?? species.GRank.Contains('T');
+                }
             }
             else
             {

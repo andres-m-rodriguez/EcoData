@@ -1,57 +1,86 @@
 @namespace FaunaFinder.Client.Components.Species
+@using EcoData.Wildlife.Contracts
 @using EcoData.Wildlife.Contracts.Dtos
 
-<MudPaper Elevation="0" Class="pa-3 rounded-lg border-solid border mud-border-lines-default species-card"
-          @onclick="HandleClick">
-    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="3">
-        <div class="species-card-thumb">
-            @if (Species.HasProfileImage)
-            {
-                <img src="@($"/wildlife/species/{Species.Id}/image")"
-                     alt="@CommonName"
-                     loading="lazy" />
-            }
-            else
-            {
-                <MudIcon Icon="@(Species.IsFauna ? Icons.Material.Filled.Pets : Icons.Material.Filled.Park)"
-                         Color="Color.Primary" Size="Size.Medium" />
-            }
+<article class="@CardClass" @onclick="HandleClick">
+    <div class="ff-card-img">
+        @if (Species.HasProfileImage)
+        {
+            <img src="@($"/wildlife/species/{Species.Id}/image")"
+                 alt="@CommonName"
+                 loading="lazy" />
+        }
+        else
+        {
+            <div class="ff-card-img-placeholder">
+                <i class="@TaxonIcons.GetIcon(Species.TaxonCode) ff-taxa-icon-lg"></i>
+            </div>
+        }
+
+        <span class="ff-card-taxa" title="@TaxonIcons.GetLabel(Species.TaxonCode)">
+            <i class="@TaxonIcons.GetIcon(Species.TaxonCode)"></i>
+        </span>
+
+        @if (Species.IsEndemic && Variant == SpeciesCardVariant.Featured)
+        {
+            <span class="ff-card-endemic">
+                <MudIcon Icon="@Icons.Material.Filled.Star" Size="Size.Small" />
+                Endemic PR
+            </span>
+        }
+
+        @if (Species.IucnStatus is { } status)
+        {
+            <span class="ff-status-pill ff-card-status @($"status-{status}")">@status</span>
+        }
+    </div>
+
+    <div class="ff-card-body">
+        <div class="ff-card-name">@CommonName</div>
+        <div class="ff-card-sci">@Species.ScientificName</div>
+        <div class="ff-card-foot">
+            <span class="muni">
+                <MudIcon Icon="@Icons.Material.Filled.LocationOn" Size="Size.Small" />
+                @Species.MunicipalityCount municipios
+            </span>
+            <span>@FormatLastSeen(Species.LastObservedAtUtc)</span>
         </div>
-        <MudStack Spacing="0" Class="species-card-text">
-            <MudText Typo="Typo.subtitle1" Class="font-weight-medium mud-text-truncate">@CommonName</MudText>
-            <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mud-text-truncate font-italic">
-                @Species.ScientificName
-            </MudText>
-        </MudStack>
-        <NuiStatusBadge Status="@RankStatus" Text="@RankText" Size="NuiStatusSize.Small" />
-        <MudIcon Icon="@Icons.Material.Filled.ChevronRight" Color="Color.Default" Size="Size.Small" />
-    </MudStack>
-</MudPaper>
+    </div>
+</article>
 
 @code {
     [Parameter, EditorRequired]
     public required SpeciesDtoForList Species { get; set; }
 
-    [Parameter]
-    public EventCallback<SpeciesDtoForList> OnClick { get; set; }
+    [Parameter] public SpeciesCardVariant Variant { get; set; } = SpeciesCardVariant.Default;
 
-    private string CommonName => ResolveCommonName(Species);
+    [Parameter] public EventCallback<SpeciesDtoForList> OnClick { get; set; }
 
-    private string RankText => string.IsNullOrEmpty(Species.GRank) ? "-" : Species.GRank;
+    [CascadingParameter] public LocaleContext Locale { get; set; } = LocaleContext.English;
 
-    private NuiStatusType RankStatus => Species.GRank?.ToUpperInvariant() switch
+    private string CommonName => Locale.Resolve(Species.CommonName, fallback: Species.ScientificName);
+
+    private string CardClass => Variant switch
     {
-        "G1" or "G2" => NuiStatusType.Error,
-        "G3" => NuiStatusType.Warning,
-        "G4" or "G5" => NuiStatusType.Success,
-        _ => NuiStatusType.Inactive
+        SpeciesCardVariant.Featured => "ff-card is-featured",
+        SpeciesCardVariant.Medium => "ff-card is-medium",
+        _ => "ff-card"
     };
 
     private Task HandleClick() => OnClick.InvokeAsync(Species);
 
-    private static string ResolveCommonName(SpeciesDtoForList species)
+    private static string FormatLastSeen(DateTimeOffset? lastSeen)
     {
-        var en = species.CommonName.FirstOrDefault(n => n.Code == "en");
-        return en?.Value ?? species.CommonName.FirstOrDefault()?.Value ?? species.ScientificName;
+        if (lastSeen is null) return "Verified";
+
+        var delta = DateTimeOffset.UtcNow - lastSeen.Value;
+        return delta switch
+        {
+            { TotalMinutes: < 60 } => $"{Math.Max(1, (int)delta.TotalMinutes)}m ago",
+            { TotalHours: < 24 } => $"{(int)delta.TotalHours}h ago",
+            { TotalDays: < 30 } => $"{(int)delta.TotalDays}d ago",
+            { TotalDays: < 365 } => $"{(int)(delta.TotalDays / 30)}mo ago",
+            _ => $"{(int)(delta.TotalDays / 365)}y ago"
+        };
     }
 }

@@ -1,0 +1,264 @@
+.ff-modal-head {
+    padding: 4px 0 12px;
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    width: 100%;
+}
+
+.ff-modal-head h3 {
+    font: 600 1.25rem/1 var(--fauna-font-serif);
+    color: var(--fauna-primary);
+    letter-spacing: -0.02em;
+    margin: 0;
+}
+
+.ff-modal-head-meta {
+    font: var(--fauna-mono);
+    color: var(--fauna-fg-4);
+    font-size: 11px;
+}
+
+.ff-modal-body {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    padding: 4px 0 8px;
+}
+
+.ff-modal-section-title {
+    font: var(--fauna-eyebrow);
+    text-transform: uppercase;
+    letter-spacing: var(--fauna-tracking-eyebrow);
+    color: var(--fauna-fg-4);
+    margin-bottom: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.ff-modal-section-meta {
+    font: var(--fauna-mono);
+    font-size: 10px;
+    letter-spacing: 0;
+    text-transform: none;
+    color: var(--fauna-fg-4);
+}
+
+.ff-link-btn {
+    background: transparent;
+    border: 0;
+    color: var(--fauna-primary);
+    cursor: pointer;
+    font: 500 11px/1 var(--fauna-font-sans);
+    letter-spacing: 0;
+    text-transform: none;
+    padding: 0;
+}
+
+.ff-link-btn:hover {
+    text-decoration: underline;
+}
+
+/* Taxa chips */
+.ff-taxa-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+}
+
+.ff-taxa-chip {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    padding: 14px 8px;
+    background: var(--fauna-surface-alt);
+    border: 1px solid var(--fauna-line);
+    border-radius: 10px;
+    font: 500 12px/1 var(--fauna-font-sans);
+    color: var(--fauna-fg-2);
+    cursor: pointer;
+    transition: background-color var(--fauna-t-base) var(--fauna-ease),
+                border-color var(--fauna-t-base) var(--fauna-ease),
+                color var(--fauna-t-base) var(--fauna-ease);
+}
+
+.ff-taxa-chip i {
+    font-size: 18px;
+    color: var(--fauna-primary-500);
+}
+
+.ff-taxa-chip .count {
+    font: var(--fauna-mono);
+    font-size: 10px;
+    color: var(--fauna-fg-4);
+}
+
+.ff-taxa-chip:hover {
+    border-color: var(--fauna-primary-300);
+    background: var(--fauna-primary-50);
+}
+
+.ff-taxa-chip.is-on {
+    background: var(--fauna-primary);
+    border-color: var(--fauna-primary);
+    color: #fff;
+}
+
+.ff-taxa-chip.is-on i,
+.ff-taxa-chip.is-on .count {
+    color: rgba(255, 255, 255, 0.85);
+}
+
+/* Status list */
+.ff-status-list {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+}
+
+.ff-status-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 10px;
+    border-radius: 8px;
+    border: 1px solid var(--fauna-line);
+    font: 500 12px/1 var(--fauna-font-sans);
+    cursor: pointer;
+    background: var(--fauna-surface-alt);
+    text-align: left;
+    transition: background-color var(--fauna-t-base) var(--fauna-ease),
+                border-color var(--fauna-t-base) var(--fauna-ease);
+}
+
+.ff-status-row:hover {
+    background: var(--fauna-primary-50);
+    border-color: var(--fauna-primary-200);
+}
+
+.ff-status-row.is-on {
+    background: var(--fauna-primary-50);
+    border-color: var(--fauna-primary-300);
+}
+
+.ff-status-row .label {
+    flex: 1;
+    color: var(--fauna-fg-2);
+}
+
+.ff-status-row .n {
+    font: var(--fauna-mono);
+    font-size: 11px;
+    color: var(--fauna-fg-4);
+}
+
+/* Checkbox rows */
+.ff-checkbox-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+    border-radius: 8px;
+    background: var(--fauna-surface-alt);
+    border: 1px solid var(--fauna-line);
+    margin-bottom: 6px;
+}
+
+.ff-checkbox-row label {
+    font: 500 13px/1 var(--fauna-font-sans);
+    color: var(--fauna-fg-2);
+    flex: 1;
+}
+
+.ff-checkbox-row .n {
+    font: var(--fauna-mono);
+    font-size: 11px;
+    color: var(--fauna-fg-4);
+}
+
+/* Range */
+.ff-range-row {
+    padding: 4px 0;
+}
+
+.ff-range-labels {
+    display: flex;
+    justify-content: space-between;
+    font: var(--fauna-mono);
+    font-size: 11px;
+    color: var(--fauna-fg-4);
+    margin-top: 4px;
+}
+
+/* Reset button in footer */
+.ff-modal-reset {
+    background: transparent;
+    border: 0;
+    color: var(--fauna-fg-3);
+    font: 500 13px/1 var(--fauna-font-sans);
+    cursor: pointer;
+    padding: 8px 4px;
+}
+
+.ff-modal-reset:hover {
+    color: var(--fauna-primary);
+    text-decoration: underline;
+}
+
+/* Responsive — below sm breakpoint the dialog hits the viewport edges and
+   the inner grids need to collapse so chips and rows stay legible. */
+@media (max-width: 600px) {
+    .ff-modal-head {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 4px;
+        padding: 4px 0 8px;
+    }
+
+    .ff-modal-head h3 {
+        font-size: 1.125rem;
+    }
+
+    .ff-modal-body {
+        gap: 20px;
+    }
+
+    .ff-modal-section-title {
+        margin-bottom: 10px;
+    }
+
+    .ff-taxa-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 6px;
+    }
+
+    .ff-taxa-chip {
+        padding: 12px 6px;
+        gap: 4px;
+    }
+
+    .ff-status-list {
+        grid-template-columns: 1fr;
+    }
+
+    .ff-status-row {
+        padding: 10px 12px;
+    }
+
+    .ff-checkbox-row {
+        padding: 10px 12px;
+    }
+}
+
+/* Very narrow phones — 3-col taxa is still too cramped, go further. */
+@media (max-width: 380px) {
+    .ff-taxa-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .ff-taxa-chip span:not(.count) {
+        font-size: 11px;
+    }
+}

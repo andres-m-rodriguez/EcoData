@@ -1,0 +1,99 @@
+.ff-grid-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    padding: 28px 0 20px;
+}
+
+.ff-grid-head h2 {
+    font: 600 1rem/1 var(--fauna-font-sans);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--fauna-primary);
+    margin: 0;
+}
+
+.ff-grid-head .meta {
+    font: var(--fauna-mono);
+    color: var(--fauna-fg-4);
+    font-size: 12px;
+}
+
+.ff-toolbar-sort-row {
+    display: flex;
+    justify-content: flex-end;
+    padding: 8px 0 0;
+}
+
+.ff-sort-btn {
+    height: 36px;
+    padding: 0 14px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 10px;
+    font: 500 12px/1 var(--fauna-font-sans);
+    color: var(--fauna-fg-3);
+    cursor: pointer;
+    transition: color var(--fauna-t-base) var(--fauna-ease),
+                background-color var(--fauna-t-base) var(--fauna-ease);
+}
+
+.ff-sort-btn:hover {
+    color: var(--fauna-primary);
+    background: var(--fauna-primary-50);
+}
+
+.ff-active-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 14px 0 24px;
+    border-bottom: 1px solid var(--fauna-line);
+    align-items: center;
+}
+
+.ff-active-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 8px 5px 12px;
+    background: var(--fauna-primary-50);
+    border: 1px solid var(--fauna-primary-100);
+    border-radius: 999px;
+    font: 500 12px/1 var(--fauna-font-sans);
+    color: var(--fauna-primary);
+}
+
+.ff-active-chip button {
+    width: 18px;
+    height: 18px;
+    border-radius: 999px;
+    background: var(--fauna-primary-100);
+    border: 0;
+    color: var(--fauna-primary);
+    display: grid;
+    place-items: center;
+    cursor: pointer;
+    padding: 0;
+    transition: background-color var(--fauna-t-base) var(--fauna-ease);
+}
+
+.ff-active-chip button:hover {
+    background: var(--fauna-primary-200);
+}
+
+.ff-active-chip button ::deep .mud-icon-root {
+    font-size: 12px !important;
+    color: var(--fauna-primary);
+}
+
+.ff-active-chips-counter {
+    margin-left: auto;
+    font: var(--fauna-mono);
+    font-size: 11px;
+    color: var(--fauna-fg-4);
+    align-self: center;
+}

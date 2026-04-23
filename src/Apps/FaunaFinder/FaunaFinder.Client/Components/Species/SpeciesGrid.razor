@@ -1,0 +1,154 @@
+@namespace FaunaFinder.Client.Components.Species
+@using EcoData.Wildlife.Contracts.Dtos
+@using EcoData.Wildlife.Contracts.Parameters
+@using EcoData.Wildlife.Application.Client
+@using EcoData.NativeUi.Components.VirtualizedList
+@implements IAsyncDisposable
+@inject ISpeciesHttpClient SpeciesClient
+@inject IBrowserViewportService Viewport
+
+<NuiVirtualizedGrid @ref="_grid"
+                    TItem="SpeciesDtoForList"
+                    TParams="SpeciesParameters"
+                    ItemsProvider="Fetch"
+                    ParametersBuilder="BuildParameters"
+                    CursorSelector="@(s => s.Id)"
+                    ItemSize="@_rowHeight"
+                    OverscanCount="2"
+                    Columns="@_columns"
+                    GridClass="ff-grid">
+    <LoadingTemplate>
+        <div class="ff-grid">
+            @for (var i = 0; i < 8; i++)
+            {
+                <div class="ff-grid-skeleton">
+                    <MudSkeleton SkeletonType="SkeletonType.Rectangle" Class="ff-grid-skeleton-img" />
+                    <div class="ff-grid-skeleton-body">
+                        <MudSkeleton SkeletonType="SkeletonType.Text" Width="70%" />
+                        <MudSkeleton SkeletonType="SkeletonType.Text" Width="50%" />
+                    </div>
+                </div>
+            }
+        </div>
+    </LoadingTemplate>
+    <EmptyTemplate>
+        <NuiEmptyState Icon="@Icons.Material.Outlined.SearchOff"
+                       Title="No species match"
+                       Description="Try adjusting your filters or search terms." />
+    </EmptyTemplate>
+    <ItemTemplate Context="species">
+        <SpeciesCard Species="species" OnClick="HandleClick" />
+    </ItemTemplate>
+    <PlaceholderTemplate>
+        <div class="ff-grid-skeleton">
+            <MudSkeleton SkeletonType="SkeletonType.Rectangle" Class="ff-grid-skeleton-img" />
+            <div class="ff-grid-skeleton-body">
+                <MudSkeleton SkeletonType="SkeletonType.Text" Width="70%" />
+                <MudSkeleton SkeletonType="SkeletonType.Text" Width="50%" />
+            </div>
+        </div>
+    </PlaceholderTemplate>
+</NuiVirtualizedGrid>
+
+@code {
+    private const int PageSize = 24;
+
+    [Parameter] public SpeciesFilterResult Filter { get; set; } = SpeciesFilterResult.Empty;
+    [Parameter] public string? Search { get; set; }
+    [Parameter] public SpeciesSort Sort { get; set; } = SpeciesSort.ScientificNameAsc;
+    [Parameter] public EventCallback<SpeciesDtoForList> OnSpeciesClick { get; set; }
+
+    private NuiVirtualizedGrid<SpeciesDtoForList, SpeciesParameters>? _grid;
+
+    private SpeciesFilterResult _lastFilter = SpeciesFilterResult.Empty;
+    private string? _lastSearch;
+    private SpeciesSort _lastSort = SpeciesSort.ScientificNameAsc;
+
+    private int _columns = 3;
+    private float _rowHeight = 460;
+    private Guid _viewportSubscriptionId;
+
+    protected override async Task OnInitializedAsync()
+    {
+        ApplyBreakpoint(await Viewport.GetCurrentBreakpointAsync());
+        _viewportSubscriptionId = Guid.NewGuid();
+        await Viewport.SubscribeAsync(_viewportSubscriptionId, OnBreakpointChanged);
+    }
+
+    private Task OnBreakpointChanged(BrowserViewportEventArgs args)
+    {
+        var prevCols = _columns;
+        var prevRow = _rowHeight;
+        ApplyBreakpoint(args.Breakpoint);
+        if (prevCols == _columns && Math.Abs(prevRow - _rowHeight) < 0.5f)
+        {
+            return Task.CompletedTask;
+        }
+        return InvokeAsync(() =>
+        {
+            StateHasChanged();
+            _grid?.Refresh(); // row geometry changed — Virtualize needs fresh math
+        });
+    }
+
+    /// <summary>
+    /// Row height tracks column count because cards are 4:3 — fewer columns
+    /// means wider, therefore taller cards. Values approximate measured
+    /// heights; off-by-20px is fine for Virtualize.
+    /// </summary>
+    private void ApplyBreakpoint(Breakpoint breakpoint)
+    {
+        (_columns, _rowHeight) = breakpoint switch
+        {
+            Breakpoint.Xs => (1, 480f),
+            Breakpoint.Sm => (2, 500f),
+            _ => (3, 460f),
+        };
+    }
+
+    protected override void OnParametersSet()
+    {
+        if (_grid is null) return;
+
+        var filterChanged = _lastFilter != Filter;
+        var searchChanged = !string.Equals(_lastSearch, Search, StringComparison.Ordinal);
+        var sortChanged = _lastSort != Sort;
+
+        if (filterChanged || searchChanged || sortChanged)
+        {
+            _lastFilter = Filter;
+            _lastSearch = Search;
+            _lastSort = Sort;
+            _grid.Refresh();
+        }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (_viewportSubscriptionId != Guid.Empty)
+        {
+            await Viewport.UnsubscribeAsync(_viewportSubscriptionId);
+        }
+    }
+
+    private SpeciesParameters BuildParameters(Guid? cursor) => new(
+        PageSize: PageSize,
+        Cursor: cursor,
+        Search: string.IsNullOrWhiteSpace(Search) ? null : Search,
+        IsEndemic: Filter.IsEndemic ? true : null,
+        HasProfileImage: Filter.HasPhoto ? true : null,
+        IucnStatuses: Filter.IucnStatuses.Count > 0 ? Filter.IucnStatuses.ToArray() : null,
+        TaxonCodes: Filter.TaxonCodes.Count > 0 ? Filter.TaxonCodes.ToArray() : null,
+        MinMunicipalityCount: Filter.MinMunicipalityCount,
+        ObservedSinceUtc: Filter.ObservedRecently
+            ? DateTimeOffset.UtcNow.AddYears(-1)
+            : null,
+        Sort: Sort
+    );
+
+    private IAsyncEnumerable<SpeciesDtoForList> Fetch(SpeciesParameters parameters, CancellationToken ct) =>
+        SpeciesClient.GetSpeciesAsync(parameters, ct);
+
+    private Task HandleClick(SpeciesDtoForList species) =>
+        OnSpeciesClick.InvokeAsync(species);
+}

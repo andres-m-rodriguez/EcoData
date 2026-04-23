@@ -1,0 +1,51 @@
+@namespace EcoData.NativeUi.Components.VirtualizedList
+@using Microsoft.AspNetCore.Components.Web.Virtualization
+@using EcoData.Common.Pagination
+@typeparam TItem
+@typeparam TParams where TParams : CursorParameters
+
+@if (_isInitialLoading)
+{
+    @if (LoadingTemplate is not null)
+    {
+        @LoadingTemplate
+    }
+}
+else if (_isEmpty)
+{
+    @if (EmptyTemplate is not null)
+    {
+        @EmptyTemplate
+    }
+}
+else
+{
+    <div class="@ComputedClass" style="@GridStyle">
+        <Virtualize TItem="IReadOnlyList<TItem>"
+                    @ref="_virtualizeRef"
+                    @key="_generation"
+                    ItemsProvider="LoadRowsAsync"
+                    ItemSize="ItemSize"
+                    OverscanCount="OverscanCount">
+            <ItemContent Context="row">
+                <div class="nui-virtualized-grid-row" style="@RowStyle">
+                    @foreach (var item in row)
+                    {
+                        @ItemTemplate(item)
+                    }
+                </div>
+            </ItemContent>
+            <Placeholder>
+                <div class="nui-virtualized-grid-row" style="@RowStyle">
+                    @for (var i = 0; i < EffectiveColumns; i++)
+                    {
+                        @if (PlaceholderTemplate is not null)
+                        {
+                            @PlaceholderTemplate
+                        }
+                    }
+                </div>
+            </Placeholder>
+        </Virtualize>
+    </div>
+}

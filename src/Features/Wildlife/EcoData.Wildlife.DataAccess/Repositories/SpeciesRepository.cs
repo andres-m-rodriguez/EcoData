@@ -256,10 +256,13 @@ public sealed class SpeciesRepository(
     {
         await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
 
+        // Prefer species with a photo, then randomise. IsFeatured stays as a
+        // curatorial pin mechanism (empty flag = random, pinned rows surface first).
         return await context
-            .Species.Where(s => s.IsFeatured)
-            .OrderByDescending(s => s.LastObservedAtUtc)
-            .ThenBy(s => s.ScientificName)
+            .Species.OrderByDescending(s => s.IsFeatured)
+            .ThenByDescending(s => s.ProfileImageData != null)
+            .ThenBy(s => EF.Functions.Random())
+            .Take(3)
             .Select(static s => new SpeciesDtoForList(
                 s.Id,
                 s.CommonName,
@@ -327,12 +330,12 @@ public sealed class SpeciesRepository(
             );
         }
 
-        if (parameters.IucnStatuses is { Count: > 0 } statuses)
+        if (parameters.IucnStatuses is { Length: > 0 } statuses)
         {
             query = query.Where(s => s.IucnStatus != null && statuses.Contains(s.IucnStatus.Value));
         }
 
-        if (parameters.TaxonCodes is { Count: > 0 } codes)
+        if (parameters.TaxonCodes is { Length: > 0 } codes)
         {
             query = query.Where(s => s.CategoryLinks.Any(cl => codes.Contains(cl.Category.Code)));
         }

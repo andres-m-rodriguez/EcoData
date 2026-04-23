@@ -9,4 +9,6 @@ public interface ISpeciesCategoryHttpClient
     Task<SpeciesCategoryDtoForDetail?> GetByIdAsync(Guid id, CancellationToken ct = default);
 
     Task<SpeciesCategoryDtoForDetail?> GetByCodeAsync(string code, CancellationToken ct = default);
+
+    Task<IReadOnlyList<TaxonFacetDto>> GetCountsAsync(CancellationToken ct = default);
 }
