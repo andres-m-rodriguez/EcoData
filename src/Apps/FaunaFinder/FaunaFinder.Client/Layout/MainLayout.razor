@@ -55,7 +55,8 @@
             @* Language dropdown — shown on every breakpoint. Driven off
                L.GetAvailableLanguages() so new locales register themselves
                in the menu without touching this markup. *@
-            <MudMenu AnchorOrigin="Origin.BottomRight" TransformOrigin="Origin.TopRight">
+            <MudMenu AnchorOrigin="Origin.BottomRight" TransformOrigin="Origin.TopRight"
+                     ActivationEvent="@MouseEvent.LeftClick">
                 <ActivatorContent>
                     <button type="button" class="ff-lang-btn" aria-label="Language">
                         <MudIcon Icon="@Icons.Material.Filled.Language" Size="Size.Small" />
