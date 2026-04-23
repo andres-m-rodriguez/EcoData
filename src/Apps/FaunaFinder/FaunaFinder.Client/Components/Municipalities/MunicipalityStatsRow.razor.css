@@ -47,21 +47,34 @@
 @media (max-width: 900px) {
     .mm-stats {
         grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
         padding: 20px 0 24px;
+        border-bottom: 0;
     }
 
-    .mm-stat {
-        padding: 16px;
-        border-left: 0;
-        border-top: 1px solid var(--fauna-line);
+    /* Mobile renders each stat as its own tile instead of a bordered strip.
+       The :first-child rule on desktop strips padding + border-left, so we
+       re-declare both here to ensure every card matches. */
+    .mm-stat,
+    .mm-stat:first-child {
+        padding: 14px 16px;
+        background: var(--fauna-surface);
+        border: 1px solid var(--fauna-line);
+        border-radius: 12px;
     }
 
-    .mm-stat:nth-child(-n+2) {
-        border-top: 0;
+    .mm-stat-label {
+        font-size: 10px;
     }
 
     .mm-stat-value {
         font-size: 1.75rem;
+        margin-top: 6px;
+    }
+
+    .mm-stat-sub {
+        margin-top: 6px;
+        font-size: 10px;
     }
 
     .mm-stat-value .unit {
