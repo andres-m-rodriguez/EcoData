@@ -75,7 +75,21 @@ public sealed class SpeciesRepository(
         await foreach (
             var species in query
                 .Take(parameters.PageSize + 1)
-                .Select(ProjectToList)
+                .Select(static s => new SpeciesDtoForList(
+                    s.Id,
+                    s.CommonName,
+                    s.ScientificName,
+                    s.IsFauna,
+                    s.GRank,
+                    s.SRank,
+                    s.ProfileImageData != null,
+                    s.IsEndemic,
+                    s.IucnStatus,
+                    s.CategoryLinks.Select(cl => cl.Category.Code).FirstOrDefault(),
+                    s.MunicipalitySpecies.Count,
+                    s.LastObservedAtUtc,
+                    s.IsFeatured
+                ))
                 .AsAsyncEnumerable()
                 .WithCancellation(cancellationToken)
         )
@@ -106,8 +120,21 @@ public sealed class SpeciesRepository(
 
         return await context
             .MunicipalitySpecies.Where(ms => ms.MunicipalityId == municipalityId)
-            .Select(ms => ms.Species)
-            .Select(ProjectToList)
+            .Select(static ms => new SpeciesDtoForList(
+                ms.Species.Id,
+                ms.Species.CommonName,
+                ms.Species.ScientificName,
+                ms.Species.IsFauna,
+                ms.Species.GRank,
+                ms.Species.SRank,
+                ms.Species.ProfileImageData != null,
+                ms.Species.IsEndemic,
+                ms.Species.IucnStatus,
+                ms.Species.CategoryLinks.Select(cl => cl.Category.Code).FirstOrDefault(),
+                ms.Species.MunicipalitySpecies.Count,
+                ms.Species.LastObservedAtUtc,
+                ms.Species.IsFeatured
+            ))
             .ToListAsync(cancellationToken);
     }
 
@@ -120,8 +147,21 @@ public sealed class SpeciesRepository(
 
         return await context
             .SpeciesCategoryLinks.Where(scl => scl.CategoryId == categoryId)
-            .Select(scl => scl.Species)
-            .Select(ProjectToList)
+            .Select(static scl => new SpeciesDtoForList(
+                scl.Species.Id,
+                scl.Species.CommonName,
+                scl.Species.ScientificName,
+                scl.Species.IsFauna,
+                scl.Species.GRank,
+                scl.Species.SRank,
+                scl.Species.ProfileImageData != null,
+                scl.Species.IsEndemic,
+                scl.Species.IucnStatus,
+                scl.Species.CategoryLinks.Select(cl => cl.Category.Code).FirstOrDefault(),
+                scl.Species.MunicipalitySpecies.Count,
+                scl.Species.LastObservedAtUtc,
+                scl.Species.IsFeatured
+            ))
             .ToListAsync(cancellationToken);
     }
 
@@ -220,27 +260,23 @@ public sealed class SpeciesRepository(
             .Species.Where(s => s.IsFeatured)
             .OrderByDescending(s => s.LastObservedAtUtc)
             .ThenBy(s => s.ScientificName)
-            .Select(ProjectToList)
+            .Select(static s => new SpeciesDtoForList(
+                s.Id,
+                s.CommonName,
+                s.ScientificName,
+                s.IsFauna,
+                s.GRank,
+                s.SRank,
+                s.ProfileImageData != null,
+                s.IsEndemic,
+                s.IucnStatus,
+                s.CategoryLinks.Select(cl => cl.Category.Code).FirstOrDefault(),
+                s.MunicipalitySpecies.Count,
+                s.LastObservedAtUtc,
+                s.IsFeatured
+            ))
             .ToListAsync(cancellationToken);
     }
-
-    private static readonly System.Linq.Expressions.Expression<
-        Func<Database.Models.Species, SpeciesDtoForList>
-    > ProjectToList = s => new SpeciesDtoForList(
-        s.Id,
-        s.CommonName,
-        s.ScientificName,
-        s.IsFauna,
-        s.GRank,
-        s.SRank,
-        s.ProfileImageData != null,
-        s.IsEndemic,
-        s.IucnStatus,
-        s.CategoryLinks.Select(cl => cl.Category.Code).FirstOrDefault(),
-        s.MunicipalitySpecies.Count,
-        s.LastObservedAtUtc,
-        s.IsFeatured
-    );
 
     private static IQueryable<Database.Models.Species> ApplyFilters(
         IQueryable<Database.Models.Species> query,

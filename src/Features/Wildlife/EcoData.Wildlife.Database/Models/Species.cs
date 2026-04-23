@@ -33,9 +33,9 @@ public sealed class Species
     public required bool IsEndemic { get; set; }
     public required IucnStatus? IucnStatus { get; set; }
     public required bool IsFeatured { get; set; }
-    public string? Habitat { get; set; }
-    public DateTimeOffset? LastObservedAtUtc { get; set; }
-    public DateTimeOffset CreatedAtUtc { get; set; }
+    public required string? Habitat { get; set; }
+    public required DateTimeOffset? LastObservedAtUtc { get; set; }
+    public required DateTimeOffset CreatedAtUtc { get; set; }
 
     public ICollection<FwsLink> FwsLinks { get; set; } = [];
     public ICollection<MunicipalitySpecies> MunicipalitySpecies { get; set; } = [];

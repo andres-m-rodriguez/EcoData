@@ -554,6 +554,8 @@ public sealed class DatabaseSeederWorker(
                     IsEndemic = dto.IsEndemic ?? gRank.Contains('T'),
                     IsFeatured = dto.IsFeatured ?? false,
                     Habitat = dto.Habitat,
+                    LastObservedAtUtc = null,
+                    CreatedAtUtc = DateTimeOffset.UtcNow,
                 };
                 context.Species.Add(species);
                 await context.SaveChangesAsync(stoppingToken);
