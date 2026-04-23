@@ -127,8 +127,8 @@ else
             Search: string.IsNullOrWhiteSpace(Search) ? null : Search,
             IsEndemic: Filter.IsEndemic ? true : null,
             HasProfileImage: Filter.HasPhoto ? true : null,
-            IucnStatuses: Filter.IucnStatuses.Count > 0 ? Filter.IucnStatuses : null,
-            TaxonCodes: Filter.TaxonCodes.Count > 0 ? Filter.TaxonCodes : null,
+            IucnStatuses: Filter.IucnStatuses.Count > 0 ? Filter.IucnStatuses.ToArray() : null,
+            TaxonCodes: Filter.TaxonCodes.Count > 0 ? Filter.TaxonCodes.ToArray() : null,
             MinMunicipalityCount: Filter.MinMunicipalityCount,
             ObservedSinceUtc: Filter.ObservedRecently
                 ? DateTimeOffset.UtcNow.AddYears(-1)

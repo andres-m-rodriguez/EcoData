@@ -13,13 +13,12 @@
         else
         {
             <div class="ff-card-img-placeholder">
-                <MudIcon Icon="@TaxonIcons.GetIcon(Species.TaxonCode)"
-                         Size="Size.Large" />
+                <i class="@TaxonIcons.GetIcon(Species.TaxonCode) ff-taxa-icon-lg"></i>
             </div>
         }
 
         <span class="ff-card-taxa" title="@TaxonIcons.GetLabel(Species.TaxonCode)">
-            <MudIcon Icon="@TaxonIcons.GetIcon(Species.TaxonCode)" Size="Size.Small" />
+            <i class="@TaxonIcons.GetIcon(Species.TaxonCode)"></i>
         </span>
 
         @if (Species.IsEndemic && Variant == SpeciesCardVariant.Featured)

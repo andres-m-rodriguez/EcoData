@@ -52,8 +52,8 @@
     color: var(--fauna-primary-300);
 }
 
-.ff-card-img-placeholder ::deep .mud-icon-root {
-    font-size: 48px !important;
+.ff-card-img-placeholder .ff-taxa-icon-lg {
+    font-size: 48px;
 }
 
 .ff-card-status {
@@ -76,10 +76,7 @@
     color: var(--fauna-primary);
     backdrop-filter: blur(6px);
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
-}
-
-.ff-card-taxa ::deep .mud-icon-root {
-    font-size: 16px !important;
+    font-size: 13px;
 }
 
 .ff-card-endemic {

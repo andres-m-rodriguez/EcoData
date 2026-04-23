@@ -84,8 +84,8 @@
                 color var(--fauna-t-base) var(--fauna-ease);
 }
 
-.ff-taxa-chip ::deep .mud-icon-root {
-    font-size: 18px !important;
+.ff-taxa-chip i {
+    font-size: 18px;
     color: var(--fauna-primary-500);
 }
 
@@ -106,7 +106,7 @@
     color: #fff;
 }
 
-.ff-taxa-chip.is-on ::deep .mud-icon-root,
+.ff-taxa-chip.is-on i,
 .ff-taxa-chip.is-on .count {
     color: rgba(255, 255, 255, 0.85);
 }

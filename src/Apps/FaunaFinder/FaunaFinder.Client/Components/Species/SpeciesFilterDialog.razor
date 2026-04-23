@@ -30,7 +30,7 @@
                         <button type="button"
                                 class="@("ff-taxa-chip" + (on ? " is-on" : ""))"
                                 @onclick="@(() => ToggleTaxa(code))">
-                            <MudIcon Icon="@TaxonIcons.GetIcon(code)" />
+                            <i class="@TaxonIcons.GetIcon(code)"></i>
                             <span>@TaxonIcons.GetLabel(code)</span>
                             <span class="count">@TaxaCountFor(code)</span>
                         </button>

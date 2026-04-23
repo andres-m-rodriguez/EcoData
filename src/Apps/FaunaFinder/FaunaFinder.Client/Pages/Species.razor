@@ -180,8 +180,8 @@ else
         Search: string.IsNullOrWhiteSpace(_search) ? null : _search,
         IsEndemic: _filter.IsEndemic ? true : null,
         HasProfileImage: _filter.HasPhoto ? true : null,
-        IucnStatuses: _filter.IucnStatuses.Count > 0 ? _filter.IucnStatuses : null,
-        TaxonCodes: _filter.TaxonCodes.Count > 0 ? _filter.TaxonCodes : null,
+        IucnStatuses: _filter.IucnStatuses.Count > 0 ? _filter.IucnStatuses.ToArray() : null,
+        TaxonCodes: _filter.TaxonCodes.Count > 0 ? _filter.TaxonCodes.ToArray() : null,
         MinMunicipalityCount: _filter.MinMunicipalityCount,
         ObservedSinceUtc: _filter.ObservedRecently ? DateTimeOffset.UtcNow.AddYears(-1) : null
     );

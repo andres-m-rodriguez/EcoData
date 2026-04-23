@@ -1,21 +1,25 @@
 using System.Collections.Frozen;
-using MudBlazor;
 
 namespace FaunaFinder.Client.Components.Species;
 
+/// <summary>
+/// Maps taxon codes to Font Awesome 6 free class names, loaded via CDN in App.razor.
+/// Material Icons lacks proper taxonomic iconography (no bird/frog/dragon), so we fall
+/// through to FA for the taxon badges specifically.
+/// </summary>
 public static class TaxonIcons
 {
     private static readonly FrozenDictionary<string, string> Map =
         new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
         {
-            ["bird"] = Icons.Material.Filled.FlightTakeoff,
-            ["plant"] = Icons.Material.Filled.LocalFlorist,
-            ["reptile"] = Icons.Material.Filled.Pets,
-            ["amphib"] = Icons.Material.Filled.WaterDrop,
-            ["fish"] = Icons.Material.Filled.SetMeal,
-            ["mammal"] = Icons.Material.Filled.Pets,
-            ["invert"] = Icons.Material.Filled.BugReport,
-            ["fungi"] = Icons.Material.Filled.Spa,
+            ["bird"] = "fa-solid fa-crow",
+            ["plant"] = "fa-solid fa-leaf",
+            ["reptile"] = "fa-solid fa-dragon",
+            ["amphib"] = "fa-solid fa-frog",
+            ["fish"] = "fa-solid fa-fish",
+            ["mammal"] = "fa-solid fa-paw",
+            ["invert"] = "fa-solid fa-bug",
+            ["fungi"] = "fa-solid fa-seedling",
         }.ToFrozenDictionary(StringComparer.OrdinalIgnoreCase);
 
     private static readonly FrozenDictionary<string, string> Labels =
@@ -37,7 +41,7 @@ public static class TaxonIcons
     public static string GetIcon(string? code) =>
         code is not null && Map.TryGetValue(code, out var icon)
             ? icon
-            : Icons.Material.Filled.Pets;
+            : "fa-solid fa-paw";
 
     public static string GetLabel(string? code) =>
         code is not null && Labels.TryGetValue(code, out var label)

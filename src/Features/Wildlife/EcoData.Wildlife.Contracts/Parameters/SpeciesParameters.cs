@@ -11,8 +11,8 @@ public sealed record SpeciesParameters(
     bool? IsFauna = null,
     bool? IsEndemic = null,
     bool? HasProfileImage = null,
-    IReadOnlyList<IucnStatus>? IucnStatuses = null,
-    IReadOnlyList<string>? TaxonCodes = null,
+    IucnStatus[]? IucnStatuses = null,
+    string[]? TaxonCodes = null,
     int? MinMunicipalityCount = null,
     DateTimeOffset? ObservedSinceUtc = null,
     SpeciesSort Sort = SpeciesSort.ScientificNameAsc
