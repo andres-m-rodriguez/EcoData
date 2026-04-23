@@ -36,4 +36,8 @@ public interface ISpeciesRepository
     Task<IReadOnlyList<SpeciesDtoForList>> GetFeaturedAsync(
         CancellationToken cancellationToken = default
     );
+
+    Task<IReadOnlyList<MunicipalitySpeciesCountDto>> GetCountsByMunicipalityAsync(
+        CancellationToken cancellationToken = default
+    );
 }

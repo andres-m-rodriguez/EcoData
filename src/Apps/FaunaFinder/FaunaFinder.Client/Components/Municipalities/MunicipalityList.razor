@@ -1,0 +1,172 @@
+@namespace FaunaFinder.Client.Components.Municipalities
+@using EcoData.Locations.Contracts.Dtos
+
+<aside class="mm-rail">
+    <div class="mm-rail-head">
+        <div class="mm-search">
+            <MudIcon Icon="@Icons.Material.Filled.Search" Size="Size.Small" />
+            <input placeholder="Search municipios by name…"
+                   value="@_search"
+                   @oninput="OnSearchInput" />
+        </div>
+        <div class="mm-rail-head-meta">
+            <span>@VisibleLabel</span>
+            <MudMenu AnchorOrigin="Origin.BottomRight" TransformOrigin="Origin.TopRight">
+                <ActivatorContent>
+                    <button type="button" class="mm-sort">
+                        <MudIcon Icon="@Icons.Material.Filled.Sort" Size="Size.Small" />
+                        Sort: @SortLabel
+                    </button>
+                </ActivatorContent>
+                <ChildContent>
+                    @foreach (var option in SortOptions)
+                    {
+                        <MudMenuItem OnClick="@(() => _sort = option.Value)">
+                            @if (option.Value == _sort)
+                            {
+                                <MudIcon Icon="@Icons.Material.Filled.Check" Size="Size.Small" Class="mr-2" />
+                            }
+                            else
+                            {
+                                <MudIcon Icon="@Icons.Material.Filled.Check" Size="Size.Small" Class="mr-2" Style="visibility:hidden" />
+                            }
+                            @option.Label
+                        </MudMenuItem>
+                    }
+                </ChildContent>
+            </MudMenu>
+        </div>
+    </div>
+
+    <div class="mm-list">
+        @if (Municipalities is null)
+        {
+            @for (var i = 0; i < 8; i++)
+            {
+                <div class="mm-row mm-row-skeleton">
+                    <MudSkeleton SkeletonType="SkeletonType.Text" Width="100%" Height="24px" />
+                </div>
+            }
+        }
+        else if (_visible.Count == 0)
+        {
+            <div class="mm-row-empty">
+                <MudIcon Icon="@Icons.Material.Outlined.SearchOff" Size="Size.Medium" />
+                <span>No municipios match "@_search"</span>
+            </div>
+        }
+        else
+        {
+            var idx = 0;
+            @foreach (var muni in _visible)
+            {
+                var position = ++idx;
+                var count = CountFor(muni.Id);
+                var isActive = SelectedId == muni.Id;
+                <div class="@RowClass(isActive)" @onclick="@(() => OnSelected.InvokeAsync(muni))">
+                    <div class="mm-row-idx">@position.ToString("00")</div>
+                    <div class="mm-row-body">
+                        <div class="mm-row-name">@muni.Name</div>
+                        <div class="mm-row-sub">@CoordsLabel(muni)</div>
+                    </div>
+                    <div class="mm-row-count">
+                        <MudIcon Icon="@Icons.Material.Filled.Pets" Size="Size.Small" />
+                        @(count is { } c ? c.ToString() : "—")
+                    </div>
+                    <button type="button" class="mm-row-details"
+                            title="View details"
+                            @onclick="@((MouseEventArgs _) => OnDetails.InvokeAsync(muni))"
+                            @onclick:stopPropagation="true">
+                        <MudIcon Icon="@Icons.Material.Filled.ArrowForward" Size="Size.Small" />
+                    </button>
+                </div>
+            }
+        }
+    </div>
+
+    <div class="mm-rail-foot">— @TotalLabel —</div>
+</aside>
+
+@code {
+    [Parameter] public IReadOnlyList<MunicipalityDtoForList>? Municipalities { get; set; }
+    [Parameter] public IReadOnlyDictionary<Guid, int>? Counts { get; set; }
+    [Parameter] public Guid? SelectedId { get; set; }
+    [Parameter] public EventCallback<MunicipalityDtoForList> OnSelected { get; set; }
+    [Parameter] public EventCallback<MunicipalityDtoForList> OnDetails { get; set; }
+
+    private string _search = string.Empty;
+    private MunicipalitySort _sort = MunicipalitySort.SpeciesCountDesc;
+
+    private IReadOnlyList<MunicipalityDtoForList> _visible = [];
+
+    private static readonly (MunicipalitySort Value, string Label)[] SortOptions =
+    [
+        (MunicipalitySort.SpeciesCountDesc, "species count ↓"),
+        (MunicipalitySort.NameAsc, "name A–Z"),
+    ];
+
+    private string SortLabel => SortOptions.FirstOrDefault(o => o.Value == _sort).Label
+        ?? "species count ↓";
+
+    protected override void OnParametersSet() => RecomputeVisible();
+
+    private void OnSearchInput(ChangeEventArgs e)
+    {
+        _search = (e.Value as string) ?? string.Empty;
+        RecomputeVisible();
+    }
+
+    private void RecomputeVisible()
+    {
+        if (Municipalities is null)
+        {
+            _visible = [];
+            return;
+        }
+
+        IEnumerable<MunicipalityDtoForList> q = Municipalities;
+
+        if (!string.IsNullOrWhiteSpace(_search))
+        {
+            var needle = _search.Trim();
+            q = q.Where(m => m.Name.Contains(needle, StringComparison.OrdinalIgnoreCase));
+        }
+
+        q = _sort switch
+        {
+            MunicipalitySort.NameAsc => q.OrderBy(m => m.Name),
+            _ => q
+                .OrderByDescending(m => CountFor(m.Id) ?? 0)
+                .ThenBy(m => m.Name)
+        };
+
+        _visible = q.ToList();
+    }
+
+    private int? CountFor(Guid id) =>
+        Counts is not null && Counts.TryGetValue(id, out var n) ? n : null;
+
+    private string RowClass(bool isActive) =>
+        isActive ? "mm-row is-active" : "mm-row";
+
+    private static string CoordsLabel(MunicipalityDtoForList muni) =>
+        $"{muni.CentroidLatitude:0.00}″N · {Math.Abs(muni.CentroidLongitude):0.00}″W";
+
+    private string VisibleLabel =>
+        Municipalities is null
+            ? "Loading…"
+            : _visible.Count == Municipalities.Count
+                ? $"{Municipalities.Count} municipios"
+                : $"{_visible.Count} of {Municipalities.Count}";
+
+    private string TotalLabel =>
+        Municipalities is null
+            ? "loading municipios"
+            : $"{Municipalities.Count} municipios tracked";
+
+    public enum MunicipalitySort
+    {
+        SpeciesCountDesc,
+        NameAsc,
+    }
+}

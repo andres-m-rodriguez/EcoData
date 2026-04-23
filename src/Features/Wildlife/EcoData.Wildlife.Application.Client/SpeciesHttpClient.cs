@@ -110,6 +110,17 @@ public sealed class SpeciesHttpClient(HttpClient httpClient) : ISpeciesHttpClien
         return await response.Content.ReadFromJsonAsync<IReadOnlyList<SpeciesDtoForList>>(ct) ?? [];
     }
 
+    public async Task<IReadOnlyList<MunicipalitySpeciesCountDto>> GetCountsByMunicipalityAsync(
+        CancellationToken ct = default)
+    {
+        var response = await httpClient.GetAsync("wildlife/species/counts-by-municipality", ct);
+
+        if (!response.IsSuccessStatusCode)
+            return [];
+
+        return await response.Content.ReadFromJsonAsync<IReadOnlyList<MunicipalitySpeciesCountDto>>(ct) ?? [];
+    }
+
     private static string BuildListQueryString(SpeciesParameters parameters, bool includePageSize)
     {
         var builder = new QueryStringBuilder()

@@ -1,0 +1,28 @@
+@namespace FaunaFinder.Client.Components.Municipalities
+@using EcoData.Wildlife.Contracts.Dtos
+
+<section class="mm-hero">
+    <div class="mm-hero-main">
+        <div class="mm-hero-eyebrow">@Eyebrow</div>
+        <h1 class="mm-hero-heading">
+            Municipios of <em>Puerto Rico</em>,<br /> mapped and observed.
+        </h1>
+    </div>
+    <div class="mm-hero-meta">
+        <span>Last sync · @LastSync</span>
+        <span>@RecordsLine</span>
+        <span>Tap a pin or row to drill in</span>
+    </div>
+</section>
+
+@code {
+    [Parameter] public SpeciesStatsDto? Stats { get; set; }
+
+    [Parameter] public string Eyebrow { get; set; } = "Volume 03 · Living Atlas";
+
+    private string LastSync => DateTime.Now.ToString("HH:mm") + " local";
+
+    private string RecordsLine => Stats is null
+        ? "— municipios · — records"
+        : $"{Stats.TotalMunicipalities} municipios · {Stats.TotalSpecies:N0} records";
+}

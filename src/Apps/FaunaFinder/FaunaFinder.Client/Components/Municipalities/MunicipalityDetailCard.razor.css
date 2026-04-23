@@ -1,0 +1,124 @@
+.mm-detail {
+    position: absolute;
+    top: 16px;
+    left: 16px;
+    width: 320px;
+    max-width: calc(100% - 32px);
+    background: #fff;
+    border: 1px solid var(--fauna-line);
+    border-radius: 14px;
+    box-shadow: var(--fauna-shadow-4);
+    overflow: hidden;
+    z-index: 500;
+}
+
+.mm-detail-head {
+    padding: 14px 16px 12px;
+    border-bottom: 1px solid var(--fauna-line);
+    display: flex;
+    align-items: start;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.mm-detail-title {
+    font: 600 1.125rem/1.15 var(--fauna-font-serif);
+    color: var(--fauna-primary);
+    letter-spacing: -0.015em;
+}
+
+.mm-detail-sub {
+    font: var(--fauna-mono);
+    font-size: 11px;
+    color: var(--fauna-fg-4);
+    margin-top: 4px;
+}
+
+.mm-detail-close {
+    width: 26px;
+    height: 26px;
+    border-radius: 6px;
+    border: 0;
+    background: transparent;
+    color: var(--fauna-fg-4);
+    cursor: pointer;
+    display: grid;
+    place-items: center;
+    flex: 0 0 auto;
+    transition: background-color var(--fauna-t-base) var(--fauna-ease),
+                color var(--fauna-t-base) var(--fauna-ease);
+}
+
+.mm-detail-close:hover {
+    background: var(--fauna-bg-alt);
+    color: var(--fauna-primary);
+}
+
+.mm-detail-close ::deep .mud-icon-root {
+    font-size: 14px !important;
+}
+
+.mm-detail-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    padding: 12px 16px 0;
+    gap: 12px;
+}
+
+.mm-detail-stat-label {
+    font: var(--fauna-eyebrow);
+    text-transform: uppercase;
+    letter-spacing: var(--fauna-tracking-eyebrow);
+    color: var(--fauna-fg-4);
+    font-size: 10px;
+}
+
+.mm-detail-stat-value {
+    font: 600 1.5rem/1 var(--fauna-font-serif);
+    color: var(--fauna-primary);
+    letter-spacing: -0.025em;
+    margin-top: 4px;
+}
+
+.mm-detail-stat-mono {
+    font: 600 1rem/1 var(--fauna-font-mono);
+    letter-spacing: 0.02em;
+    padding-top: 8px;
+}
+
+.mm-detail-cta {
+    padding: 12px 16px;
+    margin-top: 14px;
+    background: var(--fauna-surface-alt);
+    border-top: 1px solid var(--fauna-line);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.mm-detail-cta .count {
+    font: var(--fauna-mono);
+    font-size: 11px;
+    color: var(--fauna-fg-4);
+}
+
+.mm-detail-link {
+    background: transparent;
+    border: 0;
+    padding: 0;
+    cursor: pointer;
+    font: 600 12px/1 var(--fauna-font-sans);
+    color: var(--fauna-primary);
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.mm-detail-link:hover {
+    text-decoration: underline;
+}
+
+.mm-detail-link ::deep .mud-icon-root {
+    font-size: 13px !important;
+    color: var(--fauna-primary);
+}

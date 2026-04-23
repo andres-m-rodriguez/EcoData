@@ -135,6 +135,16 @@ public static class SpeciesEndpoints
             )
             .WithName("GetFeaturedSpecies");
 
+        group
+            .MapGet(
+                "/counts-by-municipality",
+                async Task<Ok<IReadOnlyList<MunicipalitySpeciesCountDto>>> (
+                    ISpeciesRepository repository,
+                    CancellationToken ct
+                ) => TypedResults.Ok(await repository.GetCountsByMunicipalityAsync(ct))
+            )
+            .WithName("GetSpeciesCountsByMunicipality");
+
         return app;
     }
 }

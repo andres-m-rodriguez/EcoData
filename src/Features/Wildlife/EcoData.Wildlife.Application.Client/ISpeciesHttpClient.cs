@@ -30,4 +30,7 @@ public interface ISpeciesHttpClient
         CancellationToken ct = default);
 
     Task<IReadOnlyList<SpeciesDtoForList>> GetFeaturedAsync(CancellationToken ct = default);
+
+    Task<IReadOnlyList<MunicipalitySpeciesCountDto>> GetCountsByMunicipalityAsync(
+        CancellationToken ct = default);
 }

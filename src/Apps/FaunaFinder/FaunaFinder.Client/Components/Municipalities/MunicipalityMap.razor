@@ -1,0 +1,131 @@
+@namespace FaunaFinder.Client.Components.Municipalities
+@using System.Text.Json
+@using EcoData.Common.Maps
+@using EcoData.Common.Maps.Components
+@using EcoData.Common.Maps.Models
+@using EcoData.Locations.Application.Client
+@using EcoData.Locations.Contracts.Dtos
+@implements IDisposable
+@inject IMunicipalityHttpClient MunicipalityClient
+
+<div class="mm-map">
+    <NuiMap TMarker="MunicipalityMarker"
+            Controller="_controller"
+            Height="100%"
+            Width="100%" />
+
+    @if (SelectedMunicipality is { } selected)
+    {
+        <MunicipalityDetailCard Municipality="selected"
+                                SpeciesCount="@SpeciesCountFor(selected.Id)"
+                                OnClose="HandleClose"
+                                OnViewDetails="HandleViewDetails" />
+    }
+
+    <div class="mm-legend">
+        <div class="mm-legend-title">Municipios</div>
+        <div class="mm-legend-row">
+            <span class="mm-legend-dot" style="background: var(--fauna-accent-warm);"></span>
+            <span>Selected</span>
+        </div>
+        <div class="mm-legend-row">
+            <span class="mm-legend-dot" style="background: var(--fauna-primary);"></span>
+            <span>Boundary</span>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter] public IReadOnlyList<MunicipalityDtoForList>? Municipalities { get; set; }
+    [Parameter] public IReadOnlyDictionary<Guid, int>? Counts { get; set; }
+    [Parameter] public MunicipalityDtoForList? SelectedMunicipality { get; set; }
+    [Parameter] public EventCallback<MunicipalityDtoForList> OnSelected { get; set; }
+    [Parameter] public EventCallback OnCleared { get; set; }
+    [Parameter] public EventCallback<MunicipalityDtoForList> OnViewDetails { get; set; }
+
+    private readonly MapController<MunicipalityMarker> _controller = new();
+    private Guid? _lastSelectedId;
+    private bool _geoJsonLoaded;
+
+    protected override void OnInitialized()
+    {
+        _controller.OnGeoJsonClicked += HandleGeoJsonClicked;
+        _ = LoadGeoJsonAsync();
+    }
+
+    protected override void OnParametersSet()
+    {
+        if (!_geoJsonLoaded) return;
+
+        var selectedId = SelectedMunicipality?.Id;
+        if (selectedId == _lastSelectedId) return;
+        _lastSelectedId = selectedId;
+
+        if (SelectedMunicipality is { } muni)
+        {
+            var centroid = new MapCoordinate(
+                (double)muni.CentroidLatitude,
+                (double)muni.CentroidLongitude);
+            _controller.SetView(centroid, 12);
+        }
+    }
+
+    private async Task LoadGeoJsonAsync()
+    {
+        var geoJson = await MunicipalityClient.GetGeoJsonByStateCodeAsync("PR");
+        if (string.IsNullOrEmpty(geoJson)) return;
+
+        _controller.AddGeoJson(new MapGeoJson
+        {
+            Id = "municipalities",
+            Data = geoJson,
+            FillColor = "#3f7d5f",
+            FillOpacity = 0.22,
+            StrokeColor = "#1f4d3a",
+            StrokeWidth = 2
+        });
+        _geoJsonLoaded = true;
+    }
+
+    private void HandleGeoJsonClicked(string layerId, string? propertiesJson)
+    {
+        if (layerId != "municipalities") return;
+        if (Municipalities is null || string.IsNullOrEmpty(propertiesJson)) return;
+
+        try
+        {
+            using var doc = JsonDocument.Parse(propertiesJson);
+            if (!doc.RootElement.TryGetProperty("geoJsonId", out var geoJsonIdEl)) return;
+            var geoJsonId = geoJsonIdEl.GetString();
+            if (string.IsNullOrEmpty(geoJsonId)) return;
+
+            var match = Municipalities.FirstOrDefault(m => m.GeoJsonId == geoJsonId);
+            if (match is not null)
+            {
+                _ = OnSelected.InvokeAsync(match);
+            }
+        }
+        catch (JsonException)
+        {
+            // Malformed feature properties — ignore and keep the previous selection.
+        }
+    }
+
+    private int? SpeciesCountFor(Guid id) =>
+        Counts is not null && Counts.TryGetValue(id, out var n) ? n : null;
+
+    private Task HandleClose() => OnCleared.InvokeAsync();
+
+    private Task HandleViewDetails(MunicipalityDtoForList muni) =>
+        OnViewDetails.InvokeAsync(muni);
+
+    public void Dispose()
+    {
+        _controller.OnGeoJsonClicked -= HandleGeoJsonClicked;
+    }
+
+    public sealed record MunicipalityMarker(
+        MapCoordinate Coordinate,
+        string? PopupContent,
+        string? TooltipContent) : IMapMarker;
+}
