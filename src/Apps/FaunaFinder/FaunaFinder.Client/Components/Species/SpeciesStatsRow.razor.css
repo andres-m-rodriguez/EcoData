@@ -70,4 +70,12 @@
     .ff-stat:nth-child(-n+2) {
         border-top: 0;
     }
+
+    .ff-stat-value {
+        font-size: 1.75rem;
+    }
+
+    .ff-stat-value .unit {
+        font-size: 0.75rem;
+    }
 }
