@@ -34,52 +34,13 @@
     <MudHidden Breakpoint="Breakpoint.SmAndDown">
         @if (_selectedMunicipality is not null)
         {
-            <div class="desktop-sidebar @(_sidebarOpen ? "open" : "")">
-                <div class="sidebar-header">
-                    <MudText Typo="Typo.h6">@_selectedMunicipality.Name</MudText>
-                    <MudIconButton Icon="@Icons.Material.Filled.Close"
-                                   Size="Size.Small"
-                                   OnClick="CloseSidebar" />
-                </div>
-
-                @if (_speciesFetch?.IsLoading is not false)
-                {
-                    <div class="pa-3">
-                        @for (int i = 0; i < 5; i++)
-                        {
-                            <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="60px" Class="mb-3 rounded" />
-                        }
-                    </div>
-                }
-                else if ((_speciesFetch.Data?.Count ?? 0) == 0)
-                {
-                    <NuiEmptyState Icon="@Icons.Material.Outlined.Pets"
-                                   Title="No species found"
-                                   Description="No species have been recorded in this municipality yet." />
-                }
-                else
-                {
-                    <div class="sidebar-content">
-                        <NuiSectionHeader Title="@($"{_speciesFetch.Data!.Count} Species")" />
-                        <MudList T="SpeciesDtoForList" Dense="true">
-                            @foreach (var species in _speciesFetch.Data!)
-                            {
-                                <NuiListItem Title="@GetSpeciesName(species)"
-                                             Subtitle="@species.ScientificName"
-                                             Icon="@(species.IsFauna ? Icons.Material.Filled.Pets : Icons.Material.Filled.Park)"
-                                             ShowChevron="true"
-                                             OnClick="@(() => NavigateToSpecies(species.Id))">
-                                    <TrailingContent>
-                                        <NuiStatusBadge Status="@GetConservationStatus(species.GRank)"
-                                                        Text="@(species.GRank ?? "-")"
-                                                        Size="NuiStatusSize.Small" />
-                                    </TrailingContent>
-                                </NuiListItem>
-                            }
-                        </MudList>
-                    </div>
-                }
-            </div>
+            <aside class="desktop-sidebar @(_sidebarOpen ? "open" : "")">
+                <MapSpeciesPanel Title="@_selectedMunicipality.Name"
+                                 IsLoading="@(_speciesFetch?.IsLoading is not false)"
+                                 Species="@_speciesFetch?.Data"
+                                 OnClose="CloseSidebar"
+                                 OnSpeciesClick="OnSpeciesClicked" />
+            </aside>
         }
     </MudHidden>
 
@@ -89,53 +50,11 @@
         {
             <div class="mobile-sheet-backdrop @(_sheetOpen ? "open" : "")" @onclick="CloseSheet"></div>
             <div class="mobile-sheet @(_sheetOpen ? "open" : "")">
-                <div class="mobile-sheet-header">
-                    <MudText Typo="Typo.subtitle1">@_selectedMunicipality.Name</MudText>
-                    <MudSpacer />
-                    <MudIconButton Icon="@Icons.Material.Filled.Close"
-                                   Size="Size.Medium"
-                                   OnClick="CloseSheet" />
-                </div>
-
-                @if (_speciesFetch?.IsLoading is not false)
-                {
-                    <div class="pa-3">
-                        @for (int i = 0; i < 5; i++)
-                        {
-                            <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="60px" Class="mb-3 rounded" />
-                        }
-                    </div>
-                }
-                else if ((_speciesFetch.Data?.Count ?? 0) == 0)
-                {
-                    <NuiEmptyState Icon="@Icons.Material.Outlined.Pets"
-                                   Title="No species found"
-                                   Description="No species have been recorded in this municipality yet." />
-                }
-                else
-                {
-                    <div class="mobile-sheet-content">
-                        <MudText Typo="Typo.caption" Color="Color.Secondary" Class="px-3 mb-2">
-                            @_speciesFetch.Data!.Count species found
-                        </MudText>
-                        <MudList T="SpeciesDtoForList" Dense="true">
-                            @foreach (var species in _speciesFetch.Data!)
-                            {
-                                <NuiListItem Title="@GetSpeciesName(species)"
-                                             Subtitle="@species.ScientificName"
-                                             Icon="@(species.IsFauna ? Icons.Material.Filled.Pets : Icons.Material.Filled.Park)"
-                                             ShowChevron="true"
-                                             OnClick="@(() => NavigateToSpecies(species.Id))">
-                                    <TrailingContent>
-                                        <NuiStatusBadge Status="@GetConservationStatus(species.GRank)"
-                                                        Text="@(species.GRank ?? "-")"
-                                                        Size="NuiStatusSize.Small" />
-                                    </TrailingContent>
-                                </NuiListItem>
-                            }
-                        </MudList>
-                    </div>
-                }
+                <MapSpeciesPanel Title="@_selectedMunicipality.Name"
+                                 IsLoading="@(_speciesFetch?.IsLoading is not false)"
+                                 Species="@_speciesFetch?.Data"
+                                 OnClose="CloseSheet"
+                                 OnSpeciesClick="OnSpeciesClicked" />
             </div>
         }
     </MudHidden>
@@ -245,29 +164,8 @@
         StateHasChanged();
     }
 
-    private void NavigateToSpecies(Guid speciesId)
-    {
-        NavigationManager.NavigateTo($"/species/{speciesId}");
-    }
-
-    private static string GetSpeciesName(SpeciesDtoForList species)
-    {
-        var englishName = species.CommonName.FirstOrDefault(n => n.Code == "en");
-        return englishName?.Value ?? species.CommonName.FirstOrDefault()?.Value ?? species.ScientificName;
-    }
-
-    private static NuiStatusType GetConservationStatus(string? gRank)
-    {
-        if (string.IsNullOrEmpty(gRank)) return NuiStatusType.Inactive;
-
-        return gRank.ToUpperInvariant() switch
-        {
-            "G1" or "G2" => NuiStatusType.Error,
-            "G3" => NuiStatusType.Warning,
-            "G4" or "G5" => NuiStatusType.Success,
-            _ => NuiStatusType.Inactive
-        };
-    }
+    private void OnSpeciesClicked(SpeciesDtoForList species) =>
+        NavigationManager.NavigateTo($"/species/{species.Id}");
 
     public void Dispose()
     {
