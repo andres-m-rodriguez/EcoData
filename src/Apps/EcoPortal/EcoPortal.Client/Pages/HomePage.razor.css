@@ -200,6 +200,20 @@
     margin-right: auto;
 }
 
+.mission-cta {
+    font-family: 'Inter', sans-serif;
+    font-size: clamp(0.95rem, 1.4vw, 1.05rem);
+    line-height: 1.7;
+    color: var(--mud-palette-text-secondary);
+    max-width: 720px;
+    margin: 1.75rem auto 0;
+}
+
+::deep .mission-cta-link {
+    color: var(--mud-palette-primary) !important;
+    font-weight: 600;
+}
+
 /* ==========================================================================
    Section Common Styles
    ========================================================================== */
