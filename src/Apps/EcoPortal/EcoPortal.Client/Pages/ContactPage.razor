@@ -1,0 +1,49 @@
+@page "/contact"
+@inject INativeNavbarManager Navbar
+
+<PageTitle>Contact - EcoData</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.Small" Class="py-8">
+    <MudStack Spacing="4" AlignItems="AlignItems.Center">
+        <MudAvatar Color="Color.Primary" Variant="Variant.Filled" Size="Size.Large"
+                   Style="width: 96px; height: 96px;">
+            <MudIcon Icon="@Icons.Material.Filled.Email" Style="font-size: 3rem;" />
+        </MudAvatar>
+
+        <MudStack Spacing="1" AlignItems="AlignItems.Center">
+            <h1 class="serif-headline">Get in Touch</h1>
+            <MudText Typo="Typo.body1" Color="Color.Secondary" Align="Align.Center">
+                Have a question, suggestion, or want to collaborate? Send us an email —
+                your default mail app will open with the address ready to go.
+            </MudText>
+        </MudStack>
+
+        <MudPaper Elevation="0" Class="pa-5" Style="width: 100%; border: 1px solid var(--mud-palette-divider); border-radius: 12px;">
+            <MudStack Spacing="3" AlignItems="AlignItems.Center">
+                <MudText Typo="Typo.caption" Color="Color.Secondary" Class="text-uppercase" Style="letter-spacing: 0.15em;">
+                    Contact Email
+                </MudText>
+                <MudLink Href="@MailtoHref" Underline="Underline.None" Typo="Typo.h6" Color="Color.Primary">
+                    @ContactEmail
+                </MudLink>
+                <MudButton Variant="Variant.Filled"
+                           Color="Color.Primary"
+                           Size="Size.Large"
+                           StartIcon="@Icons.Material.Filled.Send"
+                           Href="@MailtoHref">
+                    Open Email
+                </MudButton>
+            </MudStack>
+        </MudPaper>
+    </MudStack>
+</MudContainer>
+
+@code {
+    private const string ContactEmail = "andresm.rodriguezcan@gmail.com";
+    private const string MailtoHref = $"mailto:{ContactEmail}";
+
+    protected override void OnInitialized()
+    {
+        Navbar.SetTitle("Contact");
+    }
+}
