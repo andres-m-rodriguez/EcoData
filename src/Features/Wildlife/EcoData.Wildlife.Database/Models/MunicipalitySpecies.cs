@@ -10,6 +10,7 @@ namespace EcoData.Wildlife.Database.Models;
 public sealed class MunicipalitySpecies
 {
     public required Guid Id { get; set; }
+
     // Cross-module reference to Locations.Municipality by ID only
     public required Guid MunicipalityId { get; set; }
     public required Guid SpeciesId { get; set; }

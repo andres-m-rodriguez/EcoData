@@ -9,7 +9,6 @@
   <ItemGroup>
     <ProjectReference Include="..\EcoData.Wildlife.Contracts\EcoData.Wildlife.Contracts.csproj" />
     <ProjectReference Include="..\EcoData.Wildlife.Database\EcoData.Wildlife.Database.csproj" />
-    <ProjectReference Include="..\..\Locations\EcoData.Locations.Helpers\EcoData.Locations.Helpers.csproj" />
   </ItemGroup>
 
 </Project>
