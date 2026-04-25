@@ -2,6 +2,7 @@ using System.Runtime.CompilerServices;
 using EcoData.Organization.Contracts;
 using EcoData.Organization.Contracts.Dtos;
 using EcoData.Organization.Contracts.Parameters;
+using EcoData.Organization.DataAccess.Colors;
 using EcoData.Organization.DataAccess.Interfaces;
 using EcoData.Organization.DataAccess.Slugs;
 using EcoData.Organization.Database;
@@ -41,10 +42,14 @@ public sealed class OrganizationRepository(IDbContextFactory<OrganizationDbConte
                     o.Id,
                     o.Name,
                     o.Slug,
+                    o.Tagline,
                     o.ProfilePictureUrl,
                     o.CardPictureUrl,
                     o.AboutUs,
                     o.WebsiteUrl,
+                    o.Location,
+                    o.PrimaryColor,
+                    o.AccentColor,
                     o.CreatedAt
                 ))
                 .AsAsyncEnumerable()
@@ -64,17 +69,7 @@ public sealed class OrganizationRepository(IDbContextFactory<OrganizationDbConte
 
         return await context
             .Organizations.Where(o => o.Id == id)
-            .Select(o => new OrganizationDtoForDetail(
-                o.Id,
-                o.Name,
-                o.Slug,
-                o.ProfilePictureUrl,
-                o.CardPictureUrl,
-                o.AboutUs,
-                o.WebsiteUrl,
-                o.CreatedAt,
-                o.UpdatedAt
-            ))
+            .Select(ProjectToDetail)
             .FirstOrDefaultAsync(cancellationToken);
     }
 
@@ -87,19 +82,29 @@ public sealed class OrganizationRepository(IDbContextFactory<OrganizationDbConte
 
         return await context
             .Organizations.Where(o => o.Slug == slug)
-            .Select(o => new OrganizationDtoForDetail(
-                o.Id,
-                o.Name,
-                o.Slug,
-                o.ProfilePictureUrl,
-                o.CardPictureUrl,
-                o.AboutUs,
-                o.WebsiteUrl,
-                o.CreatedAt,
-                o.UpdatedAt
-            ))
+            .Select(ProjectToDetail)
             .FirstOrDefaultAsync(cancellationToken);
     }
+
+    private static readonly System.Linq.Expressions.Expression<Func<Database.Models.Organization, OrganizationDtoForDetail>> ProjectToDetail =
+        o => new OrganizationDtoForDetail(
+            o.Id,
+            o.Name,
+            o.Slug,
+            o.Tagline,
+            o.ProfilePictureUrl,
+            o.CardPictureUrl,
+            o.AboutUs,
+            o.WebsiteUrl,
+            o.Location,
+            o.FoundedYear,
+            o.LegalStatus,
+            o.TaxId,
+            o.PrimaryColor,
+            o.AccentColor,
+            o.CreatedAt,
+            o.UpdatedAt
+        );
 
     public async Task<OrganizationDtoForCreated?> GetByNameAsync(
         string name,
@@ -141,10 +146,17 @@ public sealed class OrganizationRepository(IDbContextFactory<OrganizationDbConte
             Id = Guid.CreateVersion7(),
             Name = dto.Name,
             Slug = slug,
+            Tagline = dto.Tagline,
             ProfilePictureUrl = dto.ProfilePictureUrl,
             CardPictureUrl = dto.CardPictureUrl,
             AboutUs = dto.AboutUs,
             WebsiteUrl = dto.WebsiteUrl,
+            Location = dto.Location,
+            FoundedYear = dto.FoundedYear,
+            LegalStatus = dto.LegalStatus,
+            TaxId = dto.TaxId,
+            PrimaryColor = HexColor.Normalize(dto.PrimaryColor),
+            AccentColor = HexColor.Normalize(dto.AccentColor),
             CreatedAt = now,
             UpdatedAt = now,
         };
@@ -217,10 +229,17 @@ public sealed class OrganizationRepository(IDbContextFactory<OrganizationDbConte
         }
 
         entity.Name = dto.Name;
+        entity.Tagline = dto.Tagline;
         entity.ProfilePictureUrl = dto.ProfilePictureUrl;
         entity.CardPictureUrl = dto.CardPictureUrl;
         entity.AboutUs = dto.AboutUs;
         entity.WebsiteUrl = dto.WebsiteUrl;
+        entity.Location = dto.Location;
+        entity.FoundedYear = dto.FoundedYear;
+        entity.LegalStatus = dto.LegalStatus;
+        entity.TaxId = dto.TaxId;
+        entity.PrimaryColor = HexColor.Normalize(dto.PrimaryColor);
+        entity.AccentColor = HexColor.Normalize(dto.AccentColor);
         entity.UpdatedAt = DateTimeOffset.UtcNow;
 
         await context.SaveChangesAsync(cancellationToken);
@@ -229,10 +248,17 @@ public sealed class OrganizationRepository(IDbContextFactory<OrganizationDbConte
             entity.Id,
             entity.Name,
             entity.Slug,
+            entity.Tagline,
             entity.ProfilePictureUrl,
             entity.CardPictureUrl,
             entity.AboutUs,
             entity.WebsiteUrl,
+            entity.Location,
+            entity.FoundedYear,
+            entity.LegalStatus,
+            entity.TaxId,
+            entity.PrimaryColor,
+            entity.AccentColor,
             entity.CreatedAt,
             entity.UpdatedAt
         );
