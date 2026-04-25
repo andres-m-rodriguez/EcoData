@@ -14,24 +14,10 @@ public sealed class ParameterResolver(IDbContextFactory<SensorsDbContext> contex
         await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
 
         var parameters = await context
-            .Parameters.AsNoTracking()
-            .Where(p => p.SourceId == sourceId || p.SourceId == null)
+            .Parameters.Where(p => p.SourceId == sourceId || p.SourceId == null)
             .ToListAsync(cancellationToken);
 
         return new ParameterLookup(sourceId, parameters);
-    }
-
-    public async Task<ResolvedReading> ResolveAsync(
-        Guid? sourceId,
-        string rawCode,
-        string rawUnit,
-        double rawValue,
-        DateTimeOffset recordedAt,
-        CancellationToken cancellationToken = default
-    )
-    {
-        var lookup = await LoadLookupAsync(sourceId, cancellationToken);
-        return lookup.Resolve(rawCode, rawUnit, rawValue, recordedAt);
     }
 }
 

@@ -4,11 +4,11 @@ namespace EcoData.Sensors.DataAccess.Interfaces;
 
 public interface IPhenomenonRepository
 {
-    Task<IReadOnlyList<PhenomenonDtoForList>> GetAllAsync(
+    IAsyncEnumerable<PhenomenonDtoForList> GetAllAsync(
         CancellationToken cancellationToken = default
     );
 
-    Task<IReadOnlyList<PhenomenonDtoForList>> GetByCapabilityAsync(
+    IAsyncEnumerable<PhenomenonDtoForList> GetByCapabilityAsync(
         string capability,
         CancellationToken cancellationToken = default
     );

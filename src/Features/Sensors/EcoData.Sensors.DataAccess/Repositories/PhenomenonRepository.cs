@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using EcoData.Sensors.Contracts.Dtos;
 using EcoData.Sensors.Database;
 using EcoData.Sensors.DataAccess.Interfaces;
@@ -8,44 +9,58 @@ namespace EcoData.Sensors.DataAccess.Repositories;
 public sealed class PhenomenonRepository(IDbContextFactory<SensorsDbContext> contextFactory)
     : IPhenomenonRepository
 {
-    public async Task<IReadOnlyList<PhenomenonDtoForList>> GetAllAsync(
-        CancellationToken cancellationToken = default
+    public async IAsyncEnumerable<PhenomenonDtoForList> GetAllAsync(
+        [EnumeratorCancellation] CancellationToken cancellationToken = default
     )
     {
         await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
-        return await context
-            .Phenomena.OrderBy(p => p.Name)
-            .Select(p => new PhenomenonDtoForList(
-                p.Id,
-                p.Code,
-                p.Name,
-                p.Description,
-                p.CanonicalUnit,
-                p.DefaultValueShape.ToString(),
-                p.Capabilities
-            ))
-            .ToListAsync(cancellationToken);
+
+        await foreach (
+            var phenomenon in context
+                .Phenomena.OrderBy(p => p.Name)
+                .Select(p => new PhenomenonDtoForList(
+                    p.Id,
+                    p.Code,
+                    p.Name,
+                    p.Description,
+                    p.CanonicalUnit,
+                    p.DefaultValueShape.ToString(),
+                    p.Capabilities
+                ))
+                .AsAsyncEnumerable()
+                .WithCancellation(cancellationToken)
+        )
+        {
+            yield return phenomenon;
+        }
     }
 
-    public async Task<IReadOnlyList<PhenomenonDtoForList>> GetByCapabilityAsync(
+    public async IAsyncEnumerable<PhenomenonDtoForList> GetByCapabilityAsync(
         string capability,
-        CancellationToken cancellationToken = default
+        [EnumeratorCancellation] CancellationToken cancellationToken = default
     )
     {
         await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
-        return await context
-            .Phenomena.Where(p => p.Capabilities.Contains(capability))
-            .OrderBy(p => p.Name)
-            .Select(p => new PhenomenonDtoForList(
-                p.Id,
-                p.Code,
-                p.Name,
-                p.Description,
-                p.CanonicalUnit,
-                p.DefaultValueShape.ToString(),
-                p.Capabilities
-            ))
-            .ToListAsync(cancellationToken);
+
+        await foreach (
+            var phenomenon in context
+                .Phenomena.Where(p => p.Capabilities.Contains(capability))
+                .OrderBy(p => p.Name)
+                .Select(p => new PhenomenonDtoForList(
+                    p.Id,
+                    p.Code,
+                    p.Name,
+                    p.Description,
+                    p.CanonicalUnit,
+                    p.DefaultValueShape.ToString(),
+                    p.Capabilities
+                ))
+                .AsAsyncEnumerable()
+                .WithCancellation(cancellationToken)
+        )
+        {
+            yield return phenomenon;
+        }
     }
 
     public async Task<PhenomenonDtoForDetail?> GetByIdAsync(
