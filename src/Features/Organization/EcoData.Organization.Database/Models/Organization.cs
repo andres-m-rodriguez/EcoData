@@ -1,3 +1,4 @@
+using EcoData.Organization.Contracts;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
