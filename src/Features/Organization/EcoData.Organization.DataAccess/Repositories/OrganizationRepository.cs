@@ -69,7 +69,24 @@ public sealed class OrganizationRepository(IDbContextFactory<OrganizationDbConte
 
         return await context
             .Organizations.Where(o => o.Id == id)
-            .Select(ProjectToDetail)
+            .Select(o => new OrganizationDtoForDetail(
+                o.Id,
+                o.Name,
+                o.Slug,
+                o.Tagline,
+                o.ProfilePictureUrl,
+                o.CardPictureUrl,
+                o.AboutUs,
+                o.WebsiteUrl,
+                o.Location,
+                o.FoundedYear,
+                o.LegalStatus,
+                o.TaxId,
+                o.PrimaryColor,
+                o.AccentColor,
+                o.CreatedAt,
+                o.UpdatedAt
+            ))
             .FirstOrDefaultAsync(cancellationToken);
     }
 
@@ -82,29 +99,26 @@ public sealed class OrganizationRepository(IDbContextFactory<OrganizationDbConte
 
         return await context
             .Organizations.Where(o => o.Slug == slug)
-            .Select(ProjectToDetail)
+            .Select(o => new OrganizationDtoForDetail(
+                o.Id,
+                o.Name,
+                o.Slug,
+                o.Tagline,
+                o.ProfilePictureUrl,
+                o.CardPictureUrl,
+                o.AboutUs,
+                o.WebsiteUrl,
+                o.Location,
+                o.FoundedYear,
+                o.LegalStatus,
+                o.TaxId,
+                o.PrimaryColor,
+                o.AccentColor,
+                o.CreatedAt,
+                o.UpdatedAt
+            ))
             .FirstOrDefaultAsync(cancellationToken);
     }
-
-    private static readonly System.Linq.Expressions.Expression<Func<Database.Models.Organization, OrganizationDtoForDetail>> ProjectToDetail =
-        o => new OrganizationDtoForDetail(
-            o.Id,
-            o.Name,
-            o.Slug,
-            o.Tagline,
-            o.ProfilePictureUrl,
-            o.CardPictureUrl,
-            o.AboutUs,
-            o.WebsiteUrl,
-            o.Location,
-            o.FoundedYear,
-            o.LegalStatus,
-            o.TaxId,
-            o.PrimaryColor,
-            o.AccentColor,
-            o.CreatedAt,
-            o.UpdatedAt
-        );
 
     public async Task<OrganizationDtoForCreated?> GetByNameAsync(
         string name,
