@@ -936,7 +936,10 @@ public sealed class DatabaseSeederWorker(
 
     // Resolves phenomenon_id, parameter_id, and canonical_value on any readings ingested before
     // their parameter mappings existed (e.g. the entire prod backlog before this seeder shipped).
-    // Idempotent: subsequent runs find no unresolved readings and return immediately.
+    // Batched so a single statement doesn't blow past Npgsql's command timeout: a 741k-row UPDATE
+    // hit the 30s read timeout and rolled the entire transaction back.
+    private const int BackfillBatchSize = 50_000;
+
     private async Task BackfillReadingsAsync(IServiceProvider services, CancellationToken stoppingToken)
     {
         var context = services.GetRequiredService<SensorsDbContext>();
@@ -953,37 +956,80 @@ public sealed class DatabaseSeederWorker(
         }
 
         logger.LogInformation(
-            "Backfilling canonical values on {Count} unresolved reading(s)",
-            unresolvedCount
+            "Backfilling canonical values on {Count} unresolved reading(s) in batches of {BatchSize}",
+            unresolvedCount,
+            BackfillBatchSize
         );
 
-        var rowsUpdated = await context.Database.ExecuteSqlRawAsync(
-            """
-            UPDATE readings r
-            SET phenomenon_id   = p.phenomenon_id,
-                parameter_id    = p.id,
-                canonical_value = r.value * p.unit_factor + p.unit_offset
-            FROM sensors s, parameters p
-            WHERE r.sensor_id = s.id
-              AND p.source_id = s.source_id
-              AND p.code = r.parameter
-              AND r.phenomenon_id IS NULL
-            """,
-            stoppingToken
-        );
+        var lastId = Guid.Empty;
+        long totalScanned = 0;
+        long totalResolved = 0;
 
-        var stillUnresolved = unresolvedCount - rowsUpdated;
+        while (!stoppingToken.IsCancellationRequested)
+        {
+            var batchIds = await context
+                .Database.SqlQuery<Guid>(
+                    $@"
+                    SELECT id AS ""Value"" FROM readings
+                    WHERE phenomenon_id IS NULL AND id > {lastId}
+                    ORDER BY id
+                    LIMIT {BackfillBatchSize}
+                    "
+                )
+                .ToListAsync(stoppingToken);
+
+            if (batchIds.Count == 0)
+            {
+                break;
+            }
+
+            totalScanned += batchIds.Count;
+            lastId = batchIds[^1];
+
+            var rowsUpdated = await context.Database.ExecuteSqlInterpolatedAsync(
+                $@"
+                UPDATE readings r
+                SET phenomenon_id   = p.phenomenon_id,
+                    parameter_id    = p.id,
+                    canonical_value = r.value * p.unit_factor + p.unit_offset
+                FROM sensors s, parameters p
+                WHERE r.id = ANY({batchIds})
+                  AND r.sensor_id = s.id
+                  AND p.source_id = s.source_id
+                  AND p.code = r.parameter
+                  AND r.phenomenon_id IS NULL
+                ",
+                stoppingToken
+            );
+
+            totalResolved += rowsUpdated;
+
+            logger.LogInformation(
+                "Backfill batch resolved {Resolved}/{Scanned}; running total {TotalResolved}/{TotalScanned}",
+                rowsUpdated,
+                batchIds.Count,
+                totalResolved,
+                totalScanned
+            );
+
+            if (batchIds.Count < BackfillBatchSize)
+            {
+                break;
+            }
+        }
+
+        var stillUnresolved = totalScanned - totalResolved;
         if (stillUnresolved > 0)
         {
             logger.LogWarning(
                 "Backfill resolved {Resolved} reading(s); {Remaining} remain unresolved (no parameter mapping for their source/code)",
-                rowsUpdated,
+                totalResolved,
                 stillUnresolved
             );
         }
         else
         {
-            logger.LogInformation("Backfill resolved {Resolved} reading(s)", rowsUpdated);
+            logger.LogInformation("Backfill resolved {Resolved} reading(s)", totalResolved);
         }
     }
 
