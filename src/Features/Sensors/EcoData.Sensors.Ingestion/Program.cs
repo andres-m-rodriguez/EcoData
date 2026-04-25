@@ -8,6 +8,7 @@ using EcoData.Sensors.Ingestion.Seeders;
 using EcoData.Sensors.Ingestion.Services;
 using EcoData.Sensors.Ingestion.Workers;
 
+
 var builder = Host.CreateApplicationBuilder(args);
 
 builder.AddServiceDefaults();
@@ -23,9 +24,8 @@ builder.Services.AddHttpClient<IUsgsApiClient, UsgsApiClient>(client =>
     client.BaseAddress = new Uri("https://waterservices.usgs.gov/nwis/iv/");
 });
 
-// Phenomenon + USGS parameter mapping seeder runs before the worker so canonical resolution is ready on first ingest.
-// Backfill resolves canonical values on any readings ingested before the mappings existed. Both run once at startup.
-builder.Services.AddHostedService<PhenomenonSeeder>();
+// Backfill resolves canonical values on any readings ingested before parameter mappings existed (e.g. before
+// the seed job ran). Phenomena and USGS parameter mappings themselves are seeded by EcoData.Seeder at deploy time.
 builder.Services.AddHostedService<ReadingBackfillService>();
 builder.Services.AddHostedService<UsgsIngestionWorker>();
 

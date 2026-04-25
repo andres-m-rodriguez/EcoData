@@ -7,6 +7,7 @@ using EcoData.Locations.Database;
 using EcoData.Locations.Database.Models;
 using EcoData.Organization.Database;
 using EcoData.Sensors.Database;
+using EcoData.Sensors.Database.Models;
 using EcoData.Wildlife.Contracts;
 using EcoData.Wildlife.Database;
 using EcoData.Wildlife.Database.Models;
@@ -40,6 +41,8 @@ public sealed class DatabaseSeederWorker(
             await SeedLocationsAsync(services, stoppingToken);
             await SeedOrganizationRolesAsync(services, stoppingToken);
             await SeedWildlifeAsync(services, stoppingToken);
+            await SeedPhenomenaAsync(services, stoppingToken);
+            await SeedUsgsParameterMappingsAsync(services, stoppingToken);
 
             logger.LogInformation("All database migrations and seeding completed successfully.");
         }
@@ -808,6 +811,126 @@ public sealed class DatabaseSeederWorker(
         }
 
         logger.LogInformation("FWS links seeded: {Count}", seededCount);
+    }
+
+    private const string UsgsDataSourceName = "USGS Puerto Rico";
+
+    private async Task SeedPhenomenaAsync(IServiceProvider services, CancellationToken stoppingToken)
+    {
+        var context = services.GetRequiredService<SensorsDbContext>();
+
+        var existingCodes = await context.Phenomena.Select(p => p.Code).ToListAsync(stoppingToken);
+        var existingSet = existingCodes.ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+        var now = DateTimeOffset.UtcNow;
+        var toAdd = PhenomenonCatalog
+            .All.Where(p => !existingSet.Contains(p.Code))
+            .Select(p => new Phenomenon
+            {
+                Id = Guid.CreateVersion7(),
+                Code = p.Code,
+                Name = p.Name,
+                Description = p.Description,
+                CanonicalUnit = p.CanonicalUnit,
+                DefaultValueShape = p.DefaultValueShape,
+                Capabilities = p.Capabilities,
+                CreatedAt = now,
+            })
+            .ToList();
+
+        if (toAdd.Count == 0)
+        {
+            logger.LogInformation("All {Total} phenomena already seeded", PhenomenonCatalog.All.Count);
+            return;
+        }
+
+        context.Phenomena.AddRange(toAdd);
+        await context.SaveChangesAsync(stoppingToken);
+        logger.LogInformation("Seeded {Count} phenomena", toAdd.Count);
+    }
+
+    private async Task SeedUsgsParameterMappingsAsync(
+        IServiceProvider services,
+        CancellationToken stoppingToken
+    )
+    {
+        var organizationContext = services.GetRequiredService<OrganizationDbContext>();
+        var dataSourceId = await organizationContext
+            .DataSources.Where(ds => ds.Name == UsgsDataSourceName)
+            .Select(ds => (Guid?)ds.Id)
+            .FirstOrDefaultAsync(stoppingToken);
+
+        if (dataSourceId is null)
+        {
+            logger.LogWarning(
+                "USGS data source '{Name}' not found; skipping USGS parameter mapping seed. Mappings will be seeded on the next deploy after the data source is created.",
+                UsgsDataSourceName
+            );
+            return;
+        }
+
+        var context = services.GetRequiredService<SensorsDbContext>();
+
+        var phenomenaByCode = await context.Phenomena.ToDictionaryAsync(
+            p => p.Code,
+            p => p.Id,
+            StringComparer.OrdinalIgnoreCase,
+            stoppingToken
+        );
+
+        var existingCodes = await context
+            .Parameters.Where(p => p.SourceId == dataSourceId)
+            .Select(p => p.Code)
+            .ToListAsync(stoppingToken);
+        var existingSet = existingCodes.ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+        var now = DateTimeOffset.UtcNow;
+        var toAdd = new List<Parameter>();
+        foreach (var mapping in UsgsParameterMappings.All)
+        {
+            if (existingSet.Contains(mapping.Code))
+            {
+                continue;
+            }
+            if (!phenomenaByCode.TryGetValue(mapping.PhenomenonCode, out var phenomenonId))
+            {
+                logger.LogWarning(
+                    "USGS code {Code} maps to phenomenon '{PhenomenonCode}' which is not in the catalog; skipping",
+                    mapping.Code,
+                    mapping.PhenomenonCode
+                );
+                continue;
+            }
+
+            toAdd.Add(new Parameter
+            {
+                Id = Guid.CreateVersion7(),
+                SourceId = dataSourceId.Value,
+                Code = mapping.Code,
+                Name = mapping.Name,
+                DefaultUnit = mapping.SourceUnit,
+                SensorTypeId = null,
+                PhenomenonId = phenomenonId,
+                SourceUnit = mapping.SourceUnit,
+                UnitFactor = mapping.UnitFactor,
+                UnitOffset = mapping.UnitOffset,
+                ValueShape = mapping.ValueShape,
+                CreatedAt = now,
+            });
+        }
+
+        if (toAdd.Count == 0)
+        {
+            logger.LogInformation(
+                "All {Total} USGS parameter mappings already seeded",
+                UsgsParameterMappings.All.Count
+            );
+            return;
+        }
+
+        context.Parameters.AddRange(toAdd);
+        await context.SaveChangesAsync(stoppingToken);
+        logger.LogInformation("Seeded {Count} USGS parameter mappings", toAdd.Count);
     }
 
     private static readonly JsonSerializerOptions JsonOptions = new()
