@@ -78,6 +78,8 @@
                 _model.TaxId = organization.TaxId;
                 _model.PrimaryColor = organization.PrimaryColor;
                 _model.AccentColor = organization.AccentColor;
+                _model.ContactEmail = organization.ContactEmail;
+                _model.Type = organization.Type;
             },
             _ => _organization = null
         );
@@ -112,7 +114,9 @@
             LegalStatus: _model.LegalStatus,
             TaxId: _model.TaxId,
             PrimaryColor: _model.PrimaryColor,
-            AccentColor: _model.AccentColor
+            AccentColor: _model.AccentColor,
+            ContactEmail: _model.ContactEmail,
+            Type: _model.Type
         );
 
         var result = await OrganizationClient.UpdateAsync(Id, dto);

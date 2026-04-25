@@ -1,4 +1,5 @@
 @using System.ComponentModel.DataAnnotations
+@using EcoData.Organization.Contracts
 
 <MudStack Spacing="3">
     @if (!string.IsNullOrEmpty(ErrorMessage))
@@ -32,6 +33,18 @@
                   Counter="280"
                   HelperText="Short editorial line shown on the organization page"
                   Disabled="IsLoading" />
+
+    <MudSelect T="OrganizationType?"
+               @bind-Value="Model.Type"
+               Label="Organization Type"
+               Clearable="true"
+               HelperText="Used for filtering on the Discover page"
+               Disabled="IsLoading">
+        @foreach (var type in OrganizationTypeOptions)
+        {
+            <MudSelectItem T="OrganizationType?" Value="@type">@FormatType(type)</MudSelectItem>
+        }
+    </MudSelect>
 
     <MudDivider Class="my-2" />
     <MudText Typo="Typo.subtitle1">Branding</MudText>
@@ -98,6 +111,14 @@
                   Placeholder="https://example.com"
                   MaxLength="500"
                   HelperText="Organization's website"
+                  Disabled="IsLoading" />
+
+    <MudTextField @bind-Value="Model.ContactEmail"
+                  Label="Contact Email"
+                  Placeholder="hello@example.org"
+                  MaxLength="256"
+                  InputType="InputType.Email"
+                  HelperText="Public address for collaboration requests"
                   Disabled="IsLoading" />
 
     <MudTextField @bind-Value="Model.Location"
@@ -225,5 +246,32 @@
 
         [MaxLength(7)]
         public string? AccentColor { get; set; }
+
+        [MaxLength(256)]
+        [EmailAddress]
+        public string? ContactEmail { get; set; }
+
+        public OrganizationType? Type { get; set; }
     }
+
+    private static readonly OrganizationType?[] OrganizationTypeOptions =
+    [
+        OrganizationType.Ngo,
+        OrganizationType.University,
+        OrganizationType.Government,
+        OrganizationType.ResearchInstitute,
+        OrganizationType.CitizenScience,
+        OrganizationType.Private,
+    ];
+
+    private static string FormatType(OrganizationType? type) => type switch
+    {
+        OrganizationType.Ngo => "NGO",
+        OrganizationType.University => "University",
+        OrganizationType.Government => "Government Agency",
+        OrganizationType.ResearchInstitute => "Research Institute",
+        OrganizationType.CitizenScience => "Citizen Science Group",
+        OrganizationType.Private => "Private Company",
+        _ => string.Empty,
+    };
 }

@@ -12,6 +12,7 @@ public sealed record OrganizationDtoForList(
     string? Location,
     string? PrimaryColor,
     string? AccentColor,
+    OrganizationType? Type,
     DateTimeOffset CreatedAt
 );
 
@@ -30,6 +31,8 @@ public sealed record OrganizationDtoForDetail(
     string? TaxId,
     string? PrimaryColor,
     string? AccentColor,
+    string? ContactEmail,
+    OrganizationType? Type,
     DateTimeOffset CreatedAt,
     DateTimeOffset UpdatedAt
 );
@@ -49,7 +52,9 @@ public sealed record OrganizationDtoForCreate(
     string? LegalStatus = null,
     string? TaxId = null,
     string? PrimaryColor = null,
-    string? AccentColor = null
+    string? AccentColor = null,
+    string? ContactEmail = null,
+    OrganizationType? Type = null
 );
 
 public sealed record OrganizationDtoForUpdate(
@@ -65,7 +70,9 @@ public sealed record OrganizationDtoForUpdate(
     string? LegalStatus = null,
     string? TaxId = null,
     string? PrimaryColor = null,
-    string? AccentColor = null
+    string? AccentColor = null,
+    string? ContactEmail = null,
+    OrganizationType? Type = null
 );
 
 public sealed record OrganizationDtoForCreated(Guid Id, string Name, string Slug);
