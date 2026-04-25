@@ -8,6 +8,8 @@
         </MudAlert>
     }
 
+    <MudText Typo="Typo.subtitle1">Identity</MudText>
+
     <MudTextField @bind-Value="Model.Name"
                   Label="Name"
                   Required="true"
@@ -16,6 +18,23 @@
                   Counter="200"
                   Immediate="true"
                   Disabled="IsLoading" />
+
+    <MudTextField @bind-Value="Model.Slug"
+                  Label="Slug"
+                  Placeholder="my-organization"
+                  MaxLength="80"
+                  HelperText="URL-friendly identifier. Leave blank to derive from Name."
+                  Disabled="IsLoading" />
+
+    <MudTextField @bind-Value="Model.Tagline"
+                  Label="Tagline"
+                  MaxLength="280"
+                  Counter="280"
+                  HelperText="Short editorial line shown on the organization page"
+                  Disabled="IsLoading" />
+
+    <MudDivider Class="my-2" />
+    <MudText Typo="Typo.subtitle1">Branding</MudText>
 
     <MudTextField @bind-Value="Model.ProfilePictureUrl"
                   Label="Profile Picture URL"
@@ -49,12 +68,22 @@
         </MudStack>
     }
 
-    <MudTextField @bind-Value="Model.WebsiteUrl"
-                  Label="Website URL"
-                  Placeholder="https://example.com"
-                  MaxLength="500"
-                  HelperText="Organization's website (optional)"
+    <MudTextField @bind-Value="Model.PrimaryColor"
+                  Label="Primary Color"
+                  InputType="InputType.Color"
+                  Class="color-field"
+                  HelperText="Used for organization-themed UI accents"
                   Disabled="IsLoading" />
+
+    <MudTextField @bind-Value="Model.AccentColor"
+                  Label="Accent Color"
+                  InputType="InputType.Color"
+                  Class="color-field"
+                  HelperText="Highlights and call-to-action color"
+                  Disabled="IsLoading" />
+
+    <MudDivider Class="my-2" />
+    <MudText Typo="Typo.subtitle1">About</MudText>
 
     <MudTextField @bind-Value="Model.AboutUs"
                   Label="About Us"
@@ -63,6 +92,45 @@
                   Counter="2000"
                   HelperText="Description of the organization"
                   Disabled="IsLoading" />
+
+    <MudTextField @bind-Value="Model.WebsiteUrl"
+                  Label="Website URL"
+                  Placeholder="https://example.com"
+                  MaxLength="500"
+                  HelperText="Organization's website"
+                  Disabled="IsLoading" />
+
+    <MudTextField @bind-Value="Model.Location"
+                  Label="Location"
+                  Placeholder="El Yunque, PR"
+                  MaxLength="200"
+                  Disabled="IsLoading" />
+
+    <MudDivider Class="my-2" />
+    <MudText Typo="Typo.subtitle1">Legal</MudText>
+
+    <MudGrid Spacing="2">
+        <MudItem xs="12" sm="4">
+            <MudNumericField @bind-Value="Model.FoundedYear"
+                             Label="Founded Year"
+                             Min="1800"
+                             Max="2100"
+                             Disabled="IsLoading" />
+        </MudItem>
+        <MudItem xs="12" sm="4">
+            <MudTextField @bind-Value="Model.LegalStatus"
+                          Label="Legal Status"
+                          Placeholder="501(c)(3)"
+                          MaxLength="80"
+                          Disabled="IsLoading" />
+        </MudItem>
+        <MudItem xs="12" sm="4">
+            <MudTextField @bind-Value="Model.TaxId"
+                          Label="Tax ID"
+                          MaxLength="40"
+                          Disabled="IsLoading" />
+        </MudItem>
+    </MudGrid>
 
     <MudStack Row="true" Justify="Justify.FlexEnd" Spacing="2" Class="mt-4">
         <MudButton Variant="Variant.Text"
@@ -122,6 +190,12 @@
         [MaxLength(200)]
         public string Name { get; set; } = string.Empty;
 
+        [MaxLength(80)]
+        public string? Slug { get; set; }
+
+        [MaxLength(280)]
+        public string? Tagline { get; set; }
+
         [MaxLength(500)]
         public string? ProfilePictureUrl { get; set; }
 
@@ -133,5 +207,23 @@
 
         [MaxLength(2000)]
         public string? AboutUs { get; set; }
+
+        [MaxLength(200)]
+        public string? Location { get; set; }
+
+        [Range(1800, 2100)]
+        public int? FoundedYear { get; set; }
+
+        [MaxLength(80)]
+        public string? LegalStatus { get; set; }
+
+        [MaxLength(40)]
+        public string? TaxId { get; set; }
+
+        [MaxLength(7)]
+        public string? PrimaryColor { get; set; }
+
+        [MaxLength(7)]
+        public string? AccentColor { get; set; }
     }
 }

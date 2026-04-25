@@ -38,11 +38,19 @@
         }
 
         var dto = new OrganizationDtoForCreate(
-            _model.Name,
-            _model.ProfilePictureUrl,
-            _model.CardPictureUrl,
-            _model.AboutUs,
-            _model.WebsiteUrl
+            Name: _model.Name,
+            Slug: _model.Slug,
+            Tagline: _model.Tagline,
+            ProfilePictureUrl: _model.ProfilePictureUrl,
+            CardPictureUrl: _model.CardPictureUrl,
+            AboutUs: _model.AboutUs,
+            WebsiteUrl: _model.WebsiteUrl,
+            Location: _model.Location,
+            FoundedYear: _model.FoundedYear,
+            LegalStatus: _model.LegalStatus,
+            TaxId: _model.TaxId,
+            PrimaryColor: _model.PrimaryColor,
+            AccentColor: _model.AccentColor
         );
 
         var result = await OrganizationClient.CreateAsync(dto);
