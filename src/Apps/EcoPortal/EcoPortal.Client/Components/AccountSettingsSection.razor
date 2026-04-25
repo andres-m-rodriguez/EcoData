@@ -7,167 +7,189 @@
 @inject AuthStateService AuthState
 @inject ISnackbar Snackbar
 
-<MudCard Elevation="0" Outlined="true">
-    <MudCardHeader>
-        <CardHeaderContent>
-            <MudText Typo="Typo.h6">Account Settings</MudText>
-        </CardHeaderContent>
-    </MudCardHeader>
-    <MudCardContent>
-        <MudStack Spacing="4">
-            @* Display Name *@
-            <div>
-                <MudText Typo="Typo.caption" Color="Color.Secondary">Display Name</MudText>
-                @if (_isEditingDisplayName)
-                {
-                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
-                        <MudTextField @bind-Value="_displayName"
-                                      Variant="Variant.Outlined"
-                                      Margin="Margin.Dense"
-                                      Immediate="true"
-                                      Disabled="UpdateDisplayNameCommand.IsLoading" />
-                        <MudIconButton Icon="@Icons.Material.Filled.Check"
-                                       Color="Color.Success"
-                                       Size="Size.Small"
-                                       OnClick="SaveDisplayNameAsync"
-                                       Disabled="UpdateDisplayNameCommand.IsLoading" />
-                        <MudIconButton Icon="@Icons.Material.Filled.Close"
-                                       Color="Color.Default"
-                                       Size="Size.Small"
-                                       OnClick="CancelEditDisplayName"
-                                       Disabled="UpdateDisplayNameCommand.IsLoading" />
-                    </MudStack>
-                }
-                else
-                {
-                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
-                        <MudText>@AuthState.CurrentUser?.DisplayName</MudText>
-                        <MudIconButton Icon="@Icons.Material.Filled.Edit"
-                                       Color="Color.Default"
-                                       Size="Size.Small"
-                                       OnClick="StartEditDisplayName" />
-                    </MudStack>
-                }
-            </div>
+<MudPaper Elevation="0" Class="account-settings-card">
+    <div class="settings-header">
+        <MudText Typo="Typo.h6" Class="settings-title">Account Settings</MudText>
+    </div>
 
-            <MudDivider />
-
-            @* Email *@
-            <div>
-                <MudText Typo="Typo.caption" Color="Color.Secondary">Email</MudText>
-                @if (_isEditingEmail)
+    <div class="settings-grid">
+        @* Display Name *@
+        <div class="settings-cell">
+            <div class="settings-cell-header">
+                <span class="settings-label">Display Name</span>
+                @if (!_isEditingDisplayName)
                 {
-                    <MudStack Spacing="2">
-                        <MudTextField @bind-Value="_newEmail"
-                                      Label="New Email"
-                                      Variant="Variant.Outlined"
-                                      Margin="Margin.Dense"
-                                      InputType="InputType.Email"
-                                      Disabled="UpdateEmailCommand.IsLoading" />
-                        <MudTextField @bind-Value="_emailPassword"
-                                      Label="Current Password"
-                                      Variant="Variant.Outlined"
-                                      Margin="Margin.Dense"
-                                      InputType="InputType.Password"
-                                      Disabled="UpdateEmailCommand.IsLoading" />
-                        <MudStack Row="true" Spacing="2">
-                            <MudButton Variant="Variant.Filled"
-                                       Color="Color.Primary"
-                                       Size="Size.Small"
-                                       OnClick="SaveEmailAsync"
-                                       Disabled="UpdateEmailCommand.IsLoading">
-                                @if (UpdateEmailCommand.IsLoading)
-                                {
-                                    <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
-                                }
-                                Save
-                            </MudButton>
-                            <MudButton Variant="Variant.Outlined"
-                                       Color="Color.Default"
-                                       Size="Size.Small"
-                                       OnClick="CancelEditEmail"
-                                       Disabled="UpdateEmailCommand.IsLoading">
-                                Cancel
-                            </MudButton>
-                        </MudStack>
-                    </MudStack>
-                }
-                else
-                {
-                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
-                        <MudText>@AuthState.CurrentUser?.Email</MudText>
-                        <MudIconButton Icon="@Icons.Material.Filled.Edit"
-                                       Color="Color.Default"
-                                       Size="Size.Small"
-                                       OnClick="StartEditEmail" />
-                    </MudStack>
-                }
-            </div>
-
-            <MudDivider />
-
-            @* Password *@
-            <div>
-                <MudText Typo="Typo.caption" Color="Color.Secondary">Password</MudText>
-                @if (_isChangingPassword)
-                {
-                    <MudStack Spacing="2">
-                        <MudTextField @bind-Value="_currentPassword"
-                                      Label="Current Password"
-                                      Variant="Variant.Outlined"
-                                      Margin="Margin.Dense"
-                                      InputType="InputType.Password"
-                                      Disabled="ChangePasswordCommand.IsLoading" />
-                        <MudTextField @bind-Value="_newPassword"
-                                      Label="New Password"
-                                      Variant="Variant.Outlined"
-                                      Margin="Margin.Dense"
-                                      InputType="InputType.Password"
-                                      Disabled="ChangePasswordCommand.IsLoading" />
-                        <MudTextField @bind-Value="_confirmPassword"
-                                      Label="Confirm New Password"
-                                      Variant="Variant.Outlined"
-                                      Margin="Margin.Dense"
-                                      InputType="InputType.Password"
-                                      Disabled="ChangePasswordCommand.IsLoading" />
-                        <MudStack Row="true" Spacing="2">
-                            <MudButton Variant="Variant.Filled"
-                                       Color="Color.Primary"
-                                       Size="Size.Small"
-                                       OnClick="SavePasswordAsync"
-                                       Disabled="ChangePasswordCommand.IsLoading">
-                                @if (ChangePasswordCommand.IsLoading)
-                                {
-                                    <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
-                                }
-                                Change Password
-                            </MudButton>
-                            <MudButton Variant="Variant.Outlined"
-                                       Color="Color.Default"
-                                       Size="Size.Small"
-                                       OnClick="CancelChangePassword"
-                                       Disabled="ChangePasswordCommand.IsLoading">
-                                Cancel
-                            </MudButton>
-                        </MudStack>
-                    </MudStack>
-                }
-                else
-                {
-                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
-                        <MudText>********</MudText>
-                        <MudButton Variant="Variant.Text"
-                                   Color="Color.Primary"
+                    <MudIconButton Icon="@Icons.Material.Outlined.Edit"
                                    Size="Size.Small"
-                                   OnClick="StartChangePassword">
-                            Change
+                                   Class="settings-edit-btn"
+                                   OnClick="StartEditDisplayName" />
+                }
+            </div>
+            @if (_isEditingDisplayName)
+            {
+                <MudStack Spacing="2" Class="mt-1">
+                    <MudTextField @bind-Value="_displayName"
+                                  Variant="Variant.Outlined"
+                                  Margin="Margin.Dense"
+                                  Immediate="true"
+                                  Disabled="UpdateDisplayNameCommand.IsLoading" />
+                    <MudStack Row="true" Spacing="2">
+                        <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small"
+                                   OnClick="SaveDisplayNameAsync"
+                                   Disabled="UpdateDisplayNameCommand.IsLoading">
+                            @if (UpdateDisplayNameCommand.IsLoading)
+                            {
+                                <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
+                            }
+                            Save
+                        </MudButton>
+                        <MudButton Variant="Variant.Text" Size="Size.Small"
+                                   OnClick="CancelEditDisplayName"
+                                   Disabled="UpdateDisplayNameCommand.IsLoading">
+                            Cancel
                         </MudButton>
                     </MudStack>
+                </MudStack>
+            }
+            else
+            {
+                <div class="settings-value">@AuthState.CurrentUser?.DisplayName</div>
+                <div class="settings-hint">Shown on shared dashboards</div>
+            }
+        </div>
+
+        @* Email *@
+        <div class="settings-cell">
+            <div class="settings-cell-header">
+                <span class="settings-label">Email</span>
+                @if (!_isEditingEmail)
+                {
+                    <MudIconButton Icon="@Icons.Material.Outlined.Edit"
+                                   Size="Size.Small"
+                                   Class="settings-edit-btn"
+                                   OnClick="StartEditEmail" />
                 }
             </div>
-        </MudStack>
-    </MudCardContent>
-</MudCard>
+            @if (_isEditingEmail)
+            {
+                <MudStack Spacing="2" Class="mt-1">
+                    <MudTextField @bind-Value="_newEmail"
+                                  Label="New email"
+                                  Variant="Variant.Outlined"
+                                  Margin="Margin.Dense"
+                                  InputType="InputType.Email"
+                                  Disabled="UpdateEmailCommand.IsLoading" />
+                    <MudTextField @bind-Value="_emailPassword"
+                                  Label="Current password"
+                                  Variant="Variant.Outlined"
+                                  Margin="Margin.Dense"
+                                  InputType="InputType.Password"
+                                  Disabled="UpdateEmailCommand.IsLoading" />
+                    <MudStack Row="true" Spacing="2">
+                        <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small"
+                                   OnClick="SaveEmailAsync"
+                                   Disabled="UpdateEmailCommand.IsLoading">
+                            @if (UpdateEmailCommand.IsLoading)
+                            {
+                                <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
+                            }
+                            Save
+                        </MudButton>
+                        <MudButton Variant="Variant.Text" Size="Size.Small"
+                                   OnClick="CancelEditEmail"
+                                   Disabled="UpdateEmailCommand.IsLoading">
+                            Cancel
+                        </MudButton>
+                    </MudStack>
+                </MudStack>
+            }
+            else
+            {
+                <div class="settings-value">@AuthState.CurrentUser?.Email</div>
+                <div class="settings-hint settings-hint-verified">
+                    <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Size="Size.Small" Class="mr-1" />
+                    Verified
+                </div>
+            }
+        </div>
+
+        @* Password *@
+        <div class="settings-cell">
+            <div class="settings-cell-header">
+                <span class="settings-label">Password</span>
+                @if (!_isChangingPassword)
+                {
+                    <MudButton Variant="Variant.Text"
+                               Color="Color.Primary"
+                               Size="Size.Small"
+                               Class="settings-change-btn"
+                               OnClick="StartChangePassword">
+                        Change
+                    </MudButton>
+                }
+            </div>
+            @if (_isChangingPassword)
+            {
+                <MudStack Spacing="2" Class="mt-1">
+                    <MudTextField @bind-Value="_currentPassword"
+                                  Label="Current password"
+                                  Variant="Variant.Outlined"
+                                  Margin="Margin.Dense"
+                                  InputType="InputType.Password"
+                                  Disabled="ChangePasswordCommand.IsLoading" />
+                    <MudTextField @bind-Value="_newPassword"
+                                  Label="New password"
+                                  Variant="Variant.Outlined"
+                                  Margin="Margin.Dense"
+                                  InputType="InputType.Password"
+                                  Disabled="ChangePasswordCommand.IsLoading" />
+                    <MudTextField @bind-Value="_confirmPassword"
+                                  Label="Confirm new password"
+                                  Variant="Variant.Outlined"
+                                  Margin="Margin.Dense"
+                                  InputType="InputType.Password"
+                                  Disabled="ChangePasswordCommand.IsLoading" />
+                    <MudStack Row="true" Spacing="2">
+                        <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small"
+                                   OnClick="SavePasswordAsync"
+                                   Disabled="ChangePasswordCommand.IsLoading">
+                            @if (ChangePasswordCommand.IsLoading)
+                            {
+                                <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
+                            }
+                            Change password
+                        </MudButton>
+                        <MudButton Variant="Variant.Text" Size="Size.Small"
+                                   OnClick="CancelChangePassword"
+                                   Disabled="ChangePasswordCommand.IsLoading">
+                            Cancel
+                        </MudButton>
+                    </MudStack>
+                </MudStack>
+            }
+            else
+            {
+                <div class="settings-value password-dots">&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;</div>
+                <div class="settings-hint">Use at least 8 characters</div>
+            }
+        </div>
+
+        @* Two-Factor Auth (Coming soon) *@
+        <div class="settings-cell settings-cell-disabled">
+            <div class="settings-cell-header">
+                <span class="settings-label">Two-Factor Auth</span>
+                <span class="coming-soon-pill">Coming soon</span>
+            </div>
+            <div class="settings-value settings-value-muted">
+                <MudIcon Icon="@Icons.Material.Outlined.Shield" Size="Size.Small" Class="mr-1" />
+                Not yet available
+            </div>
+            <div class="settings-hint">
+                An extra layer of security for your account
+            </div>
+        </div>
+    </div>
+</MudPaper>
 
 @code {
     private bool _isEditingDisplayName;

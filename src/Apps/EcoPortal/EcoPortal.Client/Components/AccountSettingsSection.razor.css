@@ -1,0 +1,135 @@
+.account-settings-card {
+    background: var(--mud-palette-surface) !important;
+    border: 1px solid var(--mud-palette-lines-default) !important;
+    border-radius: 12px !important;
+    overflow: hidden;
+}
+
+.settings-header {
+    padding: 1.25rem 1.5rem 1rem;
+    border-bottom: 1px solid var(--mud-palette-lines-default);
+}
+
+::deep .settings-title {
+    font-family: 'Newsreader', serif;
+    font-weight: 600;
+    color: var(--mud-palette-primary);
+}
+
+.settings-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0;
+}
+
+.settings-cell {
+    padding: 1.25rem 1.5rem;
+    border-right: 1px solid var(--mud-palette-lines-default);
+    border-bottom: 1px solid var(--mud-palette-lines-default);
+    min-height: 120px;
+}
+
+.settings-cell:nth-child(2n) {
+    border-right: none;
+}
+
+.settings-cell:nth-last-child(-n + 2) {
+    border-bottom: none;
+}
+
+.settings-cell-disabled {
+    background: var(--mud-palette-background-gray);
+}
+
+.settings-cell-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    margin-bottom: 0.4rem;
+    min-height: 28px;
+}
+
+.settings-label {
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    color: var(--mud-palette-secondary);
+}
+
+::deep .settings-edit-btn {
+    color: var(--mud-palette-text-secondary) !important;
+    margin: -6px;
+}
+
+::deep .settings-change-btn {
+    font-weight: 600 !important;
+    letter-spacing: 0.1em;
+    text-transform: uppercase !important;
+    font-size: 0.7rem !important;
+    margin: -4px;
+}
+
+.settings-value {
+    font-size: 0.95rem;
+    color: var(--mud-palette-text-primary);
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    margin-bottom: 0.3rem;
+    word-break: break-word;
+}
+
+.settings-value-muted {
+    color: var(--mud-palette-text-secondary);
+    font-weight: 400;
+}
+
+.password-dots {
+    letter-spacing: 0.2em;
+}
+
+.settings-hint {
+    font-size: 0.75rem;
+    color: var(--mud-palette-text-secondary);
+    display: flex;
+    align-items: center;
+}
+
+.settings-hint-verified {
+    color: #1e8c3e;
+    font-weight: 500;
+}
+
+.coming-soon-pill {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.15rem 0.55rem;
+    border-radius: 999px;
+    background: var(--mud-palette-background);
+    border: 1px solid var(--mud-palette-lines-default);
+    font-size: 0.65rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--mud-palette-text-secondary);
+}
+
+@media (max-width: 720px) {
+    .settings-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .settings-cell {
+        border-right: none;
+    }
+
+    .settings-cell:nth-last-child(-n + 2) {
+        border-bottom: 1px solid var(--mud-palette-lines-default);
+    }
+
+    .settings-cell:last-child {
+        border-bottom: none;
+    }
+}
