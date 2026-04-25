@@ -22,6 +22,11 @@ public interface IOrganizationHttpClient
         CancellationToken cancellationToken = default
     );
 
+    Task<OneOf<OrganizationDtoForDetail, ProblemDetail>> GetBySlugAsync(
+        string slug,
+        CancellationToken cancellationToken = default
+    );
+
     Task<OneOf<OrganizationDtoForCreated, ProblemDetail>> CreateAsync(
         OrganizationDtoForCreate dto,
         CancellationToken cancellationToken = default

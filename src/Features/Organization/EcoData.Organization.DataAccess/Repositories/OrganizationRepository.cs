@@ -3,6 +3,7 @@ using EcoData.Organization.Contracts;
 using EcoData.Organization.Contracts.Dtos;
 using EcoData.Organization.Contracts.Parameters;
 using EcoData.Organization.DataAccess.Interfaces;
+using EcoData.Organization.DataAccess.Slugs;
 using EcoData.Organization.Database;
 using EcoData.Organization.Database.Models;
 using Microsoft.EntityFrameworkCore;
@@ -39,6 +40,7 @@ public sealed class OrganizationRepository(IDbContextFactory<OrganizationDbConte
                 .Select(o => new OrganizationDtoForList(
                     o.Id,
                     o.Name,
+                    o.Slug,
                     o.ProfilePictureUrl,
                     o.CardPictureUrl,
                     o.AboutUs,
@@ -65,6 +67,30 @@ public sealed class OrganizationRepository(IDbContextFactory<OrganizationDbConte
             .Select(o => new OrganizationDtoForDetail(
                 o.Id,
                 o.Name,
+                o.Slug,
+                o.ProfilePictureUrl,
+                o.CardPictureUrl,
+                o.AboutUs,
+                o.WebsiteUrl,
+                o.CreatedAt,
+                o.UpdatedAt
+            ))
+            .FirstOrDefaultAsync(cancellationToken);
+    }
+
+    public async Task<OrganizationDtoForDetail?> GetBySlugAsync(
+        string slug,
+        CancellationToken cancellationToken = default
+    )
+    {
+        await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
+
+        return await context
+            .Organizations.Where(o => o.Slug == slug)
+            .Select(o => new OrganizationDtoForDetail(
+                o.Id,
+                o.Name,
+                o.Slug,
                 o.ProfilePictureUrl,
                 o.CardPictureUrl,
                 o.AboutUs,
@@ -84,7 +110,7 @@ public sealed class OrganizationRepository(IDbContextFactory<OrganizationDbConte
 
         return await context
             .Organizations.Where(o => o.Name == name)
-            .Select(o => new OrganizationDtoForCreated(o.Id, o.Name))
+            .Select(o => new OrganizationDtoForCreated(o.Id, o.Name, o.Slug))
             .FirstOrDefaultAsync(cancellationToken);
     }
 
@@ -102,11 +128,19 @@ public sealed class OrganizationRepository(IDbContextFactory<OrganizationDbConte
     {
         await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
 
+        var slug = await ResolveUniqueSlugAsync(
+            context,
+            string.IsNullOrWhiteSpace(dto.Slug) ? SlugGenerator.FromName(dto.Name) : SlugGenerator.FromName(dto.Slug),
+            excludeId: null,
+            cancellationToken
+        );
+
         var now = DateTimeOffset.UtcNow;
         var entity = new Database.Models.Organization
         {
             Id = Guid.CreateVersion7(),
             Name = dto.Name,
+            Slug = slug,
             ProfilePictureUrl = dto.ProfilePictureUrl,
             CardPictureUrl = dto.CardPictureUrl,
             AboutUs = dto.AboutUs,
@@ -153,7 +187,7 @@ public sealed class OrganizationRepository(IDbContextFactory<OrganizationDbConte
 
         await context.SaveChangesAsync(cancellationToken);
 
-        return new OrganizationDtoForCreated(entity.Id, entity.Name);
+        return new OrganizationDtoForCreated(entity.Id, entity.Name, entity.Slug);
     }
 
     public async Task<OrganizationDtoForDetail?> UpdateAsync(
@@ -173,6 +207,15 @@ public sealed class OrganizationRepository(IDbContextFactory<OrganizationDbConte
             return null;
         }
 
+        if (!string.IsNullOrWhiteSpace(dto.Slug))
+        {
+            var requested = SlugGenerator.FromName(dto.Slug);
+            if (!string.Equals(requested, entity.Slug, StringComparison.Ordinal))
+            {
+                entity.Slug = await ResolveUniqueSlugAsync(context, requested, entity.Id, cancellationToken);
+            }
+        }
+
         entity.Name = dto.Name;
         entity.ProfilePictureUrl = dto.ProfilePictureUrl;
         entity.CardPictureUrl = dto.CardPictureUrl;
@@ -185,6 +228,7 @@ public sealed class OrganizationRepository(IDbContextFactory<OrganizationDbConte
         return new OrganizationDtoForDetail(
             entity.Id,
             entity.Name,
+            entity.Slug,
             entity.ProfilePictureUrl,
             entity.CardPictureUrl,
             entity.AboutUs,
@@ -226,6 +270,7 @@ public sealed class OrganizationRepository(IDbContextFactory<OrganizationDbConte
             .Select(m => new MyOrganizationDto(
                 m.Organization!.Id,
                 m.Organization.Name,
+                m.Organization.Slug,
                 m.Organization.ProfilePictureUrl,
                 m.Organization.WebsiteUrl,
                 m.Role!.Name
@@ -235,5 +280,36 @@ public sealed class OrganizationRepository(IDbContextFactory<OrganizationDbConte
         {
             yield return org;
         }
+    }
+
+    // Generates a unique slug by appending -2, -3, ... until no other organization
+    // owns the candidate. `excludeId` is set when updating so an org doesn't conflict
+    // with its own current slug.
+    private static async Task<string> ResolveUniqueSlugAsync(
+        OrganizationDbContext context,
+        string baseSlug,
+        Guid? excludeId,
+        CancellationToken cancellationToken
+    )
+    {
+        if (string.IsNullOrEmpty(baseSlug))
+        {
+            throw new ArgumentException("Slug cannot be empty after normalization", nameof(baseSlug));
+        }
+
+        var candidate = baseSlug;
+        var attempt = 2;
+
+        while (
+            await context.Organizations.AnyAsync(
+                o => o.Slug == candidate && (excludeId == null || o.Id != excludeId),
+                cancellationToken
+            )
+        )
+        {
+            candidate = $"{baseSlug}-{attempt++}";
+        }
+
+        return candidate;
     }
 }

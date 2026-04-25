@@ -69,6 +69,29 @@ public static class OrganizationEndpoints
             .WithName("GetOrganizationById");
 
         group
+            .MapGet(
+                "/by-slug/{slug}",
+                async Task<Results<Ok<OrganizationDtoForDetail>, ProblemHttpResult>> (
+                    string slug,
+                    IOrganizationRepository repository,
+                    CancellationToken ct
+                ) =>
+                {
+                    var organization = await repository.GetBySlugAsync(slug, ct);
+                    if (organization is null)
+                    {
+                        return TypedResults.Problem(
+                            detail: "Organization not found.",
+                            statusCode: StatusCodes.Status404NotFound
+                        );
+                    }
+                    return TypedResults.Ok(organization);
+                }
+            )
+            .WithName("GetOrganizationBySlug")
+            .AllowAnonymous();
+
+        group
             .MapPost(
                 "/",
                 async Task<Results<Created<OrganizationDtoForCreated>, ProblemHttpResult>> (

@@ -7,6 +7,7 @@ public sealed class Organization
 {
     public required Guid Id { get; set; }
     public required string Name { get; set; }
+    public required string Slug { get; set; }
     public required string? ProfilePictureUrl { get; set; }
     public required string? CardPictureUrl { get; set; }
     public required string? AboutUs { get; set; }
@@ -24,6 +25,7 @@ public sealed class Organization
             builder.ToTable("organizations");
             builder.HasKey(static e => e.Id);
             builder.Property(static e => e.Name).HasMaxLength(200).IsRequired();
+            builder.Property(static e => e.Slug).HasMaxLength(80).IsRequired();
             builder.Property(static e => e.ProfilePictureUrl).HasMaxLength(500);
             builder.Property(static e => e.CardPictureUrl).HasMaxLength(500);
             builder.Property(static e => e.AboutUs).HasMaxLength(2000);
@@ -32,6 +34,7 @@ public sealed class Organization
             builder.Property(static e => e.UpdatedAt).IsRequired();
 
             builder.HasIndex(static e => e.Name).IsUnique();
+            builder.HasIndex(static e => e.Slug).IsUnique();
         }
     }
 }
