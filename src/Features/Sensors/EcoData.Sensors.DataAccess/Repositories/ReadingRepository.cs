@@ -166,6 +166,9 @@ public sealed class ReadingRepository(IDbContextFactory<SensorsDbContext> contex
             Unit = dto.Unit,
             RecordedAt = dto.RecordedAt.ToUniversalTime(),
             IngestedAt = now,
+            PhenomenonId = dto.PhenomenonId,
+            ParameterId = dto.ParameterId,
+            CanonicalValue = dto.CanonicalValue,
         });
 
         context.Readings.AddRange(entities);

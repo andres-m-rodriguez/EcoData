@@ -36,11 +36,18 @@ public sealed class SensorTypeRepository(IDbContextFactory<SensorsDbContext> con
                 st.CreatedAt,
                 st.Parameters.Select(p => new ParameterDtoForList(
                     p.Id,
+                    p.SourceId,
                     p.Code,
                     p.Name,
                     p.DefaultUnit,
                     p.SensorTypeId,
-                    st.Name
+                    st.Name,
+                    p.PhenomenonId,
+                    p.Phenomenon!.Code,
+                    p.SourceUnit,
+                    p.UnitFactor,
+                    p.UnitOffset,
+                    p.ValueShape.ToString()
                 )).ToList()
             ))
             .FirstOrDefaultAsync(cancellationToken);
@@ -59,11 +66,18 @@ public sealed class SensorTypeRepository(IDbContextFactory<SensorsDbContext> con
                 st.CreatedAt,
                 st.Parameters.Select(p => new ParameterDtoForList(
                     p.Id,
+                    p.SourceId,
                     p.Code,
                     p.Name,
                     p.DefaultUnit,
                     p.SensorTypeId,
-                    st.Name
+                    st.Name,
+                    p.PhenomenonId,
+                    p.Phenomenon!.Code,
+                    p.SourceUnit,
+                    p.UnitFactor,
+                    p.UnitOffset,
+                    p.ValueShape.ToString()
                 )).ToList()
             ))
             .FirstOrDefaultAsync(cancellationToken);
@@ -80,11 +94,18 @@ public sealed class ParameterRepository(IDbContextFactory<SensorsDbContext> cont
             .OrderBy(p => p.Name)
             .Select(p => new ParameterDtoForList(
                 p.Id,
+                p.SourceId,
                 p.Code,
                 p.Name,
                 p.DefaultUnit,
                 p.SensorTypeId,
-                p.SensorType!.Name
+                p.SensorType != null ? p.SensorType.Name : null,
+                p.PhenomenonId,
+                p.Phenomenon!.Code,
+                p.SourceUnit,
+                p.UnitFactor,
+                p.UnitOffset,
+                p.ValueShape.ToString()
             ))
             .ToListAsync(cancellationToken);
     }
@@ -99,11 +120,18 @@ public sealed class ParameterRepository(IDbContextFactory<SensorsDbContext> cont
             .OrderBy(p => p.Name)
             .Select(p => new ParameterDtoForList(
                 p.Id,
+                p.SourceId,
                 p.Code,
                 p.Name,
                 p.DefaultUnit,
                 p.SensorTypeId,
-                p.SensorType!.Name
+                p.SensorType != null ? p.SensorType.Name : null,
+                p.PhenomenonId,
+                p.Phenomenon!.Code,
+                p.SourceUnit,
+                p.UnitFactor,
+                p.UnitOffset,
+                p.ValueShape.ToString()
             ))
             .ToListAsync(cancellationToken);
     }
@@ -115,11 +143,18 @@ public sealed class ParameterRepository(IDbContextFactory<SensorsDbContext> cont
             .Where(p => p.Id == id)
             .Select(p => new ParameterDtoForDetail(
                 p.Id,
+                p.SourceId,
                 p.Code,
                 p.Name,
                 p.DefaultUnit,
                 p.SensorTypeId,
-                p.SensorType!.Name,
+                p.SensorType != null ? p.SensorType.Name : null,
+                p.PhenomenonId,
+                p.Phenomenon!.Code,
+                p.SourceUnit,
+                p.UnitFactor,
+                p.UnitOffset,
+                p.ValueShape.ToString(),
                 p.CreatedAt
             ))
             .FirstOrDefaultAsync(cancellationToken);
@@ -132,11 +167,18 @@ public sealed class ParameterRepository(IDbContextFactory<SensorsDbContext> cont
             .Where(p => p.Code == code)
             .Select(p => new ParameterDtoForDetail(
                 p.Id,
+                p.SourceId,
                 p.Code,
                 p.Name,
                 p.DefaultUnit,
                 p.SensorTypeId,
-                p.SensorType!.Name,
+                p.SensorType != null ? p.SensorType.Name : null,
+                p.PhenomenonId,
+                p.Phenomenon!.Code,
+                p.SourceUnit,
+                p.UnitFactor,
+                p.UnitOffset,
+                p.ValueShape.ToString(),
                 p.CreatedAt
             ))
             .FirstOrDefaultAsync(cancellationToken);

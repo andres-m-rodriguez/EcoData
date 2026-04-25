@@ -68,6 +68,38 @@ public static class ReferenceDataEndpoints
             )
             .WithName("GetParameterById");
 
+        var phenomenaGroup = app.MapGroup("/sensors/phenomena").WithTags("Phenomena");
+
+        phenomenaGroup
+            .MapGet(
+                "/",
+                async (string? capability, IPhenomenonRepository repository, CancellationToken ct) =>
+                {
+                    var phenomena = string.IsNullOrWhiteSpace(capability)
+                        ? await repository.GetAllAsync(ct)
+                        : await repository.GetByCapabilityAsync(capability, ct);
+                    return TypedResults.Ok(phenomena);
+                }
+            )
+            .WithName("GetPhenomena");
+
+        phenomenaGroup
+            .MapGet(
+                "/{id:guid}",
+                async Task<Results<Ok<PhenomenonDtoForDetail>, NotFound>> (
+                    Guid id,
+                    IPhenomenonRepository repository,
+                    CancellationToken ct
+                ) =>
+                {
+                    var phenomenon = await repository.GetByIdAsync(id, ct);
+                    return phenomenon is null
+                        ? TypedResults.NotFound()
+                        : TypedResults.Ok(phenomenon);
+                }
+            )
+            .WithName("GetPhenomenonById");
+
         return app;
     }
 }

@@ -3,6 +3,7 @@ using System;
 using EcoData.Sensors.Database;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using NetTopologySuite.Geometries;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
@@ -12,9 +13,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace EcoData.Sensors.Database.Migrations
 {
     [DbContext(typeof(SensorsDbContext))]
-    partial class SensorsDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260425165019_AddPhenomenonModel")]
+    partial class AddPhenomenonModel
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

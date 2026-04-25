@@ -27,5 +27,8 @@ public sealed record ReadingDtoForCreate(
     string? Description,
     double Value,
     string Unit,
-    DateTimeOffset RecordedAt
+    DateTimeOffset RecordedAt,
+    Guid? PhenomenonId = null,
+    Guid? ParameterId = null,
+    double? CanonicalValue = null
 );
