@@ -19,6 +19,8 @@ public sealed class Organization
     public required string? TaxId { get; set; }
     public required string? PrimaryColor { get; set; }
     public required string? AccentColor { get; set; }
+    public required string? ContactEmail { get; set; }
+    public required OrganizationType? Type { get; set; }
     public required DateTimeOffset CreatedAt { get; set; }
     public required DateTimeOffset UpdatedAt { get; set; }
 
@@ -45,6 +47,8 @@ public sealed class Organization
             // injects them as CSS variables, so we keep the leading "#" in the value.
             builder.Property(static e => e.PrimaryColor).HasMaxLength(7);
             builder.Property(static e => e.AccentColor).HasMaxLength(7);
+            builder.Property(static e => e.ContactEmail).HasMaxLength(256);
+            builder.Property(static e => e.Type).HasConversion<string>().HasMaxLength(40);
             builder.Property(static e => e.CreatedAt).IsRequired();
             builder.Property(static e => e.UpdatedAt).IsRequired();
 

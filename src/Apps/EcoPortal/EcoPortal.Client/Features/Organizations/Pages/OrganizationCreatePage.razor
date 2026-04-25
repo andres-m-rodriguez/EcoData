@@ -50,7 +50,9 @@
             LegalStatus: _model.LegalStatus,
             TaxId: _model.TaxId,
             PrimaryColor: _model.PrimaryColor,
-            AccentColor: _model.AccentColor
+            AccentColor: _model.AccentColor,
+            ContactEmail: _model.ContactEmail,
+            Type: _model.Type
         );
 
         var result = await OrganizationClient.CreateAsync(dto);

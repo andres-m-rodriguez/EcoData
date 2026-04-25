@@ -50,6 +50,7 @@ public sealed class OrganizationRepository(IDbContextFactory<OrganizationDbConte
                     o.Location,
                     o.PrimaryColor,
                     o.AccentColor,
+                    o.Type.HasValue ? (Contracts.OrganizationType)o.Type.Value : null,
                     o.CreatedAt
                 ))
                 .AsAsyncEnumerable()
@@ -84,6 +85,8 @@ public sealed class OrganizationRepository(IDbContextFactory<OrganizationDbConte
                 o.TaxId,
                 o.PrimaryColor,
                 o.AccentColor,
+                o.ContactEmail,
+                o.Type.HasValue ? (Contracts.OrganizationType)o.Type.Value : null,
                 o.CreatedAt,
                 o.UpdatedAt
             ))
@@ -114,6 +117,8 @@ public sealed class OrganizationRepository(IDbContextFactory<OrganizationDbConte
                 o.TaxId,
                 o.PrimaryColor,
                 o.AccentColor,
+                o.ContactEmail,
+                o.Type.HasValue ? (Contracts.OrganizationType)o.Type.Value : null,
                 o.CreatedAt,
                 o.UpdatedAt
             ))
@@ -171,6 +176,8 @@ public sealed class OrganizationRepository(IDbContextFactory<OrganizationDbConte
             TaxId = dto.TaxId,
             PrimaryColor = HexColor.Normalize(dto.PrimaryColor),
             AccentColor = HexColor.Normalize(dto.AccentColor),
+            ContactEmail = dto.ContactEmail,
+            Type = dto.Type.HasValue ? (Database.Models.OrganizationType)dto.Type.Value : null,
             CreatedAt = now,
             UpdatedAt = now,
         };
@@ -254,6 +261,8 @@ public sealed class OrganizationRepository(IDbContextFactory<OrganizationDbConte
         entity.TaxId = dto.TaxId;
         entity.PrimaryColor = HexColor.Normalize(dto.PrimaryColor);
         entity.AccentColor = HexColor.Normalize(dto.AccentColor);
+        entity.ContactEmail = dto.ContactEmail;
+        entity.Type = dto.Type.HasValue ? (Database.Models.OrganizationType)dto.Type.Value : null;
         entity.UpdatedAt = DateTimeOffset.UtcNow;
 
         await context.SaveChangesAsync(cancellationToken);
@@ -273,6 +282,8 @@ public sealed class OrganizationRepository(IDbContextFactory<OrganizationDbConte
             entity.TaxId,
             entity.PrimaryColor,
             entity.AccentColor,
+            entity.ContactEmail,
+            entity.Type.HasValue ? (Contracts.OrganizationType)entity.Type.Value : null,
             entity.CreatedAt,
             entity.UpdatedAt
         );
