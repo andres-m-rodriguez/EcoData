@@ -22,6 +22,15 @@ builder.AddAzureContainerAppEnvironment("aca-env");
 var jwtSensorSecretKey = builder.AddParameter("jwt-sensor-secret-key", secret: true);
 var jwtUserSecretKey = builder.AddParameter("jwt-user-secret-key", secret: true);
 
+// Custom domain + managed certificate name for ecoportal. Both flow in via
+// Parameters__customDomain / Parameters__certificateName env vars in CI. Baking
+// these into the Aspire-emitted Bicep keeps ingress.customDomains populated on
+// every redeploy — without it, ACA wipes the binding when the property is
+// omitted (microsoft/azure-container-apps#957) and the site goes dark until a
+// post-deploy rebind.
+var customDomain = builder.AddParameter("customDomain");
+var certificateName = builder.AddParameter("certificateName");
+
 var postgres = builder
     .AddAzurePostgresFlexibleServer("postgres")
     .RunAsContainer(c => c.WithImage("postgis/postgis", "16-3.4").WithDataVolume().WithPgAdmin());
@@ -51,9 +60,6 @@ if (builder.Environment.EnvironmentName == "Testing")
     seeder.WithEnvironment("SEED_TEST_DATA", "true");
 }
 
-// Custom domain is configured via GitHub Actions workflow step after deployment
-// to avoid Aspire resetting the SSL binding during re-provisioning
-
 var ecoportal = builder
     .AddProject<Projects.EcoPortal_Server>("ecoportal")
     .WithExternalHttpEndpoints()
@@ -71,9 +77,9 @@ var ecoportal = builder
     .PublishAsAzureContainerApp(
         (infra, app) =>
         {
-            // Configure 2 max replicas
             app.Template.Scale.MinReplicas = 1;
             app.Template.Scale.MaxReplicas = 2;
+            app.ConfigureCustomDomain(customDomain, certificateName);
         }
     );
 

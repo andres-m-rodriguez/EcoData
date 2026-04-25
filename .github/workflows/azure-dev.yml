@@ -56,34 +56,3 @@ jobs:
           Parameters__customDomain: ${{ vars.CUSTOM_DOMAIN }}
           Parameters__certificateName: ${{ vars.CERTIFICATE_NAME }}
         run: dotnet run scripts/deploy-affected.cs -- --from ${{ github.event.before }} --to ${{ github.sha }}
-
-      - name: Configure Custom Domain
-        if: ${{ vars.CUSTOM_DOMAIN != '' }}
-        run: |
-          CUSTOM_DOMAIN="${{ vars.CUSTOM_DOMAIN }}"
-          RESOURCE_GROUP="${{ env.AZURE_RESOURCE_GROUP }}"
-
-          # Get container app environment name
-          ENV_NAME=$(az containerapp env list --resource-group $RESOURCE_GROUP --query "[0].name" -o tsv)
-
-          # Check if hostname exists and get binding type
-          BINDING_TYPE=$(az containerapp hostname list --name ecoportal --resource-group $RESOURCE_GROUP --query "[?name=='$CUSTOM_DOMAIN'].bindingType" -o tsv)
-
-          if [ "$BINDING_TYPE" = "SniEnabled" ]; then
-            echo "Custom domain $CUSTOM_DOMAIN already configured with SSL"
-            exit 0
-          fi
-
-          # Add hostname if it doesn't exist
-          if [ -z "$BINDING_TYPE" ]; then
-            echo "Adding custom domain $CUSTOM_DOMAIN..."
-            az containerapp hostname add --name ecoportal --resource-group $RESOURCE_GROUP --hostname $CUSTOM_DOMAIN
-          else
-            echo "Custom domain exists but SSL is $BINDING_TYPE, re-binding..."
-          fi
-
-          # Bind SSL certificate
-          echo "Binding SSL certificate..."
-          az containerapp hostname bind --name ecoportal --resource-group $RESOURCE_GROUP --hostname $CUSTOM_DOMAIN --environment $ENV_NAME --validation-method CNAME
-
-          echo "Custom domain $CUSTOM_DOMAIN configured with SSL"
