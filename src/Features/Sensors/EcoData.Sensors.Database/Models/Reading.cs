@@ -14,7 +14,13 @@ public sealed class Reading
     public required DateTimeOffset RecordedAt { get; set; }
     public required DateTimeOffset IngestedAt { get; set; }
 
+    public Guid? PhenomenonId { get; set; }
+    public Guid? ParameterId { get; set; }
+    public double? CanonicalValue { get; set; }
+
     public Sensor? Sensor { get; set; }
+    public Phenomenon? Phenomenon { get; set; }
+    public Parameter? ResolvedParameter { get; set; }
 
     public sealed class EntityConfiguration : IEntityTypeConfiguration<Reading>
     {
@@ -40,6 +46,25 @@ public sealed class Reading
                 e.Parameter,
                 e.RecordedAt,
             });
+
+            builder.HasIndex(static e => new
+            {
+                e.SensorId,
+                e.PhenomenonId,
+                e.RecordedAt,
+            });
+
+            builder
+                .HasOne(static e => e.Phenomenon)
+                .WithMany()
+                .HasForeignKey(static e => e.PhenomenonId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            builder
+                .HasOne(static e => e.ResolvedParameter)
+                .WithMany()
+                .HasForeignKey(static e => e.ParameterId)
+                .OnDelete(DeleteBehavior.SetNull);
         }
     }
 }

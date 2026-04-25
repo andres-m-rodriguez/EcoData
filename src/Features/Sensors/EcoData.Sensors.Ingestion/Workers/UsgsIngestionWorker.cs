@@ -3,6 +3,7 @@ using EcoData.Organization.Contracts.Dtos;
 using EcoData.Organization.DataAccess.Interfaces;
 using EcoData.Sensors.Contracts.Dtos;
 using EcoData.Sensors.DataAccess.Interfaces;
+using EcoData.Sensors.DataAccess.Resolvers;
 using EcoData.Sensors.Ingestion.Services;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -17,13 +18,21 @@ public sealed class UsgsIngestionWorker(
     IIngestionLogRepository ingestionLogRepository,
     ISensorHealthRepository healthRepository,
     IMunicipalityRepository municipalityRepository,
+    ParameterResolver parameterResolver,
     IUsgsApiClient usgsApiClient,
+    IHostEnvironment hostEnvironment,
     ILogger<UsgsIngestionWorker> logger
 ) : BackgroundService
 {
     private const string UsgsOrganizationName = "USGS";
     private const string UsgsDataSourceName = "USGS Puerto Rico";
     private static readonly TimeSpan DefaultInterval = TimeSpan.FromMinutes(15);
+
+    // Dev only: cap historical catch-up so a stale local environment can't request
+    // a month of USGS data in one shot and trip the HTTP timeout. Prod always
+    // catches up from the last recorded timestamp — losing data there is worse
+    // than a slow request.
+    private static readonly TimeSpan DevMaxLookback = TimeSpan.FromHours(6);
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
@@ -43,6 +52,16 @@ public sealed class UsgsIngestionWorker(
 
                 var lastLog = await ingestionLogRepository.GetLatestAsync(dataSource.Id, stoppingToken);
                 var startDt = lastLog?.LastRecordedAt;
+                if (hostEnvironment.IsDevelopment() && startDt is { } last
+                    && last < DateTimeOffset.UtcNow - DevMaxLookback)
+                {
+                    logger.LogInformation(
+                        "Dev: last recorded {Last:O} is older than {Hours}h cap; falling back to USGS short window",
+                        last,
+                        DevMaxLookback.TotalHours
+                    );
+                    startDt = null;
+                }
 
                 var response = await usgsApiClient.GetInstantaneousValuesAsync(startDt: startDt, cancellationToken: stoppingToken);
 
@@ -101,7 +120,9 @@ public sealed class UsgsIngestionWorker(
                     logger.LogInformation("Added {Count} new sensors", sensorsToAdd.Count);
                 }
 
+                var parameterLookup = await parameterResolver.LoadLookupAsync(dataSource.Id, stoppingToken);
                 var readingsToAdd = new List<ReadingDtoForCreate>();
+                var unresolvedCodes = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
                 foreach (var series in timeSeries)
                 {
@@ -119,14 +140,39 @@ public sealed class UsgsIngestionWorker(
                     {
                         foreach (var reading in valuesSet.Value)
                         {
-                            if (double.TryParse(reading.Value, out var value))
+                            if (!double.TryParse(reading.Value, out var value))
                             {
-                                readingsToAdd.Add(new ReadingDtoForCreate(
-                                    sensor.Id, parameterCode, variableName, value, unitCode, reading.DateTime
-                                ));
+                                continue;
                             }
+
+                            var resolved = parameterLookup.Resolve(parameterCode, unitCode, value, reading.DateTime);
+                            if (resolved.PhenomenonId is null)
+                            {
+                                unresolvedCodes.Add(parameterCode);
+                            }
+
+                            readingsToAdd.Add(new ReadingDtoForCreate(
+                                sensor.Id,
+                                parameterCode,
+                                variableName,
+                                value,
+                                unitCode,
+                                reading.DateTime,
+                                resolved.PhenomenonId,
+                                resolved.ParameterId,
+                                resolved.CanonicalValue
+                            ));
                         }
                     }
+                }
+
+                if (unresolvedCodes.Count > 0)
+                {
+                    logger.LogWarning(
+                        "Stored readings for {Count} unmapped USGS parameter code(s); add Parameter mappings to enable canonical values: {Codes}",
+                        unresolvedCodes.Count,
+                        string.Join(", ", unresolvedCodes)
+                    );
                 }
 
                 if (readingsToAdd.Count > 0)
