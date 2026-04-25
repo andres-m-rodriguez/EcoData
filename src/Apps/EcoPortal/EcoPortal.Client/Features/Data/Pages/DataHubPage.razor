@@ -1,0 +1,331 @@
+@page "/data"
+@using BlazorStaticNavigation
+@inject INativeNavbarManager Navbar
+
+<PageTitle>Data Portal - EcoData</PageTitle>
+
+<div class="data-hub-page">
+
+    <section class="hero">
+        <div class="hero-in">
+            <div>
+                <div class="hero-eyebrow"><span class="v-line"></span>Open Environmental Data · Puerto Rico</div>
+                <h1>Every reading, <em>open</em> to everyone.</h1>
+                <p>
+                    Live and historical environmental data from across the island — surface water, groundwater,
+                    precipitation, water quality, and reservoirs. Search by topic, watershed, or municipality.
+                    Free to download, free to cite.
+                </p>
+                <div class="hero-search">
+                    <MudIcon Icon="@Icons.Material.Filled.Search" Size="Size.Small" />
+                    <input placeholder="Search by metric, watershed, sensor ID, or municipality…" />
+                    <button>Search</button>
+                </div>
+            </div>
+
+            <aside class="hero-stats">
+                <div class="hero-stats-k"><span class="pulse"></span>Updated · just now</div>
+                <div class="hs-item"><span class="hs-label">Total readings</span><span class="hs-val">740,386</span></div>
+                <div class="hs-item"><span class="hs-label">Active sensors</span><span class="hs-val">127<span class="u">/130</span></span></div>
+                <div class="hs-item"><span class="hs-label">Datasets published</span><span class="hs-val">2,841</span></div>
+                <div class="hs-item"><span class="hs-label">Updated every</span><span class="hs-val">15<span class="u">min</span></span></div>
+            </aside>
+        </div>
+    </section>
+
+    <main class="body-in">
+
+        <div class="section-h">
+            <div class="section-h-l">
+                <div class="eyebrow">Browse by topic</div>
+                <h2>What we <em>measure</em></h2>
+                <p>Nine domains of continuous environmental monitoring. Click any card to open the dashboard or read the latest report.</p>
+            </div>
+            <div class="view-tabs">
+                <button class="active"><MudIcon Icon="@Icons.Material.Filled.GridView" Size="Size.Small" />Topics</button>
+                <button><MudIcon Icon="@Icons.Material.Filled.List" Size="Size.Small" />Catalog</button>
+                <button><MudIcon Icon="@Icons.Material.Filled.Map" Size="Size.Small" />Map</button>
+            </div>
+        </div>
+
+        <div class="topic-grid">
+
+            <div class="topic-card surface featured">
+                <div class="feat-vis">
+                    <svg viewBox="0 0 200 140" xmlns="http://www.w3.org/2000/svg">
+                        <defs>
+                            <linearGradient id="surfg" x1="0" x2="0" y1="0" y2="1">
+                                <stop offset="0" stop-color="#0284c7" stop-opacity="0.4" />
+                                <stop offset="1" stop-color="#0284c7" stop-opacity="0" />
+                            </linearGradient>
+                        </defs>
+                        <path d="M0,80 L20,72 L40,86 L60,60 L80,68 L100,42 L120,54 L140,38 L160,46 L180,28 L200,34 L200,140 L0,140 Z" fill="url(#surfg)" />
+                        <path d="M0,80 L20,72 L40,86 L60,60 L80,68 L100,42 L120,54 L140,38 L160,46 L180,28 L200,34" fill="none" stroke="#0284c7" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" />
+                        <circle cx="200" cy="34" r="3.5" fill="#0284c7" />
+                        <circle cx="200" cy="34" r="6" fill="#0284c7" opacity="0.3" />
+                    </svg>
+                </div>
+                <div class="feat-body">
+                    <div class="topic-card-head">
+                        <div class="topic-ic"><MudIcon Icon="@Icons.Material.Filled.Water" /></div>
+                        <div class="topic-count"><strong>341,812</strong>readings</div>
+                    </div>
+                    <div class="topic-title">Surface Water</div>
+                    <div class="topic-title-es">Aguas superficiales</div>
+                    <div class="topic-desc">River flow, gage height, and water levels measured continuously across Puerto Rico's 23 monitored watersheds — from Río Grande de Loíza to Río Mameyes. The largest dataset on the platform.</div>
+                    <div class="topic-metrics">
+                        <div class="metric-chip">gage-height <strong>177,603</strong></div>
+                        <div class="metric-chip">streamflow <strong>164,209</strong></div>
+                    </div>
+                    <div class="topic-actions">
+                        <a class="topic-btn dash"><MudIcon Icon="@Icons.Material.Filled.ShowChart" Size="Size.Small" />Dashboard</a>
+                        <a class="topic-btn report"><MudIcon Icon="@Icons.Material.Filled.Description" Size="Size.Small" />Reports</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="topic-card reservoir">
+                <div class="topic-card-head">
+                    <div class="topic-ic"><MudIcon Icon="@Icons.Material.Filled.WaterDrop" /></div>
+                    <div class="topic-count"><strong>261,925</strong>readings</div>
+                </div>
+                <div class="topic-title">Reservoirs &amp; Levels</div>
+                <div class="topic-title-es">Embalses y niveles</div>
+                <div class="topic-desc">Reservoir surface elevation and storage at PRDH-managed water bodies — Carraízo, La Plata, Cerrillos, Guajataca, and 11 more.</div>
+                <div class="topic-metrics">
+                    <div class="metric-chip">water-level <strong>123,116</strong></div>
+                    <div class="metric-chip">reservoir-prd2002 <strong>71,787</strong></div>
+                    <div class="metric-chip">reservoir-lmsl <strong>67,149</strong></div>
+                </div>
+                <div class="topic-actions">
+                    <a class="topic-btn dash"><MudIcon Icon="@Icons.Material.Filled.ShowChart" Size="Size.Small" />Dashboard</a>
+                    <a class="topic-btn report"><MudIcon Icon="@Icons.Material.Filled.Description" Size="Size.Small" />Reports</a>
+                </div>
+            </div>
+
+            <div class="topic-card precip">
+                <div class="topic-card-head">
+                    <div class="topic-ic"><MudIcon Icon="@Icons.Material.Filled.Grain" /></div>
+                    <div class="topic-count"><strong>81,393</strong>readings</div>
+                </div>
+                <div class="topic-title">Precipitation</div>
+                <div class="topic-title-es">Precipitación</div>
+                <div class="topic-desc">Rainfall accumulation and intensity from gauges across all 78 municipalities — including 15-minute granularity for storm tracking.</div>
+                <div class="topic-metrics">
+                    <div class="metric-chip">precipitation <strong>81,393</strong></div>
+                </div>
+                <div class="topic-actions">
+                    <a class="topic-btn dash"><MudIcon Icon="@Icons.Material.Filled.ShowChart" Size="Size.Small" />Dashboard</a>
+                    <a class="topic-btn report"><MudIcon Icon="@Icons.Material.Filled.Description" Size="Size.Small" />Reports</a>
+                </div>
+            </div>
+
+            <div class="topic-card ground">
+                <div class="topic-card-head">
+                    <div class="topic-ic"><MudIcon Icon="@Icons.Material.Filled.VerticalAlignBottom" /></div>
+                    <div class="topic-count"><strong>31,306</strong>readings</div>
+                </div>
+                <div class="topic-title">Groundwater</div>
+                <div class="topic-title-es">Aguas subterráneas</div>
+                <div class="topic-desc">Aquifer depth-to-water measurements at monitoring wells in the South Coast and Northern Karst aquifers — critical for drought response.</div>
+                <div class="topic-metrics">
+                    <div class="metric-chip">groundwater-depth <strong>31,306</strong></div>
+                </div>
+                <div class="topic-actions">
+                    <a class="topic-btn dash"><MudIcon Icon="@Icons.Material.Filled.ShowChart" Size="Size.Small" />Dashboard</a>
+                    <a class="topic-btn report"><MudIcon Icon="@Icons.Material.Filled.Description" Size="Size.Small" />Reports</a>
+                </div>
+            </div>
+
+            <div class="topic-card quality">
+                <div class="topic-card-head">
+                    <div class="topic-ic"><MudIcon Icon="@Icons.Material.Filled.Science" /></div>
+                    <div class="topic-count"><strong>17,084</strong>readings</div>
+                </div>
+                <div class="topic-title">Water Quality</div>
+                <div class="topic-title-es">Calidad del agua</div>
+                <div class="topic-desc">Chemical and physical signatures of surface water — pH, conductance, temperature, and dissolved oxygen at 23 EPA-method stations.</div>
+                <div class="topic-metrics">
+                    <div class="metric-chip">specific-conductance <strong>4,380</strong></div>
+                    <div class="metric-chip">pH <strong>4,373</strong></div>
+                    <div class="metric-chip">water-temperature <strong>4,372</strong></div>
+                    <div class="metric-chip">dissolved-oxygen <strong>3,959</strong></div>
+                </div>
+                <div class="topic-actions">
+                    <a class="topic-btn dash"><MudIcon Icon="@Icons.Material.Filled.ShowChart" Size="Size.Small" />Dashboard</a>
+                    <a class="topic-btn report"><MudIcon Icon="@Icons.Material.Filled.Description" Size="Size.Small" />Reports</a>
+                </div>
+            </div>
+
+            <div class="topic-card infra">
+                <div class="topic-card-head">
+                    <div class="topic-ic"><MudIcon Icon="@Icons.Material.Filled.Settings" /></div>
+                    <div class="topic-count"><strong>3,485</strong>readings</div>
+                </div>
+                <div class="topic-title">Infrastructure</div>
+                <div class="topic-title-es">Infraestructura hidráulica</div>
+                <div class="topic-desc">Operational state of dam gates, spillways, and diversion structures — gate-opening height by hour at PRDH facilities.</div>
+                <div class="topic-metrics">
+                    <div class="metric-chip">gate-opening-height <strong>3,485</strong></div>
+                </div>
+                <div class="topic-actions">
+                    <a class="topic-btn dash"><MudIcon Icon="@Icons.Material.Filled.ShowChart" Size="Size.Small" />Dashboard</a>
+                    <a class="topic-btn report"><MudIcon Icon="@Icons.Material.Filled.Description" Size="Size.Small" />Reports</a>
+                </div>
+            </div>
+
+            <div class="topic-card air coming-soon">
+                <div class="topic-card-head">
+                    <div class="topic-ic"><MudIcon Icon="@Icons.Material.Filled.Air" /></div>
+                    <div class="topic-count"><strong>Q3 2026</strong>coming soon</div>
+                </div>
+                <div class="topic-title">Air Quality</div>
+                <div class="topic-title-es">Calidad del aire</div>
+                <div class="topic-desc">PM2.5, PM10, ozone, and VOCs across San Juan, Ponce, Mayagüez, and rural baselines in El Yunque. Expected Q3 2026.</div>
+                <div class="topic-metrics">
+                    <div class="metric-chip muted">PM2.5</div>
+                    <div class="metric-chip muted">PM10</div>
+                    <div class="metric-chip muted">O₃</div>
+                    <div class="metric-chip muted">VOC</div>
+                </div>
+                <div class="topic-actions">
+                    <a class="topic-btn report wide"><MudIcon Icon="@Icons.Material.Filled.NotificationsActive" Size="Size.Small" />Notify me</a>
+                </div>
+            </div>
+
+            <div class="topic-card coast coming-soon">
+                <div class="topic-card-head">
+                    <div class="topic-ic"><MudIcon Icon="@Icons.Material.Filled.Waves" /></div>
+                    <div class="topic-count"><strong>Q4 2026</strong>coming soon</div>
+                </div>
+                <div class="topic-title">Coastal &amp; Marine</div>
+                <div class="topic-title-es">Aguas costeras</div>
+                <div class="topic-desc">Tide height, salinity, and sea-surface temperature at 14 coastal stations. Reef health indicators in 2027.</div>
+                <div class="topic-metrics">
+                    <div class="metric-chip muted">tide-height</div>
+                    <div class="metric-chip muted">salinity</div>
+                    <div class="metric-chip muted">sst</div>
+                </div>
+                <div class="topic-actions">
+                    <a class="topic-btn report wide"><MudIcon Icon="@Icons.Material.Filled.NotificationsActive" Size="Size.Small" />Notify me</a>
+                </div>
+            </div>
+
+            <div class="topic-card bio coming-soon">
+                <div class="topic-card-head">
+                    <div class="topic-ic"><MudIcon Icon="@Icons.Material.Filled.Pets" /></div>
+                    <div class="topic-count"><strong>2027</strong>roadmap</div>
+                </div>
+                <div class="topic-title">Biodiversity</div>
+                <div class="topic-title-es">Biodiversidad</div>
+                <div class="topic-desc">Acoustic monitoring, camera traps, and eDNA sampling at 15 protected sites. In partnership with El Yunque Conservation Trust.</div>
+                <div class="topic-metrics">
+                    <div class="metric-chip muted">acoustic</div>
+                    <div class="metric-chip muted">eDNA</div>
+                    <div class="metric-chip muted">species-count</div>
+                </div>
+                <div class="topic-actions">
+                    <a class="topic-btn report wide"><MudIcon Icon="@Icons.Material.Filled.NotificationsActive" Size="Size.Small" />Notify me</a>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="section-h">
+            <div class="section-h-l">
+                <div class="eyebrow">Raw catalog</div>
+                <h2>Every metric, <em>by reading volume</em></h2>
+                <p>The complete machine-readable list — sortable, with API endpoints and direct download. Updated nightly.</p>
+            </div>
+            <div class="view-tabs">
+                <button><MudIcon Icon="@Icons.Material.Filled.SwapVert" Size="Size.Small" />Volume ↓</button>
+                <button><MudIcon Icon="@Icons.Material.Filled.Schedule" Size="Size.Small" />Recent</button>
+                <button><MudIcon Icon="@Icons.Material.Filled.AccountTree" Size="Size.Small" />Category</button>
+            </div>
+        </div>
+
+        <div class="catalog">
+            <div class="catalog-head">
+                <div>#</div>
+                <div>Metric</div>
+                <div>Category</div>
+                <div>Reading volume</div>
+                <div>Status</div>
+                <div></div>
+            </div>
+
+            @foreach (var (i, row) in _catalogRows.Select((r, idx) => (idx + 1, r)))
+            {
+                <div class="catalog-row">
+                    <div class="cat-num">@i.ToString("00")</div>
+                    <div class="cat-name @(row.IsUnmapped ? "unmapped-name" : null)">
+                        @row.Metric<span class="desc">@row.Description</span>
+                    </div>
+                    <div class="cat-cat @(row.IsUnmapped ? "muted" : null)">@row.Category</div>
+                    <div class="cat-bar">
+                        <div class="cat-bar-track">
+                            <div class="cat-bar-fill" style="width:@(row.PercentWidth)%; background:@row.Color;"></div>
+                        </div>
+                        <div class="cat-bar-val">@row.Volume.ToString("N0")</div>
+                    </div>
+                    <div>
+                        <span class="cat-status @(row.IsUnmapped ? "unmapped" : null)">
+                            <span class="dot"></span>@(row.IsUnmapped ? "Unmapped" : "Mapped")
+                        </span>
+                    </div>
+                    <div class="cat-action @(row.IsUnmapped ? "unmapped" : null)">
+                        @(row.IsUnmapped ? "Review" : "View") <MudIcon Icon="@Icons.Material.Filled.ArrowForward" Size="Size.Small" />
+                    </div>
+                </div>
+            }
+        </div>
+
+        <div class="cta-row">
+            <div class="cta-card primary">
+                <div class="eyebrow primary-500">For researchers</div>
+                <h3>Query the island from your notebook.</h3>
+                <p>Versioned REST API, Python SDK, and DOI-minted dataset snapshots. Three lines to a pandas DataFrame.</p>
+                <div class="cta-actions">
+                    <a class="cta-btn dark"><MudIcon Icon="@Icons.Material.Filled.MenuBook" Size="Size.Small" />API docs</a>
+                    <code>pip install ecodata</code>
+                </div>
+            </div>
+            <div class="cta-card neutral">
+                <div class="eyebrow primary-500">Don't see your metric?</div>
+                <h3>Request a dataset.</h3>
+                <p>If you need a metric we haven't published, tell us. Our team triages requests weekly. We onboard new categories every quarter.</p>
+                <div class="cta-actions">
+                    <a class="cta-btn outline"><MudIcon Icon="@Icons.Material.Filled.Email" Size="Size.Small" />Submit request</a>
+                    <a class="cta-btn ghost">View roadmap <MudIcon Icon="@Icons.Material.Filled.ArrowForward" Size="Size.Small" /></a>
+                </div>
+            </div>
+        </div>
+
+    </main>
+</div>
+
+@code {
+    protected override void OnInitialized()
+    {
+        Navbar.SetTitle("Data");
+    }
+
+    private record CatalogRow(string Metric, string Description, string Category, long Volume, double PercentWidth, string Color, bool IsUnmapped = false);
+
+    private static readonly CatalogRow[] _catalogRows =
+    [
+        new("gage-height", "Stream gage stick height · NOAA convention", "Surface Water", 177_603, 100, "#0284c7"),
+        new("streamflow", "Discharge volume · cubic feet/second", "Surface Water", 164_209, 92.5, "#0284c7"),
+        new("water-level-prd2002", "PRDH 2002 datum · reservoirs", "Reservoirs", 123_116, 69.3, "#0891b2"),
+        new("precipitation", "Rainfall · inches/15min", "Precipitation", 81_393, 45.8, "#6366f1"),
+        new("reservoir-level-prd2002", "Reservoir surface elevation", "Reservoirs", 71_787, 40.4, "#0891b2"),
+        new("reservoir-level-lmsl", "Local mean sea-level datum", "Reservoirs", 67_149, 37.8, "#0891b2"),
+        new("groundwater-depth", "Depth-to-water · monitoring wells", "Groundwater", 31_306, 17.6, "#7c5a2e"),
+        new("specific-conductance", "Electrical conductance · µS/cm", "Water Quality", 4_380, 2.5, "#16a34a"),
+        new("ph", "Hydrogen-ion concentration", "Water Quality", 4_373, 2.5, "#16a34a"),
+        new("water-temperature", "Stream temperature · °C", "Water Quality", 4_372, 2.5, "#16a34a"),
+        new("<unmapped>", "Codes not yet assigned to a metric", "— needs review", 4_254, 2.4, "#d97706", IsUnmapped: true),
+        new("dissolved-oxygen", "DO concentration · mg/L", "Water Quality", 3_959, 2.2, "#16a34a"),
+        new("gate-opening-height", "Dam gate operational state", "Infrastructure", 3_485, 1.9, "#57534e"),
+    ];
+}

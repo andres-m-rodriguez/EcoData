@@ -53,6 +53,9 @@
                 <MudLink Href="@HomePage.Path" Underline="Underline.None" Class="@GetNavLinkClass(HomePage.Path)">
                     Home
                 </MudLink>
+                <MudLink Href="@DataHubPage.Path" Underline="Underline.None" Class="@GetNavLinkClass(DataHubPage.Path)">
+                    Data
+                </MudLink>
                 <MudLink Href="@SensorsPage.Path" Underline="Underline.None" Class="@GetNavLinkClass(SensorsPage.Path)">
                     Sensors
                 </MudLink>
@@ -139,7 +142,7 @@
                 </MudContainer>
             }
         </MudHidden>
-        @if (IsHomePage)
+        @if (IsHomePage || IsFullWidthPage)
         {
             <div class="@_pageTransitionClass" @key="_navigationKey">
                 @Body
@@ -209,6 +212,9 @@
             return path.StartsWith("/organizations", StringComparison.OrdinalIgnoreCase);
         }
     }
+
+    private bool IsFullWidthPage =>
+        Navigation.State.Path.StartsWith("/data", StringComparison.OrdinalIgnoreCase);
 
     protected override async Task OnInitializedAsync()
     {
