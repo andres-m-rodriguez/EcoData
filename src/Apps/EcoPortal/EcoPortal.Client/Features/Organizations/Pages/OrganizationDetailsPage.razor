@@ -31,18 +31,19 @@
 <PageTitle>Organization Details - EcoData</PageTitle>
 
 <NuiPageLayout Title="Organization Details" ParentPath="/organizations/discover">
+    <div class="org-page page-enter" style="@(_viewModel?.ThemeStyle ?? string.Empty)">
         @if (_viewModel is null && _organizationFetch.IsLoading)
         {
-            <MudPaper Elevation="1" Class="pa-6 rounded-lg mb-6">
+            <MudPaper Elevation="0" Class="org-hero-skeleton pa-6 rounded-lg mb-6">
                 <MudStack Row AlignItems="AlignItems.Center" Spacing="4">
-                    <MudSkeleton SkeletonType="SkeletonType.Circle" Width="64px" Height="64px" />
+                    <MudSkeleton SkeletonType="SkeletonType.Circle" Width="72px" Height="72px" />
                     <MudStack Spacing="2">
-                        <MudSkeleton Width="250px" Height="32px" />
-                        <MudSkeleton Width="150px" Height="20px" />
+                        <MudSkeleton Width="320px" Height="40px" />
+                        <MudSkeleton Width="220px" Height="20px" />
                     </MudStack>
                 </MudStack>
             </MudPaper>
-            <MudPaper Elevation="1" Class="rounded-lg pa-6">
+            <MudPaper Elevation="0" Class="rounded-lg pa-6">
                 <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="48px" Class="mb-4" />
                 <MudGrid Spacing="4">
                     @for (var i = 0; i < 3; i++)
@@ -56,7 +57,7 @@
         }
         else if (_organizationFetch.Data is null && !_organizationFetch.IsLoading)
         {
-            <MudPaper Elevation="1" Class="pa-8 rounded-lg d-flex flex-column align-center justify-center">
+            <MudPaper Elevation="0" Class="pa-8 rounded-lg d-flex flex-column align-center justify-center org-not-found">
                 <MudIcon Icon="@Icons.Material.Filled.DomainDisabled" Size="Size.Large" Color="Color.Error" Class="mb-4" />
                 <MudText Typo="Typo.h5" Color="Color.Error">Organization not found</MudText>
                 <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mt-2 text-center">
@@ -71,159 +72,247 @@
         else if (_viewModel is not null)
         {
 
-            <!-- Header Card with Banner Image -->
-            <MudPaper Elevation="1" Class="mb-6 rounded-lg overflow-hidden">
-                @if (_viewModel.HasCardPicture)
-                {
-                    <div class="org-banner">
-                        <MudImage Src="@_viewModel.CardPictureUrl" Alt="@_viewModel.Name" ObjectFit="ObjectFit.Cover"
-                                  Class="org-banner-img" />
-                        <div class="org-banner-overlay"></div>
-                    </div>
-                }
-                <div class="pa-6">
-                    <MudGrid>
-                        <MudItem xs="12" md="8">
-                            <MudStack Row AlignItems="AlignItems.Center" Spacing="4">
-                                @if (_viewModel.HasProfilePicture)
-                                {
-                                    <MudAvatar Size="Size.Large">
-                                        <MudImage Src="@_viewModel.ProfilePictureUrl" Alt="@_viewModel.Name"
-                                                  ObjectFit="ObjectFit.Cover" />
-                                    </MudAvatar>
-                                }
-                                else
-                                {
-                                    <MudAvatar Size="Size.Large" Color="Color.Primary" Variant="Variant.Filled">
-                                        <MudIcon Icon="@Icons.Material.Filled.Business" />
-                                    </MudAvatar>
-                                }
+            @* ============================ HERO ============================ *@
+            <section class="org-hero @(_viewModel.HasCardPicture ? "has-banner" : "no-banner")"
+                     style="@(_viewModel.HasCardPicture ? $"background-image: linear-gradient(180deg, rgba(20,28,24,0.55) 0%, rgba(20,28,24,0.85) 100%), url('{_viewModel.CardPictureUrl}');" : null)">
+                <div class="org-hero-grid">
+                    <div class="org-hero-left">
+                        <div class="org-hero-eyebrow">
+                            <span class="v-line"></span>
+                            <MudText Inline="true" Style="color: white;">@_viewModel.Slug</MudText>
+                            @if (_viewModel.HasLocation)
+                            {
+                                <MudText Inline="true" Class="dot-sep">·</MudText>
+                                <MudText Inline="true" Style="color: white;">@_viewModel.Location</MudText>
+                            }
+                        </div>
 
-                                <MudStack Spacing="1">
-                                    <MudText Typo="Typo.h4">@_viewModel.Name</MudText>
-                                    @if (_viewModel.HasWebsite)
+                        <div class="org-hero-orgline">
+                            @if (_viewModel.HasProfilePicture)
+                            {
+                                <div class="hero-mark hero-mark-img">
+                                    <MudImage Src="@_viewModel.ProfilePictureUrl" Alt="@_viewModel.Name" ObjectFit="ObjectFit.Cover" />
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="hero-mark">@_viewModel.Initials</div>
+                            }
+                            <div>
+                                <div class="org-hero-orgmeta"><strong>@_viewModel.Name</strong></div>
+                                <div class="org-hero-orgmeta">
+                                    Org · joined @_viewModel.FormattedCreatedDate
+                                    @if (_viewModel.HasFoundedYear)
                                     {
-                                        <MudLink Href="@_viewModel.WebsiteUrl" Target="_blank" Color="Color.Primary"
-                                                 Typo="Typo.body2" Class="d-flex align-center">
-                                            <MudIcon Icon="@Icons.Material.Outlined.Link" Size="Size.Small" Class="mr-1" />
-                                            @_viewModel.DisplayWebsiteUrl
-                                        </MudLink>
+                                        <span> · active since @_viewModel.FoundedYear</span>
                                     }
-                                    <MudText Typo="Typo.caption" Class="d-flex align-center">
-                                        <MudIcon Icon="@Icons.Material.Outlined.CalendarMonth" Size="Size.Small"
-                                                 Class="mr-1" />
-                                        Joined @_viewModel.FormattedCreatedDate
-                                    </MudText>
-                                </MudStack>
-                            </MudStack>
-                        </MudItem>
+                                </div>
+                            </div>
+                        </div>
 
-                        <MudItem xs="12" md="4" Class="d-flex justify-md-end align-start">
-                            <MudStack Row Spacing="1">
-                                <MudTooltip Text="Sensor Map">
-                                    <MudIconButton Icon="@Icons.Material.Outlined.Map" Color="Color.Primary"
-                                                   Variant="Variant.Outlined" Size="Size.Medium" OnClick="NavigateToMap" />
-                                </MudTooltip>
-                                <RequireOrganizationPermission Permission="@OrgPermissions.Organization.Update"
-                                                               OrganizationId="Id">
-                                    <Authorized>
-                                        <MudTooltip Text="Edit Organization">
-                                            <MudIconButton Icon="@Icons.Material.Outlined.Edit" Color="Color.Primary"
-                                                           Variant="Variant.Filled" Size="Size.Medium" OnClick="NavigateToEdit" />
-                                        </MudTooltip>
-                                    </Authorized>
-                                    <NotAuthorized>
-                                        @if (AuthState.IsAuthenticated)
-                                        {
-                                            <MudTooltip Text="Request to join this organization">
-                                                <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small"
-                                                           StartIcon="@Icons.Material.Outlined.PersonAdd" OnClick="OpenRequestAccessDialog">
-                                                    Request Access
-                                                </MudButton>
-                                            </MudTooltip>
-                                        }
-                                    </NotAuthorized>
-                                </RequireOrganizationPermission>
-                                <RequireOrganizationPermission Permission="@OrgPermissions.Organization.Delete"
-                                                               OrganizationId="Id">
-                                    <MudTooltip Text="Delete Organization">
-                                        <MudIconButton Icon="@Icons.Material.Outlined.Delete" Color="Color.Error"
-                                                       Variant="Variant.Outlined" Size="Size.Medium" OnClick="ConfirmDelete" />
-                                    </MudTooltip>
-                                </RequireOrganizationPermission>
-                            </MudStack>
-                        </MudItem>
-                    </MudGrid>
+                        <h1 class="org-hero-title">@_viewModel.Name</h1>
+
+                        @if (_viewModel.HasTagline)
+                        {
+                            <p class="org-hero-tagline">@_viewModel.Tagline</p>
+                        }
+
+                        <div class="org-hero-meta-row">
+                            @if (_viewModel.HasWebsite)
+                            {
+                                <span class="hmr-item">
+                                    <MudIcon Icon="@Icons.Material.Outlined.Link" Size="Size.Small" Style="color: white !important;" />
+                                    <MudLink Href="@_viewModel.WebsiteUrl" Target="_blank" Style="color: white;">@_viewModel.DisplayWebsiteUrl</MudLink>
+                                </span>
+                            }
+                            @if (_viewModel.HasLocation)
+                            {
+                                <span class="hmr-item">
+                                    <MudIcon Icon="@Icons.Material.Outlined.LocationOn" Size="Size.Small" Style="color: white !important;" />
+                                    <MudText Inline="true" Style="color: white;">@_viewModel.Location</MudText>
+                                </span>
+                            }
+                            <span class="hmr-item">
+                                <MudIcon Icon="@Icons.Material.Outlined.CalendarMonth" Size="Size.Small" Style="color: white !important;" />
+                                <MudText Inline="true" Style="color: white;">Joined @_viewModel.FormattedCreatedDate</MudText>
+                            </span>
+                            @if (_viewModel.HasLegalInfo)
+                            {
+                                <span class="hmr-item">
+                                    <MudIcon Icon="@Icons.Material.Outlined.Shield" Size="Size.Small" Style="color: white !important;" />
+                                    <MudText Inline="true" Style="color: white;">@_viewModel.LegalLine</MudText>
+                                </span>
+                            }
+                        </div>
+                    </div>
+
+                    <aside class="org-hero-card">
+                        <div class="hero-card-k">At a glance</div>
+                        <div class="hero-card-stats">
+                            <div class="hcs">
+                                <div class="hcs-v">
+                                    @if (_sensorCountFetch.IsLoading)
+                                    {
+                                        <span class="hcs-v-dim">—</span>
+                                    }
+                                    else
+                                    {
+                                        @_sensorCountFetch.Data
+                                    }
+                                </div>
+                                <div class="hcs-k">Sensors live</div>
+                            </div>
+                            <div class="hcs">
+                                <div class="hcs-v">
+                                    @if (_membersFetch.IsLoading)
+                                    {
+                                        <span class="hcs-v-dim">—</span>
+                                    }
+                                    else
+                                    {
+                                        @(_membersFetch.Data?.Count ?? 0)
+                                    }
+                                </div>
+                                <div class="hcs-k">Members</div>
+                            </div>
+                        </div>
+                        <div class="hero-card-actions">
+                            <RequireOrganizationPermission Permission="@OrgPermissions.Organization.Update" OrganizationId="Id">
+                                <Authorized>
+                                    <MudButton Variant="Variant.Filled" Class="btn-pri-org" StartIcon="@Icons.Material.Outlined.Edit"
+                                               Style="color: white !important;"
+                                               OnClick="NavigateToEdit">
+                                        Edit organization
+                                    </MudButton>
+                                </Authorized>
+                                <NotAuthorized>
+                                    @if (AuthState.IsAuthenticated)
+                                    {
+                                        <MudButton Variant="Variant.Filled" Class="btn-pri-org" StartIcon="@Icons.Material.Outlined.PersonAdd"
+                                                   Style="color: white !important;"
+                                                   OnClick="OpenRequestAccessDialog">
+                                            Request access
+                                        </MudButton>
+                                    }
+                                </NotAuthorized>
+                            </RequireOrganizationPermission>
+                            <MudButton Variant="Variant.Outlined" Class="btn-ghost-light" StartIcon="@Icons.Material.Outlined.Map"
+                                       OnClick="NavigateToMap">
+                                View sensor map
+                            </MudButton>
+                            <RequireOrganizationPermission Permission="@OrgPermissions.Organization.Delete" OrganizationId="Id">
+                                <MudButton Variant="Variant.Text" Class="btn-danger-light" StartIcon="@Icons.Material.Outlined.Delete"
+                                           OnClick="ConfirmDelete">
+                                    Delete
+                                </MudButton>
+                            </RequireOrganizationPermission>
+                        </div>
+                    </aside>
                 </div>
-            </MudPaper>
+            </section>
 
-            <!-- Tabs Section -->
-            <MudPaper Elevation="1" Class="rounded-lg">
+            @* ============================ TABS ============================ *@
+            <MudPaper Elevation="0" Class="org-tabs-paper rounded-lg mt-6">
                 <Tabs>
                     <Tab Title="Overview" Icon="@Icons.Material.Outlined.Dashboard">
-                        <div class="pa-6">
-                            <MudGrid Spacing="4">
-                                @if (_viewModel.HasAbout)
-                                {
-                                    <MudItem xs="12">
-                                        <MudText Typo="Typo.h6" Class="mb-2">About Us</MudText>
-                                        <MudText Typo="Typo.body1">@_viewModel.AboutUs</MudText>
-                                    </MudItem>
-                                }
+                        <div class="org-tab-body">
+                            @if (_viewModel.HasAbout)
+                            {
+                                <section class="about-card">
+                                    <div class="about-eyebrow">Mission</div>
+                                    <p class="about-text">@_viewModel.AboutUs</p>
+                                </section>
+                            }
 
-                                <MudItem xs="12" sm="4">
-                                    <MudPaper Elevation="0" Outlined="true" Class="pa-4 rounded-lg d-flex align-center">
-                                        <MudIcon Icon="@Icons.Material.Outlined.Sensors" Color="Color.Primary"
-                                                 Size="Size.Large" Class="mr-4" />
+                            <section class="impact-grid">
+                                <div class="impact-card primary">
+                                    <div class="impact-card-k">
+                                        <MudIcon Icon="@Icons.Material.Outlined.SettingsInputAntenna" Size="Size.Small" />
+                                        Network
+                                    </div>
+                                    <div class="impact-card-v">
+                                        @if (_sensorCountFetch.IsLoading)
+                                        {
+                                            <MudProgressCircular Size="Size.Small" Indeterminate="true" />
+                                        }
+                                        else
+                                        {
+                                            @_sensorCountFetch.Data
+                                        }
+                                    </div>
+                                    <div class="impact-card-l">Sensors deployed by this organization</div>
+                                </div>
+                                <div class="impact-card light">
+                                    <div class="impact-card-k">
+                                        <MudIcon Icon="@Icons.Material.Outlined.Group" Size="Size.Small" />
+                                        Team
+                                    </div>
+                                    <div class="impact-card-v">
+                                        @if (_membersFetch.IsLoading)
+                                        {
+                                            <MudProgressCircular Size="Size.Small" Indeterminate="true" />
+                                        }
+                                        else
+                                        {
+                                            @(_membersFetch.Data?.Count ?? 0)
+                                        }
+                                    </div>
+                                    <div class="impact-card-l">Active members</div>
+                                </div>
+                                <div class="impact-card light">
+                                    <div class="impact-card-k">
+                                        <MudIcon Icon="@Icons.Material.Outlined.CalendarMonth" Size="Size.Small" />
+                                        With us since
+                                    </div>
+                                    <div class="impact-card-v impact-card-v-text">
+                                        @_viewModel.JoinedYear
+                                    </div>
+                                    <div class="impact-card-l">Joined @_viewModel.FormattedCreatedDate</div>
+                                </div>
+                            </section>
+
+                            <section class="overview-row">
+                                <div class="map-card">
+                                    <div class="map-card-vis">
+                                        <MudIcon Icon="@Icons.Material.Outlined.Map" Class="map-card-bg-icon" />
+                                    </div>
+                                    <div class="map-card-foot">
                                         <div>
-                                            @if (_sensorCountFetch.IsLoading)
-                                            {
-                                                <MudProgressCircular Size="Size.Small" Indeterminate="true" />
-                                            }
-                                            else
-                                            {
-                                                <MudText Typo="Typo.h5">@_sensorCountFetch.Data</MudText>
-                                            }
-                                            <MudText Typo="Typo.body2" Color="Color.Secondary">Total Sensors</MudText>
+                                            <div class="map-card-title">Sensor map</div>
+                                            <div class="map-card-sub">See every deployment on the reserve</div>
                                         </div>
-                                    </MudPaper>
-                                </MudItem>
-                                <MudItem xs="12" sm="4">
-                                    <MudPaper Elevation="0" Outlined="true" Class="pa-4 rounded-lg d-flex align-center">
-                                        <MudIcon Icon="@Icons.Material.Outlined.Group" Color="Color.Secondary"
-                                                 Size="Size.Large" Class="mr-4" />
-                                        <div>
-                                            @if (_membersFetch.IsLoading)
-                                            {
-                                                <MudProgressCircular Size="Size.Small" Indeterminate="true" />
-                                            }
-                                            else
-                                            {
-                                                <MudText Typo="Typo.h5">@(_membersFetch.Data?.Count ?? 0)</MudText>
-                                            }
-                                            <MudText Typo="Typo.body2" Color="Color.Secondary">Team Members</MudText>
+                                        <MudButton Variant="Variant.Text" EndIcon="@Icons.Material.Filled.ArrowForward"
+                                                   OnClick="NavigateToMap" Class="map-card-link">
+                                            Open map
+                                        </MudButton>
+                                    </div>
+                                </div>
+
+                                @if (_viewModel.HasWebsite)
+                                {
+                                    <div class="partner-card">
+                                        <MudIcon Icon="@Icons.Material.Outlined.Handshake" Class="partner-card-icon" />
+                                        <div class="partner-card-title">Partner with us</div>
+                                        <div class="partner-card-desc">
+                                            Pitch a project, request data, or get in touch with the team.
                                         </div>
-                                    </MudPaper>
-                                </MudItem>
-                                <MudItem xs="12" sm="4">
-                                    <MudPaper Elevation="0" Outlined="true" Class="pa-4 rounded-lg d-flex align-center">
-                                        <MudIcon Icon="@Icons.Material.Outlined.Science" Color="Color.Tertiary"
-                                                 Size="Size.Large" Class="mr-4" />
-                                        <div>
-                                            <MudText Typo="Typo.h5">0</MudText>
-                                            <MudText Typo="Typo.body2" Color="Color.Secondary">Publications</MudText>
-                                        </div>
-                                    </MudPaper>
-                                </MudItem>
-                            </MudGrid>
+                                        <MudLink Href="@_viewModel.WebsiteUrl" Target="_blank" Class="partner-card-link">
+                                            Visit @_viewModel.DisplayWebsiteUrl
+                                        </MudLink>
+                                    </div>
+                                }
+                            </section>
                         </div>
                     </Tab>
 
                     <Tab Title="Sensors" Icon="@Icons.Material.Outlined.Sensors"
                          Badge="@(_sensorCountFetch.IsLoading ? "..." : _sensorCountFetch.Data.ToString())">
-                        <div class="pa-6">
-                            <MudStack Row Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Class="mb-4">
-                                <MudText Typo="Typo.h6">Sensor Fleet</MudText>
+                        <div class="org-tab-body">
+                            <div class="section-head">
+                                <div>
+                                    <div class="section-eyebrow">Sensor fleet · live</div>
+                                    <h2 class="section-title">What's online</h2>
+                                </div>
                                 <MudStack Row Spacing="2">
                                     <RequireOrganizationPermission Permission="@SensorPermissions.Sensor.Update"
                                                                    OrganizationId="Id">
@@ -240,7 +329,7 @@
                                         </MudButton>
                                     </RequireOrganizationPermission>
                                 </MudStack>
-                            </MudStack>
+                            </div>
 
                             @if (_sensorsFetch.IsLoading)
                             {
@@ -279,15 +368,7 @@
                                     <div class="d-flex justify-center mt-4">
                                         <MudButton Variant="Variant.Text" Color="Color.Primary"
                                                    EndIcon="@Icons.Material.Filled.ArrowForward" OnClick="NavigateToSensors">
-                                            @if (_sensorCountFetch.IsLoading)
-                                            {
-                                                <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
-                                                <span>View all sensors</span>
-                                            }
-                                            else
-                                            {
-                                                <span>View all @_sensorCountFetch.Data sensors</span>
-                                            }
+                                            View all @_sensorCountFetch.Data sensors
                                         </MudButton>
                                     </div>
                                 }
@@ -297,9 +378,12 @@
 
                     <Tab Title="Team" Icon="@Icons.Material.Outlined.Group"
                          Badge="@(_membersFetch.IsLoading ? "..." : (_membersFetch.Data?.Count ?? 0).ToString())">
-                        <div class="pa-6">
-                            <MudStack Row Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Class="mb-4">
-                                <MudText Typo="Typo.h6">Members</MudText>
+                        <div class="org-tab-body">
+                            <div class="section-head">
+                                <div>
+                                    <div class="section-eyebrow">Leadership</div>
+                                    <h2 class="section-title">The team</h2>
+                                </div>
                                 <RequireOrganizationPermission Permission="@OrgPermissions.Organization.ManageMembers"
                                                                OrganizationId="Id">
                                     <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small"
@@ -307,7 +391,7 @@
                                         Manage
                                     </MudButton>
                                 </RequireOrganizationPermission>
-                            </MudStack>
+                            </div>
 
                             @if (_membersFetch.IsLoading)
                             {
@@ -335,27 +419,20 @@
                             }
                             else
                             {
-                                <MudGrid Spacing="3">
-                                    @foreach (var member in (_membersFetch.Data ??
-                                                                []).Take(OrganizationDetailsViewModel.MaxDisplayedMembers))
+                                <div class="team-grid">
+                                    @foreach (var member in (_membersFetch.Data ?? []).Take(OrganizationDetailsViewModel.MaxDisplayedMembers))
                                     {
-                                        <MudItem xs="12" sm="6" md="4" lg="3">
-                                            <MudPaper Elevation="0" Outlined="true" Class="pa-4 text-center rounded-lg">
-                                                <MudAvatar Size="Size.Large"
-                                                           Color="@OrganizationDetailsViewModel.GetMemberAvatarColor(member.DisplayName)"
-                                                           Class="mb-3">
-                                                    @OrganizationDetailsViewModel.GetMemberInitial(member.DisplayName)
-                                                </MudAvatar>
-                                                <MudText Typo="Typo.subtitle1" Class="mud-text-truncate">
-                                                    @member.DisplayName
-                                                </MudText>
-                                                <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mud-text-truncate">
-                                                    @member.RoleName
-                                                </MudText>
-                                            </MudPaper>
-                                        </MudItem>
+                                        <div class="team-cell">
+                                            <MudAvatar Size="Size.Medium" Color="@OrganizationDetailsViewModel.GetMemberAvatarColor(member.DisplayName)" Class="team-av">
+                                                @OrganizationDetailsViewModel.GetMemberInitial(member.DisplayName)
+                                            </MudAvatar>
+                                            <div class="team-text">
+                                                <div class="team-name">@member.DisplayName</div>
+                                                <div class="team-role">@member.RoleName</div>
+                                            </div>
+                                        </div>
                                     }
-                                </MudGrid>
+                                </div>
                                 @if ((_membersFetch.Data?.Count ?? 0) > OrganizationDetailsViewModel.MaxDisplayedMembers)
                                 {
                                     <div class="d-flex justify-center mt-4">
@@ -370,33 +447,34 @@
                     </Tab>
 
                     <Tab Title="Projects" Icon="@Icons.Material.Outlined.AccountTree">
-                        <div class="pa-6">
-                            <MudPaper Elevation="0" Outlined="true" Class="pa-8 text-center rounded-lg empty-state">
-                                <MudIcon Icon="@Icons.Material.Outlined.Construction" Size="Size.Large"
-                                         Color="Color.Secondary" Class="mb-2" />
-                                <MudText Typo="Typo.h6" Color="Color.Secondary">Projects Coming Soon</MudText>
-                                <MudText Typo="Typo.body2" Color="Color.Secondary">
-                                    Track field operations and data initiatives here.
-                                </MudText>
-                            </MudPaper>
+                        <div class="org-tab-body">
+                            <div class="coming-soon">
+                                <div class="coming-soon-eyebrow">Coming soon</div>
+                                <h2 class="coming-soon-title">Field projects</h2>
+                                <p class="coming-soon-body">
+                                    Track active field operations, completion dates, and the sensors scoped to each project.
+                                    Tracked in <a href="https://github.com/andres-m-rodriguez/EcoData/issues/209" target="_blank" rel="noopener">issue #209</a>.
+                                </p>
+                            </div>
                         </div>
                     </Tab>
 
                     <Tab Title="Research" Icon="@Icons.Material.Outlined.Science">
-                        <div class="pa-6">
-                            <MudPaper Elevation="0" Outlined="true" Class="pa-8 text-center rounded-lg empty-state">
-                                <MudIcon Icon="@Icons.Material.Outlined.Article" Size="Size.Large" Color="Color.Secondary"
-                                         Class="mb-2" />
-                                <MudText Typo="Typo.h6" Color="Color.Secondary">Publications Coming Soon</MudText>
-                                <MudText Typo="Typo.body2" Color="Color.Secondary">
-                                    A centralized hub for ecological research and data reports.
-                                </MudText>
-                            </MudPaper>
+                        <div class="org-tab-body">
+                            <div class="coming-soon">
+                                <div class="coming-soon-eyebrow">Coming soon</div>
+                                <h2 class="coming-soon-title">Publications</h2>
+                                <p class="coming-soon-body">
+                                    Latest papers, dataset DOIs, and citations referencing this organization's data.
+                                    Tracked in <a href="https://github.com/andres-m-rodriguez/EcoData/issues/209" target="_blank" rel="noopener">issue #209</a>.
+                                </p>
+                            </div>
                         </div>
                     </Tab>
                 </Tabs>
             </MudPaper>
         }
+    </div>
 </NuiPageLayout>
 
 @code {
