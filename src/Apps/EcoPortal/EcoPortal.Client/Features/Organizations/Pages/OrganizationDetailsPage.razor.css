@@ -25,17 +25,14 @@
    ========================================================================== */
 .org-hero {
     position: relative;
-    /* Full-bleed: break out of the constrained page container and span the
-       viewport width regardless of where the hero is rendered in the tree. */
-    width: 100vw;
-    margin-left: calc(50% - 50vw);
-    margin-right: calc(50% - 50vw);
+    border-radius: 14px;
     overflow: hidden;
     color: #fff;
     background: linear-gradient(135deg, var(--org-primary, var(--mud-palette-primary)) 0%,
                                 rgba(20, 28, 24, 0.95) 100%);
     background-size: cover;
     background-position: center 40%;
+    border: 1px solid var(--mud-palette-lines-default);
 }
 
 .org-hero.no-banner {
@@ -49,11 +46,7 @@
     grid-template-columns: 1fr 320px;
     gap: 2.5rem;
     align-items: end;
-    padding: 4rem 2.5rem 3rem;
-    /* Constrain the inner content even though the hero is full-bleed,
-       so on wide monitors the grid stays readable and centered. */
-    max-width: 1280px;
-    margin: 0 auto;
+    padding: 3.5rem 2.5rem 2.5rem;
 }
 
 .org-hero-left {
@@ -68,14 +61,14 @@
     text-transform: uppercase;
     letter-spacing: 0.18em;
     font-weight: 700;
-    color: #fff;
+    color: var(--org-accent, var(--mud-palette-secondary));
     margin-bottom: 1.25rem;
 }
 
 .org-hero-eyebrow .v-line {
     width: 28px;
     height: 1px;
-    background: rgba(255, 255, 255, 0.5);
+    background: var(--org-accent, var(--mud-palette-secondary));
     display: inline-block;
 }
 
@@ -169,21 +162,21 @@
 }
 
 ::deep .hmr-item .mud-icon-root {
-    color: #fff !important;
+    color: var(--org-accent, var(--mud-palette-secondary)) !important;
     width: 1rem !important;
     height: 1rem !important;
     font-size: 1rem !important;
 }
 
 .hmr-item a {
-    color: #fff;
+    color: rgba(255, 255, 255, 0.95);
     border-bottom: 1px dotted rgba(255, 255, 255, 0.4);
     padding-bottom: 1px;
     text-decoration: none;
 }
 
 .hmr-item a:hover {
-    border-bottom-color: #fff;
+    border-bottom-color: var(--org-accent, var(--mud-palette-secondary));
 }
 
 /* Hero glass card */
