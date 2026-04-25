@@ -66,10 +66,18 @@
             {
                 _organization = organization;
                 _model.Name = organization.Name;
+                _model.Slug = organization.Slug;
+                _model.Tagline = organization.Tagline;
                 _model.ProfilePictureUrl = organization.ProfilePictureUrl;
                 _model.CardPictureUrl = organization.CardPictureUrl;
                 _model.AboutUs = organization.AboutUs;
                 _model.WebsiteUrl = organization.WebsiteUrl;
+                _model.Location = organization.Location;
+                _model.FoundedYear = organization.FoundedYear;
+                _model.LegalStatus = organization.LegalStatus;
+                _model.TaxId = organization.TaxId;
+                _model.PrimaryColor = organization.PrimaryColor;
+                _model.AccentColor = organization.AccentColor;
             },
             _ => _organization = null
         );
@@ -92,11 +100,19 @@
         }
 
         var dto = new OrganizationDtoForUpdate(
-            _model.Name,
-            _model.ProfilePictureUrl,
-            _model.CardPictureUrl,
-            _model.AboutUs,
-            _model.WebsiteUrl
+            Name: _model.Name,
+            Slug: _model.Slug,
+            Tagline: _model.Tagline,
+            ProfilePictureUrl: _model.ProfilePictureUrl,
+            CardPictureUrl: _model.CardPictureUrl,
+            AboutUs: _model.AboutUs,
+            WebsiteUrl: _model.WebsiteUrl,
+            Location: _model.Location,
+            FoundedYear: _model.FoundedYear,
+            LegalStatus: _model.LegalStatus,
+            TaxId: _model.TaxId,
+            PrimaryColor: _model.PrimaryColor,
+            AccentColor: _model.AccentColor
         );
 
         var result = await OrganizationClient.UpdateAsync(Id, dto);
