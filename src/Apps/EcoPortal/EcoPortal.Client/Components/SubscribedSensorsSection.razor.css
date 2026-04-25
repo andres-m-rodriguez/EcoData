@@ -1,0 +1,66 @@
+.sensors-card {
+    background: var(--mud-palette-surface) !important;
+    border: 1px solid var(--mud-palette-lines-default) !important;
+    border-radius: 12px !important;
+    overflow: hidden;
+}
+
+.sensors-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.25rem 1.5rem 1rem;
+    border-bottom: 1px solid var(--mud-palette-lines-default);
+}
+
+::deep .sensors-title {
+    font-family: 'Newsreader', serif;
+    font-weight: 600;
+    color: var(--mud-palette-primary);
+}
+
+.sensors-count {
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    color: var(--mud-palette-secondary);
+}
+
+.sensors-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    padding: 0.75rem;
+}
+
+/* Skeleton */
+.sensors-skeleton {
+    padding: 0.75rem;
+}
+
+/* Empty */
+.sensors-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 2.5rem 1.5rem;
+}
+
+::deep .sensors-empty-icon {
+    color: var(--mud-palette-secondary) !important;
+    opacity: 0.6;
+}
+
+.sensors-empty-text {
+    color: var(--mud-palette-text-secondary);
+}
+
+/* Footer */
+.sensors-footer {
+    padding: 0.5rem 1rem;
+    border-top: 1px solid var(--mud-palette-lines-default);
+    display: flex;
+    justify-content: center;
+}

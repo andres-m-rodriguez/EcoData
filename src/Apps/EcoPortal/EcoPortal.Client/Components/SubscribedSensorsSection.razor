@@ -1,91 +1,122 @@
+@using BlazingSingularity.Fetch
 @using EcoData.Sensors.Application.Client
 @using EcoData.Sensors.Contracts.Dtos
+@using EcoPortal.Client.Features.Sensors.Components
+@implements IDisposable
+@inject ISensorHttpClient SensorClient
 @inject IUserSubscriptionHttpClient SubscriptionClient
 @inject INativeNavigationManager Navigation
 
-<MudCard Elevation="0" Outlined="true">
-    <MudCardHeader>
-        <CardHeaderContent>
-            <MudText Typo="Typo.h6">My Sensors</MudText>
-        </CardHeaderContent>
-    </MudCardHeader>
-    <MudCardContent Class="pa-0">
-        @if (_isLoading)
-        {
-            <MudStack Spacing="2" Class="pa-4">
-                @for (int i = 0; i < 3; i++)
-                {
-                    <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="48px" />
-                }
-            </MudStack>
-        }
-        else if (_subscriptions.Count == 0)
-        {
-            <MudStack AlignItems="AlignItems.Center" Spacing="2" Class="py-6">
-                <MudIcon Icon="@Icons.Material.Outlined.Sensors" Size="Size.Large" Color="Color.Secondary" />
-                <MudText Typo="Typo.body2" Color="Color.Secondary">No subscriptions yet</MudText>
-                <MudButton Variant="Variant.Text"
-                           Color="Color.Primary"
-                           Size="Size.Small"
-                           OnClick="@(() => Navigation.NavigateTo("/sensor-dashboard"))">
-                    Discover Sensors
-                </MudButton>
-            </MudStack>
-        }
-        else
-        {
-            <MudList T="UserSensorSubscriptionDto" Dense="true" Class="py-0">
-                @foreach (var subscription in _subscriptions)
-                {
-                    <MudListItem OnClick="@(() => NavigateToSensor(subscription.SensorId))">
-                        <div class="d-flex align-center gap-3">
-                            <MudIcon Icon="@Icons.Material.Filled.WaterDrop" Color="Color.Primary" Size="Size.Small" />
-                            <MudText>@subscription.SensorName</MudText>
-                        </div>
-                    </MudListItem>
-                    @if (subscription != _subscriptions.Last())
-                    {
-                        <MudDivider />
-                    }
-                }
-            </MudList>
-            @if (_hasMore)
+<MudPaper Elevation="0" Class="sensors-card">
+    <div class="sensors-header">
+        <MudText Typo="Typo.h6" Class="sensors-title">My Sensors</MudText>
+        <span class="sensors-count">
+            @(_sensorsFetch?.Data?.Count ?? 0) Subscribed
+        </span>
+    </div>
+
+    @if (_sensorsFetch is null || _sensorsFetch.IsLoading)
+    {
+        <div class="sensors-skeleton">
+            @for (int i = 0; i < 3; i++)
             {
-                <MudDivider />
-                <div class="pa-2">
-                    <MudButton Variant="Variant.Text"
-                               Color="Color.Primary"
-                               FullWidth="true"
-                               OnClick="@(() => Navigation.NavigateTo("/notifications/history"))">
-                        View All Subscriptions
-                    </MudButton>
-                </div>
+                <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="72px" Class="mb-2 rounded" />
             }
+        </div>
+    }
+    else if (_sensorsFetch.Data is { Count: 0 })
+    {
+        <div class="sensors-empty">
+            <MudIcon Icon="@Icons.Material.Outlined.Sensors" Size="Size.Large" Class="sensors-empty-icon" />
+            <MudText Typo="Typo.body2" Class="sensors-empty-text">
+                You're not following any sensors yet
+            </MudText>
+            <MudButton Variant="Variant.Text" Color="Color.Primary" Size="Size.Small"
+                       OnClick="@(() => Navigation.NavigateTo("/sensor-dashboard"))">
+                Discover sensors
+            </MudButton>
+        </div>
+    }
+    else
+    {
+        <div class="sensors-list">
+            @foreach (var sensor in _sensorsFetch.Data!)
+            {
+                <SensorListItem Sensor="sensor" OnClick="HandleSensorClick" />
+            }
+        </div>
+        @if (_hasMore)
+        {
+            <div class="sensors-footer">
+                <MudButton Variant="Variant.Text" Color="Color.Primary" Size="Size.Small"
+                           OnClick="@(() => Navigation.NavigateTo("/notifications/history"))">
+                    View all subscriptions
+                </MudButton>
+            </div>
         }
-    </MudCardContent>
-</MudCard>
+    }
+</MudPaper>
 
 @code {
-    private bool _isLoading = true;
-    private List<UserSensorSubscriptionDto> _subscriptions = new();
+    private const int MaxDisplayed = 5;
+
+    [Parameter]
+    public EventCallback<int> OnCountChanged { get; set; }
+
+    private IFetch<List<SensorDtoForList>> _sensorsFetch = default!;
     private bool _hasMore;
 
     protected override async Task OnInitializedAsync()
     {
-        try
-        {
-            var allSubscriptions = await SubscriptionClient.GetSubscriptionsAsync();
-            _subscriptions = allSubscriptions.Take(5).ToList();
-            _hasMore = allSubscriptions.Count > 5;
-        }
-        finally
-        {
-            _isLoading = false;
-        }
+        _sensorsFetch = new Fetch<List<SensorDtoForList>>(
+            LoadAsync,
+            () => InvokeAsync(StateHasChanged)
+        );
+
+        await _sensorsFetch.FetchAsync();
     }
 
-    private void NavigateToSensor(Guid sensorId)
+    private async Task<List<SensorDtoForList>> LoadAsync(CancellationToken ct)
     {
-        Navigation.NavigateTo($"/sensors/{sensorId}");
+        var subscriptions = await SubscriptionClient.GetSubscriptionsAsync();
+
+        if (OnCountChanged.HasDelegate)
+        {
+            await OnCountChanged.InvokeAsync(subscriptions.Count);
+        }
+
+        _hasMore = subscriptions.Count > MaxDisplayed;
+
+        var displayed = subscriptions.Take(MaxDisplayed).ToList();
+        var details = await Task.WhenAll(
+            displayed.Select(sub => SensorClient.GetByIdAsync(sub.SensorId, ct))
+        );
+
+        return details
+            .Where(d => d is not null)
+            .Select(d => new SensorDtoForList(
+                d!.Id,
+                d.OrganizationId,
+                d.SourceId,
+                d.ExternalId,
+                d.Name,
+                d.Latitude,
+                d.Longitude,
+                d.MunicipalityId,
+                d.IsActive,
+                d.DataSourceName
+            ))
+            .ToList();
+    }
+
+    private Task HandleSensorClick(SensorDtoForList sensor)
+    {
+        Navigation.NavigateTo($"/sensor/{sensor.Id}");
+        return Task.CompletedTask;
+    }
+
+    public void Dispose()
+    {
+        (_sensorsFetch as IDisposable)?.Dispose();
     }
 }

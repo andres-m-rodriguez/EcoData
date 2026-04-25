@@ -9,113 +9,171 @@
 
 <PageTitle>Account - EcoData</PageTitle>
 
-<div class="narrow-page">
-    <MudStack Spacing="4">
-        @if (AuthState.IsAuthenticated)
-        {
-            @* Profile Card *@
-            <MudCard Elevation="0" Outlined="true">
-                <MudCardContent>
-                    <MudStack AlignItems="AlignItems.Center" Spacing="4" Class="py-4">
-                        <MudAvatar Color="Color.Primary" Size="Size.Large" Style="width: 80px; height: 80px; font-size: 2rem;">
-                            @GetUserInitial()
-                        </MudAvatar>
-                        <MudStack Spacing="1" AlignItems="AlignItems.Center">
-                            <MudText Typo="Typo.h6">@AuthState.CurrentUser?.DisplayName</MudText>
-                            <MudText Typo="Typo.body2" Color="Color.Secondary">@AuthState.CurrentUser?.Email</MudText>
-                        </MudStack>
+@if (AuthState.IsAuthenticated)
+{
+    <div class="account-page page-enter">
+        <MudContainer MaxWidth="MaxWidth.Large" Class="py-6">
+            @* Editorial header *@
+            <header class="account-header">
+                <span class="account-eyebrow">Your Account</span>
+                <h1 class="account-title">Profile &amp; <em>settings</em></h1>
+                <p class="account-subtitle">
+                    Manage how you sign in, the sensors you follow, and how EcoData reaches you
+                    when the data has something to say.
+                </p>
+            </header>
+
+            <MudGrid Spacing="4">
+                @* Left sidebar: profile + quick links *@
+                <MudItem xs="12" md="4">
+                    <MudStack Spacing="4">
+                        <MudPaper Elevation="0" Class="profile-card pa-5">
+                            <MudStack AlignItems="AlignItems.Center" Spacing="3">
+                                <MudAvatar Color="Color.Primary" Class="profile-avatar">
+                                    @GetUserInitial()
+                                </MudAvatar>
+                                <MudStack Spacing="0" AlignItems="AlignItems.Center">
+                                    <MudText Typo="Typo.h6" Class="profile-name">
+                                        @AuthState.CurrentUser?.DisplayName
+                                    </MudText>
+                                    <MudText Typo="Typo.body2" Class="profile-email">
+                                        @AuthState.CurrentUser?.Email
+                                    </MudText>
+                                </MudStack>
+                                <div class="role-pill @(AuthState.IsGlobalAdmin ? "role-pill-admin" : "role-pill-member")">
+                                    <span class="role-dot"></span>
+                                    @(AuthState.IsGlobalAdmin ? "Administrator" : "Member")
+                                </div>
+                            </MudStack>
+
+                            <MudDivider Class="my-4" />
+
+                            <div class="profile-stats">
+                                <div class="profile-stat">
+                                    <span class="profile-stat-label">Member since</span>
+                                    <span class="profile-stat-value">@FormatMemberSince()</span>
+                                </div>
+                                <div class="profile-stat">
+                                    <span class="profile-stat-label">Sensors followed</span>
+                                    <span class="profile-stat-value">@_sensorCount</span>
+                                </div>
+                            </div>
+                        </MudPaper>
+
+                        <MudPaper Elevation="0" Class="quick-links-card">
+                            <div class="section-heading">
+                                <MudText Typo="Typo.h6">Quick Links</MudText>
+                            </div>
+                            <MudList T="string" Class="py-0">
+                                <MudListItem Href="/getting-started" Class="quick-link-item">
+                                    <div class="quick-link">
+                                        <MudIcon Icon="@Icons.Material.Outlined.HelpOutline" Class="quick-link-icon" />
+                                        <div class="quick-link-text">
+                                            <span class="quick-link-title">Getting Started</span>
+                                            <span class="quick-link-subtitle">Learn how to use EcoData</span>
+                                        </div>
+                                    </div>
+                                </MudListItem>
+                                <MudDivider />
+                                <MudListItem Href="/organizations/my" Class="quick-link-item">
+                                    <div class="quick-link">
+                                        <MudIcon Icon="@Icons.Material.Outlined.Business" Class="quick-link-icon" />
+                                        <div class="quick-link-text">
+                                            <span class="quick-link-title">My Organizations</span>
+                                            <span class="quick-link-subtitle">View memberships</span>
+                                        </div>
+                                    </div>
+                                </MudListItem>
+                                <MudDivider />
+                                <MudListItem Href="/notifications/history" Class="quick-link-item">
+                                    <div class="quick-link">
+                                        <MudIcon Icon="@Icons.Material.Outlined.NotificationsNone" Class="quick-link-icon" />
+                                        <div class="quick-link-text">
+                                            <span class="quick-link-title">Notifications</span>
+                                            <span class="quick-link-subtitle">Recent alerts &amp; history</span>
+                                        </div>
+                                    </div>
+                                </MudListItem>
+                            </MudList>
+                        </MudPaper>
                     </MudStack>
-                </MudCardContent>
-            </MudCard>
+                </MudItem>
 
-            @* Account Settings Section *@
-            <AccountSettingsSection />
+                @* Right main column *@
+                <MudItem xs="12" md="8">
+                    <MudStack Spacing="4">
+                        <AccountSettingsSection />
+                        <SubscribedSensorsSection OnCountChanged="OnSensorCountChanged" />
 
-            @* Subscribed Sensors Section *@
-            <SubscribedSensorsSection />
-
-            @* Quick Links *@
-            <MudCard Elevation="0" Outlined="true">
-                <MudCardHeader>
-                    <CardHeaderContent>
-                        <MudText Typo="Typo.h6">Quick Links</MudText>
-                    </CardHeaderContent>
-                </MudCardHeader>
-                <MudCardContent Class="pa-0">
-                    <MudList T="string" Dense="false">
-                        <MudListItem Icon="@Icons.Material.Outlined.Help" Href="/getting-started">
-                            Getting Started
-                        </MudListItem>
-                        <MudDivider />
-                        <MudListItem Icon="@Icons.Material.Outlined.Business" Href="/organizations/my">
-                            My Organizations
-                        </MudListItem>
-                        <MudDivider />
-                        <MudListItem Icon="@Icons.Material.Outlined.Notifications" Href="/notifications/history">
-                            Notifications
-                        </MudListItem>
-                    </MudList>
-                </MudCardContent>
-            </MudCard>
-
-            @* Sign Out Button *@
-            <MudButton Variant="Variant.Outlined"
-                       Color="Color.Error"
-                       FullWidth="true"
-                       StartIcon="@Icons.Material.Outlined.Logout"
-                       OnClick="LogoutAsync"
-                       Disabled="LogoutCommand.IsLoading">
-                @if (LogoutCommand.IsLoading)
-                {
-                    <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
-                    <span>Signing out...</span>
-                }
-                else
-                {
-                    <span>Sign Out</span>
-                }
-            </MudButton>
-        }
-        else
-        {
-            <MudCard Elevation="0" Outlined="true">
-                <MudCardContent>
-                    <MudStack AlignItems="AlignItems.Center" Spacing="4" Class="py-6">
-                        <MudAvatar Color="Color.Default" Size="Size.Large" Style="width: 80px; height: 80px;">
-                            <MudIcon Icon="@Icons.Material.Filled.Person" Style="font-size: 2.5rem;" />
-                        </MudAvatar>
-                        <MudStack Spacing="1" AlignItems="AlignItems.Center">
-                            <MudText Typo="Typo.h6">Welcome to EcoData</MudText>
-                            <MudText Typo="Typo.body2" Color="Color.Secondary">Sign in to access your account</MudText>
-                        </MudStack>
-                        <MudStack Row="true" Spacing="2">
-                            <MudButton Variant="Variant.Filled"
-                                       Color="Color.Primary"
-                                       Href="/login">
-                                Sign In
-                            </MudButton>
-                            <MudButton Variant="Variant.Outlined"
-                                       Color="Color.Primary"
-                                       Href="/register">
-                                Register
-                            </MudButton>
-                        </MudStack>
+                        @* Sign out panel *@
+                        <MudPaper Elevation="0" Class="signout-card pa-4">
+                            <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Spacing="3">
+                                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="3">
+                                    <MudIcon Icon="@Icons.Material.Outlined.Logout" Color="Color.Error" />
+                                    <MudStack Spacing="0">
+                                        <MudText Typo="Typo.subtitle1" Class="signout-title">
+                                            Sign out of EcoData
+                                        </MudText>
+                                        <MudText Typo="Typo.body2" Class="signout-description">
+                                            You'll be returned to the home page. Your sensors keep collecting
+                                            data &mdash; they don't need you logged in.
+                                        </MudText>
+                                    </MudStack>
+                                </MudStack>
+                                <MudButton Variant="Variant.Outlined"
+                                           Color="Color.Error"
+                                           StartIcon="@Icons.Material.Outlined.Logout"
+                                           OnClick="LogoutAsync"
+                                           Disabled="LogoutCommand.IsLoading"
+                                           Class="signout-btn">
+                                    @if (LogoutCommand.IsLoading)
+                                    {
+                                        <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
+                                        <span>Signing out...</span>
+                                    }
+                                    else
+                                    {
+                                        <span>Sign Out</span>
+                                    }
+                                </MudButton>
+                            </MudStack>
+                        </MudPaper>
                     </MudStack>
-                </MudCardContent>
-            </MudCard>
-
-            <MudCard Elevation="0" Outlined="true">
-                <MudList T="string" Dense="false">
-                    <MudListItem Icon="@Icons.Material.Outlined.Help" Href="/getting-started">
-                        Getting Started
-                    </MudListItem>
-                </MudList>
-            </MudCard>
-        }
-    </MudStack>
-</div>
+                </MudItem>
+            </MudGrid>
+        </MudContainer>
+    </div>
+}
+else
+{
+    <div class="account-page page-enter">
+        <MudContainer MaxWidth="MaxWidth.Small" Class="py-8">
+            <MudStack Spacing="4" AlignItems="AlignItems.Center">
+                <MudAvatar Color="Color.Default" Size="Size.Large" Style="width: 80px; height: 80px;">
+                    <MudIcon Icon="@Icons.Material.Filled.Person" Style="font-size: 2.5rem;" />
+                </MudAvatar>
+                <MudStack Spacing="1" AlignItems="AlignItems.Center">
+                    <h1 class="account-title">Welcome to <em>EcoData</em></h1>
+                    <MudText Typo="Typo.body1" Color="Color.Secondary" Align="Align.Center">
+                        Sign in to manage your profile and followed sensors.
+                    </MudText>
+                </MudStack>
+                <MudStack Row="true" Spacing="2">
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" Href="/login">
+                        Sign In
+                    </MudButton>
+                    <MudButton Variant="Variant.Outlined" Color="Color.Primary" Href="/register">
+                        Register
+                    </MudButton>
+                </MudStack>
+            </MudStack>
+        </MudContainer>
+    </div>
+}
 
 @code {
+    private int _sensorCount;
+
     protected override void OnInitialized()
     {
         Navbar.SetTitle("Account");
@@ -131,6 +189,18 @@
     {
         var name = AuthState.CurrentUser?.DisplayName;
         return string.IsNullOrEmpty(name) ? "?" : name[0].ToString().ToUpper();
+    }
+
+    private string FormatMemberSince()
+    {
+        var createdAt = AuthState.CurrentUser?.CreatedAt;
+        return createdAt is null ? "—" : createdAt.Value.ToString("MMM yyyy");
+    }
+
+    private void OnSensorCountChanged(int count)
+    {
+        _sensorCount = count;
+        StateHasChanged();
     }
 
     [RelayCommand]

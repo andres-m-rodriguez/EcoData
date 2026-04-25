@@ -1,0 +1,237 @@
+/* ==========================================================================
+   Account Page Container
+   ========================================================================== */
+.account-page {
+    background: var(--mud-palette-background);
+    min-height: 100%;
+}
+
+.page-enter {
+    animation: pageEnter 0.4s ease-out forwards;
+}
+
+@keyframes pageEnter {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+/* ==========================================================================
+   Editorial Header
+   ========================================================================== */
+.account-header {
+    margin-bottom: 2.5rem;
+    max-width: 640px;
+}
+
+.account-eyebrow {
+    display: block;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    color: var(--mud-palette-secondary);
+    margin-bottom: 0.75rem;
+}
+
+.account-title {
+    font-family: 'Newsreader', serif;
+    font-size: clamp(2rem, 4vw, 3rem);
+    font-weight: 700;
+    line-height: 1.1;
+    color: var(--mud-palette-primary);
+    margin: 0 0 1rem;
+    letter-spacing: -0.02em;
+}
+
+.account-title em {
+    font-style: italic;
+    font-weight: 400;
+    color: var(--mud-palette-primary);
+    opacity: 0.85;
+}
+
+.account-subtitle {
+    font-size: 1rem;
+    line-height: 1.7;
+    color: var(--mud-palette-text-secondary);
+    margin: 0;
+    max-width: 560px;
+}
+
+/* ==========================================================================
+   Profile Card (left sidebar)
+   ========================================================================== */
+::deep .profile-card {
+    background: var(--mud-palette-surface) !important;
+    border: 1px solid var(--mud-palette-lines-default) !important;
+    border-radius: 12px !important;
+}
+
+::deep .profile-avatar {
+    width: 72px !important;
+    height: 72px !important;
+    font-size: 1.75rem !important;
+    font-weight: 600 !important;
+}
+
+::deep .profile-name {
+    font-family: 'Newsreader', serif !important;
+    font-weight: 600 !important;
+    color: var(--mud-palette-primary) !important;
+}
+
+::deep .profile-email {
+    color: var(--mud-palette-text-secondary) !important;
+}
+
+.role-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.25rem 0.7rem;
+    border-radius: 999px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    border: 1px solid transparent;
+}
+
+.role-pill-admin {
+    background: rgba(38, 176, 80, 0.1);
+    color: #1e8c3e;
+    border-color: rgba(38, 176, 80, 0.25);
+}
+
+.role-pill-member {
+    background: var(--mud-palette-background-gray);
+    color: var(--mud-palette-text-secondary);
+    border-color: var(--mud-palette-lines-default);
+}
+
+.role-dot {
+    width: 0.45rem;
+    height: 0.45rem;
+    border-radius: 50%;
+    background: currentColor;
+}
+
+.profile-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.5rem;
+}
+
+.profile-stat {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+}
+
+.profile-stat-label {
+    font-size: 0.65rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--mud-palette-secondary);
+}
+
+.profile-stat-value {
+    font-family: 'Newsreader', serif;
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: var(--mud-palette-primary);
+}
+
+/* ==========================================================================
+   Quick Links Card
+   ========================================================================== */
+::deep .quick-links-card {
+    background: var(--mud-palette-surface) !important;
+    border: 1px solid var(--mud-palette-lines-default) !important;
+    border-radius: 12px !important;
+    overflow: hidden;
+}
+
+.section-heading {
+    padding: 1rem 1.25rem 0.5rem;
+}
+
+::deep .section-heading .mud-typography-h6 {
+    font-family: 'Newsreader', serif;
+    font-weight: 600;
+    color: var(--mud-palette-primary);
+}
+
+::deep .quick-link-item {
+    padding: 0.5rem 0.75rem;
+}
+
+.quick-link {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+}
+
+::deep .quick-link-icon {
+    color: var(--mud-palette-primary) !important;
+}
+
+.quick-link-text {
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+}
+
+.quick-link-title {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--mud-palette-text-primary);
+}
+
+.quick-link-subtitle {
+    font-size: 0.75rem;
+    color: var(--mud-palette-text-secondary);
+}
+
+/* ==========================================================================
+   Sign Out Card
+   ========================================================================== */
+::deep .signout-card {
+    background: rgba(235, 83, 83, 0.04) !important;
+    border: 1px solid rgba(235, 83, 83, 0.25) !important;
+    border-radius: 12px !important;
+}
+
+.signout-title {
+    font-weight: 600;
+    color: var(--mud-palette-error);
+}
+
+.signout-description {
+    color: var(--mud-palette-text-secondary);
+    max-width: 480px;
+}
+
+::deep .signout-btn {
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+/* ==========================================================================
+   Responsive
+   ========================================================================== */
+@media (max-width: 960px) {
+    .account-header {
+        margin-bottom: 1.5rem;
+    }
+
+    ::deep .signout-card .mud-stack-row {
+        flex-direction: column;
+        align-items: flex-start !important;
+    }
+
+    ::deep .signout-btn {
+        align-self: stretch;
+    }
+}
