@@ -43,6 +43,7 @@ public sealed class DatabaseSeederWorker(
             await SeedWildlifeAsync(services, stoppingToken);
             await SeedPhenomenaAsync(services, stoppingToken);
             await SeedUsgsParameterMappingsAsync(services, stoppingToken);
+            await BackfillReadingsAsync(services, stoppingToken);
 
             logger.LogInformation("All database migrations and seeding completed successfully.");
         }
@@ -931,6 +932,59 @@ public sealed class DatabaseSeederWorker(
         context.Parameters.AddRange(toAdd);
         await context.SaveChangesAsync(stoppingToken);
         logger.LogInformation("Seeded {Count} USGS parameter mappings", toAdd.Count);
+    }
+
+    // Resolves phenomenon_id, parameter_id, and canonical_value on any readings ingested before
+    // their parameter mappings existed (e.g. the entire prod backlog before this seeder shipped).
+    // Idempotent: subsequent runs find no unresolved readings and return immediately.
+    private async Task BackfillReadingsAsync(IServiceProvider services, CancellationToken stoppingToken)
+    {
+        var context = services.GetRequiredService<SensorsDbContext>();
+
+        var unresolvedCount = await context
+            .Readings.AsNoTracking()
+            .Where(r => r.PhenomenonId == null)
+            .LongCountAsync(stoppingToken);
+
+        if (unresolvedCount == 0)
+        {
+            logger.LogInformation("No unresolved readings to backfill");
+            return;
+        }
+
+        logger.LogInformation(
+            "Backfilling canonical values on {Count} unresolved reading(s)",
+            unresolvedCount
+        );
+
+        var rowsUpdated = await context.Database.ExecuteSqlRawAsync(
+            """
+            UPDATE readings r
+            SET phenomenon_id   = p.phenomenon_id,
+                parameter_id    = p.id,
+                canonical_value = r.value * p.unit_factor + p.unit_offset
+            FROM sensors s, parameters p
+            WHERE r.sensor_id = s.id
+              AND p.source_id = s.source_id
+              AND p.code = r.parameter
+              AND r.phenomenon_id IS NULL
+            """,
+            stoppingToken
+        );
+
+        var stillUnresolved = unresolvedCount - rowsUpdated;
+        if (stillUnresolved > 0)
+        {
+            logger.LogWarning(
+                "Backfill resolved {Resolved} reading(s); {Remaining} remain unresolved (no parameter mapping for their source/code)",
+                rowsUpdated,
+                stillUnresolved
+            );
+        }
+        else
+        {
+            logger.LogInformation("Backfill resolved {Resolved} reading(s)", rowsUpdated);
+        }
     }
 
     private static readonly JsonSerializerOptions JsonOptions = new()
