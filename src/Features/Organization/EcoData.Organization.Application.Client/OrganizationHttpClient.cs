@@ -55,6 +55,27 @@ public sealed class OrganizationHttpClient(HttpClient httpClient) : IOrganizatio
         return result!;
     }
 
+    public async Task<OneOf<OrganizationDtoForDetail, ProblemDetail>> GetBySlugAsync(
+        string slug,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var response = await httpClient.GetAsync(
+            $"organization/organizations/by-slug/{Uri.EscapeDataString(slug)}",
+            cancellationToken
+        );
+
+        if (!response.IsSuccessStatusCode)
+        {
+            return await response.ReadProblemAsync(cancellationToken);
+        }
+
+        var result = await response.Content.ReadFromJsonAsync<OrganizationDtoForDetail>(
+            cancellationToken
+        );
+        return result!;
+    }
+
     public async Task<OneOf<OrganizationDtoForCreated, ProblemDetail>> CreateAsync(
         OrganizationDtoForCreate dto,
         CancellationToken cancellationToken = default

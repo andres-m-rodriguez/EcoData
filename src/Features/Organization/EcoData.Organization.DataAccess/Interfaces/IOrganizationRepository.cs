@@ -13,6 +13,10 @@ public interface IOrganizationRepository
         Guid id,
         CancellationToken cancellationToken = default
     );
+    Task<OrganizationDtoForDetail?> GetBySlugAsync(
+        string slug,
+        CancellationToken cancellationToken = default
+    );
     Task<OrganizationDtoForCreated?> GetByNameAsync(
         string name,
         CancellationToken cancellationToken = default

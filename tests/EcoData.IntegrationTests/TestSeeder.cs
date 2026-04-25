@@ -1,6 +1,7 @@
 using EcoData.IntegrationTests.Stores;
 using EcoData.Locations.Database;
 using EcoData.Organization.Database;
+using EcoData.Organization.DataAccess.Slugs;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -38,6 +39,7 @@ public sealed class TestSeeder(IServiceProvider services)
         {
             Id = Guid.CreateVersion7(),
             Name = TestOrgName,
+            Slug = SlugGenerator.FromName(TestOrgName),
             ProfilePictureUrl = null,
             CardPictureUrl = null,
             AboutUs = null,
