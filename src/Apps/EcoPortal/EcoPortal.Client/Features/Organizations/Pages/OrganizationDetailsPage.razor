@@ -79,11 +79,11 @@
                     <div class="org-hero-left">
                         <div class="org-hero-eyebrow">
                             <span class="v-line"></span>
-                            <span>@_viewModel.Slug</span>
+                            <MudText Inline="true" Style="color: white;">@_viewModel.Slug</MudText>
                             @if (_viewModel.HasLocation)
                             {
-                                <span class="dot-sep">·</span>
-                                <span>@_viewModel.Location</span>
+                                <MudText Inline="true" Class="dot-sep">·</MudText>
+                                <MudText Inline="true" Style="color: white;">@_viewModel.Location</MudText>
                             }
                         </div>
 
@@ -121,26 +121,26 @@
                             @if (_viewModel.HasWebsite)
                             {
                                 <span class="hmr-item">
-                                    <MudIcon Icon="@Icons.Material.Outlined.Link" Size="Size.Small" />
-                                    <a href="@_viewModel.WebsiteUrl" target="_blank" rel="noopener">@_viewModel.DisplayWebsiteUrl</a>
+                                    <MudIcon Icon="@Icons.Material.Outlined.Link" Size="Size.Small" Style="color: white !important;" />
+                                    <MudLink Href="@_viewModel.WebsiteUrl" Target="_blank" Style="color: white;">@_viewModel.DisplayWebsiteUrl</MudLink>
                                 </span>
                             }
                             @if (_viewModel.HasLocation)
                             {
                                 <span class="hmr-item">
-                                    <MudIcon Icon="@Icons.Material.Outlined.LocationOn" Size="Size.Small" />
-                                    @_viewModel.Location
+                                    <MudIcon Icon="@Icons.Material.Outlined.LocationOn" Size="Size.Small" Style="color: white !important;" />
+                                    <MudText Inline="true" Style="color: white;">@_viewModel.Location</MudText>
                                 </span>
                             }
                             <span class="hmr-item">
-                                <MudIcon Icon="@Icons.Material.Outlined.CalendarMonth" Size="Size.Small" />
-                                Joined @_viewModel.FormattedCreatedDate
+                                <MudIcon Icon="@Icons.Material.Outlined.CalendarMonth" Size="Size.Small" Style="color: white !important;" />
+                                <MudText Inline="true" Style="color: white;">Joined @_viewModel.FormattedCreatedDate</MudText>
                             </span>
                             @if (_viewModel.HasLegalInfo)
                             {
                                 <span class="hmr-item">
-                                    <MudIcon Icon="@Icons.Material.Outlined.Shield" Size="Size.Small" />
-                                    @_viewModel.LegalLine
+                                    <MudIcon Icon="@Icons.Material.Outlined.Shield" Size="Size.Small" Style="color: white !important;" />
+                                    <MudText Inline="true" Style="color: white;">@_viewModel.LegalLine</MudText>
                                 </span>
                             }
                         </div>
@@ -180,6 +180,7 @@
                             <RequireOrganizationPermission Permission="@OrgPermissions.Organization.Update" OrganizationId="Id">
                                 <Authorized>
                                     <MudButton Variant="Variant.Filled" Class="btn-pri-org" StartIcon="@Icons.Material.Outlined.Edit"
+                                               Style="color: white !important;"
                                                OnClick="NavigateToEdit">
                                         Edit organization
                                     </MudButton>
@@ -188,6 +189,7 @@
                                     @if (AuthState.IsAuthenticated)
                                     {
                                         <MudButton Variant="Variant.Filled" Class="btn-pri-org" StartIcon="@Icons.Material.Outlined.PersonAdd"
+                                                   Style="color: white !important;"
                                                    OnClick="OpenRequestAccessDialog">
                                             Request access
                                         </MudButton>
