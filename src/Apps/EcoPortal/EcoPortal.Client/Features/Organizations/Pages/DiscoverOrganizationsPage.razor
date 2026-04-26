@@ -1,78 +1,153 @@
 @page "/organizations/discover"
+@using BlazingSingularity.Fetch
+@using BlazingSingularity.Signals
+@using EcoData.Common.Pagination.Blazor
+@using EcoData.Organization.Application.Client
 @using EcoData.Organization.Contracts.Dtos
 @using EcoData.Organization.Contracts.Parameters
-@using EcoData.Organization.Application.Client
-@using EcoData.Common.Pagination.Blazor
+@using EcoData.Sensors.Application.Client
+@using EcoData.Sensors.Contracts.Parameters
 @using EcoPortal.Client.Features.Organizations.Components
-@using BlazingSingularity.Signals
 @using EcoPortal.Client.Services
 @inject IOrganizationHttpClient OrganizationClient
+@inject ISensorHttpClient SensorClient
+@inject ISensorReadingHttpClient ReadingClient
 @inject INativeNavigationManager Navigation
 @inject INativeNavbarManager Navbar
 @inject AuthStateService AuthState
+@inject ISnackbar Snackbar
 
 <PageTitle>Discover Organizations - EcoData</PageTitle>
 
-<div class="organizations-page">
-    <section class="organizations-content">
-        <SearchHeader SearchSignal="SearchTextSignal" Placeholder="Search organizations..." />
+<div class="orgs-discover-page">
 
-        <div class="organizations-list">
-            <EcoDataVirtualizedList @ref="_virtualizedList" TItem="OrganizationDtoForList" TParams="OrganizationParameters"
-                                    ItemsProvider="GetItemsAsync" ParametersBuilder="BuildParameters" CursorSelector="org => org.Id" ItemSize="200"
-                                    OverscanCount="3">
-                <LoadingTemplate>
-                    @for (var i = 0; i < 4; i++)
+    <section class="hero">
+        <div class="hero-in">
+            <div>
+                <div class="hero-eyebrow"><span class="v-line"></span>Network Partners · Puerto Rico</div>
+                <h1>The teams behind the <em>data</em>.</h1>
+                <p>
+                    Universities, government agencies, and conservation groups deploying sensors and contributing
+                    datasets across Puerto Rico. Browse profiles, see who's monitoring what, and request access
+                    to private datasets.
+                </p>
+            </div>
+
+            <aside class="hero-stats">
+                <div class="hero-stats-k"><span class="pulse"></span>Updated · just now</div>
+                <div class="hs-item">
+                    <span class="hs-label">Organizations</span>
+                    @if (_orgCountFetch.IsLoading)
                     {
+                        <MudSkeleton SkeletonType="SkeletonType.Text" Width="120px" Height="32px" />
+                    }
+                    else
+                    {
+                        <span class="hs-val">@_orgCountFetch.Data.ToString("N0")</span>
+                    }
+                </div>
+                <div class="hs-item">
+                    <span class="hs-label">Sensors deployed</span>
+                    @if (_sensorCountFetch.IsLoading)
+                    {
+                        <MudSkeleton SkeletonType="SkeletonType.Text" Width="120px" Height="32px" />
+                    }
+                    else
+                    {
+                        <span class="hs-val">@_sensorCountFetch.Data.ToString("N0")</span>
+                    }
+                </div>
+                <div class="hs-item">
+                    <span class="hs-label">Total readings</span>
+                    @if (_readingCountFetch.IsLoading)
+                    {
+                        <MudSkeleton SkeletonType="SkeletonType.Text" Width="120px" Height="32px" />
+                    }
+                    else
+                    {
+                        <span class="hs-val">@_readingCountFetch.Data.ToString("N0")</span>
+                    }
+                </div>
+                <div class="hs-item"><span class="hs-label">Updated every</span><span class="hs-val">15<span class="u">min</span></span></div>
+            </aside>
+        </div>
+    </section>
+
+    <main class="body-in">
+
+        <div class="section-h">
+            <div class="section-h-l">
+                <div class="eyebrow">Browse organizations</div>
+                <h2>Find a <em>partner</em></h2>
+                <p>Search by name to find an organization. Click any card to see their profile, sensors, and contact information.</p>
+            </div>
+        </div>
+
+        <div class="list-card">
+            <SearchHeader SearchSignal="SearchTextSignal" Placeholder="Search organizations..." />
+
+            <div class="organizations-list">
+                <EcoDataVirtualizedList @ref="_virtualizedList" TItem="OrganizationDtoForList" TParams="OrganizationParameters"
+                                        ItemsProvider="GetItemsAsync" ParametersBuilder="BuildParameters" CursorSelector="org => org.Id" ItemSize="200"
+                                        OverscanCount="3">
+                    <LoadingTemplate>
+                        @for (var i = 0; i < 4; i++)
+                        {
+                            <div class="organization-skeleton">
+                                <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="100px" Class="rounded mb-3" />
+                                <MudSkeleton Width="60%" Height="20px" />
+                                <MudSkeleton Width="80%" Height="14px" Class="mt-2" />
+                            </div>
+                        }
+                    </LoadingTemplate>
+                    <EmptyTemplate>
+                        @if (!string.IsNullOrWhiteSpace(SearchText))
+                        {
+                            <div class="organizations-empty-state">
+                                <div class="empty-icon">
+                                    <MudIcon Icon="@Icons.Material.Filled.SearchOff" Size="Size.Large" />
+                                </div>
+                                <h4 class="empty-title">No organizations found</h4>
+                                <p class="empty-description">No organizations match "@SearchText"</p>
+                                <MudButton Variant="Variant.Filled" Color="Color.Secondary" OnClick="ClearSearch" Class="mt-4">
+                                    Clear Search
+                                </MudButton>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="organizations-empty-state">
+                                <div class="empty-icon">
+                                    <MudIcon Icon="@Icons.Material.Filled.Business" Size="Size.Large" />
+                                </div>
+                                <h4 class="empty-title">No organizations yet</h4>
+                                <p class="empty-description">Organizations will appear here once they are created.</p>
+                            </div>
+                        }
+                    </EmptyTemplate>
+                    <PlaceholderTemplate>
                         <div class="organization-skeleton">
                             <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="100px" Class="rounded mb-3" />
                             <MudSkeleton Width="60%" Height="20px" />
                             <MudSkeleton Width="80%" Height="14px" Class="mt-2" />
                         </div>
-                    }
-                </LoadingTemplate>
-                <EmptyTemplate>
-                    @if (!string.IsNullOrWhiteSpace(SearchText))
-                    {
-                        <div class="organizations-empty-state">
-                            <div class="empty-icon">
-                                <MudIcon Icon="@Icons.Material.Filled.SearchOff" Size="Size.Large" />
-                            </div>
-                            <h4 class="empty-title">No organizations found</h4>
-                            <p class="empty-description">No organizations match "@SearchText"</p>
-                            <MudButton Variant="Variant.Filled" Color="Color.Secondary" OnClick="ClearSearch" Class="mt-4">
-                                Clear Search
-                            </MudButton>
-                        </div>
-                    }
-                    else
-                    {
-                        <div class="organizations-empty-state">
-                            <div class="empty-icon">
-                                <MudIcon Icon="@Icons.Material.Filled.Business" Size="Size.Large" />
-                            </div>
-                            <h4 class="empty-title">No organizations yet</h4>
-                            <p class="empty-description">Organizations will appear here once they are created.</p>
-                        </div>
-                    }
-                </EmptyTemplate>
-                <PlaceholderTemplate>
-                    <div class="organization-skeleton">
-                        <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="100px" Class="rounded mb-3" />
-                        <MudSkeleton Width="60%" Height="20px" />
-                        <MudSkeleton Width="80%" Height="14px" Class="mt-2" />
-                    </div>
-                </PlaceholderTemplate>
-                <ItemTemplate Context="organization">
-                    <OrganizationListItem Organization="organization" OnClick="NavigateToDetails" />
-                </ItemTemplate>
-            </EcoDataVirtualizedList>
+                    </PlaceholderTemplate>
+                    <ItemTemplate Context="organization">
+                        <OrganizationListItem Organization="organization" OnClick="NavigateToDetails" />
+                    </ItemTemplate>
+                </EcoDataVirtualizedList>
+            </div>
         </div>
-    </section>
+
+    </main>
 </div>
 
 @code {
     private EcoDataVirtualizedList<OrganizationDtoForList, OrganizationParameters>? _virtualizedList;
+
+    private IFetch<int> _orgCountFetch = default!;
+    private IFetch<int> _sensorCountFetch = default!;
+    private IFetch<long> _readingCountFetch = default!;
 
     [Signal]
     private string? _searchText;
@@ -81,6 +156,40 @@
     {
         Navbar.SetTitle("Organizations");
         SearchTextSignal.OnChange(_ => _virtualizedList?.Refresh());
+
+        _orgCountFetch = new Fetch<int>(
+            ct => OrganizationClient.GetOrganizationCountAsync(new OrganizationParameters(), ct),
+            () => InvokeAsync(StateHasChanged)
+        );
+        _orgCountFetch.OnChange(() =>
+        {
+            if (_orgCountFetch.IsError)
+                Snackbar.Add("Couldn't load organization count.", Severity.Error);
+        });
+
+        _sensorCountFetch = new Fetch<int>(
+            ct => SensorClient.GetSensorCountAsync(new SensorParameters(), ct),
+            () => InvokeAsync(StateHasChanged)
+        );
+        _sensorCountFetch.OnChange(() =>
+        {
+            if (_sensorCountFetch.IsError)
+                Snackbar.Add("Couldn't load sensor count.", Severity.Error);
+        });
+
+        _readingCountFetch = new Fetch<long>(
+            ct => ReadingClient.GetTotalCountAsync(ct),
+            () => InvokeAsync(StateHasChanged)
+        );
+        _readingCountFetch.OnChange(() =>
+        {
+            if (_readingCountFetch.IsError)
+                Snackbar.Add("Couldn't load reading count.", Severity.Error);
+        });
+
+        _ = _orgCountFetch.FetchAsync();
+        _ = _sensorCountFetch.FetchAsync();
+        _ = _readingCountFetch.FetchAsync();
     }
 
     private OrganizationParameters BuildParameters(Guid? cursor)

@@ -221,7 +221,8 @@
     }
 
     private bool IsFullWidthPage =>
-        Navigation.State.Path.StartsWith("/data", StringComparison.OrdinalIgnoreCase);
+        Navigation.State.Path.StartsWith("/data", StringComparison.OrdinalIgnoreCase)
+        || Navigation.State.Path.Equals("/organizations/discover", StringComparison.OrdinalIgnoreCase);
 
     protected override async Task OnInitializedAsync()
     {

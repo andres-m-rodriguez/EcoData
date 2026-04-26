@@ -27,6 +27,21 @@ public sealed class OrganizationHttpClient(HttpClient httpClient) : IOrganizatio
         )!;
     }
 
+    public Task<int> GetOrganizationCountAsync(
+        OrganizationParameters parameters,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var queryString = new QueryStringBuilder()
+            .Add("search", parameters.Search)
+            .Build();
+
+        return httpClient.GetFromJsonAsync<int>(
+            $"organization/organizations/count{queryString}",
+            cancellationToken
+        )!;
+    }
+
     public IAsyncEnumerable<MyOrganizationDto> GetMyOrganizationsAsync(
         CancellationToken cancellationToken = default
     )

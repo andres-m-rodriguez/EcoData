@@ -13,6 +13,11 @@ public interface IOrganizationHttpClient
         CancellationToken cancellationToken = default
     );
 
+    Task<int> GetOrganizationCountAsync(
+        OrganizationParameters parameters,
+        CancellationToken cancellationToken = default
+    );
+
     IAsyncEnumerable<MyOrganizationDto> GetMyOrganizationsAsync(
         CancellationToken cancellationToken = default
     );
