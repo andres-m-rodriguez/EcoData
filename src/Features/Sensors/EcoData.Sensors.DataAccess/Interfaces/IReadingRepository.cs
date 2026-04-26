@@ -39,4 +39,6 @@ public interface IReadingRepository
         ReadingStatsParameters parameters,
         CancellationToken cancellationToken = default
     );
+
+    Task<long> GetTotalCountAsync(CancellationToken cancellationToken = default);
 }

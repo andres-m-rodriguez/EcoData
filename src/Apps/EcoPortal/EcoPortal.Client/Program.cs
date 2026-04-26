@@ -6,6 +6,7 @@ using EcoData.Sensors.Application.Client;
 using EcoPortal.Client.Authorization;
 using EcoPortal.Client.Features.Organizations.Services;
 using EcoPortal.Client.Services;
+using EcoPortal.Client.Services.Charts;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
@@ -32,6 +33,7 @@ builder.Services.AddHttpClient<IDataSourceHttpClient, DataSourceHttpClient>(clie
 builder.Services.AddMemoryCache();
 builder.Services.AddSingleton<IOrganizationCacheService, OrganizationCacheService>();
 builder.Services.AddScoped<ILeafletMapService, LeafletMapService>();
+builder.Services.AddScoped<IChartService, ChartService>();
 
 // Navigation services
 builder.Services.AddNativeUi();

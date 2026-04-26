@@ -60,6 +60,7 @@ builder
 builder.Services.AddOrganizationAuthorization();
 builder.Services.AddLoginRateLimiting();
 builder.Services.AddSensorReadingsRateLimiting();
+builder.Services.AddMemoryCache();
 
 var app = builder.Build();
 

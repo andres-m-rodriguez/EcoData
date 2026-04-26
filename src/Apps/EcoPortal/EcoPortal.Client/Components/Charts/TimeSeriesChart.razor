@@ -1,0 +1,38 @@
+@namespace EcoPortal.Client.Components.Charts
+@using EcoPortal.Client.Services.Charts
+@inject IChartService ChartService
+@implements IAsyncDisposable
+
+<div id="@_elementId" class="chart-host"></div>
+
+@code {
+    [Parameter, EditorRequired] public IReadOnlyList<TimeSeries> Series { get; set; } = [];
+    [Parameter] public bool Smooth { get; set; } = true;
+    [Parameter] public bool Area { get; set; }
+    [Parameter] public string? YAxisTitle { get; set; }
+    [Parameter] public IReadOnlyList<string>? Colors { get; set; }
+
+    private readonly string _elementId = $"ts-chart-{Guid.NewGuid():N}";
+    private IChartInstance? _chart;
+    private IReadOnlyList<TimeSeries>? _lastSeries;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            _chart = await ChartService.CreateTimeSeriesAsync(_elementId, new TimeSeriesChartConfig(
+                Series, 0, Smooth, Area, YAxisTitle, null, Colors));
+            _lastSeries = Series;
+        }
+        else if (_chart is not null && !ReferenceEquals(_lastSeries, Series))
+        {
+            await _chart.UpdateTimeSeriesAsync(Series);
+            _lastSeries = Series;
+        }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (_chart is not null) await _chart.DisposeAsync();
+    }
+}

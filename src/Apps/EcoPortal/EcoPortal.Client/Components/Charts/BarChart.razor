@@ -1,0 +1,42 @@
+@namespace EcoPortal.Client.Components.Charts
+@using EcoPortal.Client.Services.Charts
+@inject IChartService ChartService
+@implements IAsyncDisposable
+
+<div id="@_elementId" class="chart-host"></div>
+
+@code {
+    [Parameter, EditorRequired] public IReadOnlyList<string> Categories { get; set; } = [];
+    [Parameter, EditorRequired] public IReadOnlyList<BarSeries> Series { get; set; } = [];
+    [Parameter] public bool Horizontal { get; set; }
+    [Parameter] public bool Stacked { get; set; }
+    [Parameter] public string? YAxisTitle { get; set; }
+    [Parameter] public IReadOnlyList<string>? Colors { get; set; }
+
+    private readonly string _elementId = $"bar-chart-{Guid.NewGuid():N}";
+    private IChartInstance? _chart;
+    private IReadOnlyList<BarSeries>? _lastSeries;
+    private IReadOnlyList<string>? _lastCategories;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            _chart = await ChartService.CreateBarAsync(_elementId, new BarChartConfig(
+                Categories, Series, 0, Horizontal, Stacked, YAxisTitle, null, Colors));
+            _lastSeries = Series;
+            _lastCategories = Categories;
+        }
+        else if (_chart is not null && (!ReferenceEquals(_lastSeries, Series) || !ReferenceEquals(_lastCategories, Categories)))
+        {
+            await _chart.UpdateBarAsync(Categories, Series);
+            _lastSeries = Series;
+            _lastCategories = Categories;
+        }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (_chart is not null) await _chart.DisposeAsync();
+    }
+}
