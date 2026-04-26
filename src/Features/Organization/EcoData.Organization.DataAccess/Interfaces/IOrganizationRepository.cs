@@ -9,6 +9,11 @@ public interface IOrganizationRepository
         OrganizationParameters parameters,
         CancellationToken cancellationToken = default
     );
+
+    Task<int> GetOrganizationCountAsync(
+        OrganizationParameters parameters,
+        CancellationToken cancellationToken = default
+    );
     Task<OrganizationDtoForDetail?> GetByIdAsync(
         Guid id,
         CancellationToken cancellationToken = default

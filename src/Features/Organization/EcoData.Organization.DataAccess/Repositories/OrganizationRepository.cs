@@ -61,6 +61,24 @@ public sealed class OrganizationRepository(IDbContextFactory<OrganizationDbConte
         }
     }
 
+    public async Task<int> GetOrganizationCountAsync(
+        OrganizationParameters parameters,
+        CancellationToken cancellationToken = default
+    )
+    {
+        await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
+
+        var query = context.Organizations.AsNoTracking().AsQueryable();
+
+        if (!string.IsNullOrWhiteSpace(parameters.Search))
+        {
+            var search = parameters.Search.ToLower();
+            query = query.Where(o => o.Name.ToLower().Contains(search));
+        }
+
+        return await query.CountAsync(cancellationToken);
+    }
+
     public async Task<OrganizationDtoForDetail?> GetByIdAsync(
         Guid id,
         CancellationToken cancellationToken = default

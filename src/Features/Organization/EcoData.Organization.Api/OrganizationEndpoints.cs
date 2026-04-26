@@ -34,6 +34,18 @@ public static class OrganizationEndpoints
 
         group
             .MapGet(
+                "/count",
+                (
+                    [AsParameters] OrganizationParameters parameters,
+                    IOrganizationRepository repository,
+                    CancellationToken ct
+                ) => repository.GetOrganizationCountAsync(parameters, ct)
+            )
+            .WithName("GetOrganizationCount")
+            .AllowAnonymous();
+
+        group
+            .MapGet(
                 "/my",
                 (ClaimsPrincipal user, IOrganizationRepository repository, CancellationToken ct) =>
                 {
