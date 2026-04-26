@@ -41,6 +41,16 @@ var locationsDb = postgres.AddDatabase("locations").WithDropDatabaseCommand();
 var identityDb = postgres.AddDatabase("identity").WithDropDatabaseCommand();
 var wildlifeDb = postgres.AddDatabase("wildlife").WithDropDatabaseCommand();
 
+// Azure Service Bus — runs as the official Microsoft emulator locally,
+// provisions a real namespace in publish mode. Topic + subscription are
+// declared here so they exist in both environments without runtime admin calls.
+var serviceBus = builder
+    .AddAzureServiceBus("servicebus")
+    .RunAsEmulator();
+
+var eventsTopic = serviceBus.AddServiceBusTopic("ecodata-events");
+eventsTopic.AddServiceBusSubscription("ecoportal-server");
+
 var seeder = builder
     .AddProject<Projects.EcoData_Seeder>("seeder")
     .WithReference(organizationDb)
@@ -68,11 +78,17 @@ var ecoportal = builder
     .WithReference(locationsDb)
     .WithReference(identityDb)
     .WithReference(wildlifeDb)
+    .WithReference(serviceBus)
+    .WaitFor(eventsTopic)
     .WithEnvironment("Jwt__SensorSecretKey", jwtSensorSecretKey)
     .WithEnvironment("Jwt__UserSecretKey", jwtUserSecretKey)
     .WithEnvironment("Jwt__Issuer", "EcoData")
     .WithEnvironment("Jwt__Audience", "EcoData")
     .WithEnvironment("Jwt__ExpirationHours", "24")
+    .WithEnvironment("Messaging__Provider", "AzureServiceBus")
+    .WithEnvironment("Messaging__ServiceBus__ConnectionString", serviceBus.Resource.ConnectionStringExpression)
+    .WithEnvironment("Messaging__ServiceBus__TopicName", "ecodata-events")
+    .WithEnvironment("Messaging__ServiceBus__SubscriptionName", "ecoportal-server")
     .WaitFor(seeder)
     .PublishAsAzureContainerApp(
         (infra, app) =>

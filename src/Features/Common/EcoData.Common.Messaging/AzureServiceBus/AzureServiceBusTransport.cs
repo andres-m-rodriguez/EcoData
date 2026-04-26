@@ -173,14 +173,28 @@ public sealed class AzureServiceBusTransport : IMessageTransport, IAsyncDisposab
                 return;
             }
 
-            if (!await _adminClient.TopicExistsAsync(_options.TopicName, cancellationToken))
+            // Best-effort: in production the topology is provisioned via infra-as-code
+            // (Aspire-emitted Bicep), and the Service Bus emulator may reject admin
+            // create operations. We try to self-heal in dev but never block startup on it.
+            try
             {
-                await _adminClient.CreateTopicAsync(_options.TopicName, cancellationToken);
-            }
+                if (!await _adminClient.TopicExistsAsync(_options.TopicName, cancellationToken))
+                {
+                    await _adminClient.CreateTopicAsync(_options.TopicName, cancellationToken);
+                }
 
-            if (!await _adminClient.SubscriptionExistsAsync(_options.TopicName, _options.SubscriptionName, cancellationToken))
+                if (!await _adminClient.SubscriptionExistsAsync(_options.TopicName, _options.SubscriptionName, cancellationToken))
+                {
+                    await _adminClient.CreateSubscriptionAsync(_options.TopicName, _options.SubscriptionName, cancellationToken);
+                }
+            }
+            catch (Exception ex)
             {
-                await _adminClient.CreateSubscriptionAsync(_options.TopicName, _options.SubscriptionName, cancellationToken);
+                _logger.LogWarning(
+                    ex,
+                    "Could not verify or auto-create Service Bus topology for topic {Topic}/{Subscription}; assuming it is provisioned externally.",
+                    _options.TopicName,
+                    _options.SubscriptionName);
             }
 
             _topologyEnsured = true;
