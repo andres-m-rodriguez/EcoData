@@ -300,6 +300,89 @@ window.sensorMap = {
     }
 };
 
+// Status Sensor Map - multi-instance map with status-colored pins (used by topic dashboards)
+window.statusMap = {
+    instances: new Map(),
+
+    _statusColors: {
+        Normal: '#16a34a',
+        Elevated: '#d97706',
+        High: '#dc2626',
+        Low: '#78716c',
+        Offline: '#9ca3af'
+    },
+
+    init: function (elementId) {
+        if (this.instances.has(elementId)) {
+            this.dispose(elementId);
+        }
+
+        const map = L.map(elementId, { zoomControl: true }).setView([18.2208, -66.5901], 9);
+
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+            subdomains: 'abcd',
+            maxZoom: 19,
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>'
+        }).addTo(map);
+
+        const markersLayer = L.featureGroup().addTo(map);
+        this.instances.set(elementId, { map: map, markersLayer: markersLayer });
+
+        setTimeout(() => map.invalidateSize(), 100);
+    },
+
+    setSensors: function (elementId, sensors) {
+        const inst = this.instances.get(elementId);
+        if (!inst) return;
+
+        inst.markersLayer.clearLayers();
+
+        (sensors || []).forEach(s => {
+            const color = this._statusColors[s.status] || '#9ca3af';
+            const marker = L.circleMarker([s.latitude, s.longitude], {
+                radius: 6,
+                fillColor: color,
+                color: '#fff',
+                weight: 2,
+                opacity: 1,
+                fillOpacity: 0.9
+            });
+
+            const popup = `
+                <div style="min-width: 180px; font-family: Inter, sans-serif;">
+                    <div style="font-weight: 600; color: #003452; margin-bottom: 4px;">${s.name}</div>
+                    <div style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #888; margin-bottom: 8px;">${s.externalId || ''}</div>
+                    ${s.latestStreamflow != null ? `<div style="font-size: 12px;"><strong>${s.latestStreamflow.toLocaleString()}</strong> cfs</div>` : ''}
+                    ${s.latestGageHeight != null ? `<div style="font-size: 12px;"><strong>${s.latestGageHeight}</strong> ft</div>` : ''}
+                    <div style="font-size: 11px; color: ${color}; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; margin-top: 6px;">${s.status}</div>
+                </div>
+            `;
+            marker.bindPopup(popup);
+            inst.markersLayer.addLayer(marker);
+        });
+
+        if ((sensors || []).length > 0) {
+            const bounds = inst.markersLayer.getBounds();
+            if (bounds.isValid()) {
+                inst.map.fitBounds(bounds, { padding: [40, 40] });
+            }
+        }
+    },
+
+    invalidateSize: function (elementId) {
+        const inst = this.instances.get(elementId);
+        if (!inst) return;
+        inst.map.invalidateSize();
+    },
+
+    dispose: function (elementId) {
+        const inst = this.instances.get(elementId);
+        if (!inst) return;
+        inst.map.remove();
+        this.instances.delete(elementId);
+    }
+};
+
 // Organization Sensor Map - for displaying sensors within an organization with fullscreen support
 window.orgSensorMap = {
     instances: new Map(),

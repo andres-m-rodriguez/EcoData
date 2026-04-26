@@ -1,0 +1,224 @@
+@page "/data"
+@using BlazingSingularity.Fetch
+@using BlazorStaticNavigation
+@using EcoData.Sensors.Application.Client
+@using EcoData.Sensors.Contracts.Parameters
+@inject INativeNavbarManager Navbar
+@inject ISensorHttpClient SensorClient
+@inject ISensorReadingHttpClient ReadingClient
+@inject ISnackbar Snackbar
+
+<PageTitle>Data Portal - EcoData</PageTitle>
+
+<div class="data-hub-page">
+
+    <section class="hero">
+        <div class="hero-in">
+            <div>
+                <div class="hero-eyebrow"><span class="v-line"></span>Open Environmental Data · Puerto Rico</div>
+                <h1>Every reading, <em>open</em> to everyone.</h1>
+                <p>
+                    Live and historical environmental data from across the island — surface water, groundwater,
+                    precipitation, water quality, and reservoirs. Free to download, free to cite.
+                </p>
+            </div>
+
+            <aside class="hero-stats">
+                <div class="hero-stats-k"><span class="pulse"></span>Updated · just now</div>
+                <div class="hs-item">
+                    <span class="hs-label">Total readings</span>
+                    @if (_totalReadingsFetch.IsLoading)
+                    {
+                        <MudSkeleton SkeletonType="SkeletonType.Text" Width="120px" Height="32px" />
+                    }
+                    else
+                    {
+                        <span class="hs-val">@_totalReadingsFetch.Data.ToString("N0")</span>
+                    }
+                </div>
+                <div class="hs-item">
+                    <span class="hs-label">Active sensors</span>
+                    @if (_activeSensorsFetch.IsLoading || _totalSensorsFetch.IsLoading)
+                    {
+                        <MudSkeleton SkeletonType="SkeletonType.Text" Width="120px" Height="32px" />
+                    }
+                    else
+                    {
+                        <span class="hs-val">@_activeSensorsFetch.Data.ToString("N0")<span class="u">/@_totalSensorsFetch.Data.ToString("N0")</span></span>
+                    }
+                </div>
+                <div class="hs-item"><span class="hs-label">Datasets published</span><span class="hs-val">1</span></div>
+                <div class="hs-item"><span class="hs-label">Updated every</span><span class="hs-val">15<span class="u">min</span></span></div>
+            </aside>
+        </div>
+    </section>
+
+    <main class="body-in">
+
+        <div class="section-h">
+            <div class="section-h-l">
+                <div class="eyebrow">Browse by topic</div>
+                <h2>What we <em>measure</em></h2>
+                <p>Continuous environmental monitoring across Puerto Rico. Click an available dashboard to drill in.</p>
+            </div>
+        </div>
+
+        <div class="topic-grid">
+
+            <div class="topic-card surface featured">
+                <div class="feat-vis">
+                    <svg viewBox="0 0 200 140" xmlns="http://www.w3.org/2000/svg">
+                        <defs>
+                            <linearGradient id="surfg" x1="0" x2="0" y1="0" y2="1">
+                                <stop offset="0" stop-color="#0284c7" stop-opacity="0.4" />
+                                <stop offset="1" stop-color="#0284c7" stop-opacity="0" />
+                            </linearGradient>
+                        </defs>
+                        <path d="M0,80 L20,72 L40,86 L60,60 L80,68 L100,42 L120,54 L140,38 L160,46 L180,28 L200,34 L200,140 L0,140 Z" fill="url(#surfg)" />
+                        <path d="M0,80 L20,72 L40,86 L60,60 L80,68 L100,42 L120,54 L140,38 L160,46 L180,28 L200,34" fill="none" stroke="#0284c7" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" />
+                        <circle cx="200" cy="34" r="3.5" fill="#0284c7" />
+                        <circle cx="200" cy="34" r="6" fill="#0284c7" opacity="0.3" />
+                    </svg>
+                </div>
+                <div class="feat-body">
+                    <div class="topic-card-head">
+                        <div class="topic-ic"><MudIcon Icon="@Icons.Material.Filled.Water" /></div>
+                    </div>
+                    <div class="topic-title">Surface Water</div>
+                    <div class="topic-title-es">Aguas superficiales</div>
+                    <div class="topic-desc">River flow, gage height, and water levels measured continuously by USGS stations across Puerto Rico.</div>
+                    <div class="topic-actions">
+                        <a href="/data/surface-water" class="topic-btn dash"><MudIcon Icon="@Icons.Material.Filled.ShowChart" Size="Size.Small" />Dashboard</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="topic-card reservoir coming-soon">
+                <div class="topic-card-head">
+                    <div class="topic-ic"><MudIcon Icon="@Icons.Material.Filled.WaterDrop" /></div>
+                    <div class="topic-count"><strong>Coming soon</strong></div>
+                </div>
+                <div class="topic-title">Reservoirs &amp; Levels</div>
+                <div class="topic-title-es">Embalses y niveles</div>
+                <div class="topic-desc">Reservoir surface elevation and storage at managed water bodies.</div>
+            </div>
+
+            <div class="topic-card precip coming-soon">
+                <div class="topic-card-head">
+                    <div class="topic-ic"><MudIcon Icon="@Icons.Material.Filled.Grain" /></div>
+                    <div class="topic-count"><strong>Coming soon</strong></div>
+                </div>
+                <div class="topic-title">Precipitation</div>
+                <div class="topic-title-es">Precipitación</div>
+                <div class="topic-desc">Rainfall accumulation and intensity from gauges across the island.</div>
+            </div>
+
+            <div class="topic-card ground coming-soon">
+                <div class="topic-card-head">
+                    <div class="topic-ic"><MudIcon Icon="@Icons.Material.Filled.VerticalAlignBottom" /></div>
+                    <div class="topic-count"><strong>Coming soon</strong></div>
+                </div>
+                <div class="topic-title">Groundwater</div>
+                <div class="topic-title-es">Aguas subterráneas</div>
+                <div class="topic-desc">Aquifer depth-to-water measurements at monitoring wells.</div>
+            </div>
+
+            <div class="topic-card quality coming-soon">
+                <div class="topic-card-head">
+                    <div class="topic-ic"><MudIcon Icon="@Icons.Material.Filled.Science" /></div>
+                    <div class="topic-count"><strong>Coming soon</strong></div>
+                </div>
+                <div class="topic-title">Water Quality</div>
+                <div class="topic-title-es">Calidad del agua</div>
+                <div class="topic-desc">Chemical and physical signatures of surface water — pH, conductance, temperature, and dissolved oxygen.</div>
+            </div>
+
+            <div class="topic-card infra coming-soon">
+                <div class="topic-card-head">
+                    <div class="topic-ic"><MudIcon Icon="@Icons.Material.Filled.Settings" /></div>
+                    <div class="topic-count"><strong>Coming soon</strong></div>
+                </div>
+                <div class="topic-title">Infrastructure</div>
+                <div class="topic-title-es">Infraestructura hidráulica</div>
+                <div class="topic-desc">Operational state of dam gates, spillways, and diversion structures.</div>
+            </div>
+
+            <div class="topic-card air coming-soon">
+                <div class="topic-card-head">
+                    <div class="topic-ic"><MudIcon Icon="@Icons.Material.Filled.Air" /></div>
+                    <div class="topic-count"><strong>Coming soon</strong></div>
+                </div>
+                <div class="topic-title">Air Quality</div>
+                <div class="topic-title-es">Calidad del aire</div>
+                <div class="topic-desc">PM2.5, PM10, ozone, and VOCs across major metro areas and rural baselines.</div>
+            </div>
+
+            <div class="topic-card coast coming-soon">
+                <div class="topic-card-head">
+                    <div class="topic-ic"><MudIcon Icon="@Icons.Material.Filled.Waves" /></div>
+                    <div class="topic-count"><strong>Coming soon</strong></div>
+                </div>
+                <div class="topic-title">Coastal &amp; Marine</div>
+                <div class="topic-title-es">Aguas costeras</div>
+                <div class="topic-desc">Tide height, salinity, and sea-surface temperature at coastal stations.</div>
+            </div>
+
+            <div class="topic-card bio coming-soon">
+                <div class="topic-card-head">
+                    <div class="topic-ic"><MudIcon Icon="@Icons.Material.Filled.Pets" /></div>
+                    <div class="topic-count"><strong>Coming soon</strong></div>
+                </div>
+                <div class="topic-title">Biodiversity</div>
+                <div class="topic-title-es">Biodiversidad</div>
+                <div class="topic-desc">Acoustic monitoring, camera traps, and eDNA sampling at protected sites.</div>
+            </div>
+
+        </div>
+
+    </main>
+</div>
+
+@code {
+    private IFetch<long> _totalReadingsFetch = default!;
+    private IFetch<int> _activeSensorsFetch = default!;
+    private IFetch<int> _totalSensorsFetch = default!;
+
+    protected override void OnInitialized()
+    {
+        Navbar.SetTitle("Data");
+
+        _totalReadingsFetch = new Fetch<long>(
+            ct => ReadingClient.GetTotalCountAsync(ct),
+            () => InvokeAsync(StateHasChanged)
+        );
+        _totalReadingsFetch.OnChange(() =>
+        {
+            if (_totalReadingsFetch.IsError)
+                Snackbar.Add("Couldn't load reading count.", Severity.Error);
+        });
+
+        _activeSensorsFetch = new Fetch<int>(
+            ct => SensorClient.GetSensorCountAsync(new SensorParameters(IsActive: true), ct),
+            () => InvokeAsync(StateHasChanged)
+        );
+        _activeSensorsFetch.OnChange(() =>
+        {
+            if (_activeSensorsFetch.IsError)
+                Snackbar.Add("Couldn't load active sensor count.", Severity.Error);
+        });
+
+        _totalSensorsFetch = new Fetch<int>(
+            ct => SensorClient.GetSensorCountAsync(new SensorParameters(), ct),
+            () => InvokeAsync(StateHasChanged)
+        );
+        _totalSensorsFetch.OnChange(() =>
+        {
+            if (_totalSensorsFetch.IsError)
+                Snackbar.Add("Couldn't load total sensor count.", Severity.Error);
+        });
+
+        _ = _totalReadingsFetch.FetchAsync();
+        _ = _activeSensorsFetch.FetchAsync();
+        _ = _totalSensorsFetch.FetchAsync();
+    }
+}

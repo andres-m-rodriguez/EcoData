@@ -1,0 +1,53 @@
+@namespace EcoPortal.Client.Components.Maps
+@using Microsoft.JSInterop
+@inject IJSRuntime Js
+@implements IAsyncDisposable
+
+<div id="@_elementId" class="map-host"></div>
+
+@code {
+    [Parameter, EditorRequired] public IReadOnlyList<MapSensor> Sensors { get; set; } = [];
+
+    private readonly string _elementId = $"status-map-{Guid.NewGuid():N}";
+    private bool _initialized;
+    private IReadOnlyList<MapSensor>? _lastSensors;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await Js.InvokeVoidAsync("statusMap.init", _elementId);
+            _initialized = true;
+            await Js.InvokeVoidAsync("statusMap.setSensors", _elementId, Sensors);
+            _lastSensors = Sensors;
+        }
+        else if (_initialized && !ReferenceEquals(_lastSensors, Sensors))
+        {
+            await Js.InvokeVoidAsync("statusMap.setSensors", _elementId, Sensors);
+            _lastSensors = Sensors;
+        }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (!_initialized) return;
+        try
+        {
+            await Js.InvokeVoidAsync("statusMap.dispose", _elementId);
+        }
+        catch (JSDisconnectedException)
+        {
+            // app shutdown
+        }
+    }
+
+    public sealed record MapSensor(
+        string Name,
+        string ExternalId,
+        decimal Latitude,
+        decimal Longitude,
+        string Status,
+        double? LatestStreamflow,
+        double? LatestGageHeight
+    );
+}

@@ -1,0 +1,451 @@
+@page "/data/surface-water"
+@using BlazingSingularity.Fetch
+@using BlazorStaticNavigation
+@using EcoData.Common.Pagination.Blazor
+@using EcoData.Sensors.Application.Client
+@using EcoData.Sensors.Contracts.Dtos
+@using EcoData.Sensors.Contracts.Parameters
+@using EcoData.Locations.Application.Client
+@using EcoData.Locations.Contracts.Dtos
+@using EcoPortal.Client.Components.Charts
+@using EcoPortal.Client.Components.Maps
+@using EcoPortal.Client.Services.Charts
+@inject INativeNavbarManager Navbar
+@inject ISensorReadingHttpClient ReadingClient
+@inject IMunicipalityHttpClient MunicipalityClient
+@inject ISnackbar Snackbar
+
+<PageTitle>Surface Water · EcoData</PageTitle>
+
+<div class="surface-water-page">
+
+    <header class="head">
+        <div class="head-grid">
+            <div>
+                <div class="head-eyebrow">
+                    <span class="v-line"></span>
+                    Topic dashboard@(_summaryFetch.Data is { Readings7d: > 0 } s ? $" · {s.Readings7d:N0} readings (7d)" : null)
+                </div>
+                <h1>Surface Water<em> · @(_summaryFetch.IsLoading ? "—" : _summaryFetch.Data?.TotalStations.ToString("N0") ?? "0") stations.</em></h1>
+                <div class="head-es">Aguas superficiales</div>
+                <p>
+                    River flow, gage height, and water levels measured continuously across Puerto Rico's monitored
+                    watersheds. Data is published every 15 minutes by USGS Caribbean and is open under CC-BY 4.0.
+                </p>
+            </div>
+            <div class="head-actions">
+                <div class="range-tabs">
+                    <button class="@(_range == "1H" ? "active" : null)" @onclick="@(() => SetRange("1H"))">1H</button>
+                    <button class="@(_range == "24H" ? "active" : null)" @onclick="@(() => SetRange("24H"))">24H</button>
+                    <button class="@(_range == "7D" ? "active" : null)" @onclick="@(() => SetRange("7D"))">7D</button>
+                    <button class="@(_range == "30D" ? "active" : null)" @onclick="@(() => SetRange("30D"))">30D</button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="body">
+
+        <div class="kpi-row">
+            <div class="kpi">
+                <div class="kpi-h">
+                    <div class="kpi-k">Median streamflow</div>
+                </div>
+                @if (_summaryFetch.IsLoading)
+                {
+                    <MudSkeleton SkeletonType="SkeletonType.Text" Width="120px" Height="36px" />
+                }
+                else
+                {
+                    <div class="kpi-v">@FormatKpi(_summaryFetch.Data?.MedianStreamflowCfs, 0)<span class="u">cfs</span></div>
+                }
+                <div class="kpi-trend flat">latest reading per station</div>
+            </div>
+
+            <div class="kpi">
+                <div class="kpi-h">
+                    <div class="kpi-k">Mean gage height</div>
+                </div>
+                @if (_summaryFetch.IsLoading)
+                {
+                    <MudSkeleton SkeletonType="SkeletonType.Text" Width="120px" Height="36px" />
+                }
+                else
+                {
+                    <div class="kpi-v">@FormatKpi(_summaryFetch.Data?.MeanGageHeightFt, 2)<span class="u">ft</span></div>
+                }
+                <div class="kpi-trend flat">across reporting stations</div>
+            </div>
+
+            <div class="kpi">
+                <div class="kpi-h">
+                    <div class="kpi-k">7-day rainfall</div>
+                </div>
+                @if (_summaryFetch.IsLoading)
+                {
+                    <MudSkeleton SkeletonType="SkeletonType.Text" Width="120px" Height="36px" />
+                }
+                else
+                {
+                    <div class="kpi-v">@FormatKpi(_summaryFetch.Data?.MeanRainfallInches7d, 2)<span class="u">in</span></div>
+                }
+                <div class="kpi-trend flat">mean per gauge</div>
+            </div>
+
+            <div class="kpi">
+                <div class="kpi-h">
+                    <div class="kpi-k">Stations reporting</div>
+                </div>
+                @if (_summaryFetch.IsLoading)
+                {
+                    <MudSkeleton SkeletonType="SkeletonType.Text" Width="140px" Height="36px" />
+                }
+                else
+                {
+                    <div class="kpi-v">@(_summaryFetch.Data?.StationsReporting.ToString("N0") ?? "0")<span class="u">/ @(_summaryFetch.Data?.TotalStations.ToString("N0") ?? "0")</span></div>
+                }
+                <div class="kpi-trend flat">last 24h</div>
+            </div>
+
+            <div class="kpi">
+                <div class="kpi-h">
+                    <div class="kpi-k">Active alerts</div>
+                </div>
+                @if (_summaryFetch.IsLoading)
+                {
+                    <MudSkeleton SkeletonType="SkeletonType.Text" Width="60px" Height="36px" />
+                }
+                else
+                {
+                    <div class="kpi-v @(_summaryFetch.Data?.ActiveAlerts > 0 ? "danger" : null)">@(_summaryFetch.Data?.ActiveAlerts.ToString() ?? "0")</div>
+                }
+                <div class="kpi-trend flat">threshold-based</div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-h">
+                <div class="card-h-l">
+                    <div class="card-eyebrow">Streamflow &amp; gage height</div>
+                    <h3 class="card-title">@(_featured?.Name ?? "Featured station")@(_featured is null ? null : $" · {_featured.ExternalId}")</h3>
+                    <div class="card-meta">
+                        @(_featured is null ? "Loading…" : $"Last 7 days · updated {FormatRelative(_featured.LatestRecordedAt)}")
+                    </div>
+                </div>
+            </div>
+            <div class="chart-panel">
+                <div class="legend-row">
+                    <div class="legend-dot flow">streamflow · cfs</div>
+                    <div class="legend-dot gage">gage height · ft</div>
+                </div>
+                @if (_featuredSeries is { Count: > 0 })
+                {
+                    <div class="chart-frame">
+                        <TimeSeriesChart Series="_featuredSeries" Smooth="true" Area="true" Colors="_featuredColors" />
+                    </div>
+                }
+                else
+                {
+                    <div class="chart-placeholder">@(_featuredFetch.IsLoading ? "Loading chart…" : "No data available for the selected station.")</div>
+                }
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-h">
+                <div class="card-h-l">
+                    <div class="card-eyebrow">Sensor map · current state</div>
+                    <h3 class="card-title">@(_markersFetch.Data?.Count.ToString("N0") ?? "—") stations across the island</h3>
+                    <div class="card-meta">Color = current flow status · click a marker for details</div>
+                </div>
+                <div class="map-legend-inline">
+                    <span class="map-legend-dot normal">Normal</span>
+                    <span class="map-legend-dot elevated">Elevated</span>
+                    <span class="map-legend-dot high">High</span>
+                    <span class="map-legend-dot low">Low</span>
+                    <span class="map-legend-dot offline">Offline</span>
+                </div>
+            </div>
+            <div class="map-wrap">
+                @if (_markersFetch.Data is { Count: > 0 })
+                {
+                    <StatusSensorMap Sensors="@_mapSensors" />
+                }
+                else
+                {
+                    <div class="chart-placeholder tall">@(_markersFetch.IsLoading ? "Loading map…" : "No stations available.")</div>
+                }
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-h">
+                <div class="card-h-l">
+                    <div class="card-eyebrow">All stations · ranked by current flow</div>
+                    <h3 class="card-title">Watersheds</h3>
+                    <div class="card-meta">@(_markersFetch.Data?.Count.ToString() ?? "—") stations · click any row to drill in</div>
+                </div>
+            </div>
+
+            <div class="ws-list-head">
+                <div>#</div>
+                <div>Watershed / Station</div>
+                <div>Municipality</div>
+                <div class="num">Flow (cfs)</div>
+                <div class="num">Gage (ft)</div>
+                <div>7-day trend</div>
+                <div>Status</div>
+            </div>
+
+            <div class="ws-list-scroll">
+                <EcoDataVirtualizedList TItem="SurfaceWaterStationDto"
+                                        TParams="SurfaceWaterStationParameters"
+                                        ItemsProvider="@((p, ct) => ReadingClient.GetSurfaceWaterStationsAsync(p, ct))"
+                                        ParametersBuilder="@(cursor => new SurfaceWaterStationParameters(PageSize: 50, Cursor: cursor))"
+                                        CursorSelector="@(s => s.SensorId)"
+                                        ItemSize="68">
+                    <ItemTemplate Context="row">
+                        <div class="ws-row @(_featured?.SensorId == row.SensorId ? "selected" : null)" @key="row.SensorId" @onclick="@(() => SetFeaturedFromRow(row))">
+                            <div class="ws-num">@row.Rank.ToString("00")</div>
+                            <div>
+                                <div class="ws-name">
+                                    <span class="ws-river">@row.Name</span>
+                                    <span class="ws-station-id">@row.ExternalId</span>
+                                </div>
+                            </div>
+                            <div class="ws-municipality">@(MunicipalityName(row.MunicipalityId) ?? "—")</div>
+                            <div class="ws-flow-val">@(row.LatestStreamflowCfs?.ToString("N0") ?? "—")<span class="u">cfs</span></div>
+                            <div class="ws-flow-val">@(row.LatestGageHeightFt?.ToString("N2") ?? "—")<span class="u">ft</span></div>
+                            <div>@RenderSparkline(row.SparklineFlow, row.Status)</div>
+                            <div><span class="pill @(row.Status.ToLowerInvariant())"><span class="dot"></span>@row.Status</span></div>
+                        </div>
+                    </ItemTemplate>
+                    <LoadingTemplate>
+                        <div class="ws-empty">Loading stations…</div>
+                    </LoadingTemplate>
+                    <EmptyTemplate>
+                        <div class="ws-empty">No surface water stations found.</div>
+                    </EmptyTemplate>
+                    <PlaceholderTemplate>
+                        <div class="ws-row placeholder"></div>
+                    </PlaceholderTemplate>
+                </EcoDataVirtualizedList>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+@code {
+    private IFetch<SurfaceWaterSummaryDto?> _summaryFetch = default!;
+    private IFetch<List<SurfaceWaterStationMarkerDto>> _markersFetch = default!;
+    private IFetch<List<ReadingDtoForDetail>> _featuredFetch = default!;
+
+    private string _range = "7D";
+    private FeaturedStation? _featured;
+    private IReadOnlyList<TimeSeries> _featuredSeries = [];
+    private static readonly IReadOnlyList<string> _featuredColors = ["#0284c7", "#d97706"];
+
+    private IReadOnlyList<StatusSensorMap.MapSensor> _mapSensors = [];
+    private Dictionary<Guid, string> _municipalityNames = new();
+
+    protected override Task OnInitializedAsync()
+    {
+        Navbar.SetTitle("Surface Water");
+
+        _summaryFetch = new Fetch<SurfaceWaterSummaryDto?>(
+            ct => ReadingClient.GetSurfaceWaterSummaryAsync(ct),
+            () => InvokeAsync(StateHasChanged)
+        );
+        _summaryFetch.OnChange(() =>
+        {
+            if (_summaryFetch.IsError)
+                Snackbar.Add("Couldn't load Surface Water summary.", Severity.Error);
+        });
+
+        _markersFetch = new Fetch<List<SurfaceWaterStationMarkerDto>>(
+            FetchMarkersAsync,
+            () => InvokeAsync(StateHasChanged)
+        );
+        _markersFetch.OnChange(() =>
+        {
+            if (_markersFetch.IsError)
+                Snackbar.Add("Couldn't load surface water stations.", Severity.Error);
+        });
+
+        _featuredFetch = new Fetch<List<ReadingDtoForDetail>>(
+            FetchFeaturedAsync,
+            () => InvokeAsync(StateHasChanged)
+        );
+        _featuredFetch.OnChange(() =>
+        {
+            if (_featuredFetch.IsError)
+                Snackbar.Add("Couldn't load readings for the featured station.", Severity.Error);
+        });
+
+        _ = _summaryFetch.FetchAsync();
+        _ = _markersFetch.FetchAsync();
+
+        return Task.CompletedTask;
+    }
+
+    private async Task<List<SurfaceWaterStationMarkerDto>> FetchMarkersAsync(CancellationToken ct)
+    {
+        var collected = new List<SurfaceWaterStationMarkerDto>();
+
+        await foreach (var marker in ReadingClient.GetSurfaceWaterMarkersAsync(ct))
+        {
+            collected.Add(marker);
+        }
+
+        await EnrichMunicipalitiesAsync(collected, ct);
+        BuildMapSensors(collected);
+
+        if (_featured is null && collected.Count > 0)
+        {
+            SetFeaturedFromMarker(collected[0]);
+        }
+
+        return collected;
+    }
+
+private async Task EnrichMunicipalitiesAsync(IReadOnlyList<SurfaceWaterStationMarkerDto> markers, CancellationToken ct)
+    {
+        var ids = markers.Where(m => m.MunicipalityId.HasValue).Select(m => m.MunicipalityId!.Value).Distinct().ToList();
+        if (ids.Count == 0) return;
+
+        var municipalities = await MunicipalityClient.GetByIdsAsync(ids, ct);
+        _municipalityNames = municipalities.ToDictionary(m => m.Id, m => m.Name);
+    }
+
+    private void BuildMapSensors(IReadOnlyList<SurfaceWaterStationMarkerDto> markers)
+    {
+        _mapSensors = markers
+            .Select(m => new StatusSensorMap.MapSensor(
+                Name: m.Name,
+                ExternalId: m.ExternalId,
+                Latitude: m.Latitude,
+                Longitude: m.Longitude,
+                Status: m.Status,
+                LatestStreamflow: m.LatestStreamflowCfs,
+                LatestGageHeight: m.LatestGageHeightFt
+            ))
+            .ToList();
+    }
+
+    private async Task<List<ReadingDtoForDetail>> FetchFeaturedAsync(CancellationToken ct)
+    {
+        if (_featured is null) return [];
+
+        var since = DateTimeOffset.UtcNow.AddDays(-RangeToDays(_range));
+
+        var flowParams = new ReadingParameters(PageSize: 500, Parameter: "00060", FromDate: since);
+        var gageParams = new ReadingParameters(PageSize: 500, Parameter: "00065", FromDate: since);
+
+        var flow = new List<ReadingDtoForDetail>();
+        var gage = new List<ReadingDtoForDetail>();
+
+        await foreach (var r in ReadingClient.GetReadingsAsync(_featured.SensorId, flowParams, ct))
+        {
+            flow.Add(r);
+        }
+        await foreach (var r in ReadingClient.GetReadingsAsync(_featured.SensorId, gageParams, ct))
+        {
+            gage.Add(r);
+        }
+
+        _featuredSeries =
+        [
+            new TimeSeries("Streamflow (cfs)", flow.OrderBy(r => r.RecordedAt).Select(r => new TimePoint(r.RecordedAt, r.Value)).ToList()),
+            new TimeSeries("Gage height (ft)", gage.OrderBy(r => r.RecordedAt).Select(r => new TimePoint(r.RecordedAt, r.Value)).ToList())
+        ];
+
+        return flow.Concat(gage).ToList();
+    }
+
+    private void SetFeaturedFromRow(SurfaceWaterStationDto row)
+        => SetFeatured(new FeaturedStation(row.SensorId, row.Name, row.ExternalId, row.LatestRecordedAt));
+
+    private void SetFeaturedFromMarker(SurfaceWaterStationMarkerDto marker)
+        => SetFeatured(new FeaturedStation(marker.SensorId, marker.Name, marker.ExternalId, marker.LatestRecordedAt));
+
+    private void SetFeatured(FeaturedStation featured)
+    {
+        _featured = featured;
+        _featuredSeries = [];
+        _ = _featuredFetch.FetchAsync();
+    }
+
+    private void SetRange(string range)
+    {
+        if (_range == range) return;
+        _range = range;
+        if (_featured is not null)
+        {
+            _ = _featuredFetch.FetchAsync();
+        }
+    }
+
+    private static int RangeToDays(string range) => range switch
+    {
+        "1H" => 1,
+        "24H" => 1,
+        "7D" => 7,
+        "30D" => 30,
+        _ => 7
+    };
+
+    private static string FormatKpi(double? value, int decimals)
+        => value is null ? "—" : value.Value.ToString("N" + decimals);
+
+    private static string FormatRelative(DateTimeOffset? at)
+    {
+        if (at is null) return "—";
+        var diff = DateTimeOffset.UtcNow - at.Value;
+        if (diff.TotalMinutes < 1) return "just now";
+        if (diff.TotalMinutes < 60) return $"{(int)diff.TotalMinutes}m ago";
+        if (diff.TotalHours < 24) return $"{(int)diff.TotalHours}h ago";
+        return $"{(int)diff.TotalDays}d ago";
+    }
+
+    private string? MunicipalityName(Guid? id)
+        => id.HasValue && _municipalityNames.TryGetValue(id.Value, out var name) ? name : null;
+
+    private static RenderFragment RenderSparkline(IReadOnlyList<double> values, string status) => builder =>
+    {
+        if (values is null || values.Count < 2)
+        {
+            builder.AddMarkupContent(0, "<span class=\"ws-spark-empty\">—</span>");
+            return;
+        }
+
+        var color = status switch
+        {
+            "High" => "#dc2626",
+            "Elevated" => "#d97706",
+            "Low" => "#78716c",
+            "Offline" => "#9ca3af",
+            _ => "#0284c7"
+        };
+
+        var min = values.Min();
+        var max = values.Max();
+        var range = max - min;
+        if (range < 0.0001) range = 1;
+
+        const int width = 80;
+        const int height = 22;
+        var step = (double)width / (values.Count - 1);
+        var points = string.Join(" ", values.Select((v, i) =>
+        {
+            var x = i * step;
+            var y = height - ((v - min) / range) * (height - 4) - 2;
+            return $"{x:0.##},{y:0.##}";
+        }));
+
+        var svg = $"<svg width=\"{width}\" height=\"{height}\" viewBox=\"0 0 {width} {height}\"><polyline points=\"{points}\" fill=\"none\" stroke=\"{color}\" stroke-width=\"1.5\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/></svg>";
+        builder.AddMarkupContent(0, svg);
+    };
+
+    private sealed record FeaturedStation(Guid SensorId, string Name, string ExternalId, DateTimeOffset? LatestRecordedAt);
+}

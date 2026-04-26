@@ -1,0 +1,36 @@
+@namespace EcoPortal.Client.Components.Charts
+@using EcoPortal.Client.Services.Charts
+@inject IChartService ChartService
+@implements IAsyncDisposable
+
+<div id="@_elementId" class="chart-host"></div>
+
+@code {
+    [Parameter, EditorRequired] public IReadOnlyList<PieSlice> Slices { get; set; } = [];
+    [Parameter] public bool Donut { get; set; }
+    [Parameter] public IReadOnlyList<string>? Colors { get; set; }
+
+    private readonly string _elementId = $"pie-chart-{Guid.NewGuid():N}";
+    private IChartInstance? _chart;
+    private IReadOnlyList<PieSlice>? _lastSlices;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            _chart = await ChartService.CreatePieAsync(_elementId, new PieChartConfig(
+                Slices, 0, Donut, null, Colors));
+            _lastSlices = Slices;
+        }
+        else if (_chart is not null && !ReferenceEquals(_lastSlices, Slices))
+        {
+            await _chart.UpdatePieAsync(Slices);
+            _lastSlices = Slices;
+        }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (_chart is not null) await _chart.DisposeAsync();
+    }
+}

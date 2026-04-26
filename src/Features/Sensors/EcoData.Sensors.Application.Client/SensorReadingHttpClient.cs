@@ -119,6 +119,44 @@ public sealed class SensorReadingHttpClient(HttpClient httpClient) : ISensorRead
         return await response.ReadProblemAsync(cancellationToken);
     }
 
+    public Task<long> GetTotalCountAsync(CancellationToken cancellationToken = default)
+    {
+        return httpClient.GetFromJsonAsync<long>("readings/count", cancellationToken);
+    }
+
+    public async Task<SurfaceWaterSummaryDto?> GetSurfaceWaterSummaryAsync(CancellationToken cancellationToken = default)
+    {
+        var response = await httpClient.GetAsync("readings/topics/surface-water/summary", cancellationToken);
+        if (!response.IsSuccessStatusCode) return null;
+        return await response.Content.ReadFromJsonAsync<SurfaceWaterSummaryDto>(cancellationToken);
+    }
+
+    public IAsyncEnumerable<SurfaceWaterStationDto> GetSurfaceWaterStationsAsync(
+        SurfaceWaterStationParameters parameters,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var queryString = new QueryStringBuilder()
+            .Add("pageSize", parameters.PageSize != 50 ? parameters.PageSize : null)
+            .Add("cursor", parameters.Cursor)
+            .Build();
+
+        return httpClient.GetFromJsonAsAsyncEnumerable<SurfaceWaterStationDto>(
+            $"readings/topics/surface-water/stations{queryString}",
+            cancellationToken
+        )!;
+    }
+
+    public IAsyncEnumerable<SurfaceWaterStationMarkerDto> GetSurfaceWaterMarkersAsync(
+        CancellationToken cancellationToken = default
+    )
+    {
+        return httpClient.GetFromJsonAsAsyncEnumerable<SurfaceWaterStationMarkerDto>(
+            "readings/topics/surface-water/stations/markers",
+            cancellationToken
+        )!;
+    }
+
     public async IAsyncEnumerable<ReadingDtoForCreate> SubscribeToReadingsAsync(
         Guid sensorId,
         [EnumeratorCancellation] CancellationToken cancellationToken = default

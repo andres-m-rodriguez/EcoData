@@ -258,6 +258,12 @@ public sealed class ReadingRepository(IDbContextFactory<SensorsDbContext> contex
         return new SensorReadingStatsDto(parameterStats);
     }
 
+    public async Task<long> GetTotalCountAsync(CancellationToken cancellationToken = default)
+    {
+        await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
+        return await context.Readings.LongCountAsync(cancellationToken);
+    }
+
     private static (double? Threshold, string? Status) GetThresholdInfo(string parameter, double value)
     {
         return parameter.ToLowerInvariant() switch

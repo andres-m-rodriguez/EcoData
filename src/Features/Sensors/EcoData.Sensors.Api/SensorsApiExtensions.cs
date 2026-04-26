@@ -9,6 +9,7 @@ public static class SensorsApiExtensions
     {
         app.MapSensorEndpoints();
         app.MapSensorReadingEndpoints();
+        app.MapReadingEndpoints();
         app.MapSensorHealthEndpoints();
         app.MapSensorHealthConfigEndpoints();
         app.MapSensorAlertEndpoints();
