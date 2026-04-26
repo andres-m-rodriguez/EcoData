@@ -8,6 +8,7 @@ namespace EcoPortal.Client.Services;
 public enum NavigationTab
 {
     Home,
+    Data,
     Monitor,
     Orgs,
     Account
@@ -45,6 +46,7 @@ public sealed class TabNavigationService : ITabNavigationService
     private static string GetTabRoot(NavigationTab tab) => tab switch
     {
         NavigationTab.Home => "/",
+        NavigationTab.Data => "/data",
         NavigationTab.Monitor => "/monitor",
         NavigationTab.Orgs => "/orgs",
         NavigationTab.Account => "/account",
@@ -54,6 +56,7 @@ public sealed class TabNavigationService : ITabNavigationService
     private static NavigationTab GetTabFromPath(string path) => path switch
     {
         "/" or "" => NavigationTab.Home,
+        _ when path.StartsWith("/data") => NavigationTab.Data,
         _ when path.StartsWith("/monitor") || path.StartsWith("/sensor") || path.StartsWith("/alerts")
             => NavigationTab.Monitor,
         _ when path.StartsWith("/orgs") || path.StartsWith("/organizations") || path.StartsWith("/access-requests")

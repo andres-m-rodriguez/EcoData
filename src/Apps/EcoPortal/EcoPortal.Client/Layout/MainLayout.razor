@@ -171,6 +171,13 @@
                 <MudText Typo="Typo.caption">Home</MudText>
             </MudStack>
         </MudButton>
+        <MudButton Variant="Variant.Text" Color="@GetBottomNavColor(NavigationTab.Data)" Class="bottom-nav-item"
+                   OnClick="@(() => NavigateToBottomNav(NavigationTab.Data))">
+            <MudStack AlignItems="AlignItems.Center" Spacing="0">
+                <MudIcon Icon="@Icons.Material.Filled.QueryStats" Size="Size.Medium" />
+                <MudText Typo="Typo.caption">Data</MudText>
+            </MudStack>
+        </MudButton>
         <MudButton Variant="Variant.Text" Color="@GetBottomNavColor(NavigationTab.Monitor)" Class="bottom-nav-item"
                    OnClick="@(() => NavigateToBottomNav(NavigationTab.Monitor))">
             <MudStack AlignItems="AlignItems.Center" Spacing="0">
