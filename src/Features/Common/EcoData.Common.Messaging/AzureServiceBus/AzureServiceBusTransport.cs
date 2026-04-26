@@ -2,7 +2,6 @@ using System.Runtime.CompilerServices;
 using System.Text.Json;
 using System.Threading.Channels;
 using Azure.Messaging.ServiceBus;
-using Azure.Messaging.ServiceBus.Administration;
 using EcoData.Common.Messaging.Abstractions;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -12,6 +11,11 @@ namespace EcoData.Common.Messaging.AzureServiceBus;
 /// <summary>
 /// Azure Service Bus implementation of <see cref="IMessageTransport"/>.
 /// Pub/sub only in this iteration; queue (point-to-point) APIs are not yet implemented.
+/// Topology (topic + subscription) is expected to be provisioned externally — by Aspire
+/// in dev (emulator) and by Bicep in production. The transport does not self-heal it,
+/// because the Service Bus emulator does not expose the management endpoint that
+/// <see cref="Azure.Messaging.ServiceBus.Administration.ServiceBusAdministrationClient"/>
+/// requires, and a stale check there silently burns the call's timeout budget.
 /// </summary>
 public sealed class AzureServiceBusTransport : IMessageTransport, IAsyncDisposable
 {
@@ -21,10 +25,7 @@ public sealed class AzureServiceBusTransport : IMessageTransport, IAsyncDisposab
     private readonly AzureServiceBusOptions _options;
     private readonly ILogger<AzureServiceBusTransport> _logger;
     private readonly ServiceBusClient _client;
-    private readonly ServiceBusAdministrationClient _adminClient;
     private readonly ServiceBusSender _sender;
-    private readonly SemaphoreSlim _topologyLock = new(1, 1);
-    private bool _topologyEnsured;
 
     public AzureServiceBusTransport(
         IOptions<AzureServiceBusOptions> options,
@@ -40,7 +41,6 @@ public sealed class AzureServiceBusTransport : IMessageTransport, IAsyncDisposab
         }
 
         _client = new ServiceBusClient(_options.ConnectionString);
-        _adminClient = new ServiceBusAdministrationClient(_options.ConnectionString);
         _sender = _client.CreateSender(_options.TopicName);
     }
 
@@ -49,8 +49,6 @@ public sealed class AzureServiceBusTransport : IMessageTransport, IAsyncDisposab
         MessageEnvelope<T> envelope,
         CancellationToken cancellationToken = default)
     {
-        await EnsureTopologyAsync(cancellationToken);
-
         var body = JsonSerializer.SerializeToUtf8Bytes(envelope.Payload);
         var message = new ServiceBusMessage(body)
         {
@@ -86,8 +84,6 @@ public sealed class AzureServiceBusTransport : IMessageTransport, IAsyncDisposab
         string topic,
         [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
-        await EnsureTopologyAsync(cancellationToken);
-
         var channel = Channel.CreateUnbounded<MessageEnvelope<T>>(
             new UnboundedChannelOptions { SingleReader = true, SingleWriter = true });
 
@@ -179,57 +175,9 @@ public sealed class AzureServiceBusTransport : IMessageTransport, IAsyncDisposab
     public IAsyncEnumerable<MessageEnvelope<T>> ReceiveAsync<T>(string queue, CancellationToken cancellationToken = default)
         => throw new NotSupportedException("Queue (point-to-point) messaging is not implemented in this iteration.");
 
-    private async Task EnsureTopologyAsync(CancellationToken cancellationToken)
-    {
-        if (_topologyEnsured)
-        {
-            return;
-        }
-
-        await _topologyLock.WaitAsync(cancellationToken);
-        try
-        {
-            if (_topologyEnsured)
-            {
-                return;
-            }
-
-            // Best-effort: in production the topology is provisioned via infra-as-code
-            // (Aspire-emitted Bicep), and the Service Bus emulator may reject admin
-            // create operations. We try to self-heal in dev but never block startup on it.
-            try
-            {
-                if (!await _adminClient.TopicExistsAsync(_options.TopicName, cancellationToken))
-                {
-                    await _adminClient.CreateTopicAsync(_options.TopicName, cancellationToken);
-                }
-
-                if (!await _adminClient.SubscriptionExistsAsync(_options.TopicName, _options.SubscriptionName, cancellationToken))
-                {
-                    await _adminClient.CreateSubscriptionAsync(_options.TopicName, _options.SubscriptionName, cancellationToken);
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogWarning(
-                    ex,
-                    "Could not verify or auto-create Service Bus topology for topic {Topic}/{Subscription}; assuming it is provisioned externally.",
-                    _options.TopicName,
-                    _options.SubscriptionName);
-            }
-
-            _topologyEnsured = true;
-        }
-        finally
-        {
-            _topologyLock.Release();
-        }
-    }
-
     public async ValueTask DisposeAsync()
     {
         await _sender.DisposeAsync();
         await _client.DisposeAsync();
-        _topologyLock.Dispose();
     }
 }
