@@ -71,7 +71,15 @@ public sealed class AzureServiceBusTransport : IMessageTransport, IAsyncDisposab
             }
         }
 
+        _logger.LogInformation(
+            "Publishing message {MessageId} to logical topic {LogicalTopic} on Service Bus topic {ServiceBusTopic}",
+            message.MessageId,
+            topic,
+            _options.TopicName);
+
         await _sender.SendMessageAsync(message, cancellationToken);
+
+        _logger.LogInformation("Published message {MessageId}", message.MessageId);
     }
 
     public async IAsyncEnumerable<MessageEnvelope<T>> SubscribeAsync<T>(
@@ -94,8 +102,14 @@ public sealed class AzureServiceBusTransport : IMessageTransport, IAsyncDisposab
 
         processor.ProcessMessageAsync += async args =>
         {
-            if (!args.Message.ApplicationProperties.TryGetValue(LogicalTopicProperty, out var msgTopic)
-                || !string.Equals(msgTopic?.ToString(), topic, StringComparison.Ordinal))
+            args.Message.ApplicationProperties.TryGetValue(LogicalTopicProperty, out var msgTopic);
+            _logger.LogInformation(
+                "Received message {MessageId} with logical topic {ReceivedTopic}; subscriber expects {ExpectedTopic}",
+                args.Message.MessageId,
+                msgTopic,
+                topic);
+
+            if (msgTopic is null || !string.Equals(msgTopic.ToString(), topic, StringComparison.Ordinal))
             {
                 await args.CompleteMessageAsync(args.Message, args.CancellationToken);
                 return;
@@ -135,7 +149,14 @@ public sealed class AzureServiceBusTransport : IMessageTransport, IAsyncDisposab
             return Task.CompletedTask;
         };
 
+        _logger.LogInformation(
+            "Starting Service Bus processor for logical topic {LogicalTopic} on subscription {Subscription}",
+            topic,
+            _options.SubscriptionName);
+
         await processor.StartProcessingAsync(cancellationToken);
+
+        _logger.LogInformation("Service Bus processor started for {LogicalTopic}", topic);
 
         try
         {
