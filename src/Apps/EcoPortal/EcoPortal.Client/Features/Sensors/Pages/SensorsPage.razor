@@ -1,21 +1,130 @@
 @page "/sensor-dashboard"
+@using BlazingSingularity.Fetch
+@using EcoData.Sensors.Application.Client
 @using EcoData.Sensors.Contracts.Dtos
+@using EcoData.Sensors.Contracts.Parameters
 @using EcoPortal.Client.Features.Sensors.Components
 @inject INativeNavigationManager Navigation
 @inject INativeNavbarManager Navbar
+@inject ISensorHttpClient SensorClient
+@inject ISensorReadingHttpClient ReadingClient
+@inject ISnackbar Snackbar
 
 <PageTitle>Sensors - EcoData</PageTitle>
 
 <div class="sensors-page">
-    <section class="sensors-content">
-        <SensorList OnSensorClick="NavigateToDetail" />
+
+    <section class="hero">
+        <div class="hero-in">
+            <div>
+                <div class="hero-eyebrow"><span class="v-line"></span>Live Network · Puerto Rico</div>
+                <h1>Every sensor, <em>visible</em>.</h1>
+                <p>
+                    Real-time and recent readings from every monitoring station registered to the EcoData network —
+                    USGS Caribbean stations, partner organizations, and individual researchers. Browse by status,
+                    organization, or municipality.
+                </p>
+            </div>
+
+            <aside class="hero-stats">
+                <div class="hero-stats-k"><span class="pulse"></span>Updated · just now</div>
+                <div class="hs-item">
+                    <span class="hs-label">Total sensors</span>
+                    @if (_totalSensorsFetch.IsLoading)
+                    {
+                        <MudSkeleton SkeletonType="SkeletonType.Text" Width="120px" Height="32px" />
+                    }
+                    else
+                    {
+                        <span class="hs-val">@_totalSensorsFetch.Data.ToString("N0")</span>
+                    }
+                </div>
+                <div class="hs-item">
+                    <span class="hs-label">Active sensors</span>
+                    @if (_activeSensorsFetch.IsLoading || _totalSensorsFetch.IsLoading)
+                    {
+                        <MudSkeleton SkeletonType="SkeletonType.Text" Width="120px" Height="32px" />
+                    }
+                    else
+                    {
+                        <span class="hs-val">@_activeSensorsFetch.Data.ToString("N0")<span class="u">/@_totalSensorsFetch.Data.ToString("N0")</span></span>
+                    }
+                </div>
+                <div class="hs-item">
+                    <span class="hs-label">Total readings</span>
+                    @if (_totalReadingsFetch.IsLoading)
+                    {
+                        <MudSkeleton SkeletonType="SkeletonType.Text" Width="120px" Height="32px" />
+                    }
+                    else
+                    {
+                        <span class="hs-val">@_totalReadingsFetch.Data.ToString("N0")</span>
+                    }
+                </div>
+                <div class="hs-item"><span class="hs-label">Updated every</span><span class="hs-val">15<span class="u">min</span></span></div>
+            </aside>
+        </div>
     </section>
+
+    <main class="body-in">
+
+        <div class="section-h">
+            <div class="section-h-l">
+                <div class="eyebrow">Browse stations</div>
+                <h2>Find a <em>station</em></h2>
+                <p>Search by river, municipality, or station ID. Click any sensor to drill into its live readings, recent history, and configuration.</p>
+            </div>
+        </div>
+
+        <div class="list-card">
+            <SensorList OnSensorClick="NavigateToDetail" />
+        </div>
+
+    </main>
 </div>
 
 @code {
+    private IFetch<int> _totalSensorsFetch = default!;
+    private IFetch<int> _activeSensorsFetch = default!;
+    private IFetch<long> _totalReadingsFetch = default!;
+
     protected override void OnInitialized()
     {
         Navbar.SetTitle("Sensors");
+
+        _totalSensorsFetch = new Fetch<int>(
+            ct => SensorClient.GetSensorCountAsync(new SensorParameters(), ct),
+            () => InvokeAsync(StateHasChanged)
+        );
+        _totalSensorsFetch.OnChange(() =>
+        {
+            if (_totalSensorsFetch.IsError)
+                Snackbar.Add("Couldn't load total sensor count.", Severity.Error);
+        });
+
+        _activeSensorsFetch = new Fetch<int>(
+            ct => SensorClient.GetSensorCountAsync(new SensorParameters(IsActive: true), ct),
+            () => InvokeAsync(StateHasChanged)
+        );
+        _activeSensorsFetch.OnChange(() =>
+        {
+            if (_activeSensorsFetch.IsError)
+                Snackbar.Add("Couldn't load active sensor count.", Severity.Error);
+        });
+
+        _totalReadingsFetch = new Fetch<long>(
+            ct => ReadingClient.GetTotalCountAsync(ct),
+            () => InvokeAsync(StateHasChanged)
+        );
+        _totalReadingsFetch.OnChange(() =>
+        {
+            if (_totalReadingsFetch.IsError)
+                Snackbar.Add("Couldn't load reading count.", Severity.Error);
+        });
+
+        _ = _totalSensorsFetch.FetchAsync();
+        _ = _activeSensorsFetch.FetchAsync();
+        _ = _totalReadingsFetch.FetchAsync();
     }
 
     private void NavigateToDetail(SensorDtoForList sensor)
