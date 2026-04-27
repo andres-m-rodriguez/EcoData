@@ -82,6 +82,10 @@
 
         @* Mobile: Action button(s) at far right *@
         <MudHidden Breakpoint="Breakpoint.MdAndUp">
+            @if (AuthState.IsAuthenticated)
+            {
+                <NotificationBell />
+            }
             @if (!IsHomePage)
             {
                 <NuiNativeNavbar ShowBackButton="false" ShowTitle="false" />
