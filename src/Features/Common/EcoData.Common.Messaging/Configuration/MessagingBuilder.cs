@@ -1,6 +1,7 @@
 using EcoData.Common.Messaging.Abstractions;
+using EcoData.Common.Messaging.AzureServiceBus;
 using EcoData.Common.Messaging.Handlers;
-using EcoData.Common.Messaging.InMemory;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace EcoData.Common.Messaging.Configuration;
@@ -19,17 +20,37 @@ public sealed class MessagingBuilder
     }
 
     /// <summary>
-    /// Configures the messaging system to use in-memory transport.
+    /// Configures the messaging system to use the Azure Service Bus transport.
+    /// Pub/sub only in this iteration; command APIs throw <see cref="NotSupportedException"/>.
     /// </summary>
-    public MessagingBuilder UseInMemoryTransport()
+    public MessagingBuilder UseAzureServiceBus(Action<AzureServiceBusOptions> configure)
     {
         if (_transportConfigured)
         {
             throw new InvalidOperationException("A transport has already been configured.");
         }
 
-        _services.AddSingleton<IMessageTransport, InMemoryTransport>();
-        _services.AddSingleton<IMessageBus, InMemoryMessageBus>();
+        _services.Configure(configure);
+        _services.AddSingleton<IMessageTransport, AzureServiceBusTransport>();
+        _services.AddSingleton<IMessageBus, AzureServiceBusMessageBus>();
+        _transportConfigured = true;
+
+        return this;
+    }
+
+    /// <summary>
+    /// Configures the messaging system to use the Azure Service Bus transport, binding options from configuration.
+    /// </summary>
+    public MessagingBuilder UseAzureServiceBus(IConfiguration configuration)
+    {
+        if (_transportConfigured)
+        {
+            throw new InvalidOperationException("A transport has already been configured.");
+        }
+
+        _services.Configure<AzureServiceBusOptions>(configuration);
+        _services.AddSingleton<IMessageTransport, AzureServiceBusTransport>();
+        _services.AddSingleton<IMessageBus, AzureServiceBusMessageBus>();
         _transportConfigured = true;
 
         return this;
@@ -68,7 +89,8 @@ public sealed class MessagingBuilder
     {
         if (!_transportConfigured)
         {
-            UseInMemoryTransport();
+            throw new InvalidOperationException(
+                "No messaging transport configured. Call UseAzureServiceBus(...) on the MessagingBuilder.");
         }
     }
 }

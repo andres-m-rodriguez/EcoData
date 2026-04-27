@@ -1,5 +1,6 @@
 using Aspire.Hosting.ApplicationModel;
 using EcoData.AppHost.Extensions;
+using EcoData.Sensors.Contracts.Events;
 
 var builder = DistributedApplication.CreateBuilder(args);
 
@@ -41,6 +42,23 @@ var locationsDb = postgres.AddDatabase("locations").WithDropDatabaseCommand();
 var identityDb = postgres.AddDatabase("identity").WithDropDatabaseCommand();
 var wildlifeDb = postgres.AddDatabase("wildlife").WithDropDatabaseCommand();
 
+// Azure Service Bus — runs as the official Microsoft emulator locally,
+// provisions a real namespace in publish mode. Topic + subscription are
+// declared here so they exist in both environments without runtime admin calls.
+var serviceBus = builder
+    .AddAzureServiceBus("servicebus")
+    .RunAsEmulator();
+
+var eventsTopic = serviceBus.AddServiceBusTopic("ecodata-events");
+// One subscription per event type. The transport derives the subscription name from
+// typeof(T).Name.ToLowerInvariant(); each event record exposes the same name as a
+// SubscriptionName constant from its module's contracts library. Add an entry here for
+// every type used with IMessageBus.
+// Sensors module
+eventsTopic.AddServiceBusSubscription(ReadingCreatedEvent.SubscriptionName);
+eventsTopic.AddServiceBusSubscription(SensorHealthAlertEvent.SubscriptionName);
+eventsTopic.AddServiceBusSubscription(UserNotificationEvent.SubscriptionName);
+
 var seeder = builder
     .AddProject<Projects.EcoData_Seeder>("seeder")
     .WithReference(organizationDb)
@@ -68,11 +86,15 @@ var ecoportal = builder
     .WithReference(locationsDb)
     .WithReference(identityDb)
     .WithReference(wildlifeDb)
+    .WithReference(serviceBus)
+    .WaitFor(eventsTopic)
     .WithEnvironment("Jwt__SensorSecretKey", jwtSensorSecretKey)
     .WithEnvironment("Jwt__UserSecretKey", jwtUserSecretKey)
     .WithEnvironment("Jwt__Issuer", "EcoData")
     .WithEnvironment("Jwt__Audience", "EcoData")
     .WithEnvironment("Jwt__ExpirationHours", "24")
+    .WithEnvironment("Messaging__ServiceBus__ConnectionString", serviceBus.Resource.ConnectionStringExpression)
+    .WithEnvironment("Messaging__ServiceBus__TopicName", "ecodata-events")
     .WaitFor(seeder)
     .PublishAsAzureContainerApp(
         (infra, app) =>

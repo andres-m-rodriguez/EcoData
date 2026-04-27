@@ -7,10 +7,12 @@
 
   <ItemGroup Condition="'$(RuntimeIdentifier)' != 'browser-wasm'">
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    <PackageReference Include="Azure.Messaging.ServiceBus" Version="7.20.1" />
   </ItemGroup>
 
   <ItemGroup Condition="'$(RuntimeIdentifier)' == 'browser-wasm'">
     <Compile Remove="Endpoints\**" />
     <Compile Remove="Configuration\**" />
+    <Compile Remove="AzureServiceBus\**" />
   </ItemGroup>
 </Project>

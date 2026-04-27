@@ -14,6 +14,7 @@
     <PackageReference Include="Aspire.Hosting.Azure.AppContainers" Version="13.2.0" />
     <PackageReference Include="Aspire.Hosting.Azure.KeyVault" Version="13.2.0" />
     <PackageReference Include="Aspire.Hosting.Azure.PostgreSQL" Version="13.2.0" />
+    <PackageReference Include="Aspire.Hosting.Azure.ServiceBus" Version="13.2.4" />
     <PackageReference Include="Aspire.Hosting.PostgreSQL" Version="13.2.0" />
     <PackageReference Include="Npgsql" Version="9.0.3" />
   </ItemGroup>
@@ -21,6 +22,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\Apps\EcoPortal\EcoPortal.Server\EcoPortal.Server.csproj" />
     <ProjectReference Include="..\..\Apps\FaunaFinder\FaunaFinder.Server\FaunaFinder.Server.csproj" />
+    <ProjectReference Include="..\..\Features\Sensors\EcoData.Sensors.Contracts\EcoData.Sensors.Contracts.csproj" IsAspireProjectResource="false" />
     <ProjectReference Include="..\..\Features\Sensors\EcoData.Sensors.Ingestion\EcoData.Sensors.Ingestion.csproj" />
     <ProjectReference Include="..\EcoData.Seeder\EcoData.Seeder.csproj" />
     <ProjectReference Include="..\Aspire.Hosting.Zig\Aspire.Hosting.Zig.csproj" IsAspireProjectResource="false" />

@@ -13,4 +13,8 @@ public sealed record UserNotificationEvent(
     string Message,
     string Type,
     DateTimeOffset CreatedAt
-);
+)
+{
+    /// <summary>Service Bus subscription name. Must match <c>typeof(UserNotificationEvent).Name.ToLowerInvariant()</c>.</summary>
+    public const string SubscriptionName = "usernotificationevent";
+}

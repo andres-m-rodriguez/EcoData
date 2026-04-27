@@ -22,14 +22,4 @@ public static class ServiceCollectionExtensions
 
         return services;
     }
-
-    /// <summary>
-    /// Adds the messaging infrastructure with default in-memory transport.
-    /// </summary>
-    /// <param name="services">The service collection.</param>
-    /// <returns>The service collection for chaining.</returns>
-    public static IServiceCollection AddMessaging(this IServiceCollection services)
-    {
-        return services.AddMessaging(builder => builder.UseInMemoryTransport());
-    }
 }
