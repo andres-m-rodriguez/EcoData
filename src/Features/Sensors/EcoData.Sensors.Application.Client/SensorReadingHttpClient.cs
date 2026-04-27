@@ -1,7 +1,4 @@
 using System.Net.Http.Json;
-using System.Net.ServerSentEvents;
-using System.Runtime.CompilerServices;
-using System.Text.Json;
 using EcoData.Common.Http.Helpers;
 using EcoData.Common.Problems.Contracts;
 using EcoData.Sensors.Contracts.Dtos;
@@ -12,8 +9,6 @@ namespace EcoData.Sensors.Application.Client;
 
 public sealed class SensorReadingHttpClient(HttpClient httpClient) : ISensorReadingHttpClient
 {
-    private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
-
     public IAsyncEnumerable<ReadingDtoForDetail> GetReadingsAsync(
         Guid sensorId,
         ReadingParameters parameters,
@@ -155,28 +150,5 @@ public sealed class SensorReadingHttpClient(HttpClient httpClient) : ISensorRead
             "readings/topics/surface-water/stations/markers",
             cancellationToken
         )!;
-    }
-
-    public async IAsyncEnumerable<ReadingDtoForCreate> SubscribeToReadingsAsync(
-        Guid sensorId,
-        [EnumeratorCancellation] CancellationToken cancellationToken = default
-    )
-    {
-        using var response = await httpClient.GetAsync(
-            $"sensors/{sensorId}/readings/stream",
-            HttpCompletionOption.ResponseHeadersRead,
-            cancellationToken
-        );
-
-        response.EnsureSuccessStatusCode();
-
-        await using var stream = await response.Content.ReadAsStreamAsync(cancellationToken);
-
-        await foreach (var item in SseParser.Create(stream,
-            (_, bytes) => JsonSerializer.Deserialize<ReadingDtoForCreate>(bytes, JsonOptions)).EnumerateAsync(cancellationToken))
-        {
-            if (item.Data is not null)
-                yield return item.Data;
-        }
     }
 }

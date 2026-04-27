@@ -246,10 +246,6 @@
             {
                 await NotificationService.InitializeAsync();
             }
-            else
-            {
-                NotificationService.Stop();
-            }
             StateHasChanged();
         });
     }
@@ -320,11 +316,11 @@
         await LogoutCommand.ExecuteAsync();
     }
 
-    public async ValueTask DisposeAsync()
+    public ValueTask DisposeAsync()
     {
         AuthState.OnAuthStateChanged -= HandleAuthStateChanged;
         Navigation.OnStateChanged -= HandleNavigationStateChanged;
         Navbar.OnStateChanged -= HandleNavbarStateChanged;
-        await NotificationService.DisposeAsync();
+        return ValueTask.CompletedTask;
     }
 }

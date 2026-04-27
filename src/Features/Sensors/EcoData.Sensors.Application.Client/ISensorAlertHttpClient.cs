@@ -16,13 +16,4 @@ public interface ISensorAlertHttpClient
         Guid alertId,
         CancellationToken cancellationToken = default
     );
-
-    IAsyncEnumerable<SensorHealthAlertDtoForList> SubscribeToAlertsAsync(
-        CancellationToken cancellationToken = default
-    );
-
-    IAsyncEnumerable<SensorHealthAlertDtoForList> SubscribeToSensorAlertsAsync(
-        Guid sensorId,
-        CancellationToken cancellationToken = default
-    );
 }

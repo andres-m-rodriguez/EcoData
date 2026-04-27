@@ -54,20 +54,6 @@ public static class SensorReadingEndpoints
             .WithName("GetSensorReadingStats");
 
         group
-            .MapGet(
-                "/stream",
-                (Guid sensorId, IMessageBus messageBus, CancellationToken ct) =>
-                    TypedResults.ServerSentEvents(
-                        messageBus.SubscribeToEventsAsync<ReadingCreatedEvent>(
-                            sensorId.ToString(),
-                            ct
-                        ),
-                        eventType: SseEventTypes.Reading
-                    )
-            )
-            .WithName("StreamSensorReadings");
-
-        group
             .MapPost(
                 "/",
                 async Task<Results<Ok<ReadingBatchResult>, ProblemHttpResult>> (

@@ -48,37 +48,6 @@ public static class SensorAlertEndpoints
             )
             .WithName("GetSensorAlertById");
 
-        group
-            .MapGet(
-                "/stream",
-                (IMessageBus messageBus, CancellationToken ct) =>
-                    TypedResults.ServerSentEvents(
-                        messageBus.SubscribeToEventsAsync<SensorHealthAlertEvent>(
-                            MessageTopics.AllHealthAlerts,
-                            ct
-                        ),
-                        eventType: SseEventTypes.HealthAlert
-                    )
-            )
-            .WithName("StreamAllSensorAlerts");
-
-        var sensorGroup = app.MapGroup("/sensors/{sensorId:guid}/alerts")
-            .WithTags("Sensor Alerts");
-
-        sensorGroup
-            .MapGet(
-                "/stream",
-                (Guid sensorId, IMessageBus messageBus, CancellationToken ct) =>
-                    TypedResults.ServerSentEvents(
-                        messageBus.SubscribeToEventsAsync<SensorHealthAlertEvent>(
-                            sensorId.ToString(),
-                            ct
-                        ),
-                        eventType: SseEventTypes.HealthAlert
-                    )
-            )
-            .WithName("StreamSensorAlerts");
-
         return app;
     }
 }

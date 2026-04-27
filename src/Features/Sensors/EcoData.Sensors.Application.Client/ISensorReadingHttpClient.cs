@@ -30,11 +30,6 @@ public interface ISensorReadingHttpClient
         CancellationToken cancellationToken = default
     );
 
-    IAsyncEnumerable<ReadingDtoForCreate> SubscribeToReadingsAsync(
-        Guid sensorId,
-        CancellationToken cancellationToken = default
-    );
-
     Task<long> GetTotalCountAsync(CancellationToken cancellationToken = default);
 
     Task<SurfaceWaterSummaryDto?> GetSurfaceWaterSummaryAsync(CancellationToken cancellationToken = default);
