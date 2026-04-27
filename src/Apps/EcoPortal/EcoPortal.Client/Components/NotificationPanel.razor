@@ -6,25 +6,23 @@
 
 <MudPaper Elevation="0" Class="notification-panel">
     <div class="notification-header">
-        <MudText Typo="Typo.h6">Notifications</MudText>
+        <MudText Typo="Typo.subtitle2">Notifications</MudText>
         <MudSpacer />
         @if (NotificationService.UnreadCount > 0)
         {
-            <MudButton Variant="Variant.Text"
-                       Color="Color.Primary"
-                       Size="Size.Small"
-                       OnClick="MarkAllAsReadAsync">
+            <MudLink Color="Color.Primary"
+                     Typo="Typo.caption"
+                     Underline="Underline.None"
+                     OnClick="MarkAllAsReadAsync">
                 Mark all read
-            </MudButton>
+            </MudLink>
         }
     </div>
-
-    <MudDivider />
 
     <div class="notification-list">
         @if (_isLoading)
         {
-            <div class="d-flex justify-center pa-4">
+            <div class="d-flex justify-center pa-3">
                 <MudProgressCircular Size="Size.Small" Indeterminate="true" />
             </div>
         }
@@ -32,9 +30,9 @@
         {
             <div class="empty-state">
                 <MudIcon Icon="@Icons.Material.Outlined.NotificationsNone"
-                         Size="Size.Large"
+                         Size="Size.Medium"
                          Color="Color.Default" />
-                <MudText Typo="Typo.body2" Color="Color.Secondary">
+                <MudText Typo="Typo.caption" Color="Color.Secondary">
                     No notifications yet
                 </MudText>
             </div>
@@ -54,11 +52,8 @@
                         <MudText Typo="Typo.body2" Class="notification-title">
                             @notification.Title
                         </MudText>
-                        <MudText Typo="Typo.caption" Color="Color.Secondary">
-                            @notification.SensorName
-                        </MudText>
-                        <MudText Typo="Typo.caption" Color="Color.Secondary">
-                            @FormatTime(notification.CreatedAt)
+                        <MudText Typo="Typo.caption" Color="Color.Secondary" Class="notification-meta">
+                            @notification.SensorName · @FormatTime(notification.CreatedAt)
                         </MudText>
                     </div>
                     @if (!notification.IsRead)
@@ -70,32 +65,29 @@
 
             @if (_hasMore)
             {
-                <div class="d-flex justify-center pa-2">
-                    <MudButton Variant="Variant.Text"
-                               Size="Size.Small"
-                               OnClick="LoadMoreAsync"
-                               Disabled="_isLoadingMore">
+                <div class="d-flex justify-center py-1">
+                    <MudLink Typo="Typo.caption"
+                             Underline="Underline.None"
+                             OnClick="LoadMoreAsync"
+                             Disabled="_isLoadingMore">
                         @if (_isLoadingMore)
                         {
                             <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
                         }
                         Load more
-                    </MudButton>
+                    </MudLink>
                 </div>
             }
         }
     </div>
 
-    <MudDivider />
-
     <div class="notification-footer">
-        <MudButton Variant="Variant.Text"
-                   Color="Color.Primary"
-                   Size="Size.Small"
-                   FullWidth="true"
-                   Href="/notifications">
-            View all notifications
-        </MudButton>
+        <MudLink Href="/notifications"
+                 Typo="Typo.caption"
+                 Underline="Underline.None"
+                 Color="Color.Primary">
+            View all
+        </MudLink>
     </div>
 </MudPaper>
 
@@ -183,11 +175,7 @@
     }
 
     private string GetNotificationClass(UserNotificationDto notification)
-    {
-        return notification.IsRead
-            ? "notification-item"
-            : "notification-item notification-unread";
-    }
+        => "notification-item";
 
     private string GetNotificationIcon(string type) => type switch
     {
@@ -237,19 +225,21 @@
     .notification-header {
         display: flex;
         align-items: center;
-        padding: 12px 16px;
+        padding: 8px 12px;
     }
 
     .notification-list {
         flex: 1;
         overflow-y: auto;
         max-height: 320px;
+        border-top: 1px solid var(--mud-palette-divider);
+        border-bottom: 1px solid var(--mud-palette-divider);
     }
 
     .notification-item {
         display: flex;
-        align-items: flex-start;
-        padding: 12px 16px;
+        align-items: center;
+        padding: 8px 12px;
         cursor: pointer;
         transition: background-color 0.15s;
         position: relative;
@@ -259,13 +249,10 @@
         background-color: var(--mud-palette-action-default-hover);
     }
 
-    .notification-unread {
-        background-color: var(--mud-palette-primary-lighten);
-    }
-
     .notification-icon {
-        margin-right: 12px;
-        padding-top: 2px;
+        margin-right: 10px;
+        display: flex;
+        align-items: center;
     }
 
     .notification-content {
@@ -275,17 +262,20 @@
 
     .notification-title {
         font-weight: 500;
-        line-height: 1.3;
+        line-height: 1.25;
+    }
+
+    .notification-meta {
+        line-height: 1.25;
     }
 
     .unread-dot {
-        width: 8px;
-        height: 8px;
+        width: 6px;
+        height: 6px;
         border-radius: 50%;
         background-color: var(--mud-palette-primary);
         margin-left: 8px;
         flex-shrink: 0;
-        align-self: center;
     }
 
     .empty-state {
@@ -293,11 +283,13 @@
         flex-direction: column;
         align-items: center;
         justify-content: center;
-        padding: 32px 16px;
-        gap: 8px;
+        padding: 20px 12px;
+        gap: 4px;
     }
 
     .notification-footer {
-        padding: 8px;
+        display: flex;
+        justify-content: center;
+        padding: 6px;
     }
 </style>
