@@ -49,7 +49,13 @@ var serviceBus = builder
     .RunAsEmulator();
 
 var eventsTopic = serviceBus.AddServiceBusTopic("ecodata-events");
-eventsTopic.AddServiceBusSubscription("ecoportal-server");
+// One subscription per event type. The transport derives the subscription name from
+// typeof(T).Name.ToLowerInvariant(), so each event type's subscribers don't compete
+// with one another. Add an entry here for every type used with IMessageBus.
+eventsTopic.AddServiceBusSubscription("demoevent");
+eventsTopic.AddServiceBusSubscription("readingcreatedevent");
+eventsTopic.AddServiceBusSubscription("sensorhealthalertevent");
+eventsTopic.AddServiceBusSubscription("usernotificationevent");
 
 var seeder = builder
     .AddProject<Projects.EcoData_Seeder>("seeder")
@@ -88,7 +94,6 @@ var ecoportal = builder
     .WithEnvironment("Messaging__Provider", "AzureServiceBus")
     .WithEnvironment("Messaging__ServiceBus__ConnectionString", serviceBus.Resource.ConnectionStringExpression)
     .WithEnvironment("Messaging__ServiceBus__TopicName", "ecodata-events")
-    .WithEnvironment("Messaging__ServiceBus__SubscriptionName", "ecoportal-server")
     .WaitFor(seeder)
     .PublishAsAzureContainerApp(
         (infra, app) =>

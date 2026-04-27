@@ -87,9 +87,10 @@ public sealed class AzureServiceBusTransport : IMessageTransport, IAsyncDisposab
         var channel = Channel.CreateUnbounded<MessageEnvelope<T>>(
             new UnboundedChannelOptions { SingleReader = true, SingleWriter = true });
 
+        var subscriptionName = ResolveSubscriptionName<T>();
         var processor = _client.CreateProcessor(
             _options.TopicName,
-            _options.SubscriptionName,
+            subscriptionName,
             new ServiceBusProcessorOptions
             {
                 AutoCompleteMessages = false,
@@ -148,7 +149,7 @@ public sealed class AzureServiceBusTransport : IMessageTransport, IAsyncDisposab
         _logger.LogInformation(
             "Starting Service Bus processor for logical topic {LogicalTopic} on subscription {Subscription}",
             topic,
-            _options.SubscriptionName);
+            subscriptionName);
 
         await processor.StartProcessingAsync(cancellationToken);
 
@@ -167,6 +168,14 @@ public sealed class AzureServiceBusTransport : IMessageTransport, IAsyncDisposab
             await processor.DisposeAsync();
             channel.Writer.TryComplete();
         }
+    }
+
+    private string ResolveSubscriptionName<T>()
+    {
+        var typeName = typeof(T).Name.ToLowerInvariant();
+        return string.IsNullOrEmpty(_options.SubscriptionPrefix)
+            ? typeName
+            : _options.SubscriptionPrefix + typeName;
     }
 
     public Task SendAsync<T>(string queue, MessageEnvelope<T> envelope, CancellationToken cancellationToken = default)

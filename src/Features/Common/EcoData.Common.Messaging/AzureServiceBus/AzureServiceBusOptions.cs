@@ -18,8 +18,8 @@ public sealed class AzureServiceBusOptions
     public string TopicName { get; set; } = "ecodata-events";
 
     /// <summary>
-    /// Name of the subscription this process reads from. Auto-created on startup.
-    /// For multi-instance deployments, set to a per-instance value (e.g. host name).
+    /// Optional prefix prepended to per-type subscription names (e.g. <c>"ecoportal-"</c> →
+    /// <c>"ecoportal-demoevent"</c>). Lets multi-instance deployments disambiguate. Empty by default.
     /// </summary>
-    public string SubscriptionName { get; set; } = "ecoportal-server";
+    public string SubscriptionPrefix { get; set; } = string.Empty;
 }
