@@ -58,8 +58,6 @@ var eventsTopic = serviceBus.AddServiceBusTopic("ecodata-events");
 eventsTopic.AddServiceBusSubscription(ReadingCreatedEvent.SubscriptionName);
 eventsTopic.AddServiceBusSubscription(SensorHealthAlertEvent.SubscriptionName);
 eventsTopic.AddServiceBusSubscription(UserNotificationEvent.SubscriptionName);
-// Dev round-trip endpoint (DevMessagingEndpoints.DemoEvent — kept hardcoded since it's dev-only).
-eventsTopic.AddServiceBusSubscription("demoevent");
 
 var seeder = builder
     .AddProject<Projects.EcoData_Seeder>("seeder")

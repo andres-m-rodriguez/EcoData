@@ -20,7 +20,6 @@ using EcoData.Wildlife.Api;
 using EcoData.Wildlife.DataAccess;
 using EcoData.Wildlife.Database.Extensions;
 using EcoPortal.Server.Components;
-using EcoPortal.Server.Endpoints;
 using EcoPortal.Server.Services;
 using EcoPortal.Server.Workers;
 using MudBlazor.Services;
@@ -94,10 +93,5 @@ app.MapUserAuthEndpoints();
 app.MapStateEndpoints();
 app.MapMunicipalityEndpoints();
 app.MapWildlifeApiEndpoints();
-
-if (app.Environment.IsDevelopment())
-{
-    app.MapDevMessagingEndpoints();
-}
 
 app.Run();
