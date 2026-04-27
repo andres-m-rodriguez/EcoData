@@ -90,10 +90,4 @@ public sealed class UserNotificationHttpClient(HttpClient httpClient) : IUserNot
 
         return await response.Content.ReadFromJsonAsync<int>(cancellationToken);
     }
-
-    public string GetStreamUrl()
-    {
-        var baseUri = httpClient.BaseAddress?.ToString().TrimEnd('/') ?? "";
-        return $"{baseUri}/users/me/notifications/stream";
-    }
 }

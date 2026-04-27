@@ -123,31 +123,6 @@ public static class UserNotificationEndpoints
             )
             .WithName("MarkAllNotificationsAsRead");
 
-        group
-            .MapGet(
-                "/stream",
-                (
-                    ClaimsPrincipal user,
-                    IMessageBus messageBus,
-                    CancellationToken ct
-                ) =>
-                {
-                    var token = new RequestClaimToken(user);
-                    if (!token.IsAuthenticated)
-                    {
-                        return Results.Unauthorized();
-                    }
-
-                    var topic = MessageTopics.GetUserNotificationsTopic(token.UserId.Value);
-
-                    return TypedResults.ServerSentEvents(
-                        messageBus.SubscribeToEventsAsync<UserNotificationEvent>(topic, ct),
-                        eventType: SseEventTypes.UserNotification
-                    );
-                }
-            )
-            .WithName("StreamUserNotifications");
-
         return app;
     }
 }

@@ -31,6 +31,4 @@ public interface IUserNotificationHttpClient
     Task<int> MarkAllAsReadAsync(
         CancellationToken cancellationToken = default
     );
-
-    string GetStreamUrl();
 }
