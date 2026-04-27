@@ -1,5 +1,6 @@
 using Aspire.Hosting.ApplicationModel;
 using EcoData.AppHost.Extensions;
+using EcoData.Sensors.Contracts.Events;
 
 var builder = DistributedApplication.CreateBuilder(args);
 
@@ -50,12 +51,15 @@ var serviceBus = builder
 
 var eventsTopic = serviceBus.AddServiceBusTopic("ecodata-events");
 // One subscription per event type. The transport derives the subscription name from
-// typeof(T).Name.ToLowerInvariant(), so each event type's subscribers don't compete
-// with one another. Add an entry here for every type used with IMessageBus.
+// typeof(T).Name.ToLowerInvariant(); each event record exposes the same name as a
+// SubscriptionName constant from its module's contracts library. Add an entry here for
+// every type used with IMessageBus.
+// Sensors module
+eventsTopic.AddServiceBusSubscription(ReadingCreatedEvent.SubscriptionName);
+eventsTopic.AddServiceBusSubscription(SensorHealthAlertEvent.SubscriptionName);
+eventsTopic.AddServiceBusSubscription(UserNotificationEvent.SubscriptionName);
+// Dev round-trip endpoint (DevMessagingEndpoints.DemoEvent — kept hardcoded since it's dev-only).
 eventsTopic.AddServiceBusSubscription("demoevent");
-eventsTopic.AddServiceBusSubscription("readingcreatedevent");
-eventsTopic.AddServiceBusSubscription("sensorhealthalertevent");
-eventsTopic.AddServiceBusSubscription("usernotificationevent");
 
 var seeder = builder
     .AddProject<Projects.EcoData_Seeder>("seeder")
@@ -91,7 +95,6 @@ var ecoportal = builder
     .WithEnvironment("Jwt__Issuer", "EcoData")
     .WithEnvironment("Jwt__Audience", "EcoData")
     .WithEnvironment("Jwt__ExpirationHours", "24")
-    .WithEnvironment("Messaging__Provider", "AzureServiceBus")
     .WithEnvironment("Messaging__ServiceBus__ConnectionString", serviceBus.Resource.ConnectionStringExpression)
     .WithEnvironment("Messaging__ServiceBus__TopicName", "ecodata-events")
     .WaitFor(seeder)

@@ -10,4 +10,8 @@ public sealed record ReadingCreatedEvent(
     double Value,
     string Unit,
     DateTimeOffset RecordedAt
-);
+)
+{
+    /// <summary>Service Bus subscription name. Must match <c>typeof(ReadingCreatedEvent).Name.ToLowerInvariant()</c>.</summary>
+    public const string SubscriptionName = "readingcreatedevent";
+}

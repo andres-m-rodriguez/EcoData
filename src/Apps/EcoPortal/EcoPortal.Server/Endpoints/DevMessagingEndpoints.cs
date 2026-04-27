@@ -12,7 +12,10 @@ public static class DevMessagingEndpoints
     private const string Topic = "dev-messaging-roundtrip";
     private static readonly TimeSpan Timeout = TimeSpan.FromSeconds(15);
 
-    public sealed record DemoEvent(string Marker, string Message, DateTimeOffset SentAt);
+    public sealed record DemoEvent(string Marker, string Message, DateTimeOffset SentAt)
+    {
+        public const string SubscriptionName = "demoevent";
+    }
 
     public static IEndpointRouteBuilder MapDevMessagingEndpoints(this IEndpointRouteBuilder endpoints)
     {

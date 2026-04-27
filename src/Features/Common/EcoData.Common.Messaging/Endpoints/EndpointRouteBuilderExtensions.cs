@@ -115,12 +115,9 @@ public static class EndpointRouteBuilderExtensions
 
                 try
                 {
-                    var result = await handler(envelope.Payload, context);
-
-                    if (envelope.CorrelationId is not null && bus is InMemory.InMemoryMessageBus inMemoryBus)
-                    {
-                        inMemoryBus.SendResponse(envelope.CorrelationId, result);
-                    }
+                    _ = await handler(envelope.Payload, context);
+                    // Response routing for SendCommandAsync<T,TResult> isn't implemented on the
+                    // current Azure Service Bus transport; results are dropped until that ships.
                 }
                 catch
                 {

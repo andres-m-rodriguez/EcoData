@@ -45,17 +45,7 @@ builder.Services.AddOrganizationDataAccess();
 builder.Services.AddSensorsDataAccess();
 builder.Services.AddWildlifeDataAccess(builder.Configuration);
 builder.Services.AddMessaging(messaging =>
-{
-    var provider = builder.Configuration["Messaging:Provider"];
-    if (string.Equals(provider, "AzureServiceBus", StringComparison.OrdinalIgnoreCase))
-    {
-        messaging.UseAzureServiceBus(builder.Configuration.GetSection("Messaging:ServiceBus"));
-    }
-    else
-    {
-        messaging.UseInMemoryTransport();
-    }
-});
+    messaging.UseAzureServiceBus(builder.Configuration.GetSection("Messaging:ServiceBus")));
 builder.Services.AddScoped<INotificationRoutingService, NotificationRoutingService>();
 builder.Services.AddHostedService<SensorHealthMonitorWorker>();
 builder.Services.AddHostedService<NotificationDispatcherWorker>();

@@ -1,7 +1,6 @@
 using EcoData.Common.Messaging.Abstractions;
 using EcoData.Common.Messaging.AzureServiceBus;
 using EcoData.Common.Messaging.Handlers;
-using EcoData.Common.Messaging.InMemory;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -18,23 +17,6 @@ public sealed class MessagingBuilder
     public MessagingBuilder(IServiceCollection services)
     {
         _services = services;
-    }
-
-    /// <summary>
-    /// Configures the messaging system to use in-memory transport.
-    /// </summary>
-    public MessagingBuilder UseInMemoryTransport()
-    {
-        if (_transportConfigured)
-        {
-            throw new InvalidOperationException("A transport has already been configured.");
-        }
-
-        _services.AddSingleton<IMessageTransport, InMemoryTransport>();
-        _services.AddSingleton<IMessageBus, InMemoryMessageBus>();
-        _transportConfigured = true;
-
-        return this;
     }
 
     /// <summary>
@@ -107,7 +89,8 @@ public sealed class MessagingBuilder
     {
         if (!_transportConfigured)
         {
-            UseInMemoryTransport();
+            throw new InvalidOperationException(
+                "No messaging transport configured. Call UseAzureServiceBus(...) on the MessagingBuilder.");
         }
     }
 }

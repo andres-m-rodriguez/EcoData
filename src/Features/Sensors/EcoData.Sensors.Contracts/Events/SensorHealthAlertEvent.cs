@@ -11,4 +11,8 @@ public sealed record SensorHealthAlertEvent(
     DateTimeOffset TriggeredAt,
     DateTimeOffset? ResolvedAt,
     string Message
-);
+)
+{
+    /// <summary>Service Bus subscription name. Must match <c>typeof(SensorHealthAlertEvent).Name.ToLowerInvariant()</c>.</summary>
+    public const string SubscriptionName = "sensorhealthalertevent";
+}
