@@ -106,9 +106,14 @@ public sealed class AzureServiceBusTransport : IMessageTransport, IAsyncDisposab
                 msgTopic,
                 topic);
 
+            // Use CancellationToken.None for ack/dead-letter calls. args.CancellationToken
+            // gets cancelled when the processor stops, which races the iterator's finally
+            // block when the consumer exits. StopProcessingAsync waits for in-flight handlers
+            // anyway, so detaching the ack from that token avoids spurious TaskCanceledExceptions
+            // and the message redelivery they'd cause.
             if (msgTopic is null || !string.Equals(msgTopic.ToString(), topic, StringComparison.Ordinal))
             {
-                await args.CompleteMessageAsync(args.Message, args.CancellationToken);
+                await args.CompleteMessageAsync(args.Message, CancellationToken.None);
                 return;
             }
 
@@ -117,7 +122,7 @@ public sealed class AzureServiceBusTransport : IMessageTransport, IAsyncDisposab
                 var payload = JsonSerializer.Deserialize<T>(args.Message.Body.ToArray());
                 if (payload is null)
                 {
-                    await args.DeadLetterMessageAsync(args.Message, "DeserializationFailed", "Payload was null", args.CancellationToken);
+                    await args.DeadLetterMessageAsync(args.Message, "DeserializationFailed", "Payload was null", CancellationToken.None);
                     return;
                 }
 
@@ -131,12 +136,12 @@ public sealed class AzureServiceBusTransport : IMessageTransport, IAsyncDisposab
                 };
 
                 await channel.Writer.WriteAsync(envelope, args.CancellationToken);
-                await args.CompleteMessageAsync(args.Message, args.CancellationToken);
+                await args.CompleteMessageAsync(args.Message, CancellationToken.None);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to handle Service Bus message {MessageId} on topic {Topic}", args.Message.MessageId, topic);
-                await args.DeadLetterMessageAsync(args.Message, "HandlerException", ex.Message, args.CancellationToken);
+                await args.DeadLetterMessageAsync(args.Message, "HandlerException", ex.Message, CancellationToken.None);
             }
         };
 
