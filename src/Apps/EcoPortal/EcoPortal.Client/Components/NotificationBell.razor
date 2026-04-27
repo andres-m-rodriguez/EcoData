@@ -62,9 +62,20 @@
         margin-right: 8px;
     }
 
+    /* Pull the unread-count badge inward so it sits on the icon's top-right corner.
+       MudBadge's .Class lands on the .mud-badge-root wrapper; the actual bubble is
+       its child .mud-badge. We need !important to beat MudBlazor's default position
+       rules (top: 14%; right: 14%; transform: translate(50%, -50%)) which were
+       pulling the badge above the button. */
+    .notification-bell .mud-badge {
+        top: 8px !important;
+        right: 8px !important;
+        transform: none !important;
+    }
+
     .notification-popover {
-        width: 360px;
-        max-height: 480px;
+        width: 340px;
+        max-height: 440px;
         overflow: hidden;
     }
 </style>
