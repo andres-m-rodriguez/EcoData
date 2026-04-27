@@ -63,10 +63,12 @@
     }
 
     /* Pull the unread-count badge inward so it sits on the icon's top-right corner
-       instead of floating above the button. */
+       instead of floating above the button. Override MudBlazor's default
+       translate(50%, -50%) which was pulling it back up the y-axis. */
     .notification-bell .mud-badge.mud-badge-overlap {
-        top: 25%;
-        right: 25%;
+        top: 8px;
+        right: 8px;
+        transform: none;
     }
 
     .notification-popover {
