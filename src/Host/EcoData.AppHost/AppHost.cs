@@ -125,6 +125,10 @@ var sensorsIngestion = builder
     .WithReference(organizationDb)
     .WithReference(sensorsDb)
     .WithReference(locationsDb)
+    .WithReference(serviceBus)
+    .WaitFor(eventsTopic)
+    .WithEnvironment("Messaging__ServiceBus__ConnectionString", serviceBus.Resource.ConnectionStringExpression)
+    .WithEnvironment("Messaging__ServiceBus__TopicName", "ecodata-events")
     .WaitFor(seeder);
 
 // Azure resources for production
