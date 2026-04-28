@@ -144,9 +144,17 @@
                         <TimeSeriesChart Series="_featuredSeries" Smooth="true" Area="true" Colors="_featuredColors" />
                     </div>
                 }
+                else if (_featured is null)
+                {
+                    <div class="chart-placeholder">Select a station from the list below to see flow &amp; gage history.</div>
+                }
+                else if (_featuredFetch.IsLoading)
+                {
+                    <div class="chart-placeholder">Loading chart…</div>
+                }
                 else
                 {
-                    <div class="chart-placeholder">@(_featuredFetch.IsLoading ? "Loading chart…" : "No data available for the selected station.")</div>
+                    <div class="chart-placeholder">No data available for the selected station.</div>
                 }
             </div>
         </div>
@@ -301,11 +309,6 @@
         await EnrichMunicipalitiesAsync(collected, ct);
         BuildMapSensors(collected);
 
-        if (_featured is null && collected.Count > 0)
-        {
-            SetFeaturedFromMarker(collected[0]);
-        }
-
         return collected;
     }
 
@@ -365,9 +368,6 @@ private async Task EnrichMunicipalitiesAsync(IReadOnlyList<SurfaceWaterStationMa
 
     private void SetFeaturedFromRow(SurfaceWaterStationDto row)
         => SetFeatured(new FeaturedStation(row.SensorId, row.Name, row.ExternalId, row.LatestRecordedAt));
-
-    private void SetFeaturedFromMarker(SurfaceWaterStationMarkerDto marker)
-        => SetFeatured(new FeaturedStation(marker.SensorId, marker.Name, marker.ExternalId, marker.LatestRecordedAt));
 
     private void SetFeatured(FeaturedStation featured)
     {

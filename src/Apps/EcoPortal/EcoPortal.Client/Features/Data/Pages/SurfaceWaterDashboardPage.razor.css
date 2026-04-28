@@ -352,6 +352,7 @@
     gap: 12px;
     align-items: center;
     padding: 0 16px;
+    min-width: 808px;
 }
 
 .ws-list-head {
@@ -376,7 +377,7 @@
 .ws-list-scroll {
     max-height: 480px;
     overflow-y: auto;
-    overflow-x: hidden;
+    overflow-x: auto;
 }
 
 .ws-row {
@@ -521,5 +522,84 @@
 
     .body {
         padding: 16px 20px 32px;
+    }
+}
+
+@media (max-width: 640px) {
+    .head {
+        padding: 20px 16px 14px;
+    }
+
+    .head-grid {
+        grid-template-columns: 1fr;
+        gap: 16px;
+    }
+
+    .head h1 {
+        font-size: 28px;
+    }
+
+    .head p {
+        font-size: 13px;
+    }
+
+    .head-actions {
+        justify-content: stretch;
+    }
+
+    .range-tabs {
+        display: flex;
+        width: 100%;
+    }
+
+        .range-tabs button {
+            flex: 1;
+            padding: 8px 0;
+            text-align: center;
+        }
+
+    .body {
+        padding: 14px 12px 28px;
+        gap: 16px;
+    }
+
+    .kpi-row {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 8px;
+    }
+
+    .kpi {
+        padding: 14px 14px;
+    }
+
+    .kpi-v {
+        font-size: 24px;
+    }
+
+    .card-h {
+        flex-direction: column;
+        align-items: stretch;
+        padding: 16px 16px 12px;
+    }
+
+    .card-title {
+        font-size: 16px;
+    }
+
+    .map-legend-inline {
+        flex-wrap: wrap;
+        row-gap: 6px;
+    }
+
+    .chart-panel {
+        padding: 14px 16px 18px;
+    }
+
+    .map-wrap {
+        height: 320px;
+    }
+
+    .ws-list-scroll {
+        max-height: 420px;
     }
 }
