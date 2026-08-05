@@ -9,7 +9,6 @@
 @inherits StatefulComponent
 @inject IMunicipalityHttpClient MunicipalityClient
 @inject ISpeciesHttpClient SpeciesClient
-@inject INativeNavbarManager Navbar
 @inject NavigationManager NavigationManager
 @inject ILocalizer L
 
@@ -17,7 +16,7 @@
 
 @if (Id is not null)
 {
-    <NuiPageLayout Title="@LoadDetailState.Result?.Name" ParentPath="/municipalities">
+    <PageShell ParentPath="/municipalities">
         @if (_detailLoadError is not null)
         {
             <MudAlert Severity="Severity.Error">@_detailLoadError</MudAlert>
@@ -72,9 +71,9 @@
                 }
                 else if (LoadDetailSpeciesState.Result.Count == 0)
                 {
-                    <NuiEmptyState Icon="@Icons.Material.Outlined.Pets"
-                                   Title="@L[MuniDetailSpeciesEmptyTitle]"
-                                   Description="@L[MuniDetailSpeciesEmptyDescription]" />
+                    <EmptyState Icon="@Icons.Material.Outlined.Pets"
+                                Title="@L[MuniDetailSpeciesEmptyTitle]"
+                                Description="@L[MuniDetailSpeciesEmptyDescription]" />
                 }
                 else
                 {
@@ -90,11 +89,11 @@
         }
         else
         {
-            <NuiEmptyState Icon="@Icons.Material.Outlined.SearchOff"
-                           Title="@L[MuniDetailNotFoundTitle]"
-                           Description="@L[MuniDetailNotFoundDescription]" />
+            <EmptyState Icon="@Icons.Material.Outlined.SearchOff"
+                        Title="@L[MuniDetailNotFoundTitle]"
+                        Description="@L[MuniDetailNotFoundDescription]" />
         }
-    </NuiPageLayout>
+    </PageShell>
 }
 else
 {
@@ -167,7 +166,7 @@ else
     protected override void OnInitialized()
     {
         base.OnInitialized();
-        Navbar.SetTitle(L["Nav_Municipios"]);
+        Bus.Publish(new MainLayout.TitleChanged(L["Nav_Municipios"]));
         L.LanguageChanged += OnLanguageChanged;
     }
 
@@ -253,7 +252,7 @@ else
         if (result.TryPickT0(out var detail, out var error))
         {
             _detailLoadError = null;
-            Navbar.SetTitle(detail.Name);
+            Bus.Publish(new MainLayout.TitleChanged(detail.Name));
             return detail;
         }
         // A missing municipality keeps the dedicated not-found empty state.
@@ -301,7 +300,7 @@ else
 
     private void OnLanguageChanged()
     {
-        if (Id is null) Navbar.SetTitle(L["Nav_Municipios"]);
+        if (Id is null) Bus.Publish(new MainLayout.TitleChanged(L["Nav_Municipios"]));
         InvokeAsync(StateHasChanged);
     }
 

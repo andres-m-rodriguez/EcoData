@@ -11,11 +11,11 @@
 @inject IDialogService DialogService
 @inject ISnackbar Snackbar
 @inject AuthStateService AuthState
-@inject INativeNavigationManager Navigation
+@inject NavigationManager Navigation
 
 <PageTitle>My Access Requests - EcoData</PageTitle>
 
-<NuiPageLayout Label="Organizations" Title="My Requests"
+<PageShell Title="My Requests"
                  Actions="@([new("Request", OnRequestAction)])">
         <SearchHeader @bind-Value="SearchTextState.Value" Placeholder="Search requests..." />
 
@@ -123,7 +123,7 @@
                 </ItemTemplate>
             </EcoDataVirtualizedList>
         </MudPaper>
-</NuiPageLayout>
+</PageShell>
 
 @code {
     private EcoDataVirtualizedList<OrganizationAccessRequestDto, OrganizationAccessRequestParameters>? _listRef;

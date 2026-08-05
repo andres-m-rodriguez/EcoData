@@ -10,7 +10,6 @@
 @using EcoPortal.Client.Components.Maps
 @using EcoPortal.Client.Services.Charts
 @inherits StatefulComponent
-@inject INativeNavbarManager Navbar
 @inject ISensorReadingHttpClient ReadingClient
 @inject IMunicipalityHttpClient MunicipalityClient
 @inject ISnackbar Snackbar
@@ -275,7 +274,7 @@
     protected override void OnInitialized()
     {
         base.OnInitialized();
-        Navbar.SetTitle("Surface Water");
+        Bus.Publish(new MainLayout.TitleChanged("Surface Water"));
     }
 
     [Command, RunOnLoad]

@@ -16,7 +16,7 @@
 
 <PageTitle>Requests - EcoData</PageTitle>
 
-<NuiPageLayout Title="Requests" ParentPath="@($"/organizations/{OrganizationId}/team")">
+<PageShell Title="Requests" ParentPath="@($"/organizations/{OrganizationId}/team")">
         <RequireOrganizationPermission OrganizationId="OrganizationId" Permission="EcoData.Organization.Contracts.Permissions.Organization.ManageMembers">
             <Authorized>
                 <MudChipSet T="string" SelectedValue="_statusFilter" SelectedValueChanged="OnStatusFilterChanged" SelectionMode="SelectionMode.SingleSelection" Class="mb-4">
@@ -153,7 +153,7 @@
                 </MudPaper>
             </NotAuthorized>
         </RequireOrganizationPermission>
-</NuiPageLayout>
+</PageShell>
 
 @code {
     [Parameter]

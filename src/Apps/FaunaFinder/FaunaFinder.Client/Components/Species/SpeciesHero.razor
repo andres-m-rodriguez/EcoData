@@ -29,15 +29,11 @@
     <MudStack Row="true" Spacing="2" Wrap="Wrap.Wrap" Class="mb-2">
         @if (!string.IsNullOrEmpty(Species.GRank))
         {
-            <NuiStatusBadge Status="@GetRankStatus(Species.GRank)"
-                            Text="@GlobalRankText"
-                            Size="NuiStatusSize.Small" />
+            <span class="ff-status-pill @GetRankPillClass(Species.GRank)">@GlobalRankText</span>
         }
         @if (!string.IsNullOrEmpty(Species.SRank))
         {
-            <NuiStatusBadge Status="@GetRankStatus(Species.SRank)"
-                            Text="@StateRankText"
-                            Size="NuiStatusSize.Small" />
+            <span class="ff-status-pill @GetRankPillClass(Species.SRank)">@StateRankText</span>
         }
         <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined">
             @(Species.IsFauna ? L["SpeciesDetail_Kingdom_Fauna"] : L["SpeciesDetail_Kingdom_Flora"])
@@ -77,11 +73,11 @@
     private string GlobalRankText => L["SpeciesDetail_Rank_Global", Species.GRank];
     private string StateRankText => L["SpeciesDetail_Rank_State", Species.SRank];
 
-    private static NuiStatusType GetRankStatus(string rank) => rank.ToUpperInvariant() switch
+    private static string GetRankPillClass(string rank) => rank.ToUpperInvariant() switch
     {
-        "G1" or "S1" or "G2" or "S2" => NuiStatusType.Error,
-        "G3" or "S3" => NuiStatusType.Warning,
-        "G4" or "S4" or "G5" or "S5" => NuiStatusType.Success,
-        _ => NuiStatusType.Inactive
+        "G1" or "S1" or "G2" or "S2" => "status-imperiled",
+        "G3" or "S3" => "status-vulnerable",
+        "G4" or "S4" or "G5" or "S5" => "status-secure",
+        _ => "status-unranked"
     };
 }

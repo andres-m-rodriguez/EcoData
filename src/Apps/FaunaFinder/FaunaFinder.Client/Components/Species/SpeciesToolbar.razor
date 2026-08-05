@@ -9,14 +9,30 @@
     <span class="meta">@RecordsMeta</span>
 </div>
 
-<NuiSearchBar Value="@SearchText"
-              ValueChanged="OnSearchChanged"
-              Placeholder="@SearchPlaceholder"
-              ShowFilterButton="true"
-              HasActiveFilters="@HasActiveFilters"
-              FilterCount="@ActiveFilterCount"
-              OnFilterClick="OnFilterClick"
-              EnableSticky="false" />
+<div class="ff-search-bar">
+    <MudTextField T="string"
+                  Value="@SearchText"
+                  ValueChanged="OnSearchChanged"
+                  Placeholder="@SearchPlaceholder"
+                  Variant="Variant.Text"
+                  Margin="Margin.None"
+                  Underline="false"
+                  Immediate="true"
+                  DebounceInterval="300"
+                  Clearable="true"
+                  Adornment="Adornment.Start"
+                  AdornmentIcon="@Icons.Material.Filled.Search"
+                  Class="ff-search-input" />
+    <div class="ff-search-divider"></div>
+    <button type="button" class="ff-filter-btn @(HasActiveFilters ? "active" : "")" @onclick="OnFilterClick">
+        <MudIcon Icon="@Icons.Material.Filled.Tune" Size="Size.Small" />
+        <span>Filter</span>
+        @if (HasActiveFilters && ActiveFilterCount > 0)
+        {
+            <span class="ff-filter-badge">@ActiveFilterCount</span>
+        }
+    </button>
+</div>
 
 <div class="ff-toolbar-sort-row">
     <MudMenu AnchorOrigin="Origin.BottomLeft" TransformOrigin="Origin.TopLeft"

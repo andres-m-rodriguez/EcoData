@@ -3,6 +3,26 @@ using Microsoft.AspNetCore.Components.Web.Virtualization;
 
 namespace EcoData.Common.Pagination.Blazor;
 
+/// <summary>
+/// Cursor-paginated virtualized grid. Internally groups items into rows of
+/// <see cref="Columns"/> and hands Blazor's <see cref="Virtualize{TItem}"/>
+/// a row at a time — this is what keeps Virtualize's scrollbar math correct
+/// in a multi-column layout. With the default single column it behaves like
+/// <see cref="EcoDataVirtualizedList{TItem, TParams}"/> plus a row wrapper.
+///
+/// <para>
+/// <see cref="ItemSize"/> is the pixel height of a <em>row</em> (card
+/// height + vertical gap), not a single card. Consumers should measure and
+/// provide this; if it's too small or large, virtualization will jitter or
+/// render blank bands during scroll.
+/// </para>
+///
+/// <para>
+/// Row layout is class-driven (<c>ecodata-virtualized-grid-row</c> in the
+/// scoped stylesheet); the data-driven column count and gap reach CSS through
+/// custom properties on the row element.
+/// </para>
+/// </summary>
 public partial class EcoDataVirtualizedGrid<TItem, TParams> : ComponentBase
     where TParams : CursorParameters
 {
@@ -12,7 +32,7 @@ public partial class EcoDataVirtualizedGrid<TItem, TParams> : ComponentBase
     private bool _isEmpty;
     private bool _isInitialLoading = true;
     private int _generation;
-    private Virtualize<TItem>? _virtualizeRef;
+    private Virtualize<IReadOnlyList<TItem>>? _virtualizeRef;
 
     /// <summary>
     /// Function that provides items as an async enumerable given the parameters.
@@ -39,7 +59,7 @@ public partial class EcoDataVirtualizedGrid<TItem, TParams> : ComponentBase
     public required RenderFragment<TItem> ItemTemplate { get; set; }
 
     /// <summary>
-    /// Template shown while items are being loaded (placeholder rows).
+    /// Template shown for each not-yet-loaded cell while a row is being fetched.
     /// </summary>
     [Parameter]
     public RenderFragment? PlaceholderTemplate { get; set; }
@@ -56,29 +76,38 @@ public partial class EcoDataVirtualizedGrid<TItem, TParams> : ComponentBase
     [Parameter]
     public RenderFragment? EmptyTemplate { get; set; }
 
-    /// <summary>
-    /// The size of each item in pixels for virtualization (row height).
-    /// </summary>
+    /// <summary>Height of a single row in pixels. Used by Virtualize for scroll math.</summary>
     [Parameter]
-    public float ItemSize { get; set; } = 300;
+    public float ItemSize { get; set; } = 400;
+
+    /// <summary>Number of extra rows rendered before and after the visible range.</summary>
+    [Parameter]
+    public int OverscanCount { get; set; } = 4;
+
+    /// <summary>Columns per row. Defaults to 1 (single-column list).</summary>
+    [Parameter]
+    public int? Columns { get; set; }
+
+    /// <summary>Gap between columns within a row (any CSS length).</summary>
+    [Parameter]
+    public string Gap { get; set; } = "20px";
 
     /// <summary>
-    /// Number of extra items to render before and after the visible range.
-    /// </summary>
-    [Parameter]
-    public int OverscanCount { get; set; } = 6;
-
-    /// <summary>
-    /// CSS class to apply to the grid container.
+    /// Extra CSS class for the grid container.
     /// </summary>
     [Parameter]
     public string? GridClass { get; set; }
 
-    /// <summary>
-    /// Inline style to apply to the grid container.
-    /// </summary>
-    [Parameter]
-    public string? GridStyle { get; set; }
+    private int EffectiveColumns => Math.Max(1, Columns ?? 1);
+
+    private string ComputedClass =>
+        string.IsNullOrEmpty(GridClass)
+            ? "ecodata-virtualized-grid"
+            : $"ecodata-virtualized-grid {GridClass}";
+
+    // Data-driven values only — the layout rules live in the scoped stylesheet.
+    private string RowVariables =>
+        $"--grid-cols: {EffectiveColumns}; --grid-gap: {Gap};";
 
     /// <summary>
     /// Whether the grid is currently in initial loading state.
@@ -114,16 +143,19 @@ public partial class EcoDataVirtualizedGrid<TItem, TParams> : ComponentBase
         _isInitialLoading = false;
     }
 
-    private async ValueTask<ItemsProviderResult<TItem>> LoadItemsAsync(ItemsProviderRequest request)
+    private async ValueTask<ItemsProviderResult<IReadOnlyList<TItem>>> LoadRowsAsync(
+        ItemsProviderRequest request)
     {
-        var startIndex = request.StartIndex;
-        var endIndex = startIndex + request.Count;
+        var cols = EffectiveColumns;
+        var lastItemIndex = (request.StartIndex + request.Count) * cols;
         var currentGeneration = _generation;
 
-        while (_hasMoreItems && _cachedItems.Count < endIndex)
+        while (_hasMoreItems && _cachedItems.Count < lastItemIndex)
         {
             if (_generation != currentGeneration)
-                return CreateResult(startIndex, request.Count);
+            {
+                return EmptyResult();
+            }
 
             var parameters = ParametersBuilder(_lastCursor);
 
@@ -131,7 +163,9 @@ public partial class EcoDataVirtualizedGrid<TItem, TParams> : ComponentBase
             await foreach (var item in ItemsProvider(parameters, request.CancellationToken))
             {
                 if (_generation != currentGeneration)
-                    return CreateResult(startIndex, request.Count);
+                {
+                    return EmptyResult();
+                }
 
                 _cachedItems.Add(item);
                 _lastCursor = CursorSelector(item);
@@ -144,19 +178,30 @@ public partial class EcoDataVirtualizedGrid<TItem, TParams> : ComponentBase
             }
         }
 
-        return CreateResult(startIndex, request.Count);
+        var rows = new List<IReadOnlyList<TItem>>(request.Count);
+        for (var rowIndex = request.StartIndex; rowIndex < request.StartIndex + request.Count; rowIndex++)
+        {
+            var rowStart = rowIndex * cols;
+            if (rowStart >= _cachedItems.Count)
+            {
+                break;
+            }
+
+            var rowEnd = Math.Min(rowStart + cols, _cachedItems.Count);
+            rows.Add(_cachedItems.GetRange(rowStart, rowEnd - rowStart));
+        }
+
+        var knownRows = (_cachedItems.Count + cols - 1) / cols;
+        var totalRowCount = _hasMoreItems ? knownRows + 1 : knownRows;
+
+        return new ItemsProviderResult<IReadOnlyList<TItem>>(rows, totalRowCount);
     }
 
-    private ItemsProviderResult<TItem> CreateResult(int startIndex, int count)
-    {
-        var items = _cachedItems.Skip(startIndex).Take(count).ToList();
-        var totalCount = _hasMoreItems ? _cachedItems.Count + 1 : _cachedItems.Count;
-        return new ItemsProviderResult<TItem>(items, totalCount);
-    }
+    private static ItemsProviderResult<IReadOnlyList<TItem>> EmptyResult() =>
+        new([], 0);
 
     /// <summary>
-    /// Refreshes the grid by clearing the cache and reloading from the beginning.
-    /// Call this when parameters change (e.g., filters, search text).
+    /// Clears the cache and reloads from the beginning. Call when filter/search params change.
     /// </summary>
     public async Task RefreshAsync()
     {

@@ -4,8 +4,7 @@
 @using EcoPortal.Client.Services
 @using EcoPortal.Client.Themes
 @inject AuthStateService AuthState
-@inject INativeNavigationManager Navigation
-@inject INativeNavbarManager Navbar
+@inject NavigationService Navigation
 @inject ITabNavigationService Tabs
 @inject NotificationService NotificationService
 
@@ -19,11 +18,16 @@
 
         @* Mobile: Back button + Title OR Logo *@
         <MudHidden Breakpoint="Breakpoint.MdAndUp">
-            <div class="d-flex align-center" style="flex: 1;">
+            <div class="d-flex align-center flex-grow-1">
                 @if (!IsHomePage)
                 {
-                    <NuiNativeNavbar ShowBackButton="true" ShowTitle="false" ShowActions="false" />
-                    <span class="page-title">@Navbar.State.Title</span>
+                    @if (Navigation.State.CanGoBack)
+                    {
+                        <MudIconButton Icon="@Icons.Material.Filled.ArrowBack"
+                                       Color="Color.Dark"
+                                       OnClick="GoBackAsync" />
+                    }
+                    <span class="page-title">@_title</span>
                 }
                 else
                 {
@@ -36,10 +40,10 @@
         <MudHidden Breakpoint="Breakpoint.SmAndDown">
             <div class="d-flex align-center">
                 <span class="logo-text">Ecoportal</span>
-                @if (!IsHomePage && Navbar.State.Title is not null)
+                @if (!IsHomePage && _title is not null)
                 {
                     <MudDivider Vertical="true" FlexItem="true" Class="mx-4 my-3" />
-                    <span class="logo-text">@Navbar.State.Title</span>
+                    <span class="logo-text">@_title</span>
                 }
             </div>
         </MudHidden>
@@ -83,9 +87,31 @@
             {
                 <NotificationBell />
             }
-            @if (!IsHomePage)
+            @if (!IsHomePage && _navbarActions.Count > 0)
             {
-                <NuiNativeNavbar ShowBackButton="false" ShowTitle="false" />
+                @if (_navbarActions.Count == 1)
+                {
+                    <MudButton Variant="Variant.Filled"
+                               Color="Color.Primary"
+                               Size="Size.Small"
+                               OnClick="@(() => _navbarActions[0].OnClick())">
+                        @_navbarActions[0].Title
+                    </MudButton>
+                }
+                else
+                {
+                    <MudMenu Icon="@Icons.Material.Filled.MoreVert"
+                             Color="Color.Dark"
+                             AnchorOrigin="Origin.BottomRight"
+                             TransformOrigin="Origin.TopRight">
+                        @foreach (var action in _navbarActions)
+                        {
+                            <MudMenuItem OnClick="@(() => action.OnClick())">
+                                @action.Title
+                            </MudMenuItem>
+                        }
+                    </MudMenu>
+                }
             }
         </MudHidden>
 
@@ -210,7 +236,21 @@
     /// chrome reacts through this record.</summary>
     public sealed record AuthChanged;
 
+    /// <summary>The current page's app-bar title. Pages publish this instead of
+    /// talking to a navbar service.</summary>
+    public sealed record TitleChanged(string Title);
+
+    /// <summary>An action surfaced by the current page — rendered in the page header
+    /// on desktop (by PageShell) and in the app bar on mobile (by this layout).</summary>
+    public sealed record NavbarAction(string Title, Action OnClick);
+
+    /// <summary>The current page's app-bar actions. Published by PageShell; this
+    /// layout clears them again on navigation.</summary>
+    public sealed record ActionsChanged(IReadOnlyList<NavbarAction> Actions);
+
     private bool _isDarkMode;
+    private string? _title;
+    private IReadOnlyList<NavbarAction> _navbarActions = [];
     private string _pageTransitionClass = "";
     private string _navigationKey = Guid.NewGuid().ToString();
     private string _lastUri = "";
@@ -234,7 +274,6 @@
     protected override async Task OnInitializedAsync()
     {
         Navigation.OnStateChanged += HandleNavigationStateChanged;
-        Navbar.OnStateChanged += HandleNavbarStateChanged;
         await AuthState.InitializeAsync();
 
         if (AuthState.IsAuthenticated)
@@ -252,6 +291,12 @@
         }
     }
 
+    [Event]
+    private void OnTitleChanged(TitleChanged e) => _title = e.Title;
+
+    [Event]
+    private void OnActionsChanged(ActionsChanged e) => _navbarActions = e.Actions;
+
     private void HandleNavigationStateChanged()
     {
         // Only change key and transition class on actual navigation (URI change)
@@ -265,14 +310,15 @@
                 _ => ""
             };
             _navigationKey = Guid.NewGuid().ToString();
+
+            // Stale actions must not survive navigation; the incoming page's
+            // PageShell re-publishes ActionsChanged if it has any.
+            _navbarActions = [];
         }
         InvokeAsync(StateHasChanged);
     }
 
-    private void HandleNavbarStateChanged()
-    {
-        InvokeAsync(StateHasChanged);
-    }
+    private Task GoBackAsync() => Navigation.GoBackAsync();
 
     private string GetUserInitial()
     {
@@ -321,7 +367,6 @@
     public override void Dispose()
     {
         Navigation.OnStateChanged -= HandleNavigationStateChanged;
-        Navbar.OnStateChanged -= HandleNavbarStateChanged;
         base.Dispose();
     }
 }

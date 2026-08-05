@@ -5,17 +5,17 @@
 @using EcoPortal.Client.Features.Organizations.Components
 @inherits StatefulComponent
 @inject IOrganizationHttpClient OrganizationClient
-@inject INativeNavigationManager Navigation
+@inject NavigationManager Navigation
 @inject ISnackbar Snackbar
 
 <PageTitle>Create Organization - EcoData</PageTitle>
 
-<NuiPageLayout Title="Create Organization" ParentPath="/organizations/discover">
+<PageShell Title="Create Organization" ParentPath="/organizations/discover">
         <MudPaper Elevation="1" Class="pa-6 rounded-lg">
             <OrganizationForm Model="_model" SubmitButtonText="Create" ErrorMessage="@_errorMessage"
                               IsLoading="CreateState.IsLoading" OnSubmit="HandleSubmit" OnCancel="NavigateBack" />
         </MudPaper>
-</NuiPageLayout>
+</PageShell>
 
 @code {
     private readonly OrganizationForm.OrganizationFormModel _model = new();
@@ -67,5 +67,5 @@
         );
     }
 
-    private void NavigateBack() => _ = Navigation.GoBackAsync();
+    private void NavigateBack() => Navigation.NavigateTo("/organizations/discover");
 }

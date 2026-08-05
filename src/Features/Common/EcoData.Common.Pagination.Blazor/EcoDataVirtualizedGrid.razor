@@ -18,21 +18,31 @@ else if (_isEmpty)
 }
 else
 {
-    <div class="@GridClass" style="@GridStyle">
-        <Virtualize @ref="_virtualizeRef"
+    <div class="@ComputedClass">
+        <Virtualize TItem="IReadOnlyList<TItem>"
+                    @ref="_virtualizeRef"
                     @key="_generation"
-                    ItemsProvider="LoadItemsAsync"
+                    ItemsProvider="LoadRowsAsync"
                     ItemSize="ItemSize"
-                    OverscanCount="OverscanCount"
-                    Context="item">
-            <ItemContent>
-                @ItemTemplate(item)
+                    OverscanCount="OverscanCount">
+            <ItemContent Context="row">
+                <div class="ecodata-virtualized-grid-row" style="@RowVariables">
+                    @foreach (var item in row)
+                    {
+                        @ItemTemplate(item)
+                    }
+                </div>
             </ItemContent>
             <Placeholder>
-                @if (PlaceholderTemplate is not null)
-                {
-                    @PlaceholderTemplate
-                }
+                <div class="ecodata-virtualized-grid-row" style="@RowVariables">
+                    @for (var i = 0; i < EffectiveColumns; i++)
+                    {
+                        @if (PlaceholderTemplate is not null)
+                        {
+                            @PlaceholderTemplate
+                        }
+                    }
+                </div>
             </Placeholder>
         </Virtualize>
     </div>

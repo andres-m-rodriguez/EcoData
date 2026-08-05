@@ -1,4 +1,5 @@
 using System.Net.Http.Json;
+using System.Text.Json;
 using EcoData.Common.Problems.Contracts;
 using EcoData.Identity.Contracts.Errors;
 using EcoData.Identity.Contracts.Requests;
@@ -99,8 +100,8 @@ public sealed class AuthHttpClient(HttpClient httpClient) : IAuthHttpClient
         }
     }
 
-    // Best-effort auth-state probe: any failure (offline, non-2xx) reads as "not signed in";
-    // only transport exceptions are swallowed, never other exception types.
+    // Best-effort auth-state probe: any failure (offline, non-2xx, malformed body) reads
+    // as "not signed in" — transport and JSON exceptions are swallowed, nothing else.
     public async Task<UserInfo?> GetCurrentUserAsync(CancellationToken cancellationToken = default)
     {
         try
@@ -112,6 +113,10 @@ public sealed class AuthHttpClient(HttpClient httpClient) : IAuthHttpClient
             return await response.Content.ReadFromJsonAsync<UserInfo?>(cancellationToken);
         }
         catch (HttpRequestException)
+        {
+            return null;
+        }
+        catch (JsonException)
         {
             return null;
         }

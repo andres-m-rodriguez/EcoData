@@ -19,14 +19,14 @@
 @inject AuthStateService AuthState
 @inject ISensorHttpClient SensorClient
 @inject IOrganizationMemberHttpClient MemberClient
-@inject INativeNavigationManager Navigation
+@inject NavigationManager Navigation
 @inject IDialogService DialogService
 @inject ISnackbar Snackbar
 @inject IOrganizationCacheService OrganizationCache
 
 <PageTitle>Organization Details - EcoData</PageTitle>
 
-<NuiPageLayout Title="Organization Details" ParentPath="/organizations/discover">
+<PageShell Title="Organization Details" ParentPath="/organizations/discover">
     <div class="org-page page-enter" style="@ThemeStyle">
         @if (_loadError is not null)
         {
@@ -483,7 +483,7 @@
             </MudPaper>
         }
     </div>
-</NuiPageLayout>
+</PageShell>
 
 @code {
     [Parameter]

@@ -1,0 +1,35 @@
+@namespace FaunaFinder.Client.Components.Shared
+@inject NavigationManager Nav
+
+@* Dumb page chrome for detail pages: desktop back button + animated content
+   wrapper. The mobile back button lives in MainLayout's app bar. Styles live
+   in wwwroot/app.css under "Page Shell". *@
+
+<div class="ff-page-shell">
+    @if (!string.IsNullOrEmpty(ParentPath))
+    {
+        <MudHidden Breakpoint="Breakpoint.Xs">
+            <MudButton Variant="Variant.Text"
+                       StartIcon="@Icons.Material.Filled.ArrowBack"
+                       OnClick="GoBack"
+                       Class="ff-back-button">
+                Back
+            </MudButton>
+        </MudHidden>
+    }
+
+    <div class="ff-page-shell-content">
+        @ChildContent
+    </div>
+</div>
+
+@code {
+    /// <summary>Where the desktop back button goes. Omit on top-level pages.</summary>
+    [Parameter]
+    public string? ParentPath { get; set; }
+
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+
+    private void GoBack() => Nav.NavigateTo(ParentPath!);
+}

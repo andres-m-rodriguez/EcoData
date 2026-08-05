@@ -9,13 +9,13 @@
 @using EcoPortal.Client.Features.Organizations.Components
 @inherits StatefulComponent
 @inject IOrganizationHttpClient OrganizationClient
-@inject INativeNavigationManager Navigation
+@inject NavigationManager Navigation
 @inject ISnackbar Snackbar
 @inject AuthStateService AuthState
 
 <PageTitle>Edit Organization - EcoData</PageTitle>
 
-<NuiPageLayout Title="Edit Organization" ParentPath="@($"/organizations/{Id}")">
+<PageShell Title="Edit Organization" ParentPath="@($"/organizations/{Id}")">
         @if (LoadState.IsLoading)
         {
             <MudPaper Elevation="1" Class="pa-6 rounded-lg">
@@ -42,7 +42,7 @@
                                   IsLoading="SaveState.IsLoading" OnSubmit="HandleSubmit" OnCancel="NavigateToDetails" />
             </MudPaper>
         }
-</NuiPageLayout>
+</PageShell>
 
 @code {
     [Parameter]
@@ -126,5 +126,5 @@
         );
     }
 
-    private void NavigateToDetails() => _ = Navigation.GoBackAsync();
+    private void NavigateToDetails() => Navigation.NavigateTo($"/organizations/{Id}");
 }

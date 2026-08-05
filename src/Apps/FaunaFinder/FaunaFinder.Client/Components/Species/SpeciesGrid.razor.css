@@ -1,4 +1,4 @@
-/* NuiVirtualizedGrid handles layout for the live list via its Columns
+/* EcoDataVirtualizedGrid handles layout for the live list via its Columns
    parameter. The loading-state wrapper still uses .ff-grid to mirror the
    same arrangement while skeletons render. */
 

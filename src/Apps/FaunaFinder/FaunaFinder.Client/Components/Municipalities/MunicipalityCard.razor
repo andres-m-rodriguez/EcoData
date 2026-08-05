@@ -8,7 +8,9 @@
 <MudPaper Elevation="0" Class="pa-3 rounded-lg border-solid border mud-border-lines-default municipality-card"
           @onclick="HandleClick">
     <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="3">
-        <NuiIconBox Icon="@Icons.Material.Filled.LocationCity" Color="Color.Primary" />
+        <div class="ff-iconbox ff-iconbox--primary">
+            <MudIcon Icon="@Icons.Material.Filled.LocationCity" Size="Size.Small" />
+        </div>
         <MudStack Spacing="0" Class="municipality-card-text">
             <MudText Typo="Typo.subtitle1" Class="font-weight-medium mud-text-truncate">
                 @Municipality.Name

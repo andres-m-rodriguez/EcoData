@@ -8,11 +8,11 @@
 @inherits StatefulComponent
 @inject IOrganizationHttpClient OrganizationClient
 @inject AuthStateService AuthState
-@inject INativeNavigationManager Navigation
+@inject NavigationManager Navigation
 
 <PageTitle>My Organizations - EcoData</PageTitle>
 
-<NuiPageLayout Label="Organizations" Title="My Organizations">
+<PageShell Title="My Organizations">
         <MudPaper Elevation="1" Class="pa-5 rounded-lg">
             @if (LoadMyOrganizationsState.IsLoading)
             {
@@ -81,7 +81,7 @@
                 </MudStack>
             }
         </MudPaper>
-</NuiPageLayout>
+</PageShell>
 
 @code {
     private List<MyOrganizationDto> _myOrganizations = [];

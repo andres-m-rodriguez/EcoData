@@ -2,22 +2,21 @@
 @using EcoData.Wildlife.Contracts.Dtos
 @using EcoData.Wildlife.Contracts.Parameters
 @using EcoData.Wildlife.Application.Client
-@using EcoData.NativeUi.Components.VirtualizedList
+@using EcoData.Common.Pagination.Blazor
 @implements IAsyncDisposable
 @inject ISpeciesHttpClient SpeciesClient
 @inject IBrowserViewportService Viewport
 @inject ILocalizer L
 
-<NuiVirtualizedGrid @ref="_grid"
-                    TItem="SpeciesDtoForList"
-                    TParams="SpeciesParameters"
-                    ItemsProvider="Fetch"
-                    ParametersBuilder="BuildParameters"
-                    CursorSelector="@(s => s.Id)"
-                    ItemSize="@_rowHeight"
-                    OverscanCount="2"
-                    Columns="@_columns"
-                    GridClass="ff-grid">
+<EcoDataVirtualizedGrid @ref="_grid"
+                        TItem="SpeciesDtoForList"
+                        TParams="SpeciesParameters"
+                        ItemsProvider="Fetch"
+                        ParametersBuilder="BuildParameters"
+                        CursorSelector="@(s => s.Id)"
+                        ItemSize="@_rowHeight"
+                        OverscanCount="2"
+                        Columns="@_columns">
     <LoadingTemplate>
         <div class="ff-grid">
             @for (var i = 0; i < 8; i++)
@@ -33,9 +32,9 @@
         </div>
     </LoadingTemplate>
     <EmptyTemplate>
-        <NuiEmptyState Icon="@Icons.Material.Outlined.SearchOff"
-                       Title="@L[EmptyTitleKey]"
-                       Description="@L[EmptyDescriptionKey]" />
+        <EmptyState Icon="@Icons.Material.Outlined.SearchOff"
+                    Title="@L[EmptyTitleKey]"
+                    Description="@L[EmptyDescriptionKey]" />
     </EmptyTemplate>
     <ItemTemplate Context="species">
         <SpeciesCard Species="species" OnClick="HandleClick" />
@@ -49,7 +48,7 @@
             </div>
         </div>
     </PlaceholderTemplate>
-</NuiVirtualizedGrid>
+</EcoDataVirtualizedGrid>
 
 @code {
     private const int PageSize = 24;
@@ -63,7 +62,7 @@
     [Parameter] public SpeciesSort Sort { get; set; } = SpeciesSort.ScientificNameAsc;
     [Parameter] public EventCallback<SpeciesDtoForList> OnSpeciesClick { get; set; }
 
-    private NuiVirtualizedGrid<SpeciesDtoForList, SpeciesParameters>? _grid;
+    private EcoDataVirtualizedGrid<SpeciesDtoForList, SpeciesParameters>? _grid;
 
     private SpeciesFilterResult _lastFilter = SpeciesFilterResult.Empty;
     private string? _lastSearch;

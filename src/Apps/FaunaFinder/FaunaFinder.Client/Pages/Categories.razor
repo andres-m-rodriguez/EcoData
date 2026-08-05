@@ -4,7 +4,6 @@
 @inherits StatefulComponent
 @inject ISpeciesCategoryHttpClient CategoryHttpClient
 @inject ISpeciesHttpClient SpeciesHttpClient
-@inject INativeNavbarManager Navbar
 @inject NavigationManager NavigationManager
 @inject ILocalizer L
 
@@ -13,7 +12,7 @@
 @if (Id is not null)
 {
     @* Category Detail - Show species in this category *@
-    <NuiPageLayout Title="@_categoryName" ParentPath="/categories">
+    <PageShell ParentPath="/categories">
         @if (_speciesLoadError is not null)
         {
             <MudAlert Severity="Severity.Error">@_speciesLoadError</MudAlert>
@@ -27,36 +26,39 @@
         }
         else if (LoadSpeciesInCategoryState.Result.Count == 0)
         {
-            <NuiEmptyState Icon="@Icons.Material.Outlined.Pets"
-                           Title="@L[CategoryDetailEmptyTitle]"
-                           Description="@L[CategoryDetailEmptyDescription]" />
+            <EmptyState Icon="@Icons.Material.Outlined.Pets"
+                        Title="@L[CategoryDetailEmptyTitle]"
+                        Description="@L[CategoryDetailEmptyDescription]" />
         }
         else
         {
-            <NuiSectionHeader Title="@SpeciesCountHeading" />
-            <MudList T="SpeciesDtoForList" Dense="true">
+            <div class="ff-section-header">
+                <h2 class="ff-section-title">@SpeciesCountHeading</h2>
+            </div>
+            <div class="ff-list">
                 @foreach (var species in LoadSpeciesInCategoryState.Result)
                 {
-                    <NuiListItem Title="@GetSpeciesName(species)"
-                                 Subtitle="@species.ScientificName"
-                                 Icon="@(species.IsFauna ? Icons.Material.Filled.Pets : Icons.Material.Filled.Park)"
-                                 ShowChevron="true"
-                                 OnClick="@(() => NavigateToSpecies(species.Id))">
-                        <TrailingContent>
-                            <NuiStatusBadge Status="@GetConservationStatus(species.GRank)"
-                                            Text="@(species.GRank ?? "-")"
-                                            Size="NuiStatusSize.Small" />
-                        </TrailingContent>
-                    </NuiListItem>
+                    <div class="ff-list-item" @onclick="@(() => NavigateToSpecies(species.Id))">
+                        <div class="ff-list-item-icon">
+                            <MudIcon Icon="@(species.IsFauna ? Icons.Material.Filled.Pets : Icons.Material.Filled.Park)"
+                                     Size="Size.Small" />
+                        </div>
+                        <div class="ff-list-item-content">
+                            <span class="ff-list-item-title">@GetSpeciesName(species)</span>
+                            <span class="ff-list-item-subtitle">@species.ScientificName</span>
+                        </div>
+                        <MudIcon Icon="@Icons.Material.Filled.ChevronRight" Size="Size.Small" Class="ff-list-item-chevron" />
+                        <span class="ff-status-pill @GetRankPillClass(species.GRank)">@(species.GRank ?? "-")</span>
+                    </div>
                 }
-            </MudList>
+            </div>
         }
-    </NuiPageLayout>
+    </PageShell>
 }
 else
 {
     @* Categories List *@
-    <NuiPageLayout Title="Categories">
+    <PageShell>
         @if (_categoriesLoadError is not null)
         {
             <MudAlert Severity="Severity.Error">@_categoriesLoadError</MudAlert>
@@ -70,25 +72,29 @@ else
         }
         else if (LoadCategoriesState.Result.Count == 0)
         {
-            <NuiEmptyState Icon="@Icons.Material.Outlined.Category"
-                           Title="@L[CategoriesEmptyTitle]"
-                           Description="@L[CategoriesEmptyDescription]" />
+            <EmptyState Icon="@Icons.Material.Outlined.Category"
+                        Title="@L[CategoriesEmptyTitle]"
+                        Description="@L[CategoriesEmptyDescription]" />
         }
         else
         {
-            <MudList T="SpeciesCategoryDtoForList" Dense="true">
+            <div class="ff-list">
                 @foreach (var category in LoadCategoriesState.Result)
                 {
-                    <NuiListItem Title="@GetCategoryName(category)"
-                                 Subtitle="@category.Code"
-                                 Icon="@GetCategoryIcon(category.Code)"
-                                 ShowChevron="true"
-                                 OnClick="@(() => NavigateToCategory(category.Id, category))">
-                    </NuiListItem>
+                    <div class="ff-list-item" @onclick="@(() => NavigateToCategory(category.Id, category))">
+                        <div class="ff-list-item-icon">
+                            <MudIcon Icon="@GetCategoryIcon(category.Code)" Size="Size.Small" />
+                        </div>
+                        <div class="ff-list-item-content">
+                            <span class="ff-list-item-title">@GetCategoryName(category)</span>
+                            <span class="ff-list-item-subtitle">@category.Code</span>
+                        </div>
+                        <MudIcon Icon="@Icons.Material.Filled.ChevronRight" Size="Size.Small" Class="ff-list-item-chevron" />
+                    </div>
                 }
-            </MudList>
+            </div>
         }
-    </NuiPageLayout>
+    </PageShell>
 }
 
 @code {
@@ -113,13 +119,13 @@ else
     protected override void OnInitialized()
     {
         base.OnInitialized();
-        Navbar.SetTitle(L["Nav_Categories"]);
+        Bus.Publish(new MainLayout.TitleChanged(L["Nav_Categories"]));
         L.LanguageChanged += OnLanguageChanged;
     }
 
     private void OnLanguageChanged()
     {
-        if (Id is null) Navbar.SetTitle(L["Nav_Categories"]);
+        if (Id is null) Bus.Publish(new MainLayout.TitleChanged(L["Nav_Categories"]));
         InvokeAsync(StateHasChanged);
     }
 
@@ -181,7 +187,7 @@ else
     private void NavigateToCategory(Guid categoryId, SpeciesCategoryDtoForList category)
     {
         _categoryName = GetCategoryName(category);
-        Navbar.SetTitle(_categoryName);
+        Bus.Publish(new MainLayout.TitleChanged(_categoryName));
         NavigationManager.NavigateTo($"/categories/{categoryId}");
     }
 
@@ -202,18 +208,13 @@ else
         return englishName?.Value ?? species.CommonName.FirstOrDefault()?.Value ?? species.ScientificName;
     }
 
-    private static NuiStatusType GetConservationStatus(string? gRank)
+    private static string GetRankPillClass(string? gRank) => gRank?.ToUpperInvariant() switch
     {
-        if (string.IsNullOrEmpty(gRank)) return NuiStatusType.Inactive;
-
-        return gRank.ToUpperInvariant() switch
-        {
-            "G1" or "G2" => NuiStatusType.Error,
-            "G3" => NuiStatusType.Warning,
-            "G4" or "G5" => NuiStatusType.Success,
-            _ => NuiStatusType.Inactive
-        };
-    }
+        "G1" or "G2" => "status-imperiled",
+        "G3" => "status-vulnerable",
+        "G4" or "G5" => "status-secure",
+        _ => "status-unranked"
+    };
 
     private static string GetCategoryIcon(string code)
     {

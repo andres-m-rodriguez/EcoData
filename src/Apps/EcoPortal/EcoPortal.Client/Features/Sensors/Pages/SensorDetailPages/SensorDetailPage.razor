@@ -9,7 +9,7 @@
 
 <PageTitle>Sensor Details - EcoData</PageTitle>
 
-<NuiPageLayout Title="Sensor Details" ParentPath="/sensor-dashboard">
+<PageShell Title="Sensor Details" ParentPath="/sensor-dashboard">
         @if (LoadState.IsLoading)
         {
             <SensorDetailSkeleton />
@@ -39,7 +39,7 @@
                 </NotAuthorized>
             </AuthorizeView>
         }
-</NuiPageLayout>
+</PageShell>
 
 @code {
     private SensorDtoForDetail? _sensor;

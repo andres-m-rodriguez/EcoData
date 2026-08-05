@@ -1,9 +1,8 @@
 @using EcoData.Common.i18n
-@inherits LayoutComponentBase
-@inject INativeNavigationManager Navigation
-@inject INativeNavbarManager Navbar
+@using Microsoft.AspNetCore.Components.Routing
+@inherits StatefulLayoutComponent
+@inject NavigationManager Nav
 @inject ILocalizer L
-@implements IDisposable
 
 <MudThemeProvider Theme="FaunaFinderTheme.Default" />
 <MudPopoverProvider />
@@ -15,11 +14,16 @@
         <MudAppBar Color="Color.Primary" Elevation="0" Fixed="true" Class="app-bar-blur ff-appbar">
             @* Mobile: Back button + Title OR Logo *@
             <MudHidden Breakpoint="Breakpoint.MdAndUp">
-                <div class="d-flex align-center" style="flex: 1;">
+                <div class="d-flex align-center flex-grow-1">
                     @if (!IsHomePage)
                     {
-                        <NuiNativeNavbar ShowBackButton="true" ShowTitle="false" ShowActions="false" />
-                        <span class="page-title">@Navbar.State.Title</span>
+                        @if (BackHref is { } backHref)
+                        {
+                            <MudIconButton Icon="@Icons.Material.Filled.ArrowBack"
+                                           Color="Color.Dark"
+                                           OnClick="@(() => Nav.NavigateTo(backHref))" />
+                        }
+                        <span class="page-title">@_title</span>
                     }
                     else
                     {
@@ -35,7 +39,7 @@
                     @if (ShowTitleDivider)
                     {
                         <MudDivider Vertical="true" FlexItem="true" Class="mx-4 my-3" />
-                        <span class="page-title">@Navbar.State.Title</span>
+                        <span class="page-title">@_title</span>
                     }
                 </div>
             </MudHidden>
@@ -79,14 +83,6 @@
                     </MudMenuItem>
                 }
             </MudMenu>
-
-            @* Mobile: Action button(s) at far right *@
-            <MudHidden Breakpoint="Breakpoint.MdAndUp">
-                @if (!IsHomePage)
-                {
-                    <NuiNativeNavbar ShowBackButton="false" ShowTitle="false" />
-                }
-            </MudHidden>
         </MudAppBar>
 
         <MudMainContent Class="main-content">
@@ -145,36 +141,55 @@
 
     private NavigationTab _currentTab = NavigationTab.Map;
     private LocaleContext _locale = LocaleContext.English;
+    private string? _title;
 
-    private bool IsHomePage => Navigation.State.Path == "/" || Navigation.State.Path == "";
+    /// <summary>
+    /// Pages publish this to name themselves in the app bar:
+    /// <c>Bus.Publish(new MainLayout.TitleChanged(...))</c>.
+    /// </summary>
+    public sealed record TitleChanged(string Title);
+
+    [Event]
+    private void OnTitleChanged(TitleChanged e) => _title = e.Title;
+
+    private string Path => new Uri(Nav.Uri).AbsolutePath;
+
+    private bool IsHomePage => Path is "/" or "";
 
     private bool IsEditorialListPage =>
-        string.Equals(Navigation.State.Path, "/species", StringComparison.OrdinalIgnoreCase) ||
-        string.Equals(Navigation.State.Path, "/municipalities", StringComparison.OrdinalIgnoreCase) ||
-        string.Equals(Navigation.State.Path, "/categories", StringComparison.OrdinalIgnoreCase);
+        string.Equals(Path, "/species", StringComparison.OrdinalIgnoreCase) ||
+        string.Equals(Path, "/municipalities", StringComparison.OrdinalIgnoreCase) ||
+        string.Equals(Path, "/categories", StringComparison.OrdinalIgnoreCase);
 
     // Hide the divider+title on top-level list pages (home, species, muni, categories).
     // Each either renders its own root heading or relies on the active nav pill for context.
     private bool ShowTitleDivider =>
-        !IsHomePage && !IsEditorialListPage && Navbar.State.Title is not null;
+        !IsHomePage && !IsEditorialListPage && _title is not null;
+
+    // Mobile back target: detail routes are always "/section/{id}", so back
+    // goes to the section root. Top-level pages have nowhere to go back to.
+    private string? BackHref
+    {
+        get
+        {
+            var trimmed = Path.Trim('/');
+            var slash = trimmed.IndexOf('/');
+            return slash < 0 ? null : $"/{trimmed[..slash]}";
+        }
+    }
 
     protected override void OnInitialized()
     {
-        Navigation.OnStateChanged += HandleNavigationStateChanged;
-        Navbar.OnStateChanged += HandleNavbarStateChanged;
+        base.OnInitialized();
+        Nav.LocationChanged += HandleLocationChanged;
         L.LanguageChanged += HandleLanguageChanged;
         _locale = L.CurrentLanguage == "es" ? LocaleContext.Spanish : LocaleContext.English;
         UpdateCurrentTab();
     }
 
-    private void HandleNavigationStateChanged()
+    private void HandleLocationChanged(object? sender, LocationChangedEventArgs e)
     {
         UpdateCurrentTab();
-        InvokeAsync(StateHasChanged);
-    }
-
-    private void HandleNavbarStateChanged()
-    {
         InvokeAsync(StateHasChanged);
     }
 
@@ -186,7 +201,7 @@
 
     private void UpdateCurrentTab()
     {
-        var path = Navigation.State.Path;
+        var path = Path;
         _currentTab = path switch
         {
             "/" or "" => NavigationTab.Map,
@@ -199,7 +214,7 @@
 
     private string GetNavLinkClass(string path, bool exact = false)
     {
-        var currentPath = Navigation.State.Path;
+        var currentPath = Path;
         var isActive = exact
             ? (path == "/" ? currentPath == "/" || string.IsNullOrEmpty(currentPath) : string.Equals(currentPath, path, StringComparison.OrdinalIgnoreCase))
             : currentPath.StartsWith(path, StringComparison.OrdinalIgnoreCase);
@@ -222,15 +237,13 @@
             NavigationTab.Categories => "/categories",
             _ => "/"
         };
-        Navigation.NavigateTo(path);
+        Nav.NavigateTo(path);
     }
 
-    private void SetLocale(string code) => L.SetLanguage(code);
-
-    public void Dispose()
+    public override void Dispose()
     {
-        Navigation.OnStateChanged -= HandleNavigationStateChanged;
-        Navbar.OnStateChanged -= HandleNavbarStateChanged;
+        Nav.LocationChanged -= HandleLocationChanged;
         L.LanguageChanged -= HandleLanguageChanged;
+        base.Dispose();
     }
 }
