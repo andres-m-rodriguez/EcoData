@@ -29,73 +29,121 @@ public sealed class OrganizationAccessRequestHttpClient(HttpClient httpClient)
         )!;
     }
 
-    public async Task<OneOf<OrganizationAccessRequestDto, ProblemDetail>> GetByIdAsync(
+    public async Task<OneOf<OrganizationAccessRequestDto, RequestFailed>> GetByIdAsync(
         Guid organizationId,
         Guid id,
         CancellationToken cancellationToken = default
     )
     {
-        var response = await httpClient.GetAsync(
-            $"organization/organizations/{organizationId}/access-requests/{id}",
-            cancellationToken
-        );
-
-        if (!response.IsSuccessStatusCode)
+        try
         {
-            return await response.ReadProblemAsync(cancellationToken);
-        }
+            var response = await httpClient.GetAsync(
+                $"organization/organizations/{organizationId}/access-requests/{id}",
+                cancellationToken
+            );
 
-        var result = await response.Content.ReadFromJsonAsync<OrganizationAccessRequestDto>(
-            cancellationToken
-        );
-        return result!;
+            if (!response.IsSuccessStatusCode)
+            {
+                var problem = await ProblemDetailsParser.ParseAsync(response, cancellationToken);
+                return new RequestFailed((int)response.StatusCode, problem?.Detail ?? problem?.Title);
+            }
+
+            var result = await response.Content.ReadFromJsonAsync<OrganizationAccessRequestDto>(
+                cancellationToken
+            );
+            if (result is null)
+            {
+                return new RequestFailed(
+                    (int)response.StatusCode,
+                    "The server returned an empty response."
+                );
+            }
+
+            return result;
+        }
+        catch (HttpRequestException e)
+        {
+            return new RequestFailed(0, e.Message);
+        }
     }
 
-    public async Task<OneOf<OrganizationAccessRequestDto, ProblemDetail>> CreateAsync(
+    public async Task<OneOf<OrganizationAccessRequestDto, RequestFailed>> CreateAsync(
         Guid organizationId,
         CreateOrganizationAccessRequestRequest request,
         CancellationToken cancellationToken = default
     )
     {
-        var response = await httpClient.PostAsJsonAsync(
-            $"organization/organizations/{organizationId}/access-requests",
-            request,
-            cancellationToken
-        );
-
-        if (!response.IsSuccessStatusCode)
+        try
         {
-            return await response.ReadProblemAsync(cancellationToken);
-        }
+            var response = await httpClient.PostAsJsonAsync(
+                $"organization/organizations/{organizationId}/access-requests",
+                request,
+                cancellationToken
+            );
 
-        var result = await response.Content.ReadFromJsonAsync<OrganizationAccessRequestDto>(
-            cancellationToken
-        );
-        return result!;
+            if (!response.IsSuccessStatusCode)
+            {
+                var problem = await ProblemDetailsParser.ParseAsync(response, cancellationToken);
+                return new RequestFailed((int)response.StatusCode, problem?.Detail ?? problem?.Title);
+            }
+
+            var result = await response.Content.ReadFromJsonAsync<OrganizationAccessRequestDto>(
+                cancellationToken
+            );
+            if (result is null)
+            {
+                return new RequestFailed(
+                    (int)response.StatusCode,
+                    "The server returned an empty response."
+                );
+            }
+
+            return result;
+        }
+        catch (HttpRequestException e)
+        {
+            return new RequestFailed(0, e.Message);
+        }
     }
 
-    public async Task<OneOf<OrganizationAccessRequestDto, ProblemDetail>> UpdateStatusAsync(
+    public async Task<OneOf<OrganizationAccessRequestDto, RequestFailed>> UpdateStatusAsync(
         Guid organizationId,
         Guid id,
         UpdateOrganizationAccessRequestStatusRequest request,
         CancellationToken cancellationToken = default
     )
     {
-        var response = await httpClient.PutAsJsonAsync(
-            $"organization/organizations/{organizationId}/access-requests/{id}/status",
-            request,
-            cancellationToken
-        );
-
-        if (!response.IsSuccessStatusCode)
+        try
         {
-            return await response.ReadProblemAsync(cancellationToken);
-        }
+            var response = await httpClient.PutAsJsonAsync(
+                $"organization/organizations/{organizationId}/access-requests/{id}/status",
+                request,
+                cancellationToken
+            );
 
-        var result = await response.Content.ReadFromJsonAsync<OrganizationAccessRequestDto>(
-            cancellationToken
-        );
-        return result!;
+            if (!response.IsSuccessStatusCode)
+            {
+                var problem = await ProblemDetailsParser.ParseAsync(response, cancellationToken);
+                return new RequestFailed((int)response.StatusCode, problem?.Detail ?? problem?.Title);
+            }
+
+            var result = await response.Content.ReadFromJsonAsync<OrganizationAccessRequestDto>(
+                cancellationToken
+            );
+            if (result is null)
+            {
+                return new RequestFailed(
+                    (int)response.StatusCode,
+                    "The server returned an empty response."
+                );
+            }
+
+            return result;
+        }
+        catch (HttpRequestException e)
+        {
+            return new RequestFailed(0, e.Message);
+        }
     }
 
     public IAsyncEnumerable<OrganizationAccessRequestDto> GetMyRequestsAsync(
@@ -115,25 +163,41 @@ public sealed class OrganizationAccessRequestHttpClient(HttpClient httpClient)
         )!;
     }
 
-    public async Task<OneOf<OrganizationAccessRequestDto, ProblemDetail>> CancelMyRequestAsync(
+    public async Task<OneOf<OrganizationAccessRequestDto, RequestFailed>> CancelMyRequestAsync(
         Guid id,
         CancellationToken cancellationToken = default
     )
     {
-        var response = await httpClient.PostAsync(
-            $"organization/me/access-requests/{id}/cancel",
-            null,
-            cancellationToken
-        );
-
-        if (!response.IsSuccessStatusCode)
+        try
         {
-            return await response.ReadProblemAsync(cancellationToken);
-        }
+            var response = await httpClient.PostAsync(
+                $"organization/me/access-requests/{id}/cancel",
+                null,
+                cancellationToken
+            );
 
-        var result = await response.Content.ReadFromJsonAsync<OrganizationAccessRequestDto>(
-            cancellationToken
-        );
-        return result!;
+            if (!response.IsSuccessStatusCode)
+            {
+                var problem = await ProblemDetailsParser.ParseAsync(response, cancellationToken);
+                return new RequestFailed((int)response.StatusCode, problem?.Detail ?? problem?.Title);
+            }
+
+            var result = await response.Content.ReadFromJsonAsync<OrganizationAccessRequestDto>(
+                cancellationToken
+            );
+            if (result is null)
+            {
+                return new RequestFailed(
+                    (int)response.StatusCode,
+                    "The server returned an empty response."
+                );
+            }
+
+            return result;
+        }
+        catch (HttpRequestException e)
+        {
+            return new RequestFailed(0, e.Message);
+        }
     }
 }

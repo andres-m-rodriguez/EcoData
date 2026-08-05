@@ -1,7 +1,9 @@
+using EcoData.Common.Messaging.Abstractions;
 using EcoData.Locations.DataAccess.Interfaces;
 using EcoData.Organization.Contracts.Dtos;
 using EcoData.Organization.DataAccess.Interfaces;
 using EcoData.Sensors.Contracts.Dtos;
+using EcoData.Sensors.Contracts.Events;
 using EcoData.Sensors.DataAccess.Interfaces;
 using EcoData.Sensors.DataAccess.Resolvers;
 using EcoData.Sensors.Ingestion.Services;
@@ -20,6 +22,7 @@ public sealed class UsgsIngestionWorker(
     IMunicipalityRepository municipalityRepository,
     ParameterResolver parameterResolver,
     IUsgsApiClient usgsApiClient,
+    IMessageBus messageBus,
     IHostEnvironment hostEnvironment,
     ILogger<UsgsIngestionWorker> logger
 ) : BackgroundService
@@ -192,6 +195,22 @@ public sealed class UsgsIngestionWorker(
                     foreach (var (sensorId, lastReading) in sensorLastReadings)
                     {
                         await healthRepository.RecordReadingAsync(sensorId, lastReading, stoppingToken);
+                    }
+
+                    foreach (var reading in readingsToAdd)
+                    {
+                        await messageBus.PublishEventAsync(
+                            new ReadingCreatedEvent(
+                                reading.SensorId,
+                                reading.Parameter,
+                                reading.Description,
+                                reading.Value,
+                                reading.Unit,
+                                reading.RecordedAt
+                            ),
+                            topic: reading.SensorId.ToString(),
+                            cancellationToken: stoppingToken
+                        );
                     }
 
                     logger.LogInformation("Ingested {Count} readings, last recorded at {LastRecordedAt}",

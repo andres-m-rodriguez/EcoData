@@ -15,7 +15,13 @@
 
 <div class="map-page">
     <div class="map-container">
-        @if (_mapInitFetch.IsLoading)
+        @if (_mapLoadError is not null)
+        {
+            <div class="map-error-overlay">
+                <MudAlert Severity="Severity.Error">@_mapLoadError</MudAlert>
+            </div>
+        }
+        else if (_mapInitFetch.IsLoading)
         {
             <MudOverlay Visible="true" DarkBackground="false" Absolute="true" Class="map-loading-overlay" ZIndex="1000">
                 <MudStack AlignItems="AlignItems.Center">
@@ -38,6 +44,7 @@
                 <MapSpeciesPanel Title="@_selectedMunicipality.Name"
                                  IsLoading="@(_speciesFetch?.IsLoading is not false)"
                                  Species="@_speciesFetch?.Data"
+                                 LoadError="@_speciesLoadError"
                                  OnClose="CloseSidebar"
                                  OnSpeciesClick="OnSpeciesClicked" />
             </aside>
@@ -53,6 +60,7 @@
                 <MapSpeciesPanel Title="@_selectedMunicipality.Name"
                                  IsLoading="@(_speciesFetch?.IsLoading is not false)"
                                  Species="@_speciesFetch?.Data"
+                                 LoadError="@_speciesLoadError"
                                  OnClose="CloseSheet"
                                  OnSpeciesClick="OnSpeciesClicked" />
             </div>
@@ -68,6 +76,9 @@
 
     private IFetch<bool> _mapInitFetch = default!;
     private IFetch<IReadOnlyList<SpeciesDtoForList>>? _speciesFetch;
+
+    private string? _mapLoadError;
+    private string? _speciesLoadError;
 
     protected override void OnInitialized()
     {
@@ -88,7 +99,15 @@
 
     private async Task<bool> InitMapAsync(CancellationToken ct)
     {
-        var geoJson = await MunicipalityHttpClient.GetGeoJsonByStateCodeAsync("PR", ct);
+        var result = await MunicipalityHttpClient.GetGeoJsonByStateCodeAsync("PR", ct);
+        if (!result.TryPickT0(out var geoJson, out var error))
+        {
+            _mapLoadError = error.StatusCode == 0
+                ? "Couldn't reach the server."
+                : error.Message ?? "Something went wrong while loading the map.";
+            return false;
+        }
+        _mapLoadError = null;
         if (!string.IsNullOrEmpty(geoJson))
         {
             _mapController.AddGeoJson(new MapGeoJson
@@ -140,7 +159,19 @@
 
         (_speciesFetch as IDisposable)?.Dispose();
         _speciesFetch = new Fetch<IReadOnlyList<SpeciesDtoForList>>(
-            ct => SpeciesHttpClient.GetByMunicipalityAsync(municipality.Id, ct),
+            async ct =>
+            {
+                var result = await SpeciesHttpClient.GetByMunicipalityAsync(municipality.Id, ct);
+                if (result.TryPickT0(out var species, out var error))
+                {
+                    _speciesLoadError = null;
+                    return species;
+                }
+                _speciesLoadError = error.StatusCode == 0
+                    ? "Couldn't reach the server."
+                    : error.Message ?? "Something went wrong while loading species.";
+                return [];
+            },
             () => InvokeAsync(StateHasChanged)
         );
         await _speciesFetch.FetchAsync();

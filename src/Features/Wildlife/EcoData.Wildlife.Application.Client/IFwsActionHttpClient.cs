@@ -1,8 +1,10 @@
+using EcoData.Common.Problems.Contracts;
 using EcoData.Wildlife.Contracts.Dtos;
+using OneOf;
 
 namespace EcoData.Wildlife.Application.Client;
 
 public interface IFwsActionHttpClient
 {
-    Task<IReadOnlyList<FwsActionDtoForList>> GetAllAsync(CancellationToken ct = default);
+    Task<OneOf<IReadOnlyList<FwsActionDtoForList>, RequestFailed>> GetAllAsync(CancellationToken ct = default);
 }

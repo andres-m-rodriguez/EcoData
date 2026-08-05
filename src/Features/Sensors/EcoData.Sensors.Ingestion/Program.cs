@@ -1,3 +1,4 @@
+using EcoData.Common.Messaging;
 using EcoData.Locations.DataAccess.Extensions;
 using EcoData.Locations.Database.Extensions;
 using EcoData.Organization.DataAccess;
@@ -17,6 +18,8 @@ builder.AddSensorsDatabase();
 builder.Services.AddSensorsDataAccess();
 builder.AddLocationsDatabase();
 builder.Services.AddLocationsDataAccess();
+builder.Services.AddMessaging(messaging =>
+    messaging.UseAzureServiceBus(builder.Configuration.GetSection("Messaging:ServiceBus")));
 
 builder.Services.AddHttpClient<IUsgsApiClient, UsgsApiClient>(client =>
 {

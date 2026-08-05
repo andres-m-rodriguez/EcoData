@@ -24,7 +24,9 @@ public static class OrganizationBlockedUserEndpoints
         group
             .MapGet(
                 "/",
-                async (
+                async Task<
+                    Results<Ok<IAsyncEnumerable<OrganizationBlockedUserDto>>, ForbidHttpResult>
+                > (
                     Guid organizationId,
                     ClaimsPrincipal user,
                     IOrganizationBlockedUserRepository repository,
@@ -43,10 +45,10 @@ public static class OrganizationBlockedUserEndpoints
                         )
                     )
                     {
-                        return Results.Forbid();
+                        return TypedResults.Forbid();
                     }
 
-                    return Results.Ok(repository.GetByOrganizationAsync(organizationId, ct));
+                    return TypedResults.Ok(repository.GetByOrganizationAsync(organizationId, ct));
                 }
             )
             .WithName("GetBlockedUsers");

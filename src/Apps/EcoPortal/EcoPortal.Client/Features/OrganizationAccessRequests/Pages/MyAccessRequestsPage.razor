@@ -163,7 +163,7 @@
                     Snackbar.Add("Request cancelled successfully", Severity.Success);
                     _listRef?.Refresh();
                 },
-                problem => Snackbar.Add(problem.Detail ?? "Failed to cancel request", Severity.Error)
+                error => Snackbar.Add(error.Message ?? "Failed to cancel request", Severity.Error)
             );
         }
     }

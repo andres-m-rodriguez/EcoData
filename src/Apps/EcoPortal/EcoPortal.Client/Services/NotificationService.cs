@@ -1,6 +1,8 @@
+using EcoData.Common.Problems.Contracts;
 using EcoData.Sensors.Application.Client;
 using EcoData.Sensors.Contracts.Dtos;
 using EcoData.Sensors.Contracts.Parameters;
+using OneOf;
 
 namespace EcoPortal.Client.Services;
 
@@ -26,18 +28,16 @@ public sealed class NotificationService
 
     public async Task RefreshUnreadCountAsync()
     {
-        try
+        // Clients never throw; on failure (e.g. user not authenticated) keep the count unchanged.
+        var result = await _notificationClient.GetUnreadCountAsync();
+        if (result.TryPickT0(out var count, out _))
         {
-            _unreadCount = await _notificationClient.GetUnreadCountAsync();
+            _unreadCount = count;
             OnUnreadCountChanged?.Invoke();
-        }
-        catch
-        {
-            // Silently fail — user might not be authenticated.
         }
     }
 
-    public Task<IReadOnlyList<UserNotificationDto>> GetNotificationsAsync(
+    public Task<OneOf<IReadOnlyList<UserNotificationDto>, RequestFailed>> GetNotificationsAsync(
         int pageSize = 20,
         Guid? cursor = null,
         string? sensorName = null)
@@ -58,11 +58,17 @@ public sealed class NotificationService
         }
     }
 
-    public async Task MarkAllAsReadAsync()
+    public async Task<bool> MarkAllAsReadAsync()
     {
-        await _notificationClient.MarkAllAsReadAsync();
+        var result = await _notificationClient.MarkAllAsReadAsync();
+        if (result.IsT1)
+        {
+            return false;
+        }
+
         _unreadCount = 0;
         OnUnreadCountChanged?.Invoke();
+        return true;
     }
 
     // OnNotificationReceived is preserved for compatibility with NotificationPanel,

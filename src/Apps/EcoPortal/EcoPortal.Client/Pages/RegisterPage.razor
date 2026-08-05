@@ -128,7 +128,12 @@
 
         result.Switch(
             _ => Navigation.NavigateTo("/login?registered=true"),
-            problem => _errorMessage = problem.Detail ?? "Registration failed"
+            validationFailed => _errorMessage = string.Join(" ", validationFailed.AllMessages),
+            requestFailed => _errorMessage = requestFailed.StatusCode switch
+            {
+                0 => "Couldn't reach the server. Please try again.",
+                _ => requestFailed.Message ?? "Registration failed"
+            }
         );
     }
 

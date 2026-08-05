@@ -6,28 +6,31 @@ namespace EcoData.Sensors.Application.Client;
 
 public interface IUserSubscriptionHttpClient
 {
-    Task<IReadOnlyList<UserSensorSubscriptionDto>> GetSubscriptionsAsync(
+    Task<OneOf<IReadOnlyList<UserSensorSubscriptionDto>, RequestFailed>> GetSubscriptionsAsync(
         CancellationToken cancellationToken = default
     );
 
-    Task<UserSensorSubscriptionDto?> GetSubscriptionAsync(
+    /// <summary>
+    /// A 404 RequestFailed means the user is not subscribed to the sensor.
+    /// </summary>
+    Task<OneOf<UserSensorSubscriptionDto, RequestFailed>> GetSubscriptionAsync(
         Guid sensorId,
         CancellationToken cancellationToken = default
     );
 
-    Task<OneOf<UserSensorSubscriptionDto, ProblemDetail>> SubscribeAsync(
+    Task<OneOf<UserSensorSubscriptionDto, RequestFailed>> SubscribeAsync(
         Guid sensorId,
         UserSensorSubscriptionDtoForCreate request,
         CancellationToken cancellationToken = default
     );
 
-    Task<OneOf<UserSensorSubscriptionDto, ProblemDetail>> UpdateSubscriptionAsync(
+    Task<OneOf<UserSensorSubscriptionDto, RequestFailed>> UpdateSubscriptionAsync(
         Guid sensorId,
         UserSensorSubscriptionDtoForUpdate request,
         CancellationToken cancellationToken = default
     );
 
-    Task<OneOf<bool, ProblemDetail>> UnsubscribeAsync(
+    Task<OneOf<OneOf.Types.Success, RequestFailed>> UnsubscribeAsync(
         Guid sensorId,
         CancellationToken cancellationToken = default
     );

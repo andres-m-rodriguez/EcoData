@@ -103,14 +103,14 @@
 
             var result = await SubscriptionClient.UpdateSubscriptionAsync(SensorId, request);
 
-            if (result.IsT0)
+            if (result.TryPickT0(out var updated, out var failure))
             {
                 Snackbar.Add("Preferences updated", Severity.Success);
-                MudDialog.Close(DialogResult.Ok(result.AsT0));
+                MudDialog.Close(DialogResult.Ok(updated));
             }
             else
             {
-                Snackbar.Add(result.AsT1.Detail ?? "Failed to update preferences", Severity.Error);
+                Snackbar.Add(failure.Message ?? "Failed to update preferences", Severity.Error);
             }
         }
         finally
@@ -126,14 +126,14 @@
         {
             var result = await SubscriptionClient.UnsubscribeAsync(SensorId);
 
-            if (result.IsT0)
+            if (result.TryPickT0(out _, out var failure))
             {
                 Snackbar.Add("Unsubscribed from sensor alerts", Severity.Success);
                 MudDialog.Close(DialogResult.Ok(true));
             }
             else
             {
-                Snackbar.Add(result.AsT1.Detail ?? "Failed to unsubscribe", Severity.Error);
+                Snackbar.Add(failure.Message ?? "Failed to unsubscribe", Severity.Error);
             }
         }
         finally

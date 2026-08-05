@@ -7,7 +7,7 @@ namespace EcoData.Sensors.Application.Client;
 
 public interface ISensorHealthHttpClient
 {
-    Task<OneOf<SensorHealthSummaryDto, ProblemDetail>> GetSummaryAsync(
+    Task<OneOf<SensorHealthSummaryDto, RequestFailed>> GetSummaryAsync(
         CancellationToken cancellationToken = default
     );
 
@@ -16,17 +16,17 @@ public interface ISensorHealthHttpClient
         CancellationToken cancellationToken = default
     );
 
-    Task<OneOf<SensorHealthStatusDtoForDetail, ProblemDetail>> GetSensorHealthAsync(
+    Task<OneOf<SensorHealthStatusDtoForDetail, RequestFailed>> GetSensorHealthAsync(
         Guid sensorId,
         CancellationToken cancellationToken = default
     );
 
-    Task<OneOf<SensorHealthConfigDtoForDetail, ProblemDetail>> GetSensorHealthConfigAsync(
+    Task<OneOf<SensorHealthConfigDtoForDetail, RequestFailed>> GetSensorHealthConfigAsync(
         Guid sensorId,
         CancellationToken cancellationToken = default
     );
 
-    Task<OneOf<SensorHealthConfigDtoForDetail, ProblemDetail>> UpdateHealthConfigAsync(
+    Task<OneOf<SensorHealthConfigDtoForDetail, RequestFailed>> UpdateHealthConfigAsync(
         Guid sensorId,
         SensorHealthConfigDtoForCreate config,
         CancellationToken cancellationToken = default

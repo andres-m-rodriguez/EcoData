@@ -9,7 +9,7 @@ namespace EcoData.Sensors.Application.Client;
 
 public sealed class UserNotificationHttpClient(HttpClient httpClient) : IUserNotificationHttpClient
 {
-    public async Task<IReadOnlyList<UserNotificationDto>> GetNotificationsAsync(
+    public async Task<OneOf<IReadOnlyList<UserNotificationDto>, RequestFailed>> GetNotificationsAsync(
         int pageSize = 20,
         Guid? cursor = null,
         string? sensorName = null,
@@ -21,16 +21,28 @@ public sealed class UserNotificationHttpClient(HttpClient httpClient) : IUserNot
             .Add("sensorName", sensorName)
             .Build();
 
-        var response = await httpClient.GetAsync(
-            $"users/me/notifications{queryString}",
-            cancellationToken
-        );
-        response.EnsureSuccessStatusCode();
+        try
+        {
+            var response = await httpClient.GetAsync(
+                $"users/me/notifications{queryString}",
+                cancellationToken
+            );
 
-        var result = await response.Content.ReadFromJsonAsync<List<UserNotificationDto>>(
-            cancellationToken
-        );
-        return result ?? [];
+            if (!response.IsSuccessStatusCode)
+            {
+                var problem = await ProblemDetailsParser.ParseAsync(response, cancellationToken);
+                return new RequestFailed((int)response.StatusCode, problem?.Detail ?? problem?.Title);
+            }
+
+            var result = await response.Content.ReadFromJsonAsync<List<UserNotificationDto>>(
+                cancellationToken
+            );
+            return OneOf<IReadOnlyList<UserNotificationDto>, RequestFailed>.FromT0(result ?? []);
+        }
+        catch (HttpRequestException e)
+        {
+            return new RequestFailed(0, e.Message);
+        }
     }
 
     public IAsyncEnumerable<UserNotificationDto> GetNotificationsAsync(
@@ -49,45 +61,86 @@ public sealed class UserNotificationHttpClient(HttpClient httpClient) : IUserNot
         )!;
     }
 
-    public async Task<int> GetUnreadCountAsync(CancellationToken cancellationToken = default)
+    public async Task<OneOf<int, RequestFailed>> GetUnreadCountAsync(
+        CancellationToken cancellationToken = default)
     {
-        var result = await httpClient.GetFromJsonAsync<UnreadCountDto>(
-            "users/me/notifications/unread-count",
-            cancellationToken
-        );
-        return result?.Count ?? 0;
+        try
+        {
+            var response = await httpClient.GetAsync(
+                "users/me/notifications/unread-count",
+                cancellationToken
+            );
+
+            if (!response.IsSuccessStatusCode)
+            {
+                var problem = await ProblemDetailsParser.ParseAsync(response, cancellationToken);
+                return new RequestFailed((int)response.StatusCode, problem?.Detail ?? problem?.Title);
+            }
+
+            var result = await response.Content.ReadFromJsonAsync<UnreadCountDto>(
+                cancellationToken
+            );
+            return result?.Count ?? 0;
+        }
+        catch (HttpRequestException e)
+        {
+            return new RequestFailed(0, e.Message);
+        }
     }
 
-    public async Task<OneOf<UserNotificationDto, ProblemDetail>> MarkAsReadAsync(
+    public async Task<OneOf<UserNotificationDto, RequestFailed>> MarkAsReadAsync(
         Guid notificationId,
         CancellationToken cancellationToken = default)
     {
-        var response = await httpClient.PostAsync(
-            $"users/me/notifications/{notificationId}/read",
-            null,
-            cancellationToken
-        );
-
-        if (!response.IsSuccessStatusCode)
+        try
         {
-            return await response.ReadProblemAsync(cancellationToken);
-        }
+            var response = await httpClient.PostAsync(
+                $"users/me/notifications/{notificationId}/read",
+                null,
+                cancellationToken
+            );
 
-        var result = await response.Content.ReadFromJsonAsync<UserNotificationDto>(
-            cancellationToken
-        );
-        return result!;
+            if (!response.IsSuccessStatusCode)
+            {
+                var problem = await ProblemDetailsParser.ParseAsync(response, cancellationToken);
+                return new RequestFailed((int)response.StatusCode, problem?.Detail ?? problem?.Title);
+            }
+
+            var result = await response.Content.ReadFromJsonAsync<UserNotificationDto>(
+                cancellationToken
+            );
+            if (result is null)
+                return new RequestFailed((int)response.StatusCode, "The server returned an empty response.");
+            return result;
+        }
+        catch (HttpRequestException e)
+        {
+            return new RequestFailed(0, e.Message);
+        }
     }
 
-    public async Task<int> MarkAllAsReadAsync(CancellationToken cancellationToken = default)
+    public async Task<OneOf<int, RequestFailed>> MarkAllAsReadAsync(
+        CancellationToken cancellationToken = default)
     {
-        var response = await httpClient.PostAsync(
-            "users/me/notifications/read-all",
-            null,
-            cancellationToken
-        );
-        response.EnsureSuccessStatusCode();
+        try
+        {
+            var response = await httpClient.PostAsync(
+                "users/me/notifications/read-all",
+                null,
+                cancellationToken
+            );
 
-        return await response.Content.ReadFromJsonAsync<int>(cancellationToken);
+            if (!response.IsSuccessStatusCode)
+            {
+                var problem = await ProblemDetailsParser.ParseAsync(response, cancellationToken);
+                return new RequestFailed((int)response.StatusCode, problem?.Detail ?? problem?.Title);
+            }
+
+            return await response.Content.ReadFromJsonAsync<int>(cancellationToken);
+        }
+        catch (HttpRequestException e)
+        {
+            return new RequestFailed(0, e.Message);
+        }
     }
 }

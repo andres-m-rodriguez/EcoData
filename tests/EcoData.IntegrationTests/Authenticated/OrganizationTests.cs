@@ -44,7 +44,7 @@ public sealed class OrganizationTests(EcoDataTestFixture fixture) : Authenticate
 
         deleteResult.IsT1.Should().BeTrue("Delete should return ProblemDetail when sensors exist");
         var problem = deleteResult.AsT1;
-        problem.Status.Should().Be(409, "Should be a conflict error");
+        problem.StatusCode.Should().Be(409, "Should be a conflict error");
     }
 
     [Fact]

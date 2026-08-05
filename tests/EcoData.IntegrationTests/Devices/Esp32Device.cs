@@ -33,7 +33,7 @@ public sealed class Esp32Device : IDisposable
         if (!result.IsT0)
         {
             var problem = result.AsT1;
-            throw new InvalidOperationException($"Failed to post sensor reading: {problem.Title} - {problem.Detail}");
+            throw new InvalidOperationException($"Failed to post sensor reading: HTTP {problem.StatusCode} - {problem.Message}");
         }
     }
 

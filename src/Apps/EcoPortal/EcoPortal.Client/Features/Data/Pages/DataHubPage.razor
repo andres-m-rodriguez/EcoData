@@ -1,12 +1,12 @@
 @page "/data"
 @using BlazingSingularity.Fetch
 @using BlazorStaticNavigation
+@using EcoData.Common.Problems.Contracts
 @using EcoData.Sensors.Application.Client
 @using EcoData.Sensors.Contracts.Parameters
 @inject INativeNavbarManager Navbar
 @inject ISensorHttpClient SensorClient
 @inject ISensorReadingHttpClient ReadingClient
-@inject ISnackbar Snackbar
 
 <PageTitle>Data Portal - EcoData</PageTitle>
 
@@ -24,6 +24,10 @@
             </div>
 
             <aside class="hero-stats">
+                @if (_loadError is not null)
+                {
+                    <MudAlert Severity="Severity.Error" Dense="true">@_loadError</MudAlert>
+                }
                 <div class="hero-stats-k"><span class="pulse"></span>Updated · just now</div>
                 <div class="hs-item">
                     <span class="hs-label">Total readings</span>
@@ -182,43 +186,57 @@
     private IFetch<long> _totalReadingsFetch = default!;
     private IFetch<int> _activeSensorsFetch = default!;
     private IFetch<int> _totalSensorsFetch = default!;
+    private string? _loadError;
 
     protected override void OnInitialized()
     {
         Navbar.SetTitle("Data");
 
         _totalReadingsFetch = new Fetch<long>(
-            ct => ReadingClient.GetTotalCountAsync(ct),
+            async ct =>
+            {
+                var result = await ReadingClient.GetTotalCountAsync(ct);
+                if (result.TryPickT0(out var count, out var error))
+                    return count;
+                SetLoadError(error, "Couldn't load reading count.");
+                return 0;
+            },
             () => InvokeAsync(StateHasChanged)
         );
-        _totalReadingsFetch.OnChange(() =>
-        {
-            if (_totalReadingsFetch.IsError)
-                Snackbar.Add("Couldn't load reading count.", Severity.Error);
-        });
 
         _activeSensorsFetch = new Fetch<int>(
-            ct => SensorClient.GetSensorCountAsync(new SensorParameters(IsActive: true), ct),
+            async ct =>
+            {
+                var result = await SensorClient.GetSensorCountAsync(new SensorParameters(IsActive: true), ct);
+                if (result.TryPickT0(out var count, out var error))
+                    return count;
+                SetLoadError(error, "Couldn't load active sensor count.");
+                return 0;
+            },
             () => InvokeAsync(StateHasChanged)
         );
-        _activeSensorsFetch.OnChange(() =>
-        {
-            if (_activeSensorsFetch.IsError)
-                Snackbar.Add("Couldn't load active sensor count.", Severity.Error);
-        });
 
         _totalSensorsFetch = new Fetch<int>(
-            ct => SensorClient.GetSensorCountAsync(new SensorParameters(), ct),
+            async ct =>
+            {
+                var result = await SensorClient.GetSensorCountAsync(new SensorParameters(), ct);
+                if (result.TryPickT0(out var count, out var error))
+                    return count;
+                SetLoadError(error, "Couldn't load total sensor count.");
+                return 0;
+            },
             () => InvokeAsync(StateHasChanged)
         );
-        _totalSensorsFetch.OnChange(() =>
-        {
-            if (_totalSensorsFetch.IsError)
-                Snackbar.Add("Couldn't load total sensor count.", Severity.Error);
-        });
 
         _ = _totalReadingsFetch.FetchAsync();
         _ = _activeSensorsFetch.FetchAsync();
         _ = _totalSensorsFetch.FetchAsync();
+    }
+
+    private void SetLoadError(RequestFailed error, string fallback)
+    {
+        _loadError = error.StatusCode == 0
+            ? "Couldn't reach the server. Check your connection."
+            : error.Message ?? fallback;
     }
 }

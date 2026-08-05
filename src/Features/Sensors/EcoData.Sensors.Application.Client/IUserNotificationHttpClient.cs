@@ -7,7 +7,7 @@ namespace EcoData.Sensors.Application.Client;
 
 public interface IUserNotificationHttpClient
 {
-    Task<IReadOnlyList<UserNotificationDto>> GetNotificationsAsync(
+    Task<OneOf<IReadOnlyList<UserNotificationDto>, RequestFailed>> GetNotificationsAsync(
         int pageSize = 20,
         Guid? cursor = null,
         string? sensorName = null,
@@ -19,16 +19,16 @@ public interface IUserNotificationHttpClient
         CancellationToken cancellationToken = default
     );
 
-    Task<int> GetUnreadCountAsync(
+    Task<OneOf<int, RequestFailed>> GetUnreadCountAsync(
         CancellationToken cancellationToken = default
     );
 
-    Task<OneOf<UserNotificationDto, ProblemDetail>> MarkAsReadAsync(
+    Task<OneOf<UserNotificationDto, RequestFailed>> MarkAsReadAsync(
         Guid notificationId,
         CancellationToken cancellationToken = default
     );
 
-    Task<int> MarkAllAsReadAsync(
+    Task<OneOf<int, RequestFailed>> MarkAllAsReadAsync(
         CancellationToken cancellationToken = default
     );
 }

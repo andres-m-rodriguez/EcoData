@@ -96,7 +96,7 @@
         var validationResult = new LoginRequestValidator().Validate(request);
         if (!validationResult.IsValid)
         {
-            _errorMessage = validationResult.Errors[0].ErrorMessage;
+            _errorMessage = string.Join(" ", validationResult.Errors.Select(e => e.ErrorMessage));
             return;
         }
 
@@ -108,7 +108,13 @@
                 var returnUrl = string.IsNullOrEmpty(ReturnUrl) ? "/" : ReturnUrl;
                 Navigation.NavigateTo(returnUrl);
             },
-            problem => _errorMessage = problem.Detail ?? "Login failed"
+            validationFailed => _errorMessage = string.Join(" ", validationFailed.AllMessages),
+            requestFailed => _errorMessage = requestFailed.StatusCode switch
+            {
+                401 => requestFailed.Message ?? "Invalid email or password",
+                0 => "Couldn't reach the server. Please try again.",
+                _ => requestFailed.Message ?? "Login failed"
+            }
         );
     }
 

@@ -1,8 +1,10 @@
 using System.Net.Http.Json;
 using System.Text.Json;
 using EcoData.Common.Http.Helpers;
+using EcoData.Common.Problems.Contracts;
 using EcoData.Locations.Contracts.Dtos;
 using EcoData.Locations.Contracts.Parameters;
+using OneOf;
 
 namespace EcoPortal.Client.Services;
 
@@ -48,57 +50,87 @@ public sealed class LocationHttpClient(HttpClient httpClient) : ILocationHttpCli
         )!;
     }
 
-    public async Task<MunicipalityDtoForDetail?> GetMunicipalityByIdAsync(
+    public async Task<OneOf<MunicipalityDtoForDetail, RequestFailed>> GetMunicipalityByIdAsync(
         Guid id,
         CancellationToken cancellationToken = default
     )
     {
-        var response = await httpClient.GetAsync($"locations/municipalities/{id}", cancellationToken);
-
-        if (!response.IsSuccessStatusCode)
+        try
         {
-            return null;
+            var response = await httpClient.GetAsync($"locations/municipalities/{id}", cancellationToken);
+            if (!response.IsSuccessStatusCode)
+            {
+                var problem = await ProblemDetailsParser.ParseAsync(response, cancellationToken);
+                return new RequestFailed((int)response.StatusCode, problem?.Detail ?? problem?.Title);
+            }
+            var municipality = await response.Content.ReadFromJsonAsync<MunicipalityDtoForDetail>(cancellationToken);
+            if (municipality is null)
+                return new RequestFailed((int)response.StatusCode, "The server returned an empty response.");
+            return municipality;
         }
-
-        return await response.Content.ReadFromJsonAsync<MunicipalityDtoForDetail>(cancellationToken);
+        catch (HttpRequestException e)
+        {
+            return new RequestFailed(0, e.Message);
+        }
     }
 
-    public async Task<MunicipalityDtoForDetail?> GetMunicipalityByPointAsync(
+    public async Task<OneOf<MunicipalityDtoForDetail, RequestFailed>> GetMunicipalityByPointAsync(
         decimal latitude,
         decimal longitude,
         CancellationToken cancellationToken = default
     )
     {
-        var queryString = new QueryStringBuilder()
-            .Add("latitude", latitude)
-            .Add("longitude", longitude)
-            .Build();
-
-        var response = await httpClient.GetAsync($"locations/municipalities/by-point{queryString}", cancellationToken);
-
-        if (!response.IsSuccessStatusCode)
+        try
         {
-            return null;
-        }
+            var queryString = new QueryStringBuilder()
+                .Add("latitude", latitude)
+                .Add("longitude", longitude)
+                .Build();
 
-        return await response.Content.ReadFromJsonAsync<MunicipalityDtoForDetail>(cancellationToken);
+            var response = await httpClient.GetAsync(
+                $"locations/municipalities/by-point{queryString}",
+                cancellationToken
+            );
+            if (!response.IsSuccessStatusCode)
+            {
+                var problem = await ProblemDetailsParser.ParseAsync(response, cancellationToken);
+                return new RequestFailed((int)response.StatusCode, problem?.Detail ?? problem?.Title);
+            }
+            var municipality = await response.Content.ReadFromJsonAsync<MunicipalityDtoForDetail>(cancellationToken);
+            if (municipality is null)
+                return new RequestFailed((int)response.StatusCode, "The server returned an empty response.");
+            return municipality;
+        }
+        catch (HttpRequestException e)
+        {
+            return new RequestFailed(0, e.Message);
+        }
     }
 
-    public async Task<JsonDocument?> GetMunicipalitiesGeoJsonAsync(
+    public async Task<OneOf<JsonDocument, RequestFailed>> GetMunicipalitiesGeoJsonAsync(
         string stateCode,
         CancellationToken cancellationToken = default
     )
     {
-        var response = await httpClient.GetAsync(
-            $"locations/municipalities/geojson/state/{stateCode}",
-            cancellationToken
-        );
-
-        if (!response.IsSuccessStatusCode)
+        try
         {
-            return null;
+            var response = await httpClient.GetAsync(
+                $"locations/municipalities/geojson/state/{stateCode}",
+                cancellationToken
+            );
+            if (!response.IsSuccessStatusCode)
+            {
+                var problem = await ProblemDetailsParser.ParseAsync(response, cancellationToken);
+                return new RequestFailed((int)response.StatusCode, problem?.Detail ?? problem?.Title);
+            }
+            var geoJson = await response.Content.ReadFromJsonAsync<JsonDocument>(cancellationToken);
+            if (geoJson is null)
+                return new RequestFailed((int)response.StatusCode, "The server returned an empty response.");
+            return geoJson;
         }
-
-        return await response.Content.ReadFromJsonAsync<JsonDocument>(cancellationToken);
+        catch (HttpRequestException e)
+        {
+            return new RequestFailed(0, e.Message);
+        }
     }
 }

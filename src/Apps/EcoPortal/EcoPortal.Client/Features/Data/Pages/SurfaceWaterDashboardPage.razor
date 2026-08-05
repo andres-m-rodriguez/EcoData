@@ -46,6 +46,11 @@
 
     <div class="body">
 
+        @if (_loadError is not null)
+        {
+            <MudAlert Severity="Severity.Error" Dense="true" Class="mb-4">@_loadError</MudAlert>
+        }
+
         <div class="kpi-row">
             <div class="kpi">
                 <div class="kpi-h">
@@ -249,6 +254,7 @@
     private IFetch<List<SurfaceWaterStationMarkerDto>> _markersFetch = default!;
     private IFetch<List<ReadingDtoForDetail>> _featuredFetch = default!;
 
+    private string? _loadError;
     private string _range = "7D";
     private FeaturedStation? _featured;
     private IReadOnlyList<TimeSeries> _featuredSeries = [];
@@ -262,14 +268,18 @@
         Navbar.SetTitle("Surface Water");
 
         _summaryFetch = new Fetch<SurfaceWaterSummaryDto?>(
-            ct => ReadingClient.GetSurfaceWaterSummaryAsync(ct),
+            async ct =>
+            {
+                var result = await ReadingClient.GetSurfaceWaterSummaryAsync(ct);
+                if (result.TryPickT0(out var summary, out var error))
+                    return summary;
+                _loadError = error.StatusCode == 0
+                    ? "Couldn't reach the server. Check your connection."
+                    : error.Message ?? "Couldn't load the Surface Water summary.";
+                return null;
+            },
             () => InvokeAsync(StateHasChanged)
         );
-        _summaryFetch.OnChange(() =>
-        {
-            if (_summaryFetch.IsError)
-                Snackbar.Add("Couldn't load Surface Water summary.", Severity.Error);
-        });
 
         _markersFetch = new Fetch<List<SurfaceWaterStationMarkerDto>>(
             FetchMarkersAsync,
@@ -317,8 +327,19 @@ private async Task EnrichMunicipalitiesAsync(IReadOnlyList<SurfaceWaterStationMa
         var ids = markers.Where(m => m.MunicipalityId.HasValue).Select(m => m.MunicipalityId!.Value).Distinct().ToList();
         if (ids.Count == 0) return;
 
-        var municipalities = await MunicipalityClient.GetByIdsAsync(ids, ct);
-        _municipalityNames = municipalities.ToDictionary(m => m.Id, m => m.Name);
+        var result = await MunicipalityClient.GetByIdsAsync(ids, ct);
+        if (result.TryPickT0(out var municipalities, out var error))
+        {
+            _municipalityNames = municipalities.ToDictionary(m => m.Id, m => m.Name);
+        }
+        else
+        {
+            Snackbar.Add(
+                error.StatusCode == 0
+                    ? "Couldn't reach the server."
+                    : error.Message ?? "Couldn't load municipality names.",
+                Severity.Error);
+        }
     }
 
     private void BuildMapSensors(IReadOnlyList<SurfaceWaterStationMarkerDto> markers)

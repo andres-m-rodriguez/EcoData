@@ -63,7 +63,7 @@
                 Snackbar.Add("Organization created successfully", Severity.Success);
                 Navigation.NavigateTo($"/organizations/{created.Id}");
             },
-            problem => _errorMessage = problem.Detail ?? "Failed to create organization"
+            error => _errorMessage = error.Message ?? "Failed to create organization"
         );
     }
 

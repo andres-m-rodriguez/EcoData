@@ -44,9 +44,10 @@ public sealed class SensorCrudTests(EcoDataTestFixture fixture) : AuthenticatedT
     {
         var parameters = new SensorParameters();
 
-        var count = await SensorHttpClient.GetSensorCountAsync(parameters);
+        var countResult = await SensorHttpClient.GetSensorCountAsync(parameters);
 
-        count.Should().BeGreaterThanOrEqualTo(0);
+        countResult.IsT0.Should().BeTrue("Count request should succeed");
+        countResult.AsT0.Should().BeGreaterThanOrEqualTo(0);
     }
 
     [Fact]
@@ -54,21 +55,23 @@ public sealed class SensorCrudTests(EcoDataTestFixture fixture) : AuthenticatedT
     {
         var credentials = await Sensors.GetOrCreateAsync(nameof(GetSensorById_WhenExists_ReturnsDetail));
 
-        var detail = await SensorHttpClient.GetByIdAsync(credentials.SensorId);
+        var detailResult = await SensorHttpClient.GetByIdAsync(credentials.SensorId);
 
-        detail.Should().NotBeNull();
-        detail!.Id.Should().Be(credentials.SensorId);
+        detailResult.IsT0.Should().BeTrue("Sensor should be found");
+        var detail = detailResult.AsT0;
+        detail.Id.Should().Be(credentials.SensorId);
         detail.OrganizationId.Should().Be(Organizations.OrganizationId);
     }
 
     [Fact]
-    public async Task GetSensorById_WhenDoesNotExist_ReturnsNull()
+    public async Task GetSensorById_WhenDoesNotExist_ReturnsNotFound()
     {
         var nonExistentId = Guid.CreateVersion7();
 
-        var detail = await SensorHttpClient.GetByIdAsync(nonExistentId);
+        var detailResult = await SensorHttpClient.GetByIdAsync(nonExistentId);
 
-        detail.Should().BeNull();
+        detailResult.IsT1.Should().BeTrue("Missing sensor should be a request failure");
+        detailResult.AsT1.StatusCode.Should().Be(404);
     }
 
     [Fact]
@@ -98,11 +101,12 @@ public sealed class SensorCrudTests(EcoDataTestFixture fixture) : AuthenticatedT
     {
         var credentials = await Sensors.GetOrCreateAsync(nameof(UpdateSensor_CanDeactivate));
 
-        var detail = await SensorHttpClient.GetByIdAsync(credentials.SensorId);
-        detail.Should().NotBeNull();
+        var detailResult = await SensorHttpClient.GetByIdAsync(credentials.SensorId);
+        detailResult.IsT0.Should().BeTrue("Sensor should be found");
+        var detail = detailResult.AsT0;
 
         var updateRequest = new SensorDtoForUpdate(
-            ExternalId: detail!.ExternalId,
+            ExternalId: detail.ExternalId,
             Name: detail.Name,
             Latitude: Locations.Latitude,
             Longitude: Locations.Longitude,
@@ -126,10 +130,10 @@ public sealed class SensorCrudTests(EcoDataTestFixture fixture) : AuthenticatedT
         var deleteResult = await SensorHttpClient.DeleteAsync(credentials.SensorId);
 
         deleteResult.IsT0.Should().BeTrue("Delete should succeed");
-        deleteResult.AsT0.Should().BeTrue();
 
-        var detail = await SensorHttpClient.GetByIdAsync(credentials.SensorId);
-        detail.Should().BeNull("Sensor should not be found after deletion");
+        var detailResult = await SensorHttpClient.GetByIdAsync(credentials.SensorId);
+        detailResult.IsT1.Should().BeTrue("Sensor should not be found after deletion");
+        detailResult.AsT1.StatusCode.Should().Be(404);
     }
 
     [Fact]

@@ -48,6 +48,10 @@ builder.Services.AddMessaging(messaging =>
 builder.Services.AddScoped<INotificationRoutingService, NotificationRoutingService>();
 builder.Services.AddHostedService<SensorHealthMonitorWorker>();
 builder.Services.AddHostedService<NotificationDispatcherWorker>();
+if (builder.Environment.IsDevelopment())
+{
+    builder.Services.AddHostedService<ReadingEventLoggerWorker>();
+}
 
 builder
     .Services.AddAuthentication(options =>
@@ -73,7 +77,6 @@ if (app.Environment.IsDevelopment())
 }
 else
 {
-    app.UseExceptionHandler("/Error", createScopeForErrors: true);
     app.UseHsts();
 }
 

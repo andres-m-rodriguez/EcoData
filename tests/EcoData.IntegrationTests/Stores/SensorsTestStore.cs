@@ -67,7 +67,12 @@ public sealed class SensorsTestStore(
 
         if (registration.IsT1)
             throw new InvalidOperationException(
-                $"Failed to register sensor '{name}': {registration.AsT1.Detail}"
+                $"Failed to register sensor '{name}': {string.Join("; ", registration.AsT1.AllMessages)}"
+            );
+
+        if (registration.IsT2)
+            throw new InvalidOperationException(
+                $"Failed to register sensor '{name}': HTTP {registration.AsT2.StatusCode} - {registration.AsT2.Message}"
             );
 
         var credentials = registration.AsT0;

@@ -1,8 +1,10 @@
+using EcoData.Common.Problems.Contracts;
 using EcoData.Wildlife.Contracts.Dtos;
+using OneOf;
 
 namespace EcoData.Wildlife.Application.Client;
 
 public interface INrcsPracticeHttpClient
 {
-    Task<IReadOnlyList<NrcsPracticeDtoForList>> GetAllAsync(CancellationToken ct = default);
+    Task<OneOf<IReadOnlyList<NrcsPracticeDtoForList>, RequestFailed>> GetAllAsync(CancellationToken ct = default);
 }

@@ -14,6 +14,16 @@
     background: #e7e6df;
 }
 
+/* Load-failure banner floats over the map without displacing it */
+.mm-map-error {
+    position: absolute;
+    top: 12px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 500;
+    width: min(90%, 420px);
+}
+
 .mm-legend {
     position: absolute;
     left: 12px;

@@ -5,7 +5,17 @@
 @using BlazingSingularity.Fetch
 @inject ISpeciesHttpClient SpeciesClient
 
-@if (_fetch is null || _fetch.IsLoading)
+@if (_loadError is not null)
+{
+    <section class="ff-featured">
+        <div class="ff-featured-head">
+            <h2>@L["Species_Featured_Heading"]</h2>
+            <span class="meta">@L["Species_Featured_Meta"]</span>
+        </div>
+        <MudAlert Severity="Severity.Error">@_loadError</MudAlert>
+    </section>
+}
+else if (_fetch is null || _fetch.IsLoading)
 {
     <section class="ff-featured">
         <div class="ff-featured-head">
@@ -42,12 +52,25 @@ else if (_fetch.Data is { Count: > 0 } featured)
     [Parameter] public EventCallback<SpeciesDtoForList> OnSpeciesClick { get; set; }
 
     private IFetch<IReadOnlyList<SpeciesDtoForList>>? _fetch;
+    private string? _loadError;
 
     protected override void OnInitialized()
     {
         base.OnInitialized();
         _fetch = new Fetch<IReadOnlyList<SpeciesDtoForList>>(
-            SpeciesClient.GetFeaturedAsync,
+            async ct =>
+            {
+                var result = await SpeciesClient.GetFeaturedAsync(ct);
+                if (result.TryPickT0(out var featured, out var error))
+                {
+                    _loadError = null;
+                    return featured;
+                }
+                _loadError = error.StatusCode == 0
+                    ? "Couldn't reach the server."
+                    : error.Message ?? "Something went wrong while loading featured species.";
+                return [];
+            },
             () => InvokeAsync(StateHasChanged));
         _ = _fetch.FetchAsync();
     }

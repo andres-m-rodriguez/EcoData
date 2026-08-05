@@ -132,7 +132,7 @@
                     _blockedUsers.Remove(blocked);
                     StateHasChanged();
                 },
-                problem => Snackbar.Add(problem.Detail ?? "Failed to unblock user", Severity.Error)
+                error => Snackbar.Add(error.Message ?? "Failed to unblock user", Severity.Error)
             );
         }
     }

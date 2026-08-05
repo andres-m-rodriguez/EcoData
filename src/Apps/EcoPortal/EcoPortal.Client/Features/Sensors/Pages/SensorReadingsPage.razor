@@ -26,10 +26,17 @@
         }
         else if (_sensor is null)
         {
-            <MudStack AlignItems="AlignItems.Center" Class="pa-8" Spacing="2">
-                <MudIcon Icon="@Icons.Material.Filled.SensorsOff" Size="Size.Large" Color="Color.Secondary" />
-                <MudText Typo="Typo.h6" Color="Color.Secondary">Sensor not found</MudText>
-            </MudStack>
+            @if (_loadError is not null)
+            {
+                <MudAlert Severity="Severity.Error">@_loadError</MudAlert>
+            }
+            else
+            {
+                <MudStack AlignItems="AlignItems.Center" Class="pa-8" Spacing="2">
+                    <MudIcon Icon="@Icons.Material.Filled.SensorsOff" Size="Size.Large" Color="Color.Secondary" />
+                    <MudText Typo="Typo.h6" Color="Color.Secondary">Sensor not found</MudText>
+                </MudStack>
+            }
         }
         else
         {
@@ -50,6 +57,7 @@
 @code {
     private SensorReadingsList? _readingsList;
     private SensorDtoForDetail? _sensor;
+    private string? _loadError;
     private bool _loading = true;
     private IReadOnlyList<string> _availableParameters = [];
 
@@ -62,13 +70,25 @@
 
     protected override async Task OnInitializedAsync()
     {
-        _sensor = await SensorClient.GetByIdAsync(SensorId);
-
-        if (_sensor is not null)
+        var sensorResult = await SensorClient.GetByIdAsync(SensorId);
+        if (!sensorResult.TryPickT0(out var sensor, out var sensorError))
         {
-            _availableParameters = await ReadingClient.GetReadingParametersAsync(SensorId);
+            _sensor = null;
+            _loadError = sensorError.StatusCode switch
+            {
+                404 => null,
+                0 => "Couldn't reach the server.",
+                _ => sensorError.Message ?? "Couldn't load this sensor."
+            };
+            _loading = false;
+            return;
         }
 
+        _sensor = sensor;
+        var parametersResult = await ReadingClient.GetReadingParametersAsync(SensorId);
+        _availableParameters = parametersResult.TryPickT0(out var parameters, out _)
+            ? parameters
+            : [];
         _loading = false;
     }
 

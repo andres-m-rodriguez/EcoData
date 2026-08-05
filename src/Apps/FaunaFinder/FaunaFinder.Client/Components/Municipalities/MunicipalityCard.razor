@@ -15,7 +15,11 @@
                 @Municipality.Name
             </MudText>
             <MudText Typo="Typo.caption" Color="Color.Secondary">
-                @if (_countFetch.IsLoading)
+                @if (_countLoadError is not null)
+                {
+                    <span class="mud-error-text">@_countLoadError</span>
+                }
+                else if (_countFetch.IsLoading)
                 {
                     <MudSkeleton Width="60px" Height="14px" />
                 }
@@ -37,14 +41,27 @@
     public EventCallback<MunicipalityDtoForList> OnClick { get; set; }
 
     private IFetch<int> _countFetch = default!;
+    private string? _countLoadError;
 
     protected override void OnInitialized()
     {
         base.OnInitialized();
         _countFetch = new Fetch<int>(
-            ct => SpeciesClient.GetCountAsync(
-                new SpeciesParameters(MunicipalityId: Municipality.Id),
-                ct),
+            async ct =>
+            {
+                var result = await SpeciesClient.GetCountAsync(
+                    new SpeciesParameters(MunicipalityId: Municipality.Id),
+                    ct);
+                if (result.TryPickT0(out var count, out var error))
+                {
+                    _countLoadError = null;
+                    return count;
+                }
+                _countLoadError = error.StatusCode == 0
+                    ? "Couldn't reach the server."
+                    : error.Message ?? "Couldn't load the species count.";
+                return 0;
+            },
             () => InvokeAsync(StateHasChanged));
         _ = _countFetch.FetchAsync();
     }

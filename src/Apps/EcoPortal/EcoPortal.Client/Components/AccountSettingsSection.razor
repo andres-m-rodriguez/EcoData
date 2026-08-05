@@ -235,7 +235,12 @@
                 Snackbar.Add("Display name updated", Severity.Success);
                 _isEditingDisplayName = false;
             },
-            problem => Snackbar.Add(problem.Detail ?? "Failed to update display name", Severity.Error)
+            validationFailed => Snackbar.Add(string.Join(" ", validationFailed.AllMessages), Severity.Error),
+            requestFailed => Snackbar.Add(requestFailed.StatusCode switch
+            {
+                0 => "Couldn't reach the server. Please try again.",
+                _ => requestFailed.Message ?? "Failed to update display name"
+            }, Severity.Error)
         );
     }
 
@@ -281,7 +286,13 @@
                 _isEditingEmail = false;
                 _emailPassword = string.Empty;
             },
-            problem => Snackbar.Add(problem.Detail ?? "Failed to update email", Severity.Error)
+            validationFailed => Snackbar.Add(string.Join(" ", validationFailed.AllMessages), Severity.Error),
+            requestFailed => Snackbar.Add(requestFailed.StatusCode switch
+            {
+                401 => requestFailed.Message ?? "Invalid password",
+                0 => "Couldn't reach the server. Please try again.",
+                _ => requestFailed.Message ?? "Failed to update email"
+            }, Severity.Error)
         );
     }
 
@@ -336,7 +347,13 @@
                 _newPassword = string.Empty;
                 _confirmPassword = string.Empty;
             },
-            problem => Snackbar.Add(problem.Detail ?? "Failed to change password", Severity.Error)
+            validationFailed => Snackbar.Add(string.Join(" ", validationFailed.AllMessages), Severity.Error),
+            requestFailed => Snackbar.Add(requestFailed.StatusCode switch
+            {
+                401 => requestFailed.Message ?? "Invalid current password",
+                0 => "Couldn't reach the server. Please try again.",
+                _ => requestFailed.Message ?? "Failed to change password"
+            }, Severity.Error)
         );
     }
 

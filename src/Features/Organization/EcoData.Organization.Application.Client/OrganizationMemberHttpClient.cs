@@ -3,9 +3,9 @@ using EcoData.Common.Http.Helpers;
 using EcoData.Common.Pagination;
 using EcoData.Common.Problems.Contracts;
 using EcoData.Organization.Contracts.Dtos;
-using EcoData.Organization.Contracts.Errors;
 using EcoData.Organization.Contracts.Parameters;
 using OneOf;
+using OneOf.Types;
 
 namespace EcoData.Organization.Application.Client;
 
@@ -29,68 +29,108 @@ public sealed class OrganizationMemberHttpClient(HttpClient httpClient)
         )!;
     }
 
-    public async Task<OneOf<OrganizationMemberDto, ProblemDetail>> GetAsync(
+    public async Task<OneOf<OrganizationMemberDto, RequestFailed>> GetAsync(
         Guid organizationId,
         Guid userId,
         CancellationToken cancellationToken = default
     )
     {
-        var response = await httpClient.GetAsync(
-            $"organization/organizations/{organizationId}/members/{userId}",
-            cancellationToken
-        );
-
-        if (!response.IsSuccessStatusCode)
+        try
         {
-            return await response.ReadProblemAsync(cancellationToken);
-        }
+            var response = await httpClient.GetAsync(
+                $"organization/organizations/{organizationId}/members/{userId}",
+                cancellationToken
+            );
 
-        var result = await response.Content.ReadFromJsonAsync<OrganizationMemberDto>(
-            cancellationToken
-        );
-        return result!;
+            if (!response.IsSuccessStatusCode)
+            {
+                var problem = await ProblemDetailsParser.ParseAsync(response, cancellationToken);
+                return new RequestFailed((int)response.StatusCode, problem?.Detail ?? problem?.Title);
+            }
+
+            var result = await response.Content.ReadFromJsonAsync<OrganizationMemberDto>(
+                cancellationToken
+            );
+            if (result is null)
+            {
+                return new RequestFailed(
+                    (int)response.StatusCode,
+                    "The server returned an empty response."
+                );
+            }
+
+            return result;
+        }
+        catch (HttpRequestException e)
+        {
+            return new RequestFailed(0, e.Message);
+        }
     }
 
-    public async Task<OneOf<OrganizationMemberDto, ProblemDetail>> UpdateAsync(
+    public async Task<OneOf<OrganizationMemberDto, RequestFailed>> UpdateAsync(
         Guid organizationId,
         Guid userId,
         UpdateMemberRoleRequest request,
         CancellationToken cancellationToken = default
     )
     {
-        var response = await httpClient.PutAsJsonAsync(
-            $"organization/organizations/{organizationId}/members/{userId}",
-            request,
-            cancellationToken
-        );
-
-        if (!response.IsSuccessStatusCode)
+        try
         {
-            return await response.ReadProblemAsync(cancellationToken);
-        }
+            var response = await httpClient.PutAsJsonAsync(
+                $"organization/organizations/{organizationId}/members/{userId}",
+                request,
+                cancellationToken
+            );
 
-        var result = await response.Content.ReadFromJsonAsync<OrganizationMemberDto>(
-            cancellationToken
-        );
-        return result!;
+            if (!response.IsSuccessStatusCode)
+            {
+                var problem = await ProblemDetailsParser.ParseAsync(response, cancellationToken);
+                return new RequestFailed((int)response.StatusCode, problem?.Detail ?? problem?.Title);
+            }
+
+            var result = await response.Content.ReadFromJsonAsync<OrganizationMemberDto>(
+                cancellationToken
+            );
+            if (result is null)
+            {
+                return new RequestFailed(
+                    (int)response.StatusCode,
+                    "The server returned an empty response."
+                );
+            }
+
+            return result;
+        }
+        catch (HttpRequestException e)
+        {
+            return new RequestFailed(0, e.Message);
+        }
     }
 
-    public async Task<OneOf<Success, ProblemDetail>> DeleteAsync(
+    public async Task<OneOf<Success, RequestFailed>> DeleteAsync(
         Guid organizationId,
         Guid userId,
         CancellationToken cancellationToken = default
     )
     {
-        var response = await httpClient.DeleteAsync(
-            $"organization/organizations/{organizationId}/members/{userId}",
-            cancellationToken
-        );
-
-        if (!response.IsSuccessStatusCode)
+        try
         {
-            return await response.ReadProblemAsync(cancellationToken);
-        }
+            var response = await httpClient.DeleteAsync(
+                $"organization/organizations/{organizationId}/members/{userId}",
+                cancellationToken
+            );
 
-        return new Success();
+            if (!response.IsSuccessStatusCode)
+            {
+                var problem = await ProblemDetailsParser.ParseAsync(response, cancellationToken);
+                return new RequestFailed((int)response.StatusCode, problem?.Detail ?? problem?.Title);
+            }
+
+            return new Success();
+        }
+        catch (HttpRequestException e)
+        {
+            return new RequestFailed(0, e.Message);
+        }
     }
 }
