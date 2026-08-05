@@ -6,9 +6,8 @@
 @using EcoPortal.Client.Features.Organizations.Authorization
 @using EcoPortal.Client.Features.Sensors.Pages.SensorDetailPages.Components
 @using EcoPortal.Client.Features.Sensors.Components
-@using BlazingSingularity.Fetch
 @using SensorPermissions = EcoData.Sensors.Contracts.Permissions
-@implements IDisposable
+@inherits StatefulComponent
 @inject ISensorHttpClient SensorClient
 @inject ISensorHealthHttpClient HealthClient
 @inject ISensorReadingHttpClient ReadingClient
@@ -31,14 +30,14 @@
                              Variant="Variant.Filled">
                         @(Sensor.IsActive ? "Online" : "Offline")
                     </MudChip>
-                    @if (_healthFetch.IsLoading)
+                    @if (LoadHealthState.IsLoading)
                     {
                         <MudSkeleton Width="60px" Height="24px" Class="rounded-pill" />
                     }
-                    else if (_healthFetch.Data is not null)
+                    else if (LoadHealthState.Result is not null)
                     {
                         <MudChip T="string" Color="@GetHealthStatusColor()" Size="Size.Small" Variant="Variant.Outlined">
-                            @_healthFetch.Data
+                            @LoadHealthState.Result
                         </MudChip>
                     }
                 </MudStack>
@@ -49,14 +48,14 @@
                     </MudChip>
                     <MudStack Row="true" Spacing="1" AlignItems="AlignItems.Center">
                         <MudIcon Icon="@Icons.Material.Filled.LocationOn" Size="Size.Small" Color="Color.Secondary" />
-                        @if (_locationFetch.IsLoading)
+                        @if (LoadLocationState.IsLoading)
                         {
                             <MudSkeleton Width="120px" Height="16px" />
                         }
-                        else if (_locationFetch.Data is not null)
+                        else if (LoadLocationState.Result is not null)
                         {
-                            <MudText Typo="Typo.body2" Color="Color.Secondary">@_locationFetch.Data.Name,
-                                @_locationFetch.Data.StateCode</MudText>
+                            <MudText Typo="Typo.body2" Color="Color.Secondary">@LoadLocationState.Result.Name,
+                                @LoadLocationState.Result.StateCode</MudText>
                             }
                         else
                             {
@@ -69,7 +68,7 @@
                 </MudStack>
                 <MudStack Row="true" Spacing="2" AlignItems="AlignItems.Center">
                     <SensorSubscriptionToggle SensorId="Sensor.Id"
-                                              HealthMonitoringEnabled="@(_healthFetch.Data is not null)" />
+                                              HealthMonitoringEnabled="@(LoadHealthState.Result is not null)" />
                     <RequireOrganizationPermission Permission="@SensorPermissions.Sensor.Delete"
                                                    OrganizationId="Sensor.OrganizationId">
                         <MudTooltip Text="Delete Sensor">
@@ -88,7 +87,7 @@
                     <MudIcon Icon="@Icons.Material.Filled.Bolt" Color="Color.Primary" Size="Size.Small" />
                     <MudText Typo="Typo.subtitle2" Class="font-weight-bold">Live Readings</MudText>
                 </MudStack>
-                @if (_statsFetch.Data?.Parameters.Count > 0)
+                @if (LoadStatsState.Result?.Parameters.Count > 0)
                 {
                     <MudChip T="string" Size="Size.Small" Color="Color.Success" Variant="Variant.Text">
                         <MudIcon Icon="@Icons.Material.Filled.FiberManualRecord" Size="Size.Small" Class="mr-1" />
@@ -96,7 +95,7 @@
                     </MudChip>
                 }
             </MudStack>
-            @if (_statsFetch.IsLoading)
+            @if (LoadStatsState.IsLoading)
             {
                 <MudGrid Spacing="3">
                     @for (var i = 0; i < 4; i++)
@@ -113,10 +112,10 @@
                     }
                 </MudGrid>
             }
-            else if (_statsFetch.Data?.Parameters.Count > 0)
+            else if (LoadStatsState.Result?.Parameters.Count > 0)
             {
                 <MudGrid Spacing="3">
-                    @foreach (var param in _statsFetch.Data.Parameters)
+                    @foreach (var param in LoadStatsState.Result.Parameters)
                     {
                         var isWarning = param.ThresholdStatus is "Above" or "Below";
 
@@ -189,16 +188,16 @@
                     </MudStack>
                     <MudStack Spacing="1">
                         <SensorLocationMap Latitude="Sensor.Latitude" Longitude="Sensor.Longitude" />
-                        @if (_locationFetch.IsLoading)
+                        @if (LoadLocationState.IsLoading)
                         {
                             <MudStack AlignItems="AlignItems.Center">
                                 <MudSkeleton Width="80%" Height="14px" />
                             </MudStack>
                         }
-                        else if (_locationFetch.Data is not null)
+                        else if (LoadLocationState.Result is not null)
                         {
                             <MudText Typo="Typo.body2" Align="Align.Center" Color="Color.Secondary">
-                                @_locationFetch.Data.Name, @_locationFetch.Data.StateName
+                                @LoadLocationState.Result.Name, @LoadLocationState.Result.StateName
                             </MudText>
                         }
                     </MudStack>
@@ -257,65 +256,41 @@
 
 @code {
     private SensorReadingsPreview? _readingsPreview;
-    private IFetch<MunicipalityDtoForDetail?> _locationFetch = default!;
-    private IFetch<string?> _healthFetch = default!;
-    private IFetch<SensorReadingStatsDto?> _statsFetch = default!;
 
     [Parameter, EditorRequired]
     public SensorDtoForDetail Sensor { get; set; } = default!;
 
-    protected override void OnInitialized()
+    [Command, RunOnLoad]
+    private async Task<MunicipalityDtoForDetail?> LoadLocation(CancellationToken ct)
     {
-        _locationFetch = new Fetch<MunicipalityDtoForDetail?>(
-            async ct =>
-            {
-                var result = await MunicipalityClient.GetByIdAsync(Sensor.MunicipalityId, ct);
-                return result.Match<MunicipalityDtoForDetail?>(
-                    municipality => municipality,
-                    _ => null
-                );
-            },
-            () => InvokeAsync(StateHasChanged)
+        var result = await MunicipalityClient.GetByIdAsync(Sensor.MunicipalityId, ct);
+        return result.Match<MunicipalityDtoForDetail?>(
+            municipality => municipality,
+            _ => null
         );
-
-        _healthFetch = new Fetch<string?>(
-            async ct =>
-            {
-                var result = await HealthClient.GetSensorHealthAsync(Sensor.Id, ct);
-                return result.Match<string?>(
-                    health => health.Status,
-                    _ => null
-                );
-            },
-            () => InvokeAsync(StateHasChanged)
-        );
-
-        _statsFetch = new Fetch<SensorReadingStatsDto?>(
-            async ct =>
-            {
-                var result = await ReadingClient.GetStatsAsync(Sensor.Id, null, ct);
-                return result.Match<SensorReadingStatsDto?>(
-                    stats => stats,
-                    _ => null
-                );
-            },
-            () => InvokeAsync(StateHasChanged)
-        );
-
-        // Start fetches in parallel
-        _ = _locationFetch.FetchAsync();
-        _ = _healthFetch.FetchAsync();
-        _ = _statsFetch.FetchAsync();
     }
 
-    public void Dispose()
+    [Command, RunOnLoad]
+    private async Task<string?> LoadHealth(CancellationToken ct)
     {
-        (_locationFetch as IDisposable)?.Dispose();
-        (_healthFetch as IDisposable)?.Dispose();
-        (_statsFetch as IDisposable)?.Dispose();
+        var result = await HealthClient.GetSensorHealthAsync(Sensor.Id, ct);
+        return result.Match<string?>(
+            health => health.Status,
+            _ => null
+        );
     }
 
-    private Color GetHealthStatusColor() => _healthFetch.Data switch
+    [Command, RunOnLoad]
+    private async Task<SensorReadingStatsDto?> LoadStats(CancellationToken ct)
+    {
+        var result = await ReadingClient.GetStatsAsync(Sensor.Id, null, ct);
+        return result.Match<SensorReadingStatsDto?>(
+            stats => stats,
+            _ => null
+        );
+    }
+
+    private Color GetHealthStatusColor() => LoadHealthState.Result switch
     {
         "Healthy" => Color.Success,
         "Stale" => Color.Warning,
@@ -336,7 +311,7 @@
     private void RefreshReadings()
     {
         _readingsPreview?.Refresh();
-        _ = _statsFetch.FetchAsync();
+        _ = LoadStatsState.TryExecute();
     }
 
     private void NavigateToConfigure() => Navigation.NavigateTo($"/sensor/{Sensor.Id}/configure");

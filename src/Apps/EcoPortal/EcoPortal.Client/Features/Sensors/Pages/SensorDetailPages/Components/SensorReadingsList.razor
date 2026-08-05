@@ -4,10 +4,10 @@
 @using EcoData.Common.Pagination.Blazor
 @using EcoPortal.Client.Features.Sensors.Components
 @using EcoPortal.Client.Components
-@using BlazingSingularity.Signals
+@inherits StatefulComponent
 @inject ISensorReadingHttpClient ReadingClient
 
-<SearchHeader SearchSignal="SearchTextSignal" Placeholder="Search by parameter..."
+<SearchHeader @bind-Value="SearchTextState.Value" Placeholder="Search by parameter..."
               ShowFilterButton="ShowFilter" HasActiveFilters="HasNonSearchFilters"
               OnFilterClick="OnFilterClick" ActionButtons="ActionButtons" />
 
@@ -79,7 +79,7 @@
 @code {
     private EcoDataVirtualizedList<ReadingDtoForDetail, ReadingParameters>? _virtualizedList;
 
-    [Signal]
+    [Reactive]
     private string? _searchText;
 
     [Parameter, EditorRequired]
@@ -103,13 +103,11 @@
     [Parameter]
     public DateTime? ToDate { get; set; }
 
-    private bool HasActiveFilters => SearchText is { Length: > 0 } || HasNonSearchFilters;
+    private bool HasActiveFilters => _searchText is { Length: > 0 } || HasNonSearchFilters;
     private bool HasNonSearchFilters => ParameterFilter is not null || FromDate.HasValue || ToDate.HasValue;
 
-    protected override void OnInitialized()
-    {
-        SearchTextSignal.OnChange(_ => _virtualizedList?.Refresh());
-    }
+    [OnChanged]
+    private void OnSearchTextChanged(string? value) => _virtualizedList?.Refresh();
 
     protected override void OnParametersSet()
     {
@@ -120,7 +118,7 @@
 
     private void ClearFilters()
     {
-        SearchText = null;
+        SearchTextState.Value = null;
         _virtualizedList?.Refresh();
     }
 
@@ -131,7 +129,7 @@
         return new ReadingParameters(
             PageSize: 50,
             Cursor: cursor,
-            Search: string.IsNullOrWhiteSpace(SearchText) ? null : SearchText,
+            Search: string.IsNullOrWhiteSpace(_searchText) ? null : _searchText,
             Parameter: ParameterFilter,
             FromDate: FromDate.HasValue ? new DateTimeOffset(FromDate.Value, localOffset) : null,
             ToDate: ToDate.HasValue ? new DateTimeOffset(ToDate.Value.AddDays(1).AddTicks(-1), localOffset) : null

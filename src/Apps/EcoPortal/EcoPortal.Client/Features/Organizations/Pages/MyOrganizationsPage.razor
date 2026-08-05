@@ -5,7 +5,7 @@
 @using EcoPortal.Client.Components
 @using EcoPortal.Client.Services
 @using EcoPortal.Client.Pages
-@using BlazingSingularity.Commands
+@inherits StatefulComponent
 @inject IOrganizationHttpClient OrganizationClient
 @inject AuthStateService AuthState
 @inject INativeNavigationManager Navigation
@@ -14,7 +14,7 @@
 
 <NuiPageLayout Label="Organizations" Title="My Organizations">
         <MudPaper Elevation="1" Class="pa-5 rounded-lg">
-            @if (LoadMyOrganizationsCommand.IsLoading)
+            @if (LoadMyOrganizationsState.IsLoading)
             {
                 <MudStack Spacing="2">
                     @for (var i = 0; i < 5; i++)
@@ -87,13 +87,8 @@
     private List<MyOrganizationDto> _myOrganizations = [];
     private bool _showLoginPrompt;
 
-    protected override async Task OnInitializedAsync()
-    {
-        await LoadMyOrganizationsCommand.ExecuteAsync();
-    }
-
-    [RelayCommand]
-    private async Task LoadMyOrganizations()
+    [Command, RunOnLoad]
+    private async Task LoadMyOrganizations(CancellationToken ct)
     {
         if (!AuthState.IsAuthenticated)
         {
@@ -101,7 +96,7 @@
             return;
         }
 
-        await foreach (var org in OrganizationClient.GetMyOrganizationsAsync(CancellationToken.None))
+        await foreach (var org in OrganizationClient.GetMyOrganizationsAsync(ct))
         {
             _myOrganizations.Add(org);
         }

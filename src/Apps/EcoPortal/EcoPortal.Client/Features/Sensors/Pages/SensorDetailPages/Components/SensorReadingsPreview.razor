@@ -2,10 +2,11 @@
 @using EcoData.Sensors.Contracts.Parameters
 @using EcoData.Sensors.Application.Client
 @using EcoPortal.Client.Features.Sensors.Components
+@inherits StatefulComponent
 @inject ISensorReadingHttpClient ReadingClient
 @inject INativeNavigationManager Navigation
 
-@if (_loading)
+@if (LoadReadingsState.IsLoading)
 {
     <MudList T="string" Dense="true">
         @for (var i = 0; i < 5; i++)
@@ -22,7 +23,7 @@
         }
     </MudList>
 }
-else if (_readings.Count == 0)
+else if (LoadReadingsState.Result is not { Count: > 0 } readings)
 {
     <MudStack AlignItems="AlignItems.Center" Class="pa-4" Spacing="2">
         <MudIcon Icon="@Icons.Material.Filled.Assessment" Size="Size.Medium" Color="Color.Secondary" />
@@ -32,7 +33,7 @@ else if (_readings.Count == 0)
 else
 {
     <MudList T="ReadingDtoForDetail" Dense="true">
-        @foreach (var reading in _readings)
+        @foreach (var reading in readings)
         {
             <ReadingListItem Reading="reading" />
         }
@@ -45,52 +46,26 @@ else
 }
 
 @code {
-    private List<ReadingDtoForDetail> _readings = [];
-    private bool _loading = true;
-    private CancellationTokenSource? _cts;
-
     [Parameter, EditorRequired]
     public Guid SensorId { get; set; }
 
-    protected override async Task OnInitializedAsync()
-    {
-        await LoadReadingsAsync();
-    }
-
     public void Refresh()
     {
-        _ = LoadReadingsAsync();
+        _ = LoadReadingsState.TryExecute();
     }
 
-    private async Task LoadReadingsAsync()
+    [Command, RunOnLoad]
+    private async Task<List<ReadingDtoForDetail>> LoadReadings(CancellationToken ct)
     {
-        _cts?.Cancel();
-        _cts = new CancellationTokenSource();
+        var parameters = new ReadingParameters(PageSize: 5);
+        var readings = new List<ReadingDtoForDetail>();
 
-        _loading = true;
-        StateHasChanged();
-
-        try
+        await foreach (var reading in ReadingClient.GetReadingsAsync(SensorId, parameters, ct))
         {
-            var parameters = new ReadingParameters(PageSize: 5);
-            var readings = new List<ReadingDtoForDetail>();
+            readings.Add(reading);
+        }
 
-            await foreach (var reading in ReadingClient.GetReadingsAsync(SensorId, parameters, _cts.Token))
-            {
-                readings.Add(reading);
-            }
-
-            _readings = readings;
-        }
-        catch (OperationCanceledException)
-        {
-            // Ignore cancellation
-        }
-        finally
-        {
-            _loading = false;
-            StateHasChanged();
-        }
+        return readings;
     }
 
     private void NavigateToReadings()

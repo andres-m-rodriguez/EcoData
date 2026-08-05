@@ -5,9 +5,8 @@
 @using EcoData.Locations.Contracts.Parameters
 @using EcoData.Wildlife.Application.Client
 @using EcoData.Wildlife.Contracts.Dtos
-@using BlazingSingularity.Fetch
 @using FaunaFinder.Client.Components.Municipalities
-@implements IDisposable
+@inherits StatefulComponent
 @inject IMunicipalityHttpClient MunicipalityClient
 @inject ISpeciesHttpClient SpeciesClient
 @inject INativeNavbarManager Navbar
@@ -18,18 +17,18 @@
 
 @if (Id is not null)
 {
-    <NuiPageLayout Title="@_detailFetch?.Data?.Name" ParentPath="/municipalities">
+    <NuiPageLayout Title="@LoadDetailState.Result?.Name" ParentPath="/municipalities">
         @if (_detailLoadError is not null)
         {
             <MudAlert Severity="Severity.Error">@_detailLoadError</MudAlert>
         }
-        else if (_detailFetch?.IsLoading is not false)
+        else if (LoadDetailState.IsLoading)
         {
             <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="180px" Class="mb-4 rounded-lg" />
             <MudSkeleton SkeletonType="SkeletonType.Text" Width="60%" Class="mb-2" />
             <MudSkeleton SkeletonType="SkeletonType.Text" Width="40%" />
         }
-        else if (_detailFetch.Data is { } detail)
+        else if (LoadDetailState.Result is { } detail)
         {
             <MudPaper Elevation="0" Class="pa-4 pa-md-6 rounded-lg border-solid border mud-border-lines-default mb-4">
                 <MudText Typo="Typo.h5" GutterBottom="true">@detail.Name</MudText>
@@ -48,7 +47,7 @@
                     <MudIcon Icon="@Icons.Material.Filled.Pets" Color="Color.Primary" />
                     <MudText Typo="Typo.h6">@L["MuniDetail_Species_Heading"]</MudText>
                     <MudSpacer />
-                    @if (_detailSpeciesFetch?.Data is { Count: > 0 } list)
+                    @if (LoadDetailSpeciesState.Result is { Count: > 0 } list)
                     {
                         <MudText Typo="Typo.caption" Color="Color.Secondary">
                             @list.Count
@@ -60,7 +59,7 @@
                 {
                     <MudAlert Severity="Severity.Error">@_detailSpeciesLoadError</MudAlert>
                 }
-                else if (_detailSpeciesFetch?.IsLoading is not false)
+                else if (LoadDetailSpeciesState.Result is null || LoadDetailSpeciesState.IsLoading)
                 {
                     <MudGrid Spacing="2">
                         @for (var i = 0; i < 6; i++)
@@ -71,7 +70,7 @@
                         }
                     </MudGrid>
                 }
-                else if (_detailSpeciesFetch.Data is null || _detailSpeciesFetch.Data.Count == 0)
+                else if (LoadDetailSpeciesState.Result.Count == 0)
                 {
                     <NuiEmptyState Icon="@Icons.Material.Outlined.Pets"
                                    Title="@L[MuniDetailSpeciesEmptyTitle]"
@@ -80,7 +79,7 @@
                 else
                 {
                     <div class="mm-detail-grid">
-                        @foreach (var species in _detailSpeciesFetch.Data)
+                        @foreach (var species in LoadDetailSpeciesState.Result)
                         {
                             <SpeciesCard Species="species"
                                          OnClick="@(s => NavigationManager.NavigateTo($"/species/{s.Id}"))" />
@@ -100,9 +99,9 @@
 else
 {
     <div class="ff-page mm-page">
-        <MunicipalityEditorialHero Stats="@_statsFetch?.Data" />
+        <MunicipalityEditorialHero Stats="@LoadStatsState.Result" />
 
-        <MunicipalityStatsRow Stats="@_statsFetch?.Data" />
+        <MunicipalityStatsRow Stats="@LoadStatsState.Result" />
 
         @if ((_statsLoadError ?? _municipalitiesLoadError) is { } listLoadError)
         {
@@ -153,15 +152,11 @@ else
     private const string MuniDetailNotFoundTitle = "MuniDetail_NotFound_Title";
     private const string MuniDetailNotFoundDescription = "MuniDetail_NotFound_Description";
 
-    private IFetch<SpeciesStatsDto?>? _statsFetch;
     private IReadOnlyList<MunicipalityDtoForList>? _municipalities;
     private IReadOnlyDictionary<Guid, int>? _countsMap;
-    private CancellationTokenSource? _listCts;
 
     private MunicipalityDtoForList? _selected;
 
-    private IFetch<MunicipalityDtoForDetail?>? _detailFetch;
-    private IFetch<IReadOnlyList<SpeciesDtoForList>>? _detailSpeciesFetch;
     private Guid? _loadedDetailId;
 
     private string? _statsLoadError;
@@ -171,27 +166,9 @@ else
 
     protected override void OnInitialized()
     {
+        base.OnInitialized();
         Navbar.SetTitle(L["Nav_Municipios"]);
         L.LanguageChanged += OnLanguageChanged;
-
-        _statsFetch = new Fetch<SpeciesStatsDto?>(
-            async ct =>
-            {
-                var result = await SpeciesClient.GetStatsAsync(ct);
-                if (result.TryPickT0(out var stats, out var error))
-                {
-                    _statsLoadError = null;
-                    return stats;
-                }
-                _statsLoadError = error.StatusCode == 0
-                    ? "Couldn't reach the server."
-                    : error.Message ?? "Something went wrong while loading species stats.";
-                return null;
-            },
-            () => InvokeAsync(StateHasChanged));
-        _ = _statsFetch.FetchAsync();
-
-        _ = LoadMunicipalitiesAndCountsAsync();
     }
 
     protected override async Task OnParametersSetAsync()
@@ -201,55 +178,9 @@ else
             if (_loadedDetailId == id) return;
             _loadedDetailId = id;
 
-            (_detailFetch as IDisposable)?.Dispose();
-            (_detailSpeciesFetch as IDisposable)?.Dispose();
-
-            _detailFetch = new Fetch<MunicipalityDtoForDetail?>(
-                async ct =>
-                {
-                    var result = await MunicipalityClient.GetByIdAsync(id, ct);
-                    if (result.TryPickT0(out var detail, out var error))
-                    {
-                        _detailLoadError = null;
-                        return detail;
-                    }
-                    // A missing municipality keeps the dedicated not-found empty state.
-                    _detailLoadError = error.StatusCode switch
-                    {
-                        404 => null,
-                        0 => "Couldn't reach the server.",
-                        _ => error.Message ?? "Something went wrong while loading this municipality."
-                    };
-                    return null;
-                },
-                () =>
-                {
-                    if (_detailFetch?.Data is { } detail)
-                    {
-                        Navbar.SetTitle(detail.Name);
-                    }
-                    return InvokeAsync(StateHasChanged);
-                });
-
-            _detailSpeciesFetch = new Fetch<IReadOnlyList<SpeciesDtoForList>>(
-                async ct =>
-                {
-                    var result = await SpeciesClient.GetByMunicipalityAsync(id, ct);
-                    if (result.TryPickT0(out var species, out var error))
-                    {
-                        _detailSpeciesLoadError = null;
-                        return species;
-                    }
-                    _detailSpeciesLoadError = error.StatusCode == 0
-                        ? "Couldn't reach the server."
-                        : error.Message ?? "Something went wrong while loading species.";
-                    return [];
-                },
-                () => InvokeAsync(StateHasChanged));
-
             await Task.WhenAll(
-                _detailFetch.FetchAsync(),
-                _detailSpeciesFetch.FetchAsync()
+                LoadDetailState.TryExecute(),
+                LoadDetailSpeciesState.TryExecute()
             );
         }
         else
@@ -258,12 +189,24 @@ else
         }
     }
 
-    private async Task LoadMunicipalitiesAndCountsAsync()
+    [Command, RunOnLoad]
+    private async Task<SpeciesStatsDto?> LoadStats(CancellationToken ct)
     {
-        _listCts?.Cancel();
-        _listCts = new CancellationTokenSource();
-        var ct = _listCts.Token;
+        var result = await SpeciesClient.GetStatsAsync(ct);
+        if (result.TryPickT0(out var stats, out var error))
+        {
+            _statsLoadError = null;
+            return stats;
+        }
+        _statsLoadError = error.StatusCode == 0
+            ? "Couldn't reach the server."
+            : error.Message ?? "Something went wrong while loading species stats.";
+        return null;
+    }
 
+    [Command, RunOnLoad]
+    private async Task LoadMunicipalities(CancellationToken ct)
+    {
         _municipalitiesLoadError = null;
 
         // Run the list stream + count fetch in parallel.
@@ -279,17 +222,12 @@ else
                 collected.Add(m);
             }
         }
-        catch (OperationCanceledException)
-        {
-            return;
-        }
         catch (HttpRequestException e)
         {
             // The list stream has no error channel — the transport exception is the signal.
             _municipalitiesLoadError = e.StatusCode is null
                 ? "Couldn't reach the server."
                 : "Something went wrong while loading municipalities.";
-            await InvokeAsync(StateHasChanged);
             return;
         }
 
@@ -301,13 +239,46 @@ else
                 : countsError.Message ?? "Something went wrong while loading species counts.";
             _countsMap = new Dictionary<Guid, int>();
             _municipalities = collected;
-            await InvokeAsync(StateHasChanged);
             return;
         }
 
         _countsMap = counts.ToDictionary(c => c.MunicipalityId, c => c.Count);
         _municipalities = collected;
-        await InvokeAsync(StateHasChanged);
+    }
+
+    [Command]
+    private async Task<MunicipalityDtoForDetail?> LoadDetail(CancellationToken ct)
+    {
+        var result = await MunicipalityClient.GetByIdAsync(_loadedDetailId!.Value, ct);
+        if (result.TryPickT0(out var detail, out var error))
+        {
+            _detailLoadError = null;
+            Navbar.SetTitle(detail.Name);
+            return detail;
+        }
+        // A missing municipality keeps the dedicated not-found empty state.
+        _detailLoadError = error.StatusCode switch
+        {
+            404 => null,
+            0 => "Couldn't reach the server.",
+            _ => error.Message ?? "Something went wrong while loading this municipality."
+        };
+        return null;
+    }
+
+    [Command]
+    private async Task<IReadOnlyList<SpeciesDtoForList>?> LoadDetailSpecies(CancellationToken ct)
+    {
+        var result = await SpeciesClient.GetByMunicipalityAsync(_loadedDetailId!.Value, ct);
+        if (result.TryPickT0(out var species, out var error))
+        {
+            _detailSpeciesLoadError = null;
+            return species;
+        }
+        _detailSpeciesLoadError = error.StatusCode == 0
+            ? "Couldn't reach the server."
+            : error.Message ?? "Something went wrong while loading species.";
+        return [];
     }
 
     private Task HandleSelected(MunicipalityDtoForList muni)
@@ -334,13 +305,9 @@ else
         InvokeAsync(StateHasChanged);
     }
 
-    public void Dispose()
+    public override void Dispose()
     {
         L.LanguageChanged -= OnLanguageChanged;
-        _listCts?.Cancel();
-        _listCts?.Dispose();
-        (_statsFetch as IDisposable)?.Dispose();
-        (_detailFetch as IDisposable)?.Dispose();
-        (_detailSpeciesFetch as IDisposable)?.Dispose();
+        base.Dispose();
     }
 }

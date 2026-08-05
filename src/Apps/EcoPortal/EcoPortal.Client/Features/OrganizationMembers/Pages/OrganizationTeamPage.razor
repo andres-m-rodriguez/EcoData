@@ -11,8 +11,7 @@
 @using EcoPortal.Client.Features.OrganizationMembers.Components
 @using EcoPortal.Client.Features.OrganizationMembers.Dialogs
 @using EcoData.Common.Pagination.Blazor
-@using BlazingSingularity.Commands
-@using BlazingSingularity.Signals
+@inherits StatefulComponent
 @inject IOrganizationHttpClient OrganizationClient
 @inject IOrganizationMemberHttpClient MemberClient
 @inject INativeNavigationManager Navigation
@@ -23,9 +22,9 @@
 
 <NuiPageLayout Title="Teams" ParentPath="@($"/organizations/{OrganizationId}")"
                  Actions="@([new("Requests", NavigateToRequests)])">
-        <SearchHeader SearchSignal="SearchTextSignal" Placeholder="Search members..." EnableSticky="true" />
+        <SearchHeader @bind-Value="SearchTextState.Value" Placeholder="Search members..." EnableSticky="true" />
 
-        @if (LoadOrganizationCommand.IsLoading)
+        @if (LoadOrganizationState.IsLoading)
         {
             <MudPaper Elevation="0" Class="rounded-lg">
                 @for (var i = 0; i < 5; i++)
@@ -136,21 +135,18 @@
 
     private OrganizationDtoForDetail? _organization;
 
-    [Signal]
+    [Reactive]
     private string? _searchText;
 
-    private bool HasActiveFilters => !string.IsNullOrWhiteSpace(SearchText);
+    private bool HasActiveFilters => !string.IsNullOrWhiteSpace(_searchText);
 
-    protected override async Task OnInitializedAsync()
-    {
-        SearchTextSignal.OnChange(_ => _virtualizedList?.Refresh());
-        await LoadOrganizationCommand.ExecuteAsync();
-    }
+    [OnChanged]
+    private void OnSearchTextChanged(string? value) => _virtualizedList?.Refresh();
 
-    [RelayCommand]
-    private async Task LoadOrganization()
+    [Command, RunOnLoad]
+    private async Task LoadOrganization(CancellationToken ct)
     {
-        var result = await OrganizationClient.GetByIdAsync(OrganizationId);
+        var result = await OrganizationClient.GetByIdAsync(OrganizationId, ct);
         result.Switch(
             organization => _organization = organization,
             _ => _organization = null
@@ -160,7 +156,7 @@
     private OrganizationMemberParameters BuildParameters(Guid? cursor) => new(
         PageSize: 50,
         Cursor: cursor,
-        Search: string.IsNullOrWhiteSpace(SearchText) ? null : SearchText
+        Search: string.IsNullOrWhiteSpace(_searchText) ? null : _searchText
     );
 
     private IAsyncEnumerable<OrganizationMemberDto> GetItemsAsync(OrganizationMemberParameters parameters, CancellationToken
@@ -171,7 +167,7 @@ cancellationToken)
 
     private void ClearFilters()
     {
-        SearchText = null;
+        SearchTextState.Value = null;
     }
 
     private void NavigateToRequests()

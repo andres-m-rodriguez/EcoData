@@ -1,9 +1,9 @@
 @using EcoData.Sensors.Contracts.Dtos
 @using EcoPortal.Client.Services
+@inherits StatefulComponent
 @inject NotificationService NotificationService
 @inject NavigationManager Navigation
 @inject ISnackbar Snackbar
-@implements IDisposable
 
 <MudPaper Elevation="0" Class="notification-panel">
     <div class="notification-header">
@@ -75,9 +75,9 @@
                 <div class="d-flex justify-center py-1">
                     <MudLink Typo="Typo.caption"
                              Underline="Underline.None"
-                             OnClick="LoadMoreAsync"
-                             Disabled="_isLoadingMore">
-                        @if (_isLoadingMore)
+                             OnClick="@(() => LoadMoreState.TryExecute())"
+                             Disabled="LoadMoreState.IsLoading">
+                        @if (LoadMoreState.IsLoading)
                         {
                             <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
                         }
@@ -104,17 +104,11 @@
 
     private List<UserNotificationDto>? _notifications;
     private string? _loadError;
-    private bool _isLoadingMore;
     private bool _hasMore;
     private const int PageSize = 10;
 
-    protected override async Task OnInitializedAsync()
-    {
-        NotificationService.OnNotificationReceived += HandleNewNotification;
-        await LoadNotificationsAsync();
-    }
-
-    private async Task LoadNotificationsAsync()
+    [Command, RunOnLoad]
+    private async Task LoadNotifications()
     {
         _notifications = null;
         _loadError = null;
@@ -133,11 +127,11 @@
         }
     }
 
-    private async Task LoadMoreAsync()
+    [Command]
+    private async Task LoadMore()
     {
-        if (_isLoadingMore || _notifications is not { Count: > 0 }) return;
+        if (_notifications is not { Count: > 0 }) return;
 
-        _isLoadingMore = true;
         var cursor = _notifications.Last().Id;
         var result = await NotificationService.GetNotificationsAsync(PageSize + 1, cursor);
         if (result.TryPickT0(out var notifications, out _))
@@ -145,16 +139,6 @@
             _hasMore = notifications.Count > PageSize;
             _notifications.AddRange(notifications.Take(PageSize));
         }
-        _isLoadingMore = false;
-    }
-
-    private void HandleNewNotification()
-    {
-        InvokeAsync(async () =>
-        {
-            await LoadNotificationsAsync();
-            StateHasChanged();
-        });
     }
 
     private async Task HandleNotificationClick(UserNotificationDto notification)
@@ -225,11 +209,6 @@
             return $"{(int)diff.TotalDays}d ago";
 
         return time.ToLocalTime().ToString("MMM d");
-    }
-
-    public void Dispose()
-    {
-        NotificationService.OnNotificationReceived -= HandleNewNotification;
     }
 }
 

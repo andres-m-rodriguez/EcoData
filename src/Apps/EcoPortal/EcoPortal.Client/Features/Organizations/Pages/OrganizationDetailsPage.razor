@@ -9,13 +9,10 @@
 @using EcoPortal.Client.Services
 @using EcoPortal.Client.Components
 @using EcoPortal.Client.Features.Organizations.Authorization
-@using EcoPortal.Client.Features.Organizations.ViewModels
 @using EcoPortal.Client.Features.Sensors.Components
 @using EcoPortal.Client.Features.Organizations.Components
-@using BlazingSingularity.Commands
-@using BlazingSingularity.Fetch
-@implements IDisposable
 @using EcoPortal.Client.Features.OrganizationAccessRequests.Dialogs
+@inherits StatefulComponent
 @using OrgPermissions = EcoData.Organization.Contracts.Permissions
 @using SensorPermissions = EcoData.Sensors.Contracts.Permissions
 @inject IOrganizationHttpClient OrganizationClient
@@ -30,12 +27,12 @@
 <PageTitle>Organization Details - EcoData</PageTitle>
 
 <NuiPageLayout Title="Organization Details" ParentPath="/organizations/discover">
-    <div class="org-page page-enter" style="@(_viewModel?.ThemeStyle ?? string.Empty)">
+    <div class="org-page page-enter" style="@ThemeStyle">
         @if (_loadError is not null)
         {
             <MudAlert Severity="Severity.Error" Class="mb-4">@_loadError</MudAlert>
         }
-        @if (_viewModel is null && _organizationFetch.IsLoading)
+        @if (_organization is null && LoadOrganizationState.IsLoading)
         {
             <MudPaper Elevation="0" Class="org-hero-skeleton pa-6 rounded-lg mb-6">
                 <MudStack Row AlignItems="AlignItems.Center" Spacing="4">
@@ -58,7 +55,7 @@
                 </MudGrid>
             </MudPaper>
         }
-        else if (_organizationFetch.Data is null && !_organizationFetch.IsLoading && _loadError is null)
+        else if (LoadOrganizationState.Result is null && !LoadOrganizationState.IsLoading && _loadError is null)
         {
             <MudPaper Elevation="0" Class="pa-8 rounded-lg d-flex flex-column align-center justify-center org-not-found">
                 <MudIcon Icon="@Icons.Material.Filled.DomainDisabled" Size="Size.Large" Color="Color.Error" Class="mb-4" />
@@ -72,78 +69,78 @@
                 </MudButton>
             </MudPaper>
         }
-        else if (_viewModel is not null)
+        else if (_organization is { } org)
         {
 
             @* ============================ HERO ============================ *@
-            <section class="org-hero @(_viewModel.HasCardPicture ? "has-banner" : "no-banner")"
-                     style="@(_viewModel.HasCardPicture ? $"background-image: linear-gradient(180deg, rgba(20,28,24,0.55) 0%, rgba(20,28,24,0.85) 100%), url('{_viewModel.CardPictureUrl}');" : null)">
+            <section class="org-hero @(HasText(org.CardPictureUrl) ? "has-banner" : "no-banner")"
+                     style="@(HasText(org.CardPictureUrl) ? $"background-image: linear-gradient(180deg, rgba(20,28,24,0.55) 0%, rgba(20,28,24,0.85) 100%), url('{org.CardPictureUrl}');" : null)">
                 <div class="org-hero-grid">
                     <div class="org-hero-left">
                         <div class="org-hero-eyebrow">
                             <span class="v-line"></span>
-                            <MudText Inline="true" Style="color: white;">@_viewModel.Slug</MudText>
-                            @if (_viewModel.HasLocation)
+                            <MudText Inline="true" Style="color: white;">@org.Slug</MudText>
+                            @if (HasText(org.Location))
                             {
                                 <MudText Inline="true" Class="dot-sep">·</MudText>
-                                <MudText Inline="true" Style="color: white;">@_viewModel.Location</MudText>
+                                <MudText Inline="true" Style="color: white;">@org.Location</MudText>
                             }
                         </div>
 
                         <div class="org-hero-orgline">
-                            @if (_viewModel.HasProfilePicture)
+                            @if (HasText(org.ProfilePictureUrl))
                             {
                                 <div class="hero-mark hero-mark-img">
-                                    <MudImage Src="@_viewModel.ProfilePictureUrl" Alt="@_viewModel.Name" ObjectFit="ObjectFit.Cover" />
+                                    <MudImage Src="@org.ProfilePictureUrl" Alt="@org.Name" ObjectFit="ObjectFit.Cover" />
                                 </div>
                             }
                             else
                             {
-                                <div class="hero-mark">@_viewModel.Initials</div>
+                                <div class="hero-mark">@GetInitials(org.Name)</div>
                             }
                             <div>
-                                <div class="org-hero-orgmeta"><strong>@_viewModel.Name</strong></div>
+                                <div class="org-hero-orgmeta"><strong>@org.Name</strong></div>
                                 <div class="org-hero-orgmeta">
-                                    Org · joined @_viewModel.FormattedCreatedDate
-                                    @if (_viewModel.HasFoundedYear)
+                                    Org · joined @org.CreatedAt.ToString("MMM d, yyyy")
+                                    @if (org.FoundedYear.HasValue)
                                     {
-                                        <span> · active since @_viewModel.FoundedYear</span>
+                                        <span> · active since @org.FoundedYear</span>
                                     }
                                 </div>
                             </div>
                         </div>
 
-                        <h1 class="org-hero-title">@_viewModel.Name</h1>
+                        <h1 class="org-hero-title">@org.Name</h1>
 
-                        @if (_viewModel.HasTagline)
+                        @if (HasText(org.Tagline))
                         {
-                            <p class="org-hero-tagline">@_viewModel.Tagline</p>
+                            <p class="org-hero-tagline">@org.Tagline</p>
                         }
 
                         <div class="org-hero-meta-row">
-                            @if (_viewModel.HasWebsite)
+                            @if (HasText(org.WebsiteUrl))
                             {
                                 <span class="hmr-item">
                                     <MudIcon Icon="@Icons.Material.Outlined.Link" Size="Size.Small" Style="color: white !important;" />
-                                    <MudLink Href="@_viewModel.WebsiteUrl" Target="_blank" Style="color: white;">@_viewModel.DisplayWebsiteUrl</MudLink>
+                                    <MudLink Href="@org.WebsiteUrl" Target="_blank" Style="color: white;">@GetDisplayWebsiteUrl(org.WebsiteUrl)</MudLink>
                                 </span>
                             }
-                            @if (_viewModel.HasLocation)
+                            @if (HasText(org.Location))
                             {
                                 <span class="hmr-item">
                                     <MudIcon Icon="@Icons.Material.Outlined.LocationOn" Size="Size.Small" Style="color: white !important;" />
-                                    <MudText Inline="true" Style="color: white;">@_viewModel.Location</MudText>
+                                    <MudText Inline="true" Style="color: white;">@org.Location</MudText>
                                 </span>
                             }
                             <span class="hmr-item">
                                 <MudIcon Icon="@Icons.Material.Outlined.CalendarMonth" Size="Size.Small" Style="color: white !important;" />
-                                <MudText Inline="true" Style="color: white;">Joined @_viewModel.FormattedCreatedDate</MudText>
+                                <MudText Inline="true" Style="color: white;">Joined @org.CreatedAt.ToString("MMM d, yyyy")</MudText>
                             </span>
-                            @if (_viewModel.HasLegalInfo)
+                            @if (HasText(org.LegalStatus) || HasText(org.TaxId))
                             {
                                 <span class="hmr-item">
                                     <MudIcon Icon="@Icons.Material.Outlined.Shield" Size="Size.Small" Style="color: white !important;" />
-                                    <MudText Inline="true" Style="color: white;">@_viewModel.LegalLine</MudText>
+                                    <MudText Inline="true" Style="color: white;">@GetLegalLine(org)</MudText>
                                 </span>
                             }
                         </div>
@@ -154,13 +151,13 @@
                         <div class="hero-card-stats">
                             <div class="hcs">
                                 <div class="hcs-v">
-                                    @if (_sensorCountFetch.IsLoading)
+                                    @if (LoadSensorCountState.IsLoading)
                                     {
                                         <span class="hcs-v-dim">—</span>
                                     }
-                                    else if (_sensorCountFetch.Data is not null)
+                                    else if (LoadSensorCountState.Result is not null)
                                     {
-                                        @_sensorCountFetch.Data
+                                        @LoadSensorCountState.Result
                                     }
                                     else
                                     {
@@ -171,13 +168,13 @@
                             </div>
                             <div class="hcs">
                                 <div class="hcs-v">
-                                    @if (_membersFetch.IsLoading)
+                                    @if (LoadMembersState.IsLoading)
                                     {
                                         <span class="hcs-v-dim">—</span>
                                     }
                                     else
                                     {
-                                        @(_membersFetch.Data?.Count ?? 0)
+                                        @(LoadMembersState.Result?.Count ?? 0)
                                     }
                                 </div>
                                 <div class="hcs-k">Members</div>
@@ -223,11 +220,11 @@
                 <Tabs>
                     <Tab Title="Overview" Icon="@Icons.Material.Outlined.Dashboard">
                         <div class="org-tab-body">
-                            @if (_viewModel.HasAbout)
+                            @if (HasText(org.AboutUs))
                             {
                                 <section class="about-card">
                                     <div class="about-eyebrow">Mission</div>
-                                    <p class="about-text">@_viewModel.AboutUs</p>
+                                    <p class="about-text">@org.AboutUs</p>
                                 </section>
                             }
 
@@ -238,13 +235,13 @@
                                         Network
                                     </div>
                                     <div class="impact-card-v">
-                                        @if (_sensorCountFetch.IsLoading)
+                                        @if (LoadSensorCountState.IsLoading)
                                         {
                                             <MudProgressCircular Size="Size.Small" Indeterminate="true" />
                                         }
-                                        else if (_sensorCountFetch.Data is not null)
+                                        else if (LoadSensorCountState.Result is not null)
                                         {
-                                            @_sensorCountFetch.Data
+                                            @LoadSensorCountState.Result
                                         }
                                         else
                                         {
@@ -259,13 +256,13 @@
                                         Team
                                     </div>
                                     <div class="impact-card-v">
-                                        @if (_membersFetch.IsLoading)
+                                        @if (LoadMembersState.IsLoading)
                                         {
                                             <MudProgressCircular Size="Size.Small" Indeterminate="true" />
                                         }
                                         else
                                         {
-                                            @(_membersFetch.Data?.Count ?? 0)
+                                            @(LoadMembersState.Result?.Count ?? 0)
                                         }
                                     </div>
                                     <div class="impact-card-l">Active members</div>
@@ -276,9 +273,9 @@
                                         With us since
                                     </div>
                                     <div class="impact-card-v impact-card-v-text">
-                                        @_viewModel.JoinedYear
+                                        @org.CreatedAt.Year
                                     </div>
-                                    <div class="impact-card-l">Joined @_viewModel.FormattedCreatedDate</div>
+                                    <div class="impact-card-l">Joined @org.CreatedAt.ToString("MMM d, yyyy")</div>
                                 </div>
                             </section>
 
@@ -299,7 +296,7 @@
                                     </div>
                                 </div>
 
-                                @if (_viewModel.HasWebsite)
+                                @if (HasText(org.WebsiteUrl))
                                 {
                                     <div class="partner-card">
                                         <MudIcon Icon="@Icons.Material.Outlined.Handshake" Class="partner-card-icon" />
@@ -307,8 +304,8 @@
                                         <div class="partner-card-desc">
                                             Pitch a project, request data, or get in touch with the team.
                                         </div>
-                                        <MudLink Href="@_viewModel.WebsiteUrl" Target="_blank" Class="partner-card-link">
-                                            Visit @_viewModel.DisplayWebsiteUrl
+                                        <MudLink Href="@org.WebsiteUrl" Target="_blank" Class="partner-card-link">
+                                            Visit @GetDisplayWebsiteUrl(org.WebsiteUrl)
                                         </MudLink>
                                     </div>
                                 }
@@ -317,7 +314,7 @@
                     </Tab>
 
                     <Tab Title="Sensors" Icon="@Icons.Material.Outlined.Sensors"
-                         Badge="@(_sensorCountFetch.IsLoading ? "..." : _sensorCountFetch.Data?.ToString())">
+                         Badge="@(LoadSensorCountState.IsLoading ? "..." : LoadSensorCountState.Result?.ToString())">
                         <div class="org-tab-body">
                             <div class="section-head">
                                 <div>
@@ -342,7 +339,7 @@
                                 </MudStack>
                             </div>
 
-                            @if (_sensorsFetch.IsLoading)
+                            @if (LoadSensorsState.IsLoading)
                             {
                                 <MudGrid Spacing="3">
                                     @for (var i = 0; i < 4; i++)
@@ -353,7 +350,7 @@
                                     }
                                 </MudGrid>
                             }
-                            else if ((_sensorsFetch.Data?.Count ?? 0) == 0)
+                            else if ((LoadSensorsState.Result?.Count ?? 0) == 0)
                             {
                                 <MudPaper Elevation="0" Outlined="true" Class="pa-8 text-center rounded-lg empty-state">
                                     <MudIcon Icon="@Icons.Material.Outlined.SensorsOff" Size="Size.Large"
@@ -367,19 +364,19 @@
                             else
                             {
                                 <MudGrid Spacing="3">
-                                    @foreach (var sensor in _sensorsFetch.Data ?? [])
+                                    @foreach (var sensor in LoadSensorsState.Result ?? [])
                                     {
                                         <MudItem xs="12" md="6">
                                             <SensorListItem Sensor="sensor" OnClick="NavigateToSensor" />
                                         </MudItem>
                                     }
                                 </MudGrid>
-                                @if (_sensorCountFetch.Data > OrganizationDetailsViewModel.MaxDisplayedSensors)
+                                @if (LoadSensorCountState.Result > MaxDisplayedSensors)
                                 {
                                     <div class="d-flex justify-center mt-4">
                                         <MudButton Variant="Variant.Text" Color="Color.Primary"
                                                    EndIcon="@Icons.Material.Filled.ArrowForward" OnClick="NavigateToSensors">
-                                            View all @_sensorCountFetch.Data sensors
+                                            View all @LoadSensorCountState.Result sensors
                                         </MudButton>
                                     </div>
                                 }
@@ -388,7 +385,7 @@
                     </Tab>
 
                     <Tab Title="Team" Icon="@Icons.Material.Outlined.Group"
-                         Badge="@(_membersFetch.IsLoading ? "..." : (_membersFetch.Data?.Count ?? 0).ToString())">
+                         Badge="@(LoadMembersState.IsLoading ? "..." : (LoadMembersState.Result?.Count ?? 0).ToString())">
                         <div class="org-tab-body">
                             <div class="section-head">
                                 <div>
@@ -404,7 +401,7 @@
                                 </RequireOrganizationPermission>
                             </div>
 
-                            @if (_membersFetch.IsLoading)
+                            @if (LoadMembersState.IsLoading)
                             {
                                 <MudGrid Spacing="3">
                                     @for (var i = 0; i < 4; i++)
@@ -420,7 +417,7 @@
                                     }
                                 </MudGrid>
                             }
-                            else if ((_membersFetch.Data?.Count ?? 0) == 0)
+                            else if ((LoadMembersState.Result?.Count ?? 0) == 0)
                             {
                                 <MudPaper Elevation="0" Outlined="true" Class="pa-8 text-center rounded-lg empty-state">
                                     <MudIcon Icon="@Icons.Material.Outlined.GroupOff" Size="Size.Large" Color="Color.Secondary"
@@ -431,11 +428,11 @@
                             else
                             {
                                 <div class="team-grid">
-                                    @foreach (var member in (_membersFetch.Data ?? []).Take(OrganizationDetailsViewModel.MaxDisplayedMembers))
+                                    @foreach (var member in (LoadMembersState.Result ?? []).Take(MaxDisplayedMembers))
                                     {
                                         <div class="team-cell">
-                                            <MudAvatar Size="Size.Medium" Color="@OrganizationDetailsViewModel.GetMemberAvatarColor(member.DisplayName)" Class="team-av">
-                                                @OrganizationDetailsViewModel.GetMemberInitial(member.DisplayName)
+                                            <MudAvatar Size="Size.Medium" Color="@GetMemberAvatarColor(member.DisplayName)" Class="team-av">
+                                                @GetMemberInitial(member.DisplayName)
                                             </MudAvatar>
                                             <div class="team-text">
                                                 <div class="team-name">@member.DisplayName</div>
@@ -444,12 +441,12 @@
                                         </div>
                                     }
                                 </div>
-                                @if ((_membersFetch.Data?.Count ?? 0) > OrganizationDetailsViewModel.MaxDisplayedMembers)
+                                @if ((LoadMembersState.Result?.Count ?? 0) > MaxDisplayedMembers)
                                 {
                                     <div class="d-flex justify-center mt-4">
                                         <MudButton Variant="Variant.Text" Color="Color.Primary"
                                                    EndIcon="@Icons.Material.Filled.ArrowForward" OnClick="NavigateToTeam">
-                                            View all @(_membersFetch.Data?.Count ?? 0) members
+                                            View all @(LoadMembersState.Result?.Count ?? 0) members
                                         </MudButton>
                                     </div>
                                 }
@@ -491,97 +488,71 @@
 @code {
     [Parameter]
     public Guid Id { get; set; }
-    private OrganizationDetailsViewModel? _viewModel;
+
+    private const int MaxDisplayedSensors = 6;
+    private const int MaxDisplayedMembers = 10;
+
+    private OrganizationDtoForDetail? _organization;
     private string? _loadError;
-    private BackgroundFetch<OrganizationDtoForDetail?> _organizationFetch = default!;
-    private IFetch<int?> _sensorCountFetch = default!;
-    private IFetch<List<SensorDtoForList>> _sensorsFetch = default!;
-    private IFetch<List<OrganizationMemberDto>> _membersFetch = default!;
 
-    protected override async Task OnInitializedAsync()
+    protected override void OnInitialized()
     {
-        var sensorParams = new SensorParameters(PageSize: OrganizationDetailsViewModel.MaxDisplayedSensors, OrganizationId: Id);
-
-        _organizationFetch = new BackgroundFetch<OrganizationDtoForDetail?>(
-            FetchOrganizationAsync,
-            () => InvokeAsync(StateHasChanged)
-        );
-
-        _sensorCountFetch = new Fetch<int?>(
-            async ct =>
-            {
-                var result = await SensorClient.GetSensorCountAsync(sensorParams, ct);
-                if (result.TryPickT0(out var count, out var error))
-                    return count;
-                _loadError = error.StatusCode == 0
-                    ? "Couldn't reach the server."
-                    : error.Message ?? "Couldn't load the sensor count.";
-                return null;
-            },
-            () => InvokeAsync(StateHasChanged)
-        );
-
-        _sensorsFetch = new Fetch<List<SensorDtoForList>>(
-            ct => FetchSensorsAsync(sensorParams, ct),
-            () => InvokeAsync(StateHasChanged)
-        );
-
-        _membersFetch = new Fetch<List<OrganizationMemberDto>>(
-            FetchMembersAsync,
-            () => InvokeAsync(StateHasChanged)
-        );
-
-        // Check cache for initial data
-        var cachedOrg = OrganizationCache.Get(Id);
-        if (cachedOrg is not null)
-        {
-            _organizationFetch.SetInitialData(cachedOrg);
-            _viewModel = new OrganizationDetailsViewModel(cachedOrg);
-        }
-
-        // Start all fetches in parallel for progressive loading
-        _ = _sensorCountFetch.FetchAsync();
-        _ = _sensorsFetch.FetchAsync();
-        _ = _membersFetch.FetchAsync();
-
-        // Fetch fresh org data in background (or foreground if no cache)
-        await _organizationFetch.FetchAsync();
+        // Pre-seed from the cache before base.OnInitialized() fires the RunOnLoad
+        // commands, so a cached organization renders instantly while LoadOrganization
+        // refreshes it in the background (stale-while-revalidate).
+        _organization = OrganizationCache.Get(Id);
+        base.OnInitialized();
     }
 
-    private async Task<OrganizationDtoForDetail?> FetchOrganizationAsync(CancellationToken ct)
+    [Command, RunOnLoad]
+    private async Task<OrganizationDtoForDetail?> LoadOrganization(CancellationToken ct)
     {
         var result = await OrganizationClient.GetByIdAsync(Id, ct);
-        return result.Match<OrganizationDtoForDetail?>(
-            organization =>
+        if (!result.TryPickT0(out var organization, out var error))
+        {
+            _loadError = error.StatusCode switch
             {
-                _viewModel = new OrganizationDetailsViewModel(organization);
-                OrganizationCache.Set(organization);
-                return organization;
-            },
-            error =>
-            {
-                _loadError = error.StatusCode switch
-                {
-                    404 => null,
-                    0 => "Couldn't reach the server.",
-                    _ => error.Message ?? "Couldn't load this organization."
-                };
-                return null;
-            }
-        );
+                404 => null,
+                0 => "Couldn't reach the server.",
+                _ => error.Message ?? "Couldn't load this organization."
+            };
+            return null;
+        }
+
+        _organization = organization;
+        OrganizationCache.Set(organization);
+        return organization;
     }
 
-    private async Task<List<SensorDtoForList>> FetchSensorsAsync(SensorParameters parameters, CancellationToken ct)
+    [Command, RunOnLoad]
+    private async Task<int?> LoadSensorCount(CancellationToken ct)
+    {
+        var result = await SensorClient.GetSensorCountAsync(
+            new SensorParameters(PageSize: MaxDisplayedSensors, OrganizationId: Id), ct);
+        if (!result.TryPickT0(out var count, out var error))
+        {
+            _loadError = error.StatusCode == 0
+                ? "Couldn't reach the server."
+                : error.Message ?? "Couldn't load the sensor count.";
+            return null;
+        }
+        return count;
+    }
+
+    [Command, RunOnLoad]
+    private async Task<List<SensorDtoForList>> LoadSensors(CancellationToken ct)
     {
         var sensors = new List<SensorDtoForList>();
-        await foreach (var sensor in SensorClient.GetSensorsAsync(parameters, ct))
+        await foreach (var sensor in SensorClient.GetSensorsAsync(
+            new SensorParameters(PageSize: MaxDisplayedSensors, OrganizationId: Id), ct))
         {
             sensors.Add(sensor);
         }
         return sensors;
     }
 
-    private async Task<List<OrganizationMemberDto>> FetchMembersAsync(CancellationToken ct)
+    [Command, RunOnLoad]
+    private async Task<List<OrganizationMemberDto>> LoadMembers(CancellationToken ct)
     {
         var members = new List<OrganizationMemberDto>();
         await foreach (var member in MemberClient.GetAllAsync(Id, new OrganizationMemberParameters(), ct))
@@ -591,16 +562,10 @@
         return members;
     }
 
-    public void Dispose()
-    {
-        _organizationFetch.Dispose();
-    }
-
     private async Task OpenRequestAccessDialog()
     {
-        if (_organizationFetch.Data is null) return;
+        if (_organization is not { } org) return;
 
-        var org = _organizationFetch.Data;
         var orgForList = new OrganizationDtoForList(
             Id: org.Id,
             Name: org.Name,
@@ -634,11 +599,11 @@
 
     private async Task ConfirmDelete()
     {
-        if (_viewModel is null) return;
+        if (_organization is null) return;
 
         var parameters = new DialogParameters<ConfirmDialog>
         {
-            { x => x.ContentText, $"Are you sure you want to delete \"{_viewModel.Name}\"?" },
+            { x => x.ContentText, $"Are you sure you want to delete \"{_organization.Name}\"?" },
             { x => x.ButtonText, "Delete" },
             { x => x.Color, Color.Error }
         };
@@ -657,5 +622,55 @@
                 error => Snackbar.Add(error.Message ?? "Failed to delete organization", Severity.Error)
             );
         }
+    }
+
+    // Inline CSS variables that scope per-org branding to the page. Falls back
+    // to MudBlazor palette tokens when the org hasn't picked colors yet, so
+    // the layout reads correctly either way.
+    private string ThemeStyle => _organization is { } org
+        ? $"--org-primary: {org.PrimaryColor ?? "var(--mud-palette-primary)"}; " +
+          $"--org-accent: {org.AccentColor ?? "var(--mud-palette-secondary)"};"
+        : string.Empty;
+
+    private static bool HasText(string? value) => !string.IsNullOrWhiteSpace(value);
+
+    private static string GetInitials(string name)
+    {
+        if (string.IsNullOrWhiteSpace(name)) return "?";
+        var parts = name.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        if (parts.Length == 1) return parts[0][..Math.Min(2, parts[0].Length)].ToUpperInvariant();
+        return string.Concat(parts[0][0], parts[1][0]).ToUpperInvariant();
+    }
+
+    private static string GetDisplayWebsiteUrl(string? websiteUrl) =>
+        Uri.TryCreate(websiteUrl, UriKind.Absolute, out var uri)
+            ? uri.Host
+            : websiteUrl ?? string.Empty;
+
+    private static string GetLegalLine(OrganizationDtoForDetail org) =>
+        (HasText(org.LegalStatus), HasText(org.TaxId)) switch
+        {
+            (true, true) => $"{org.LegalStatus} · {org.TaxId}",
+            (true, false) => org.LegalStatus!,
+            (false, true) => org.TaxId!,
+            _ => string.Empty
+        };
+
+    private static char GetMemberInitial(string displayName) =>
+        string.IsNullOrWhiteSpace(displayName) ? '?' : char.ToUpper(displayName[0]);
+
+    private static Color GetMemberAvatarColor(string displayName)
+    {
+        var colors = new[]
+        {
+            Color.Primary,
+            Color.Secondary,
+            Color.Tertiary,
+            Color.Info,
+            Color.Success,
+            Color.Warning,
+        };
+        var hash = displayName.GetHashCode();
+        return colors[Math.Abs(hash) % colors.Length];
     }
 }

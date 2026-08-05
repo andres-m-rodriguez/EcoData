@@ -1,8 +1,6 @@
 @page "/account"
-@using BlazingSingularity
-@using BlazingSingularity.Commands
+@inherits StatefulComponent
 @using EcoPortal.Client.Services
-@implements IDisposable
 @inject AuthStateService AuthState
 @inject ITabNavigationService Tabs
 @inject INativeNavbarManager Navbar
@@ -124,9 +122,9 @@
                                            Color="Color.Error"
                                            StartIcon="@Icons.Material.Outlined.Logout"
                                            OnClick="LogoutAsync"
-                                           Disabled="LogoutCommand.IsLoading"
+                                           Disabled="LogoutState.IsLoading"
                                            Class="signout-btn">
-                                    @if (LogoutCommand.IsLoading)
+                                    @if (LogoutState.IsLoading)
                                     {
                                         <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
                                         <span>Signing out...</span>
@@ -176,13 +174,11 @@ else
 
     protected override void OnInitialized()
     {
+        base.OnInitialized();
         Navbar.SetTitle("Account");
-        AuthState.OnAuthStateChanged += StateHasChanged;
-    }
-
-    public void Dispose()
-    {
-        AuthState.OnAuthStateChanged -= StateHasChanged;
+        // MainLayout owns AuthChanged; cross-class consumers use the base's auto-disposed
+        // subscription. The empty handler exists purely for the re-render DispatchEvent runs.
+        SubscribeEvent<MainLayout.AuthChanged>(_ => DispatchEvent(() => { }));
     }
 
     private string GetUserInitial()
@@ -200,10 +196,9 @@ else
     private void OnSensorCountChanged(int count)
     {
         _sensorCount = count;
-        StateHasChanged();
     }
 
-    [RelayCommand]
+    [Command]
     private async Task Logout()
     {
         await AuthState.LogoutAsync();
@@ -212,6 +207,6 @@ else
 
     private async Task LogoutAsync()
     {
-        await LogoutCommand.ExecuteAsync();
+        await LogoutState.Execute();
     }
 }

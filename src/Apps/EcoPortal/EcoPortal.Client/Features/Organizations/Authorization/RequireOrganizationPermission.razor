@@ -1,16 +1,16 @@
 @using EcoPortal.Client.Services
-@implements IDisposable
+@inherits StatefulComponent
 @inject AuthStateService AuthState
 @inject PermissionContextService PermissionContext
 
-@if (_isLoading)
+@if (CheckPermissionState.IsLoading || !CheckPermissionState.HasResult)
 {
     @if (Loading is not null)
     {
         @Loading
     }
 }
-else if (_isAuthorized)
+else if (CheckPermissionState.Result)
 {
     @if (Authorized is not null)
     {
@@ -45,29 +45,24 @@ else if (NotAuthorized is not null)
     [Parameter]
     public RenderFragment? Loading { get; set; }
 
-    private bool _isLoading = true;
-    private bool _isAuthorized;
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        // [Event] requires a record nested in this component; MainLayout owns AuthChanged,
+        // so cross-class consumers subscribe through the base's auto-disposed hook instead.
+        SubscribeEvent<MainLayout.AuthChanged>(_ => DispatchEvent(() => CheckPermissionState.TryExecute()));
+    }
 
     protected override async Task OnParametersSetAsync()
     {
-        await CheckPermissionAsync();
+        await CheckPermissionState.Execute();
     }
 
-    protected override void OnInitialized()
+    // Trailing token buys latest-wins: a re-check triggered by new parameters or an
+    // auth change discards any stale in-flight result.
+    [Command]
+    private async Task<bool> CheckPermission(CancellationToken ct)
     {
-        AuthState.OnAuthStateChanged += OnAuthStateChanged;
-    }
-
-    private async void OnAuthStateChanged()
-    {
-        await CheckPermissionAsync();
-        await InvokeAsync(StateHasChanged);
-    }
-
-    private async Task CheckPermissionAsync()
-    {
-        _isLoading = true;
-        Console.Write("hello");
         if (!AuthState.IsInitialized)
         {
             await AuthState.InitializeAsync();
@@ -75,26 +70,14 @@ else if (NotAuthorized is not null)
 
         if (AuthState.IsGlobalAdmin)
         {
-            _isAuthorized = true;
-            _isLoading = false;
-            StateHasChanged
-            ();
-            return;
+            return true;
         }
 
         if (OrganizationId == Guid.Empty || string.IsNullOrEmpty(Permission))
         {
-            _isAuthorized = false;
-            _isLoading = false;
-            return;
+            return false;
         }
 
-        _isAuthorized = await PermissionContext.HasPermissionAsync(OrganizationId, Permission);
-        _isLoading = false;
-    }
-
-    public void Dispose()
-    {
-        AuthState.OnAuthStateChanged -= OnAuthStateChanged;
+        return await PermissionContext.HasPermissionAsync(OrganizationId, Permission);
     }
 }

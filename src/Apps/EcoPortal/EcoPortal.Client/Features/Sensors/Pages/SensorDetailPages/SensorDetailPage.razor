@@ -4,12 +4,13 @@
 @using EcoPortal.Client.Components
 @using EcoPortal.Client.Features.Sensors.Pages.SensorDetailPages.Components
 @using Microsoft.AspNetCore.Components.Authorization
+@inherits StatefulComponent
 @inject ISensorHttpClient SensorClient
 
 <PageTitle>Sensor Details - EcoData</PageTitle>
 
 <NuiPageLayout Title="Sensor Details" ParentPath="/sensor-dashboard">
-        @if (_loading)
+        @if (LoadState.IsLoading)
         {
             <SensorDetailSkeleton />
         }
@@ -43,14 +44,14 @@
 @code {
     private SensorDtoForDetail? _sensor;
     private string? _loadError;
-    private bool _loading = true;
 
     [Parameter]
     public Guid SensorId { get; set; }
 
-    protected override async Task OnInitializedAsync()
+    [Command, RunOnLoad]
+    private async Task Load(CancellationToken ct)
     {
-        var result = await SensorClient.GetByIdAsync(SensorId);
+        var result = await SensorClient.GetByIdAsync(SensorId, ct);
         if (!result.TryPickT0(out var sensor, out var sensorError))
         {
             _sensor = null;
@@ -60,11 +61,9 @@
                 0 => "Couldn't reach the server.",
                 _ => sensorError.Message ?? "Couldn't load this sensor."
             };
-            _loading = false;
             return;
         }
 
         _sensor = sensor;
-        _loading = false;
     }
 }

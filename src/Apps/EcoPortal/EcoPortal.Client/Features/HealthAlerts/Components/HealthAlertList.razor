@@ -3,11 +3,11 @@
 @using EcoData.Sensors.Application.Client
 @using EcoPortal.Client.Features.HealthAlerts.Dialogs
 @using EcoData.Common.Pagination.Blazor
-@using BlazingSingularity.Signals
+@inherits StatefulComponent
 @inject ISensorAlertHttpClient AlertClient
 @inject IDialogService DialogService
 
-<SearchHeader SearchSignal="SearchTextSignal" Placeholder="Search alerts..." ShowFilterButton="true"
+<SearchHeader @bind-Value="SearchTextState.Value" Placeholder="Search alerts..." ShowFilterButton="true"
               HasActiveFilters="HasNonSearchFilters" FilterCount="ActiveFilterCount" OnFilterClick="OpenFilterDialog" />
 
 <div class="alert-list-container">
@@ -81,62 +81,68 @@
 @code {
     private EcoDataVirtualizedList<SensorHealthAlertDtoForList, SensorHealthAlertParameters>? _virtualizedList;
 
-    [Signal]
+    [Reactive]
     private string? _searchText;
 
-    [Signal]
+    [Reactive]
     private AlertTypeOption _typeFilter = AlertTypeOption.All;
 
-    [Signal]
+    [Reactive]
     private ResolvedOption _resolvedFilter = ResolvedOption.All;
 
-    [Signal]
+    [Reactive]
     private DateTime? _fromDate;
 
-    [Signal]
+    [Reactive]
     private DateTime? _toDate;
 
     [Parameter]
     public Guid? SensorId { get; set; }
 
-    private bool HasActiveFilters => !string.IsNullOrWhiteSpace(SearchText) || HasNonSearchFilters;
+    private bool HasActiveFilters => !string.IsNullOrWhiteSpace(_searchText) || HasNonSearchFilters;
 
     private bool HasNonSearchFilters =>
-        TypeFilter != AlertTypeOption.All ||
-        ResolvedFilter != ResolvedOption.All ||
-        FromDate.HasValue ||
-        ToDate.HasValue;
+        _typeFilter != AlertTypeOption.All ||
+        _resolvedFilter != ResolvedOption.All ||
+        _fromDate.HasValue ||
+        _toDate.HasValue;
 
     private int ActiveFilterCount
     {
         get
         {
             var count = 0;
-            if (TypeFilter != AlertTypeOption.All) count++;
-            if (ResolvedFilter != ResolvedOption.All) count++;
-            if (FromDate.HasValue) count++;
-            if (ToDate.HasValue) count++;
+            if (_typeFilter != AlertTypeOption.All) count++;
+            if (_resolvedFilter != ResolvedOption.All) count++;
+            if (_fromDate.HasValue) count++;
+            if (_toDate.HasValue) count++;
             return count;
         }
     }
 
-    protected override void OnInitialized()
-    {
-        SearchTextSignal.OnChange(_ => _virtualizedList?.Refresh());
-        TypeFilterSignal.OnChange(_ => _virtualizedList?.Refresh());
-        ResolvedFilterSignal.OnChange(_ => _virtualizedList?.Refresh());
-        FromDateSignal.OnChange(_ => _virtualizedList?.Refresh());
-        ToDateSignal.OnChange(_ => _virtualizedList?.Refresh());
-    }
+    [OnChanged]
+    private void OnSearchTextChanged(string? value) => _virtualizedList?.Refresh();
+
+    [OnChanged]
+    private void OnTypeFilterChanged(AlertTypeOption value) => _virtualizedList?.Refresh();
+
+    [OnChanged]
+    private void OnResolvedFilterChanged(ResolvedOption value) => _virtualizedList?.Refresh();
+
+    [OnChanged]
+    private void OnFromDateChanged(DateTime? value) => _virtualizedList?.Refresh();
+
+    [OnChanged]
+    private void OnToDateChanged(DateTime? value) => _virtualizedList?.Refresh();
 
     private async Task OpenFilterDialog()
     {
         var parameters = new DialogParameters<AlertFilterDialog>
         {
-            { x => x.TypeFilter, TypeFilter },
-            { x => x.ResolvedFilter, ResolvedFilter },
-            { x => x.FromDate, FromDate },
-            { x => x.ToDate, ToDate }
+            { x => x.TypeFilter, _typeFilter },
+            { x => x.ResolvedFilter, _resolvedFilter },
+            { x => x.FromDate, _fromDate },
+            { x => x.ToDate, _toDate }
         };
 
         var options = new DialogOptions
@@ -151,10 +157,10 @@
 
         if (result is { Canceled: false, Data: AlertFilterResult filterResult })
         {
-            TypeFilter = filterResult.AlertType;
-            ResolvedFilter = filterResult.Resolved;
-            FromDate = filterResult.FromDate;
-            ToDate = filterResult.ToDate;
+            TypeFilterState.Value = filterResult.AlertType;
+            ResolvedFilterState.Value = filterResult.Resolved;
+            FromDateState.Value = filterResult.FromDate;
+            ToDateState.Value = filterResult.ToDate;
         }
     }
 
@@ -164,21 +170,21 @@
             PageSize: 50,
             Cursor: cursor,
             SensorId: SensorId,
-            AlertType: TypeFilter switch
+            AlertType: _typeFilter switch
             {
                 AlertTypeOption.Stale => "Stale",
                 AlertTypeOption.Unhealthy => "Unhealthy",
                 AlertTypeOption.Recovered => "Recovered",
                 _ => null
             },
-            IsResolved: ResolvedFilter switch
+            IsResolved: _resolvedFilter switch
             {
                 ResolvedOption.Resolved => true,
                 ResolvedOption.Unresolved => false,
                 _ => null
             },
-            FromDate: FromDate.HasValue ? new DateTimeOffset(FromDate.Value, TimeSpan.Zero) : null,
-            ToDate: ToDate.HasValue ? new DateTimeOffset(ToDate.Value.AddDays(1).AddTicks(-1), TimeSpan.Zero) : null
+            FromDate: _fromDate.HasValue ? new DateTimeOffset(_fromDate.Value, TimeSpan.Zero) : null,
+            ToDate: _toDate.HasValue ? new DateTimeOffset(_toDate.Value.AddDays(1).AddTicks(-1), TimeSpan.Zero) : null
         );
     }
 
@@ -191,11 +197,11 @@
 
     private void ClearFilters()
     {
-        SearchText = null;
-        TypeFilter = AlertTypeOption.All;
-        ResolvedFilter = ResolvedOption.All;
-        FromDate = null;
-        ToDate = null;
+        SearchTextState.Value = null;
+        TypeFilterState.Value = AlertTypeOption.All;
+        ResolvedFilterState.Value = ResolvedOption.All;
+        FromDateState.Value = null;
+        ToDateState.Value = null;
     }
 
     public enum AlertTypeOption

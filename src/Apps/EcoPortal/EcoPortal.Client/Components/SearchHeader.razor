@@ -1,12 +1,12 @@
-@using BlazingSingularity.Signals
 @inject IJSRuntime JS
 @implements IAsyncDisposable
 
 <div class="search-header-wrapper @(_isSticky ? "is-sticky" : "")" @ref="_headerRef">
     <div class="search-header-content">
         <div class="search-wrapper">
-            <NuiSearchBar @bind-Value="SearchSignal.Value" Placeholder="@Placeholder" ShowFilterButton="ShowFilterButton"
-                          HasActiveFilters="HasActiveFilters" FilterCount="FilterCount" OnFilterClick="OnFilterClick"
+            <NuiSearchBar Value="@Value" ValueChanged="ValueChanged" Placeholder="@Placeholder"
+                          ShowFilterButton="ShowFilterButton" HasActiveFilters="HasActiveFilters"
+                          FilterCount="FilterCount" OnFilterClick="OnFilterClick"
                           EnableSticky="false" />
         </div>
         @if (ActionButtons is not null)
@@ -25,8 +25,11 @@
     private DotNetObjectReference<SearchHeader>? _dotNetRef;
     private IJSObjectReference? _jsModule;
 
-    [Parameter, EditorRequired]
-    public Signal<string?> SearchSignal { get; set; } = default!;
+    [Parameter]
+    public string? Value { get; set; }
+
+    [Parameter]
+    public EventCallback<string?> ValueChanged { get; set; }
 
     [Parameter]
     public string Placeholder { get; set; } = "Search...";
