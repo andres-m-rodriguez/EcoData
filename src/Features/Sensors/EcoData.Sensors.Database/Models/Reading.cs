@@ -38,6 +38,13 @@ public sealed class Reading
 
             builder.HasIndex(static e => e.RecordedAt);
 
+            // Topic queries filter by parameter code without a sensor id; the
+            // SensorId-leading indexes can't serve them. Covering SensorId/Value
+            // keeps distinct-station and latest-value scans index-only.
+            builder
+                .HasIndex(static e => new { e.Parameter, e.RecordedAt })
+                .IncludeProperties(static e => new { e.SensorId, e.Value });
+
             builder.HasIndex(static e => new { e.SensorId, e.RecordedAt });
 
             builder.HasIndex(static e => new
