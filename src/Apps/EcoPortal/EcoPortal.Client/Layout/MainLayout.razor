@@ -36,15 +36,10 @@
             </div>
         </MudHidden>
 
-        @* Desktop: Logo + Page Title *@
+        @* Desktop: Logo *@
         <MudHidden Breakpoint="Breakpoint.SmAndDown">
             <div class="d-flex align-center">
                 <span class="logo-text">Ecoportal</span>
-                @if (!IsHomePage && _title is not null)
-                {
-                    <MudDivider Vertical="true" FlexItem="true" Class="mx-4 my-3" />
-                    <span class="logo-text">@_title</span>
-                }
             </div>
         </MudHidden>
 
