@@ -1,5 +1,4 @@
 using EcoData.Sensors.Contracts.Dtos;
-using EcoData.Sensors.Contracts.Parameters;
 
 namespace EcoData.Sensors.DataAccess.Interfaces;
 
@@ -7,12 +6,11 @@ public interface ISurfaceWaterRepository
 {
     Task<SurfaceWaterSummaryDto> GetSummaryAsync(CancellationToken cancellationToken = default);
 
-    IAsyncEnumerable<SurfaceWaterStationDto> GetStationsAsync(
-        SurfaceWaterStationParameters parameters,
+    Task<List<SurfaceWaterStationDto>> GetSortedStationsAsync(
         CancellationToken cancellationToken = default
     );
 
-    IAsyncEnumerable<SurfaceWaterStationMarkerDto> GetMarkersAsync(
+    Task<List<SurfaceWaterStationMarkerDto>> GetMarkersAsync(
         CancellationToken cancellationToken = default
     );
 }

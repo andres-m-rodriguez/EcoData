@@ -1,6 +1,4 @@
-using System.Runtime.CompilerServices;
 using EcoData.Sensors.Contracts.Dtos;
-using EcoData.Sensors.Contracts.Parameters;
 using EcoData.Sensors.DataAccess.Interfaces;
 using EcoData.Sensors.Database;
 using Microsoft.EntityFrameworkCore;
@@ -13,6 +11,7 @@ public sealed class SurfaceWaterRepository(IDbContextFactory<SensorsDbContext> c
     private const string StreamflowCode = "00060";
     private const string GageHeightCode = "00065";
     private const string PrecipitationCode = "00045";
+    private const int SparklineSize = 12;
 
     private static readonly string[] SurfaceWaterCodes =
         [StreamflowCode, GageHeightCode, PrecipitationCode];
@@ -76,34 +75,8 @@ public sealed class SurfaceWaterRepository(IDbContextFactory<SensorsDbContext> c
         );
     }
 
-    public async IAsyncEnumerable<SurfaceWaterStationDto> GetStationsAsync(
-        SurfaceWaterStationParameters parameters,
-        [EnumeratorCancellation] CancellationToken cancellationToken = default
-    )
-    {
-        // The full list is materialized + sorted on every request. The slice below
-        // is what actually goes over the wire; DB cost stays the same per request.
-        // For larger station counts, swap this for a snapshot table populated by a worker.
-        var sorted = await ComputeSortedStationsAsync(sparklineSize: 12, cancellationToken);
-
-        var startIndex = 0;
-        if (parameters.Cursor.HasValue)
-        {
-            var idx = sorted.FindIndex(s => s.SensorId == parameters.Cursor.Value);
-            startIndex = idx >= 0 ? idx + 1 : 0;
-        }
-
-        var pageSize = parameters.PageSize > 0 ? parameters.PageSize : 50;
-        var end = Math.Min(sorted.Count, startIndex + pageSize);
-        for (var i = startIndex; i < end; i++)
-        {
-            cancellationToken.ThrowIfCancellationRequested();
-            yield return sorted[i] with { Rank = i + 1 };
-        }
-    }
-
-    public async IAsyncEnumerable<SurfaceWaterStationMarkerDto> GetMarkersAsync(
-        [EnumeratorCancellation] CancellationToken cancellationToken = default
+    public async Task<List<SurfaceWaterStationMarkerDto>> GetMarkersAsync(
+        CancellationToken cancellationToken = default
     )
     {
         await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
@@ -118,7 +91,7 @@ public sealed class SurfaceWaterRepository(IDbContextFactory<SensorsDbContext> c
 
         if (sensorIds.Count == 0)
         {
-            yield break;
+            return [];
         }
 
         var rows = await context.Sensors
@@ -154,44 +127,30 @@ public sealed class SurfaceWaterRepository(IDbContextFactory<SensorsDbContext> c
             })
             .ToListAsync(cancellationToken);
 
-        var ordered = rows
-            .Select(r => new
+        return rows
+            .Select(r =>
             {
-                r.Id,
-                r.Name,
-                r.ExternalId,
-                r.MunicipalityId,
-                r.Latitude,
-                r.Longitude,
-                r.LatestFlow,
-                r.LatestGage,
-                LatestRecordedAt = MaxNullable(r.LatestFlowAt, r.LatestGageAt),
-                Status = ResolveStatus(r.LatestFlow, MaxNullable(r.LatestFlowAt, r.LatestGageAt), dayAgo),
+                var latestRecorded = MaxNullable(r.LatestFlowAt, r.LatestGageAt);
+                return new SurfaceWaterStationMarkerDto(
+                    SensorId: r.Id,
+                    Name: r.Name,
+                    ExternalId: r.ExternalId,
+                    MunicipalityId: r.MunicipalityId,
+                    Latitude: r.Latitude,
+                    Longitude: r.Longitude,
+                    LatestStreamflowCfs: r.LatestFlow,
+                    LatestGageHeightFt: r.LatestGage,
+                    LatestRecordedAt: latestRecorded,
+                    Status: ResolveStatus(r.LatestFlow, latestRecorded, dayAgo)
+                );
             })
-            .OrderByDescending(r => r.LatestFlow ?? double.MinValue)
-            .ThenByDescending(r => r.Id);
-
-        foreach (var r in ordered)
-        {
-            cancellationToken.ThrowIfCancellationRequested();
-            yield return new SurfaceWaterStationMarkerDto(
-                SensorId: r.Id,
-                Name: r.Name,
-                ExternalId: r.ExternalId,
-                MunicipalityId: r.MunicipalityId,
-                Latitude: r.Latitude,
-                Longitude: r.Longitude,
-                LatestStreamflowCfs: r.LatestFlow,
-                LatestGageHeightFt: r.LatestGage,
-                LatestRecordedAt: r.LatestRecordedAt,
-                Status: r.Status
-            );
-        }
+            .OrderByDescending(r => r.LatestStreamflowCfs ?? double.MinValue)
+            .ThenByDescending(r => r.SensorId)
+            .ToList();
     }
 
-    private async Task<List<SurfaceWaterStationDto>> ComputeSortedStationsAsync(
-        int sparklineSize,
-        CancellationToken cancellationToken
+    public async Task<List<SurfaceWaterStationDto>> GetSortedStationsAsync(
+        CancellationToken cancellationToken = default
     )
     {
         await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
@@ -242,7 +201,7 @@ public sealed class SurfaceWaterRepository(IDbContextFactory<SensorsDbContext> c
                 Sparkline = context.Readings
                     .Where(r => r.SensorId == s.Id && r.Parameter == StreamflowCode)
                     .OrderByDescending(r => r.RecordedAt)
-                    .Take(sparklineSize)
+                    .Take(SparklineSize)
                     .Select(r => r.Value)
                     .ToList(),
             })
@@ -272,6 +231,7 @@ public sealed class SurfaceWaterRepository(IDbContextFactory<SensorsDbContext> c
             })
             .OrderByDescending(s => s.LatestStreamflowCfs ?? double.MinValue)
             .ThenByDescending(s => s.SensorId)
+            .Select((s, i) => s with { Rank = i + 1 })
             .ToList();
     }
 
