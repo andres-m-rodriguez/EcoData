@@ -11,6 +11,13 @@ permissions:
   id-token: write
   contents: read
 
+# All runs deploy into the same resource group; overlapping runs race on ARM
+# updates to shared resources (e.g. Log Analytics "Workspace cannot be updated
+# while current provisioning state is not Succeeded"), so queue them instead.
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
 env:
   AZURE_CLIENT_ID: ${{ vars.AZURE_CLIENT_ID }}
   AZURE_TENANT_ID: ${{ vars.AZURE_TENANT_ID }}
