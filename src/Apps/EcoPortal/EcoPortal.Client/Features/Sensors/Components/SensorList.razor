@@ -3,13 +3,13 @@
 @using EcoData.Sensors.Application.Client
 @using EcoPortal.Client.Features.Sensors.Dialogs
 @using EcoData.Common.Pagination.Blazor
-@using BlazingSingularity.Signals
+@inherits StatefulComponent
 @inject ISensorHttpClient SensorClient
 @inject IDialogService DialogService
 
 @if (ShowFilters)
 {
-    <SearchHeader SearchSignal="SearchTextSignal" Placeholder="Search sensors..." ShowFilterButton="true"
+    <SearchHeader @bind-Value="SearchTextState.Value" Placeholder="Search sensors..." ShowFilterButton="true"
                   HasActiveFilters="HasNonSearchFilters" OnFilterClick="OpenFilterDialog" />
 }
 
@@ -84,10 +84,10 @@
 @code {
     private EcoDataVirtualizedList<SensorDtoForList, SensorParameters>? _virtualizedList;
 
-    [Signal]
+    [Reactive]
     private string? _searchText;
 
-    [Signal]
+    [Reactive]
     private SensorStatusFilter _statusFilter = SensorStatusFilter.All;
 
     [Parameter]
@@ -108,20 +108,20 @@
     [Parameter]
     public EventCallback<SensorDtoForList> OnSensorClick { get; set; }
 
-    private bool HasActiveFilters => !string.IsNullOrWhiteSpace(SearchText) || StatusFilter != SensorStatusFilter.All;
-    private bool HasNonSearchFilters => StatusFilter != SensorStatusFilter.All;
+    private bool HasActiveFilters => !string.IsNullOrWhiteSpace(_searchText) || _statusFilter != SensorStatusFilter.All;
+    private bool HasNonSearchFilters => _statusFilter != SensorStatusFilter.All;
 
-    protected override void OnInitialized()
-    {
-        SearchTextSignal.OnChange(_ => _virtualizedList?.Refresh());
-        StatusFilterSignal.OnChange(_ => _virtualizedList?.Refresh());
-    }
+    [OnChanged]
+    private void OnSearchTextChanged(string? value) => _virtualizedList?.Refresh();
+
+    [OnChanged]
+    private void OnStatusFilterChanged(SensorStatusFilter value) => _virtualizedList?.Refresh();
 
     private async Task OpenFilterDialog()
     {
         var parameters = new DialogParameters<SensorFilterDialog>
         {
-            { x => x.StatusFilter, StatusFilter }
+            { x => x.StatusFilter, _statusFilter }
         };
 
         var options = new DialogOptions
@@ -136,7 +136,7 @@
 
         if (result is { Canceled: false, Data: SensorStatusFilter filter })
         {
-            StatusFilter = filter;
+            StatusFilterState.Value = filter;
         }
     }
 
@@ -145,8 +145,8 @@
         return new SensorParameters(
             PageSize: 50,
             Cursor: cursor,
-            Search: string.IsNullOrWhiteSpace(SearchText) ? null : SearchText,
-            IsActive: StatusFilter switch
+            Search: string.IsNullOrWhiteSpace(_searchText) ? null : _searchText,
+            IsActive: _statusFilter switch
             {
                 SensorStatusFilter.Active => true,
                 SensorStatusFilter.Inactive => false,
@@ -164,8 +164,8 @@ cancellationToken)
 
     private void ClearFilters()
     {
-        SearchText = null;
-        StatusFilter = SensorStatusFilter.All;
+        SearchTextState.Value = null;
+        StatusFilterState.Value = SensorStatusFilter.All;
     }
 
     private async Task HandleClick(SensorDtoForList sensor)

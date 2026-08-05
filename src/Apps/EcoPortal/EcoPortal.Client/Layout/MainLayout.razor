@@ -1,6 +1,4 @@
-@inherits LayoutComponentBase
-@using BlazingSingularity
-@using BlazingSingularity.Commands
+@inherits StatefulLayoutComponent
 @using EcoPortal.Client.Components
 @using EcoPortal.Client.Pages
 @using EcoPortal.Client.Services
@@ -10,7 +8,6 @@
 @inject INativeNavbarManager Navbar
 @inject ITabNavigationService Tabs
 @inject NotificationService NotificationService
-@implements IAsyncDisposable
 
 <MudThemeProvider Theme="AppThemes.Azure" IsDarkMode="_isDarkMode" />
 <MudPopoverProvider />
@@ -208,6 +205,11 @@
 </MudHidden>
 
 @code {
+    /// <summary>The signed-in user changed (login, logout, profile update).
+    /// Published by <see cref="AuthStateService"/>; anyone showing auth-derived
+    /// chrome reacts through this record.</summary>
+    public sealed record AuthChanged;
+
     private bool _isDarkMode;
     private string _pageTransitionClass = "";
     private string _navigationKey = Guid.NewGuid().ToString();
@@ -231,7 +233,6 @@
 
     protected override async Task OnInitializedAsync()
     {
-        AuthState.OnAuthStateChanged += HandleAuthStateChanged;
         Navigation.OnStateChanged += HandleNavigationStateChanged;
         Navbar.OnStateChanged += HandleNavbarStateChanged;
         await AuthState.InitializeAsync();
@@ -242,16 +243,13 @@
         }
     }
 
-    private void HandleAuthStateChanged()
+    [Event]
+    private async Task OnAuthChanged(AuthChanged _)
     {
-        InvokeAsync(async () =>
+        if (AuthState.IsAuthenticated)
         {
-            if (AuthState.IsAuthenticated)
-            {
-                await NotificationService.InitializeAsync();
-            }
-            StateHasChanged();
-        });
+            await NotificationService.InitializeAsync();
+        }
     }
 
     private void HandleNavigationStateChanged()
@@ -309,7 +307,7 @@
         Tabs.NavigateToTab(tab);
     }
 
-    [RelayCommand]
+    [Command]
     private async Task Logout()
     {
         await AuthState.LogoutAsync();
@@ -317,14 +315,13 @@
 
     private async Task LogoutAsync()
     {
-        await LogoutCommand.ExecuteAsync();
+        await LogoutState.Execute();
     }
 
-    public ValueTask DisposeAsync()
+    public override void Dispose()
     {
-        AuthState.OnAuthStateChanged -= HandleAuthStateChanged;
         Navigation.OnStateChanged -= HandleNavigationStateChanged;
         Navbar.OnStateChanged -= HandleNavbarStateChanged;
-        return ValueTask.CompletedTask;
+        base.Dispose();
     }
 }

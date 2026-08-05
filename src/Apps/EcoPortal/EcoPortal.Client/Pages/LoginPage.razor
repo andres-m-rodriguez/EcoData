@@ -1,10 +1,9 @@
 @page "/login"
 @layout AuthLayout
+@inherits StatefulComponent
 @using EcoPortal.Client.Layout
 @using EcoPortal.Client.Services
 @using EcoData.Identity.Contracts.Requests
-@using BlazingSingularity
-@using BlazingSingularity.Commands
 @inject AuthStateService AuthState
 @inject INativeNavigationManager Navigation
 
@@ -19,7 +18,7 @@
 
 <MudText Typo="Typo.h5" Align="Align.Center" Class="mb-4">Welcome Back</MudText>
 
-<EditForm Model="_model" OnValidSubmit="() => LoginCommand.ExecuteAsync()">
+<EditForm Model="_model" OnValidSubmit="HandleSubmit">
     <DataAnnotationsValidator />
 
     <MudStack Spacing="3">
@@ -32,7 +31,7 @@
                       Variant="Variant.Outlined"
                       Required="true"
                       RequiredError="Email is required"
-                      Disabled="LoginCommand.IsLoading" />
+                      Disabled="LoginState.IsLoading" />
 
         <MudTextField @bind-Value="_model.Password"
                       Label="Password"
@@ -45,20 +44,20 @@
                       Variant="Variant.Outlined"
                       Required="true"
                       RequiredError="Password is required"
-                      Disabled="LoginCommand.IsLoading" />
+                      Disabled="LoginState.IsLoading" />
 
         <MudCheckBox @bind-Value="_model.RememberMe"
                      Label="Remember me"
                      Color="Color.Primary"
                      Dense="true"
-                     Disabled="LoginCommand.IsLoading" />
+                     Disabled="LoginState.IsLoading" />
 
         <MudButton ButtonType="ButtonType.Submit"
                    Variant="Variant.Filled"
                    Color="Color.Primary"
                    FullWidth="true"
-                   Disabled="LoginCommand.IsLoading">
-            @if (LoginCommand.IsLoading)
+                   Disabled="LoginState.IsLoading">
+            @if (LoginState.IsLoading)
             {
                 <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
                 <span>Signing in...</span>
@@ -86,7 +85,16 @@
     [SupplyParameterFromQuery]
     public string? ReturnUrl { get; set; }
 
-    [RelayCommand]
+    private async Task HandleSubmit()
+    {
+        await LoginState.TryExecute();
+        if (LoginState.IsError)
+        {
+            _errorMessage = "Something went wrong while signing in. Please try again.";
+        }
+    }
+
+    [Command]
     private async Task Login()
     {
         _errorMessage = null;

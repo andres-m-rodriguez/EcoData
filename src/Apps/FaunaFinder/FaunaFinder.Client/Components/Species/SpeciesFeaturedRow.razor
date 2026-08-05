@@ -2,7 +2,6 @@
 @inherits LocalizedComponentBase
 @using EcoData.Wildlife.Contracts.Dtos
 @using EcoData.Wildlife.Application.Client
-@using BlazingSingularity.Fetch
 @inject ISpeciesHttpClient SpeciesClient
 
 @if (_loadError is not null)
@@ -15,7 +14,7 @@
         <MudAlert Severity="Severity.Error">@_loadError</MudAlert>
     </section>
 }
-else if (_fetch is null || _fetch.IsLoading)
+else if (LoadFeaturedState.Result is null)
 {
     <section class="ff-featured">
         <div class="ff-featured-head">
@@ -29,7 +28,7 @@ else if (_fetch is null || _fetch.IsLoading)
         </div>
     </section>
 }
-else if (_fetch.Data is { Count: > 0 } featured)
+else if (LoadFeaturedState.Result is { Count: > 0 } featured)
 {
     <section class="ff-featured">
         <div class="ff-featured-head">
@@ -51,36 +50,6 @@ else if (_fetch.Data is { Count: > 0 } featured)
 @code {
     [Parameter] public EventCallback<SpeciesDtoForList> OnSpeciesClick { get; set; }
 
-    private IFetch<IReadOnlyList<SpeciesDtoForList>>? _fetch;
-    private string? _loadError;
-
-    protected override void OnInitialized()
-    {
-        base.OnInitialized();
-        _fetch = new Fetch<IReadOnlyList<SpeciesDtoForList>>(
-            async ct =>
-            {
-                var result = await SpeciesClient.GetFeaturedAsync(ct);
-                if (result.TryPickT0(out var featured, out var error))
-                {
-                    _loadError = null;
-                    return featured;
-                }
-                _loadError = error.StatusCode == 0
-                    ? "Couldn't reach the server."
-                    : error.Message ?? "Something went wrong while loading featured species.";
-                return [];
-            },
-            () => InvokeAsync(StateHasChanged));
-        _ = _fetch.FetchAsync();
-    }
-
     private Task HandleClick(SpeciesDtoForList species) =>
         OnSpeciesClick.InvokeAsync(species);
-
-    public override void Dispose()
-    {
-        base.Dispose();
-        (_fetch as IDisposable)?.Dispose();
-    }
 }

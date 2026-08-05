@@ -2,17 +2,18 @@
 @using EcoData.Sensors.Contracts.Dtos
 @using EcoData.Sensors.Application.Client
 @using EcoPortal.Client.Components
+@inherits StatefulComponent
 @inject ISensorAlertHttpClient AlertClient
 @inject INativeNavigationManager Navigation
 
 <PageTitle>Alert Details - EcoData</PageTitle>
 
 <NuiPageLayout Title="Alert Details" ParentPath="/alerts">
-        @if (_loading)
+        @if (LoadAlertState.IsLoading)
         {
             <MudProgressCircular Color="Color.Primary" Indeterminate />
         }
-        else if (_alert is null)
+        else if (Alert is null)
         {
             <MudStack AlignItems="AlignItems.Center" Class="pa-8" Spacing="2">
                 <MudIcon Icon="@Icons.Material.Filled.Warning" Size="Size.Large" Color="Color.Secondary" />
@@ -25,11 +26,11 @@
                 <div class="alert-detail-header">
                     <div class="alert-type-badge">
                         <MudChip T="string" Size="Size.Medium" Color="@GetAlertColor()" Variant="Variant.Filled">
-                            @_alert.AlertType
+                            @Alert.AlertType
                         </MudChip>
                     </div>
-                    <h1 class="alert-sensor-name">@_alert.SensorName</h1>
-                    <p class="alert-message">@_alert.Message</p>
+                    <h1 class="alert-sensor-name">@Alert.SensorName</h1>
+                    <p class="alert-message">@Alert.Message</p>
                 </div>
 
                 <MudDivider Class="my-4" />
@@ -39,13 +40,13 @@
                         <tbody>
                             <tr>
                                 <td><strong>Alert ID</strong></td>
-                                <td><code>@_alert.Id</code></td>
+                                <td><code>@Alert.Id</code></td>
                             </tr>
                             <tr>
                                 <td><strong>Sensor</strong></td>
                                 <td>
-                                    <MudLink Href="@($"/sensor/{_alert.SensorId}")">
-                                        @_alert.SensorName
+                                    <MudLink Href="@($"/sensor/{Alert.SensorId}")">
+                                        @Alert.SensorName
                                     </MudLink>
                                 </td>
                             </tr>
@@ -53,22 +54,22 @@
                                 <td><strong>Alert Type</strong></td>
                                 <td>
                                     <MudIcon Icon="@GetAlertIcon()" Color="@GetAlertColor()" Size="Size.Small" Class="mr-1" />
-                                    @_alert.AlertType
+                                    @Alert.AlertType
                                 </td>
                             </tr>
                             <tr>
                                 <td><strong>Triggered At</strong></td>
-                                <td>@_alert.TriggeredAt.LocalDateTime.ToString("MMMM dd, yyyy 'at' HH:mm:ss")</td>
+                                <td>@Alert.TriggeredAt.LocalDateTime.ToString("MMMM dd, yyyy 'at' HH:mm:ss")</td>
                             </tr>
                             <tr>
                                 <td><strong>Status</strong></td>
                                 <td>
-                                    @if (_alert.ResolvedAt.HasValue)
+                                    @if (Alert.ResolvedAt.HasValue)
                                     {
                                         <MudChip T="string" Size="Size.Small" Color="Color.Success" Variant="Variant.Outlined">
                                             Resolved
                                         </MudChip>
-                                        <span class="ml-2">@_alert.ResolvedAt.Value.LocalDateTime.ToString("MMMM dd, yyyy 'at' HH:mm:ss")</span>
+                                        <span class="ml-2">@Alert.ResolvedAt.Value.LocalDateTime.ToString("MMMM dd, yyyy 'at' HH:mm:ss")</span>
                                     }
                                     else
                                     {
@@ -78,11 +79,11 @@
                                     }
                                 </td>
                             </tr>
-                            @if (_alert.ResolvedAt.HasValue)
+                            @if (Alert.ResolvedAt.HasValue)
                             {
                                 <tr>
                                     <td><strong>Duration</strong></td>
-                                    <td>@FormatDuration(_alert.TriggeredAt, _alert.ResolvedAt.Value)</td>
+                                    <td>@FormatDuration(Alert.TriggeredAt, Alert.ResolvedAt.Value)</td>
                                 </tr>
                             }
                         </tbody>
@@ -102,31 +103,30 @@
 </NuiPageLayout>
 
 @code {
-    private SensorHealthAlertDtoForDetail? _alert;
-    private bool _loading = true;
-
     [Parameter]
     public Guid AlertId { get; set; }
 
-    protected override async Task OnInitializedAsync()
+    private SensorHealthAlertDtoForDetail? Alert => LoadAlertState.Result;
+
+    [Command, RunOnLoad]
+    private async Task<SensorHealthAlertDtoForDetail?> LoadAlert()
     {
         var result = await AlertClient.GetAlertByIdAsync(AlertId);
-        result.Switch(
-            alert => _alert = alert,
-            _ => _alert = null
+        return result.Match<SensorHealthAlertDtoForDetail?>(
+            alert => alert,
+            _ => null
         );
-        _loading = false;
     }
 
     private void NavigateToSensor()
     {
-        if (_alert is not null)
+        if (Alert is not null)
         {
-            Navigation.NavigateTo($"/sensor/{_alert.SensorId}");
+            Navigation.NavigateTo($"/sensor/{Alert.SensorId}");
         }
     }
 
-    private Color GetAlertColor() => _alert?.AlertType switch
+    private Color GetAlertColor() => Alert?.AlertType switch
     {
         "Stale" => Color.Warning,
         "Unhealthy" => Color.Error,
@@ -134,7 +134,7 @@
         _ => Color.Default
     };
 
-    private string GetAlertIcon() => _alert?.AlertType switch
+    private string GetAlertIcon() => Alert?.AlertType switch
     {
         "Stale" => Icons.Material.Filled.Schedule,
         "Unhealthy" => Icons.Material.Filled.Error,

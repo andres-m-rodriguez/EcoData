@@ -7,7 +7,7 @@
 @using EcoPortal.Client.Components
 @using EcoPortal.Client.Services
 @using EcoPortal.Client.Features.Organizations.Components
-@using BlazingSingularity.Commands
+@inherits StatefulComponent
 @inject IOrganizationHttpClient OrganizationClient
 @inject INativeNavigationManager Navigation
 @inject ISnackbar Snackbar
@@ -16,7 +16,7 @@
 <PageTitle>Edit Organization - EcoData</PageTitle>
 
 <NuiPageLayout Title="Edit Organization" ParentPath="@($"/organizations/{Id}")">
-        @if (LoadCommand.IsLoading)
+        @if (LoadState.IsLoading)
         {
             <MudPaper Elevation="1" Class="pa-6 rounded-lg">
                 <MudSkeleton Width="200px" Height="32px" />
@@ -39,7 +39,7 @@
         {
             <MudPaper Elevation="1" Class="pa-6 rounded-lg">
                 <OrganizationForm Model="_model" SubmitButtonText="Save Changes" ErrorMessage="@_errorMessage"
-                                  IsLoading="SaveCommand.IsLoading" OnSubmit="HandleSubmit" OnCancel="NavigateToDetails" />
+                                  IsLoading="SaveState.IsLoading" OnSubmit="HandleSubmit" OnCancel="NavigateToDetails" />
             </MudPaper>
         }
 </NuiPageLayout>
@@ -52,15 +52,10 @@
     private readonly OrganizationForm.OrganizationFormModel _model = new();
     private string? _errorMessage;
 
-    protected override async Task OnInitializedAsync()
+    [Command, RunOnLoad]
+    private async Task Load(CancellationToken ct)
     {
-        await LoadCommand.ExecuteAsync();
-    }
-
-    [RelayCommand]
-    private async Task Load()
-    {
-        var result = await OrganizationClient.GetByIdAsync(Id);
+        var result = await OrganizationClient.GetByIdAsync(Id, ct);
         result.Switch(
             organization =>
             {
@@ -87,10 +82,10 @@
 
     private async Task HandleSubmit(OrganizationForm.OrganizationFormModel model)
     {
-        await SaveCommand.ExecuteAsync();
+        await SaveState.Execute();
     }
 
-    [RelayCommand]
+    [Command]
     private async Task Save()
     {
         _errorMessage = null;

@@ -5,8 +5,11 @@ using EcoData.Wildlife.Application.Client;
 using FaunaFinder.Client.Localization;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using MudBlazor.Services;
+using Tempest;
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
+
+builder.Services.AddTempest();
 
 var baseAddress = new Uri(builder.HostEnvironment.BaseAddress);
 

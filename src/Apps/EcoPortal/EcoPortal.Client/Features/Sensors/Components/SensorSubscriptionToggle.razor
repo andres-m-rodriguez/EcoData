@@ -2,6 +2,7 @@
 @using EcoData.Sensors.Contracts.Dtos
 @using EcoPortal.Client.Services
 @using EcoPortal.Client.Features.Sensors.Dialogs
+@inherits StatefulComponent
 @inject IUserSubscriptionHttpClient SubscriptionClient
 @inject AuthStateService AuthState
 @inject IDialogService DialogService
@@ -10,7 +11,7 @@
 @if (AuthState.IsAuthenticated && HealthMonitoringEnabled)
 {
     <div class="subscription-toggle">
-        @if (_isLoading)
+        @if (LoadSubscriptionState.IsLoading)
         {
             <MudProgressCircular Size="Size.Small" Indeterminate="true" />
         }
@@ -30,9 +31,9 @@
                        Color="Color.Primary"
                        Size="Size.Small"
                        StartIcon="@Icons.Material.Outlined.NotificationAdd"
-                       OnClick="SubscribeAsync"
-                       Disabled="_isSubscribing">
-                @if (_isSubscribing)
+                       OnClick="() => SubscribeState.Execute()"
+                       Disabled="SubscribeState.IsLoading">
+                @if (SubscribeState.IsLoading)
                 {
                     <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
                 }
@@ -50,44 +51,26 @@
     public bool HealthMonitoringEnabled { get; set; }
 
     private UserSensorSubscriptionDto? _subscription;
-    private bool _isLoading = true;
-    private bool _isSubscribing;
-
-    protected override async Task OnInitializedAsync()
-    {
-        if (AuthState.IsAuthenticated && HealthMonitoringEnabled)
-        {
-            await LoadSubscriptionAsync();
-        }
-        else
-        {
-            _isLoading = false;
-        }
-    }
 
     protected override async Task OnParametersSetAsync()
     {
         if (AuthState.IsAuthenticated && HealthMonitoringEnabled)
         {
-            await LoadSubscriptionAsync();
+            await LoadSubscriptionState.TryExecute();
         }
     }
 
-    private async Task LoadSubscriptionAsync()
+    [Command]
+    private async Task LoadSubscription(CancellationToken ct)
     {
-        _isLoading = true;
-
         // A 404 means "not subscribed"; any other failure also falls back to the subscribe button.
-        var result = await SubscriptionClient.GetSubscriptionAsync(SensorId);
+        var result = await SubscriptionClient.GetSubscriptionAsync(SensorId, ct);
         _subscription = result.TryPickT0(out var subscription, out _) ? subscription : null;
-
-        _isLoading = false;
     }
 
-    private async Task SubscribeAsync()
+    [Command]
+    private async Task Subscribe()
     {
-        _isSubscribing = true;
-
         var request = new UserSensorSubscriptionDtoForCreate(
             NotifyOnStale: true,
             NotifyOnUnhealthy: true,
@@ -105,8 +88,6 @@
         {
             Snackbar.Add(failure.Message ?? "Failed to subscribe", Severity.Error);
         }
-
-        _isSubscribing = false;
     }
 
     private async Task OpenPreferencesDialog()

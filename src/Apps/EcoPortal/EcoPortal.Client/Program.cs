@@ -11,8 +11,11 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using MudBlazor.Services;
+using Tempest;
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
+
+builder.Services.AddTempest();
 
 var baseAddress = new Uri(builder.HostEnvironment.BaseAddress);
 builder.Services.AddOrganizationClient(baseAddress);

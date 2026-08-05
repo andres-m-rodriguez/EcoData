@@ -2,7 +2,7 @@
 @using EcoData.Organization.Contracts.Dtos
 @using EcoData.Organization.Application.Client
 @using EcoPortal.Client.Features.Organizations.Authorization
-@using BlazingSingularity.Commands
+@inherits StatefulComponent
 @inject IOrganizationBlockedUserHttpClient BlockedUserClient
 @inject IDialogService DialogService
 @inject ISnackbar Snackbar
@@ -13,7 +13,7 @@
     <Authorized>
         <MudText Typo="Typo.h5" Class="mb-4">Blocked Users</MudText>
 
-        @if (LoadBlockedUsersCommand.IsLoading)
+        @if (LoadBlockedUsersState.IsLoading)
         {
             <MudPaper Elevation="1" Class="rounded-lg">
                 @for (var i = 0; i < 3; i++)
@@ -95,16 +95,11 @@
 
     private List<OrganizationBlockedUserDto> _blockedUsers = [];
 
-    protected override async Task OnInitializedAsync()
-    {
-        await LoadBlockedUsersCommand.ExecuteAsync();
-    }
-
-    [RelayCommand]
-    private async Task LoadBlockedUsers()
+    [Command, RunOnLoad]
+    private async Task LoadBlockedUsers(CancellationToken ct)
     {
         _blockedUsers.Clear();
-        await foreach (var blocked in BlockedUserClient.GetBlockedUsersAsync(OrganizationId))
+        await foreach (var blocked in BlockedUserClient.GetBlockedUsersAsync(OrganizationId, ct))
         {
             _blockedUsers.Add(blocked);
         }
@@ -130,7 +125,6 @@
                 {
                     Snackbar.Add($"{blocked.UserDisplayName} has been unblocked", Severity.Success);
                     _blockedUsers.Remove(blocked);
-                    StateHasChanged();
                 },
                 error => Snackbar.Add(error.Message ?? "Failed to unblock user", Severity.Error)
             );

@@ -5,6 +5,7 @@
 @using static EcoPortal.Client.Features.Sensors.Dialogs.ReadingFilterDialog
 @using EcoPortal.Client.Features.Sensors.Pages.SensorDetailPages.Components
 @using EcoPortal.Client.Components
+@inherits StatefulComponent
 @inject ISensorHttpClient SensorClient
 @inject ISensorReadingHttpClient ReadingClient
 @inject IDialogService DialogService
@@ -12,7 +13,7 @@
 <PageTitle>Sensor Readings - EcoData</PageTitle>
 
 <NuiPageLayout Title="Readings" ParentPath="@($"/sensor/{SensorId}")">
-        @if (_loading)
+        @if (LoadState.IsLoading)
         {
             <MudPaper Elevation="0" Class="pa-4 rounded-lg" Style="border: 1px solid var(--mud-palette-lines-default);">
                 <MudSkeleton Width="200px" Height="32px" Class="mb-4" />
@@ -58,7 +59,6 @@
     private SensorReadingsList? _readingsList;
     private SensorDtoForDetail? _sensor;
     private string? _loadError;
-    private bool _loading = true;
     private IReadOnlyList<string> _availableParameters = [];
 
     private string? _parameterFilter;
@@ -68,9 +68,10 @@
     [Parameter]
     public Guid SensorId { get; set; }
 
-    protected override async Task OnInitializedAsync()
+    [Command, RunOnLoad]
+    private async Task Load(CancellationToken ct)
     {
-        var sensorResult = await SensorClient.GetByIdAsync(SensorId);
+        var sensorResult = await SensorClient.GetByIdAsync(SensorId, ct);
         if (!sensorResult.TryPickT0(out var sensor, out var sensorError))
         {
             _sensor = null;
@@ -80,16 +81,14 @@
                 0 => "Couldn't reach the server.",
                 _ => sensorError.Message ?? "Couldn't load this sensor."
             };
-            _loading = false;
             return;
         }
 
         _sensor = sensor;
-        var parametersResult = await ReadingClient.GetReadingParametersAsync(SensorId);
+        var parametersResult = await ReadingClient.GetReadingParametersAsync(SensorId, ct);
         _availableParameters = parametersResult.TryPickT0(out var parameters, out _)
             ? parameters
             : [];
-        _loading = false;
     }
 
     private async Task OpenFilterDialog()

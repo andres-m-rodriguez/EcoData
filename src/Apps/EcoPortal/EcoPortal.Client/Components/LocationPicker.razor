@@ -1,14 +1,13 @@
+@inherits StatefulComponent
 @using EcoData.Locations.Contracts.Dtos
 @using EcoPortal.Client.Services
-@using BlazingSingularity.Commands
-@using BlazingSingularity.Signals
 @implements IAsyncDisposable
 @inject ILocationHttpClient LocationClient
 @inject ISnackbar Snackbar
 
 <MudStack Spacing="3">
     <MudStack Row="true" Spacing="2">
-        <MudNumericField Value="Latitude"
+        <MudNumericField Value="_latitude"
                          ValueChanged="@(async (decimal v) => await OnLatitudeChanged(v))"
                          Label="Latitude"
                          Min="-90"
@@ -20,7 +19,7 @@
                          Immediate="true"
                          Style="flex: 1;" />
 
-        <MudNumericField Value="Longitude"
+        <MudNumericField Value="_longitude"
                          ValueChanged="@(async (decimal v) => await OnLongitudeChanged(v))"
                          Label="Longitude"
                          Min="-180"
@@ -37,9 +36,9 @@
         <MudButton Variant="Variant.Text"
                    Size="Size.Small"
                    StartIcon="@Icons.Material.Filled.MyLocation"
-                   OnClick="() => GetCurrentLocationCommand.ExecuteAsync()"
-                   Disabled="IsLoading || GetCurrentLocationCommand.IsLoading">
-            @if (GetCurrentLocationCommand.IsLoading)
+                   OnClick="() => GetCurrentLocationState.Execute()"
+                   Disabled="IsLoading || GetCurrentLocationState.IsLoading">
+            @if (GetCurrentLocationState.IsLoading)
             {
                 <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
             }
@@ -53,30 +52,30 @@
                 ShowMarker="InitialLatitude != 0 && InitialLongitude != 0"
                 OnMapClick="OnMapClicked" />
 
-    @if (!string.IsNullOrEmpty(GeolocationError))
+    @if (!string.IsNullOrEmpty(_geolocationError))
     {
         <MudAlert Severity="Severity.Error" Variant="Variant.Outlined" Dense="true"
-                  ShowCloseIcon="true" CloseIconClicked="() => GeolocationError = null">
-            <MudText Typo="Typo.body2">@GeolocationError</MudText>
+                  ShowCloseIcon="true" CloseIconClicked="() => GeolocationErrorState.Value = null">
+            <MudText Typo="Typo.body2">@_geolocationError</MudText>
         </MudAlert>
     }
 
-    @if (ValidateLocationCommand.IsLoading)
+    @if (ValidateLocationState.IsLoading)
     {
         <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
             <MudProgressCircular Size="Size.Small" Indeterminate="true" />
             <MudText Typo="Typo.body2" Color="Color.Secondary">Validating location...</MudText>
         </MudStack>
     }
-    else if (Municipality is not null)
+    else if (_municipality is not null)
     {
         <MudAlert Severity="Severity.Success" Variant="Variant.Outlined" Dense="true">
             <MudText Typo="Typo.body2">
-                <strong>@Municipality.Name</strong>, @Municipality.StateName
+                <strong>@_municipality.Name</strong>, @_municipality.StateName
             </MudText>
         </MudAlert>
     }
-    else if (HasValidationError)
+    else if (_hasValidationError)
     {
         <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Dense="true">
             <MudText Typo="Typo.body2">
@@ -89,11 +88,11 @@
 @code {
     private LeafletMap? _map;
 
-    [Signal] private decimal _latitude;
-    [Signal] private decimal _longitude;
-    [Signal] private string? _geolocationError;
-    [Signal] private MunicipalityDtoForDetail? _municipality;
-    [Signal] private bool _hasValidationError;
+    [Reactive] private decimal _latitude;
+    [Reactive] private decimal _longitude;
+    [Reactive] private string? _geolocationError;
+    [Reactive] private MunicipalityDtoForDetail? _municipality;
+    [Reactive] private bool _hasValidationError;
 
     [Parameter] public decimal InitialLatitude { get; set; }
     [Parameter] public decimal InitialLongitude { get; set; }
@@ -102,55 +101,56 @@
 
     protected override void OnParametersSet()
     {
-        if (InitialLatitude != 0 && InitialLongitude != 0 && Latitude == 0 && Longitude == 0)
+        if (InitialLatitude != 0 && InitialLongitude != 0 && _latitude == 0 && _longitude == 0)
         {
-            Latitude = InitialLatitude;
-            Longitude = InitialLongitude;
+            // Programmatic seed from parameters; a render follows anyway.
+            LatitudeState.SetSilently(InitialLatitude);
+            LongitudeState.SetSilently(InitialLongitude);
         }
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (firstRender && Latitude != 0 && Longitude != 0)
+        if (firstRender && _latitude != 0 && _longitude != 0)
         {
-            await ValidateLocationCommand.ExecuteAsync();
+            await ValidateLocationState.Execute();
         }
     }
 
-    [RelayCommand]
+    [Command]
     private async Task GetCurrentLocation()
     {
         if (_map is null) return;
 
-        GeolocationError = null;
+        GeolocationErrorState.Value = null;
         var result = await _map.GetCurrentLocationAsync();
 
         if (result.Success && result.Latitude.HasValue && result.Longitude.HasValue)
         {
-            Latitude = (decimal)result.Latitude.Value;
-            Longitude = (decimal)result.Longitude.Value;
-            await ValidateLocationCommand.ExecuteAsync();
+            LatitudeState.Value = (decimal)result.Latitude.Value;
+            LongitudeState.Value = (decimal)result.Longitude.Value;
+            await ValidateLocationState.Execute();
         }
         else
         {
-            GeolocationError = result.Error ?? "Unable to get current location";
+            GeolocationErrorState.Value = result.Error ?? "Unable to get current location";
         }
     }
 
-    [RelayCommand]
+    [Command]
     private async Task ValidateLocation()
     {
-        HasValidationError = false;
-        Municipality = null;
+        HasValidationErrorState.Value = false;
+        MunicipalityState.Value = null;
 
-        var result = await LocationClient.GetMunicipalityByPointAsync(Latitude, Longitude);
+        var result = await LocationClient.GetMunicipalityByPointAsync(_latitude, _longitude);
         if (result.TryPickT0(out var municipality, out var error))
         {
-            Municipality = municipality;
+            MunicipalityState.Value = municipality;
         }
         else if (error.StatusCode == 404)
         {
-            HasValidationError = true;
+            HasValidationErrorState.Value = true;
         }
         else
         {
@@ -162,47 +162,51 @@
         }
 
         await OnLocationChanged.InvokeAsync(new LocationSelectedEventArgs(
-            Latitude,
-            Longitude,
-            Municipality
+            _latitude,
+            _longitude,
+            _municipality
         ));
     }
 
     private async Task OnMapClicked(MapClickEventArgs args)
     {
-        Latitude = (decimal)args.Latitude;
-        Longitude = (decimal)args.Longitude;
-        GeolocationError = null;
+        LatitudeState.Value = (decimal)args.Latitude;
+        LongitudeState.Value = (decimal)args.Longitude;
+        GeolocationErrorState.Value = null;
 
-        await ValidateLocationCommand.ExecuteAsync();
+        await ValidateLocationState.Execute();
     }
 
     private async Task OnLatitudeChanged(decimal value)
     {
-        Latitude = value;
+        LatitudeState.Value = value;
         await OnCoordinatesChanged();
     }
 
     private async Task OnLongitudeChanged(decimal value)
     {
-        Longitude = value;
+        LongitudeState.Value = value;
         await OnCoordinatesChanged();
     }
 
     private async Task OnCoordinatesChanged()
     {
-        if (Latitude < -90 || Latitude > 90 || Longitude < -180 || Longitude > 180)
+        if (_latitude < -90 || _latitude > 90 || _longitude < -180 || _longitude > 180)
             return;
 
-        if (Latitude != 0 && Longitude != 0 && _map is not null)
+        if (_latitude != 0 && _longitude != 0 && _map is not null)
         {
-            await _map.SetMarkerAsync((double)Latitude, (double)Longitude);
-            await ValidateLocationCommand.ExecuteAsync();
+            await _map.SetMarkerAsync((double)_latitude, (double)_longitude);
+            await ValidateLocationState.Execute();
         }
     }
 
     public async ValueTask DisposeAsync()
     {
+        // Blazor prefers async disposal when both are present; run the Tempest
+        // base cleanup here so bus subscriptions still unhook.
+        Dispose();
+
         if (_map is not null)
         {
             await _map.DisposeAsync();

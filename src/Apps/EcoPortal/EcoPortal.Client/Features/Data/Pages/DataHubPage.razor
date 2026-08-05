@@ -1,9 +1,9 @@
 @page "/data"
-@using BlazingSingularity.Fetch
 @using BlazorStaticNavigation
 @using EcoData.Common.Problems.Contracts
 @using EcoData.Sensors.Application.Client
 @using EcoData.Sensors.Contracts.Parameters
+@inherits StatefulComponent
 @inject INativeNavbarManager Navbar
 @inject ISensorHttpClient SensorClient
 @inject ISensorReadingHttpClient ReadingClient
@@ -31,24 +31,24 @@
                 <div class="hero-stats-k"><span class="pulse"></span>Updated · just now</div>
                 <div class="hs-item">
                     <span class="hs-label">Total readings</span>
-                    @if (_totalReadingsFetch.IsLoading)
+                    @if (LoadTotalReadingsState.IsLoading)
                     {
                         <MudSkeleton SkeletonType="SkeletonType.Text" Width="120px" Height="32px" />
                     }
                     else
                     {
-                        <span class="hs-val">@_totalReadingsFetch.Data.ToString("N0")</span>
+                        <span class="hs-val">@LoadTotalReadingsState.Result.ToString("N0")</span>
                     }
                 </div>
                 <div class="hs-item">
                     <span class="hs-label">Active sensors</span>
-                    @if (_activeSensorsFetch.IsLoading || _totalSensorsFetch.IsLoading)
+                    @if (LoadActiveSensorsState.IsLoading || LoadTotalSensorsState.IsLoading)
                     {
                         <MudSkeleton SkeletonType="SkeletonType.Text" Width="120px" Height="32px" />
                     }
                     else
                     {
-                        <span class="hs-val">@_activeSensorsFetch.Data.ToString("N0")<span class="u">/@_totalSensorsFetch.Data.ToString("N0")</span></span>
+                        <span class="hs-val">@LoadActiveSensorsState.Result.ToString("N0")<span class="u">/@LoadTotalSensorsState.Result.ToString("N0")</span></span>
                     }
                 </div>
                 <div class="hs-item"><span class="hs-label">Datasets published</span><span class="hs-val">1</span></div>
@@ -183,54 +183,48 @@
 </div>
 
 @code {
-    private IFetch<long> _totalReadingsFetch = default!;
-    private IFetch<int> _activeSensorsFetch = default!;
-    private IFetch<int> _totalSensorsFetch = default!;
     private string? _loadError;
 
     protected override void OnInitialized()
     {
+        base.OnInitialized();
         Navbar.SetTitle("Data");
+    }
 
-        _totalReadingsFetch = new Fetch<long>(
-            async ct =>
-            {
-                var result = await ReadingClient.GetTotalCountAsync(ct);
-                if (result.TryPickT0(out var count, out var error))
-                    return count;
-                SetLoadError(error, "Couldn't load reading count.");
-                return 0;
-            },
-            () => InvokeAsync(StateHasChanged)
-        );
+    [Command, RunOnLoad]
+    private async Task<long> LoadTotalReadings(CancellationToken ct)
+    {
+        var result = await ReadingClient.GetTotalCountAsync(ct);
+        if (!result.TryPickT0(out var count, out var error))
+        {
+            SetLoadError(error, "Couldn't load reading count.");
+            return 0;
+        }
+        return count;
+    }
 
-        _activeSensorsFetch = new Fetch<int>(
-            async ct =>
-            {
-                var result = await SensorClient.GetSensorCountAsync(new SensorParameters(IsActive: true), ct);
-                if (result.TryPickT0(out var count, out var error))
-                    return count;
-                SetLoadError(error, "Couldn't load active sensor count.");
-                return 0;
-            },
-            () => InvokeAsync(StateHasChanged)
-        );
+    [Command, RunOnLoad]
+    private async Task<int> LoadActiveSensors(CancellationToken ct)
+    {
+        var result = await SensorClient.GetSensorCountAsync(new SensorParameters(IsActive: true), ct);
+        if (!result.TryPickT0(out var count, out var error))
+        {
+            SetLoadError(error, "Couldn't load active sensor count.");
+            return 0;
+        }
+        return count;
+    }
 
-        _totalSensorsFetch = new Fetch<int>(
-            async ct =>
-            {
-                var result = await SensorClient.GetSensorCountAsync(new SensorParameters(), ct);
-                if (result.TryPickT0(out var count, out var error))
-                    return count;
-                SetLoadError(error, "Couldn't load total sensor count.");
-                return 0;
-            },
-            () => InvokeAsync(StateHasChanged)
-        );
-
-        _ = _totalReadingsFetch.FetchAsync();
-        _ = _activeSensorsFetch.FetchAsync();
-        _ = _totalSensorsFetch.FetchAsync();
+    [Command, RunOnLoad]
+    private async Task<int> LoadTotalSensors(CancellationToken ct)
+    {
+        var result = await SensorClient.GetSensorCountAsync(new SensorParameters(), ct);
+        if (!result.TryPickT0(out var count, out var error))
+        {
+            SetLoadError(error, "Couldn't load total sensor count.");
+            return 0;
+        }
+        return count;
     }
 
     private void SetLoadError(RequestFailed error, string fallback)

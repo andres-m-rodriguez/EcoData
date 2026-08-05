@@ -3,7 +3,7 @@
 @using EcoData.Organization.Application.Client
 @using EcoPortal.Client.Components
 @using EcoPortal.Client.Features.Organizations.Components
-@using BlazingSingularity.Commands
+@inherits StatefulComponent
 @inject IOrganizationHttpClient OrganizationClient
 @inject INativeNavigationManager Navigation
 @inject ISnackbar Snackbar
@@ -13,7 +13,7 @@
 <NuiPageLayout Title="Create Organization" ParentPath="/organizations/discover">
         <MudPaper Elevation="1" Class="pa-6 rounded-lg">
             <OrganizationForm Model="_model" SubmitButtonText="Create" ErrorMessage="@_errorMessage"
-                              IsLoading="CreateCommand.IsLoading" OnSubmit="HandleSubmit" OnCancel="NavigateBack" />
+                              IsLoading="CreateState.IsLoading" OnSubmit="HandleSubmit" OnCancel="NavigateBack" />
         </MudPaper>
 </NuiPageLayout>
 
@@ -23,10 +23,10 @@
 
     private async Task HandleSubmit(OrganizationForm.OrganizationFormModel model)
     {
-        await CreateCommand.ExecuteAsync();
+        await CreateState.Execute();
     }
 
-    [RelayCommand]
+    [Command]
     private async Task Create()
     {
         _errorMessage = null;

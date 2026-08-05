@@ -7,8 +7,8 @@
 @using EcoData.Locations.Contracts.Dtos
 @using EcoPortal.Client.Services
 @using EcoPortal.Client.Components
-@using BlazingSingularity.Commands
 @using SensorPermissions = EcoData.Sensors.Contracts.Permissions
+@inherits StatefulComponent
 @inject ISensorHttpClient SensorClient
 @inject ISensorHealthHttpClient HealthClient
 @inject IMunicipalityHttpClient MunicipalityClient
@@ -20,7 +20,7 @@
 <PageTitle>Configure Sensor - EcoData</PageTitle>
 
 <NuiPageLayout Title="Configure Sensor" ParentPath="@($"/sensor/{SensorId}")">
-        @if (LoadCommand.IsLoading)
+        @if (LoadState.IsLoading)
         {
             <MudStack Spacing="4">
                 <MudPaper Elevation="0" Class="pa-6 rounded-lg border-solid border mud-border-lines-default">
@@ -146,7 +146,7 @@
                                 </MudText>
                                 <MudButton Variant="Variant.Filled" Color="Color.Primary"
                                            StartIcon="@Icons.Material.Filled.Add" OnClick="EnableHealthMonitoring"
-                                           Disabled="SaveCommand.IsLoading">
+                                           Disabled="SaveState.IsLoading">
                                     Enable Health Monitoring
                                 </MudButton>
                             </MudStack>
@@ -191,8 +191,8 @@
                             <MudStack Row="true" Justify="Justify.FlexEnd" Class="mt-6">
                                 <MudButton Variant="Variant.Filled" Color="Color.Primary"
                                            StartIcon="@Icons.Material.Filled.Save" OnClick="SaveHealthConfig"
-                                           Disabled="SaveCommand.IsLoading">
-                                    @if (SaveCommand.IsLoading)
+                                           Disabled="SaveState.IsLoading">
+                                    @if (SaveState.IsLoading)
                                     {
                                         <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
                                         @:Saving...
@@ -272,12 +272,7 @@
     [Parameter]
     public Guid SensorId { get; set; }
 
-    protected override async Task OnInitializedAsync()
-    {
-        await LoadCommand.ExecuteAsync();
-    }
-
-    [RelayCommand]
+    [Command, RunOnLoad]
     private async Task Load()
     {
         var sensorResult = await SensorClient.GetByIdAsync(SensorId);
@@ -381,10 +376,10 @@
 
     private async Task SaveHealthConfig()
     {
-        await SaveCommand.ExecuteAsync();
+        await SaveState.Execute();
     }
 
-    [RelayCommand]
+    [Command]
     private async Task Save()
     {
         _errorMessage = null;

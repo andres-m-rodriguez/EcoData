@@ -4,12 +4,11 @@
 @using EcoData.Locations.Application.Client
 @using EcoData.Wildlife.Application.Client
 @using EcoData.Wildlife.Contracts.Dtos
-@using BlazingSingularity.Fetch
+@inherits StatefulComponent
 @inject IMunicipalityHttpClient MunicipalityHttpClient
 @inject ISpeciesHttpClient SpeciesHttpClient
 @inject NavigationManager NavigationManager
 @inject ILocalizer L
-@implements IDisposable
 
 <PageTitle>FaunaFinder — @L["Nav_Map"]</PageTitle>
 
@@ -21,7 +20,7 @@
                 <MudAlert Severity="Severity.Error">@_mapLoadError</MudAlert>
             </div>
         }
-        else if (_mapInitFetch.IsLoading)
+        else if (InitMapState.IsLoading)
         {
             <MudOverlay Visible="true" DarkBackground="false" Absolute="true" Class="map-loading-overlay" ZIndex="1000">
                 <MudStack AlignItems="AlignItems.Center">
@@ -42,8 +41,8 @@
         {
             <aside class="desktop-sidebar @(_sidebarOpen ? "open" : "")">
                 <MapSpeciesPanel Title="@_selectedMunicipality.Name"
-                                 IsLoading="@(_speciesFetch?.IsLoading is not false)"
-                                 Species="@_speciesFetch?.Data"
+                                 IsLoading="@(LoadSpeciesState.Result is null || LoadSpeciesState.IsLoading)"
+                                 Species="@LoadSpeciesState.Result"
                                  LoadError="@_speciesLoadError"
                                  OnClose="CloseSidebar"
                                  OnSpeciesClick="OnSpeciesClicked" />
@@ -58,8 +57,8 @@
             <div class="mobile-sheet-backdrop @(_sheetOpen ? "open" : "")" @onclick="CloseSheet"></div>
             <div class="mobile-sheet @(_sheetOpen ? "open" : "")">
                 <MapSpeciesPanel Title="@_selectedMunicipality.Name"
-                                 IsLoading="@(_speciesFetch?.IsLoading is not false)"
-                                 Species="@_speciesFetch?.Data"
+                                 IsLoading="@(LoadSpeciesState.Result is null || LoadSpeciesState.IsLoading)"
+                                 Species="@LoadSpeciesState.Result"
                                  LoadError="@_speciesLoadError"
                                  OnClose="CloseSheet"
                                  OnSpeciesClick="OnSpeciesClicked" />
@@ -74,30 +73,20 @@
     private bool _sheetOpen;
     private SelectedMunicipality? _selectedMunicipality;
 
-    private IFetch<bool> _mapInitFetch = default!;
-    private IFetch<IReadOnlyList<SpeciesDtoForList>>? _speciesFetch;
-
     private string? _mapLoadError;
     private string? _speciesLoadError;
 
     protected override void OnInitialized()
     {
+        base.OnInitialized();
         L.LanguageChanged += OnLanguageChanged;
         _mapController.OnGeoJsonClicked += OnGeoJsonClicked;
-        _mapInitFetch = new Fetch<bool>(
-            InitMapAsync,
-            () => InvokeAsync(StateHasChanged)
-        );
     }
 
     private void OnLanguageChanged() => InvokeAsync(StateHasChanged);
 
-    protected override async Task OnInitializedAsync()
-    {
-        await _mapInitFetch.FetchAsync();
-    }
-
-    private async Task<bool> InitMapAsync(CancellationToken ct)
+    [Command, RunOnLoad]
+    private async Task<bool> InitMap(CancellationToken ct)
     {
         var result = await MunicipalityHttpClient.GetGeoJsonByStateCodeAsync("PR", ct);
         if (!result.TryPickT0(out var geoJson, out var error))
@@ -156,25 +145,24 @@
         _selectedMunicipality = municipality;
         _sidebarOpen = true;
         _sheetOpen = true;
+        StateHasChanged();
 
-        (_speciesFetch as IDisposable)?.Dispose();
-        _speciesFetch = new Fetch<IReadOnlyList<SpeciesDtoForList>>(
-            async ct =>
-            {
-                var result = await SpeciesHttpClient.GetByMunicipalityAsync(municipality.Id, ct);
-                if (result.TryPickT0(out var species, out var error))
-                {
-                    _speciesLoadError = null;
-                    return species;
-                }
-                _speciesLoadError = error.StatusCode == 0
-                    ? "Couldn't reach the server."
-                    : error.Message ?? "Something went wrong while loading species.";
-                return [];
-            },
-            () => InvokeAsync(StateHasChanged)
-        );
-        await _speciesFetch.FetchAsync();
+        await LoadSpeciesState.TryExecute();
+    }
+
+    [Command]
+    private async Task<IReadOnlyList<SpeciesDtoForList>?> LoadSpecies(CancellationToken ct)
+    {
+        var result = await SpeciesHttpClient.GetByMunicipalityAsync(_selectedMunicipality!.Id, ct);
+        if (result.TryPickT0(out var species, out var error))
+        {
+            _speciesLoadError = null;
+            return species;
+        }
+        _speciesLoadError = error.StatusCode == 0
+            ? "Couldn't reach the server."
+            : error.Message ?? "Something went wrong while loading species.";
+        return [];
     }
 
     private sealed record SelectedMunicipality(Guid Id, string Name);
@@ -183,8 +171,6 @@
     {
         _sidebarOpen = false;
         _selectedMunicipality = null;
-        (_speciesFetch as IDisposable)?.Dispose();
-        _speciesFetch = null;
     }
 
     private async Task CloseSheet()
@@ -194,20 +180,17 @@
 
         await Task.Delay(300);
         _selectedMunicipality = null;
-        (_speciesFetch as IDisposable)?.Dispose();
-        _speciesFetch = null;
         StateHasChanged();
     }
 
     private void OnSpeciesClicked(SpeciesDtoForList species) =>
         NavigationManager.NavigateTo($"/species/{species.Id}");
 
-    public void Dispose()
+    public override void Dispose()
     {
         L.LanguageChanged -= OnLanguageChanged;
         _mapController.OnGeoJsonClicked -= OnGeoJsonClicked;
-        (_mapInitFetch as IDisposable)?.Dispose();
-        (_speciesFetch as IDisposable)?.Dispose();
+        base.Dispose();
     }
 
     public record MunicipalityMarker(

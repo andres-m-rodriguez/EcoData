@@ -1,8 +1,7 @@
-@using BlazingSingularity.Fetch
+@inherits StatefulComponent
 @using EcoData.Sensors.Application.Client
 @using EcoData.Sensors.Contracts.Dtos
 @using EcoPortal.Client.Features.Sensors.Components
-@implements IDisposable
 @inject ISensorHttpClient SensorClient
 @inject IUserSubscriptionHttpClient SubscriptionClient
 @inject INativeNavigationManager Navigation
@@ -11,7 +10,7 @@
     <div class="sensors-header">
         <MudText Typo="Typo.h6" Class="sensors-title">My Sensors</MudText>
         <span class="sensors-count">
-            @(_sensorsFetch?.Data?.Count ?? 0) Subscribed
+            @(LoadSensorsState.Result?.Count ?? 0) Subscribed
         </span>
     </div>
 
@@ -19,7 +18,7 @@
     {
         <MudAlert Severity="Severity.Error" Dense="true">@_loadError</MudAlert>
     }
-    else if (_sensorsFetch is null || _sensorsFetch.IsLoading)
+    else if (LoadSensorsState.Result is not { } sensors)
     {
         <div class="sensors-skeleton">
             @for (int i = 0; i < 3; i++)
@@ -28,7 +27,7 @@
             }
         </div>
     }
-    else if (_sensorsFetch.Data is { Count: 0 })
+    else if (sensors.Count == 0)
     {
         <div class="sensors-empty">
             <MudIcon Icon="@Icons.Material.Outlined.Sensors" Size="Size.Large" Class="sensors-empty-icon" />
@@ -44,7 +43,7 @@
     else
     {
         <div class="sensors-list">
-            @foreach (var sensor in _sensorsFetch.Data!)
+            @foreach (var sensor in sensors)
             {
                 <SensorListItem Sensor="sensor" OnClick="HandleSensorClick" />
             }
@@ -67,21 +66,11 @@
     [Parameter]
     public EventCallback<int> OnCountChanged { get; set; }
 
-    private IFetch<List<SensorDtoForList>> _sensorsFetch = default!;
     private bool _hasMore;
     private string? _loadError;
 
-    protected override async Task OnInitializedAsync()
-    {
-        _sensorsFetch = new Fetch<List<SensorDtoForList>>(
-            LoadAsync,
-            () => InvokeAsync(StateHasChanged)
-        );
-
-        await _sensorsFetch.FetchAsync();
-    }
-
-    private async Task<List<SensorDtoForList>> LoadAsync(CancellationToken ct)
+    [Command, RunOnLoad]
+    private async Task<List<SensorDtoForList>> LoadSensors(CancellationToken ct)
     {
         _loadError = null;
 
@@ -128,10 +117,5 @@
     {
         Navigation.NavigateTo($"/sensor/{sensor.Id}");
         return Task.CompletedTask;
-    }
-
-    public void Dispose()
-    {
-        (_sensorsFetch as IDisposable)?.Dispose();
     }
 }

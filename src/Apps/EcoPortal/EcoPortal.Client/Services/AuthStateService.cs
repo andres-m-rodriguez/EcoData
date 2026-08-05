@@ -4,11 +4,13 @@ using EcoData.Identity.Contracts.Authorization;
 using EcoData.Identity.Contracts.Errors;
 using EcoData.Identity.Contracts.Requests;
 using EcoData.Identity.Contracts.Responses;
+using EcoPortal.Client.Layout;
 using OneOf;
+using Tempest;
 
 namespace EcoPortal.Client.Services;
 
-public sealed class AuthStateService(IAuthHttpClient authClient)
+public sealed class AuthStateService(IAuthHttpClient authClient, IEventBus bus)
 {
     private UserInfo? _currentUser;
     private bool _isInitialized;
@@ -17,8 +19,6 @@ public sealed class AuthStateService(IAuthHttpClient authClient)
     public bool IsAuthenticated => _currentUser is not null;
     public bool IsInitialized => _isInitialized;
     public bool IsGlobalAdmin => _currentUser?.GlobalRole == GlobalRole.GlobalAdmin;
-
-    public event Action? OnAuthStateChanged;
 
     public async Task InitializeAsync()
     {
@@ -66,6 +66,6 @@ public sealed class AuthStateService(IAuthHttpClient authClient)
 
     private void NotifyStateChanged()
     {
-        OnAuthStateChanged?.Invoke();
+        bus.Publish<MainLayout.AuthChanged>();
     }
 }
