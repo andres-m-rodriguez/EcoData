@@ -56,7 +56,7 @@ public sealed class PermissionContextService(
 
         return result.Match(
             permissions => permissions,
-            error =>
+            _ =>
             {
                 // Don't cache failures — a later call should be able to retry.
                 _cache.Remove(organizationId);

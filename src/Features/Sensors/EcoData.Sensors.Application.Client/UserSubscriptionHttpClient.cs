@@ -51,7 +51,9 @@ public sealed class UserSubscriptionHttpClient(HttpClient httpClient) : IUserSub
             var result = await response.Content.ReadFromJsonAsync<UserSensorSubscriptionDto>(
                 cancellationToken
             );
-            return result!;
+            if (result is null)
+                return new RequestFailed((int)response.StatusCode, "The server returned an empty response.");
+            return result;
         }
         catch (HttpRequestException e)
         {
@@ -81,7 +83,9 @@ public sealed class UserSubscriptionHttpClient(HttpClient httpClient) : IUserSub
             var result = await response.Content.ReadFromJsonAsync<UserSensorSubscriptionDto>(
                 cancellationToken
             );
-            return result!;
+            if (result is null)
+                return new RequestFailed((int)response.StatusCode, "The server returned an empty response.");
+            return result;
         }
         catch (HttpRequestException e)
         {
@@ -111,7 +115,9 @@ public sealed class UserSubscriptionHttpClient(HttpClient httpClient) : IUserSub
             var result = await response.Content.ReadFromJsonAsync<UserSensorSubscriptionDto>(
                 cancellationToken
             );
-            return result!;
+            if (result is null)
+                return new RequestFailed((int)response.StatusCode, "The server returned an empty response.");
+            return result;
         }
         catch (HttpRequestException e)
         {

@@ -26,7 +26,9 @@ public sealed class SensorHealthHttpClient(HttpClient httpClient) : ISensorHealt
             var result = await response.Content.ReadFromJsonAsync<SensorHealthSummaryDto>(
                 cancellationToken
             );
-            return result!;
+            if (result is null)
+                return new RequestFailed((int)response.StatusCode, "The server returned an empty response.");
+            return result;
         }
         catch (HttpRequestException e)
         {
@@ -70,7 +72,9 @@ public sealed class SensorHealthHttpClient(HttpClient httpClient) : ISensorHealt
             var result = await response.Content.ReadFromJsonAsync<SensorHealthStatusDtoForDetail>(
                 cancellationToken
             );
-            return result!;
+            if (result is null)
+                return new RequestFailed((int)response.StatusCode, "The server returned an empty response.");
+            return result;
         }
         catch (HttpRequestException e)
         {
@@ -99,7 +103,9 @@ public sealed class SensorHealthHttpClient(HttpClient httpClient) : ISensorHealt
             var result = await response.Content.ReadFromJsonAsync<SensorHealthConfigDtoForDetail>(
                 cancellationToken
             );
-            return result!;
+            if (result is null)
+                return new RequestFailed((int)response.StatusCode, "The server returned an empty response.");
+            return result;
         }
         catch (HttpRequestException e)
         {
@@ -130,7 +136,9 @@ public sealed class SensorHealthHttpClient(HttpClient httpClient) : ISensorHealt
             var result = await response.Content.ReadFromJsonAsync<SensorHealthConfigDtoForDetail>(
                 cancellationToken
             );
-            return result!;
+            if (result is null)
+                return new RequestFailed((int)response.StatusCode, "The server returned an empty response.");
+            return result;
         }
         catch (HttpRequestException e)
         {

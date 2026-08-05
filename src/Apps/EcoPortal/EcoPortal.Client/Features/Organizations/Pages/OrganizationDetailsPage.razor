@@ -31,6 +31,10 @@
 
 <NuiPageLayout Title="Organization Details" ParentPath="/organizations/discover">
     <div class="org-page page-enter" style="@(_viewModel?.ThemeStyle ?? string.Empty)">
+        @if (_loadError is not null)
+        {
+            <MudAlert Severity="Severity.Error" Class="mb-4">@_loadError</MudAlert>
+        }
         @if (_viewModel is null && _organizationFetch.IsLoading)
         {
             <MudPaper Elevation="0" Class="org-hero-skeleton pa-6 rounded-lg mb-6">
@@ -54,7 +58,7 @@
                 </MudGrid>
             </MudPaper>
         }
-        else if (_organizationFetch.Data is null && !_organizationFetch.IsLoading)
+        else if (_organizationFetch.Data is null && !_organizationFetch.IsLoading && _loadError is null)
         {
             <MudPaper Elevation="0" Class="pa-8 rounded-lg d-flex flex-column align-center justify-center org-not-found">
                 <MudIcon Icon="@Icons.Material.Filled.DomainDisabled" Size="Size.Large" Color="Color.Error" Class="mb-4" />
@@ -154,9 +158,13 @@
                                     {
                                         <span class="hcs-v-dim">—</span>
                                     }
-                                    else
+                                    else if (_sensorCountFetch.Data is not null)
                                     {
                                         @_sensorCountFetch.Data
+                                    }
+                                    else
+                                    {
+                                        <span class="hcs-v-dim">—</span>
                                     }
                                 </div>
                                 <div class="hcs-k">Sensors live</div>
@@ -234,9 +242,13 @@
                                         {
                                             <MudProgressCircular Size="Size.Small" Indeterminate="true" />
                                         }
-                                        else
+                                        else if (_sensorCountFetch.Data is not null)
                                         {
                                             @_sensorCountFetch.Data
+                                        }
+                                        else
+                                        {
+                                            @:—
                                         }
                                     </div>
                                     <div class="impact-card-l">Sensors deployed by this organization</div>
@@ -305,7 +317,7 @@
                     </Tab>
 
                     <Tab Title="Sensors" Icon="@Icons.Material.Outlined.Sensors"
-                         Badge="@(_sensorCountFetch.IsLoading ? "..." : _sensorCountFetch.Data.ToString())">
+                         Badge="@(_sensorCountFetch.IsLoading ? "..." : _sensorCountFetch.Data?.ToString())">
                         <div class="org-tab-body">
                             <div class="section-head">
                                 <div>
@@ -480,8 +492,9 @@
     [Parameter]
     public Guid Id { get; set; }
     private OrganizationDetailsViewModel? _viewModel;
+    private string? _loadError;
     private BackgroundFetch<OrganizationDtoForDetail?> _organizationFetch = default!;
-    private IFetch<int> _sensorCountFetch = default!;
+    private IFetch<int?> _sensorCountFetch = default!;
     private IFetch<List<SensorDtoForList>> _sensorsFetch = default!;
     private IFetch<List<OrganizationMemberDto>> _membersFetch = default!;
 
@@ -494,14 +507,16 @@
             () => InvokeAsync(StateHasChanged)
         );
 
-        _sensorCountFetch = new Fetch<int>(
+        _sensorCountFetch = new Fetch<int?>(
             async ct =>
             {
                 var result = await SensorClient.GetSensorCountAsync(sensorParams, ct);
-                return result.Match(
-                    count => count,
-                    _ => 0
-                );
+                if (result.TryPickT0(out var count, out var error))
+                    return count;
+                _loadError = error.StatusCode == 0
+                    ? "Couldn't reach the server."
+                    : error.Message ?? "Couldn't load the sensor count.";
+                return null;
             },
             () => InvokeAsync(StateHasChanged)
         );
@@ -543,7 +558,16 @@
                 OrganizationCache.Set(organization);
                 return organization;
             },
-            _ => null
+            error =>
+            {
+                _loadError = error.StatusCode switch
+                {
+                    404 => null,
+                    0 => "Couldn't reach the server.",
+                    _ => error.Message ?? "Couldn't load this organization."
+                };
+                return null;
+            }
         );
     }
 

@@ -35,7 +35,9 @@ public sealed class SensorHttpClient(HttpClient httpClient) : ISensorHttpClient
             var result = await response.Content.ReadFromJsonAsync<SensorDtoForRegistered>(
                 cancellationToken
             );
-            return result!;
+            if (result is null)
+                return new RequestFailed((int)response.StatusCode, "The server returned an empty response.");
+            return result;
         }
         catch (HttpRequestException e)
         {
@@ -118,7 +120,9 @@ public sealed class SensorHttpClient(HttpClient httpClient) : ISensorHttpClient
             var result = await response.Content.ReadFromJsonAsync<SensorDtoForDetail>(
                 cancellationToken
             );
-            return result!;
+            if (result is null)
+                return new RequestFailed((int)response.StatusCode, "The server returned an empty response.");
+            return result;
         }
         catch (HttpRequestException e)
         {
@@ -151,7 +155,9 @@ public sealed class SensorHttpClient(HttpClient httpClient) : ISensorHttpClient
             var result = await response.Content.ReadFromJsonAsync<SensorDtoForDetail>(
                 cancellationToken
             );
-            return result!;
+            if (result is null)
+                return new RequestFailed((int)response.StatusCode, "The server returned an empty response.");
+            return result;
         }
         catch (HttpRequestException e)
         {

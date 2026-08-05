@@ -2,6 +2,7 @@
 @using EcoPortal.Client.Services
 @inject NotificationService NotificationService
 @inject NavigationManager Navigation
+@inject ISnackbar Snackbar
 @implements IDisposable
 
 <MudPaper Elevation="0" Class="notification-panel">
@@ -174,7 +175,13 @@
 
     private async Task MarkAllAsReadAsync()
     {
-        if (!await NotificationService.MarkAllAsReadAsync() || _notifications is null)
+        if (!await NotificationService.MarkAllAsReadAsync())
+        {
+            Snackbar.Add("Couldn't mark all notifications as read.", Severity.Error);
+            return;
+        }
+
+        if (_notifications is null)
         {
             return;
         }

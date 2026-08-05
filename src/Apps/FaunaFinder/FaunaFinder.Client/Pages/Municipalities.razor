@@ -294,18 +294,18 @@ else
         }
 
         var countsResult = await countsTask;
-        if (countsResult.TryPickT0(out var counts, out var countsError))
-        {
-            _countsMap = counts.ToDictionary(c => c.MunicipalityId, c => c.Count);
-        }
-        else
+        if (!countsResult.TryPickT0(out var counts, out var countsError))
         {
             _municipalitiesLoadError = countsError.StatusCode == 0
                 ? "Couldn't reach the server."
                 : countsError.Message ?? "Something went wrong while loading species counts.";
             _countsMap = new Dictionary<Guid, int>();
+            _municipalities = collected;
+            await InvokeAsync(StateHasChanged);
+            return;
         }
 
+        _countsMap = counts.ToDictionary(c => c.MunicipalityId, c => c.Count);
         _municipalities = collected;
         await InvokeAsync(StateHasChanged);
     }

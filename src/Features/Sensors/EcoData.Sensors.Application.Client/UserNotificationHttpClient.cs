@@ -109,7 +109,9 @@ public sealed class UserNotificationHttpClient(HttpClient httpClient) : IUserNot
             var result = await response.Content.ReadFromJsonAsync<UserNotificationDto>(
                 cancellationToken
             );
-            return result!;
+            if (result is null)
+                return new RequestFailed((int)response.StatusCode, "The server returned an empty response.");
+            return result;
         }
         catch (HttpRequestException e)
         {

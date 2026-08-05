@@ -97,17 +97,16 @@
             _mapInitialized = true;
 
             var geoJsonResult = await LocationClient.GetMunicipalitiesGeoJsonAsync("PR");
-            if (geoJsonResult.TryPickT0(out var geoJson, out var geoJsonError))
-            {
-                await JS.InvokeVoidAsync("orgSensorMap.addMunicipalities", _elementId, geoJson.RootElement);
-            }
-            else
+            if (!geoJsonResult.TryPickT0(out var geoJson, out var geoJsonError))
             {
                 _loadError = geoJsonError.StatusCode == 0
                     ? "Couldn't reach the server."
                     : geoJsonError.Message ?? "Couldn't load municipality boundaries.";
                 StateHasChanged();
+                return;
             }
+
+            await JS.InvokeVoidAsync("orgSensorMap.addMunicipalities", _elementId, geoJson.RootElement);
         }
     }
 
@@ -127,7 +126,16 @@
         var countResult = await SensorClient.GetSensorCountAsync(
             new SensorParameters(OrganizationId: Id, MunicipalityId: municipalityId)
         );
-        _sensorCount = countResult.TryPickT0(out var count, out _) ? count : 0;
+        if (!countResult.TryPickT0(out var count, out var countError))
+        {
+            _loadError = countError.StatusCode == 0
+                ? "Couldn't reach the server."
+                : countError.Message ?? "Couldn't load the sensor count.";
+            StateHasChanged();
+            return;
+        }
+
+        _sensorCount = count;
         StateHasChanged();
     }
 

@@ -51,7 +51,9 @@ public sealed class SensorAlertHttpClient(HttpClient httpClient) : ISensorAlertH
             var result = await response.Content.ReadFromJsonAsync<SensorHealthAlertDtoForDetail>(
                 cancellationToken
             );
-            return result!;
+            if (result is null)
+                return new RequestFailed((int)response.StatusCode, "The server returned an empty response.");
+            return result;
         }
         catch (HttpRequestException e)
         {

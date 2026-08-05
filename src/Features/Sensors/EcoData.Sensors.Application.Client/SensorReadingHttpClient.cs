@@ -87,7 +87,9 @@ public sealed class SensorReadingHttpClient(HttpClient httpClient) : ISensorRead
             var result = await response.Content.ReadFromJsonAsync<SensorReadingStatsDto>(
                 cancellationToken
             );
-            return result!;
+            if (result is null)
+                return new RequestFailed((int)response.StatusCode, "The server returned an empty response.");
+            return result;
         }
         catch (HttpRequestException e)
         {
@@ -138,7 +140,9 @@ public sealed class SensorReadingHttpClient(HttpClient httpClient) : ISensorRead
             var result = await response.Content.ReadFromJsonAsync<ReadingBatchResult>(
                 cancellationToken
             );
-            return result!;
+            if (result is null)
+                return new RequestFailed((int)response.StatusCode, "The server returned an empty response.");
+            return result;
         }
         catch (HttpRequestException e)
         {
@@ -188,7 +192,9 @@ public sealed class SensorReadingHttpClient(HttpClient httpClient) : ISensorRead
             var result = await response.Content.ReadFromJsonAsync<SurfaceWaterSummaryDto>(
                 cancellationToken
             );
-            return result!;
+            if (result is null)
+                return new RequestFailed((int)response.StatusCode, "The server returned an empty response.");
+            return result;
         }
         catch (HttpRequestException e)
         {

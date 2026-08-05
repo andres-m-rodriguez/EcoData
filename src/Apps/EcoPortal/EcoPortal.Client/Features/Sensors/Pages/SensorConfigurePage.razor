@@ -45,12 +45,19 @@
         else if (_sensor is null || !_hasPermission)
         {
             <MudPaper Elevation="0" Class="pa-6 rounded-lg border-solid border mud-border-lines-default">
-                <MudStack AlignItems="AlignItems.Center">
-                    <MudIcon Icon="@Icons.Material.Filled.Error" Size="Size.Large" Color="Color.Error" />
-                    <MudText Typo="Typo.h6" Color="Color.Error" Class="mt-2">
-                        @(_sensor is null ? "Sensor not found" : "You don't have permission to configure this sensor")
-                    </MudText>
-                </MudStack>
+                @if (_loadError is not null)
+                {
+                    <MudAlert Severity="Severity.Error">@_loadError</MudAlert>
+                }
+                else
+                {
+                    <MudStack AlignItems="AlignItems.Center">
+                        <MudIcon Icon="@Icons.Material.Filled.Error" Size="Size.Large" Color="Color.Error" />
+                        <MudText Typo="Typo.h6" Color="Color.Error" Class="mt-2">
+                            @(_sensor is null ? "Sensor not found" : "You don't have permission to configure this sensor")
+                        </MudText>
+                    </MudStack>
+                }
             </MudPaper>
         }
         else
@@ -126,17 +133,24 @@
 
                     @if (_healthConfig is null)
                     {
-                        <MudStack AlignItems="AlignItems.Center" Class="pa-4" Spacing="2">
-                            <MudIcon Icon="@Icons.Material.Filled.HealthAndSafety" Size="Size.Large" Color="Color.Secondary" />
-                            <MudText Typo="Typo.body1" Color="Color.Secondary">
-                                Health monitoring is not configured for this sensor.
-                            </MudText>
-                            <MudButton Variant="Variant.Filled" Color="Color.Primary"
-                                       StartIcon="@Icons.Material.Filled.Add" OnClick="EnableHealthMonitoring"
-                                       Disabled="SaveCommand.IsLoading">
-                                Enable Health Monitoring
-                            </MudButton>
-                        </MudStack>
+                        @if (!string.IsNullOrEmpty(_errorMessage))
+                        {
+                            <MudAlert Severity="Severity.Error">@_errorMessage</MudAlert>
+                        }
+                        else
+                        {
+                            <MudStack AlignItems="AlignItems.Center" Class="pa-4" Spacing="2">
+                                <MudIcon Icon="@Icons.Material.Filled.HealthAndSafety" Size="Size.Large" Color="Color.Secondary" />
+                                <MudText Typo="Typo.body1" Color="Color.Secondary">
+                                    Health monitoring is not configured for this sensor.
+                                </MudText>
+                                <MudButton Variant="Variant.Filled" Color="Color.Primary"
+                                           StartIcon="@Icons.Material.Filled.Add" OnClick="EnableHealthMonitoring"
+                                           Disabled="SaveCommand.IsLoading">
+                                    Enable Health Monitoring
+                                </MudButton>
+                            </MudStack>
+                        }
                     }
                     else
                     {
@@ -246,6 +260,7 @@
     private SensorHealthConfigDtoForDetail? _healthConfig;
     private SensorHealthStatusDtoForDetail? _healthStatus;
     private string? _errorMessage;
+    private string? _loadError;
     private bool _hasPermission;
 
     // Form fields
@@ -266,9 +281,19 @@
     private async Task Load()
     {
         var sensorResult = await SensorClient.GetByIdAsync(SensorId);
-        _sensor = sensorResult.TryPickT0(out var sensor, out _) ? sensor : null;
+        if (!sensorResult.TryPickT0(out var sensor, out var sensorError))
+        {
+            _sensor = null;
+            _loadError = sensorError.StatusCode switch
+            {
+                404 => null,
+                0 => "Couldn't reach the server.",
+                _ => sensorError.Message ?? "Couldn't load this sensor."
+            };
+            return;
+        }
 
-        if (_sensor is null) return;
+        _sensor = sensor;
 
         // Check permission
         if (!AuthState.IsInitialized)
@@ -281,13 +306,9 @@
 
         if (!_hasPermission) return;
 
-        // Load municipality
+        // Load municipality; a failure here shouldn't stop the health config from loading
         var municipalityResult = await MunicipalityClient.GetByIdAsync(_sensor.MunicipalityId);
-        if (municipalityResult.TryPickT0(out var municipality, out var municipalityError))
-        {
-            _municipality = municipality;
-        }
-        else
+        if (!municipalityResult.TryPickT0(out var municipality, out var municipalityError))
         {
             _municipality = null;
             Snackbar.Add(
@@ -295,6 +316,10 @@
                     ? "Couldn't reach the server."
                     : municipalityError.Message ?? "Couldn't load the sensor's municipality.",
                 Severity.Error);
+        }
+        else
+        {
+            _municipality = municipality;
         }
 
         // Load health config
@@ -308,14 +333,38 @@
                 _unhealthyThresholdSeconds = config.UnhealthyThresholdSeconds;
                 _isMonitoringEnabled = config.IsMonitoringEnabled;
             },
-            _ => _healthConfig = null // Config doesn't exist yet
+            error =>
+            {
+                if (error.StatusCode == 404)
+                {
+                    _healthConfig = null; // Config doesn't exist yet
+                }
+                else
+                {
+                    _errorMessage = error.StatusCode == 0
+                        ? "Couldn't reach the server."
+                        : error.Message ?? "Couldn't load the health configuration.";
+                }
+            }
         );
 
         // Load health status
         var statusResult = await HealthClient.GetSensorHealthAsync(SensorId);
         statusResult.Switch(
             status => _healthStatus = status,
-            _ => _healthStatus = null
+            error =>
+            {
+                if (error.StatusCode == 404)
+                {
+                    _healthStatus = null;
+                }
+                else
+                {
+                    _errorMessage = error.StatusCode == 0
+                        ? "Couldn't reach the server."
+                        : error.Message ?? "Couldn't load the sensor's health status.";
+                }
+            }
         );
     }
 

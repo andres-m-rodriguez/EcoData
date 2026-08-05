@@ -30,12 +30,19 @@
         else if (_sensor is null || !_hasPermission)
         {
             <MudPaper Elevation="1" Class="pa-6">
-                <MudStack AlignItems="AlignItems.Center">
-                    <MudIcon Icon="@Icons.Material.Filled.Error" Size="Size.Large" Color="Color.Error" />
-                    <MudText Typo="Typo.h6" Color="Color.Error" Class="mt-2">
-                        @(_sensor is null ? "Sensor not found" : "You don't have permission to edit this sensor")
-                    </MudText>
-                </MudStack>
+                @if (_loadError is not null)
+                {
+                    <MudAlert Severity="Severity.Error">@_loadError</MudAlert>
+                }
+                else
+                {
+                    <MudStack AlignItems="AlignItems.Center">
+                        <MudIcon Icon="@Icons.Material.Filled.Error" Size="Size.Large" Color="Color.Error" />
+                        <MudText Typo="Typo.h6" Color="Color.Error" Class="mt-2">
+                            @(_sensor is null ? "Sensor not found" : "You don't have permission to edit this sensor")
+                        </MudText>
+                    </MudStack>
+                }
             </MudPaper>
         }
         else
@@ -63,6 +70,7 @@
     private SensorDtoForDetail? _sensor;
     private SensorFormModel _formModel = new();
     private string? _errorMessage;
+    private string? _loadError;
     private bool _hasPermission;
 
     protected override async Task OnInitializedAsync()
@@ -74,32 +82,42 @@
     private async Task Load()
     {
         var sensorResult = await SensorClient.GetByIdAsync(SensorId);
-        _sensor = sensorResult.TryPickT0(out var sensor, out _) ? sensor : null;
-
-        if (_sensor is not null)
+        if (!sensorResult.TryPickT0(out var sensor, out var sensorError))
         {
-            // Check if user has permission to update this sensor
-            if (!AuthState.IsInitialized)
+            _sensor = null;
+            _loadError = sensorError.StatusCode switch
             {
-                await AuthState.InitializeAsync();
-            }
-
-            _hasPermission = AuthState.IsGlobalAdmin ||
-                await PermissionContext.HasPermissionAsync(_sensor.OrganizationId, SensorPermissions.Sensor.Update);
-
-            if (_hasPermission)
-            {
-                _formModel = new SensorFormModel
-                {
-                    ExternalId = _sensor.ExternalId,
-                    Name = _sensor.Name,
-                    Latitude = _sensor.Latitude,
-                    Longitude = _sensor.Longitude,
-                    MunicipalityId = _sensor.MunicipalityId,
-                    IsActive = _sensor.IsActive
-                };
-            }
+                404 => null,
+                0 => "Couldn't reach the server.",
+                _ => sensorError.Message ?? "Couldn't load this sensor."
+            };
+            return;
         }
+
+        _sensor = sensor;
+
+        if (!AuthState.IsInitialized)
+        {
+            await AuthState.InitializeAsync();
+        }
+
+        _hasPermission = AuthState.IsGlobalAdmin ||
+            await PermissionContext.HasPermissionAsync(_sensor.OrganizationId, SensorPermissions.Sensor.Update);
+
+        if (!_hasPermission)
+        {
+            return;
+        }
+
+        _formModel = new SensorFormModel
+        {
+            ExternalId = _sensor.ExternalId,
+            Name = _sensor.Name,
+            Latitude = _sensor.Latitude,
+            Longitude = _sensor.Longitude,
+            MunicipalityId = _sensor.MunicipalityId,
+            IsActive = _sensor.IsActive
+        };
     }
 
     private async Task HandleSubmit(SensorFormModel model)

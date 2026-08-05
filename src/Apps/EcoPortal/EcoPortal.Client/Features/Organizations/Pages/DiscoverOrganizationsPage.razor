@@ -2,6 +2,7 @@
 @using BlazingSingularity.Fetch
 @using BlazingSingularity.Signals
 @using EcoData.Common.Pagination.Blazor
+@using EcoData.Common.Problems.Contracts
 @using EcoData.Organization.Application.Client
 @using EcoData.Organization.Contracts.Dtos
 @using EcoData.Organization.Contracts.Parameters
@@ -15,7 +16,6 @@
 @inject INativeNavigationManager Navigation
 @inject INativeNavbarManager Navbar
 @inject AuthStateService AuthState
-@inject ISnackbar Snackbar
 
 <PageTitle>Discover Organizations - EcoData</PageTitle>
 
@@ -34,6 +34,10 @@
             </div>
 
             <aside class="hero-stats">
+                @if (_loadError is not null)
+                {
+                    <MudAlert Severity="Severity.Error" Dense="true">@_loadError</MudAlert>
+                }
                 <div class="hero-stats-k"><span class="pulse"></span>Updated · just now</div>
                 <div class="hs-item">
                     <span class="hs-label">Organizations</span>
@@ -148,6 +152,7 @@
     private IFetch<int> _orgCountFetch = default!;
     private IFetch<int> _sensorCountFetch = default!;
     private IFetch<long> _readingCountFetch = default!;
+    private string? _loadError;
 
     [Signal]
     private string? _searchText;
@@ -161,52 +166,37 @@
             async ct =>
             {
                 var result = await OrganizationClient.GetOrganizationCountAsync(new OrganizationParameters(), ct);
-                return result.Match(
-                    count => count,
-                    error => throw new InvalidOperationException(error.Message ?? "Couldn't load organization count.")
-                );
+                if (result.TryPickT0(out var count, out var error))
+                    return count;
+                SetLoadError(error, "Couldn't load organization count.");
+                return 0;
             },
             () => InvokeAsync(StateHasChanged)
         );
-        _orgCountFetch.OnChange(() =>
-        {
-            if (_orgCountFetch.IsError)
-                Snackbar.Add("Couldn't load organization count.", Severity.Error);
-        });
 
         _sensorCountFetch = new Fetch<int>(
             async ct =>
             {
                 var result = await SensorClient.GetSensorCountAsync(new SensorParameters(), ct);
-                return result.Match(
-                    count => count,
-                    error => throw new InvalidOperationException(error.Message ?? "Couldn't load sensor count.")
-                );
+                if (result.TryPickT0(out var count, out var error))
+                    return count;
+                SetLoadError(error, "Couldn't load sensor count.");
+                return 0;
             },
             () => InvokeAsync(StateHasChanged)
         );
-        _sensorCountFetch.OnChange(() =>
-        {
-            if (_sensorCountFetch.IsError)
-                Snackbar.Add("Couldn't load sensor count.", Severity.Error);
-        });
 
         _readingCountFetch = new Fetch<long>(
             async ct =>
             {
                 var result = await ReadingClient.GetTotalCountAsync(ct);
-                return result.Match(
-                    count => count,
-                    error => throw new InvalidOperationException(error.Message ?? "Couldn't load reading count.")
-                );
+                if (result.TryPickT0(out var count, out var error))
+                    return count;
+                SetLoadError(error, "Couldn't load reading count.");
+                return 0;
             },
             () => InvokeAsync(StateHasChanged)
         );
-        _readingCountFetch.OnChange(() =>
-        {
-            if (_readingCountFetch.IsError)
-                Snackbar.Add("Couldn't load reading count.", Severity.Error);
-        });
 
         _ = _orgCountFetch.FetchAsync();
         _ = _sensorCountFetch.FetchAsync();
@@ -237,5 +227,12 @@
     private void ClearSearch()
     {
         SearchText = null;
+    }
+
+    private void SetLoadError(RequestFailed error, string fallback)
+    {
+        _loadError = error.StatusCode == 0
+            ? "Couldn't reach the server. Check your connection."
+            : error.Message ?? fallback;
     }
 }
