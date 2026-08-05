@@ -12,8 +12,7 @@
 @inject IOrganizationHttpClient OrganizationClient
 @inject ISensorHttpClient SensorClient
 @inject ISensorReadingHttpClient ReadingClient
-@inject INativeNavigationManager Navigation
-@inject INativeNavbarManager Navbar
+@inject NavigationManager Navigation
 @inject AuthStateService AuthState
 
 <PageTitle>Discover Organizations - EcoData</PageTitle>
@@ -156,7 +155,7 @@
     protected override void OnInitialized()
     {
         base.OnInitialized();
-        Navbar.SetTitle("Organizations");
+        Bus.Publish(new MainLayout.TitleChanged("Organizations"));
     }
 
     [OnChanged]

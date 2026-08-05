@@ -12,14 +12,14 @@
 @inject ISensorHttpClient SensorClient
 @inject ISensorHealthHttpClient HealthClient
 @inject IMunicipalityHttpClient MunicipalityClient
-@inject INativeNavigationManager Navigation
+@inject NavigationManager Navigation
 @inject ISnackbar Snackbar
 @inject PermissionContextService PermissionContext
 @inject AuthStateService AuthState
 
 <PageTitle>Configure Sensor - EcoData</PageTitle>
 
-<NuiPageLayout Title="Configure Sensor" ParentPath="@($"/sensor/{SensorId}")">
+<PageShell Title="Configure Sensor" ParentPath="@($"/sensor/{SensorId}")">
         @if (LoadState.IsLoading)
         {
             <MudStack Spacing="4">
@@ -251,7 +251,7 @@
                 }
             </MudStack>
         }
-</NuiPageLayout>
+</PageShell>
 
 @code {
     private MudForm? _form;

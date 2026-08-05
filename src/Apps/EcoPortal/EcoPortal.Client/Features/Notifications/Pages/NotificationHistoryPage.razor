@@ -3,9 +3,9 @@
 @using EcoPortal.Client.Services
 @using EcoPortal.Client.Components
 @using EcoPortal.Client.Features.Notifications.Components
+@inherits StatefulComponent
 @inject NotificationService NotificationService
 @inject NavigationManager Navigation
-@inject INativeNavbarManager Navbar
 
 <PageTitle>Notifications - EcoData</PageTitle>
 
@@ -18,7 +18,8 @@
 
     protected override void OnInitialized()
     {
-        Navbar.SetTitle("Notifications");
+        base.OnInitialized();
+        Bus.Publish(new MainLayout.TitleChanged("Notifications"));
     }
 
     private async Task HandleNotificationClick(UserNotificationDto notification)

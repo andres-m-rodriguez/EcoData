@@ -364,7 +364,7 @@ h1:focus {
 }
 
 /* ==========================================================================
-   Empty States
+   Empty States (Components/Shared/EmptyState.razor)
    ========================================================================== */
 .empty-state {
     display: flex;
@@ -373,23 +373,271 @@ h1:focus {
     justify-content: center;
     padding: 48px 24px;
     text-align: center;
+    gap: 8px;
 }
 
 .empty-state-icon {
-    font-size: 64px;
-    color: var(--mud-palette-text-disabled);
-    margin-bottom: 16px;
+    width: 64px;
+    height: 64px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--mud-palette-background-grey);
+    border-radius: 50%;
+    margin-bottom: 8px;
 }
 
 .empty-state-title {
     font-size: 1.25rem;
     font-weight: 600;
     color: var(--mud-palette-text-primary);
-    margin-bottom: 8px;
 }
 
 .empty-state-description {
     font-size: 0.875rem;
     color: var(--mud-palette-text-secondary);
     max-width: 320px;
+}
+
+/* ==========================================================================
+   Page Shell (Components/Shared/PageShell.razor) — detail-page chrome
+   ========================================================================== */
+.ff-page-shell {
+    margin-top: 16px;
+    margin-bottom: 32px;
+}
+
+.ff-back-button {
+    margin-bottom: 8px;
+}
+
+.ff-page-shell-content {
+    animation: ff-content-enter 0.35s cubic-bezier(0, 0, 0.2, 1);
+    animation-delay: 100ms;
+    animation-fill-mode: backwards;
+}
+
+@keyframes ff-content-enter {
+    from {
+        opacity: 0;
+        transform: translateY(12px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@media (max-width: 600px) {
+    .ff-page-shell {
+        margin-top: 8px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .ff-page-shell-content {
+        animation: none;
+    }
+}
+
+/* ==========================================================================
+   Section Header — heading row above a list block
+   ========================================================================== */
+.ff-section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 16px;
+}
+
+.ff-section-title {
+    margin: 0;
+    font-size: 1.25rem;
+    font-weight: 600;
+    line-height: 1.6;
+    color: var(--mud-palette-text-primary);
+}
+
+/* ==========================================================================
+   List Items — tappable rows with an icon box (Categories lists)
+   ========================================================================== */
+.ff-list {
+    padding: 8px 0;
+}
+
+.ff-list-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+}
+
+.ff-list-item:hover {
+    background-color: var(--mud-palette-action-default-hover);
+}
+
+.ff-list-item-icon {
+    flex-shrink: 0;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 10px;
+    background-color: var(--mud-palette-background-grey);
+    color: var(--mud-palette-text-secondary);
+}
+
+.ff-list-item-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.ff-list-item-title {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--mud-palette-text-primary);
+}
+
+.ff-list-item-subtitle {
+    font-size: 12px;
+    color: var(--mud-palette-text-secondary);
+}
+
+.ff-list-item-chevron {
+    flex-shrink: 0;
+    color: var(--mud-palette-text-disabled);
+    transition: color 0.15s ease;
+}
+
+.ff-list-item:hover .ff-list-item-chevron {
+    color: var(--mud-palette-text-secondary);
+}
+
+/* ==========================================================================
+   Icon Box — tinted square icon container (MunicipalityCard)
+   ========================================================================== */
+.ff-iconbox {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+}
+
+.ff-iconbox--primary {
+    background-color: var(--mud-palette-primary-lighten);
+    color: var(--mud-palette-primary);
+}
+
+/* ==========================================================================
+   Status Pill — NatureServe rank modifiers (SpeciesHero, Categories)
+   Base .ff-status-pill + IUCN modifiers live in css/fauna-tokens.css.
+   ========================================================================== */
+.ff-status-pill.status-secure { background: var(--status-lc-bg); color: var(--status-lc); }
+.ff-status-pill.status-vulnerable { background: var(--status-vu-bg); color: #7d5c20; }
+.ff-status-pill.status-imperiled { background: var(--status-cr-bg); color: var(--status-cr); }
+.ff-status-pill.status-unranked { background: var(--status-dd-bg); color: var(--status-ex); }
+
+/* ==========================================================================
+   Toolbar Search Bar (SpeciesToolbar) — MudTextField + filter button
+   ========================================================================== */
+.ff-search-bar {
+    display: flex;
+    align-items: center;
+    background-color: var(--mud-palette-surface);
+    border: 1px solid var(--mud-palette-lines-default);
+    border-radius: 8px;
+    padding: 0 16px;
+    gap: 12px;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.ff-search-bar:hover {
+    border-color: var(--mud-palette-lines-inputs);
+}
+
+.ff-search-bar:focus-within {
+    border-color: var(--mud-palette-primary);
+    box-shadow: 0 0 0 1px var(--mud-palette-primary);
+}
+
+.ff-search-input {
+    flex: 1;
+    min-width: 0;
+    margin: 0 !important;
+}
+
+.ff-search-input .mud-input-slot {
+    padding: 12px 0 !important;
+    font-size: 0.875rem;
+    color: var(--mud-palette-text-primary);
+}
+
+.ff-search-input .mud-input {
+    margin: 0;
+}
+
+.ff-search-input .mud-icon-root {
+    color: var(--mud-palette-text-secondary);
+}
+
+.ff-search-input input::placeholder {
+    color: var(--mud-palette-text-disabled) !important;
+    opacity: 1;
+}
+
+.ff-search-divider {
+    width: 1px;
+    height: 20px;
+    background-color: var(--mud-palette-lines-default);
+    flex-shrink: 0;
+}
+
+.ff-filter-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: none;
+    border: none;
+    padding: 12px 4px 12px 0;
+    cursor: pointer;
+    color: var(--mud-palette-text-secondary);
+    font-size: 0.75rem;
+    font-weight: 500;
+    transition: color 0.2s ease;
+}
+
+.ff-filter-btn:hover,
+.ff-filter-btn.active {
+    color: var(--mud-palette-primary);
+}
+
+.ff-filter-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 16px;
+    height: 16px;
+    padding: 0 4px;
+    font-size: 0.625rem;
+    font-weight: 600;
+    background-color: var(--mud-palette-primary);
+    color: var(--mud-palette-primary-text);
+    border-radius: 9999px;
+}
+
+@media (max-width: 600px) {
+    .ff-filter-btn span:not(.ff-filter-badge) {
+        display: none;
+    }
 }

@@ -5,8 +5,7 @@
 @using EcoData.Sensors.Contracts.Parameters
 @using EcoPortal.Client.Features.Sensors.Components
 @inherits StatefulComponent
-@inject INativeNavigationManager Navigation
-@inject INativeNavbarManager Navbar
+@inject NavigationManager Navigation
 @inject ISensorHttpClient SensorClient
 @inject ISensorReadingHttpClient ReadingClient
 
@@ -93,7 +92,7 @@
     protected override void OnInitialized()
     {
         base.OnInitialized();
-        Navbar.SetTitle("Sensors");
+        Bus.Publish(new MainLayout.TitleChanged("Sensors"));
     }
 
     [Command, RunOnLoad]

@@ -14,13 +14,13 @@
 @inherits StatefulComponent
 @inject IOrganizationHttpClient OrganizationClient
 @inject IOrganizationMemberHttpClient MemberClient
-@inject INativeNavigationManager Navigation
+@inject NavigationManager Navigation
 @inject IDialogService DialogService
 @inject ISnackbar Snackbar
 
 <PageTitle>Team - EcoData</PageTitle>
 
-<NuiPageLayout Title="Teams" ParentPath="@($"/organizations/{OrganizationId}")"
+<PageShell Title="Teams" ParentPath="@($"/organizations/{OrganizationId}")"
                  Actions="@([new("Requests", NavigateToRequests)])">
         <SearchHeader @bind-Value="SearchTextState.Value" Placeholder="Search members..." EnableSticky="true" />
 
@@ -125,7 +125,7 @@
                 </EcoDataVirtualizedList>
             </MudPaper>
         }
-</NuiPageLayout>
+</PageShell>
 
 @code {
     private EcoDataVirtualizedList<OrganizationMemberDto, OrganizationMemberParameters>? _virtualizedList;

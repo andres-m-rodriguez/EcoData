@@ -2,12 +2,38 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Routing;
 using Microsoft.JSInterop;
 
-namespace EcoData.NativeUi.Components.NativeNavigation;
+namespace EcoPortal.Client.Services;
+
+/// <summary>Direction of the most recent navigation.</summary>
+public enum NavigationDirection
+{
+    /// <summary>No navigation has occurred yet.</summary>
+    None,
+
+    /// <summary>Navigated forward to a new page.</summary>
+    Forward,
+
+    /// <summary>Navigated back to a previous page.</summary>
+    Back
+}
+
+/// <summary>Immutable snapshot of the current navigation state.</summary>
+/// <param name="Uri">The full URI of the current page.</param>
+/// <param name="Path">The path portion of the current URI (without query string).</param>
+/// <param name="CanGoBack">Whether back navigation is available.</param>
+/// <param name="Direction">The direction of the most recent navigation.</param>
+public sealed record NavigationState(
+    string Uri,
+    string Path,
+    bool CanGoBack,
+    NavigationDirection Direction);
 
 /// <summary>
-/// Implementation of <see cref="INativeNavigationManager"/> that wraps Blazor's NavigationManager.
+/// Tracks a logical back-stack on top of Blazor's <see cref="NavigationManager"/> so the
+/// shell can show a back button, animate page transitions by direction, and send deep
+/// links "back" to a logical parent. Consumed by MainLayout, PageShell, and tab navigation.
 /// </summary>
-internal sealed class NativeNavigationManager : INativeNavigationManager, IDisposable
+public sealed class NavigationService : IDisposable
 {
     private readonly NavigationManager _nav;
     private readonly IJSRuntime _js;
@@ -17,7 +43,7 @@ internal sealed class NativeNavigationManager : INativeNavigationManager, IDispo
     private bool _isNavigatingBack;
     private NavigationDirection _direction = NavigationDirection.None;
 
-    public NativeNavigationManager(NavigationManager navigationManager, IJSRuntime jsRuntime)
+    public NavigationService(NavigationManager navigationManager, IJSRuntime jsRuntime)
     {
         _nav = navigationManager;
         _js = jsRuntime;
@@ -58,6 +84,10 @@ internal sealed class NativeNavigationManager : INativeNavigationManager, IDispo
         // At root with no parent - do nothing
     }
 
+    /// <summary>
+    /// Sets the parent path for deep link back navigation. Called by pages that are
+    /// accessed via deep links to define where "back" should go.
+    /// </summary>
     public void SetParentPath(string? parentPath)
     {
         if (_depth == 0 && _parentPath != parentPath)

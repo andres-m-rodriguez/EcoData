@@ -1,6 +1,6 @@
 @page "/getting-started"
 @using BlazorStaticNavigation
-@inject INativeNavbarManager Navbar
+@inject IEventBus Bus
 
 <PageTitle>Getting Started - EcoData</PageTitle>
 
@@ -89,6 +89,6 @@
 @code {
     protected override void OnInitialized()
     {
-        Navbar.SetTitle("Getting Started");
+        Bus.Publish(new MainLayout.TitleChanged("Getting Started"));
     }
 }

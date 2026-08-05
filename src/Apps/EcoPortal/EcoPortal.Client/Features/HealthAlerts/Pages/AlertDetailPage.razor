@@ -4,11 +4,11 @@
 @using EcoPortal.Client.Components
 @inherits StatefulComponent
 @inject ISensorAlertHttpClient AlertClient
-@inject INativeNavigationManager Navigation
+@inject NavigationManager Navigation
 
 <PageTitle>Alert Details - EcoData</PageTitle>
 
-<NuiPageLayout Title="Alert Details" ParentPath="/alerts">
+<PageShell Title="Alert Details" ParentPath="/alerts">
         @if (LoadAlertState.IsLoading)
         {
             <MudProgressCircular Color="Color.Primary" Indeterminate />
@@ -100,7 +100,7 @@
                 </div>
             </div>
         }
-</NuiPageLayout>
+</PageShell>
 
 @code {
     [Parameter]

@@ -12,7 +12,7 @@
 
 <PageTitle>Sensor Readings - EcoData</PageTitle>
 
-<NuiPageLayout Title="Readings" ParentPath="@($"/sensor/{SensorId}")">
+<PageShell Title="Readings" ParentPath="@($"/sensor/{SensorId}")">
         @if (LoadState.IsLoading)
         {
             <MudPaper Elevation="0" Class="pa-4 rounded-lg" Style="border: 1px solid var(--mud-palette-lines-default);">
@@ -53,7 +53,7 @@
                                     ToDate="@_toDate" />
             </MudPaper>
         }
-</NuiPageLayout>
+</PageShell>
 
 @code {
     private SensorReadingsList? _readingsList;

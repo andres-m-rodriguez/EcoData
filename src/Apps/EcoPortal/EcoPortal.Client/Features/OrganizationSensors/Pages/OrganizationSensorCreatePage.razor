@@ -13,12 +13,12 @@
 @inherits StatefulComponent
 @inject ISensorHttpClient SensorClient
 @inject IOrganizationHttpClient OrganizationClient
-@inject INativeNavigationManager Navigation
+@inject NavigationManager Navigation
 @inject IDialogService DialogService
 
 <PageTitle>Add Sensor - EcoData</PageTitle>
 
-<NuiPageLayout Title="Add Sensor" ParentPath="@($"/organizations/{OrganizationId}/sensors")">
+<PageShell Title="Add Sensor" ParentPath="@($"/organizations/{OrganizationId}/sensors")">
         @if (LoadState.IsLoading)
         {
             <MudPaper Elevation="1" Class="pa-6">
@@ -54,7 +54,7 @@
                             OnCancel="NavigateToSensors" />
             </MudPaper>
         }
-</NuiPageLayout>
+</PageShell>
 
 @code {
     [Parameter]
@@ -138,5 +138,5 @@
         await dialog.Result;
     }
 
-    private void NavigateToSensors() => _ = Navigation.GoBackAsync();
+    private void NavigateToSensors() => Navigation.NavigateTo($"/organizations/{OrganizationId}/sensors");
 }

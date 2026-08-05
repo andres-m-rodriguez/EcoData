@@ -1,5 +1,5 @@
 @page "/contact"
-@inject INativeNavbarManager Navbar
+@inject IEventBus Bus
 
 <PageTitle>Contact - EcoData</PageTitle>
 
@@ -44,6 +44,6 @@
 
     protected override void OnInitialized()
     {
-        Navbar.SetTitle("Contact");
+        Bus.Publish(new MainLayout.TitleChanged("Contact"));
     }
 }

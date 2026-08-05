@@ -33,9 +33,9 @@
     }
     else if (LoadLinksState.Result is { Links.Count: 0 })
     {
-        <NuiEmptyState Icon="@Icons.Material.Outlined.SearchOff"
-                       Title="No conservation actions"
-                       Description="This species doesn't have any FWS/NRCS recommendations yet." />
+        <EmptyState Icon="@Icons.Material.Outlined.SearchOff"
+                    Title="No conservation actions"
+                    Description="This species doesn't have any FWS/NRCS recommendations yet." />
     }
     else
     {
@@ -89,9 +89,9 @@
 
         @if (FilteredLinks.Count == 0)
         {
-            <NuiEmptyState Icon="@Icons.Material.Outlined.FilterAltOff"
-                           Title="No matches"
-                           Description="Try adjusting the filters or search term." />
+            <EmptyState Icon="@Icons.Material.Outlined.FilterAltOff"
+                        Title="No matches"
+                        Description="Try adjusting the filters or search term." />
         }
         else
         {

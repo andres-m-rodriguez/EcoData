@@ -10,14 +10,14 @@
 @using SensorPermissions = EcoData.Sensors.Contracts.Permissions
 @inherits StatefulComponent
 @inject ISensorHttpClient SensorClient
-@inject INativeNavigationManager Navigation
+@inject NavigationManager Navigation
 @inject ISnackbar Snackbar
 @inject PermissionContextService PermissionContext
 @inject AuthStateService AuthState
 
 <PageTitle>Edit Sensor - EcoData</PageTitle>
 
-<NuiPageLayout Title="Edit Sensor" ParentPath="@($"/sensor/{SensorId}")">
+<PageShell Title="Edit Sensor" ParentPath="@($"/sensor/{SensorId}")">
         @if (LoadState.IsLoading)
         {
             <MudPaper Elevation="1" Class="pa-6">
@@ -61,7 +61,7 @@
                             OnCancel="NavigateBack" />
             </MudPaper>
         }
-</NuiPageLayout>
+</PageShell>
 
 @code {
     [Parameter]
@@ -147,5 +147,5 @@
         );
     }
 
-    private void NavigateBack() => _ = Navigation.GoBackAsync();
+    private void NavigateBack() => Navigation.NavigateTo($"/sensor/{SensorId}");
 }

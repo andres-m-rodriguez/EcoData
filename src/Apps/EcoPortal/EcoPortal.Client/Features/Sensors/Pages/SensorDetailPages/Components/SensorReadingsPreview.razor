@@ -4,7 +4,7 @@
 @using EcoPortal.Client.Features.Sensors.Components
 @inherits StatefulComponent
 @inject ISensorReadingHttpClient ReadingClient
-@inject INativeNavigationManager Navigation
+@inject NavigationManager Navigation
 
 @if (LoadReadingsState.IsLoading)
 {

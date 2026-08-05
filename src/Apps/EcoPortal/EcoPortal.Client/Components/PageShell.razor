@@ -1,0 +1,79 @@
+@using EcoPortal.Client.Services
+@inject IEventBus Bus
+@inject NavigationService Navigation
+
+@* Page chrome: back link and header actions on desktop, animated content everywhere.
+   The title and actions travel to MainLayout's app bar over the bus. *@
+
+<div class="page-shell">
+    @if (!string.IsNullOrEmpty(ParentPath))
+    {
+        <MudHidden Breakpoint="Breakpoint.Xs">
+            <MudButton Variant="Variant.Text"
+                       StartIcon="@Icons.Material.Filled.ArrowBack"
+                       OnClick="GoBack"
+                       Class="page-shell-back">
+                Back
+            </MudButton>
+        </MudHidden>
+    }
+
+    @if (Actions is { Count: > 0 })
+    {
+        <MudHidden Breakpoint="Breakpoint.Xs">
+            <div class="page-shell-header">
+                <MudStack Row Justify="Justify.FlexEnd" AlignItems="AlignItems.Center" Spacing="2">
+                    @foreach (var action in Actions)
+                    {
+                        <MudButton Variant="Variant.Filled" Color="Color.Primary"
+                                   OnClick="@(() => action.OnClick())">
+                            @action.Title
+                        </MudButton>
+                    }
+                </MudStack>
+            </div>
+        </MudHidden>
+    }
+
+    <div class="page-shell-content">
+        @ChildContent
+    </div>
+</div>
+
+@code {
+    /// <summary>Published as <see cref="MainLayout.TitleChanged"/> for the app bar.</summary>
+    [Parameter]
+    public string? Title { get; set; }
+
+    /// <summary>Where "back" goes when this page was opened via a deep link.</summary>
+    [Parameter]
+    public string? ParentPath { get; set; }
+
+    /// <summary>Page actions: buttons in the header on desktop, surfaced in the
+    /// app bar by MainLayout on mobile.</summary>
+    [Parameter]
+    public IReadOnlyList<MainLayout.NavbarAction>? Actions { get; set; }
+
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+
+    protected override void OnInitialized()
+    {
+        if (Title is not null)
+        {
+            Bus.Publish(new MainLayout.TitleChanged(Title));
+        }
+
+        if (ParentPath is not null)
+        {
+            Navigation.SetParentPath(ParentPath);
+        }
+
+        if (Actions is { Count: > 0 })
+        {
+            Bus.Publish(new MainLayout.ActionsChanged(Actions));
+        }
+    }
+
+    private void GoBack() => _ = Navigation.GoBackAsync();
+}

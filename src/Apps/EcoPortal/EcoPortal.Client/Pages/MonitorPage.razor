@@ -1,6 +1,6 @@
 @page "/monitor"
-@inject INativeNavigationManager Navigation
-@inject INativeNavbarManager Navbar
+@inject NavigationManager Navigation
+@inject IEventBus Bus
 
 <PageTitle>Monitor - EcoData</PageTitle>
 
@@ -21,6 +21,6 @@
 @code {
     protected override void OnInitialized()
     {
-        Navbar.SetTitle("Monitor");
+        Bus.Publish(new MainLayout.TitleChanged("Monitor"));
     }
 }

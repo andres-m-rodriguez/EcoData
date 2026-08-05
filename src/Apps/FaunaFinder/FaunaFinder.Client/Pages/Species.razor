@@ -4,12 +4,10 @@
 @using EcoData.Wildlife.Contracts.Parameters
 @using EcoData.Locations.Contracts.Dtos
 @using EcoData.Locations.Application.Client
-@using EcoData.NativeUi.Components.NativeNavbar
 @inherits StatefulComponent
 @inject ISpeciesHttpClient SpeciesHttpClient
 @inject ISpeciesCategoryHttpClient SpeciesCategoryHttpClient
 @inject IMunicipalityHttpClient MunicipalityHttpClient
-@inject INativeNavbarManager Navbar
 @inject NavigationManager NavigationManager
 @inject IDialogService Dialogs
 @inject IBrowserViewportService Viewport
@@ -19,7 +17,7 @@
 
 @if (Id is not null)
 {
-    <NuiPageLayout Title="@LoadDetailState.Result?.ScientificName" ParentPath="/species">
+    <PageShell ParentPath="/species">
         @if (_detailLoadError is not null)
         {
             <MudAlert Severity="Severity.Error">@_detailLoadError</MudAlert>
@@ -61,9 +59,9 @@
                 }
                 else if (LoadMunicipalitiesState.Result.Count == 0)
                 {
-                    <NuiEmptyState Icon="@Icons.Material.Outlined.LocationOff"
-                                   Title="@L[SpeciesDetailMunicipalitiesEmptyTitle]"
-                                   Description="@L[SpeciesDetailMunicipalitiesEmptyDescription]" />
+                    <EmptyState Icon="@Icons.Material.Outlined.LocationOff"
+                                Title="@L[SpeciesDetailMunicipalitiesEmptyTitle]"
+                                Description="@L[SpeciesDetailMunicipalitiesEmptyDescription]" />
                 }
                 else
                 {
@@ -83,11 +81,11 @@
         }
         else
         {
-            <NuiEmptyState Icon="@Icons.Material.Outlined.SearchOff"
-                           Title="@L[SpeciesDetailNotFoundTitle]"
-                           Description="@L[SpeciesDetailNotFoundDescription]" />
+            <EmptyState Icon="@Icons.Material.Outlined.SearchOff"
+                        Title="@L[SpeciesDetailNotFoundTitle]"
+                        Description="@L[SpeciesDetailNotFoundDescription]" />
         }
-    </NuiPageLayout>
+    </PageShell>
 }
 else
 {
@@ -144,7 +142,7 @@ else
     protected override void OnInitialized()
     {
         base.OnInitialized();
-        Navbar.SetTitle(L["Nav_Species"]);
+        Bus.Publish(new MainLayout.TitleChanged(L["Nav_Species"]));
         L.LanguageChanged += OnLanguageChanged;
     }
 
@@ -219,7 +217,7 @@ else
         if (result.TryPickT0(out var detail, out var error))
         {
             _detailLoadError = null;
-            Navbar.SetTitle(GetSpeciesName(detail));
+            Bus.Publish(new MainLayout.TitleChanged(GetSpeciesName(detail)));
             return detail;
         }
         // A missing species keeps the dedicated not-found empty state.
@@ -313,7 +311,8 @@ else
     private void OnLanguageChanged()
     {
         // Nav title needs refreshing since we seeded it from L in OnInitialized.
-        Navbar.SetTitle(Id is null ? L["Nav_Species"] : Navbar.State.Title ?? L["Nav_Species"]);
+        // On a detail page the title is the species name, which isn't localized.
+        if (Id is null) Bus.Publish(new MainLayout.TitleChanged(L["Nav_Species"]));
         InvokeAsync(StateHasChanged);
     }
 

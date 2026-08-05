@@ -1,0 +1,27 @@
+@namespace FaunaFinder.Client.Components.Shared
+
+@* Dumb empty-state block: icon in a circle, a sentence, an optional second
+   sentence. Every empty state in the app is this exact shape — styles live
+   in wwwroot/app.css under "Empty States". *@
+
+<div class="empty-state">
+    <div class="empty-state-icon">
+        <MudIcon Icon="@Icon" Size="Size.Large" Color="Color.Secondary" />
+    </div>
+    <div class="empty-state-title">@Title</div>
+    @if (!string.IsNullOrEmpty(Description))
+    {
+        <div class="empty-state-description">@Description</div>
+    }
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public required string Icon { get; set; }
+
+    [Parameter, EditorRequired]
+    public required string Title { get; set; }
+
+    [Parameter]
+    public string? Description { get; set; }
+}

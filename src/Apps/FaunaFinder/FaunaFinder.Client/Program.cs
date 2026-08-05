@@ -1,6 +1,5 @@
 using EcoData.Common.i18n;
 using EcoData.Locations.Application.Client;
-using EcoData.NativeUi;
 using EcoData.Wildlife.Application.Client;
 using FaunaFinder.Client.Localization;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
@@ -16,7 +15,6 @@ var baseAddress = new Uri(builder.HostEnvironment.BaseAddress);
 builder.Services.AddLocationsClient(baseAddress);
 builder.Services.AddWildlifeClient(baseAddress);
 
-builder.Services.AddNativeUi();
 builder.Services.AddMudServices();
 
 // Localization — single Localizer instance fed from FaunaFinderStrings.

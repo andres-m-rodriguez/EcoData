@@ -1,7 +1,7 @@
 @page "/orgs"
 @using EcoPortal.Client.Services
-@inject INativeNavigationManager Navigation
-@inject INativeNavbarManager Navbar
+@inject NavigationManager Navigation
+@inject IEventBus Bus
 @inject AuthStateService AuthState
 
 <PageTitle>Organizations - EcoData</PageTitle>
@@ -31,6 +31,6 @@
 @code {
     protected override void OnInitialized()
     {
-        Navbar.SetTitle("Organizations");
+        Bus.Publish(new MainLayout.TitleChanged("Organizations"));
     }
 }

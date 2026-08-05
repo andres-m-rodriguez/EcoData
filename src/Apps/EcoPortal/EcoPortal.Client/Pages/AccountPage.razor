@@ -3,7 +3,6 @@
 @using EcoPortal.Client.Services
 @inject AuthStateService AuthState
 @inject ITabNavigationService Tabs
-@inject INativeNavbarManager Navbar
 
 <PageTitle>Account - EcoData</PageTitle>
 
@@ -175,7 +174,7 @@ else
     protected override void OnInitialized()
     {
         base.OnInitialized();
-        Navbar.SetTitle("Account");
+        Bus.Publish(new MainLayout.TitleChanged("Account"));
         // MainLayout owns AuthChanged; cross-class consumers use the base's auto-disposed
         // subscription. The empty handler exists purely for the re-render DispatchEvent runs.
         SubscribeEvent<MainLayout.AuthChanged>(_ => DispatchEvent(() => { }));

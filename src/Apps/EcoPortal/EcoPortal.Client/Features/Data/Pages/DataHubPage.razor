@@ -4,7 +4,6 @@
 @using EcoData.Sensors.Application.Client
 @using EcoData.Sensors.Contracts.Parameters
 @inherits StatefulComponent
-@inject INativeNavbarManager Navbar
 @inject ISensorHttpClient SensorClient
 @inject ISensorReadingHttpClient ReadingClient
 
@@ -188,7 +187,7 @@
     protected override void OnInitialized()
     {
         base.OnInitialized();
-        Navbar.SetTitle("Data");
+        Bus.Publish(new MainLayout.TitleChanged("Data"));
     }
 
     [Command, RunOnLoad]

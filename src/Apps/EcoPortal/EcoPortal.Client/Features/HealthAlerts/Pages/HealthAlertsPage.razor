@@ -1,7 +1,7 @@
 @page "/alerts"
 @using BlazorStaticNavigation
 @using EcoPortal.Client.Features.HealthAlerts.Components
-@inject INativeNavbarManager Navbar
+@inherits StatefulComponent
 
 <PageTitle>Health Alerts - EcoData</PageTitle>
 
@@ -14,6 +14,7 @@
 @code {
     protected override void OnInitialized()
     {
-        Navbar.SetTitle("Alerts");
+        base.OnInitialized();
+        Bus.Publish(new MainLayout.TitleChanged("Alerts"));
     }
 }

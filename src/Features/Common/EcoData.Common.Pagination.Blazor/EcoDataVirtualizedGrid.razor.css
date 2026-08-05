@@ -1,0 +1,8 @@
+/* One virtualized "item" is a row of cells. The column count and gap are
+   data-driven, so they arrive as CSS custom properties set on the row
+   element; everything else is declared here. */
+.ecodata-virtualized-grid-row {
+    display: grid;
+    grid-template-columns: repeat(var(--grid-cols, 1), 1fr);
+    gap: var(--grid-gap, 20px);
+}

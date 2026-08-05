@@ -1,13 +1,37 @@
-@inject IJSRuntime JS
-@implements IAsyncDisposable
+@* Debounced search field with optional filter button and action slot. Sticks below
+   the app bar via pure CSS (position: sticky) — no JS involved. *@
 
-<div class="search-header-wrapper @(_isSticky ? "is-sticky" : "")" @ref="_headerRef">
+<div class="search-header-wrapper">
     <div class="search-header-content">
         <div class="search-wrapper">
-            <NuiSearchBar Value="@Value" ValueChanged="ValueChanged" Placeholder="@Placeholder"
-                          ShowFilterButton="ShowFilterButton" HasActiveFilters="HasActiveFilters"
-                          FilterCount="FilterCount" OnFilterClick="OnFilterClick"
-                          EnableSticky="false" />
+            <div class="search-bar">
+                <MudTextField T="string"
+                              Value="@Value"
+                              ValueChanged="@ValueChanged"
+                              Placeholder="@Placeholder"
+                              Variant="Variant.Text"
+                              Margin="Margin.None"
+                              Underline="false"
+                              Immediate="true"
+                              DebounceInterval="300"
+                              Clearable="true"
+                              Adornment="Adornment.Start"
+                              AdornmentIcon="@Icons.Material.Filled.Search"
+                              Class="search-input" />
+                @if (ShowFilterButton)
+                {
+                    <div class="search-divider"></div>
+                    <button type="button" class="filter-btn @(HasActiveFilters ? "active" : "")"
+                            @onclick="OnFilterClick">
+                        <MudIcon Icon="@Icons.Material.Filled.Tune" Size="Size.Small" />
+                        <span>Filter</span>
+                        @if (HasActiveFilters && FilterCount > 0)
+                        {
+                            <span class="filter-badge">@FilterCount</span>
+                        }
+                    </button>
+                }
+            </div>
         </div>
         @if (ActionButtons is not null)
         {
@@ -19,12 +43,6 @@
 </div>
 
 @code {
-    private ElementReference _headerRef;
-    private bool _isSticky;
-    private bool _disposed;
-    private DotNetObjectReference<SearchHeader>? _dotNetRef;
-    private IJSObjectReference? _jsModule;
-
     [Parameter]
     public string? Value { get; set; }
 
@@ -49,46 +67,8 @@
     [Parameter]
     public RenderFragment? ActionButtons { get; set; }
 
+    /// <summary>Unused: stickiness is pure CSS now. The old JS observer imported a
+    /// script that never shipped. Kept only so existing call sites keep compiling.</summary>
     [Parameter]
     public bool EnableSticky { get; set; } = true;
-
-    protected override async Task OnAfterRenderAsync(bool firstRender)
-    {
-        if (firstRender && EnableSticky)
-        {
-            _dotNetRef = DotNetObjectReference.Create(this);
-            _jsModule = await JS.InvokeAsync<IJSObjectReference>("import", "./js/stickySearch.js");
-
-            // Check if disposed during the await
-            if (_disposed) return;
-
-            await _jsModule.InvokeVoidAsync("initStickySearch", _headerRef, _dotNetRef);
-        }
-    }
-
-    [JSInvokable]
-    public void SetSticky(bool isSticky)
-    {
-        if (_isSticky != isSticky)
-        {
-            _isSticky = isSticky;
-            StateHasChanged();
-        }
-    }
-
-    public async ValueTask DisposeAsync()
-    {
-        _disposed = true;
-
-        if (_jsModule is not null)
-        {
-            try
-            {
-                await _jsModule.InvokeVoidAsync("destroyStickySearch");
-                await _jsModule.DisposeAsync();
-            }
-            catch (JSDisconnectedException) { }
-        }
-        _dotNetRef?.Dispose();
-    }
 }

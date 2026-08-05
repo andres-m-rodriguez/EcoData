@@ -13,7 +13,7 @@
 @inject ISensorReadingHttpClient ReadingClient
 @inject IMunicipalityHttpClient MunicipalityClient
 @inject IDialogService DialogService
-@inject INativeNavigationManager Navigation
+@inject NavigationManager Navigation
 @inject ISnackbar Snackbar
 
 @* Header Card *@
@@ -334,10 +334,11 @@
         {
             var deleteResult = await SensorClient.DeleteAsync(Sensor.Id);
             await deleteResult.Match(
-                async _ =>
+                _ =>
                 {
                     Snackbar.Add("Sensor deleted successfully", Severity.Success);
-                    await Navigation.GoBackAsync();
+                    Navigation.NavigateTo("/sensor-dashboard");
+                    return Task.CompletedTask;
                 },
                 requestFailed =>
                 {

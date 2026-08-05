@@ -11,18 +11,18 @@
 @using EcoPortal.Client.Features.Organizations.Authorization
 @inherits StatefulComponent
 @inject IOrganizationHttpClient OrganizationClient
-@inject INativeNavigationManager Navigation
+@inject NavigationManager Navigation
 @inject AuthStateService AuthState
 
 <PageTitle>Sensors - EcoData</PageTitle>
 
-<NuiPageLayout Title="Sensors" ParentPath="@($"/organizations/{OrganizationId}")"
+<PageShell Title="Sensors" ParentPath="@($"/organizations/{OrganizationId}")"
                  Actions="@([new("Add", NavigateToCreateSensor)])">
     <SensorList OrganizationId="OrganizationId"
                 EmptyMessage="No sensors yet"
                 EmptySubMessage="Add sensors to start monitoring water quality."
                 OnSensorClick="NavigateToDetail" />
-</NuiPageLayout>
+</PageShell>
 
 @code {
     [Parameter]
