@@ -94,8 +94,16 @@ public static class UserAuthEndpoints
         group
             .MapGet(
                 "/me",
-                async (ClaimsPrincipal user, IAuthService authService, CancellationToken ct) =>
-                    TypedResults.Ok<UserInfo?>(await authService.GetCurrentUserAsync(user, ct))
+                async Task<Results<Ok<UserInfo>, UnauthorizedHttpResult>> (
+                    ClaimsPrincipal user,
+                    IAuthService authService,
+                    CancellationToken ct
+                ) =>
+                    // A null Ok<T> serializes as a 200 with an EMPTY body, which no JSON
+                    // reader accepts; "no current user" is a 401, not an empty success.
+                    await authService.GetCurrentUserAsync(user, ct) is { } userInfo
+                        ? TypedResults.Ok(userInfo)
+                        : TypedResults.Unauthorized()
             )
             .WithName("GetCurrentUser");
 
