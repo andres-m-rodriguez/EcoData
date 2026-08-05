@@ -92,7 +92,10 @@
 
 /* Page transition animations. Transform-only: an opacity fade lets the gray
    .main-content background show through the incoming page, which reads as a
-   flash between pages that share the same dark hero (Data ↔ Sensors). */
+   flash between pages that share the same dark hero (Data ↔ Sensors).
+
+   Mobile-only: on desktop the swap is instant (one paint), so pages that open
+   with the same hero keep it visually stationary instead of re-entering. */
 @keyframes slide-in-right {
     from {
         transform: translateX(12px);
@@ -111,17 +114,19 @@
     }
 }
 
-.page-transition-forward,
-.page-transition-back {
-    will-change: transform;
-}
+@media (max-width: 959.95px) {
+    .page-transition-forward,
+    .page-transition-back {
+        will-change: transform;
+    }
 
-.page-transition-forward {
-    animation: slide-in-right 0.2s ease-out;
-}
+    .page-transition-forward {
+        animation: slide-in-right 0.2s ease-out;
+    }
 
-.page-transition-back {
-    animation: slide-in-left 0.2s ease-out;
+    .page-transition-back {
+        animation: slide-in-left 0.2s ease-out;
+    }
 }
 
 /* Ensure minimum height for content */
