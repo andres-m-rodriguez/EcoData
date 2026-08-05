@@ -1,5 +1,6 @@
 @using EcoData.Sensors.Application.Client
 @using EcoData.Sensors.Contracts.Dtos
+@inherits StatefulComponent
 @inject IUserSubscriptionHttpClient SubscriptionClient
 @inject ISnackbar Snackbar
 
@@ -38,17 +39,17 @@
     <DialogActions>
         <MudButton Color="Color.Error"
                    Variant="Variant.Text"
-                   OnClick="UnsubscribeAsync"
-                   Disabled="_isSaving">
+                   OnClick="() => UnsubscribeState.Execute()"
+                   Disabled="IsBusy">
             Unsubscribe
         </MudButton>
         <MudSpacer />
-        <MudButton OnClick="Cancel" Disabled="_isSaving">Cancel</MudButton>
+        <MudButton OnClick="Cancel" Disabled="IsBusy">Cancel</MudButton>
         <MudButton Color="Color.Primary"
                    Variant="Variant.Filled"
-                   OnClick="SaveAsync"
-                   Disabled="_isSaving">
-            @if (_isSaving)
+                   OnClick="() => SaveState.Execute()"
+                   Disabled="IsBusy">
+            @if (SaveState.IsLoading)
             {
                 <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
             }
@@ -70,10 +71,13 @@
     private bool _notifyOnStale;
     private bool _notifyOnUnhealthy;
     private bool _notifyOnRecovered;
-    private bool _isSaving;
+
+    private bool IsBusy => SaveState.IsLoading || UnsubscribeState.IsLoading;
 
     protected override void OnInitialized()
     {
+        base.OnInitialized();
+
         if (CurrentSubscription is not null)
         {
             _notifyOnStale = CurrentSubscription.NotifyOnStale;
@@ -90,55 +94,41 @@
 
     private void Cancel() => MudDialog.Cancel();
 
-    private async Task SaveAsync()
+    [Command]
+    private async Task Save()
     {
-        _isSaving = true;
-        try
+        var request = new UserSensorSubscriptionDtoForUpdate(
+            _notifyOnStale,
+            _notifyOnUnhealthy,
+            _notifyOnRecovered
+        );
+
+        var result = await SubscriptionClient.UpdateSubscriptionAsync(SensorId, request);
+
+        if (result.TryPickT0(out var updated, out var failure))
         {
-            var request = new UserSensorSubscriptionDtoForUpdate(
-                _notifyOnStale,
-                _notifyOnUnhealthy,
-                _notifyOnRecovered
-            );
-
-            var result = await SubscriptionClient.UpdateSubscriptionAsync(SensorId, request);
-
-            if (result.TryPickT0(out var updated, out var failure))
-            {
-                Snackbar.Add("Preferences updated", Severity.Success);
-                MudDialog.Close(DialogResult.Ok(updated));
-            }
-            else
-            {
-                Snackbar.Add(failure.Message ?? "Failed to update preferences", Severity.Error);
-            }
+            Snackbar.Add("Preferences updated", Severity.Success);
+            MudDialog.Close(DialogResult.Ok(updated));
         }
-        finally
+        else
         {
-            _isSaving = false;
+            Snackbar.Add(failure.Message ?? "Failed to update preferences", Severity.Error);
         }
     }
 
-    private async Task UnsubscribeAsync()
+    [Command]
+    private async Task Unsubscribe()
     {
-        _isSaving = true;
-        try
-        {
-            var result = await SubscriptionClient.UnsubscribeAsync(SensorId);
+        var result = await SubscriptionClient.UnsubscribeAsync(SensorId);
 
-            if (result.TryPickT0(out _, out var failure))
-            {
-                Snackbar.Add("Unsubscribed from sensor alerts", Severity.Success);
-                MudDialog.Close(DialogResult.Ok(true));
-            }
-            else
-            {
-                Snackbar.Add(failure.Message ?? "Failed to unsubscribe", Severity.Error);
-            }
-        }
-        finally
+        if (result.TryPickT0(out _, out var failure))
         {
-            _isSaving = false;
+            Snackbar.Add("Unsubscribed from sensor alerts", Severity.Success);
+            MudDialog.Close(DialogResult.Ok(true));
+        }
+        else
+        {
+            Snackbar.Add(failure.Message ?? "Failed to unsubscribe", Severity.Error);
         }
     }
 }

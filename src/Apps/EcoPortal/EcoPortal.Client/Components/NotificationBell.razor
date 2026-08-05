@@ -1,6 +1,6 @@
 @using EcoPortal.Client.Services
+@inherits StatefulComponent
 @inject NotificationService NotificationService
-@implements IDisposable
 
 <MudBadge Content="@UnreadCountDisplay"
           Visible="@HasUnread"
@@ -24,22 +24,25 @@
 </MudPopover>
 
 @code {
-    private bool _isPanelOpen;
+    /// <summary>Published by NotificationService whenever the unread count changes; the badge re-renders.</summary>
+    public sealed record UnreadCountChanged(int Count);
 
-    private bool HasUnread => NotificationService.UnreadCount > 0;
+    private bool _isPanelOpen;
+    private int _unreadCount;
+
+    private bool HasUnread => _unreadCount > 0;
 
     private string UnreadCountDisplay =>
-        NotificationService.UnreadCount > 99 ? "99+" : NotificationService.UnreadCount.ToString();
+        _unreadCount > 99 ? "99+" : _unreadCount.ToString();
 
     protected override void OnInitialized()
     {
-        NotificationService.OnUnreadCountChanged += HandleUnreadCountChanged;
+        base.OnInitialized();
+        _unreadCount = NotificationService.UnreadCount;
     }
 
-    private void HandleUnreadCountChanged()
-    {
-        InvokeAsync(StateHasChanged);
-    }
+    [Event]
+    private void OnUnreadCountChanged(UnreadCountChanged e) => _unreadCount = e.Count;
 
     private void TogglePanel()
     {
@@ -49,11 +52,6 @@
     private void ClosePanel()
     {
         _isPanelOpen = false;
-    }
-
-    public void Dispose()
-    {
-        NotificationService.OnUnreadCountChanged -= HandleUnreadCountChanged;
     }
 }
 

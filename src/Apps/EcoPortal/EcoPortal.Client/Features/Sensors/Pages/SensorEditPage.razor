@@ -6,9 +6,9 @@
 @using EcoPortal.Client.Features.Sensors.Components
 @using EcoPortal.Client.Services
 @using EcoPortal.Client.Components
-@using BlazingSingularity.Commands
 @using static EcoPortal.Client.Features.Sensors.Components.SensorForm
 @using SensorPermissions = EcoData.Sensors.Contracts.Permissions
+@inherits StatefulComponent
 @inject ISensorHttpClient SensorClient
 @inject INativeNavigationManager Navigation
 @inject ISnackbar Snackbar
@@ -18,7 +18,7 @@
 <PageTitle>Edit Sensor - EcoData</PageTitle>
 
 <NuiPageLayout Title="Edit Sensor" ParentPath="@($"/sensor/{SensorId}")">
-        @if (LoadCommand.IsLoading)
+        @if (LoadState.IsLoading)
         {
             <MudPaper Elevation="1" Class="pa-6">
                 <MudSkeleton Width="200px" Height="32px" />
@@ -55,7 +55,7 @@
                 <SensorForm Model="_formModel"
                             SubmitButtonText="Save Changes"
                             ErrorMessage="@_errorMessage"
-                            IsLoading="SaveCommand.IsLoading"
+                            IsLoading="SaveState.IsLoading"
                             HideExternalId="true"
                             OnSubmit="HandleSubmit"
                             OnCancel="NavigateBack" />
@@ -73,12 +73,7 @@
     private string? _loadError;
     private bool _hasPermission;
 
-    protected override async Task OnInitializedAsync()
-    {
-        await LoadCommand.ExecuteAsync();
-    }
-
-    [RelayCommand]
+    [Command, RunOnLoad]
     private async Task Load()
     {
         var sensorResult = await SensorClient.GetByIdAsync(SensorId);
@@ -122,10 +117,10 @@
 
     private async Task HandleSubmit(SensorFormModel model)
     {
-        await SaveCommand.ExecuteAsync();
+        await SaveState.Execute();
     }
 
-    [RelayCommand]
+    [Command]
     private async Task Save()
     {
         _errorMessage = null;

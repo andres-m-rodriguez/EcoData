@@ -3,7 +3,6 @@
 @using EcoData.Locations.Contracts.Dtos
 @using EcoData.Wildlife.Application.Client
 @using EcoData.Wildlife.Contracts.Parameters
-@using BlazingSingularity.Fetch
 @inject ISpeciesHttpClient SpeciesClient
 
 <MudPaper Elevation="0" Class="pa-3 rounded-lg border-solid border mud-border-lines-default municipality-card"
@@ -19,13 +18,13 @@
                 {
                     <span class="mud-error-text">@_countLoadError</span>
                 }
-                else if (_countFetch.IsLoading)
+                else if (LoadCountState.IsLoading)
                 {
                     <MudSkeleton Width="60px" Height="14px" />
                 }
                 else
                 {
-                    <span>@L["Muni_Card_SpeciesCount", _countFetch.Data]</span>
+                    <span>@L["Muni_Card_SpeciesCount", LoadCountState.Result]</span>
                 }
             </MudText>
         </MudStack>
@@ -40,37 +39,5 @@
     [Parameter]
     public EventCallback<MunicipalityDtoForList> OnClick { get; set; }
 
-    private IFetch<int> _countFetch = default!;
-    private string? _countLoadError;
-
-    protected override void OnInitialized()
-    {
-        base.OnInitialized();
-        _countFetch = new Fetch<int>(
-            async ct =>
-            {
-                var result = await SpeciesClient.GetCountAsync(
-                    new SpeciesParameters(MunicipalityId: Municipality.Id),
-                    ct);
-                if (result.TryPickT0(out var count, out var error))
-                {
-                    _countLoadError = null;
-                    return count;
-                }
-                _countLoadError = error.StatusCode == 0
-                    ? "Couldn't reach the server."
-                    : error.Message ?? "Couldn't load the species count.";
-                return 0;
-            },
-            () => InvokeAsync(StateHasChanged));
-        _ = _countFetch.FetchAsync();
-    }
-
     private Task HandleClick() => OnClick.InvokeAsync(Municipality);
-
-    public override void Dispose()
-    {
-        base.Dispose();
-        (_countFetch as IDisposable)?.Dispose();
-    }
 }

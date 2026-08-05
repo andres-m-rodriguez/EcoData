@@ -6,7 +6,7 @@
 @using EcoPortal.Client.Components
 @using EcoPortal.Client.Services
 @using EcoPortal.Client.Features.OrganizationAccessRequests.Dialogs
-@using BlazingSingularity.Signals
+@inherits StatefulComponent
 @inject IOrganizationAccessRequestHttpClient AccessRequestClient
 @inject IDialogService DialogService
 @inject ISnackbar Snackbar
@@ -17,7 +17,7 @@
 
 <NuiPageLayout Label="Organizations" Title="My Requests"
                  Actions="@([new("Request", OnRequestAction)])">
-        <SearchHeader SearchSignal="SearchTextSignal" Placeholder="Search requests..." />
+        <SearchHeader @bind-Value="SearchTextState.Value" Placeholder="Search requests..." />
 
         <MudPaper Elevation="1" Class="rounded-lg">
             <EcoDataVirtualizedList @ref="_listRef" TItem="OrganizationAccessRequestDto"
@@ -128,18 +128,16 @@
 @code {
     private EcoDataVirtualizedList<OrganizationAccessRequestDto, OrganizationAccessRequestParameters>? _listRef;
 
-    [Signal]
+    [Reactive]
     private string? _searchText;
 
-    protected override void OnInitialized()
-    {
-        SearchTextSignal.OnChange(_ => _listRef?.Refresh());
-    }
+    [OnChanged]
+    private void OnSearchTextChanged(string? value) => _listRef?.Refresh();
 
     private OrganizationAccessRequestParameters CreateParameters(Guid? cursor) => new(
         PageSize: 20,
         Cursor: cursor,
-        Search: string.IsNullOrWhiteSpace(SearchText) ? null : SearchText
+        Search: string.IsNullOrWhiteSpace(_searchText) ? null : _searchText
     );
 
     private async Task CancelRequest(OrganizationAccessRequestDto request)

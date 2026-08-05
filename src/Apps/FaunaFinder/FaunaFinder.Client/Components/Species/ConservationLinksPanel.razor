@@ -2,8 +2,7 @@
 @using EcoData.Wildlife.Contracts.Dtos
 @using EcoData.Wildlife.Application.Client
 @using EcoData.Common.i18n
-@using BlazingSingularity.Fetch
-@implements IDisposable
+@inherits StatefulComponent
 @inject IConservationLinkHttpClient LinkClient
 @inject IFwsActionHttpClient FwsClient
 @inject INrcsPracticeHttpClient NrcsClient
@@ -14,7 +13,7 @@
         <MudText Typo="Typo.h6">Conservation Actions</MudText>
         <MudSpacer />
         <MudText Typo="Typo.caption" Color="Color.Secondary">
-            @if (_linksFetch.Data is { } links)
+            @if (LoadLinksState.Result is { } links)
             {
                 <span>@FilteredLinks.Count / @links.Links.Count</span>
             }
@@ -25,14 +24,14 @@
     {
         <MudAlert Severity="Severity.Error">@loadError</MudAlert>
     }
-    else if (_linksFetch.IsLoading || _fwsFetch.IsLoading || _nrcsFetch.IsLoading)
+    else if (LoadLinksState.IsLoading || LoadFwsActionsState.IsLoading || LoadNrcsPracticesState.IsLoading)
     {
         @for (var i = 0; i < 3; i++)
         {
             <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="88px" Class="mb-2 rounded-lg" />
         }
     }
-    else if (_linksFetch.Data is { Links.Count: 0 })
+    else if (LoadLinksState.Result is { Links.Count: 0 })
     {
         <NuiEmptyState Icon="@Icons.Material.Outlined.SearchOff"
                        Title="No conservation actions"
@@ -50,7 +49,7 @@
                            Label="NRCS practice" Variant="Variant.Outlined" Margin="Margin.Dense"
                            AnchorOrigin="Origin.BottomCenter" Class="conservation-filter-field">
                     <MudSelectItem T="Guid?" Value="@(null as Guid?)">All practices</MudSelectItem>
-                    @foreach (var p in _nrcsFetch.Data ?? [])
+                    @foreach (var p in LoadNrcsPracticesState.Result ?? [])
                     {
                         <MudSelectItem T="Guid?" Value="@((Guid?)p.Id)">@p.Code — @ResolveLocale(p.Name)</MudSelectItem>
                     }
@@ -60,7 +59,7 @@
                            Label="FWS action" Variant="Variant.Outlined" Margin="Margin.Dense"
                            AnchorOrigin="Origin.BottomCenter" Class="conservation-filter-field">
                     <MudSelectItem T="Guid?" Value="@(null as Guid?)">All actions</MudSelectItem>
-                    @foreach (var a in _fwsFetch.Data ?? [])
+                    @foreach (var a in LoadFwsActionsState.Result ?? [])
                     {
                         <MudSelectItem T="Guid?" Value="@((Guid?)a.Id)">@a.Code — @ResolveLocale(a.Name)</MudSelectItem>
                     }
@@ -132,10 +131,6 @@
     [Parameter, EditorRequired]
     public Guid SpeciesId { get; set; }
 
-    private IFetch<ConservationLinksDtoForSpecies> _linksFetch = default!;
-    private IFetch<IReadOnlyList<FwsActionDtoForList>> _fwsFetch = default!;
-    private IFetch<IReadOnlyList<NrcsPracticeDtoForList>> _nrcsFetch = default!;
-
     private string _search = "";
     private Guid? _practiceId;
     private Guid? _actionId;
@@ -150,7 +145,7 @@
     {
         get
         {
-            var links = _linksFetch.Data?.Links ?? [];
+            var links = LoadLinksState.Result?.Links ?? [];
             if (links.Count == 0) return links;
 
             IEnumerable<FwsLinkDtoForDetail> filtered = links;
@@ -169,57 +164,49 @@
         }
     }
 
-    protected override void OnInitialized()
+    [Command, RunOnLoad]
+    private async Task<ConservationLinksDtoForSpecies?> LoadLinks(CancellationToken ct)
     {
-        _linksFetch = new Fetch<ConservationLinksDtoForSpecies>(
-            async ct =>
-            {
-                var result = await LinkClient.GetBySpeciesAsync(SpeciesId, ct);
-                if (result.TryPickT0(out var links, out var error))
-                {
-                    _linksLoadError = null;
-                    return links;
-                }
-                _linksLoadError = error.StatusCode == 0
-                    ? "Couldn't reach the server."
-                    : error.Message ?? "Something went wrong while loading conservation actions.";
-                return new ConservationLinksDtoForSpecies([]);
-            },
-            () => InvokeAsync(StateHasChanged));
-        _fwsFetch = new Fetch<IReadOnlyList<FwsActionDtoForList>>(
-            async ct =>
-            {
-                var result = await FwsClient.GetAllAsync(ct);
-                if (result.TryPickT0(out var actions, out var error))
-                {
-                    _fwsLoadError = null;
-                    return actions;
-                }
-                _fwsLoadError = error.StatusCode == 0
-                    ? "Couldn't reach the server."
-                    : error.Message ?? "Something went wrong while loading FWS actions.";
-                return [];
-            },
-            () => InvokeAsync(StateHasChanged));
-        _nrcsFetch = new Fetch<IReadOnlyList<NrcsPracticeDtoForList>>(
-            async ct =>
-            {
-                var result = await NrcsClient.GetAllAsync(ct);
-                if (result.TryPickT0(out var practices, out var error))
-                {
-                    _nrcsLoadError = null;
-                    return practices;
-                }
-                _nrcsLoadError = error.StatusCode == 0
-                    ? "Couldn't reach the server."
-                    : error.Message ?? "Something went wrong while loading NRCS practices.";
-                return [];
-            },
-            () => InvokeAsync(StateHasChanged));
+        var result = await LinkClient.GetBySpeciesAsync(SpeciesId, ct);
+        if (result.TryPickT0(out var links, out var error))
+        {
+            _linksLoadError = null;
+            return links;
+        }
+        _linksLoadError = error.StatusCode == 0
+            ? "Couldn't reach the server."
+            : error.Message ?? "Something went wrong while loading conservation actions.";
+        return new ConservationLinksDtoForSpecies([]);
+    }
 
-        _ = _linksFetch.FetchAsync();
-        _ = _fwsFetch.FetchAsync();
-        _ = _nrcsFetch.FetchAsync();
+    [Command, RunOnLoad]
+    private async Task<IReadOnlyList<FwsActionDtoForList>?> LoadFwsActions(CancellationToken ct)
+    {
+        var result = await FwsClient.GetAllAsync(ct);
+        if (result.TryPickT0(out var actions, out var error))
+        {
+            _fwsLoadError = null;
+            return actions;
+        }
+        _fwsLoadError = error.StatusCode == 0
+            ? "Couldn't reach the server."
+            : error.Message ?? "Something went wrong while loading FWS actions.";
+        return [];
+    }
+
+    [Command, RunOnLoad]
+    private async Task<IReadOnlyList<NrcsPracticeDtoForList>?> LoadNrcsPractices(CancellationToken ct)
+    {
+        var result = await NrcsClient.GetAllAsync(ct);
+        if (result.TryPickT0(out var practices, out var error))
+        {
+            _nrcsLoadError = null;
+            return practices;
+        }
+        _nrcsLoadError = error.StatusCode == 0
+            ? "Couldn't reach the server."
+            : error.Message ?? "Something went wrong while loading NRCS practices.";
+        return [];
     }
 
     private void OnPracticeChanged(Guid? id)
@@ -234,21 +221,14 @@
 
     private string GetPracticeLabel(Guid id)
     {
-        var p = (_nrcsFetch.Data ?? []).FirstOrDefault(x => x.Id == id);
+        var p = (LoadNrcsPracticesState.Result ?? []).FirstOrDefault(x => x.Id == id);
         return p is null ? "" : $"{p.Code} — {ResolveLocale(p.Name)}";
     }
 
     private string GetActionLabel(Guid id)
     {
-        var a = (_fwsFetch.Data ?? []).FirstOrDefault(x => x.Id == id);
+        var a = (LoadFwsActionsState.Result ?? []).FirstOrDefault(x => x.Id == id);
         return a is null ? "" : $"{a.Code} — {ResolveLocale(a.Name)}";
-    }
-
-    public void Dispose()
-    {
-        (_linksFetch as IDisposable)?.Dispose();
-        (_fwsFetch as IDisposable)?.Dispose();
-        (_nrcsFetch as IDisposable)?.Dispose();
     }
 
     private static string ResolveLocale(IReadOnlyList<LocaleValue> values)

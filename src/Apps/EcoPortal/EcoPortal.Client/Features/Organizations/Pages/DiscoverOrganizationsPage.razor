@@ -1,6 +1,4 @@
 @page "/organizations/discover"
-@using BlazingSingularity.Fetch
-@using BlazingSingularity.Signals
 @using EcoData.Common.Pagination.Blazor
 @using EcoData.Common.Problems.Contracts
 @using EcoData.Organization.Application.Client
@@ -10,6 +8,7 @@
 @using EcoData.Sensors.Contracts.Parameters
 @using EcoPortal.Client.Features.Organizations.Components
 @using EcoPortal.Client.Services
+@inherits StatefulComponent
 @inject IOrganizationHttpClient OrganizationClient
 @inject ISensorHttpClient SensorClient
 @inject ISensorReadingHttpClient ReadingClient
@@ -41,35 +40,35 @@
                 <div class="hero-stats-k"><span class="pulse"></span>Updated · just now</div>
                 <div class="hs-item">
                     <span class="hs-label">Organizations</span>
-                    @if (_orgCountFetch.IsLoading)
+                    @if (LoadOrgCountState.IsLoading)
                     {
                         <MudSkeleton SkeletonType="SkeletonType.Text" Width="120px" Height="32px" />
                     }
                     else
                     {
-                        <span class="hs-val">@_orgCountFetch.Data.ToString("N0")</span>
+                        <span class="hs-val">@LoadOrgCountState.Result.ToString("N0")</span>
                     }
                 </div>
                 <div class="hs-item">
                     <span class="hs-label">Sensors deployed</span>
-                    @if (_sensorCountFetch.IsLoading)
+                    @if (LoadSensorCountState.IsLoading)
                     {
                         <MudSkeleton SkeletonType="SkeletonType.Text" Width="120px" Height="32px" />
                     }
                     else
                     {
-                        <span class="hs-val">@_sensorCountFetch.Data.ToString("N0")</span>
+                        <span class="hs-val">@LoadSensorCountState.Result.ToString("N0")</span>
                     }
                 </div>
                 <div class="hs-item">
                     <span class="hs-label">Total readings</span>
-                    @if (_readingCountFetch.IsLoading)
+                    @if (LoadReadingCountState.IsLoading)
                     {
                         <MudSkeleton SkeletonType="SkeletonType.Text" Width="120px" Height="32px" />
                     }
                     else
                     {
-                        <span class="hs-val">@_readingCountFetch.Data.ToString("N0")</span>
+                        <span class="hs-val">@LoadReadingCountState.Result.ToString("N0")</span>
                     }
                 </div>
                 <div class="hs-item"><span class="hs-label">Updated every</span><span class="hs-val">15<span class="u">min</span></span></div>
@@ -88,7 +87,7 @@
         </div>
 
         <div class="list-card">
-            <SearchHeader SearchSignal="SearchTextSignal" Placeholder="Search organizations..." />
+            <SearchHeader @bind-Value="SearchTextState.Value" Placeholder="Search organizations..." />
 
             <div class="organizations-list">
                 <EcoDataVirtualizedList @ref="_virtualizedList" TItem="OrganizationDtoForList" TParams="OrganizationParameters"
@@ -105,14 +104,14 @@
                         }
                     </LoadingTemplate>
                     <EmptyTemplate>
-                        @if (!string.IsNullOrWhiteSpace(SearchText))
+                        @if (!string.IsNullOrWhiteSpace(_searchText))
                         {
                             <div class="organizations-empty-state">
                                 <div class="empty-icon">
                                     <MudIcon Icon="@Icons.Material.Filled.SearchOff" Size="Size.Large" />
                                 </div>
                                 <h4 class="empty-title">No organizations found</h4>
-                                <p class="empty-description">No organizations match "@SearchText"</p>
+                                <p class="empty-description">No organizations match "@_searchText"</p>
                                 <MudButton Variant="Variant.Filled" Color="Color.Secondary" OnClick="ClearSearch" Class="mt-4">
                                     Clear Search
                                 </MudButton>
@@ -149,58 +148,54 @@
 @code {
     private EcoDataVirtualizedList<OrganizationDtoForList, OrganizationParameters>? _virtualizedList;
 
-    private IFetch<int> _orgCountFetch = default!;
-    private IFetch<int> _sensorCountFetch = default!;
-    private IFetch<long> _readingCountFetch = default!;
     private string? _loadError;
 
-    [Signal]
+    [Reactive]
     private string? _searchText;
 
     protected override void OnInitialized()
     {
+        base.OnInitialized();
         Navbar.SetTitle("Organizations");
-        SearchTextSignal.OnChange(_ => _virtualizedList?.Refresh());
+    }
 
-        _orgCountFetch = new Fetch<int>(
-            async ct =>
-            {
-                var result = await OrganizationClient.GetOrganizationCountAsync(new OrganizationParameters(), ct);
-                if (result.TryPickT0(out var count, out var error))
-                    return count;
-                SetLoadError(error, "Couldn't load organization count.");
-                return 0;
-            },
-            () => InvokeAsync(StateHasChanged)
-        );
+    [OnChanged]
+    private void OnSearchTextChanged(string? value) => _virtualizedList?.Refresh();
 
-        _sensorCountFetch = new Fetch<int>(
-            async ct =>
-            {
-                var result = await SensorClient.GetSensorCountAsync(new SensorParameters(), ct);
-                if (result.TryPickT0(out var count, out var error))
-                    return count;
-                SetLoadError(error, "Couldn't load sensor count.");
-                return 0;
-            },
-            () => InvokeAsync(StateHasChanged)
-        );
+    [Command, RunOnLoad]
+    private async Task<int> LoadOrgCount(CancellationToken ct)
+    {
+        var result = await OrganizationClient.GetOrganizationCountAsync(new OrganizationParameters(), ct);
+        if (!result.TryPickT0(out var count, out var error))
+        {
+            SetLoadError(error, "Couldn't load organization count.");
+            return 0;
+        }
+        return count;
+    }
 
-        _readingCountFetch = new Fetch<long>(
-            async ct =>
-            {
-                var result = await ReadingClient.GetTotalCountAsync(ct);
-                if (result.TryPickT0(out var count, out var error))
-                    return count;
-                SetLoadError(error, "Couldn't load reading count.");
-                return 0;
-            },
-            () => InvokeAsync(StateHasChanged)
-        );
+    [Command, RunOnLoad]
+    private async Task<int> LoadSensorCount(CancellationToken ct)
+    {
+        var result = await SensorClient.GetSensorCountAsync(new SensorParameters(), ct);
+        if (!result.TryPickT0(out var count, out var error))
+        {
+            SetLoadError(error, "Couldn't load sensor count.");
+            return 0;
+        }
+        return count;
+    }
 
-        _ = _orgCountFetch.FetchAsync();
-        _ = _sensorCountFetch.FetchAsync();
-        _ = _readingCountFetch.FetchAsync();
+    [Command, RunOnLoad]
+    private async Task<long> LoadReadingCount(CancellationToken ct)
+    {
+        var result = await ReadingClient.GetTotalCountAsync(ct);
+        if (!result.TryPickT0(out var count, out var error))
+        {
+            SetLoadError(error, "Couldn't load reading count.");
+            return 0;
+        }
+        return count;
     }
 
     private OrganizationParameters BuildParameters(Guid? cursor)
@@ -208,7 +203,7 @@
         return new OrganizationParameters(
             PageSize: 20,
             Cursor: cursor,
-            Search: string.IsNullOrWhiteSpace(SearchText) ? null : SearchText
+            Search: string.IsNullOrWhiteSpace(_searchText) ? null : _searchText
         );
     }
 
@@ -226,7 +221,7 @@
 
     private void ClearSearch()
     {
-        SearchText = null;
+        SearchTextState.Value = null;
     }
 
     private void SetLoadError(RequestFailed error, string fallback)

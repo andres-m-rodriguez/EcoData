@@ -3,11 +3,10 @@
 @using EcoData.Common.Pagination.Blazor
 @using EcoPortal.Client.Services
 @using EcoPortal.Client.Components
-@using BlazingSingularity.Signals
+@inherits StatefulComponent
 @inject NotificationService NotificationService
-@implements IDisposable
 
-<SearchHeader SearchSignal="SearchTextSignal" Placeholder="Search by sensor name..." />
+<SearchHeader @bind-Value="SearchTextState.Value" Placeholder="Search by sensor name..." />
 
 <MudStack Spacing="2">
     <EcoDataVirtualizedList @ref="_virtualizedList"
@@ -36,7 +35,7 @@
                 <MudAvatar Color="Color.Default" Size="Size.Large" Style="width: 6rem; height: 6rem;">
                     <MudIcon Icon="@Icons.Material.Outlined.NotificationsNone" Size="Size.Large" />
                 </MudAvatar>
-                @if (!string.IsNullOrWhiteSpace(SearchText))
+                @if (!string.IsNullOrWhiteSpace(_searchText))
                 {
                     <MudText Typo="Typo.h6">No matching notifications</MudText>
                     <MudText Typo="Typo.body2" Color="Color.Secondary">Try a different search term to find notifications.</MudText>
@@ -67,24 +66,21 @@
 @code {
     private EcoDataVirtualizedList<UserNotificationDto, NotificationParameters>? _virtualizedList;
 
-    [Signal]
+    [Reactive]
     private string? _searchText;
 
     [Parameter]
     public EventCallback<UserNotificationDto> OnNotificationClick { get; set; }
 
-    protected override void OnInitialized()
-    {
-        SearchTextSignal.OnChange(_ => _virtualizedList?.Refresh());
-        NotificationService.OnNotificationReceived += HandleNewNotification;
-    }
+    [OnChanged]
+    private void OnSearchTextChanged(string? value) => _virtualizedList?.Refresh();
 
     private NotificationParameters BuildParameters(Guid? cursor)
     {
         return new NotificationParameters(
             PageSize: 50,
             Cursor: cursor,
-            SensorName: string.IsNullOrWhiteSpace(SearchText) ? null : SearchText
+            SensorName: string.IsNullOrWhiteSpace(_searchText) ? null : _searchText
         );
     }
 
@@ -95,11 +91,6 @@
         return NotificationService.GetNotificationsAsync(parameters, cancellationToken);
     }
 
-    private void HandleNewNotification()
-    {
-        InvokeAsync(() => _virtualizedList?.Refresh());
-    }
-
     private async Task HandleClick(UserNotificationDto notification)
     {
         if (!notification.IsRead)
@@ -107,10 +98,5 @@
             await NotificationService.MarkAsReadAsync(notification.Id);
         }
         await OnNotificationClick.InvokeAsync(notification);
-    }
-
-    public void Dispose()
-    {
-        NotificationService.OnNotificationReceived -= HandleNewNotification;
     }
 }

@@ -1,4 +1,4 @@
-@using BlazingSingularity.Commands
+@inherits StatefulComponent
 @using EcoData.Identity.Application.Client.HttpClients
 @using EcoData.Identity.Contracts.Requests
 @using EcoData.Identity.Contracts.Responses
@@ -32,12 +32,12 @@
                                   Variant="Variant.Outlined"
                                   Margin="Margin.Dense"
                                   Immediate="true"
-                                  Disabled="UpdateDisplayNameCommand.IsLoading" />
+                                  Disabled="UpdateDisplayNameState.IsLoading" />
                     <MudStack Row="true" Spacing="2">
                         <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small"
                                    OnClick="SaveDisplayNameAsync"
-                                   Disabled="UpdateDisplayNameCommand.IsLoading">
-                            @if (UpdateDisplayNameCommand.IsLoading)
+                                   Disabled="UpdateDisplayNameState.IsLoading">
+                            @if (UpdateDisplayNameState.IsLoading)
                             {
                                 <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
                             }
@@ -45,7 +45,7 @@
                         </MudButton>
                         <MudButton Variant="Variant.Text" Size="Size.Small"
                                    OnClick="CancelEditDisplayName"
-                                   Disabled="UpdateDisplayNameCommand.IsLoading">
+                                   Disabled="UpdateDisplayNameState.IsLoading">
                             Cancel
                         </MudButton>
                     </MudStack>
@@ -78,18 +78,18 @@
                                   Variant="Variant.Outlined"
                                   Margin="Margin.Dense"
                                   InputType="InputType.Email"
-                                  Disabled="UpdateEmailCommand.IsLoading" />
+                                  Disabled="UpdateEmailState.IsLoading" />
                     <MudTextField @bind-Value="_emailPassword"
                                   Label="Current password"
                                   Variant="Variant.Outlined"
                                   Margin="Margin.Dense"
                                   InputType="InputType.Password"
-                                  Disabled="UpdateEmailCommand.IsLoading" />
+                                  Disabled="UpdateEmailState.IsLoading" />
                     <MudStack Row="true" Spacing="2">
                         <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small"
                                    OnClick="SaveEmailAsync"
-                                   Disabled="UpdateEmailCommand.IsLoading">
-                            @if (UpdateEmailCommand.IsLoading)
+                                   Disabled="UpdateEmailState.IsLoading">
+                            @if (UpdateEmailState.IsLoading)
                             {
                                 <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
                             }
@@ -97,7 +97,7 @@
                         </MudButton>
                         <MudButton Variant="Variant.Text" Size="Size.Small"
                                    OnClick="CancelEditEmail"
-                                   Disabled="UpdateEmailCommand.IsLoading">
+                                   Disabled="UpdateEmailState.IsLoading">
                             Cancel
                         </MudButton>
                     </MudStack>
@@ -136,24 +136,24 @@
                                   Variant="Variant.Outlined"
                                   Margin="Margin.Dense"
                                   InputType="InputType.Password"
-                                  Disabled="ChangePasswordCommand.IsLoading" />
+                                  Disabled="ChangePasswordState.IsLoading" />
                     <MudTextField @bind-Value="_newPassword"
                                   Label="New password"
                                   Variant="Variant.Outlined"
                                   Margin="Margin.Dense"
                                   InputType="InputType.Password"
-                                  Disabled="ChangePasswordCommand.IsLoading" />
+                                  Disabled="ChangePasswordState.IsLoading" />
                     <MudTextField @bind-Value="_confirmPassword"
                                   Label="Confirm new password"
                                   Variant="Variant.Outlined"
                                   Margin="Margin.Dense"
                                   InputType="InputType.Password"
-                                  Disabled="ChangePasswordCommand.IsLoading" />
+                                  Disabled="ChangePasswordState.IsLoading" />
                     <MudStack Row="true" Spacing="2">
                         <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small"
                                    OnClick="SavePasswordAsync"
-                                   Disabled="ChangePasswordCommand.IsLoading">
-                            @if (ChangePasswordCommand.IsLoading)
+                                   Disabled="ChangePasswordState.IsLoading">
+                            @if (ChangePasswordState.IsLoading)
                             {
                                 <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
                             }
@@ -161,7 +161,7 @@
                         </MudButton>
                         <MudButton Variant="Variant.Text" Size="Size.Small"
                                    OnClick="CancelChangePassword"
-                                   Disabled="ChangePasswordCommand.IsLoading">
+                                   Disabled="ChangePasswordState.IsLoading">
                             Cancel
                         </MudButton>
                     </MudStack>
@@ -216,7 +216,7 @@
         _displayName = string.Empty;
     }
 
-    [RelayCommand]
+    [Command]
     private async Task UpdateDisplayName()
     {
         if (string.IsNullOrWhiteSpace(_displayName))
@@ -244,7 +244,7 @@
         );
     }
 
-    private async Task SaveDisplayNameAsync() => await UpdateDisplayNameCommand.ExecuteAsync();
+    private async Task SaveDisplayNameAsync() => await UpdateDisplayNameState.Execute();
 
     private void StartEditEmail()
     {
@@ -260,7 +260,7 @@
         _emailPassword = string.Empty;
     }
 
-    [RelayCommand]
+    [Command]
     private async Task UpdateEmail()
     {
         if (string.IsNullOrWhiteSpace(_newEmail))
@@ -296,7 +296,7 @@
         );
     }
 
-    private async Task SaveEmailAsync() => await UpdateEmailCommand.ExecuteAsync();
+    private async Task SaveEmailAsync() => await UpdateEmailState.Execute();
 
     private void StartChangePassword()
     {
@@ -314,7 +314,7 @@
         _confirmPassword = string.Empty;
     }
 
-    [RelayCommand]
+    [Command]
     private async Task ChangePassword()
     {
         if (string.IsNullOrWhiteSpace(_currentPassword))
@@ -357,5 +357,5 @@
         );
     }
 
-    private async Task SavePasswordAsync() => await ChangePasswordCommand.ExecuteAsync();
+    private async Task SavePasswordAsync() => await ChangePasswordState.Execute();
 }

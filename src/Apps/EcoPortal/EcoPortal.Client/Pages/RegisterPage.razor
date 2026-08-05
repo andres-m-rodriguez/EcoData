@@ -1,10 +1,9 @@
 @page "/register"
 @layout AuthLayout
+@inherits StatefulComponent
 @using EcoPortal.Client.Layout
 @using EcoData.Identity.Application.Client.HttpClients
 @using EcoData.Identity.Contracts.Requests
-@using BlazingSingularity
-@using BlazingSingularity.Commands
 @inject IAuthHttpClient AuthClient
 @inject INativeNavigationManager Navigation
 
@@ -22,7 +21,7 @@
     </MudAlert>
 }
 
-<EditForm Model="_model" OnValidSubmit="() => RegisterCommand.ExecuteAsync()">
+<EditForm Model="_model" OnValidSubmit="HandleSubmit">
     <DataAnnotationsValidator />
 
     <MudStack Spacing="3">
@@ -34,7 +33,7 @@
                       Variant="Variant.Outlined"
                       Required="true"
                       RequiredError="Display name is required"
-                      Disabled="RegisterCommand.IsLoading" />
+                      Disabled="RegisterState.IsLoading" />
 
         <MudTextField @bind-Value="_model.Email"
                       Label="Email"
@@ -45,7 +44,7 @@
                       Variant="Variant.Outlined"
                       Required="true"
                       RequiredError="Email is required"
-                      Disabled="RegisterCommand.IsLoading" />
+                      Disabled="RegisterState.IsLoading" />
 
         <MudTextField @bind-Value="_model.Password"
                       Label="Password"
@@ -59,7 +58,7 @@
                       Required="true"
                       RequiredError="Password is required"
                       HelperText="At least 8 characters with uppercase, lowercase, and a number"
-                      Disabled="RegisterCommand.IsLoading" />
+                      Disabled="RegisterState.IsLoading" />
 
         <MudTextField @bind-Value="_model.ConfirmPassword"
                       Label="Confirm Password"
@@ -72,15 +71,15 @@
                       Variant="Variant.Outlined"
                       Required="true"
                       RequiredError="Please confirm your password"
-                      Disabled="RegisterCommand.IsLoading" />
+                      Disabled="RegisterState.IsLoading" />
 
         <MudButton ButtonType="ButtonType.Submit"
                    Variant="Variant.Filled"
                    Color="Color.Primary"
                    FullWidth="true"
-                   Disabled="RegisterCommand.IsLoading"
+                   Disabled="RegisterState.IsLoading"
                    Class="mt-2">
-            @if (RegisterCommand.IsLoading)
+            @if (RegisterState.IsLoading)
             {
                 <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
                 <span>Creating Account...</span>
@@ -106,7 +105,16 @@
     private bool _showConfirmPassword;
     private string? _errorMessage;
 
-    [RelayCommand]
+    private async Task HandleSubmit()
+    {
+        await RegisterState.TryExecute();
+        if (RegisterState.IsError)
+        {
+            _errorMessage = "Something went wrong while creating your account. Please try again.";
+        }
+    }
+
+    [Command]
     private async Task Register()
     {
         if (_model.Password != _model.ConfirmPassword)

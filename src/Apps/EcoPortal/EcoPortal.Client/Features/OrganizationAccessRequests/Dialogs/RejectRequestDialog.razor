@@ -1,4 +1,4 @@
-@using BlazingSingularity.Signals
+@inherits StatefulComponent
 
 <MudDialog>
     <TitleContent>
@@ -8,14 +8,14 @@
         <MudText Typo="Typo.body2" Class="mb-4">
             Are you sure you want to reject the access request from <strong>@RequesterName</strong>?
         </MudText>
-        <MudTextField @bind-Value="ReviewNotes"
+        <MudTextField @bind-Value="ReviewNotesState.Value"
                       Label="Review Notes (Optional)"
                       Placeholder="Add a reason for rejection..."
                       Variant="Variant.Outlined"
                       Lines="3"
                       HelperText="This will be visible to administrators"
                       Class="mb-4" />
-        <MudCheckBox @bind-Value="BlockUser" Color="Color.Error" Dense="true">
+        <MudCheckBox @bind-Value="BlockUserState.Value" Color="Color.Error" Dense="true">
             <MudText Typo="Typo.body2">
                 Also block this user from future requests
             </MudText>
@@ -24,7 +24,7 @@
     <DialogActions>
         <MudButton OnClick="Cancel">Cancel</MudButton>
         <MudButton Color="Color.Error" Variant="Variant.Filled" OnClick="Submit">
-            @(BlockUser ? "Reject & Block" : "Reject")
+            @(_blockUser ? "Reject & Block" : "Reject")
         </MudButton>
     </DialogActions>
 </MudDialog>
@@ -36,15 +36,15 @@
     [Parameter]
     public string RequesterName { get; set; } = string.Empty;
 
-    [Signal]
+    [Reactive]
     private string? _reviewNotes;
 
-    [Signal]
+    [Reactive]
     private bool _blockUser;
 
     private void Cancel() => MudDialog.Cancel();
 
-    private void Submit() => MudDialog.Close(DialogResult.Ok(new RejectRequestResult(ReviewNotes, BlockUser)));
+    private void Submit() => MudDialog.Close(DialogResult.Ok(new RejectRequestResult(_reviewNotes, _blockUser)));
 
     public sealed record RejectRequestResult(string? ReviewNotes, bool BlockUser);
 }
