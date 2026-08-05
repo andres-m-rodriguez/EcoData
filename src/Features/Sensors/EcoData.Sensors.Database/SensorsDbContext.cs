@@ -17,6 +17,9 @@ public sealed class SensorsDbContext(DbContextOptions<SensorsDbContext> options)
     public DbSet<IngestionLog> IngestionLogs => Set<IngestionLog>();
     public DbSet<UserSensorSubscription> UserSensorSubscriptions => Set<UserSensorSubscription>();
     public DbSet<UserNotification> UserNotifications => Set<UserNotification>();
+    public DbSet<SurfaceWaterStationSnapshot> SurfaceWaterStationSnapshots => Set<SurfaceWaterStationSnapshot>();
+    public DbSet<SurfaceWaterSummarySnapshot> SurfaceWaterSummarySnapshots => Set<SurfaceWaterSummarySnapshot>();
+    public DbSet<ReadingStatsSnapshot> ReadingStatsSnapshots => Set<ReadingStatsSnapshot>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -33,5 +36,8 @@ public sealed class SensorsDbContext(DbContextOptions<SensorsDbContext> options)
         modelBuilder.ApplyConfiguration(new IngestionLog.EntityConfiguration());
         modelBuilder.ApplyConfiguration(new UserSensorSubscription.EntityConfiguration());
         modelBuilder.ApplyConfiguration(new UserNotification.EntityConfiguration());
+        modelBuilder.ApplyConfiguration(new SurfaceWaterStationSnapshot.EntityConfiguration());
+        modelBuilder.ApplyConfiguration(new SurfaceWaterSummarySnapshot.EntityConfiguration());
+        modelBuilder.ApplyConfiguration(new ReadingStatsSnapshot.EntityConfiguration());
     }
 }

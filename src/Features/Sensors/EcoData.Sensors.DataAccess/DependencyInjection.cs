@@ -1,6 +1,7 @@
 using EcoData.Sensors.DataAccess.Interfaces;
 using EcoData.Sensors.DataAccess.Repositories;
 using EcoData.Sensors.DataAccess.Resolvers;
+using EcoData.Sensors.DataAccess.Services;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace EcoData.Sensors.DataAccess;
@@ -16,6 +17,7 @@ public static class DependencyInjection
         services.AddScoped<ISensorHealthRepository, SensorHealthRepository>();
         services.AddScoped<IReadingRepository, ReadingRepository>();
         services.AddScoped<ISurfaceWaterRepository, SurfaceWaterRepository>();
+        services.AddScoped<ISurfaceWaterSnapshotRefresher, SurfaceWaterSnapshotRefresher>();
         services.AddScoped<IIngestionLogRepository, IngestionLogRepository>();
         services.AddScoped<IUserSensorSubscriptionRepository, UserSensorSubscriptionRepository>();
         services.AddScoped<IUserNotificationRepository, UserNotificationRepository>();

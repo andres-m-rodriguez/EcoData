@@ -261,7 +261,15 @@ public sealed class ReadingRepository(IDbContextFactory<SensorsDbContext> contex
     public async Task<long> GetTotalCountAsync(CancellationToken cancellationToken = default)
     {
         await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
-        return await context.Readings.LongCountAsync(cancellationToken);
+
+        // Counting live is the fallback for a fresh database where the snapshot
+        // refresher hasn't produced its first row yet.
+        var stats = await context.ReadingStatsSnapshots
+            .AsNoTracking()
+            .FirstOrDefaultAsync(cancellationToken);
+
+        return stats?.TotalReadings
+            ?? await context.Readings.LongCountAsync(cancellationToken);
     }
 
     private static (double? Threshold, string? Status) GetThresholdInfo(string parameter, double value)

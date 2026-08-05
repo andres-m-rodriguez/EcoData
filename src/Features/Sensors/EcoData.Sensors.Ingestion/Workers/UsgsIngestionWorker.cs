@@ -17,6 +17,7 @@ public sealed class UsgsIngestionWorker(
     IReadingRepository readingRepository,
     IIngestionLogRepository ingestionLogRepository,
     ISensorHealthRepository healthRepository,
+    ISurfaceWaterSnapshotRefresher snapshotRefresher,
     IMunicipalityRepository municipalityRepository,
     ParameterResolver parameterResolver,
     IUsgsApiClient usgsApiClient,
@@ -203,6 +204,18 @@ public sealed class UsgsIngestionWorker(
             catch (Exception ex)
             {
                 logger.LogError(ex, "Error during USGS data ingestion");
+            }
+
+            // Outside the ingestion try so snapshots still refresh when USGS is
+            // down: time-windowed stats (stations reporting, readings 7d) drift
+            // even without new readings.
+            try
+            {
+                await snapshotRefresher.RefreshAsync(stoppingToken);
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Error refreshing surface water snapshots");
             }
 
             await Task.Delay(DefaultInterval, stoppingToken);
