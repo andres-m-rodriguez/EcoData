@@ -47,6 +47,10 @@ foreach (var (resource, project, _) in deployables)
     }
 }
 
+// The AppHost defines every resource's infrastructure; without this entry an
+// AppHost-only change (new Azure resource, env var, scaling rule) deploys nothing.
+projectToResources["EcoData.AppHost"] = [.. resources.Keys];
+
 var output = new Output(
     resources,
     projectToResources.OrderBy(x => x.Key).ToDictionary(x => x.Key, x => x.Value.Order().ToList())

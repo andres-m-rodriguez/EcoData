@@ -16,8 +16,15 @@ if (builder.ExecutionContext.IsRunMode)
         .ExcludeFromManifest();
 }
 
-// Azure Container App Environment for deployment
-builder.AddAzureContainerAppEnvironment("aca-env");
+// Azure Container App Environment for deployment. The Log Analytics workspace is
+// declared explicitly and shared with Application Insights — left implicit, each
+// provisions its own workspace, splitting telemetry in two and re-PUTting
+// workspace state on every deploy, which is what overlapping deploy runs raced on
+// ("Workspace cannot be updated while current provisioning state is not
+// Succeeded"; serialized via the concurrency group in azure-dev.yml). aca-env
+// references this workspace as 'existing', so its redeploys never touch it.
+var logAnalytics = builder.AddAzureLogAnalyticsWorkspace("law");
+builder.AddAzureContainerAppEnvironment("aca-env").WithAzureLogAnalyticsWorkspace(logAnalytics);
 
 // JWT secrets - from Key Vault in production, parameters in development
 var jwtSensorSecretKey = builder.AddParameter("jwt-sensor-secret-key", secret: true);
@@ -139,7 +146,9 @@ if (builder.ExecutionContext.IsPublishMode)
     sensorsIngestion.WithReference(keyVault);
 
     // Application Insights for telemetry
-    var appInsights = builder.AddAzureApplicationInsights("appinsights");
+    var appInsights = builder
+        .AddAzureApplicationInsights("appinsights")
+        .WithLogAnalyticsWorkspace(logAnalytics);
     ecoportal.WithReference(appInsights);
     sensorsIngestion.WithReference(appInsights);
     seeder.WithReference(appInsights);
