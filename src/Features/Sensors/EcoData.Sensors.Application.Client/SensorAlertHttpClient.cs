@@ -30,22 +30,32 @@ public sealed class SensorAlertHttpClient(HttpClient httpClient) : ISensorAlertH
         )!;
     }
 
-    public async Task<OneOf<SensorHealthAlertDtoForDetail, ProblemDetail>> GetAlertByIdAsync(
+    public async Task<OneOf<SensorHealthAlertDtoForDetail, RequestFailed>> GetAlertByIdAsync(
         Guid alertId,
         CancellationToken cancellationToken = default
     )
     {
-        var response = await httpClient.GetAsync(
-            $"/sensors/alerts/{alertId}",
-            cancellationToken
-        );
+        try
+        {
+            var response = await httpClient.GetAsync(
+                $"/sensors/alerts/{alertId}",
+                cancellationToken
+            );
 
-        if (!response.IsSuccessStatusCode)
-            return await response.ReadProblemAsync(cancellationToken);
+            if (!response.IsSuccessStatusCode)
+            {
+                var problem = await ProblemDetailsParser.ParseAsync(response, cancellationToken);
+                return new RequestFailed((int)response.StatusCode, problem?.Detail ?? problem?.Title);
+            }
 
-        var result = await response.Content.ReadFromJsonAsync<SensorHealthAlertDtoForDetail>(
-            cancellationToken
-        );
-        return result!;
+            var result = await response.Content.ReadFromJsonAsync<SensorHealthAlertDtoForDetail>(
+                cancellationToken
+            );
+            return result!;
+        }
+        catch (HttpRequestException e)
+        {
+            return new RequestFailed(0, e.Message);
+        }
     }
 }

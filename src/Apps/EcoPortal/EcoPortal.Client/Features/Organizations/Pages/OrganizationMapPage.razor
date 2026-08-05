@@ -22,6 +22,14 @@
                        OnClick="ToggleFullscreen" />
     </div>
 
+    @if (_loadError is not null)
+    {
+        <MudAlert Severity="Severity.Error" Class="ma-2" ShowCloseIcon="true"
+                  CloseIconClicked="() => _loadError = null">
+            @_loadError
+        </MudAlert>
+    }
+
     <div class="map-body">
         <div id="@_elementId" class="map-leaflet"></div>
     </div>
@@ -74,6 +82,7 @@
     private bool _isFullscreen;
     private bool _panelOpen;
     private string? _selectedMunicipalityName;
+    private string? _loadError;
     private Guid? _selectedMunicipalityId;
     private int? _sensorCount;
     private EcoDataVirtualizedList<SensorDtoForList, SensorParameters>? _sensorList;
@@ -87,10 +96,17 @@
             await JS.InvokeVoidAsync("orgSensorMap.init", _elementId, _dotNetRef);
             _mapInitialized = true;
 
-            var geoJson = await LocationClient.GetMunicipalitiesGeoJsonAsync("PR");
-            if (geoJson is not null)
+            var geoJsonResult = await LocationClient.GetMunicipalitiesGeoJsonAsync("PR");
+            if (geoJsonResult.TryPickT0(out var geoJson, out var geoJsonError))
             {
                 await JS.InvokeVoidAsync("orgSensorMap.addMunicipalities", _elementId, geoJson.RootElement);
+            }
+            else
+            {
+                _loadError = geoJsonError.StatusCode == 0
+                    ? "Couldn't reach the server."
+                    : geoJsonError.Message ?? "Couldn't load municipality boundaries.";
+                StateHasChanged();
             }
         }
     }
@@ -108,9 +124,10 @@
         _panelOpen = true;
         StateHasChanged();
 
-        _sensorCount = await SensorClient.GetSensorCountAsync(
+        var countResult = await SensorClient.GetSensorCountAsync(
             new SensorParameters(OrganizationId: Id, MunicipalityId: municipalityId)
         );
+        _sensorCount = countResult.TryPickT0(out var count, out _) ? count : 0;
         StateHasChanged();
     }
 

@@ -15,7 +15,6 @@ public static class SensorsApiExtensions
         app.MapSensorAlertEndpoints();
         app.MapReferenceDataEndpoints();
         app.MapPhenomenonEndpoints();
-        app.MapGeoTestEndpoints();
         app.MapUserSubscriptionEndpoints();
         app.MapUserNotificationEndpoints();
 

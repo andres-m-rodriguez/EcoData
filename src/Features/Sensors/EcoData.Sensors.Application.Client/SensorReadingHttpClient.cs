@@ -30,25 +30,36 @@ public sealed class SensorReadingHttpClient(HttpClient httpClient) : ISensorRead
         )!;
     }
 
-    public async Task<IReadOnlyList<string>> GetReadingParametersAsync(
+    public async Task<OneOf<IReadOnlyList<string>, RequestFailed>> GetReadingParametersAsync(
         Guid sensorId,
         CancellationToken cancellationToken = default
     )
     {
-        var response = await httpClient.GetAsync(
-            $"sensors/{sensorId}/readings/parameters",
-            cancellationToken
-        );
-
-        if (!response.IsSuccessStatusCode)
+        try
         {
-            return [];
-        }
+            var response = await httpClient.GetAsync(
+                $"sensors/{sensorId}/readings/parameters",
+                cancellationToken
+            );
 
-        return await response.Content.ReadFromJsonAsync<IReadOnlyList<string>>(cancellationToken) ?? [];
+            if (!response.IsSuccessStatusCode)
+            {
+                var problem = await ProblemDetailsParser.ParseAsync(response, cancellationToken);
+                return new RequestFailed((int)response.StatusCode, problem?.Detail ?? problem?.Title);
+            }
+
+            var result = await response.Content.ReadFromJsonAsync<IReadOnlyList<string>>(
+                cancellationToken
+            );
+            return OneOf<IReadOnlyList<string>, RequestFailed>.FromT0(result ?? []);
+        }
+        catch (HttpRequestException e)
+        {
+            return new RequestFailed(0, e.Message);
+        }
     }
 
-    public async Task<SensorReadingStatsDto?> GetStatsAsync(
+    public async Task<OneOf<SensorReadingStatsDto, RequestFailed>> GetStatsAsync(
         Guid sensorId,
         ReadingStatsParameters? parameters = null,
         CancellationToken cancellationToken = default
@@ -60,20 +71,31 @@ public sealed class SensorReadingHttpClient(HttpClient httpClient) : ISensorRead
             .Add("parameter", parameters?.Parameter)
             .Build();
 
-        var response = await httpClient.GetAsync(
-            $"sensors/{sensorId}/readings/stats{queryString}",
-            cancellationToken
-        );
-
-        if (!response.IsSuccessStatusCode)
+        try
         {
-            return null;
-        }
+            var response = await httpClient.GetAsync(
+                $"sensors/{sensorId}/readings/stats{queryString}",
+                cancellationToken
+            );
 
-        return await response.Content.ReadFromJsonAsync<SensorReadingStatsDto>(cancellationToken);
+            if (!response.IsSuccessStatusCode)
+            {
+                var problem = await ProblemDetailsParser.ParseAsync(response, cancellationToken);
+                return new RequestFailed((int)response.StatusCode, problem?.Detail ?? problem?.Title);
+            }
+
+            var result = await response.Content.ReadFromJsonAsync<SensorReadingStatsDto>(
+                cancellationToken
+            );
+            return result!;
+        }
+        catch (HttpRequestException e)
+        {
+            return new RequestFailed(0, e.Message);
+        }
     }
 
-    public async Task<OneOf<ReadingBatchResult, ProblemDetail>> PostReadingsAsync(
+    public async Task<OneOf<ReadingBatchResult, RequestFailed>> PostReadingsAsync(
         Guid sensorId,
         SensorReadingDto reading,
         CancellationToken cancellationToken = default
@@ -99,31 +121,79 @@ public sealed class SensorReadingHttpClient(HttpClient httpClient) : ISensorRead
 
         var batch = new ReadingBatchDtoForCreate(sensorId, readingItems);
 
-        var response = await httpClient.PostAsJsonAsync(
-            $"sensors/{sensorId}/readings",
-            batch,
-            cancellationToken
-        );
-
-        if (response.IsSuccessStatusCode)
+        try
         {
-            var result = await response.Content.ReadFromJsonAsync<ReadingBatchResult>(cancellationToken);
+            var response = await httpClient.PostAsJsonAsync(
+                $"sensors/{sensorId}/readings",
+                batch,
+                cancellationToken
+            );
+
+            if (!response.IsSuccessStatusCode)
+            {
+                var problem = await ProblemDetailsParser.ParseAsync(response, cancellationToken);
+                return new RequestFailed((int)response.StatusCode, problem?.Detail ?? problem?.Title);
+            }
+
+            var result = await response.Content.ReadFromJsonAsync<ReadingBatchResult>(
+                cancellationToken
+            );
             return result!;
         }
-
-        return await response.ReadProblemAsync(cancellationToken);
+        catch (HttpRequestException e)
+        {
+            return new RequestFailed(0, e.Message);
+        }
     }
 
-    public Task<long> GetTotalCountAsync(CancellationToken cancellationToken = default)
+    public async Task<OneOf<long, RequestFailed>> GetTotalCountAsync(
+        CancellationToken cancellationToken = default
+    )
     {
-        return httpClient.GetFromJsonAsync<long>("readings/count", cancellationToken);
+        try
+        {
+            var response = await httpClient.GetAsync("readings/count", cancellationToken);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                var problem = await ProblemDetailsParser.ParseAsync(response, cancellationToken);
+                return new RequestFailed((int)response.StatusCode, problem?.Detail ?? problem?.Title);
+            }
+
+            return await response.Content.ReadFromJsonAsync<long>(cancellationToken);
+        }
+        catch (HttpRequestException e)
+        {
+            return new RequestFailed(0, e.Message);
+        }
     }
 
-    public async Task<SurfaceWaterSummaryDto?> GetSurfaceWaterSummaryAsync(CancellationToken cancellationToken = default)
+    public async Task<OneOf<SurfaceWaterSummaryDto, RequestFailed>> GetSurfaceWaterSummaryAsync(
+        CancellationToken cancellationToken = default
+    )
     {
-        var response = await httpClient.GetAsync("readings/topics/surface-water/summary", cancellationToken);
-        if (!response.IsSuccessStatusCode) return null;
-        return await response.Content.ReadFromJsonAsync<SurfaceWaterSummaryDto>(cancellationToken);
+        try
+        {
+            var response = await httpClient.GetAsync(
+                "readings/topics/surface-water/summary",
+                cancellationToken
+            );
+
+            if (!response.IsSuccessStatusCode)
+            {
+                var problem = await ProblemDetailsParser.ParseAsync(response, cancellationToken);
+                return new RequestFailed((int)response.StatusCode, problem?.Detail ?? problem?.Title);
+            }
+
+            var result = await response.Content.ReadFromJsonAsync<SurfaceWaterSummaryDto>(
+                cancellationToken
+            );
+            return result!;
+        }
+        catch (HttpRequestException e)
+        {
+            return new RequestFailed(0, e.Message);
+        }
     }
 
     public IAsyncEnumerable<SurfaceWaterStationDto> GetSurfaceWaterStationsAsync(

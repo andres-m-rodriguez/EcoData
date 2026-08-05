@@ -1,5 +1,4 @@
 using System.Net.Http.Json;
-using EcoData.Common.Http.Helpers;
 using EcoData.Common.Problems.Contracts;
 using EcoData.Sensors.Contracts.Dtos;
 using OneOf;
@@ -8,95 +7,140 @@ namespace EcoData.Sensors.Application.Client;
 
 public sealed class UserSubscriptionHttpClient(HttpClient httpClient) : IUserSubscriptionHttpClient
 {
-    public async Task<IReadOnlyList<UserSensorSubscriptionDto>> GetSubscriptionsAsync(
+    public async Task<OneOf<IReadOnlyList<UserSensorSubscriptionDto>, RequestFailed>> GetSubscriptionsAsync(
         CancellationToken cancellationToken = default)
     {
-        var response = await httpClient.GetAsync("users/me/subscriptions", cancellationToken);
-        response.EnsureSuccessStatusCode();
+        try
+        {
+            var response = await httpClient.GetAsync("users/me/subscriptions", cancellationToken);
 
-        var result = await response.Content.ReadFromJsonAsync<List<UserSensorSubscriptionDto>>(
-            cancellationToken
-        );
-        return result ?? [];
+            if (!response.IsSuccessStatusCode)
+            {
+                var problem = await ProblemDetailsParser.ParseAsync(response, cancellationToken);
+                return new RequestFailed((int)response.StatusCode, problem?.Detail ?? problem?.Title);
+            }
+
+            var result = await response.Content.ReadFromJsonAsync<List<UserSensorSubscriptionDto>>(
+                cancellationToken
+            );
+            return OneOf<IReadOnlyList<UserSensorSubscriptionDto>, RequestFailed>.FromT0(result ?? []);
+        }
+        catch (HttpRequestException e)
+        {
+            return new RequestFailed(0, e.Message);
+        }
     }
 
-    public async Task<UserSensorSubscriptionDto?> GetSubscriptionAsync(
+    public async Task<OneOf<UserSensorSubscriptionDto, RequestFailed>> GetSubscriptionAsync(
         Guid sensorId,
         CancellationToken cancellationToken = default)
     {
-        var response = await httpClient.GetAsync(
-            $"sensors/{sensorId}/subscribe",
-            cancellationToken
-        );
-
-        if (!response.IsSuccessStatusCode)
+        try
         {
-            return null;
-        }
+            var response = await httpClient.GetAsync(
+                $"sensors/{sensorId}/subscribe",
+                cancellationToken
+            );
 
-        return await response.Content.ReadFromJsonAsync<UserSensorSubscriptionDto>(
-            cancellationToken
-        );
+            if (!response.IsSuccessStatusCode)
+            {
+                var problem = await ProblemDetailsParser.ParseAsync(response, cancellationToken);
+                return new RequestFailed((int)response.StatusCode, problem?.Detail ?? problem?.Title);
+            }
+
+            var result = await response.Content.ReadFromJsonAsync<UserSensorSubscriptionDto>(
+                cancellationToken
+            );
+            return result!;
+        }
+        catch (HttpRequestException e)
+        {
+            return new RequestFailed(0, e.Message);
+        }
     }
 
-    public async Task<OneOf<UserSensorSubscriptionDto, ProblemDetail>> SubscribeAsync(
+    public async Task<OneOf<UserSensorSubscriptionDto, RequestFailed>> SubscribeAsync(
         Guid sensorId,
         UserSensorSubscriptionDtoForCreate request,
         CancellationToken cancellationToken = default)
     {
-        var response = await httpClient.PostAsJsonAsync(
-            $"sensors/{sensorId}/subscribe",
-            request,
-            cancellationToken
-        );
-
-        if (!response.IsSuccessStatusCode)
+        try
         {
-            return await response.ReadProblemAsync(cancellationToken);
-        }
+            var response = await httpClient.PostAsJsonAsync(
+                $"sensors/{sensorId}/subscribe",
+                request,
+                cancellationToken
+            );
 
-        var result = await response.Content.ReadFromJsonAsync<UserSensorSubscriptionDto>(
-            cancellationToken
-        );
-        return result!;
+            if (!response.IsSuccessStatusCode)
+            {
+                var problem = await ProblemDetailsParser.ParseAsync(response, cancellationToken);
+                return new RequestFailed((int)response.StatusCode, problem?.Detail ?? problem?.Title);
+            }
+
+            var result = await response.Content.ReadFromJsonAsync<UserSensorSubscriptionDto>(
+                cancellationToken
+            );
+            return result!;
+        }
+        catch (HttpRequestException e)
+        {
+            return new RequestFailed(0, e.Message);
+        }
     }
 
-    public async Task<OneOf<UserSensorSubscriptionDto, ProblemDetail>> UpdateSubscriptionAsync(
+    public async Task<OneOf<UserSensorSubscriptionDto, RequestFailed>> UpdateSubscriptionAsync(
         Guid sensorId,
         UserSensorSubscriptionDtoForUpdate request,
         CancellationToken cancellationToken = default)
     {
-        var response = await httpClient.PatchAsJsonAsync(
-            $"sensors/{sensorId}/subscribe",
-            request,
-            cancellationToken
-        );
-
-        if (!response.IsSuccessStatusCode)
+        try
         {
-            return await response.ReadProblemAsync(cancellationToken);
-        }
+            var response = await httpClient.PatchAsJsonAsync(
+                $"sensors/{sensorId}/subscribe",
+                request,
+                cancellationToken
+            );
 
-        var result = await response.Content.ReadFromJsonAsync<UserSensorSubscriptionDto>(
-            cancellationToken
-        );
-        return result!;
+            if (!response.IsSuccessStatusCode)
+            {
+                var problem = await ProblemDetailsParser.ParseAsync(response, cancellationToken);
+                return new RequestFailed((int)response.StatusCode, problem?.Detail ?? problem?.Title);
+            }
+
+            var result = await response.Content.ReadFromJsonAsync<UserSensorSubscriptionDto>(
+                cancellationToken
+            );
+            return result!;
+        }
+        catch (HttpRequestException e)
+        {
+            return new RequestFailed(0, e.Message);
+        }
     }
 
-    public async Task<OneOf<bool, ProblemDetail>> UnsubscribeAsync(
+    public async Task<OneOf<OneOf.Types.Success, RequestFailed>> UnsubscribeAsync(
         Guid sensorId,
         CancellationToken cancellationToken = default)
     {
-        var response = await httpClient.DeleteAsync(
-            $"sensors/{sensorId}/subscribe",
-            cancellationToken
-        );
-
-        if (!response.IsSuccessStatusCode)
+        try
         {
-            return await response.ReadProblemAsync(cancellationToken);
-        }
+            var response = await httpClient.DeleteAsync(
+                $"sensors/{sensorId}/subscribe",
+                cancellationToken
+            );
 
-        return true;
+            if (!response.IsSuccessStatusCode)
+            {
+                var problem = await ProblemDetailsParser.ParseAsync(response, cancellationToken);
+                return new RequestFailed((int)response.StatusCode, problem?.Detail ?? problem?.Title);
+            }
+
+            return new OneOf.Types.Success();
+        }
+        catch (HttpRequestException e)
+        {
+            return new RequestFailed(0, e.Message);
+        }
     }
 }

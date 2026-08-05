@@ -1,5 +1,7 @@
+using EcoData.Common.Problems.Contracts;
 using EcoData.Locations.Contracts.Dtos;
 using EcoData.Locations.Contracts.Parameters;
+using OneOf;
 
 namespace EcoData.Locations.Application.Client;
 
@@ -9,11 +11,11 @@ public interface IMunicipalityHttpClient
         MunicipalityParameters? parameters = null,
         CancellationToken ct = default);
 
-    Task<MunicipalityDtoForDetail?> GetByIdAsync(Guid id, CancellationToken ct = default);
+    Task<OneOf<MunicipalityDtoForDetail, RequestFailed>> GetByIdAsync(Guid id, CancellationToken ct = default);
 
-    Task<IReadOnlyList<MunicipalityDtoForList>> GetByIdsAsync(
+    Task<OneOf<IReadOnlyList<MunicipalityDtoForList>, RequestFailed>> GetByIdsAsync(
         IReadOnlyCollection<Guid> ids,
         CancellationToken ct = default);
 
-    Task<string?> GetGeoJsonByStateCodeAsync(string stateCode, CancellationToken ct = default);
+    Task<OneOf<string, RequestFailed>> GetGeoJsonByStateCodeAsync(string stateCode, CancellationToken ct = default);
 }

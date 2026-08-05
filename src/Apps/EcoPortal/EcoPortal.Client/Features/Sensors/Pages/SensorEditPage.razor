@@ -73,7 +73,8 @@
     [RelayCommand]
     private async Task Load()
     {
-        _sensor = await SensorClient.GetByIdAsync(SensorId);
+        var sensorResult = await SensorClient.GetByIdAsync(SensorId);
+        _sensor = sensorResult.TryPickT0(out var sensor, out _) ? sensor : null;
 
         if (_sensor is not null)
         {
@@ -128,7 +129,8 @@
                 Snackbar.Add("Sensor updated successfully", Severity.Success);
                 Navigation.NavigateTo($"/sensor/{SensorId}", replace: true);
             },
-            problem => _errorMessage = problem.Detail ?? "Failed to update sensor"
+            validationFailed => _errorMessage = string.Join(" ", validationFailed.AllMessages),
+            requestFailed => _errorMessage = requestFailed.Message ?? "Failed to update sensor"
         );
     }
 

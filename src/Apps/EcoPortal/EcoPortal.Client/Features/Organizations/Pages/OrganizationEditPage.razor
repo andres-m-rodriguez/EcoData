@@ -127,7 +127,7 @@
                 Snackbar.Add("Organization updated successfully", Severity.Success);
                 Navigation.NavigateTo($"/organizations/{Id}");
             },
-            problem => _errorMessage = problem.Detail ?? "Failed to update organization"
+            error => _errorMessage = error.Message ?? "Failed to update organization"
         );
     }
 

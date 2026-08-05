@@ -26,18 +26,14 @@ public static class UserAuthEndpoints
                 {
                     var result = await authService.RegisterAsync(request, ct);
 
-                    return result.Match<Results<Ok<UserInfo>, ProblemHttpResult>>(
+                    return result.Match<Results<Ok<UserInfo>, ProblemHttpResult, ValidationProblem>>(
                         userInfo => TypedResults.Ok(userInfo),
                         _ =>
                             TypedResults.Problem(
                                 detail: "An account with this email already exists",
                                 statusCode: StatusCodes.Status409Conflict
                             ),
-                        validationFailed =>
-                            TypedResults.Problem(
-                                detail: string.Join(", ", validationFailed.Errors),
-                                statusCode: StatusCodes.Status400BadRequest
-                            )
+                        validationFailed => TypedResults.ValidationProblem(validationFailed.Errors)
                     );
                 }
             )
@@ -55,7 +51,7 @@ public static class UserAuthEndpoints
                 {
                     var result = await authService.LoginAsync(request, ct);
 
-                    return result.Match<Results<Ok<LoginResponse>, ProblemHttpResult>>(
+                    return result.Match<Results<Ok<LoginResponse>, ProblemHttpResult, ValidationProblem>>(
                         loginResponse =>
                         {
                             httpContext.Response.Cookies.Append(
@@ -88,11 +84,7 @@ public static class UserAuthEndpoints
                                     : "Too many login attempts. Please try again in 1 minute.",
                                 statusCode: StatusCodes.Status429TooManyRequests
                             ),
-                        validationFailed =>
-                            TypedResults.Problem(
-                                detail: string.Join(", ", validationFailed.Errors),
-                                statusCode: StatusCodes.Status400BadRequest
-                            )
+                        validationFailed => TypedResults.ValidationProblem(validationFailed.Errors)
                     );
                 }
             )
@@ -122,7 +114,7 @@ public static class UserAuthEndpoints
         group
             .MapPatch(
                 "/profile",
-                async (
+                async Task<Results<Ok<UserInfo>, ProblemHttpResult, ValidationProblem>> (
                     UpdateProfileRequest request,
                     ClaimsPrincipal user,
                     IAuthService authService,
@@ -132,7 +124,7 @@ public static class UserAuthEndpoints
                     var userIdClaim = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                     if (!Guid.TryParse(userIdClaim, out var userId))
                     {
-                        return Results.Problem(
+                        return TypedResults.Problem(
                             detail: "Invalid user",
                             statusCode: StatusCodes.Status401Unauthorized
                         );
@@ -140,13 +132,9 @@ public static class UserAuthEndpoints
 
                     var result = await authService.UpdateProfileAsync(userId, request, ct);
 
-                    return result.Match<IResult>(
+                    return result.Match<Results<Ok<UserInfo>, ProblemHttpResult, ValidationProblem>>(
                         userInfo => TypedResults.Ok(userInfo),
-                        validationFailed =>
-                            TypedResults.Problem(
-                                detail: string.Join(", ", validationFailed.Errors),
-                                statusCode: StatusCodes.Status400BadRequest
-                            )
+                        validationFailed => TypedResults.ValidationProblem(validationFailed.Errors)
                     );
                 }
             )
@@ -156,7 +144,7 @@ public static class UserAuthEndpoints
         group
             .MapPatch(
                 "/email",
-                async (
+                async Task<Results<Ok<UserInfo>, ProblemHttpResult, ValidationProblem>> (
                     UpdateEmailRequest request,
                     ClaimsPrincipal user,
                     IAuthService authService,
@@ -166,7 +154,7 @@ public static class UserAuthEndpoints
                     var userIdClaim = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                     if (!Guid.TryParse(userIdClaim, out var userId))
                     {
-                        return Results.Problem(
+                        return TypedResults.Problem(
                             detail: "Invalid user",
                             statusCode: StatusCodes.Status401Unauthorized
                         );
@@ -174,7 +162,7 @@ public static class UserAuthEndpoints
 
                     var result = await authService.UpdateEmailAsync(userId, request, ct);
 
-                    return result.Match<IResult>(
+                    return result.Match<Results<Ok<UserInfo>, ProblemHttpResult, ValidationProblem>>(
                         userInfo => TypedResults.Ok(userInfo),
                         _ =>
                             TypedResults.Problem(
@@ -186,11 +174,7 @@ public static class UserAuthEndpoints
                                 detail: "An account with this email already exists",
                                 statusCode: StatusCodes.Status409Conflict
                             ),
-                        validationFailed =>
-                            TypedResults.Problem(
-                                detail: string.Join(", ", validationFailed.Errors),
-                                statusCode: StatusCodes.Status400BadRequest
-                            )
+                        validationFailed => TypedResults.ValidationProblem(validationFailed.Errors)
                     );
                 }
             )
@@ -200,7 +184,7 @@ public static class UserAuthEndpoints
         group
             .MapPatch(
                 "/password",
-                async (
+                async Task<Results<Ok, ProblemHttpResult, ValidationProblem>> (
                     ChangePasswordRequest request,
                     ClaimsPrincipal user,
                     IAuthService authService,
@@ -210,7 +194,7 @@ public static class UserAuthEndpoints
                     var userIdClaim = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                     if (!Guid.TryParse(userIdClaim, out var userId))
                     {
-                        return Results.Problem(
+                        return TypedResults.Problem(
                             detail: "Invalid user",
                             statusCode: StatusCodes.Status401Unauthorized
                         );
@@ -218,18 +202,14 @@ public static class UserAuthEndpoints
 
                     var result = await authService.ChangePasswordAsync(userId, request, ct);
 
-                    return result.Match<IResult>(
+                    return result.Match<Results<Ok, ProblemHttpResult, ValidationProblem>>(
                         _ => TypedResults.Ok(),
                         _ =>
                             TypedResults.Problem(
                                 detail: "Invalid current password",
                                 statusCode: StatusCodes.Status401Unauthorized
                             ),
-                        validationFailed =>
-                            TypedResults.Problem(
-                                detail: string.Join(", ", validationFailed.Errors),
-                                statusCode: StatusCodes.Status400BadRequest
-                            )
+                        validationFailed => TypedResults.ValidationProblem(validationFailed.Errors)
                     );
                 }
             )

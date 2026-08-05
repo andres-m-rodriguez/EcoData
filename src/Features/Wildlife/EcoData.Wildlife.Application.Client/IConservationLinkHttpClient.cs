@@ -1,8 +1,12 @@
+using EcoData.Common.Problems.Contracts;
 using EcoData.Wildlife.Contracts.Dtos;
+using OneOf;
 
 namespace EcoData.Wildlife.Application.Client;
 
 public interface IConservationLinkHttpClient
 {
-    Task<ConservationLinksDtoForSpecies> GetBySpeciesAsync(Guid speciesId, CancellationToken ct = default);
+    Task<OneOf<ConservationLinksDtoForSpecies, RequestFailed>> GetBySpeciesAsync(
+        Guid speciesId,
+        CancellationToken ct = default);
 }

@@ -199,7 +199,7 @@ cancellationToken)
                     Snackbar.Add("Role updated successfully", Severity.Success);
                     _virtualizedList?.Refresh();
                 },
-                problem => Snackbar.Add(problem.Detail ?? "Failed to update role", Severity.Error)
+                error => Snackbar.Add(error.Message ?? "Failed to update role", Severity.Error)
             );
         }
     }
@@ -225,7 +225,7 @@ cancellationToken)
                     Snackbar.Add("Member removed successfully", Severity.Success);
                     _virtualizedList?.Refresh();
                 },
-                problem => Snackbar.Add(problem.Detail ?? "Failed to remove member", Severity.Error)
+                error => Snackbar.Add(error.Message ?? "Failed to remove member", Severity.Error)
             );
         }
     }

@@ -108,9 +108,14 @@
                 await ShowCredentialsDialog(credentials);
                 Navigation.NavigateTo($"/organizations/{OrganizationId}/sensors");
             },
-            problem =>
+            validationFailed =>
             {
-                _errorMessage = problem.Detail ?? "Failed to register sensor";
+                _errorMessage = string.Join(" ", validationFailed.AllMessages);
+                return Task.CompletedTask;
+            },
+            requestFailed =>
+            {
+                _errorMessage = requestFailed.Message ?? "Failed to register sensor";
                 return Task.CompletedTask;
             }
         );

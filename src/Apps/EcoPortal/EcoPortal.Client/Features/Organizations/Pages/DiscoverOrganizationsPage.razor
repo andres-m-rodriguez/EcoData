@@ -158,7 +158,14 @@
         SearchTextSignal.OnChange(_ => _virtualizedList?.Refresh());
 
         _orgCountFetch = new Fetch<int>(
-            ct => OrganizationClient.GetOrganizationCountAsync(new OrganizationParameters(), ct),
+            async ct =>
+            {
+                var result = await OrganizationClient.GetOrganizationCountAsync(new OrganizationParameters(), ct);
+                return result.Match(
+                    count => count,
+                    error => throw new InvalidOperationException(error.Message ?? "Couldn't load organization count.")
+                );
+            },
             () => InvokeAsync(StateHasChanged)
         );
         _orgCountFetch.OnChange(() =>
@@ -168,7 +175,14 @@
         });
 
         _sensorCountFetch = new Fetch<int>(
-            ct => SensorClient.GetSensorCountAsync(new SensorParameters(), ct),
+            async ct =>
+            {
+                var result = await SensorClient.GetSensorCountAsync(new SensorParameters(), ct);
+                return result.Match(
+                    count => count,
+                    error => throw new InvalidOperationException(error.Message ?? "Couldn't load sensor count.")
+                );
+            },
             () => InvokeAsync(StateHasChanged)
         );
         _sensorCountFetch.OnChange(() =>
@@ -178,7 +192,14 @@
         });
 
         _readingCountFetch = new Fetch<long>(
-            ct => ReadingClient.GetTotalCountAsync(ct),
+            async ct =>
+            {
+                var result = await ReadingClient.GetTotalCountAsync(ct);
+                return result.Match(
+                    count => count,
+                    error => throw new InvalidOperationException(error.Message ?? "Couldn't load reading count.")
+                );
+            },
             () => InvokeAsync(StateHasChanged)
         );
         _readingCountFetch.OnChange(() =>

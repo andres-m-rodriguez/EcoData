@@ -76,43 +76,37 @@
     private async Task LoadSubscriptionAsync()
     {
         _isLoading = true;
-        try
-        {
-            _subscription = await SubscriptionClient.GetSubscriptionAsync(SensorId);
-        }
-        finally
-        {
-            _isLoading = false;
-        }
+
+        // A 404 means "not subscribed"; any other failure also falls back to the subscribe button.
+        var result = await SubscriptionClient.GetSubscriptionAsync(SensorId);
+        _subscription = result.TryPickT0(out var subscription, out _) ? subscription : null;
+
+        _isLoading = false;
     }
 
     private async Task SubscribeAsync()
     {
         _isSubscribing = true;
-        try
-        {
-            var request = new UserSensorSubscriptionDtoForCreate(
-                NotifyOnStale: true,
-                NotifyOnUnhealthy: true,
-                NotifyOnRecovered: true
-            );
 
-            var result = await SubscriptionClient.SubscribeAsync(SensorId, request);
+        var request = new UserSensorSubscriptionDtoForCreate(
+            NotifyOnStale: true,
+            NotifyOnUnhealthy: true,
+            NotifyOnRecovered: true
+        );
 
-            if (result.IsT0)
-            {
-                _subscription = result.AsT0;
-                Snackbar.Add("Subscribed to sensor alerts", Severity.Success);
-            }
-            else
-            {
-                Snackbar.Add(result.AsT1.Detail ?? "Failed to subscribe", Severity.Error);
-            }
-        }
-        finally
+        var result = await SubscriptionClient.SubscribeAsync(SensorId, request);
+
+        if (result.TryPickT0(out var created, out var failure))
         {
-            _isSubscribing = false;
+            _subscription = created;
+            Snackbar.Add("Subscribed to sensor alerts", Severity.Success);
         }
+        else
+        {
+            Snackbar.Add(failure.Message ?? "Failed to subscribe", Severity.Error);
+        }
+
+        _isSubscribing = false;
     }
 
     private async Task OpenPreferencesDialog()

@@ -4,6 +4,7 @@
 @using BlazingSingularity.Signals
 @implements IAsyncDisposable
 @inject ILocationHttpClient LocationClient
+@inject ISnackbar Snackbar
 
 <MudStack Spacing="3">
     <MudStack Row="true" Spacing="2">
@@ -142,8 +143,23 @@
         HasValidationError = false;
         Municipality = null;
 
-        Municipality = await LocationClient.GetMunicipalityByPointAsync(Latitude, Longitude);
-        HasValidationError = Municipality is null;
+        var result = await LocationClient.GetMunicipalityByPointAsync(Latitude, Longitude);
+        if (result.TryPickT0(out var municipality, out var error))
+        {
+            Municipality = municipality;
+        }
+        else if (error.StatusCode == 404)
+        {
+            HasValidationError = true;
+        }
+        else
+        {
+            Snackbar.Add(
+                error.StatusCode == 0
+                    ? "Couldn't reach the server."
+                    : error.Message ?? "Couldn't validate the location.",
+                Severity.Error);
+        }
 
         await OnLocationChanged.InvokeAsync(new LocationSelectedEventArgs(
             Latitude,

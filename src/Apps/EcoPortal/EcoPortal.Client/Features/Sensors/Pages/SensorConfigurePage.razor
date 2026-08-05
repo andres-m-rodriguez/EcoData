@@ -265,7 +265,8 @@
     [RelayCommand]
     private async Task Load()
     {
-        _sensor = await SensorClient.GetByIdAsync(SensorId);
+        var sensorResult = await SensorClient.GetByIdAsync(SensorId);
+        _sensor = sensorResult.TryPickT0(out var sensor, out _) ? sensor : null;
 
         if (_sensor is null) return;
 
@@ -281,7 +282,20 @@
         if (!_hasPermission) return;
 
         // Load municipality
-        _municipality = await MunicipalityClient.GetByIdAsync(_sensor.MunicipalityId);
+        var municipalityResult = await MunicipalityClient.GetByIdAsync(_sensor.MunicipalityId);
+        if (municipalityResult.TryPickT0(out var municipality, out var municipalityError))
+        {
+            _municipality = municipality;
+        }
+        else
+        {
+            _municipality = null;
+            Snackbar.Add(
+                municipalityError.StatusCode == 0
+                    ? "Couldn't reach the server."
+                    : municipalityError.Message ?? "Couldn't load the sensor's municipality.",
+                Severity.Error);
+        }
 
         // Load health config
         var configResult = await HealthClient.GetSensorHealthConfigAsync(SensorId);
@@ -341,7 +355,7 @@
                 _healthConfig = updatedConfig;
                 Snackbar.Add("Health configuration saved successfully", Severity.Success);
             },
-            problem => _errorMessage = problem.Detail ?? "Failed to save health configuration"
+            requestFailed => _errorMessage = requestFailed.Message ?? "Failed to save health configuration"
         );
     }
 

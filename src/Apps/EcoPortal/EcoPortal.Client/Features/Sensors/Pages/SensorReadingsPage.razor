@@ -62,11 +62,15 @@
 
     protected override async Task OnInitializedAsync()
     {
-        _sensor = await SensorClient.GetByIdAsync(SensorId);
+        var sensorResult = await SensorClient.GetByIdAsync(SensorId);
+        _sensor = sensorResult.TryPickT0(out var sensor, out _) ? sensor : null;
 
         if (_sensor is not null)
         {
-            _availableParameters = await ReadingClient.GetReadingParametersAsync(SensorId);
+            var parametersResult = await ReadingClient.GetReadingParametersAsync(SensorId);
+            _availableParameters = parametersResult.TryPickT0(out var parameters, out _)
+                ? parameters
+                : [];
         }
 
         _loading = false;

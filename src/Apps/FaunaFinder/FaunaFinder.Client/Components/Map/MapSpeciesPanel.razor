@@ -14,7 +14,11 @@
     </button>
 </header>
 
-@if (IsLoading)
+@if (LoadError is not null)
+{
+    <MudAlert Severity="Severity.Error" Class="ma-3">@LoadError</MudAlert>
+}
+else if (IsLoading)
 {
     <div class="msp-list">
         @for (var i = 0; i < 6; i++)
@@ -71,6 +75,7 @@ else
     [Parameter] public string? Title { get; set; }
     [Parameter] public IReadOnlyList<SpeciesDtoForList>? Species { get; set; }
     [Parameter] public bool IsLoading { get; set; }
+    [Parameter] public string? LoadError { get; set; }
     [Parameter] public EventCallback OnClose { get; set; }
     [Parameter] public EventCallback<SpeciesDtoForList> OnSpeciesClick { get; set; }
 

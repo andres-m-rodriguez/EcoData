@@ -41,10 +41,28 @@ public sealed class PermissionContextService(
             return cachedTask;
         }
 
-        var task = permissionClient.GetMyPermissionsAsync(organizationId, cancellationToken);
+        var task = FetchPermissionsAsync(organizationId, cancellationToken);
         _cache[organizationId] = task;
 
         return task;
+    }
+
+    private async Task<UserPermissionsDto> FetchPermissionsAsync(
+        Guid organizationId,
+        CancellationToken cancellationToken
+    )
+    {
+        var result = await permissionClient.GetMyPermissionsAsync(organizationId, cancellationToken);
+
+        return result.Match(
+            permissions => permissions,
+            error =>
+            {
+                // Don't cache failures — a later call should be able to retry.
+                _cache.Remove(organizationId);
+                return new UserPermissionsDto(organizationId, [], IsGlobalAdmin: false);
+            }
+        );
     }
 
     public void InvalidateCache(Guid? organizationId = null)

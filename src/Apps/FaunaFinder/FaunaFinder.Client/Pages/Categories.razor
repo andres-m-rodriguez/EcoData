@@ -15,7 +15,11 @@
 {
     @* Category Detail - Show species in this category *@
     <NuiPageLayout Title="@_categoryName" ParentPath="/categories">
-        @if (_speciesInCategoryFetch?.IsLoading is not false)
+        @if (_speciesLoadError is not null)
+        {
+            <MudAlert Severity="Severity.Error">@_speciesLoadError</MudAlert>
+        }
+        else if (_speciesInCategoryFetch?.IsLoading is not false)
         {
             @for (int i = 0; i < 8; i++)
             {
@@ -54,7 +58,11 @@ else
 {
     @* Categories List *@
     <NuiPageLayout Title="Categories">
-        @if (_categoriesFetch.IsLoading)
+        @if (_categoriesLoadError is not null)
+        {
+            <MudAlert Severity="Severity.Error">@_categoriesLoadError</MudAlert>
+        }
+        else if (_categoriesFetch.IsLoading)
         {
             @for (int i = 0; i < 6; i++)
             {
@@ -99,6 +107,9 @@ else
     private IFetch<IReadOnlyList<SpeciesDtoForList>>? _speciesInCategoryFetch;
     private Guid? _loadedCategoryId;
 
+    private string? _categoriesLoadError;
+    private string? _speciesLoadError;
+
     private string SpeciesCountHeading =>
         L["CategoryDetail_SpeciesCount", _speciesInCategoryFetch?.Data?.Count ?? 0];
 
@@ -107,7 +118,19 @@ else
         Navbar.SetTitle(L["Nav_Categories"]);
         L.LanguageChanged += OnLanguageChanged;
         _categoriesFetch = new Fetch<IReadOnlyList<SpeciesCategoryDtoForList>>(
-            CategoryHttpClient.GetAllAsync,
+            async ct =>
+            {
+                var result = await CategoryHttpClient.GetAllAsync(ct);
+                if (result.TryPickT0(out var categories, out var error))
+                {
+                    _categoriesLoadError = null;
+                    return categories;
+                }
+                _categoriesLoadError = error.StatusCode == 0
+                    ? "Couldn't reach the server."
+                    : error.Message ?? "Something went wrong while loading categories.";
+                return [];
+            },
             () => InvokeAsync(StateHasChanged)
         );
     }
@@ -127,7 +150,19 @@ else
 
             (_speciesInCategoryFetch as IDisposable)?.Dispose();
             _speciesInCategoryFetch = new Fetch<IReadOnlyList<SpeciesDtoForList>>(
-                ct => SpeciesHttpClient.GetByCategoryAsync(id, ct),
+                async ct =>
+                {
+                    var result = await SpeciesHttpClient.GetByCategoryAsync(id, ct);
+                    if (result.TryPickT0(out var species, out var error))
+                    {
+                        _speciesLoadError = null;
+                        return species;
+                    }
+                    _speciesLoadError = error.StatusCode == 0
+                        ? "Couldn't reach the server."
+                        : error.Message ?? "Something went wrong while loading species.";
+                    return [];
+                },
                 () => InvokeAsync(StateHasChanged)
             );
             await _speciesInCategoryFetch.FetchAsync();

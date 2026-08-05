@@ -95,7 +95,7 @@
                 Snackbar.Add($"Access request submitted for {_selectedOrganization.Name}", Severity.Success);
                 MudDialog.Close(DialogResult.Ok(true));
             },
-            problem => Snackbar.Add(problem.Detail ?? "Failed to submit request", Severity.Error)
+            error => Snackbar.Add(error.Message ?? "Failed to submit request", Severity.Error)
         );
     }
 }

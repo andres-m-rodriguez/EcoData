@@ -29,7 +29,9 @@ public sealed class AuthTests(EcoDataTestFixture fixture)
             new LoginRequest("invalid@email.com", "WrongPassword123!")
         );
 
-        result.IsT1.Should().BeTrue("Login with invalid credentials should return ProblemDetail");
+        result
+            .IsT2.Should()
+            .BeTrue("Login with invalid credentials should fail with a request error");
     }
 
     [Fact]
@@ -44,9 +46,12 @@ public sealed class AuthTests(EcoDataTestFixture fixture)
 
         var result = await AuthHttpClient.RegisterAsync(request);
 
-        result.IsT1.Should().BeTrue("Registration with mismatched passwords should fail");
-        var problem = result.AsT1;
-        problem.Status.Should().Be(400);
+        result
+            .IsT1.Should()
+            .BeTrue("Registration with mismatched passwords should fail validation");
+        var validationFailed = result.AsT1;
+        validationFailed.Errors.Should().NotBeEmpty();
+        validationFailed.AllMessages.Should().NotBeEmpty();
     }
 
     [Fact]
@@ -61,9 +66,10 @@ public sealed class AuthTests(EcoDataTestFixture fixture)
 
         var result = await AuthHttpClient.RegisterAsync(request);
 
-        result.IsT1.Should().BeTrue("Registration with invalid email should fail");
-        var problem = result.AsT1;
-        problem.Status.Should().Be(400);
+        result.IsT1.Should().BeTrue("Registration with invalid email should fail validation");
+        var validationFailed = result.AsT1;
+        validationFailed.Errors.Should().NotBeEmpty();
+        validationFailed.AllMessages.Should().NotBeEmpty();
     }
 
     [Fact]
@@ -78,9 +84,10 @@ public sealed class AuthTests(EcoDataTestFixture fixture)
 
         var result = await AuthHttpClient.RegisterAsync(request);
 
-        result.IsT1.Should().BeTrue("Registration with short password should fail");
-        var problem = result.AsT1;
-        problem.Status.Should().Be(400);
+        result.IsT1.Should().BeTrue("Registration with short password should fail validation");
+        var validationFailed = result.AsT1;
+        validationFailed.Errors.Should().NotBeEmpty();
+        validationFailed.AllMessages.Should().NotBeEmpty();
     }
 
     [Fact]

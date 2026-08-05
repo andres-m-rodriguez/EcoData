@@ -20,7 +20,13 @@
     </div>
 
     <div class="notification-list">
-        @if (_isLoading)
+        @if (_loadError is not null)
+        {
+            <MudAlert Severity="Severity.Error" Dense="true" Class="ma-2">
+                @_loadError
+            </MudAlert>
+        }
+        else if (_notifications is null)
         {
             <div class="d-flex justify-center pa-3">
                 <MudProgressCircular Size="Size.Small" Indeterminate="true" />
@@ -95,8 +101,8 @@
     [Parameter]
     public EventCallback OnClose { get; set; }
 
-    private List<UserNotificationDto> _notifications = [];
-    private bool _isLoading = true;
+    private List<UserNotificationDto>? _notifications;
+    private string? _loadError;
     private bool _isLoadingMore;
     private bool _hasMore;
     private const int PageSize = 10;
@@ -109,35 +115,36 @@
 
     private async Task LoadNotificationsAsync()
     {
-        _isLoading = true;
-        try
+        _notifications = null;
+        _loadError = null;
+
+        var result = await NotificationService.GetNotificationsAsync(PageSize + 1);
+        if (result.TryPickT0(out var notifications, out var failure))
         {
-            var notifications = await NotificationService.GetNotificationsAsync(PageSize + 1);
             _hasMore = notifications.Count > PageSize;
             _notifications = notifications.Take(PageSize).ToList();
         }
-        finally
+        else
         {
-            _isLoading = false;
+            _loadError = failure.StatusCode == 0
+                ? "Couldn't reach the server. Check your connection."
+                : failure.Message ?? "Couldn't load notifications.";
         }
     }
 
     private async Task LoadMoreAsync()
     {
-        if (_isLoadingMore || _notifications.Count == 0) return;
+        if (_isLoadingMore || _notifications is not { Count: > 0 }) return;
 
         _isLoadingMore = true;
-        try
+        var cursor = _notifications.Last().Id;
+        var result = await NotificationService.GetNotificationsAsync(PageSize + 1, cursor);
+        if (result.TryPickT0(out var notifications, out _))
         {
-            var cursor = _notifications.Last().Id;
-            var notifications = await NotificationService.GetNotificationsAsync(PageSize + 1, cursor);
             _hasMore = notifications.Count > PageSize;
             _notifications.AddRange(notifications.Take(PageSize));
         }
-        finally
-        {
-            _isLoadingMore = false;
-        }
+        _isLoadingMore = false;
     }
 
     private void HandleNewNotification()
@@ -154,10 +161,10 @@
         if (!notification.IsRead)
         {
             await NotificationService.MarkAsReadAsync(notification.Id);
-            var index = _notifications.FindIndex(n => n.Id == notification.Id);
+            var index = _notifications?.FindIndex(n => n.Id == notification.Id) ?? -1;
             if (index >= 0)
             {
-                _notifications[index] = notification with { IsRead = true };
+                _notifications![index] = notification with { IsRead = true };
             }
         }
 
@@ -167,7 +174,11 @@
 
     private async Task MarkAllAsReadAsync()
     {
-        await NotificationService.MarkAllAsReadAsync();
+        if (!await NotificationService.MarkAllAsReadAsync() || _notifications is null)
+        {
+            return;
+        }
+
         for (int i = 0; i < _notifications.Count; i++)
         {
             _notifications[i] = _notifications[i] with { IsRead = true };

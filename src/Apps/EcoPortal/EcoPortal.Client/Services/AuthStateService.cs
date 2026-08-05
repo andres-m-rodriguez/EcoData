@@ -1,6 +1,7 @@
 using EcoData.Common.Problems.Contracts;
 using EcoData.Identity.Application.Client.HttpClients;
 using EcoData.Identity.Contracts.Authorization;
+using EcoData.Identity.Contracts.Errors;
 using EcoData.Identity.Contracts.Requests;
 using EcoData.Identity.Contracts.Responses;
 using OneOf;
@@ -29,7 +30,9 @@ public sealed class AuthStateService(IAuthHttpClient authClient)
         NotifyStateChanged();
     }
 
-    public async Task<OneOf<UserInfo, ProblemDetail>> LoginAsync(LoginRequest request)
+    public async Task<OneOf<UserInfo, ValidationFailed, RequestFailed>> LoginAsync(
+        LoginRequest request
+    )
     {
         var result = await authClient.LoginAsync(request);
 
@@ -39,14 +42,17 @@ public sealed class AuthStateService(IAuthHttpClient authClient)
         }
 
         NotifyStateChanged();
-        return result.Match<OneOf<UserInfo, ProblemDetail>>(
+        return result.Match<OneOf<UserInfo, ValidationFailed, RequestFailed>>(
             loginResponse => loginResponse.User,
-            problemDetail => problemDetail
+            validationFailed => validationFailed,
+            requestFailed => requestFailed
         );
     }
 
     public async Task LogoutAsync()
     {
+        // Best-effort: clear local auth state even if the server call fails —
+        // the user asked to sign out and the cookie may already be gone.
         await authClient.LogoutAsync();
         _currentUser = null;
         NotifyStateChanged();

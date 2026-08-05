@@ -21,7 +21,11 @@
 @if (Id is not null)
 {
     <NuiPageLayout Title="@_detailFetch?.Data?.ScientificName" ParentPath="/species">
-        @if (_detailFetch?.IsLoading is not false)
+        @if (_detailLoadError is not null)
+        {
+            <MudAlert Severity="Severity.Error">@_detailLoadError</MudAlert>
+        }
+        else if (_detailFetch?.IsLoading is not false)
         {
             <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="240px" Class="mb-4 rounded-lg" />
             <MudSkeleton SkeletonType="SkeletonType.Text" Width="60%" Class="mb-2" />
@@ -41,7 +45,11 @@
                     </MudText>
                 </MudStack>
 
-                @if (_municipalitiesFetch?.IsLoading is not false)
+                @if (_municipalitiesLoadError is not null)
+                {
+                    <MudAlert Severity="Severity.Error">@_municipalitiesLoadError</MudAlert>
+                }
+                else if (_municipalitiesFetch?.IsLoading is not false)
                 {
                     <MudGrid Spacing="2">
                         @for (var i = 0; i < Math.Min(6, detail.MunicipalityIds.Count); i++)
@@ -85,6 +93,11 @@
 else
 {
     <div class="ff-page">
+        @if ((_statsLoadError ?? _facetsLoadError ?? _taxaCountsLoadError) is { } listLoadError)
+        {
+            <MudAlert Severity="Severity.Error" Class="mb-4">@listLoadError</MudAlert>
+        }
+
         <SpeciesEditorialHero Stats="@_statsFetch?.Data" />
 
         <SpeciesStatsRow Stats="@_statsFetch?.Data" />
@@ -124,6 +137,12 @@ else
     private IFetch<IReadOnlyList<TaxonFacetDto>>? _taxaCountsFetch;
     private Guid? _loadedDetailId;
 
+    private string? _detailLoadError;
+    private string? _municipalitiesLoadError;
+    private string? _statsLoadError;
+    private string? _facetsLoadError;
+    private string? _taxaCountsLoadError;
+
     private SpeciesFilterResult _filter = SpeciesFilterResult.Empty;
     private string? _search;
     private SpeciesSort _sort = SpeciesSort.ScientificNameAsc;
@@ -134,17 +153,53 @@ else
         L.LanguageChanged += OnLanguageChanged;
 
         _statsFetch = new Fetch<SpeciesStatsDto?>(
-            SpeciesHttpClient.GetStatsAsync,
+            async ct =>
+            {
+                var result = await SpeciesHttpClient.GetStatsAsync(ct);
+                if (result.TryPickT0(out var stats, out var error))
+                {
+                    _statsLoadError = null;
+                    return stats;
+                }
+                _statsLoadError = error.StatusCode == 0
+                    ? "Couldn't reach the server."
+                    : error.Message ?? "Something went wrong while loading species stats.";
+                return null;
+            },
             () => InvokeAsync(StateHasChanged));
         _ = _statsFetch.FetchAsync();
 
         _facetsFetch = new Fetch<SpeciesFacetsDto?>(
-            ct => SpeciesHttpClient.GetFacetsAsync(BuildFacetParameters(), ct),
+            async ct =>
+            {
+                var result = await SpeciesHttpClient.GetFacetsAsync(BuildFacetParameters(), ct);
+                if (result.TryPickT0(out var facets, out var error))
+                {
+                    _facetsLoadError = null;
+                    return facets;
+                }
+                _facetsLoadError = error.StatusCode == 0
+                    ? "Couldn't reach the server."
+                    : error.Message ?? "Something went wrong while loading filters.";
+                return null;
+            },
             () => InvokeAsync(StateHasChanged));
         _ = _facetsFetch.FetchAsync();
 
         _taxaCountsFetch = new Fetch<IReadOnlyList<TaxonFacetDto>>(
-            SpeciesCategoryHttpClient.GetCountsAsync,
+            async ct =>
+            {
+                var result = await SpeciesCategoryHttpClient.GetCountsAsync(ct);
+                if (result.TryPickT0(out var counts, out var error))
+                {
+                    _taxaCountsLoadError = null;
+                    return counts;
+                }
+                _taxaCountsLoadError = error.StatusCode == 0
+                    ? "Couldn't reach the server."
+                    : error.Message ?? "Something went wrong while loading category counts.";
+                return [];
+            },
             () => InvokeAsync(StateHasChanged));
         _ = _taxaCountsFetch.FetchAsync();
     }
@@ -162,12 +217,21 @@ else
             _detailFetch = new Fetch<SpeciesDtoForDetail?>(
                 async ct =>
                 {
-                    var detail = await SpeciesHttpClient.GetByIdAsync(id, ct);
-                    if (detail is not null)
+                    var result = await SpeciesHttpClient.GetByIdAsync(id, ct);
+                    if (result.TryPickT0(out var detail, out var error))
                     {
+                        _detailLoadError = null;
                         _ = LoadMunicipalitiesAsync(detail.MunicipalityIds);
+                        return detail;
                     }
-                    return detail;
+                    // A missing species keeps the dedicated not-found empty state.
+                    _detailLoadError = error.StatusCode switch
+                    {
+                        404 => null,
+                        0 => "Couldn't reach the server.",
+                        _ => error.Message ?? "Something went wrong while loading this species."
+                    };
+                    return null;
                 },
                 () =>
                 {
@@ -189,7 +253,19 @@ else
     private Task LoadMunicipalitiesAsync(IReadOnlyList<Guid> ids)
     {
         _municipalitiesFetch = new Fetch<IReadOnlyList<MunicipalityDtoForList>>(
-            ct => MunicipalityHttpClient.GetByIdsAsync(ids, ct),
+            async ct =>
+            {
+                var result = await MunicipalityHttpClient.GetByIdsAsync(ids, ct);
+                if (result.TryPickT0(out var municipalities, out var error))
+                {
+                    _municipalitiesLoadError = null;
+                    return municipalities;
+                }
+                _municipalitiesLoadError = error.StatusCode == 0
+                    ? "Couldn't reach the server."
+                    : error.Message ?? "Something went wrong while loading municipalities.";
+                return [];
+            },
             () => InvokeAsync(StateHasChanged));
         return _municipalitiesFetch.FetchAsync();
     }
@@ -208,7 +284,19 @@ else
     {
         (_facetsFetch as IDisposable)?.Dispose();
         _facetsFetch = new Fetch<SpeciesFacetsDto?>(
-            ct => SpeciesHttpClient.GetFacetsAsync(BuildFacetParameters(), ct),
+            async ct =>
+            {
+                var result = await SpeciesHttpClient.GetFacetsAsync(BuildFacetParameters(), ct);
+                if (result.TryPickT0(out var facets, out var error))
+                {
+                    _facetsLoadError = null;
+                    return facets;
+                }
+                _facetsLoadError = error.StatusCode == 0
+                    ? "Couldn't reach the server."
+                    : error.Message ?? "Something went wrong while loading filters.";
+                return null;
+            },
             () => InvokeAsync(StateHasChanged));
         _ = _facetsFetch.FetchAsync();
     }

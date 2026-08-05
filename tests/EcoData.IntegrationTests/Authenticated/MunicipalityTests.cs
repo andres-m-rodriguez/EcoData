@@ -73,10 +73,11 @@ public sealed class MunicipalityTests(EcoDataTestFixture fixture) : Authenticate
     {
         var municipalityId = Locations.MunicipalityId;
 
-        var detail = await MunicipalityHttpClient.GetByIdAsync(municipalityId);
+        var detailResult = await MunicipalityHttpClient.GetByIdAsync(municipalityId);
 
-        detail.Should().NotBeNull();
-        detail!.Id.Should().Be(municipalityId);
+        detailResult.IsT0.Should().BeTrue("Municipality should be found");
+        var detail = detailResult.AsT0;
+        detail.Id.Should().Be(municipalityId);
         detail.Name.Should().NotBeNullOrEmpty();
         detail.StateId.Should().NotBeEmpty();
         detail.StateName.Should().NotBeNullOrEmpty();
@@ -84,22 +85,23 @@ public sealed class MunicipalityTests(EcoDataTestFixture fixture) : Authenticate
     }
 
     [Fact]
-    public async Task GetById_WhenMunicipalityDoesNotExist_ReturnsNull()
+    public async Task GetById_WhenMunicipalityDoesNotExist_ReturnsNotFound()
     {
         var nonExistentId = Guid.CreateVersion7();
 
-        var detail = await MunicipalityHttpClient.GetByIdAsync(nonExistentId);
+        var detailResult = await MunicipalityHttpClient.GetByIdAsync(nonExistentId);
 
-        detail.Should().BeNull();
+        detailResult.IsT1.Should().BeTrue("Missing municipality should be a request failure");
+        detailResult.AsT1.StatusCode.Should().Be(404);
     }
 
     [Fact]
     public async Task GetMunicipalities_WithStateCodeFilter_ReturnsOnlyMatchingState()
     {
-        var municipalityDetail = await MunicipalityHttpClient.GetByIdAsync(
+        var municipalityDetailResult = await MunicipalityHttpClient.GetByIdAsync(
             Locations.MunicipalityId
         );
-        if (municipalityDetail is null)
+        if (!municipalityDetailResult.TryPickT0(out var municipalityDetail, out _))
             return;
 
         var stateCode = municipalityDetail.StateCode;
@@ -156,10 +158,11 @@ public sealed class MunicipalityTests(EcoDataTestFixture fixture) : Authenticate
     [Fact]
     public async Task GetMunicipality_HasValidCoordinates()
     {
-        var detail = await MunicipalityHttpClient.GetByIdAsync(Locations.MunicipalityId);
+        var detailResult = await MunicipalityHttpClient.GetByIdAsync(Locations.MunicipalityId);
 
-        detail.Should().NotBeNull();
-        detail!.CentroidLatitude.Should().BeInRange(-90, 90);
+        detailResult.IsT0.Should().BeTrue("Municipality should be found");
+        var detail = detailResult.AsT0;
+        detail.CentroidLatitude.Should().BeInRange(-90, 90);
         detail.CentroidLongitude.Should().BeInRange(-180, 180);
     }
 

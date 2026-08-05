@@ -1,5 +1,6 @@
 using EcoData.Common.Problems.Contracts;
 using EcoData.Sensors.Contracts.Dtos;
+using EcoData.Sensors.Contracts.Errors;
 using EcoData.Sensors.Contracts.Parameters;
 using EcoData.Sensors.Contracts.Requests;
 using OneOf;
@@ -8,7 +9,7 @@ namespace EcoData.Sensors.Application.Client;
 
 public interface ISensorHttpClient
 {
-    Task<OneOf<SensorDtoForRegistered, ProblemDetail>> RegisterAsync(
+    Task<OneOf<SensorDtoForRegistered, ValidationFailed, RequestFailed>> RegisterAsync(
         RegisterSensorRequest request,
         CancellationToken cancellationToken = default
     );
@@ -18,23 +19,23 @@ public interface ISensorHttpClient
         CancellationToken cancellationToken = default
     );
 
-    Task<int> GetSensorCountAsync(
+    Task<OneOf<int, RequestFailed>> GetSensorCountAsync(
         SensorParameters parameters,
         CancellationToken cancellationToken = default
     );
 
-    Task<SensorDtoForDetail?> GetByIdAsync(
+    Task<OneOf<SensorDtoForDetail, RequestFailed>> GetByIdAsync(
         Guid sensorId,
         CancellationToken cancellationToken = default
     );
 
-    Task<OneOf<SensorDtoForDetail, ProblemDetail>> UpdateAsync(
+    Task<OneOf<SensorDtoForDetail, ValidationFailed, RequestFailed>> UpdateAsync(
         Guid sensorId,
         SensorDtoForUpdate request,
         CancellationToken cancellationToken = default
     );
 
-    Task<OneOf<bool, ProblemDetail>> DeleteAsync(
+    Task<OneOf<OneOf.Types.Success, RequestFailed>> DeleteAsync(
         Guid sensorId,
         CancellationToken cancellationToken = default
     );

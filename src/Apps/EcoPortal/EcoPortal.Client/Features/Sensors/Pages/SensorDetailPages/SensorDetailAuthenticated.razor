@@ -267,7 +267,14 @@
     protected override void OnInitialized()
     {
         _locationFetch = new Fetch<MunicipalityDtoForDetail?>(
-            ct => MunicipalityClient.GetByIdAsync(Sensor.MunicipalityId, ct),
+            async ct =>
+            {
+                var result = await MunicipalityClient.GetByIdAsync(Sensor.MunicipalityId, ct);
+                return result.Match<MunicipalityDtoForDetail?>(
+                    municipality => municipality,
+                    _ => null
+                );
+            },
             () => InvokeAsync(StateHasChanged)
         );
 
@@ -284,7 +291,14 @@
         );
 
         _statsFetch = new Fetch<SensorReadingStatsDto?>(
-            ct => ReadingClient.GetStatsAsync(Sensor.Id, null, ct),
+            async ct =>
+            {
+                var result = await ReadingClient.GetStatsAsync(Sensor.Id, null, ct);
+                return result.Match<SensorReadingStatsDto?>(
+                    stats => stats,
+                    _ => null
+                );
+            },
             () => InvokeAsync(StateHasChanged)
         );
 
@@ -350,9 +364,9 @@
                     Snackbar.Add("Sensor deleted successfully", Severity.Success);
                     await Navigation.GoBackAsync();
                 },
-                problem =>
+                requestFailed =>
                 {
-                    Snackbar.Add(problem.Detail ?? "Failed to delete sensor", Severity.Error);
+                    Snackbar.Add(requestFailed.Message ?? "Failed to delete sensor", Severity.Error);
                     return Task.CompletedTask;
                 }
             );

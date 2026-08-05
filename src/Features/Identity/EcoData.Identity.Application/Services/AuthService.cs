@@ -25,6 +25,12 @@ public sealed class AuthService(
     IJwtTokenService jwtTokenService
 ) : IAuthService
 {
+    // Empty key = model-level error, matching ASP.NET's convention for errors not tied to a field.
+    private static readonly Dictionary<string, string[]> NotFoundErrors = new()
+    {
+        [string.Empty] = ["User not found"],
+    };
+
     public async Task<OneOf<UserInfo, EmailAlreadyExists, ValidationFailed>> RegisterAsync(
         RegisterRequest request,
         CancellationToken cancellationToken = default
@@ -34,7 +40,7 @@ public sealed class AuthService(
         if (!validationResult.IsValid)
         {
             return new ValidationFailed(
-                validationResult.Errors.Select(e => e.ErrorMessage).ToList()
+                new Dictionary<string, string[]>(validationResult.ToDictionary())
             );
         }
 
@@ -58,7 +64,12 @@ public sealed class AuthService(
         var createResult = await userManager.CreateAsync(user, request.Password);
         if (!createResult.Succeeded)
         {
-            return new ValidationFailed(createResult.Errors.Select(e => e.Description).ToList());
+            // Identity errors have no field name; the error code stands in as the map key.
+            return new ValidationFailed(
+                createResult
+                    .Errors.GroupBy(e => e.Code)
+                    .ToDictionary(g => g.Key, g => g.Select(e => e.Description).ToArray())
+            );
         }
 
         return new UserInfo(
@@ -81,7 +92,7 @@ public sealed class AuthService(
         if (!validationResult.IsValid)
         {
             return new ValidationFailed(
-                validationResult.Errors.Select(e => e.ErrorMessage).ToList()
+                new Dictionary<string, string[]>(validationResult.ToDictionary())
             );
         }
 
@@ -227,14 +238,14 @@ public sealed class AuthService(
         if (!validationResult.IsValid)
         {
             return new ValidationFailed(
-                validationResult.Errors.Select(e => e.ErrorMessage).ToList()
+                new Dictionary<string, string[]>(validationResult.ToDictionary())
             );
         }
 
         var user = await userManager.FindByIdAsync(userId.ToString());
         if (user is null)
         {
-            return new ValidationFailed(["User not found"]);
+            return new ValidationFailed(NotFoundErrors);
         }
 
         user.DisplayName = request.DisplayName;
@@ -261,14 +272,14 @@ public sealed class AuthService(
         if (!validationResult.IsValid)
         {
             return new ValidationFailed(
-                validationResult.Errors.Select(e => e.ErrorMessage).ToList()
+                new Dictionary<string, string[]>(validationResult.ToDictionary())
             );
         }
 
         var user = await userManager.FindByIdAsync(userId.ToString());
         if (user is null)
         {
-            return new ValidationFailed(["User not found"]);
+            return new ValidationFailed(NotFoundErrors);
         }
 
         var passwordValid = await userManager.CheckPasswordAsync(user, request.CurrentPassword);
@@ -310,14 +321,14 @@ public sealed class AuthService(
         if (!validationResult.IsValid)
         {
             return new ValidationFailed(
-                validationResult.Errors.Select(e => e.ErrorMessage).ToList()
+                new Dictionary<string, string[]>(validationResult.ToDictionary())
             );
         }
 
         var user = await userManager.FindByIdAsync(userId.ToString());
         if (user is null)
         {
-            return new ValidationFailed(["User not found"]);
+            return new ValidationFailed(NotFoundErrors);
         }
 
         var result = await userManager.ChangePasswordAsync(user, request.CurrentPassword, request.NewPassword);
@@ -327,7 +338,12 @@ public sealed class AuthService(
             {
                 return new InvalidPassword();
             }
-            return new ValidationFailed(result.Errors.Select(e => e.Description).ToList());
+            // Identity errors have no field name; the error code stands in as the map key.
+            return new ValidationFailed(
+                result
+                    .Errors.GroupBy(e => e.Code)
+                    .ToDictionary(g => g.Key, g => g.Select(e => e.Description).ToArray())
+            );
         }
 
         return new Success();

@@ -14,19 +14,19 @@ public interface IOrganizationAccessRequestHttpClient
         CancellationToken cancellationToken = default
     );
 
-    Task<OneOf<OrganizationAccessRequestDto, ProblemDetail>> GetByIdAsync(
+    Task<OneOf<OrganizationAccessRequestDto, RequestFailed>> GetByIdAsync(
         Guid organizationId,
         Guid id,
         CancellationToken cancellationToken = default
     );
 
-    Task<OneOf<OrganizationAccessRequestDto, ProblemDetail>> CreateAsync(
+    Task<OneOf<OrganizationAccessRequestDto, RequestFailed>> CreateAsync(
         Guid organizationId,
         CreateOrganizationAccessRequestRequest request,
         CancellationToken cancellationToken = default
     );
 
-    Task<OneOf<OrganizationAccessRequestDto, ProblemDetail>> UpdateStatusAsync(
+    Task<OneOf<OrganizationAccessRequestDto, RequestFailed>> UpdateStatusAsync(
         Guid organizationId,
         Guid id,
         UpdateOrganizationAccessRequestStatusRequest request,
@@ -38,7 +38,7 @@ public interface IOrganizationAccessRequestHttpClient
         CancellationToken cancellationToken = default
     );
 
-    Task<OneOf<OrganizationAccessRequestDto, ProblemDetail>> CancelMyRequestAsync(
+    Task<OneOf<OrganizationAccessRequestDto, RequestFailed>> CancelMyRequestAsync(
         Guid id,
         CancellationToken cancellationToken = default
     );

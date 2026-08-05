@@ -1,7 +1,7 @@
 using EcoData.Common.Problems.Contracts;
 using EcoData.Organization.Contracts.Dtos;
-using EcoData.Organization.Contracts.Errors;
 using OneOf;
+using OneOf.Types;
 
 namespace EcoData.Organization.Application.Client;
 
@@ -12,14 +12,14 @@ public interface IOrganizationBlockedUserHttpClient
         CancellationToken cancellationToken = default
     );
 
-    Task<OneOf<OrganizationBlockedUserDto, ProblemDetail>> BlockUserAsync(
+    Task<OneOf<OrganizationBlockedUserDto, RequestFailed>> BlockUserAsync(
         Guid organizationId,
         Guid userId,
         string? reason,
         CancellationToken cancellationToken = default
     );
 
-    Task<OneOf<Success, ProblemDetail>> UnblockUserAsync(
+    Task<OneOf<Success, RequestFailed>> UnblockUserAsync(
         Guid organizationId,
         Guid userId,
         CancellationToken cancellationToken = default

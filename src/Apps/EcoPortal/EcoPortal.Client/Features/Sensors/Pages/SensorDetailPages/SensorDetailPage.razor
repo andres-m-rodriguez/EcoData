@@ -42,7 +42,8 @@
 
     protected override async Task OnInitializedAsync()
     {
-        _sensor = await SensorClient.GetByIdAsync(SensorId);
+        var result = await SensorClient.GetByIdAsync(SensorId);
+        _sensor = result.TryPickT0(out var sensor, out _) ? sensor : null;
         _loading = false;
     }
 }

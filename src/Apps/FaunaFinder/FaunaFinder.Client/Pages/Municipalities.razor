@@ -19,7 +19,11 @@
 @if (Id is not null)
 {
     <NuiPageLayout Title="@_detailFetch?.Data?.Name" ParentPath="/municipalities">
-        @if (_detailFetch?.IsLoading is not false)
+        @if (_detailLoadError is not null)
+        {
+            <MudAlert Severity="Severity.Error">@_detailLoadError</MudAlert>
+        }
+        else if (_detailFetch?.IsLoading is not false)
         {
             <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="180px" Class="mb-4 rounded-lg" />
             <MudSkeleton SkeletonType="SkeletonType.Text" Width="60%" Class="mb-2" />
@@ -52,7 +56,11 @@
                     }
                 </MudStack>
 
-                @if (_detailSpeciesFetch?.IsLoading is not false)
+                @if (_detailSpeciesLoadError is not null)
+                {
+                    <MudAlert Severity="Severity.Error">@_detailSpeciesLoadError</MudAlert>
+                }
+                else if (_detailSpeciesFetch?.IsLoading is not false)
                 {
                     <MudGrid Spacing="2">
                         @for (var i = 0; i < 6; i++)
@@ -95,6 +103,11 @@ else
         <MunicipalityEditorialHero Stats="@_statsFetch?.Data" />
 
         <MunicipalityStatsRow Stats="@_statsFetch?.Data" />
+
+        @if ((_statsLoadError ?? _municipalitiesLoadError) is { } listLoadError)
+        {
+            <MudAlert Severity="Severity.Error">@listLoadError</MudAlert>
+        }
 
         @* Mobile tab toggle — radio-input driven, no JS. Inputs must live as
            siblings of .mm-tabs and .mm-layout so `:checked ~` can target them. *@
@@ -151,13 +164,30 @@ else
     private IFetch<IReadOnlyList<SpeciesDtoForList>>? _detailSpeciesFetch;
     private Guid? _loadedDetailId;
 
+    private string? _statsLoadError;
+    private string? _municipalitiesLoadError;
+    private string? _detailLoadError;
+    private string? _detailSpeciesLoadError;
+
     protected override void OnInitialized()
     {
         Navbar.SetTitle(L["Nav_Municipios"]);
         L.LanguageChanged += OnLanguageChanged;
 
         _statsFetch = new Fetch<SpeciesStatsDto?>(
-            SpeciesClient.GetStatsAsync,
+            async ct =>
+            {
+                var result = await SpeciesClient.GetStatsAsync(ct);
+                if (result.TryPickT0(out var stats, out var error))
+                {
+                    _statsLoadError = null;
+                    return stats;
+                }
+                _statsLoadError = error.StatusCode == 0
+                    ? "Couldn't reach the server."
+                    : error.Message ?? "Something went wrong while loading species stats.";
+                return null;
+            },
             () => InvokeAsync(StateHasChanged));
         _ = _statsFetch.FetchAsync();
 
@@ -175,7 +205,23 @@ else
             (_detailSpeciesFetch as IDisposable)?.Dispose();
 
             _detailFetch = new Fetch<MunicipalityDtoForDetail?>(
-                ct => MunicipalityClient.GetByIdAsync(id, ct),
+                async ct =>
+                {
+                    var result = await MunicipalityClient.GetByIdAsync(id, ct);
+                    if (result.TryPickT0(out var detail, out var error))
+                    {
+                        _detailLoadError = null;
+                        return detail;
+                    }
+                    // A missing municipality keeps the dedicated not-found empty state.
+                    _detailLoadError = error.StatusCode switch
+                    {
+                        404 => null,
+                        0 => "Couldn't reach the server.",
+                        _ => error.Message ?? "Something went wrong while loading this municipality."
+                    };
+                    return null;
+                },
                 () =>
                 {
                     if (_detailFetch?.Data is { } detail)
@@ -186,7 +232,19 @@ else
                 });
 
             _detailSpeciesFetch = new Fetch<IReadOnlyList<SpeciesDtoForList>>(
-                ct => SpeciesClient.GetByMunicipalityAsync(id, ct),
+                async ct =>
+                {
+                    var result = await SpeciesClient.GetByMunicipalityAsync(id, ct);
+                    if (result.TryPickT0(out var species, out var error))
+                    {
+                        _detailSpeciesLoadError = null;
+                        return species;
+                    }
+                    _detailSpeciesLoadError = error.StatusCode == 0
+                        ? "Couldn't reach the server."
+                        : error.Message ?? "Something went wrong while loading species.";
+                    return [];
+                },
                 () => InvokeAsync(StateHasChanged));
 
             await Task.WhenAll(
@@ -206,6 +264,8 @@ else
         _listCts = new CancellationTokenSource();
         var ct = _listCts.Token;
 
+        _municipalitiesLoadError = null;
+
         // Run the list stream + count fetch in parallel.
         var countsTask = SpeciesClient.GetCountsByMunicipalityAsync(ct);
 
@@ -223,11 +283,30 @@ else
         {
             return;
         }
+        catch (HttpRequestException e)
+        {
+            // The list stream has no error channel — the transport exception is the signal.
+            _municipalitiesLoadError = e.StatusCode is null
+                ? "Couldn't reach the server."
+                : "Something went wrong while loading municipalities.";
+            await InvokeAsync(StateHasChanged);
+            return;
+        }
 
-        var counts = await countsTask;
+        var countsResult = await countsTask;
+        if (countsResult.TryPickT0(out var counts, out var countsError))
+        {
+            _countsMap = counts.ToDictionary(c => c.MunicipalityId, c => c.Count);
+        }
+        else
+        {
+            _municipalitiesLoadError = countsError.StatusCode == 0
+                ? "Couldn't reach the server."
+                : countsError.Message ?? "Something went wrong while loading species counts.";
+            _countsMap = new Dictionary<Guid, int>();
+        }
 
         _municipalities = collected;
-        _countsMap = counts.ToDictionary(c => c.MunicipalityId, c => c.Count);
         await InvokeAsync(StateHasChanged);
     }
 

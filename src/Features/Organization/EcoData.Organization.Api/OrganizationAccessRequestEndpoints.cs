@@ -103,7 +103,9 @@ public static class OrganizationAccessRequestEndpoints
         orgGroup
             .MapGet(
                 "/",
-                async (
+                async Task<
+                    Results<Ok<IAsyncEnumerable<OrganizationAccessRequestDto>>, ForbidHttpResult>
+                > (
                     Guid organizationId,
                     [AsParameters] OrganizationAccessRequestParameters parameters,
                     ClaimsPrincipal user,
@@ -123,10 +125,10 @@ public static class OrganizationAccessRequestEndpoints
                         )
                     )
                     {
-                        return Results.Forbid();
+                        return TypedResults.Forbid();
                     }
 
-                    return Results.Ok(
+                    return TypedResults.Ok(
                         repository.GetByOrganizationAsync(organizationId, parameters, ct)
                     );
                 }
@@ -264,7 +266,10 @@ public static class OrganizationAccessRequestEndpoints
         meGroup
             .MapGet(
                 "/",
-                (
+                Results<
+                    Ok<IAsyncEnumerable<OrganizationAccessRequestDto>>,
+                    UnauthorizedHttpResult
+                > (
                     [AsParameters] OrganizationAccessRequestParameters parameters,
                     ClaimsPrincipal user,
                     IOrganizationAccessRequestRepository repository,
@@ -274,10 +279,10 @@ public static class OrganizationAccessRequestEndpoints
                     var token = new RequestClaimToken(user);
                     if (!token.IsAuthenticated)
                     {
-                        return Results.Unauthorized();
+                        return TypedResults.Unauthorized();
                     }
 
-                    return Results.Ok(
+                    return TypedResults.Ok(
                         repository.GetByUserAsync(token.UserId.Value, parameters, ct)
                     );
                 }

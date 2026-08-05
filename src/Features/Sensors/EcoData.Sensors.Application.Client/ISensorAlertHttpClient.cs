@@ -12,7 +12,7 @@ public interface ISensorAlertHttpClient
         CancellationToken cancellationToken = default
     );
 
-    Task<OneOf<SensorHealthAlertDtoForDetail, ProblemDetail>> GetAlertByIdAsync(
+    Task<OneOf<SensorHealthAlertDtoForDetail, RequestFailed>> GetAlertByIdAsync(
         Guid alertId,
         CancellationToken cancellationToken = default
     );

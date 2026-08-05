@@ -1,5 +1,7 @@
+using EcoData.Common.Problems.Contracts;
 using EcoData.Wildlife.Contracts.Dtos;
 using EcoData.Wildlife.Contracts.Parameters;
+using OneOf;
 
 namespace EcoData.Wildlife.Application.Client;
 
@@ -9,28 +11,29 @@ public interface ISpeciesHttpClient
         SpeciesParameters? parameters = null,
         CancellationToken ct = default);
 
-    Task<int> GetCountAsync(
+    Task<OneOf<int, RequestFailed>> GetCountAsync(
         SpeciesParameters? parameters = null,
         CancellationToken ct = default);
 
-    Task<SpeciesDtoForDetail?> GetByIdAsync(Guid id, CancellationToken ct = default);
+    Task<OneOf<SpeciesDtoForDetail, RequestFailed>> GetByIdAsync(Guid id, CancellationToken ct = default);
 
-    Task<IReadOnlyList<SpeciesDtoForList>> GetByMunicipalityAsync(
+    Task<OneOf<IReadOnlyList<SpeciesDtoForList>, RequestFailed>> GetByMunicipalityAsync(
         Guid municipalityId,
         CancellationToken ct = default);
 
-    Task<IReadOnlyList<SpeciesDtoForList>> GetByCategoryAsync(
+    Task<OneOf<IReadOnlyList<SpeciesDtoForList>, RequestFailed>> GetByCategoryAsync(
         Guid categoryId,
         CancellationToken ct = default);
 
-    Task<SpeciesStatsDto?> GetStatsAsync(CancellationToken ct = default);
+    Task<OneOf<SpeciesStatsDto, RequestFailed>> GetStatsAsync(CancellationToken ct = default);
 
-    Task<SpeciesFacetsDto?> GetFacetsAsync(
+    Task<OneOf<SpeciesFacetsDto, RequestFailed>> GetFacetsAsync(
         SpeciesParameters? parameters = null,
         CancellationToken ct = default);
 
-    Task<IReadOnlyList<SpeciesDtoForList>> GetFeaturedAsync(CancellationToken ct = default);
+    Task<OneOf<IReadOnlyList<SpeciesDtoForList>, RequestFailed>> GetFeaturedAsync(
+        CancellationToken ct = default);
 
-    Task<IReadOnlyList<MunicipalitySpeciesCountDto>> GetCountsByMunicipalityAsync(
+    Task<OneOf<IReadOnlyList<MunicipalitySpeciesCountDto>, RequestFailed>> GetCountsByMunicipalityAsync(
         CancellationToken ct = default);
 }

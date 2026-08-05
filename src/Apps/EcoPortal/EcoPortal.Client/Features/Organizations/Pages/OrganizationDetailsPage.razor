@@ -1,6 +1,5 @@
 @page "/organizations/{Id:guid}"
 @using EcoData.Organization.Contracts.Dtos
-@using EcoData.Organization.Contracts.Errors
 @using EcoData.Organization.Contracts.Parameters
 @using EcoData.Organization.Application.Client
 @using EcoData.Sensors.Contracts.Dtos
@@ -496,7 +495,14 @@
         );
 
         _sensorCountFetch = new Fetch<int>(
-            ct => SensorClient.GetSensorCountAsync(sensorParams, ct),
+            async ct =>
+            {
+                var result = await SensorClient.GetSensorCountAsync(sensorParams, ct);
+                return result.Match(
+                    count => count,
+                    _ => 0
+                );
+            },
             () => InvokeAsync(StateHasChanged)
         );
 
@@ -624,7 +630,7 @@
                     Snackbar.Add("Deleted", Severity.Success);
                     Navigation.NavigateTo("/organizations/discover");
                 },
-                problem => Snackbar.Add(problem.Detail ?? "Failed to delete organization", Severity.Error)
+                error => Snackbar.Add(error.Message ?? "Failed to delete organization", Severity.Error)
             );
         }
     }

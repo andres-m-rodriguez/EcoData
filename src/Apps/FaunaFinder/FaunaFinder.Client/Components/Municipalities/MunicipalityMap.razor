@@ -9,6 +9,12 @@
 @inject IMunicipalityHttpClient MunicipalityClient
 
 <div class="mm-map">
+    @if (_geoJsonLoadError is not null)
+    {
+        <div class="mm-map-error">
+            <MudAlert Severity="Severity.Error">@_geoJsonLoadError</MudAlert>
+        </div>
+    }
     <NuiMap TMarker="MunicipalityMarker"
             Controller="_controller"
             Height="100%"
@@ -46,6 +52,7 @@
     private readonly MapController<MunicipalityMarker> _controller = new();
     private Guid? _lastSelectedId;
     private bool _geoJsonLoaded;
+    private string? _geoJsonLoadError;
 
     protected override void OnInitialized()
     {
@@ -73,7 +80,16 @@
 
     private async Task LoadGeoJsonAsync()
     {
-        var geoJson = await MunicipalityClient.GetGeoJsonByStateCodeAsync("PR");
+        var result = await MunicipalityClient.GetGeoJsonByStateCodeAsync("PR");
+        if (!result.TryPickT0(out var geoJson, out var error))
+        {
+            _geoJsonLoadError = error.StatusCode == 0
+                ? "Couldn't reach the server."
+                : error.Message ?? "Something went wrong while loading the map.";
+            await InvokeAsync(StateHasChanged);
+            return;
+        }
+        _geoJsonLoadError = null;
         if (string.IsNullOrEmpty(geoJson)) return;
 
         _controller.AddGeoJson(new MapGeoJson

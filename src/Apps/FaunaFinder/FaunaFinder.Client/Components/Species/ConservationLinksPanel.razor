@@ -21,7 +21,11 @@
         </MudText>
     </MudStack>
 
-    @if (_linksFetch.IsLoading || _fwsFetch.IsLoading || _nrcsFetch.IsLoading)
+    @if (LoadError is { } loadError)
+    {
+        <MudAlert Severity="Severity.Error">@loadError</MudAlert>
+    }
+    else if (_linksFetch.IsLoading || _fwsFetch.IsLoading || _nrcsFetch.IsLoading)
     {
         @for (var i = 0; i < 3; i++)
         {
@@ -136,6 +140,12 @@
     private Guid? _practiceId;
     private Guid? _actionId;
 
+    private string? _linksLoadError;
+    private string? _fwsLoadError;
+    private string? _nrcsLoadError;
+
+    private string? LoadError => _linksLoadError ?? _fwsLoadError ?? _nrcsLoadError;
+
     private IReadOnlyList<FwsLinkDtoForDetail> FilteredLinks
     {
         get
@@ -162,13 +172,49 @@
     protected override void OnInitialized()
     {
         _linksFetch = new Fetch<ConservationLinksDtoForSpecies>(
-            ct => LinkClient.GetBySpeciesAsync(SpeciesId, ct),
+            async ct =>
+            {
+                var result = await LinkClient.GetBySpeciesAsync(SpeciesId, ct);
+                if (result.TryPickT0(out var links, out var error))
+                {
+                    _linksLoadError = null;
+                    return links;
+                }
+                _linksLoadError = error.StatusCode == 0
+                    ? "Couldn't reach the server."
+                    : error.Message ?? "Something went wrong while loading conservation actions.";
+                return new ConservationLinksDtoForSpecies([]);
+            },
             () => InvokeAsync(StateHasChanged));
         _fwsFetch = new Fetch<IReadOnlyList<FwsActionDtoForList>>(
-            FwsClient.GetAllAsync,
+            async ct =>
+            {
+                var result = await FwsClient.GetAllAsync(ct);
+                if (result.TryPickT0(out var actions, out var error))
+                {
+                    _fwsLoadError = null;
+                    return actions;
+                }
+                _fwsLoadError = error.StatusCode == 0
+                    ? "Couldn't reach the server."
+                    : error.Message ?? "Something went wrong while loading FWS actions.";
+                return [];
+            },
             () => InvokeAsync(StateHasChanged));
         _nrcsFetch = new Fetch<IReadOnlyList<NrcsPracticeDtoForList>>(
-            NrcsClient.GetAllAsync,
+            async ct =>
+            {
+                var result = await NrcsClient.GetAllAsync(ct);
+                if (result.TryPickT0(out var practices, out var error))
+                {
+                    _nrcsLoadError = null;
+                    return practices;
+                }
+                _nrcsLoadError = error.StatusCode == 0
+                    ? "Couldn't reach the server."
+                    : error.Message ?? "Something went wrong while loading NRCS practices.";
+                return [];
+            },
             () => InvokeAsync(StateHasChanged));
 
         _ = _linksFetch.FetchAsync();
