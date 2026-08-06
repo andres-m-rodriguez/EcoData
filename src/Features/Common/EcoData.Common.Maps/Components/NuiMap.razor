@@ -33,6 +33,11 @@
         Controller.OnMarkersChanged += HandleMarkersChanged;
         Controller.OnViewChanged += HandleViewChanged;
         Controller.OnGeoJsonChanged += HandleGeoJsonChanged;
+        Controller.OnCirclesChanged += HandleCirclesChanged;
+        Controller.OnCircleFocusRequested += HandleCircleFocusRequested;
+        Controller.OnSearchRadiusChanged += HandleSearchRadiusChanged;
+        Controller.OnPolygonDrawActionRequested += HandlePolygonDrawActionRequested;
+        Controller.OnHeatmapChanged += HandleHeatmapChanged;
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -51,9 +56,15 @@
                 Controller.Zoom,
                 _dotNetRef);
 
+            if (Controller is MapController<TMarker> mapController)
+            {
+                mapController.GeolocationProvider = GetCurrentPositionAsync;
+            }
+
             _isInitialized = true;
             await UpdateMarkers();
             await UpdateGeoJson();
+            await UpdateCircles();
         }
     }
 
@@ -75,6 +86,30 @@
     public void OnGeoJsonClickedFromJs(string layerId, string? properties)
     {
         Controller.RaiseGeoJsonClicked(layerId, properties);
+    }
+
+    [JSInvokable]
+    public void OnGeoJsonLoadedFromJs(string layerId, bool success)
+    {
+        Controller.RaiseGeoJsonLoaded(layerId, success);
+    }
+
+    [JSInvokable]
+    public void OnCircleClickedFromJs(int index)
+    {
+        Controller.RaiseCircleClicked(index);
+    }
+
+    [JSInvokable]
+    public void OnPolygonDrawnFromJs(MapCoordinate[] coordinates)
+    {
+        Controller.RaisePolygonDrawn(coordinates);
+    }
+
+    [JSInvokable]
+    public void OnPolygonDrawCancelledFromJs()
+    {
+        Controller.RaisePolygonDrawCancelled();
     }
 
     // ===== Event Handlers =====
@@ -111,6 +146,106 @@
         }
     }
 
+    private async void HandleCirclesChanged()
+    {
+        if (_isInitialized)
+        {
+            await InvokeAsync(async () => await UpdateCircles());
+        }
+    }
+
+    private async void HandleCircleFocusRequested(int? index)
+    {
+        if (!_isInitialized || _mapInstance is null || _module is null) return;
+
+        await InvokeAsync(async () =>
+        {
+            if (index is { } i)
+            {
+                await _module.InvokeVoidAsync("focusCircle", _mapInstance, i);
+            }
+            else
+            {
+                await _module.InvokeVoidAsync("focusAllCircles", _mapInstance);
+            }
+        });
+    }
+
+    private async void HandleSearchRadiusChanged((MapCoordinate Center, double RadiusMeters)? radius)
+    {
+        if (!_isInitialized || _mapInstance is null || _module is null) return;
+
+        await InvokeAsync(async () =>
+        {
+            if (radius is { } r)
+            {
+                await _module.InvokeVoidAsync(
+                    "showSearchRadius",
+                    _mapInstance,
+                    r.Center.Latitude,
+                    r.Center.Longitude,
+                    r.RadiusMeters);
+            }
+            else
+            {
+                await _module.InvokeVoidAsync("clearSearchRadius", _mapInstance);
+            }
+        });
+    }
+
+    private async void HandlePolygonDrawActionRequested(MapPolygonDrawAction action)
+    {
+        if (!_isInitialized || _mapInstance is null || _module is null) return;
+
+        await InvokeAsync(async () =>
+        {
+            var function = action switch
+            {
+                MapPolygonDrawAction.Enable => "enablePolygonDraw",
+                MapPolygonDrawAction.Finish => "finishPolygonDraw",
+                MapPolygonDrawAction.Cancel => "cancelPolygonDraw",
+                _ => "clearDrawnPolygon",
+            };
+            await _module.InvokeVoidAsync(function, _mapInstance);
+        });
+    }
+
+    private async void HandleHeatmapChanged()
+    {
+        if (!_isInitialized || _mapInstance is null || _module is null) return;
+        if (Controller is not MapController<TMarker> mapController) return;
+
+        await InvokeAsync(async () =>
+        {
+            if (!mapController.HeatmapVisible)
+            {
+                await _module.InvokeVoidAsync("hideHeatmap", _mapInstance);
+                return;
+            }
+
+            var points = mapController.HeatPoints.Select(p => new
+            {
+                latitude = p.Latitude,
+                longitude = p.Longitude,
+                intensity = p.Intensity,
+                isFauna = p.IsFauna
+            }).ToArray();
+
+            await _module.InvokeVoidAsync(
+                "showHeatmap",
+                _mapInstance,
+                points,
+                mapController.HeatmapFilter.ToString().ToLowerInvariant());
+        });
+    }
+
+    private async Task<MapGeolocationResult?> GetCurrentPositionAsync()
+    {
+        if (_module is null) return null;
+
+        return await _module.InvokeAsync<MapGeolocationResult>("getCurrentPosition");
+    }
+
     // ===== Update Methods =====
 
     private async Task UpdateMarkers()
@@ -129,6 +264,24 @@
         await _module.InvokeVoidAsync("setMarkers", _mapInstance, markerData);
     }
 
+    private async Task UpdateCircles()
+    {
+        if (_mapInstance is null || _module is null) return;
+
+        var circleData = Controller.Circles.Select((c, i) => new
+        {
+            index = i,
+            lat = c.Center.Latitude,
+            lng = c.Center.Longitude,
+            radiusMeters = c.RadiusMeters,
+            fillColor = c.FillColor,
+            strokeColor = c.StrokeColor,
+            popup = c.PopupHtml
+        }).ToArray();
+
+        await _module.InvokeVoidAsync("setCircles", _mapInstance, circleData);
+    }
+
     private async Task UpdateGeoJson()
     {
         if (_mapInstance is null || _module is null) return;
@@ -139,6 +292,9 @@
             {
                 id = g.Id,
                 data = g.Data,
+                url = g.Url,
+                cacheKey = g.CacheKey,
+                cacheVersion = g.CacheVersion,
                 fillColor = g.FillColor,
                 fillOpacity = g.FillOpacity,
                 strokeColor = g.StrokeColor,
@@ -172,6 +328,16 @@
         Controller.OnMarkersChanged -= HandleMarkersChanged;
         Controller.OnViewChanged -= HandleViewChanged;
         Controller.OnGeoJsonChanged -= HandleGeoJsonChanged;
+        Controller.OnCirclesChanged -= HandleCirclesChanged;
+        Controller.OnCircleFocusRequested -= HandleCircleFocusRequested;
+        Controller.OnSearchRadiusChanged -= HandleSearchRadiusChanged;
+        Controller.OnPolygonDrawActionRequested -= HandlePolygonDrawActionRequested;
+        Controller.OnHeatmapChanged -= HandleHeatmapChanged;
+
+        if (Controller is MapController<TMarker> mapController)
+        {
+            mapController.GeolocationProvider = null;
+        }
 
         if (_mapInstance is not null)
         {

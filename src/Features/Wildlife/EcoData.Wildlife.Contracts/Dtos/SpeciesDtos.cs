@@ -33,7 +33,35 @@ public sealed record SpeciesDtoForDetail(
     bool IsEndemic,
     IucnStatus? IucnStatus,
     string? Habitat,
-    DateTimeOffset? LastObservedAtUtc
+    DateTimeOffset? LastObservedAtUtc,
+    IReadOnlyList<SpeciesLocationDto> Locations
+);
+
+public sealed record SpeciesLocationDto(
+    Guid Id,
+    double Latitude,
+    double Longitude,
+    double RadiusMeters,
+    string? Description
+);
+
+public sealed record SpeciesNearbyDto(
+    Guid Id,
+    IReadOnlyList<LocaleValue> CommonName,
+    string ScientificName,
+    bool IsFauna,
+    double DistanceMeters,
+    double Latitude,
+    double Longitude,
+    double RadiusMeters,
+    string? LocationDescription
+);
+
+public sealed record HeatmapPointDto(
+    double Latitude,
+    double Longitude,
+    double Intensity,
+    bool IsFauna
 );
 
 public sealed record SpeciesDtoForCreate(

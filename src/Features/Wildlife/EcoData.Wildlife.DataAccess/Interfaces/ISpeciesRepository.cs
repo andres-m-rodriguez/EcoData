@@ -40,4 +40,20 @@ public interface ISpeciesRepository
     Task<IReadOnlyList<MunicipalitySpeciesCountDto>> GetCountsByMunicipalityAsync(
         CancellationToken cancellationToken = default
     );
+
+    Task<IReadOnlyList<SpeciesNearbyDto>> GetNearbyAsync(
+        double latitude,
+        double longitude,
+        double radiusMeters,
+        CancellationToken cancellationToken = default
+    );
+
+    Task<IReadOnlyList<SpeciesNearbyDto>> GetInPolygonAsync(
+        IReadOnlyList<PolygonCoordinate> coordinates,
+        CancellationToken cancellationToken = default
+    );
+
+    Task<IReadOnlyList<HeatmapPointDto>> GetHeatmapAsync(
+        CancellationToken cancellationToken = default
+    );
 }

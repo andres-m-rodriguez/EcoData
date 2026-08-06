@@ -36,10 +36,6 @@
     bottom: 0;
 }
 
-.map-loading-overlay {
-    background-color: rgba(244, 244, 239, 0.85);
-}
-
 /* Load-failure banner floats over the map without displacing it */
 .map-error-overlay {
     position: absolute;
@@ -48,6 +44,93 @@
     transform: translateX(-50%);
     z-index: 1100;
     width: min(90%, 480px);
+}
+
+/* Crosshair cursor while drawing a polygon (class set by nuimap.js) */
+.map-container ::deep .nui-map-draw-mode {
+    cursor: crosshair;
+}
+
+/* Action FAB stack — bottom-right, above Leaflet attribution */
+.map-fabs {
+    position: absolute;
+    right: 16px;
+    bottom: 28px;
+    z-index: 500;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    align-items: flex-end;
+}
+
+/* Polygon draw instruction banner — top center */
+.draw-banner {
+    position: absolute;
+    top: 12px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 600;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    max-width: min(560px, calc(100% - 24px));
+    padding: 8px 14px;
+    background: var(--fauna-surface);
+    border: 1px solid var(--fauna-line);
+    border-radius: 12px;
+    box-shadow: var(--fauna-shadow-4);
+    color: var(--fauna-fg-2);
+}
+
+.draw-banner ::deep .mud-icon-root {
+    color: var(--fauna-primary);
+    flex-shrink: 0;
+}
+
+.draw-banner-text {
+    font: var(--fauna-body-sm);
+    color: var(--fauna-fg-2);
+    min-width: 0;
+}
+
+/* Heatmap filter card — top left, clear of the sidebar */
+.heatmap-card {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    z-index: 550;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 6px 8px;
+    background: var(--fauna-surface);
+    border: 1px solid var(--fauna-line);
+    border-radius: 12px;
+    box-shadow: var(--fauna-shadow-4);
+}
+
+.heatmap-close {
+    width: 26px;
+    height: 26px;
+    border-radius: 8px;
+    border: 1px solid var(--fauna-line);
+    background: var(--fauna-surface);
+    color: var(--fauna-fg-3);
+    cursor: pointer;
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+}
+
+.heatmap-close:hover {
+    background: var(--fauna-bg-alt);
+    color: var(--fauna-fg);
+}
+
+.heatmap-close ::deep .mud-icon-root {
+    font-size: 15px !important;
+    color: inherit;
+>>>>>>> fca6594 (feat(faunafinder): map parity with original — near-me search, polygon draw, heatmap, species location navigator)
 }
 
 /* Desktop sidebar shell — inner chrome lives in MapSpeciesPanel */

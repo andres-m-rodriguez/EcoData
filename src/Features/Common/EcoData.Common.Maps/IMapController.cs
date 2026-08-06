@@ -91,6 +91,93 @@ public interface IMapController<TMarker>
     /// </summary>
     void FitToBounds(MapBounds bounds);
 
+    // ===== Circle Methods =====
+
+    /// <summary>
+    /// Current circles on the map.
+    /// </summary>
+    IReadOnlyList<MapCircle> Circles { get; }
+
+    /// <summary>
+    /// Replace all circles on the map.
+    /// </summary>
+    void SetCircles(IEnumerable<MapCircle> circles);
+
+    /// <summary>
+    /// Remove all circles.
+    /// </summary>
+    void ClearCircles();
+
+    /// <summary>
+    /// Fly to a circle by index and open its popup.
+    /// </summary>
+    void FocusCircle(int index);
+
+    /// <summary>
+    /// Fly to bounds containing every circle.
+    /// </summary>
+    void FocusAllCircles();
+
+    // ===== Search Radius Methods =====
+
+    /// <summary>
+    /// Show the user-location dot and a dashed search-radius circle, and fly to it.
+    /// </summary>
+    void ShowSearchRadius(MapCoordinate center, double radiusMeters);
+
+    /// <summary>
+    /// Remove the search-radius overlay.
+    /// </summary>
+    void ClearSearchRadius();
+
+    // ===== Polygon Draw Methods =====
+
+    /// <summary>
+    /// Enter polygon draw mode. Vertices are added by clicking; the shape completes on
+    /// double-click, Enter, or clicking the first vertex, and fires <see cref="OnPolygonDrawn"/>.
+    /// </summary>
+    void EnablePolygonDraw();
+
+    /// <summary>
+    /// Complete the polygon being drawn (requires at least 3 vertices).
+    /// </summary>
+    void FinishPolygonDraw();
+
+    /// <summary>
+    /// Cancel draw mode and remove any in-progress shape.
+    /// </summary>
+    void CancelPolygonDraw();
+
+    /// <summary>
+    /// Remove a completed drawn polygon from the map.
+    /// </summary>
+    void ClearDrawnPolygon();
+
+    // ===== Heatmap Methods =====
+
+    /// <summary>
+    /// Show (or refresh) the heatmap layer with the given points.
+    /// </summary>
+    void ShowHeatmap(IReadOnlyList<MapHeatPoint> points, MapHeatmapFilter filter = MapHeatmapFilter.All);
+
+    /// <summary>
+    /// Re-filter the currently shown heatmap.
+    /// </summary>
+    void SetHeatmapFilter(MapHeatmapFilter filter);
+
+    /// <summary>
+    /// Remove the heatmap layer.
+    /// </summary>
+    void HideHeatmap();
+
+    // ===== Geolocation =====
+
+    /// <summary>
+    /// Ask the browser for the user's current position. Returns null when no map
+    /// component is attached yet.
+    /// </summary>
+    Task<MapGeolocationResult?> GetCurrentPositionAsync();
+
     // ===== Events (internal, raised by component) =====
 
     /// <summary>
@@ -123,6 +210,52 @@ public interface IMapController<TMarker>
     /// </summary>
     event Action<string, string?>? OnGeoJsonClicked;
 
+    /// <summary>
+    /// Fired when a URL-based GeoJSON layer finishes loading in JS.
+    /// Receives the layer ID and whether the load succeeded.
+    /// </summary>
+    event Action<string, bool>? OnGeoJsonLoaded;
+
+    /// <summary>
+    /// Fired when circles change.
+    /// </summary>
+    event Action? OnCirclesChanged;
+
+    /// <summary>
+    /// Fired when a circle is clicked. Receives the circle index.
+    /// </summary>
+    event Action<int>? OnCircleClicked;
+
+    /// <summary>
+    /// Fired when a circle focus is requested. Receives the circle index, or null for all circles.
+    /// </summary>
+    event Action<int?>? OnCircleFocusRequested;
+
+    /// <summary>
+    /// Fired when the search radius overlay changes. Receives null when cleared.
+    /// </summary>
+    event Action<(MapCoordinate Center, double RadiusMeters)?>? OnSearchRadiusChanged;
+
+    /// <summary>
+    /// Fired when a polygon draw action is requested by the caller.
+    /// </summary>
+    event Action<MapPolygonDrawAction>? OnPolygonDrawActionRequested;
+
+    /// <summary>
+    /// Fired when the user completes a polygon. Receives the vertices.
+    /// </summary>
+    event Action<IReadOnlyList<MapCoordinate>>? OnPolygonDrawn;
+
+    /// <summary>
+    /// Fired when the user cancels polygon drawing (Escape).
+    /// </summary>
+    event Action? OnPolygonDrawCancelled;
+
+    /// <summary>
+    /// Fired when the heatmap state changes.
+    /// </summary>
+    event Action? OnHeatmapChanged;
+
     // ===== Internal methods for component to raise events =====
 
     /// <summary>
@@ -139,4 +272,35 @@ public interface IMapController<TMarker>
     /// Called by the component when a GeoJSON feature is clicked.
     /// </summary>
     void RaiseGeoJsonClicked(string layerId, string? properties);
+
+    /// <summary>
+    /// Called by the component when a URL-based GeoJSON layer finishes loading.
+    /// </summary>
+    void RaiseGeoJsonLoaded(string layerId, bool success);
+
+    /// <summary>
+    /// Called by the component when a circle is clicked.
+    /// </summary>
+    void RaiseCircleClicked(int index);
+
+    /// <summary>
+    /// Called by the component when the user completes a polygon.
+    /// </summary>
+    void RaisePolygonDrawn(IReadOnlyList<MapCoordinate> coordinates);
+
+    /// <summary>
+    /// Called by the component when the user cancels polygon drawing.
+    /// </summary>
+    void RaisePolygonDrawCancelled();
+}
+
+/// <summary>
+/// Polygon draw actions a controller can request from the map component.
+/// </summary>
+public enum MapPolygonDrawAction
+{
+    Enable,
+    Finish,
+    Cancel,
+    ClearDrawn,
 }

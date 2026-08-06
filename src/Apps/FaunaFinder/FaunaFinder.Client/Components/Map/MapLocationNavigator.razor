@@ -1,0 +1,48 @@
+@namespace FaunaFinder.Client.Components.Map
+@inherits LocalizedComponentBase
+@using EcoData.Wildlife.Contracts.Dtos
+
+<div class="mln-overlay">
+    <div class="mln-head">
+        <MudIcon Icon="@Icons.Material.Filled.MyLocation" Size="Size.Small" />
+        <span class="mln-species">@Locale.Resolve(Species.CommonName, fallback: Species.ScientificName)</span>
+        <a class="mln-details" href="@($"/species/{Species.Id}")">@L["Map_ViewDetails"]</a>
+        <button type="button" class="mln-close" @onclick="HandleClose" aria-label="@L["Common_Close"]">
+            <MudIcon Icon="@Icons.Material.Filled.Close" Size="Size.Small" />
+        </button>
+    </div>
+    <div class="mln-body">
+        <MudIconButton Icon="@Icons.Material.Filled.ChevronLeft"
+                       Size="Size.Medium"
+                       Disabled="@(CurrentIndex == 0)"
+                       OnClick="HandlePrevious" />
+        <button type="button" class="mln-info" @onclick="HandleFocusCurrent">
+            <span class="mln-location">@(CurrentLocation.Description ?? L["Map_Location_Unnamed"])</span>
+            <span class="mln-counter">
+                @($"{CurrentIndex + 1} / {Species.Locations.Count}") · @L["Map_Location_RadiusMeters", CurrentLocation.RadiusMeters.ToString("N0")]
+            </span>
+        </button>
+        <MudIconButton Icon="@Icons.Material.Filled.ChevronRight"
+                       Size="Size.Medium"
+                       Disabled="@(CurrentIndex >= Species.Locations.Count - 1)"
+                       OnClick="HandleNext" />
+    </div>
+</div>
+
+@code {
+    [Parameter, EditorRequired] public SpeciesDtoForDetail Species { get; set; } = null!;
+    [Parameter] public int CurrentIndex { get; set; }
+    [Parameter] public EventCallback OnClose { get; set; }
+    [Parameter] public EventCallback OnPrevious { get; set; }
+    [Parameter] public EventCallback OnNext { get; set; }
+    [Parameter] public EventCallback OnFocusCurrent { get; set; }
+
+    [CascadingParameter] public LocaleContext Locale { get; set; } = LocaleContext.English;
+
+    private SpeciesLocationDto CurrentLocation => Species.Locations[CurrentIndex];
+
+    private Task HandleClose() => OnClose.InvokeAsync();
+    private Task HandlePrevious() => OnPrevious.InvokeAsync();
+    private Task HandleNext() => OnNext.InvokeAsync();
+    private Task HandleFocusCurrent() => OnFocusCurrent.InvokeAsync();
+}

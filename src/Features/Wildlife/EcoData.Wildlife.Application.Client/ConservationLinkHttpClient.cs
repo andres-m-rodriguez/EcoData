@@ -29,4 +29,29 @@ public sealed class ConservationLinkHttpClient(HttpClient httpClient) : IConserv
             return new RequestFailed(0, e.Message);
         }
     }
+
+    public async Task<OneOf<IReadOnlyList<SpeciesConservationCodesDto>, RequestFailed>> GetCodesByMunicipalityAsync(
+        Guid municipalityId,
+        CancellationToken ct = default)
+    {
+        try
+        {
+            var response = await httpClient.GetAsync(
+                $"wildlife/conservation-links/codes-by-municipality/{municipalityId}",
+                ct);
+            if (!response.IsSuccessStatusCode)
+            {
+                var problem = await ProblemDetailsParser.ParseAsync(response, ct);
+                return new RequestFailed((int)response.StatusCode, problem?.Detail ?? problem?.Title);
+            }
+            var codes = await response.Content.ReadFromJsonAsync<IReadOnlyList<SpeciesConservationCodesDto>>(ct);
+            if (codes is null)
+                return new RequestFailed((int)response.StatusCode, "The server returned an empty response.");
+            return OneOf<IReadOnlyList<SpeciesConservationCodesDto>, RequestFailed>.FromT0(codes);
+        }
+        catch (HttpRequestException e)
+        {
+            return new RequestFailed(0, e.Message);
+        }
+    }
 }

@@ -60,6 +60,17 @@ public static class ConservationEndpoints
             )
             .WithName("GetConservationLinksForSpecies");
 
+        linksGroup
+            .MapGet(
+                "/codes-by-municipality/{municipalityId:guid}",
+                async Task<Ok<IReadOnlyList<SpeciesConservationCodesDto>>> (
+                    Guid municipalityId,
+                    IConservationRepository repository,
+                    CancellationToken ct
+                ) => TypedResults.Ok(await repository.GetCodesByMunicipalityAsync(municipalityId, ct))
+            )
+            .WithName("GetConservationCodesByMunicipality");
+
         return app;
     }
 }

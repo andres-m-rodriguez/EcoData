@@ -489,11 +489,11 @@ public sealed class DatabaseSeederWorker(
         if (speciesList is null)
             return;
 
-        var existingSpecies = await context.Species.ToDictionaryAsync(
-            s => s.ScientificName,
-            s => s,
-            stoppingToken
-        );
+        // Tracked: the context is NoTracking by default, and the branches below
+        // mutate existing rows (taxonomy, image backfill) rather than only adding.
+        var existingSpecies = await context
+            .Species.AsTracking()
+            .ToDictionaryAsync(s => s.ScientificName, s => s, stoppingToken);
 
         var categories = await context.SpeciesCategories.ToDictionaryAsync(
             c => c.Code,
@@ -516,6 +516,10 @@ public sealed class DatabaseSeederWorker(
             if (existingSpecies.TryGetValue(dto.ScientificName, out var existing))
             {
                 species = existing;
+
+                // Taxonomy comes from the matching matrix, which corrects rows that
+                // predated it (flora seeded as fauna). Always trust the source here.
+                species.IsFauna = dto.IsFauna;
 
                 // Update image if we have one and the existing doesn't
                 if (species.ProfileImageData is null && !string.IsNullOrEmpty(dto.ImageBase64))
@@ -604,6 +608,33 @@ public sealed class DatabaseSeederWorker(
                 }
             }
 
+            // Occurrence locations (seeded once; existing rows are left untouched)
+            if (dto.Locations is { Count: > 0 })
+            {
+                var hasLocations = await context.SpeciesLocations.AnyAsync(
+                    l => l.SpeciesId == species.Id,
+                    stoppingToken
+                );
+
+                if (!hasLocations)
+                {
+                    foreach (var location in dto.Locations)
+                    {
+                        context.SpeciesLocations.Add(
+                            new SpeciesLocation
+                            {
+                                Id = Guid.CreateVersion7(),
+                                SpeciesId = species.Id,
+                                Latitude = location.Latitude,
+                                Longitude = location.Longitude,
+                                RadiusMeters = location.RadiusMeters,
+                                Description = location.Description,
+                            }
+                        );
+                    }
+                }
+            }
+
             // Link to categories
             if (dto.CategoryCodes is { Count: > 0 })
             {
@@ -612,25 +643,40 @@ public sealed class DatabaseSeederWorker(
                     .Select(scl => scl.CategoryId)
                     .ToHashSetAsync(stoppingToken);
 
+                var sanctionedCategoryIds = new HashSet<Guid>();
                 foreach (var rawCode in dto.CategoryCodes)
                 {
                     var categoryCode = NormalizeCategoryCode(rawCode);
-                    if (
-                        categories.TryGetValue(categoryCode, out var category)
-                        && !existingCategoryLinks.Contains(category.Id)
-                    )
+                    if (!categories.TryGetValue(categoryCode, out var category))
                     {
-                        context.SpeciesCategoryLinks.Add(
-                            new SpeciesCategoryLink
-                            {
-                                Id = Guid.CreateVersion7(),
-                                SpeciesId = species.Id,
-                                CategoryId = category.Id,
-                            }
-                        );
-                        existingCategoryLinks.Add(category.Id);
+                        continue;
                     }
+
+                    sanctionedCategoryIds.Add(category.Id);
+                    if (existingCategoryLinks.Contains(category.Id))
+                    {
+                        continue;
+                    }
+
+                    context.SpeciesCategoryLinks.Add(
+                        new SpeciesCategoryLink
+                        {
+                            Id = Guid.CreateVersion7(),
+                            SpeciesId = species.Id,
+                            CategoryId = category.Id,
+                        }
+                    );
+                    existingCategoryLinks.Add(category.Id);
                 }
+
+                // A species reclassified by the source must lose its old category,
+                // otherwise it keeps showing under the stale filter chip.
+                await context
+                    .SpeciesCategoryLinks.Where(scl =>
+                        scl.SpeciesId == species.Id
+                        && !sanctionedCategoryIds.Contains(scl.CategoryId)
+                    )
+                    .ExecuteDeleteAsync(stoppingToken);
             }
 
             await context.SaveChangesAsync(stoppingToken);
@@ -757,6 +803,7 @@ public sealed class DatabaseSeederWorker(
         var existingLinks = await context
             .FwsLinks.Select(l => new
             {
+                l.Id,
                 l.SpeciesId,
                 l.NrcsPracticeId,
                 l.FwsActionId,
@@ -766,6 +813,16 @@ public sealed class DatabaseSeederWorker(
         var existingLinkSet = existingLinks
             .Select(l => (l.SpeciesId, l.NrcsPracticeId, l.FwsActionId))
             .ToHashSet();
+
+        await RemoveUnsanctionedFwsLinksAsync(
+            context,
+            links,
+            speciesMap,
+            practiceMap,
+            actionMap,
+            existingLinks.Select(l => (l.Id, l.SpeciesId, l.NrcsPracticeId, l.FwsActionId)),
+            stoppingToken
+        );
 
         var batchCount = 0;
         var seededCount = 0;
@@ -812,6 +869,54 @@ public sealed class DatabaseSeederWorker(
         }
 
         logger.LogInformation("FWS links seeded: {Count}", seededCount);
+    }
+
+    /// <summary>
+    /// Deletes practice/action/species links the source file no longer sanctions.
+    /// The matching matrix is authoritative, so links dropped from it — or whose
+    /// species, practice or action disappeared — must not survive a reseed.
+    /// </summary>
+    private async Task RemoveUnsanctionedFwsLinksAsync(
+        WildlifeDbContext context,
+        List<FwsLinkDto> links,
+        Dictionary<string, Guid> speciesMap,
+        Dictionary<string, Guid> practiceMap,
+        Dictionary<string, Guid> actionMap,
+        IEnumerable<(Guid Id, Guid SpeciesId, Guid NrcsPracticeId, Guid FwsActionId)> existingLinks,
+        CancellationToken stoppingToken
+    )
+    {
+        var sanctioned = new HashSet<(Guid, Guid, Guid)>();
+        foreach (var dto in links)
+        {
+            if (
+                speciesMap.TryGetValue(dto.SpeciesScientificName, out var speciesId)
+                && practiceMap.TryGetValue(dto.NrcsPracticeCode, out var practiceId)
+                && actionMap.TryGetValue(dto.FwsActionCode, out var actionId)
+            )
+            {
+                sanctioned.Add((speciesId, practiceId, actionId));
+            }
+        }
+
+        var staleIds = existingLinks
+            .Where(l => !sanctioned.Contains((l.SpeciesId, l.NrcsPracticeId, l.FwsActionId)))
+            .Select(l => l.Id)
+            .ToList();
+
+        if (staleIds.Count == 0)
+        {
+            return;
+        }
+
+        foreach (var batch in staleIds.Chunk(500))
+        {
+            await context
+                .FwsLinks.Where(l => batch.Contains(l.Id))
+                .ExecuteDeleteAsync(stoppingToken);
+        }
+
+        logger.LogInformation("FWS links removed (not in source): {Count}", staleIds.Count);
     }
 
     private const string UsgsDataSourceName = "USGS Puerto Rico";
@@ -1107,6 +1212,24 @@ public sealed class DatabaseSeederWorker(
 
         [JsonPropertyName("habitat")]
         public string? Habitat { get; init; }
+
+        [JsonPropertyName("locations")]
+        public List<SpeciesLocationSeedDto>? Locations { get; init; }
+    }
+
+    private sealed class SpeciesLocationSeedDto
+    {
+        [JsonPropertyName("latitude")]
+        public required double Latitude { get; init; }
+
+        [JsonPropertyName("longitude")]
+        public required double Longitude { get; init; }
+
+        [JsonPropertyName("radiusMeters")]
+        public required double RadiusMeters { get; init; }
+
+        [JsonPropertyName("description")]
+        public string? Description { get; init; }
     }
 
     private sealed class FwsLinkDto

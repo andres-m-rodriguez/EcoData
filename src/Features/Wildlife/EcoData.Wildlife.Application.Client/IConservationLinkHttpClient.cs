@@ -9,4 +9,8 @@ public interface IConservationLinkHttpClient
     Task<OneOf<ConservationLinksDtoForSpecies, RequestFailed>> GetBySpeciesAsync(
         Guid speciesId,
         CancellationToken ct = default);
+
+    Task<OneOf<IReadOnlyList<SpeciesConservationCodesDto>, RequestFailed>> GetCodesByMunicipalityAsync(
+        Guid municipalityId,
+        CancellationToken ct = default);
 }

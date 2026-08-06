@@ -4,9 +4,8 @@
 @using EcoData.Common.Maps
 @using EcoData.Common.Maps.Components
 @using EcoData.Common.Maps.Models
-@using EcoData.Locations.Application.Client
 @using EcoData.Locations.Contracts.Dtos
-@inject IMunicipalityHttpClient MunicipalityClient
+@using FaunaFinder.Client.Components.Map
 
 <div class="mm-map">
     @if (_geoJsonLoadError is not null)
@@ -58,7 +57,19 @@
     {
         base.OnInitialized();
         _controller.OnGeoJsonClicked += HandleGeoJsonClicked;
-        _ = LoadGeoJsonAsync();
+        _controller.OnGeoJsonLoaded += HandleGeoJsonLoaded;
+
+        _controller.AddGeoJson(new MapGeoJson
+        {
+            Id = MunicipalityBoundaries.LayerId,
+            Url = MunicipalityBoundaries.Url,
+            CacheKey = MunicipalityBoundaries.CacheKey,
+            CacheVersion = MunicipalityBoundaries.CacheVersion,
+            FillColor = "#3f7d5f",
+            FillOpacity = 0.22,
+            StrokeColor = "#1f4d3a",
+            StrokeWidth = 2
+        });
     }
 
     protected override void OnParametersSet()
@@ -78,35 +89,18 @@
         }
     }
 
-    private async Task LoadGeoJsonAsync()
+    private void HandleGeoJsonLoaded(string layerId, bool success)
     {
-        var result = await MunicipalityClient.GetGeoJsonByStateCodeAsync("PR");
-        if (!result.TryPickT0(out var geoJson, out var error))
-        {
-            _geoJsonLoadError = error.StatusCode == 0
-                ? "Couldn't reach the server."
-                : error.Message ?? "Something went wrong while loading the map.";
-            await InvokeAsync(StateHasChanged);
-            return;
-        }
-        _geoJsonLoadError = null;
-        if (string.IsNullOrEmpty(geoJson)) return;
+        if (layerId != MunicipalityBoundaries.LayerId) return;
 
-        _controller.AddGeoJson(new MapGeoJson
-        {
-            Id = "municipalities",
-            Data = geoJson,
-            FillColor = "#3f7d5f",
-            FillOpacity = 0.22,
-            StrokeColor = "#1f4d3a",
-            StrokeWidth = 2
-        });
-        _geoJsonLoaded = true;
+        _geoJsonLoaded = success;
+        _geoJsonLoadError = success ? null : "Something went wrong while loading the map.";
+        InvokeAsync(StateHasChanged);
     }
 
     private void HandleGeoJsonClicked(string layerId, string? propertiesJson)
     {
-        if (layerId != "municipalities") return;
+        if (layerId != MunicipalityBoundaries.LayerId) return;
         if (Municipalities is null || string.IsNullOrEmpty(propertiesJson)) return;
 
         try
@@ -140,6 +134,7 @@
     {
         base.Dispose();
         _controller.OnGeoJsonClicked -= HandleGeoJsonClicked;
+        _controller.OnGeoJsonLoaded -= HandleGeoJsonLoaded;
     }
 
     public sealed record MunicipalityMarker(

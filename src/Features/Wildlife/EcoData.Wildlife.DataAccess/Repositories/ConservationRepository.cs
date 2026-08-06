@@ -34,6 +34,25 @@ public sealed class ConservationRepository(IDbContextFactory<WildlifeDbContext> 
             .ToListAsync(cancellationToken);
     }
 
+    public async Task<IReadOnlyList<SpeciesConservationCodesDto>> GetCodesByMunicipalityAsync(
+        Guid municipalityId,
+        CancellationToken cancellationToken = default
+    )
+    {
+        await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
+
+        return await context
+            .FwsLinks
+            .Where(l => l.Species.MunicipalitySpecies.Any(ms => ms.MunicipalityId == municipalityId))
+            .GroupBy(l => l.SpeciesId)
+            .Select(g => new SpeciesConservationCodesDto(
+                g.Key,
+                g.Select(l => l.NrcsPractice.Code).Distinct().ToList(),
+                g.Select(l => l.FwsAction.Code).Distinct().ToList()
+            ))
+            .ToListAsync(cancellationToken);
+    }
+
     public async Task<ConservationLinksDtoForSpecies> GetLinksForSpeciesAsync(
         Guid speciesId,
         CancellationToken cancellationToken = default

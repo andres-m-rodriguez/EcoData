@@ -109,6 +109,28 @@ _mapController.RemoveGeoJson("my-layer");
 _mapController.ClearGeoJson();
 ```
 
+For large payloads, set `Url` instead of `Data`. The map renders immediately and
+JS fetches the GeoJSON in the background — the payload never crosses the .NET/JS
+interop boundary. With a `CacheKey`, the fetched data is cached in localStorage
+so repeat visits skip the network entirely (bump `CacheVersion` to invalidate).
+Subscribe to `OnGeoJsonLoaded` to observe success or failure:
+
+```csharp
+_mapController.OnGeoJsonLoaded += (layerId, success) =>
+{
+    // Show an error overlay when success is false
+};
+
+_mapController.AddGeoJson(new MapGeoJson
+{
+    Id = "municipalities",
+    Url = "locations/municipalities/geojson/state/PR",
+    CacheKey = "pr-municipios-geojson",
+    CacheVersion = "v1",
+    FillColor = "#40916c"
+});
+```
+
 ### View Control
 
 ```csharp

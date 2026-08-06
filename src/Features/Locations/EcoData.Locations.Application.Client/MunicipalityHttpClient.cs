@@ -76,25 +76,4 @@ public sealed class MunicipalityHttpClient(HttpClient httpClient) : IMunicipalit
             return new RequestFailed(0, e.Message);
         }
     }
-
-    public async Task<OneOf<string, RequestFailed>> GetGeoJsonByStateCodeAsync(string stateCode, CancellationToken ct = default)
-    {
-        try
-        {
-            var response = await httpClient.GetAsync($"locations/municipalities/geojson/state/{stateCode}", ct);
-            if (!response.IsSuccessStatusCode)
-            {
-                var problem = await ProblemDetailsParser.ParseAsync(response, ct);
-                return new RequestFailed((int)response.StatusCode, problem?.Detail ?? problem?.Title);
-            }
-            var geoJson = await response.Content.ReadAsStringAsync(ct);
-            if (string.IsNullOrEmpty(geoJson))
-                return new RequestFailed((int)response.StatusCode, "The server returned an empty response.");
-            return geoJson;
-        }
-        catch (HttpRequestException e)
-        {
-            return new RequestFailed(0, e.Message);
-        }
-    }
 }

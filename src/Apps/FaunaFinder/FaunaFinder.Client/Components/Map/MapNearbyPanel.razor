@@ -1,0 +1,89 @@
+@namespace FaunaFinder.Client.Components.Map
+@inherits LocalizedComponentBase
+@using EcoData.Wildlife.Contracts.Dtos
+
+<header class="mnp-head">
+    <div class="mnp-head-meta">
+        <div class="mnp-eyebrow">@Eyebrow</div>
+        <div class="mnp-title">@Title</div>
+    </div>
+    <button type="button" class="mnp-close" @onclick="HandleClose" aria-label="@L["Common_Close"]">
+        <MudIcon Icon="@Icons.Material.Filled.Close" Size="Size.Small" />
+    </button>
+</header>
+
+@if (IsLoading)
+{
+    <div class="mnp-list">
+        @for (var i = 0; i < 5; i++)
+        {
+            <div class="mnp-row mnp-row-skeleton">
+                <MudSkeleton SkeletonType="SkeletonType.Text" Width="80%" Height="20px" />
+                <MudSkeleton SkeletonType="SkeletonType.Text" Width="55%" Height="14px" />
+            </div>
+        }
+    </div>
+}
+else if (Species is null || Species.Count == 0)
+{
+    <div class="mnp-empty">
+        <MudIcon Icon="@Icons.Material.Outlined.LocationOff" Size="Size.Medium" />
+        <div class="mnp-empty-title">@L["Map_Nearby_Empty_Title"]</div>
+        <div class="mnp-empty-sub">@L["Map_Nearby_Empty_Description"]</div>
+    </div>
+}
+else
+{
+    <div class="mnp-meta">@L["Map_Nearby_Count", Species.Count]</div>
+    <div class="mnp-list">
+        @{
+            var idx = 0;
+        }
+        @foreach (var s in Species)
+        {
+            var index = idx++;
+            var current = s;
+            <div class="mnp-row" @onclick="@(() => HandleFocus(index))">
+                <span class="mnp-dot color-@(index % PaletteSize)"></span>
+                <div class="mnp-row-body">
+                    <div class="mnp-row-name">@Locale.Resolve(current.CommonName, fallback: current.ScientificName)</div>
+                    <div class="mnp-row-sci">@current.ScientificName</div>
+                    @if (!string.IsNullOrEmpty(current.LocationDescription))
+                    {
+                        <div class="mnp-row-desc">@current.LocationDescription</div>
+                    }
+                </div>
+                <div class="mnp-row-side">
+                    <span class="mnp-distance">@FormatDistance(current.DistanceMeters)</span>
+                    <button type="button" class="mnp-details" @onclick:stopPropagation
+                            @onclick="@(() => HandleDetails(current))">
+                        @L["Map_ViewDetails"]
+                        <MudIcon Icon="@Icons.Material.Filled.ChevronRight" Size="Size.Small" />
+                    </button>
+                </div>
+            </div>
+        }
+    </div>
+}
+
+@code {
+    /// <summary>Number of color classes defined in the scoped stylesheet (.mnp-dot.color-N).</summary>
+    public const int PaletteSize = 8;
+
+    [Parameter] public string? Title { get; set; }
+    [Parameter] public string? Eyebrow { get; set; }
+    [Parameter] public IReadOnlyList<SpeciesNearbyDto>? Species { get; set; }
+    [Parameter] public bool IsLoading { get; set; }
+    [Parameter] public EventCallback OnClose { get; set; }
+    [Parameter] public EventCallback<int> OnFocusSpecies { get; set; }
+    [Parameter] public EventCallback<SpeciesNearbyDto> OnDetailsClick { get; set; }
+
+    [CascadingParameter] public LocaleContext Locale { get; set; } = LocaleContext.English;
+
+    private Task HandleClose() => OnClose.InvokeAsync();
+    private Task HandleFocus(int index) => OnFocusSpecies.InvokeAsync(index);
+    private Task HandleDetails(SpeciesNearbyDto s) => OnDetailsClick.InvokeAsync(s);
+
+    private static string FormatDistance(double meters) =>
+        meters < 1000 ? $"{meters:N0} m" : $"{meters / 1000:N1} km";
+}

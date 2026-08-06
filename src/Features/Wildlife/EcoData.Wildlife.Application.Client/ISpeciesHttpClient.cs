@@ -34,6 +34,19 @@ public interface ISpeciesHttpClient
     Task<OneOf<IReadOnlyList<SpeciesDtoForList>, RequestFailed>> GetFeaturedAsync(
         CancellationToken ct = default);
 
+    Task<OneOf<IReadOnlyList<SpeciesNearbyDto>, RequestFailed>> GetNearbyAsync(
+        double latitude,
+        double longitude,
+        double radiusMeters,
+        CancellationToken ct = default);
+
+    Task<OneOf<IReadOnlyList<SpeciesNearbyDto>, RequestFailed>> GetInPolygonAsync(
+        IReadOnlyList<PolygonCoordinate> coordinates,
+        CancellationToken ct = default);
+
+    Task<OneOf<IReadOnlyList<HeatmapPointDto>, RequestFailed>> GetHeatmapAsync(
+        CancellationToken ct = default);
+
     Task<OneOf<IReadOnlyList<MunicipalitySpeciesCountDto>, RequestFailed>> GetCountsByMunicipalityAsync(
         CancellationToken ct = default);
 }

@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Net.Http.Json;
 using EcoData.Common.Http.Helpers;
 using EcoData.Common.Problems.Contracts;
@@ -207,6 +208,85 @@ public sealed class SpeciesHttpClient(HttpClient httpClient) : ISpeciesHttpClien
             if (counts is null)
                 return new RequestFailed((int)response.StatusCode, "The server returned an empty response.");
             return OneOf<IReadOnlyList<MunicipalitySpeciesCountDto>, RequestFailed>.FromT0(counts);
+        }
+        catch (HttpRequestException e)
+        {
+            return new RequestFailed(0, e.Message);
+        }
+    }
+
+    public async Task<OneOf<IReadOnlyList<SpeciesNearbyDto>, RequestFailed>> GetNearbyAsync(
+        double latitude,
+        double longitude,
+        double radiusMeters,
+        CancellationToken ct = default)
+    {
+        var query = new QueryStringBuilder()
+            .Add("latitude", latitude.ToString(CultureInfo.InvariantCulture))
+            .Add("longitude", longitude.ToString(CultureInfo.InvariantCulture))
+            .Add("radiusMeters", radiusMeters.ToString(CultureInfo.InvariantCulture))
+            .Build();
+
+        try
+        {
+            var response = await httpClient.GetAsync($"wildlife/species/nearby{query}", ct);
+            if (!response.IsSuccessStatusCode)
+            {
+                var problem = await ProblemDetailsParser.ParseAsync(response, ct);
+                return new RequestFailed((int)response.StatusCode, problem?.Detail ?? problem?.Title);
+            }
+            var species = await response.Content.ReadFromJsonAsync<IReadOnlyList<SpeciesNearbyDto>>(ct);
+            if (species is null)
+                return new RequestFailed((int)response.StatusCode, "The server returned an empty response.");
+            return OneOf<IReadOnlyList<SpeciesNearbyDto>, RequestFailed>.FromT0(species);
+        }
+        catch (HttpRequestException e)
+        {
+            return new RequestFailed(0, e.Message);
+        }
+    }
+
+    public async Task<OneOf<IReadOnlyList<SpeciesNearbyDto>, RequestFailed>> GetInPolygonAsync(
+        IReadOnlyList<PolygonCoordinate> coordinates,
+        CancellationToken ct = default)
+    {
+        try
+        {
+            var response = await httpClient.PostAsJsonAsync(
+                "wildlife/species/in-polygon",
+                new PolygonSearchParameters(coordinates),
+                ct);
+            if (!response.IsSuccessStatusCode)
+            {
+                var problem = await ProblemDetailsParser.ParseAsync(response, ct);
+                return new RequestFailed((int)response.StatusCode, problem?.Detail ?? problem?.Title);
+            }
+            var species = await response.Content.ReadFromJsonAsync<IReadOnlyList<SpeciesNearbyDto>>(ct);
+            if (species is null)
+                return new RequestFailed((int)response.StatusCode, "The server returned an empty response.");
+            return OneOf<IReadOnlyList<SpeciesNearbyDto>, RequestFailed>.FromT0(species);
+        }
+        catch (HttpRequestException e)
+        {
+            return new RequestFailed(0, e.Message);
+        }
+    }
+
+    public async Task<OneOf<IReadOnlyList<HeatmapPointDto>, RequestFailed>> GetHeatmapAsync(
+        CancellationToken ct = default)
+    {
+        try
+        {
+            var response = await httpClient.GetAsync("wildlife/species/heatmap", ct);
+            if (!response.IsSuccessStatusCode)
+            {
+                var problem = await ProblemDetailsParser.ParseAsync(response, ct);
+                return new RequestFailed((int)response.StatusCode, problem?.Detail ?? problem?.Title);
+            }
+            var points = await response.Content.ReadFromJsonAsync<IReadOnlyList<HeatmapPointDto>>(ct);
+            if (points is null)
+                return new RequestFailed((int)response.StatusCode, "The server returned an empty response.");
+            return OneOf<IReadOnlyList<HeatmapPointDto>, RequestFailed>.FromT0(points);
         }
         catch (HttpRequestException e)
         {

@@ -16,6 +16,4 @@ public interface IMunicipalityHttpClient
     Task<OneOf<IReadOnlyList<MunicipalityDtoForList>, RequestFailed>> GetByIdsAsync(
         IReadOnlyCollection<Guid> ids,
         CancellationToken ct = default);
-
-    Task<OneOf<string, RequestFailed>> GetGeoJsonByStateCodeAsync(string stateCode, CancellationToken ct = default);
 }

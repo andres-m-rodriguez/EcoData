@@ -145,6 +145,46 @@ public static class SpeciesEndpoints
             )
             .WithName("GetSpeciesCountsByMunicipality");
 
+        group
+            .MapGet(
+                "/nearby",
+                async Task<Ok<IReadOnlyList<SpeciesNearbyDto>>> (
+                    [AsParameters] NearbySpeciesParameters parameters,
+                    ISpeciesRepository repository,
+                    CancellationToken ct
+                ) =>
+                    TypedResults.Ok(
+                        await repository.GetNearbyAsync(
+                            parameters.Latitude,
+                            parameters.Longitude,
+                            parameters.RadiusMeters,
+                            ct
+                        )
+                    )
+            )
+            .WithName("GetSpeciesNearby");
+
+        group
+            .MapPost(
+                "/in-polygon",
+                async Task<Ok<IReadOnlyList<SpeciesNearbyDto>>> (
+                    PolygonSearchParameters parameters,
+                    ISpeciesRepository repository,
+                    CancellationToken ct
+                ) => TypedResults.Ok(await repository.GetInPolygonAsync(parameters.Coordinates, ct))
+            )
+            .WithName("GetSpeciesInPolygon");
+
+        group
+            .MapGet(
+                "/heatmap",
+                async Task<Ok<IReadOnlyList<HeatmapPointDto>>> (
+                    ISpeciesRepository repository,
+                    CancellationToken ct
+                ) => TypedResults.Ok(await repository.GetHeatmapAsync(ct))
+            )
+            .WithName("GetSpeciesHeatmap");
+
         return app;
     }
 }
