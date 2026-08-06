@@ -66,6 +66,13 @@ else
                 {
                     <span class="ff-status-pill status-DD">DD</span>
                 }
+                @if (OnViewLocations.HasDelegate)
+                {
+                    <button type="button" class="msp-row-map" title="@L["Map_ViewLocations"]"
+                            @onclick:stopPropagation @onclick="@(() => HandleViewLocations(current))">
+                        <MudIcon Icon="@Icons.Material.Filled.MyLocation" Size="Size.Small" />
+                    </button>
+                }
             </div>
         }
     </div>
@@ -78,6 +85,7 @@ else
     [Parameter] public string? LoadError { get; set; }
     [Parameter] public EventCallback OnClose { get; set; }
     [Parameter] public EventCallback<SpeciesDtoForList> OnSpeciesClick { get; set; }
+    [Parameter] public EventCallback<SpeciesDtoForList> OnViewLocations { get; set; }
 
     [CascadingParameter] public LocaleContext Locale { get; set; } = LocaleContext.English;
 
@@ -85,4 +93,5 @@ else
 
     private Task HandleClose() => OnClose.InvokeAsync();
     private Task HandleClick(SpeciesDtoForList s) => OnSpeciesClick.InvokeAsync(s);
+    private Task HandleViewLocations(SpeciesDtoForList s) => OnViewLocations.InvokeAsync(s);
 }

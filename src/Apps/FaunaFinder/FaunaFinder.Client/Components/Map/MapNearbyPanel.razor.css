@@ -1,4 +1,4 @@
-.msp-head {
+.mnp-head {
     display: flex;
     align-items: flex-start;
     justify-content: space-between;
@@ -8,21 +8,21 @@
     background: var(--fauna-surface);
 }
 
-.msp-head-meta {
+.mnp-head-meta {
     display: flex;
     flex-direction: column;
     gap: 4px;
     min-width: 0;
 }
 
-.msp-eyebrow {
+.mnp-eyebrow {
     font: var(--fauna-eyebrow);
     text-transform: uppercase;
     letter-spacing: var(--fauna-tracking-eyebrow);
     color: var(--fauna-fg-4);
 }
 
-.msp-title {
+.mnp-title {
     font: 600 1.5rem/1.15 var(--fauna-font-serif);
     color: var(--fauna-primary);
     letter-spacing: var(--fauna-tracking-tight);
@@ -30,7 +30,7 @@
     text-overflow: ellipsis;
 }
 
-.msp-close {
+.mnp-close {
     width: 32px;
     height: 32px;
     border-radius: 8px;
@@ -46,17 +46,17 @@
                 color var(--fauna-t-base) var(--fauna-ease);
 }
 
-.msp-close:hover {
+.mnp-close:hover {
     background: var(--fauna-bg-alt);
     color: var(--fauna-fg);
 }
 
-.msp-close ::deep .mud-icon-root {
+.mnp-close ::deep .mud-icon-root {
     font-size: 18px !important;
     color: inherit;
 }
 
-.msp-meta {
+.mnp-meta {
     padding: 10px 20px 6px;
     font: var(--fauna-mono);
     font-size: 11px;
@@ -65,17 +65,17 @@
     letter-spacing: 0.08em;
 }
 
-.msp-list {
+.mnp-list {
     flex: 1;
     overflow-y: auto;
     display: flex;
     flex-direction: column;
 }
 
-.msp-row {
+.mnp-row {
     padding: 12px 16px 12px 20px;
     display: grid;
-    grid-template-columns: 28px 22px 1fr auto auto;
+    grid-template-columns: 14px 1fr auto;
     gap: 12px;
     align-items: center;
     cursor: pointer;
@@ -83,53 +83,34 @@
     transition: background-color var(--fauna-t-base) var(--fauna-ease);
 }
 
-.msp-row-map {
-    width: 28px;
-    height: 28px;
-    border-radius: 8px;
-    border: 1px solid var(--fauna-line);
-    background: var(--fauna-surface);
-    color: var(--fauna-primary);
-    cursor: pointer;
-    display: grid;
-    place-items: center;
+.mnp-row:hover {
+    background: var(--fauna-primary-50);
+}
+
+.mnp-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    border: 2px solid var(--fauna-surface);
+    box-shadow: 0 0 0 1px var(--fauna-line);
     flex-shrink: 0;
-    transition: background-color var(--fauna-t-base) var(--fauna-ease);
 }
 
-.msp-row-map:hover {
-    background: var(--fauna-primary-50);
-}
+/* Palette mirrors the circle colors assigned per result index on the map. */
+.mnp-dot.color-0 { background: #10b981; }
+.mnp-dot.color-1 { background: #3b82f6; }
+.mnp-dot.color-2 { background: #f59e0b; }
+.mnp-dot.color-3 { background: #8b5cf6; }
+.mnp-dot.color-4 { background: #ef4444; }
+.mnp-dot.color-5 { background: #06b6d4; }
+.mnp-dot.color-6 { background: #ec4899; }
+.mnp-dot.color-7 { background: #84cc16; }
 
-.msp-row-map ::deep .mud-icon-root {
-    font-size: 15px !important;
-    color: inherit;
-}
-
-.msp-row:hover {
-    background: var(--fauna-primary-50);
-}
-
-.msp-row-idx {
-    font: var(--fauna-mono);
-    font-size: 11px;
-    color: var(--fauna-fg-5);
-    letter-spacing: 0.05em;
-    text-align: right;
-}
-
-.msp-row-icon {
-    color: var(--fauna-primary-500);
-    font-size: 14px;
-    display: grid;
-    place-items: center;
-}
-
-.msp-row-body {
+.mnp-row-body {
     min-width: 0;
 }
 
-.msp-row-name {
+.mnp-row-name {
     font: 500 14px/1.2 var(--fauna-font-sans);
     color: var(--fauna-fg);
     overflow: hidden;
@@ -137,7 +118,7 @@
     white-space: nowrap;
 }
 
-.msp-row-sci {
+.mnp-row-sci {
     font: italic 400 12px/1.3 var(--fauna-font-serif);
     color: var(--fauna-fg-3);
     margin-top: 2px;
@@ -146,13 +127,58 @@
     white-space: nowrap;
 }
 
-.msp-row-skeleton {
+.mnp-row-desc {
+    font: var(--fauna-body-sm);
+    font-size: 11px;
+    color: var(--fauna-fg-4);
+    margin-top: 2px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.mnp-row-side {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 4px;
+}
+
+.mnp-distance {
+    font: var(--fauna-mono);
+    font-size: 11px;
+    color: var(--fauna-primary-500);
+    letter-spacing: 0.03em;
+    white-space: nowrap;
+}
+
+.mnp-details {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    border: none;
+    background: none;
+    padding: 2px 0;
+    font: 500 12px/1 var(--fauna-font-sans);
+    color: var(--fauna-primary);
+    cursor: pointer;
+}
+
+.mnp-details:hover {
+    text-decoration: underline;
+}
+
+.mnp-details ::deep .mud-icon-root {
+    font-size: 14px !important;
+}
+
+.mnp-row-skeleton {
     grid-template-columns: 1fr;
     padding: 14px 20px;
     gap: 4px;
 }
 
-.msp-empty {
+.mnp-empty {
     padding: 48px 24px;
     text-align: center;
     display: flex;
@@ -162,17 +188,17 @@
     color: var(--fauna-fg-3);
 }
 
-.msp-empty ::deep .mud-icon-root {
+.mnp-empty ::deep .mud-icon-root {
     color: var(--fauna-fg-5);
     margin-bottom: 8px;
 }
 
-.msp-empty-title {
+.mnp-empty-title {
     font: 500 14px/1.2 var(--fauna-font-sans);
     color: var(--fauna-fg-2);
 }
 
-.msp-empty-sub {
+.mnp-empty-sub {
     font: var(--fauna-body-sm);
     color: var(--fauna-fg-4);
     max-width: 240px;
