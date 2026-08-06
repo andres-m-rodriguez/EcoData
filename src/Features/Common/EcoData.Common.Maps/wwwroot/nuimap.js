@@ -9,10 +9,16 @@ export function initialize(element, lat, lng, zoom, dotNetRef) {
 
     map._nuiMarkers = L.layerGroup().addTo(map);
     map._nuiGeoJson = L.layerGroup().addTo(map);
+    map._nuiCircles = L.layerGroup().addTo(map);
     map._dotNetRef = dotNetRef;
+    map._nuiSearchRadius = null;
+    map._nuiUserLocation = null;
+    map._nuiHeat = { layer: null, points: [], filter: 'all' };
+    map._nuiDraw = { active: false, points: [], markers: [], polygon: null, previewLine: null, handlers: null };
 
-    // Map click handler
+    // Map click handler (suppressed while drawing a polygon)
     map.on('click', (e) => {
+        if (map._nuiDraw.active) return;
         if (map._dotNetRef) {
             map._dotNetRef.invokeMethodAsync('OnMapClickedFromJs', e.latlng.lat, e.latlng.lng);
         }
@@ -109,8 +115,382 @@ export function fitToBounds(map, southWestLat, southWestLng, northEastLat, north
     map.fitBounds(bounds);
 }
 
+// ===== Circles (species occurrence areas, generalized as circles) =====
+
+export function setCircles(map, circles) {
+    if (!map) return;
+
+    map._nuiCircles.clearLayers();
+
+    circles.forEach(c => {
+        const circle = L.circle([c.lat, c.lng], {
+            radius: c.radiusMeters,
+            fillColor: c.fillColor,
+            color: c.strokeColor,
+            weight: 2,
+            fillOpacity: 0.35
+        });
+
+        if (c.popup) {
+            circle.bindPopup(c.popup);
+        }
+
+        circle.on('click', () => {
+            if (map._dotNetRef) {
+                map._dotNetRef.invokeMethodAsync('OnCircleClickedFromJs', c.index);
+            }
+        });
+
+        map._nuiCircles.addLayer(circle);
+    });
+}
+
+export function clearCircles(map) {
+    if (!map) return;
+    map._nuiCircles.clearLayers();
+}
+
+export function focusCircle(map, index) {
+    if (!map) return;
+
+    const layers = map._nuiCircles.getLayers();
+    if (index < 0 || index >= layers.length) return;
+
+    const circle = layers[index];
+    map.flyToBounds(circle.getBounds(), { padding: [50, 50], maxZoom: 14, duration: 0.8 });
+    setTimeout(() => circle.openPopup(), 800);
+}
+
+export function focusAllCircles(map) {
+    if (!map) return;
+
+    const layers = map._nuiCircles.getLayers();
+    if (layers.length === 0) return;
+
+    const group = L.featureGroup(layers);
+    map.flyToBounds(group.getBounds(), { padding: [50, 50], duration: 0.8 });
+}
+
+// ===== Search radius + user location =====
+
+export function showSearchRadius(map, lat, lng, radiusMeters) {
+    if (!map) return;
+
+    clearSearchRadius(map);
+
+    map._nuiUserLocation = L.circleMarker([lat, lng], {
+        radius: 8,
+        fillColor: '#2563eb',
+        color: '#ffffff',
+        weight: 3,
+        fillOpacity: 1
+    }).addTo(map);
+
+    map._nuiSearchRadius = L.circle([lat, lng], {
+        radius: radiusMeters,
+        fillColor: '#3b82f6',
+        color: '#2563eb',
+        weight: 2,
+        fillOpacity: 0.08,
+        dashArray: '8, 6'
+    }).addTo(map);
+
+    map.flyToBounds(map._nuiSearchRadius.getBounds(), { padding: [30, 30], duration: 0.8 });
+}
+
+export function clearSearchRadius(map) {
+    if (!map) return;
+
+    if (map._nuiSearchRadius) {
+        map.removeLayer(map._nuiSearchRadius);
+        map._nuiSearchRadius = null;
+    }
+    if (map._nuiUserLocation) {
+        map.removeLayer(map._nuiUserLocation);
+        map._nuiUserLocation = null;
+    }
+}
+
+// ===== Geolocation =====
+
+export function getCurrentPosition() {
+    return new Promise((resolve) => {
+        if (!('geolocation' in navigator)) {
+            resolve({ success: false, latitude: 0, longitude: 0, error: 'unsupported' });
+            return;
+        }
+
+        navigator.geolocation.getCurrentPosition(
+            (position) => resolve({
+                success: true,
+                latitude: position.coords.latitude,
+                longitude: position.coords.longitude,
+                error: null
+            }),
+            (error) => resolve({
+                success: false,
+                latitude: 0,
+                longitude: 0,
+                error: error.code === error.PERMISSION_DENIED ? 'denied'
+                    : error.code === error.POSITION_UNAVAILABLE ? 'unavailable'
+                    : 'timeout'
+            }),
+            { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
+        );
+    });
+}
+
+// ===== Polygon draw mode =====
+
+export function enablePolygonDraw(map) {
+    if (!map || map._nuiDraw.active) return;
+
+    const draw = map._nuiDraw;
+    draw.active = true;
+    clearDrawnPolygon(map);
+
+    const container = map.getContainer();
+    container.classList.add('nui-map-draw-mode');
+    map.dragging.disable();
+    map.doubleClickZoom.disable();
+
+    const updatePolygon = () => {
+        if (draw.polygon) {
+            map.removeLayer(draw.polygon);
+            draw.polygon = null;
+        }
+        if (draw.points.length < 2) return;
+
+        draw.polygon = L.polygon(draw.points, {
+            fillColor: '#8b5cf6',
+            color: '#7c3aed',
+            weight: 3,
+            fillOpacity: 0.2,
+            dashArray: '10, 5'
+        }).addTo(map);
+    };
+
+    const finish = () => {
+        if (draw.points.length < 3) return;
+
+        if (draw.previewLine) {
+            map.removeLayer(draw.previewLine);
+            draw.previewLine = null;
+        }
+        draw.markers.forEach(m => map.removeLayer(m));
+        draw.markers = [];
+
+        if (draw.polygon) {
+            draw.polygon.setStyle({ dashArray: null, fillOpacity: 0.15 });
+        }
+
+        const coordinates = draw.points.map(p => ({ latitude: p.lat, longitude: p.lng }));
+        disablePolygonDraw(map);
+
+        if (map._dotNetRef) {
+            map._dotNetRef.invokeMethodAsync('OnPolygonDrawnFromJs', coordinates);
+        }
+    };
+
+    const onClick = (e) => {
+        if (!draw.active) return;
+        const point = e.latlng;
+
+        // Clicking near the first vertex closes the polygon.
+        if (draw.points.length >= 3) {
+            const first = draw.points[0];
+            const distance = map.latLngToContainerPoint(point)
+                .distanceTo(map.latLngToContainerPoint(first));
+            if (distance < 15) {
+                finish();
+                return;
+            }
+        }
+
+        draw.points.push(point);
+        const marker = L.circleMarker(point, {
+            radius: 6,
+            fillColor: draw.points.length === 1 ? '#22c55e' : '#8b5cf6',
+            color: '#fff',
+            weight: 2,
+            fillOpacity: 1
+        }).addTo(map);
+        draw.markers.push(marker);
+        updatePolygon();
+    };
+
+    const onMouseMove = (e) => {
+        if (!draw.active || draw.points.length === 0) return;
+
+        const last = draw.points[draw.points.length - 1];
+        if (draw.previewLine) {
+            map.removeLayer(draw.previewLine);
+        }
+        draw.previewLine = L.polyline([last, e.latlng], {
+            color: '#8b5cf6',
+            weight: 2,
+            dashArray: '5, 5',
+            opacity: 0.7
+        }).addTo(map);
+    };
+
+    const onDblClick = (e) => {
+        if (!draw.active) return;
+        L.DomEvent.stopPropagation(e.originalEvent);
+        L.DomEvent.preventDefault(e.originalEvent);
+        finish();
+    };
+
+    const onKeyDown = (e) => {
+        if (!draw.active) return;
+
+        if (e.key === 'Escape') {
+            clearDrawnPolygon(map);
+            disablePolygonDraw(map);
+            if (map._dotNetRef) {
+                map._dotNetRef.invokeMethodAsync('OnPolygonDrawCancelledFromJs');
+            }
+        } else if (e.key === 'Enter' && draw.points.length >= 3) {
+            finish();
+        } else if ((e.key === 'Backspace' || e.key === 'Delete') && draw.points.length > 0) {
+            draw.points.pop();
+            const lastMarker = draw.markers.pop();
+            if (lastMarker) {
+                map.removeLayer(lastMarker);
+            }
+            updatePolygon();
+        }
+    };
+
+    draw.handlers = { onClick, onMouseMove, onDblClick, onKeyDown, finish };
+    map.on('click', onClick);
+    map.on('mousemove', onMouseMove);
+    map.on('dblclick', onDblClick);
+    document.addEventListener('keydown', onKeyDown);
+}
+
+export function finishPolygonDraw(map) {
+    if (!map || !map._nuiDraw.active || !map._nuiDraw.handlers) return;
+    map._nuiDraw.handlers.finish();
+}
+
+export function cancelPolygonDraw(map) {
+    if (!map) return;
+    clearDrawnPolygon(map);
+    disablePolygonDraw(map);
+}
+
+export function getDrawnPointCount(map) {
+    return map ? map._nuiDraw.points.length : 0;
+}
+
+function disablePolygonDraw(map) {
+    const draw = map._nuiDraw;
+    draw.active = false;
+
+    map.getContainer().classList.remove('nui-map-draw-mode');
+    map.dragging.enable();
+    map.doubleClickZoom.enable();
+
+    if (draw.previewLine) {
+        map.removeLayer(draw.previewLine);
+        draw.previewLine = null;
+    }
+
+    if (draw.handlers) {
+        map.off('click', draw.handlers.onClick);
+        map.off('mousemove', draw.handlers.onMouseMove);
+        map.off('dblclick', draw.handlers.onDblClick);
+        document.removeEventListener('keydown', draw.handlers.onKeyDown);
+        draw.handlers = null;
+    }
+}
+
+export function clearDrawnPolygon(map) {
+    if (!map) return;
+
+    const draw = map._nuiDraw;
+    if (draw.polygon) {
+        map.removeLayer(draw.polygon);
+        draw.polygon = null;
+    }
+    if (draw.previewLine) {
+        map.removeLayer(draw.previewLine);
+        draw.previewLine = null;
+    }
+    draw.markers.forEach(m => map.removeLayer(m));
+    draw.markers = [];
+    draw.points = [];
+}
+
+// ===== Heatmap (requires the leaflet.heat plugin; no-op without it) =====
+
+export function showHeatmap(map, points, filter) {
+    if (!map) return;
+
+    map._nuiHeat.points = points;
+    map._nuiHeat.filter = filter || 'all';
+    updateHeatLayer(map);
+}
+
+export function setHeatmapFilter(map, filter) {
+    if (!map) return;
+
+    map._nuiHeat.filter = filter;
+    updateHeatLayer(map);
+}
+
+export function hideHeatmap(map) {
+    if (!map) return;
+
+    if (map._nuiHeat.layer) {
+        map.removeLayer(map._nuiHeat.layer);
+        map._nuiHeat.layer = null;
+    }
+    map._nuiHeat.points = [];
+}
+
+function updateHeatLayer(map) {
+    if (typeof L.heatLayer !== 'function') {
+        console.warn('nuimap: leaflet.heat plugin is not loaded; heatmap is unavailable.');
+        return;
+    }
+
+    if (map._nuiHeat.layer) {
+        map.removeLayer(map._nuiHeat.layer);
+        map._nuiHeat.layer = null;
+    }
+
+    let filtered = map._nuiHeat.points;
+    if (map._nuiHeat.filter === 'fauna') {
+        filtered = filtered.filter(p => p.isFauna);
+    } else if (map._nuiHeat.filter === 'flora') {
+        filtered = filtered.filter(p => !p.isFauna);
+    }
+
+    if (filtered.length === 0) return;
+
+    const heatData = filtered.map(p => [p.latitude, p.longitude, p.intensity]);
+    map._nuiHeat.layer = L.heatLayer(heatData, {
+        radius: 25,
+        blur: 15,
+        maxZoom: 17,
+        max: 1.0,
+        gradient: {
+            0.0: '#3b82f6',
+            0.25: '#22c55e',
+            0.5: '#eab308',
+            0.75: '#f97316',
+            1.0: '#ef4444'
+        }
+    }).addTo(map);
+}
+
 export function dispose(map) {
     if (map) {
+        if (map._nuiDraw && map._nuiDraw.handlers) {
+            document.removeEventListener('keydown', map._nuiDraw.handlers.onKeyDown);
+        }
         map.remove();
     }
 }

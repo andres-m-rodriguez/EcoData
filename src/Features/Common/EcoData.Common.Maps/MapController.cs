@@ -10,12 +10,20 @@ public class MapController<TMarker> : IMapController<TMarker>
 {
     private readonly List<TMarker> _markers = [];
     private readonly Dictionary<string, MapGeoJson> _geoJsonLayers = [];
+    private readonly List<MapCircle> _circles = [];
 
     public IReadOnlyList<TMarker> Markers => _markers;
+
+    public IReadOnlyList<MapCircle> Circles => _circles;
 
     public MapCoordinate Center { get; private set; } = MapCoordinate.PuertoRicoCenter;
 
     public int Zoom { get; private set; } = 9;
+
+    /// <summary>
+    /// Set by the map component while attached; used for calls that need a result back from JS.
+    /// </summary>
+    internal Func<Task<MapGeolocationResult?>>? GeolocationProvider { get; set; }
 
     // ===== Events =====
     public event Action? OnMarkersChanged;
@@ -24,6 +32,20 @@ public class MapController<TMarker> : IMapController<TMarker>
     public event Action<int>? OnMarkerClicked;
     public event Action<MapCoordinate>? OnMapClicked;
     public event Action<string, string?>? OnGeoJsonClicked;
+    public event Action? OnCirclesChanged;
+    public event Action<int>? OnCircleClicked;
+    public event Action<int?>? OnCircleFocusRequested;
+    public event Action<(MapCoordinate Center, double RadiusMeters)?>? OnSearchRadiusChanged;
+    public event Action<MapPolygonDrawAction>? OnPolygonDrawActionRequested;
+    public event Action<IReadOnlyList<MapCoordinate>>? OnPolygonDrawn;
+    public event Action? OnPolygonDrawCancelled;
+    public event Action? OnHeatmapChanged;
+
+    // ===== Circle State =====
+
+    internal IReadOnlyList<MapHeatPoint> HeatPoints { get; private set; } = [];
+    internal MapHeatmapFilter HeatmapFilter { get; private set; } = MapHeatmapFilter.All;
+    internal bool HeatmapVisible { get; private set; }
 
     // ===== Marker Methods =====
 
@@ -113,6 +135,95 @@ public class MapController<TMarker> : IMapController<TMarker>
         OnViewChanged?.Invoke();
     }
 
+    // ===== Circle Methods =====
+
+    public void SetCircles(IEnumerable<MapCircle> circles)
+    {
+        _circles.Clear();
+        _circles.AddRange(circles);
+        OnCirclesChanged?.Invoke();
+    }
+
+    public void ClearCircles()
+    {
+        _circles.Clear();
+        OnCirclesChanged?.Invoke();
+    }
+
+    public void FocusCircle(int index)
+    {
+        OnCircleFocusRequested?.Invoke(index);
+    }
+
+    public void FocusAllCircles()
+    {
+        OnCircleFocusRequested?.Invoke(null);
+    }
+
+    // ===== Search Radius Methods =====
+
+    public void ShowSearchRadius(MapCoordinate center, double radiusMeters)
+    {
+        OnSearchRadiusChanged?.Invoke((center, radiusMeters));
+    }
+
+    public void ClearSearchRadius()
+    {
+        OnSearchRadiusChanged?.Invoke(null);
+    }
+
+    // ===== Polygon Draw Methods =====
+
+    public void EnablePolygonDraw()
+    {
+        OnPolygonDrawActionRequested?.Invoke(MapPolygonDrawAction.Enable);
+    }
+
+    public void FinishPolygonDraw()
+    {
+        OnPolygonDrawActionRequested?.Invoke(MapPolygonDrawAction.Finish);
+    }
+
+    public void CancelPolygonDraw()
+    {
+        OnPolygonDrawActionRequested?.Invoke(MapPolygonDrawAction.Cancel);
+    }
+
+    public void ClearDrawnPolygon()
+    {
+        OnPolygonDrawActionRequested?.Invoke(MapPolygonDrawAction.ClearDrawn);
+    }
+
+    // ===== Heatmap Methods =====
+
+    public void ShowHeatmap(IReadOnlyList<MapHeatPoint> points, MapHeatmapFilter filter = MapHeatmapFilter.All)
+    {
+        HeatPoints = points;
+        HeatmapFilter = filter;
+        HeatmapVisible = true;
+        OnHeatmapChanged?.Invoke();
+    }
+
+    public void SetHeatmapFilter(MapHeatmapFilter filter)
+    {
+        HeatmapFilter = filter;
+        OnHeatmapChanged?.Invoke();
+    }
+
+    public void HideHeatmap()
+    {
+        HeatmapVisible = false;
+        HeatPoints = [];
+        OnHeatmapChanged?.Invoke();
+    }
+
+    // ===== Geolocation =====
+
+    public async Task<MapGeolocationResult?> GetCurrentPositionAsync()
+    {
+        return GeolocationProvider is null ? null : await GeolocationProvider();
+    }
+
     // ===== Event Raising (called by component) =====
 
     public void RaiseMarkerClicked(int index)
@@ -128,5 +239,20 @@ public class MapController<TMarker> : IMapController<TMarker>
     public void RaiseGeoJsonClicked(string layerId, string? properties)
     {
         OnGeoJsonClicked?.Invoke(layerId, properties);
+    }
+
+    public void RaiseCircleClicked(int index)
+    {
+        OnCircleClicked?.Invoke(index);
+    }
+
+    public void RaisePolygonDrawn(IReadOnlyList<MapCoordinate> coordinates)
+    {
+        OnPolygonDrawn?.Invoke(coordinates);
+    }
+
+    public void RaisePolygonDrawCancelled()
+    {
+        OnPolygonDrawCancelled?.Invoke();
     }
 }
