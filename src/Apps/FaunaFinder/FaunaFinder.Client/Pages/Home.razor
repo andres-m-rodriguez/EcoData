@@ -540,9 +540,11 @@
 
     private string BuildNearbyPopup(SpeciesNearbyDto species)
     {
-        var name = System.Net.WebUtility.HtmlEncode(
-            Locale.Resolve(species.CommonName, fallback: species.ScientificName));
-        var scientific = System.Net.WebUtility.HtmlEncode(species.ScientificName);
+        var resolved = Locale.Resolve(species.CommonName, fallback: species.ScientificName);
+        var name = System.Net.WebUtility.HtmlEncode(resolved);
+        var scientific = SpeciesNaming.EchoesScientificName(resolved, species.ScientificName)
+            ? string.Empty
+            : $"<em>{System.Net.WebUtility.HtmlEncode(species.ScientificName)}</em><br/>";
         var distance = species.DistanceMeters < 1000
             ? $"{species.DistanceMeters:N0} m"
             : $"{species.DistanceMeters / 1000:N1} km";
@@ -550,7 +552,7 @@
             ? string.Empty
             : $"<br/><small>{System.Net.WebUtility.HtmlEncode(species.LocationDescription)}</small>";
 
-        return $"<strong>{name}</strong><br/><em>{scientific}</em><br/>{distance}{description}";
+        return $"<strong>{name}</strong><br/>{scientific}{distance}{description}";
     }
 
     private void FocusNearbySpecies(int index) => _mapController.FocusCircle(index);

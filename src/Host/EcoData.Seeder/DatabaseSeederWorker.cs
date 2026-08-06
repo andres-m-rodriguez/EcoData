@@ -349,7 +349,6 @@ public sealed class DatabaseSeederWorker(
     )
     {
         // Fixed 8-code taxonomy backing the FaunaFinder filter chips.
-        // Any legacy SpeciesCategory rows from earlier deploys coexist harmlessly.
         var defaultCategories = new[]
         {
             ("bird", "Bird", "Ave"),
@@ -384,7 +383,74 @@ public sealed class DatabaseSeederWorker(
         }
 
         await context.SaveChangesAsync(stoppingToken);
+
+        await RetireLegacyCategoriesAsync(
+            context,
+            defaultCategories.Select(c => c.Item1).ToHashSet(),
+            stoppingToken
+        );
+
         logger.LogInformation("Species categories seeded.");
+    }
+
+    /// <summary>
+    /// Folds pre-taxonomy category rows into their canonical code. Databases
+    /// seeded before the 8-code taxonomy still carry "amphibian" alongside
+    /// "amphib" (and "invertebrate", "fern"), which renders the same filter
+    /// chip twice. Links move to the canonical row before the old one goes.
+    /// </summary>
+    private async Task RetireLegacyCategoriesAsync(
+        WildlifeDbContext context,
+        HashSet<string> canonicalCodes,
+        CancellationToken stoppingToken
+    )
+    {
+        var categories = await context.SpeciesCategories.ToListAsync(stoppingToken);
+        var byCode = categories.ToDictionary(c => c.Code);
+
+        var retired = 0;
+        foreach (var legacy in categories.Where(c => !canonicalCodes.Contains(c.Code)))
+        {
+            var canonicalCode = NormalizeCategoryCode(legacy.Code);
+            // Without a canonical home, deleting the row would orphan its links.
+            if (canonicalCode == legacy.Code
+                || !byCode.TryGetValue(canonicalCode, out var canonical))
+            {
+                logger.LogWarning(
+                    "Species category {Code} has no canonical equivalent; leaving it in place.",
+                    legacy.Code
+                );
+                continue;
+            }
+
+            // Species already carrying the canonical code just lose the stale link.
+            await context
+                .SpeciesCategoryLinks.Where(l =>
+                    l.CategoryId == legacy.Id
+                    && context.SpeciesCategoryLinks.Any(other =>
+                        other.CategoryId == canonical.Id && other.SpeciesId == l.SpeciesId
+                    )
+                )
+                .ExecuteDeleteAsync(stoppingToken);
+
+            await context
+                .SpeciesCategoryLinks.Where(l => l.CategoryId == legacy.Id)
+                .ExecuteUpdateAsync(
+                    s => s.SetProperty(l => l.CategoryId, canonical.Id),
+                    stoppingToken
+                );
+
+            await context
+                .SpeciesCategories.Where(c => c.Id == legacy.Id)
+                .ExecuteDeleteAsync(stoppingToken);
+
+            retired++;
+        }
+
+        if (retired > 0)
+        {
+            logger.LogInformation("Legacy species categories retired: {Count}", retired);
+        }
     }
 
     private async Task SeedNrcsPracticesAsync(
@@ -517,9 +583,11 @@ public sealed class DatabaseSeederWorker(
             {
                 species = existing;
 
-                // Taxonomy comes from the matching matrix, which corrects rows that
-                // predated it (flora seeded as fauna). Always trust the source here.
+                // Taxonomy and naming come from the matching matrix, which corrects
+                // rows that predated it: flora seeded as fauna, and the scientific
+                // name echoed into the common-name slot so cards rendered it twice.
                 species.IsFauna = dto.IsFauna;
+                species.CommonName = BuildCommonName(dto);
 
                 // Update image if we have one and the existing doesn't
                 if (species.ProfileImageData is null && !string.IsNullOrEmpty(dto.ImageBase64))
@@ -549,11 +617,7 @@ public sealed class DatabaseSeederWorker(
                 species = new Species
                 {
                     Id = Guid.CreateVersion7(),
-                    CommonName =
-                    [
-                        new LocaleValue("en", dto.CommonNameEn),
-                        new LocaleValue("es", dto.CommonNameEs),
-                    ],
+                    CommonName = BuildCommonName(dto),
                     ScientificName = dto.ScientificName,
                     ProfileImageData = string.IsNullOrEmpty(dto.ImageBase64)
                         ? null
@@ -726,6 +790,26 @@ public sealed class DatabaseSeederWorker(
             await context.SaveChangesAsync(stoppingToken);
             logger.LogInformation("Marked {Count} species as featured.", picks.Count);
         }
+    }
+
+    /// <summary>
+    /// Common name for a species, omitting locales the source leaves blank.
+    /// The matching matrix marks 27 species as having no common name at all;
+    /// storing an empty entry would make callers resolve to null instead of
+    /// falling back to the scientific name.
+    /// </summary>
+    private static List<LocaleValue> BuildCommonName(SpeciesDto dto)
+    {
+        var values = new List<LocaleValue>();
+        if (!string.IsNullOrWhiteSpace(dto.CommonNameEn))
+        {
+            values.Add(new LocaleValue("en", dto.CommonNameEn));
+        }
+        if (!string.IsNullOrWhiteSpace(dto.CommonNameEs))
+        {
+            values.Add(new LocaleValue("es", dto.CommonNameEs));
+        }
+        return values;
     }
 
     private static string NormalizeCategoryCode(string code) => code switch

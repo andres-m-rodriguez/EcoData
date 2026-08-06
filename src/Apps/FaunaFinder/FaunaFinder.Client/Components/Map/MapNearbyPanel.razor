@@ -46,8 +46,14 @@ else
             <div class="mnp-row" @onclick="@(() => HandleFocus(index))">
                 <span class="mnp-dot color-@(index % PaletteSize)"></span>
                 <div class="mnp-row-body">
-                    <div class="mnp-row-name">@Locale.Resolve(current.CommonName, fallback: current.ScientificName)</div>
-                    <div class="mnp-row-sci">@current.ScientificName</div>
+                    @{
+                        var nearbyName = Locale.Resolve(current.CommonName, fallback: current.ScientificName);
+                    }
+                    <div class="mnp-row-name">@nearbyName</div>
+                    @if (!SpeciesNaming.EchoesScientificName(nearbyName, current.ScientificName))
+                    {
+                        <div class="mnp-row-sci">@current.ScientificName</div>
+                    }
                     @if (!string.IsNullOrEmpty(current.LocationDescription))
                     {
                         <div class="mnp-row-desc">@current.LocationDescription</div>

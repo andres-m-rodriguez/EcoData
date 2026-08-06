@@ -38,7 +38,10 @@
 
     <div class="ff-card-body">
         <div class="ff-card-name">@CommonName</div>
-        <div class="ff-card-sci">@Species.ScientificName</div>
+        @if (!SpeciesNaming.EchoesScientificName(CommonName, Species.ScientificName))
+        {
+            <div class="ff-card-sci">@Species.ScientificName</div>
+        }
         <div class="ff-card-foot">
             <span class="muni">
                 <MudIcon Icon="@Icons.Material.Filled.LocationOn" Size="Size.Small" />
