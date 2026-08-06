@@ -211,6 +211,12 @@ public interface IMapController<TMarker>
     event Action<string, string?>? OnGeoJsonClicked;
 
     /// <summary>
+    /// Fired when a URL-based GeoJSON layer finishes loading in JS.
+    /// Receives the layer ID and whether the load succeeded.
+    /// </summary>
+    event Action<string, bool>? OnGeoJsonLoaded;
+
+    /// <summary>
     /// Fired when circles change.
     /// </summary>
     event Action? OnCirclesChanged;
@@ -266,6 +272,11 @@ public interface IMapController<TMarker>
     /// Called by the component when a GeoJSON feature is clicked.
     /// </summary>
     void RaiseGeoJsonClicked(string layerId, string? properties);
+
+    /// <summary>
+    /// Called by the component when a URL-based GeoJSON layer finishes loading.
+    /// </summary>
+    void RaiseGeoJsonLoaded(string layerId, bool success);
 
     /// <summary>
     /// Called by the component when a circle is clicked.

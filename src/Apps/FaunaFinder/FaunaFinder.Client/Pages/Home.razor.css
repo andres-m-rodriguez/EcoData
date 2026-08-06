@@ -36,10 +36,6 @@
     bottom: 0;
 }
 
-.map-loading-overlay {
-    background-color: rgba(244, 244, 239, 0.85);
-}
-
 /* Load-failure banner floats over the map without displacing it */
 .map-error-overlay {
     position: absolute;

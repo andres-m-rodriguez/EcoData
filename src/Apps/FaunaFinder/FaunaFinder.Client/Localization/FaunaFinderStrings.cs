@@ -239,7 +239,6 @@ public static class FaunaFinderStrings
         ["CategoryDetail_Empty_Description"] = "No species have been categorized here yet.",
 
         // Home (map page)
-        ["Home_MapLoading"] = "Loading map…",
         ["Home_SidebarEmpty"] = "Tap a municipio to see its species",
         ["Map_Panel_Eyebrow"] = "Municipio",
         ["Map_Panel_NoSpecies_Title"] = "No species recorded",
@@ -482,7 +481,6 @@ public static class FaunaFinderStrings
         ["CategoryDetail_Empty_Description"] = "Aún no se ha categorizado ninguna especie aquí.",
 
         // Home (map page)
-        ["Home_MapLoading"] = "Cargando mapa…",
         ["Home_SidebarEmpty"] = "Toca un municipio para ver sus especies",
         ["Map_Panel_Eyebrow"] = "Municipio",
         ["Map_Panel_NoSpecies_Title"] = "Sin especies registradas",

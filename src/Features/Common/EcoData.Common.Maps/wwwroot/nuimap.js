@@ -15,6 +15,7 @@ export function initialize(element, lat, lng, zoom, dotNetRef) {
     map._nuiUserLocation = null;
     map._nuiHeat = { layer: null, points: [], filter: 'all' };
     map._nuiDraw = { active: false, points: [], markers: [], polygon: null, previewLine: null, handlers: null };
+    map._nuiGeoJsonGeneration = 0;
 
     // Map click handler (suppressed while drawing a polygon)
     map.on('click', (e) => {
@@ -64,38 +65,95 @@ export function setGeoJson(map, layers) {
     if (!map) return;
 
     map._nuiGeoJson.clearLayers();
+    // Invalidates URL fetches still in flight from a previous setGeoJson call,
+    // so they don't add layers on top of the cleared state.
+    const generation = ++map._nuiGeoJsonGeneration;
 
     layers.forEach(layer => {
-        try {
-            const geoJsonData = JSON.parse(layer.data);
-            const geoJsonLayer = L.geoJSON(geoJsonData, {
-                style: {
-                    fillColor: layer.fillColor,
-                    fillOpacity: layer.fillOpacity,
-                    color: layer.strokeColor,
-                    weight: layer.strokeWidth
-                },
-                onEachFeature: (feature, leafletLayer) => {
-                    // GeoJSON feature click handler. While drawing a polygon the
-                    // click must bubble to the map's draw handler instead, so the
-                    // feature neither swallows the vertex placement nor selects.
-                    leafletLayer.on('click', (e) => {
-                        if (map._nuiDraw.active) return;
-                        L.DomEvent.stopPropagation(e);
-                        if (map._dotNetRef) {
-                            const properties = feature.properties
-                                ? JSON.stringify(feature.properties)
-                                : null;
-                            map._dotNetRef.invokeMethodAsync('OnGeoJsonClickedFromJs', layer.id, properties);
-                        }
-                    });
-                }
-            });
-            map._nuiGeoJson.addLayer(geoJsonLayer);
-        } catch (e) {
-            console.error('Failed to parse GeoJSON for layer:', layer.id, e);
+        if (layer.data) {
+            try {
+                addGeoJsonLayer(map, layer, JSON.parse(layer.data));
+            } catch (e) {
+                console.error('Failed to parse GeoJSON for layer:', layer.id, e);
+            }
+        } else if (layer.url) {
+            loadGeoJsonFromUrl(map, layer, generation);
         }
     });
+}
+
+function loadGeoJsonFromUrl(map, layer, generation) {
+    const notify = (success) => {
+        if (map._dotNetRef && map._nuiGeoJsonGeneration === generation) {
+            map._dotNetRef.invokeMethodAsync('OnGeoJsonLoadedFromJs', layer.id, success);
+        }
+    };
+
+    if (layer.cacheKey) {
+        const versionKey = layer.cacheKey + ':version';
+        try {
+            const cached = localStorage.getItem(layer.cacheKey);
+            if (cached && localStorage.getItem(versionKey) === layer.cacheVersion) {
+                addGeoJsonLayer(map, layer, JSON.parse(cached));
+                notify(true);
+                return;
+            }
+        } catch (e) {
+            console.warn('Failed to read cached GeoJSON, fetching from URL:', e);
+        }
+    }
+
+    fetch(layer.url)
+        .then(r => {
+            if (!r.ok) throw new Error('GeoJSON request returned ' + r.status);
+            return r.text();
+        })
+        .then(text => {
+            const data = JSON.parse(text);
+            if (map._nuiGeoJsonGeneration !== generation) return;
+
+            if (layer.cacheKey) {
+                try {
+                    localStorage.setItem(layer.cacheKey, text);
+                    localStorage.setItem(layer.cacheKey + ':version', layer.cacheVersion);
+                } catch (e) {
+                    console.warn('Failed to cache GeoJSON to localStorage:', e);
+                }
+            }
+            addGeoJsonLayer(map, layer, data);
+            notify(true);
+        })
+        .catch(e => {
+            console.error('Failed to load GeoJSON for layer:', layer.id, e);
+            notify(false);
+        });
+}
+
+function addGeoJsonLayer(map, layer, geoJsonData) {
+    const geoJsonLayer = L.geoJSON(geoJsonData, {
+        style: {
+            fillColor: layer.fillColor,
+            fillOpacity: layer.fillOpacity,
+            color: layer.strokeColor,
+            weight: layer.strokeWidth
+        },
+        onEachFeature: (feature, leafletLayer) => {
+            // GeoJSON feature click handler. While drawing a polygon the
+            // click must bubble to the map's draw handler instead, so the
+            // feature neither swallows the vertex placement nor selects.
+            leafletLayer.on('click', (e) => {
+                if (map._nuiDraw.active) return;
+                L.DomEvent.stopPropagation(e);
+                if (map._dotNetRef) {
+                    const properties = feature.properties
+                        ? JSON.stringify(feature.properties)
+                        : null;
+                    map._dotNetRef.invokeMethodAsync('OnGeoJsonClickedFromJs', layer.id, properties);
+                }
+            });
+        }
+    });
+    map._nuiGeoJson.addLayer(geoJsonLayer);
 }
 
 export function fitToMarkers(map) {

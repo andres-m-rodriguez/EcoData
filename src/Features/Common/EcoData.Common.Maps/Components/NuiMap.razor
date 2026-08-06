@@ -89,6 +89,12 @@
     }
 
     [JSInvokable]
+    public void OnGeoJsonLoadedFromJs(string layerId, bool success)
+    {
+        Controller.RaiseGeoJsonLoaded(layerId, success);
+    }
+
+    [JSInvokable]
     public void OnCircleClickedFromJs(int index)
     {
         Controller.RaiseCircleClicked(index);
@@ -286,6 +292,9 @@
             {
                 id = g.Id,
                 data = g.Data,
+                url = g.Url,
+                cacheKey = g.CacheKey,
+                cacheVersion = g.CacheVersion,
                 fillColor = g.FillColor,
                 fillOpacity = g.FillOpacity,
                 strokeColor = g.StrokeColor,

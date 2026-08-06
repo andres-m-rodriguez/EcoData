@@ -32,6 +32,7 @@ public class MapController<TMarker> : IMapController<TMarker>
     public event Action<int>? OnMarkerClicked;
     public event Action<MapCoordinate>? OnMapClicked;
     public event Action<string, string?>? OnGeoJsonClicked;
+    public event Action<string, bool>? OnGeoJsonLoaded;
     public event Action? OnCirclesChanged;
     public event Action<int>? OnCircleClicked;
     public event Action<int?>? OnCircleFocusRequested;
@@ -239,6 +240,11 @@ public class MapController<TMarker> : IMapController<TMarker>
     public void RaiseGeoJsonClicked(string layerId, string? properties)
     {
         OnGeoJsonClicked?.Invoke(layerId, properties);
+    }
+
+    public void RaiseGeoJsonLoaded(string layerId, bool success)
+    {
+        OnGeoJsonLoaded?.Invoke(layerId, success);
     }
 
     public void RaiseCircleClicked(int index)

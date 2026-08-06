@@ -1,7 +1,6 @@
 @page "/"
 @using EcoData.Common.Maps
 @using EcoData.Common.Maps.Models
-@using EcoData.Locations.Application.Client
 @using EcoData.Wildlife.Application.Client
 @using EcoData.Wildlife.Contracts.Dtos
 @using EcoData.Wildlife.Contracts.Parameters
@@ -9,7 +8,6 @@
 @using FaunaFinder.Client.Components.Map
 @using OneOf
 @inherits StatefulComponent
-@inject IMunicipalityHttpClient MunicipalityHttpClient
 @inject ISpeciesHttpClient SpeciesHttpClient
 @inject IConservationLinkHttpClient ConservationLinkHttpClient
 @inject NavigationManager NavigationManager
@@ -25,15 +23,6 @@
             <div class="map-error-overlay">
                 <MudAlert Severity="Severity.Error">@_mapLoadError</MudAlert>
             </div>
-        }
-        else if (InitMapState.IsLoading)
-        {
-            <MudOverlay Visible="true" DarkBackground="false" Absolute="true" Class="map-loading-overlay" ZIndex="1000">
-                <MudStack AlignItems="AlignItems.Center">
-                    <MudProgressCircular Indeterminate="true" Color="Color.Primary" />
-                    <MudText Typo="Typo.body2">@L["Home_MapLoading"]</MudText>
-                </MudStack>
-            </MudOverlay>
         }
         <NuiMap TMarker="MunicipalityMarker"
                 Controller="_mapController"
@@ -241,37 +230,33 @@
         base.OnInitialized();
         L.LanguageChanged += OnLanguageChanged;
         _mapController.OnGeoJsonClicked += OnGeoJsonClicked;
+        _mapController.OnGeoJsonLoaded += OnGeoJsonLoaded;
         _mapController.OnPolygonDrawn += OnPolygonDrawn;
         _mapController.OnPolygonDrawCancelled += OnPolygonDrawCancelled;
+
+        // Boundaries are fetched JS-side (localStorage-cached), so the map
+        // renders immediately instead of waiting on the payload.
+        _mapController.AddGeoJson(new MapGeoJson
+        {
+            Id = MunicipalityBoundaries.LayerId,
+            Url = MunicipalityBoundaries.Url,
+            CacheKey = MunicipalityBoundaries.CacheKey,
+            CacheVersion = MunicipalityBoundaries.CacheVersion,
+            FillColor = "#40916c",
+            FillOpacity = 0.3,
+            StrokeColor = "#2d6a4f",
+            StrokeWidth = 2
+        });
     }
 
     private void OnLanguageChanged() => InvokeAsync(StateHasChanged);
 
-    [Command, RunOnLoad]
-    private async Task<bool> InitMap(CancellationToken ct)
+    private void OnGeoJsonLoaded(string layerId, bool success)
     {
-        var result = await MunicipalityHttpClient.GetGeoJsonByStateCodeAsync("PR", ct);
-        if (!result.TryPickT0(out var geoJson, out var error))
-        {
-            _mapLoadError = error.StatusCode == 0
-                ? "Couldn't reach the server."
-                : error.Message ?? "Something went wrong while loading the map.";
-            return false;
-        }
-        _mapLoadError = null;
-        if (!string.IsNullOrEmpty(geoJson))
-        {
-            _mapController.AddGeoJson(new MapGeoJson
-            {
-                Id = "municipalities",
-                Data = geoJson,
-                FillColor = "#40916c",
-                FillOpacity = 0.3,
-                StrokeColor = "#2d6a4f",
-                StrokeWidth = 2
-            });
-        }
-        return true;
+        if (layerId != MunicipalityBoundaries.LayerId) return;
+
+        _mapLoadError = success ? null : "Something went wrong while loading the map.";
+        InvokeAsync(StateHasChanged);
     }
 
     // ===== Municipality selection =====
@@ -738,6 +723,7 @@
     {
         L.LanguageChanged -= OnLanguageChanged;
         _mapController.OnGeoJsonClicked -= OnGeoJsonClicked;
+        _mapController.OnGeoJsonLoaded -= OnGeoJsonLoaded;
         _mapController.OnPolygonDrawn -= OnPolygonDrawn;
         _mapController.OnPolygonDrawCancelled -= OnPolygonDrawCancelled;
         base.Dispose();

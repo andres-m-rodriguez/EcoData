@@ -11,9 +11,28 @@ public class MapGeoJson
     public required string Id { get; init; }
 
     /// <summary>
-    /// The GeoJSON data as a string.
+    /// The GeoJSON data as a string. Optional when <see cref="Url"/> is set.
     /// </summary>
-    public required string Data { get; init; }
+    public string? Data { get; init; }
+
+    /// <summary>
+    /// URL to fetch the GeoJSON from. The fetch happens in JS after the map has
+    /// initialized, so the map renders immediately and the payload never crosses
+    /// the .NET/JS interop boundary. Ignored when <see cref="Data"/> is set.
+    /// </summary>
+    public string? Url { get; init; }
+
+    /// <summary>
+    /// localStorage key for caching the fetched GeoJSON. Only used with
+    /// <see cref="Url"/>; when null the data is re-fetched on every visit.
+    /// </summary>
+    public string? CacheKey { get; init; }
+
+    /// <summary>
+    /// Cache version stored alongside <see cref="CacheKey"/>. Bump it to
+    /// invalidate previously cached data.
+    /// </summary>
+    public string CacheVersion { get; init; } = "v1";
 
     /// <summary>
     /// Default fill color for features.
