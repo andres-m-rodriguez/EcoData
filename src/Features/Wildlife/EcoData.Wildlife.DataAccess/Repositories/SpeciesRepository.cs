@@ -287,11 +287,26 @@ public sealed class SpeciesRepository(
 
         query = ApplySort(query, parameters.Sort);
 
-        // Cursor pagination is Id-based; correct only for ScientificNameAsc + Id tiebreaker.
-        // Non-default sorts fall back to first-page results (follow-up tracked in issue #188).
         if (parameters.Cursor.HasValue)
         {
-            query = query.Where(s => s.Id < parameters.Cursor.Value);
+            // Keyset pagination has to compare on the same key the rows are ordered
+            // by. The cursor only carries an Id, so the row it points at supplies
+            // the rest of its sort position; without that, "id < cursor" against an
+            // ORDER BY on the name returns rows the caller has already seen.
+            var cursor = await context
+                .Species.Where(s => s.Id == parameters.Cursor.Value)
+                .Select(s => new SpeciesCursor(
+                    s.Id,
+                    s.ScientificName,
+                    s.LastObservedAtUtc,
+                    s.MunicipalitySpecies.Count
+                ))
+                .FirstOrDefaultAsync(cancellationToken);
+
+            if (cursor is not null)
+            {
+                query = ApplyCursor(query, parameters.Sort, cursor);
+            }
         }
 
         await foreach (
@@ -596,6 +611,56 @@ public sealed class SpeciesRepository(
 
         return query;
     }
+
+    /// <summary>
+    /// Sort position of the row a cursor points at, so the next page can resume
+    /// from it under whichever ordering is in play.
+    /// </summary>
+    private sealed record SpeciesCursor(
+        Guid Id,
+        string ScientificName,
+        DateTimeOffset? LastObservedAtUtc,
+        int MunicipalityCount
+    );
+
+    /// <summary>
+    /// Rows strictly after <paramref name="cursor"/> in <paramref name="sort"/> order.
+    /// Each branch mirrors the matching <see cref="ApplySort"/> branch, including its
+    /// Id tiebreaker; the two must be changed together.
+    /// </summary>
+    private static IQueryable<Database.Models.Species> ApplyCursor(
+        IQueryable<Database.Models.Species> query,
+        SpeciesSort sort,
+        SpeciesCursor cursor
+    ) => sort switch
+    {
+        SpeciesSort.ScientificNameAsc => query.Where(s =>
+            string.Compare(s.ScientificName, cursor.ScientificName) > 0
+            || (s.ScientificName == cursor.ScientificName && s.Id > cursor.Id)
+        ),
+        SpeciesSort.ScientificNameDesc => query.Where(s =>
+            string.Compare(s.ScientificName, cursor.ScientificName) < 0
+            || (s.ScientificName == cursor.ScientificName && s.Id < cursor.Id)
+        ),
+        // Postgres sorts NULLs first under DESC, so an unobserved cursor is still
+        // inside the leading null block and every dated row comes after it.
+        SpeciesSort.RecentlyObserved => cursor.LastObservedAtUtc is null
+            ? query.Where(s =>
+                s.LastObservedAtUtc != null || (s.LastObservedAtUtc == null && s.Id < cursor.Id)
+            )
+            : query.Where(s =>
+                s.LastObservedAtUtc != null
+                && (
+                    s.LastObservedAtUtc < cursor.LastObservedAtUtc
+                    || (s.LastObservedAtUtc == cursor.LastObservedAtUtc && s.Id < cursor.Id)
+                )
+            ),
+        SpeciesSort.MostMunicipalities => query.Where(s =>
+            s.MunicipalitySpecies.Count < cursor.MunicipalityCount
+            || (s.MunicipalitySpecies.Count == cursor.MunicipalityCount && s.Id < cursor.Id)
+        ),
+        _ => query.Where(s => s.Id < cursor.Id),
+    };
 
     private static IQueryable<Database.Models.Species> ApplySort(
         IQueryable<Database.Models.Species> query,
