@@ -22,9 +22,12 @@
     }
 
     <MudText Typo="Typo.h5" GutterBottom="true">@CommonName</MudText>
-    <MudText Typo="Typo.subtitle1" Color="Color.Secondary" Class="mb-4 font-italic">
-        @Species.ScientificName
-    </MudText>
+    @if (!SpeciesNaming.EchoesScientificName(CommonName, Species.ScientificName))
+    {
+        <MudText Typo="Typo.subtitle1" Color="Color.Secondary" Class="mb-4 font-italic">
+            @Species.ScientificName
+        </MudText>
+    }
 
     <MudStack Row="true" Spacing="2" Wrap="Wrap.Wrap" Class="mb-2">
         @if (!string.IsNullOrEmpty(Species.GRank))

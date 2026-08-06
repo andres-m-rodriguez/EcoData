@@ -75,8 +75,14 @@ else
                     <i class="@TaxonIcons.GetIcon(current.TaxonCode)"></i>
                 </div>
                 <div class="msp-row-body">
-                    <div class="msp-row-name">@Locale.Resolve(current.CommonName, fallback: current.ScientificName)</div>
-                    <div class="msp-row-sci">@current.ScientificName</div>
+                    @{
+                        var panelName = Locale.Resolve(current.CommonName, fallback: current.ScientificName);
+                    }
+                    <div class="msp-row-name">@panelName</div>
+                    @if (!SpeciesNaming.EchoesScientificName(panelName, current.ScientificName))
+                    {
+                        <div class="msp-row-sci">@current.ScientificName</div>
+                    }
                 </div>
                 @if (current.IucnStatus is { } status)
                 {

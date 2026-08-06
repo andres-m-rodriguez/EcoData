@@ -130,6 +130,40 @@ def build_actions(rows, existing_actions):
     return sorted(actions, key=lambda action: action["code"])
 
 
+# Spanish stand-ins for the workbook's "(NCN - ...)" markers: they describe the
+# growth habit rather than naming the species, so they are dropped alongside it.
+# Anything carrying an actual name ("Ausu", "Un Cactus (Pitahaya)", "Arana - un
+# Arbol Pequeno") is deliberately absent and survives.
+SPANISH_NON_NAMES = {
+    "un arbusto",
+    "un helecho",
+    "un arbol pequeno",
+    "un arbusto o arbol pequeno",
+    "un arbol pequeno o arbusto",
+    "arbol pequeno",
+    "una yerba",
+    "una herbacea",
+}
+
+
+def is_spanish_non_name(value):
+    folded = (value or "").strip().casefold()
+    for accented, plain in (("ñ", "n"), ("á", "a"), ("é", "e"), ("í", "i"), ("ó", "o"), ("ú", "u")):
+        folded = folded.replace(accented, plain)
+    return folded in SPANISH_NON_NAMES
+
+
+def common_name(workbook_value):
+    """Workbook common name, or None where it marks the species as having none.
+
+    "(NCN - A Grass)" and friends are the workbook's way of saying no common
+    name exists; storing them would put boilerplate where a name belongs.
+    """
+    if not workbook_value or workbook_value.upper().startswith("(NCN"):
+        return None
+    return workbook_value
+
+
 def build_species(species_index, existing_species):
     """Carry forward curated species data; correct taxonomy from the workbook."""
     by_name = {}
@@ -144,17 +178,18 @@ def build_species(species_index, existing_species):
             by_name[name] = record
 
     added = []
-    for scientific_name, (common_name, classification) in sorted(species_index.items()):
+    renamed = 0
+    for scientific_name, (workbook_name, classification) in sorted(species_index.items()):
         if classification not in CLASSIFICATION:
             raise SystemExit(f"Unmapped classification {classification!r}.")
         category_code, is_fauna = CLASSIFICATION[classification]
+        name_en = common_name(workbook_name)
 
         record = by_name.get(scientific_name)
         if record is None:
             record = {
                 "scientificName": scientific_name,
-                "commonNameEn": common_name,
-                "commonNameEs": common_name,
+                "commonNameEs": name_en,
                 "elCode": "",
                 "gRank": "",
                 "sRank": "",
@@ -164,12 +199,32 @@ def build_species(species_index, existing_species):
             by_name[scientific_name] = record
             added.append(scientific_name)
 
+        # Most records were seeded with the scientific name echoed into both
+        # common-name slots, which renders the same text twice on every card.
+        # The workbook is authoritative for the English name; Spanish is kept
+        # only where it is a real name rather than that same echo.
+        previous_en = (record.get("commonNameEn") or "").strip()
+        previous_es = (record.get("commonNameEs") or "").strip()
+        echoed = (
+            previous_es.casefold() == previous_en.casefold()
+            or previous_es.casefold() == scientific_name.casefold()
+        )
+        if previous_en.casefold() != (name_en or "").casefold():
+            renamed += 1
+
+        keep_es = previous_es and not echoed
+        if name_en is None and is_spanish_non_name(previous_es):
+            keep_es = False
+
+        record["commonNameEn"] = name_en
+        record["commonNameEs"] = previous_es if keep_es else name_en
+
         # The workbook is authoritative for taxonomy. Everything else on an
         # existing record (image, ranks, locations, municipalities) is untouched.
         record["isFauna"] = is_fauna
         record["categoryCodes"] = [category_code]
 
-    return [by_name[name] for name in sorted(by_name)], added
+    return [by_name[name] for name in sorted(by_name)], added, renamed
 
 
 def main():
@@ -184,7 +239,7 @@ def main():
 
     links = build_links(rows, existing_links)
     actions = build_actions(rows, existing_actions)
-    species, added = build_species(species_index, existing_species)
+    species, added, renamed = build_species(species_index, existing_species)
 
     unknown = {link["speciesScientificName"] for link in links} - {
         record["scientificName"] for record in species
@@ -204,6 +259,8 @@ def main():
     print(f"fws_actions.json  {len(existing_actions):>5} -> {len(actions):>5}")
     print(f"species.json      {len(existing_species):>5} -> {len(species):>5}")
     print(f"  added: {', '.join(added) if added else 'none'}")
+    named = sum(1 for record in species if record.get("commonNameEn"))
+    print(f"  common names set from the workbook on {renamed}; {named} now have one")
 
 
 if __name__ == "__main__":
