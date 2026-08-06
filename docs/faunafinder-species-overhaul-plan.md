@@ -292,7 +292,7 @@ App-specific, under `src/Apps/FaunaFinder/FaunaFinder.Client/Components/Species/
 - 4-column grid backed by `SpeciesStatsDto` from `/wildlife/species/stats`.
 - Columns: Total / Endemic / Threatened / Municipios. Each column = label (eyebrow), big number (serif, 2.75rem), sub-line.
 - Loading state via the **loading-state pattern** (no `_isLoading` bool; nullable sentinel — see `MEMORY.md` "Loading state pattern").
-- Use `IFetch<SpeciesStatsDto>` from `BlazingSingularity.Fetch`.
+- Load via a Tempest.Blazor `[Command, RunOnLoad] Task<SpeciesStatsDto?>`, rendering from `LoadState.Result`.
 
 ### `SpeciesFeaturedRow.razor` (new)
 - Calls `/wildlife/species/featured`, takes the first 3 cards.

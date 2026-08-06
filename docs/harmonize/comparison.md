@@ -53,7 +53,7 @@ Credit where due. Each row below is asserted in **both** documents, not inferred
 | No home-grown `Result<T>` in actual use | §4 (explicit rule) | §4 (`Common.Results` exists but has **zero** consumers — dead, so practice agrees) |
 | Sealed classes + primary constructors as the default shape | §7 | §2, §4 (repos and clients) |
 | Smart pages / dumb shared components; no viewmodel layer for page state | §5, §6 | §5, §6 (one surviving `OrganizationDetailsViewModel`, acknowledged as contradicting direction) |
-| Component reactivity from a single third-party attribute/state library, not Fluxor/Redux | §6 (Tempest) | §6 (BlazingSingularity) |
+| Component reactivity from a single third-party attribute/state library, not Fluxor/Redux | §6 (Tempest) | §6 (the legacy reactivity package) |
 | Loading states as skeleton/sentinel idioms, not a global spinner framework | §5 | §5 (`MudSkeleton` shaped like content, 156 uses — "the one place docs and reality agree") |
 
 Two of these deserve emphasis because they are easy to miss when cataloguing EcoData's flaws:
@@ -189,7 +189,7 @@ Why Harmony reads cleaner here: it made the extraction-bar decision once ("genui
 
 **Different:**
 
-| Dimension | Harmony (Tempest.Blazor) | EcoData (BlazingSingularity) |
+| Dimension | Harmony (Tempest.Blazor) | EcoData (legacy reactivity package, pre-migration) |
 |---|---|---|
 | Library usage | One library, one usage pattern, everywhere; `SPEC.md` authoritative; compile-time diagnostics TEM001–014 | One library, **disjoint subsets per app**: FaunaFinder uses only `Fetch<T>`; EcoPortal uses all four mechanisms incl. `[Signal]` — a second parallel reactivity system passing mutable state by reference as component parameters, inverting `EventCallback` flow; beta.6 restored but never adopted |
 | Re-rendering | Every re-render funneled through `StatefulComponent`'s single marshalled `Rerender()`; manual `StateHasChanged` survives only at foreign edges (SignalR, `Virtualize`) | **134 manual `StateHasChanged` across 55 files — structural, not sloppy**: `Fetch<T>`'s constructor *requires* the re-render callback. EcoData's doc is explicit: any "no hand-written StateHasChanged" rule is incompatible with `Fetch<T>` as shaped |
@@ -200,7 +200,7 @@ Why Harmony reads cleaner here: it made the extraction-bar decision once ("genui
 | Cross-component effects | Event bus with nested record contracts | `@ref` + `.Refresh()` choreography after every mutation; `Action?` events on singletons |
 | Hygiene | Disposal handled by base class | Leaked `Fetch` disposables on 4 pages, 7 `async void` sites (including the public `Refresh()` API), one unmarshalled subscriber — but **zero unbalanced event subscriptions**, a genuine bright spot |
 
-**Root cause:** the philosophies are near-identical — both codebases bet on "attribute + generated state twin per operation, fields in the component." The differences are (a) *library capability*: Tempest's base class absorbs marshalling, disposal, and cancellation that BlazingSingularity pushes onto every call site, which is why EcoData's 134 `StateHasChanged` calls and disposal leaks are structural rather than careless; and (b) *enforcement*: nothing stopped EcoPortal from adopting `[Signal]` alongside `Fetch<T>`, or FaunaFinder from stacking three localization channels. Note the library question is entangled with real-time: Harmony's "manual StateHasChanged only at SignalR edges" idiom presumes SignalR exists; EcoData currently has no push at all (Section 10).
+**Root cause:** the philosophies are near-identical — both codebases bet on "attribute + generated state twin per operation, fields in the component." The differences are (a) *library capability*: Tempest's base class absorbs marshalling, disposal, and cancellation that the legacy reactivity package pushes onto every call site, which is why EcoData's 134 `StateHasChanged` calls and disposal leaks are structural rather than careless; and (b) *enforcement*: nothing stopped EcoPortal from adopting `[Signal]` alongside `Fetch<T>`, or FaunaFinder from stacking three localization channels. Note the library question is entangled with real-time: Harmony's "manual StateHasChanged only at SignalR edges" idiom presumes SignalR exists; EcoData currently has no push at all (Section 10).
 
 ---
 
@@ -236,7 +236,7 @@ These are decisions, not recommendations. Each is a place where copying Harmony 
 
 3. **Messaging and multiple hosts.** EcoData has Azure Service Bus events (#223), two web apps composing different feature subsets, `Sensors.Ingestion`, and homeless workers awaiting a worker host. Harmony is single-server, synchronous, and lists Commands/Events as "not yet introduced" — it simply has no convention to adopt here. Decision needed: keep `IMessageBus` events as a first-class EcoData convention (and write the rules Harmony never had: who may publish, where handlers live, what the ~1,400 LOC of dead command/handler/SSE machinery becomes), or shrink toward Harmony's sync `Application.Server`-only model and accept coupling across hosts.
 
-4. **Tempest.Blazor vs BlazingSingularity.** Same philosophy, different libraries. Tempest deletes the `StateHasChanged` callback, disposal burden, and cancellation boilerplate that account for a large share of EcoData §6's defect list — but it is beta, sourced from a sibling repo, targets net10.0, and its idioms assume SignalR-style push at the edges, which EcoData currently lacks (see #5). Staying on BlazingSingularity means Harmony's "zero manual StateHasChanged" and disposal rules are *unadoptable as written* (EcoData's doc is explicit about the incompatibility); switching means migrating 138 razor files across two apps that today use disjoint subsets of the current library.
+4. **Tempest.Blazor vs the legacy reactivity package.** *(Since resolved: both Blazor clients migrated to Tempest.Blazor in #229.)* Same philosophy, different libraries. Tempest deletes the `StateHasChanged` callback, disposal burden, and cancellation boilerplate that account for a large share of EcoData §6's defect list — but it is beta, sourced from a sibling repo, targets net10.0, and its idioms assume SignalR-style push at the edges, which EcoData currently lacks (see #5). Staying on the legacy library means Harmony's "zero manual StateHasChanged" and disposal rules are *unadoptable as written* (EcoData's doc is explicit about the incompatibility); switching means migrating 138 razor files across two apps that today use disjoint subsets of the current library.
 
 5. **Real-time push.** Harmony's UI conventions (stream clients, bus hand-offs, edge-marshalled SignalR) presuppose push. EcoData deliberately removed SSE (#225), has zero SignalR, and has a never-firing `NotificationService` event with live subscribers and tracking issues (#222/#224). Decision: introduce a push channel (which one, terminated where, bridged how from Service Bus) or codify "no push" and delete the vestigial subscriber surface. Adopting Harmony's UI conventions without deciding this imports idioms for a mechanism that doesn't exist.
 
