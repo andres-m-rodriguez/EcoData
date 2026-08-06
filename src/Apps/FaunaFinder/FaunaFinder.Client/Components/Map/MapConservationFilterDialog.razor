@@ -1,0 +1,59 @@
+@namespace FaunaFinder.Client.Components.Map
+@inherits LocalizedComponentBase
+
+<MudDialog Visible="Visible" VisibleChanged="VisibleChanged"
+           Options="new DialogOptions { MaxWidth = MaxWidth.Small, FullWidth = true, CloseOnEscapeKey = true }">
+    <TitleContent>
+        <MudText Typo="Typo.h6">@L["Map_Filter_Title"]</MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudText Typo="Typo.subtitle2" Class="mb-2">@L["Map_Filter_NrcsPractices"]</MudText>
+        <div class="d-flex flex-wrap gap-1 mb-4">
+            @foreach (var practice in AvailableNrcsPractices)
+            {
+                var code = practice;
+                <MudChip T="string"
+                         Color="@(SelectedNrcsPractices.Contains(code) ? Color.Primary : Color.Default)"
+                         Variant="@(SelectedNrcsPractices.Contains(code) ? Variant.Filled : Variant.Outlined)"
+                         OnClick="() => ToggleNrcsPractice(code)">
+                    @(code)
+                </MudChip>
+            }
+        </div>
+
+        <MudText Typo="Typo.subtitle2" Class="mb-2">@L["Map_Filter_FwsActions"]</MudText>
+        <div class="d-flex flex-wrap gap-1">
+            @foreach (var action in AvailableFwsActions)
+            {
+                var code = action;
+                <MudChip T="string"
+                         Color="@(SelectedFwsActions.Contains(code) ? Color.Secondary : Color.Default)"
+                         Variant="@(SelectedFwsActions.Contains(code) ? Variant.Filled : Variant.Outlined)"
+                         OnClick="() => ToggleFwsAction(code)">
+                    @(code)
+                </MudChip>
+            }
+        </div>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="HandleClearAll" Color="Color.Default">@L["Map_Filter_ClearAll"]</MudButton>
+        <MudButton OnClick="HandleApply" Color="Color.Primary" Variant="Variant.Filled">@L["Map_Filter_Apply"]</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [Parameter] public bool Visible { get; set; }
+    [Parameter] public EventCallback<bool> VisibleChanged { get; set; }
+    [Parameter] public IReadOnlyList<string> AvailableNrcsPractices { get; set; } = [];
+    [Parameter] public IReadOnlyList<string> AvailableFwsActions { get; set; } = [];
+    [Parameter] public IReadOnlyCollection<string> SelectedNrcsPractices { get; set; } = [];
+    [Parameter] public IReadOnlyCollection<string> SelectedFwsActions { get; set; } = [];
+    [Parameter] public EventCallback<string> OnToggleNrcsPractice { get; set; }
+    [Parameter] public EventCallback<string> OnToggleFwsAction { get; set; }
+    [Parameter] public EventCallback OnClearFilters { get; set; }
+
+    private Task ToggleNrcsPractice(string code) => OnToggleNrcsPractice.InvokeAsync(code);
+    private Task ToggleFwsAction(string code) => OnToggleFwsAction.InvokeAsync(code);
+    private Task HandleClearAll() => OnClearFilters.InvokeAsync();
+    private Task HandleApply() => VisibleChanged.InvokeAsync(false);
+}

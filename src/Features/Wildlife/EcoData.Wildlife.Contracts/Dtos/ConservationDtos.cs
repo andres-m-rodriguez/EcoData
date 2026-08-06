@@ -25,3 +25,9 @@ public sealed record FwsLinkDtoForDetail(
 public sealed record ConservationLinksDtoForSpecies(
     IReadOnlyList<FwsLinkDtoForDetail> Links
 );
+
+public sealed record SpeciesConservationCodesDto(
+    Guid SpeciesId,
+    IReadOnlyList<string> NrcsPracticeCodes,
+    IReadOnlyList<string> FwsActionCodes
+);

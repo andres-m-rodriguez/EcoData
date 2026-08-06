@@ -9,6 +9,17 @@
         <div class="msp-eyebrow">@L["Map_Panel_Eyebrow"]</div>
         <div class="msp-title">@(Title ?? "—")</div>
     </div>
+    @if (OnFilterClick.HasDelegate)
+    {
+        <button type="button" class="msp-filter @(ActiveFilterCount > 0 ? "active" : "")"
+                title="@L["Map_Filter_Label"]" @onclick="HandleFilterClick">
+            <MudIcon Icon="@Icons.Material.Filled.FilterAlt" Size="Size.Small" />
+            @if (ActiveFilterCount > 0)
+            {
+                <span class="msp-filter-count">@ActiveFilterCount</span>
+            }
+        </button>
+    }
     <button type="button" class="msp-close" @onclick="HandleClose" aria-label="@CloseLabel">
         <MudIcon Icon="@Icons.Material.Filled.Close" Size="Size.Small" />
     </button>
@@ -40,7 +51,16 @@ else if (Species is null || Species.Count == 0)
 }
 else
 {
-    <div class="msp-meta">@L["Map_Panel_SpeciesObserved", Species.Count]</div>
+    <div class="msp-meta">
+        @if (TotalCount is { } total && total != Species.Count)
+        {
+            @L["Map_Filter_Showing", Species.Count, total]
+        }
+        else
+        {
+            @L["Map_Panel_SpeciesObserved", Species.Count]
+        }
+    </div>
     <div class="msp-list">
         @{
             var idx = 0;
@@ -86,6 +106,9 @@ else
     [Parameter] public EventCallback OnClose { get; set; }
     [Parameter] public EventCallback<SpeciesDtoForList> OnSpeciesClick { get; set; }
     [Parameter] public EventCallback<SpeciesDtoForList> OnViewLocations { get; set; }
+    [Parameter] public EventCallback OnFilterClick { get; set; }
+    [Parameter] public int ActiveFilterCount { get; set; }
+    [Parameter] public int? TotalCount { get; set; }
 
     [CascadingParameter] public LocaleContext Locale { get; set; } = LocaleContext.English;
 
@@ -94,4 +117,5 @@ else
     private Task HandleClose() => OnClose.InvokeAsync();
     private Task HandleClick(SpeciesDtoForList s) => OnSpeciesClick.InvokeAsync(s);
     private Task HandleViewLocations(SpeciesDtoForList s) => OnViewLocations.InvokeAsync(s);
+    private Task HandleFilterClick() => OnFilterClick.InvokeAsync();
 }

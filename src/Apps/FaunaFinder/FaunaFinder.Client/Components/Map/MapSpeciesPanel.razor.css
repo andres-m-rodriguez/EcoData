@@ -30,6 +30,51 @@
     text-overflow: ellipsis;
 }
 
+.msp-filter {
+    position: relative;
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    border: 1px solid var(--fauna-line);
+    background: var(--fauna-surface);
+    color: var(--fauna-fg-3);
+    cursor: pointer;
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+    transition: background-color var(--fauna-t-base) var(--fauna-ease),
+                color var(--fauna-t-base) var(--fauna-ease);
+}
+
+.msp-filter:hover {
+    background: var(--fauna-bg-alt);
+    color: var(--fauna-fg);
+}
+
+.msp-filter.active {
+    color: var(--fauna-primary);
+    border-color: var(--fauna-primary);
+}
+
+.msp-filter ::deep .mud-icon-root {
+    font-size: 17px !important;
+    color: inherit;
+}
+
+.msp-filter-count {
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    min-width: 16px;
+    height: 16px;
+    padding: 0 4px;
+    border-radius: 8px;
+    background: var(--fauna-primary);
+    color: #fff;
+    font: 600 10px/16px var(--fauna-font-sans);
+    text-align: center;
+}
+
 .msp-close {
     width: 32px;
     height: 32px;

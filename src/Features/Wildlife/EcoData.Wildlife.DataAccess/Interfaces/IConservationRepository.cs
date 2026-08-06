@@ -8,6 +8,11 @@ public interface IConservationRepository
 
     Task<IReadOnlyList<NrcsPracticeDtoForList>> GetAllNrcsPracticesAsync(CancellationToken cancellationToken = default);
 
+    Task<IReadOnlyList<SpeciesConservationCodesDto>> GetCodesByMunicipalityAsync(
+        Guid municipalityId,
+        CancellationToken cancellationToken = default
+    );
+
     Task<ConservationLinksDtoForSpecies> GetLinksForSpeciesAsync(
         Guid speciesId,
         CancellationToken cancellationToken = default

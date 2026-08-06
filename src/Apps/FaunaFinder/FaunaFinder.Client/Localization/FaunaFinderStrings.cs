@@ -270,6 +270,13 @@ public static class FaunaFinderStrings
         ["Map_Geolocation_Unavailable"] = "Your location could not be determined. Please try again.",
         ["Map_Geolocation_Unsupported"] = "Your browser does not support geolocation.",
         ["Map_NoLocations_ForSpecies"] = "This species has no recorded locations yet.",
+        ["Map_Filter_Title"] = "Filters",
+        ["Map_Filter_Label"] = "Filter by conservation practice",
+        ["Map_Filter_NrcsPractices"] = "NRCS practices",
+        ["Map_Filter_FwsActions"] = "FWS actions",
+        ["Map_Filter_ClearAll"] = "Clear all",
+        ["Map_Filter_Apply"] = "Apply",
+        ["Map_Filter_Showing"] = "Showing {0} of {1} species",
     };
 
     // -------------------------------------------------------------------
@@ -506,5 +513,12 @@ public static class FaunaFinderStrings
         ["Map_Geolocation_Unavailable"] = "No se pudo determinar tu ubicación. Inténtalo de nuevo.",
         ["Map_Geolocation_Unsupported"] = "Tu navegador no es compatible con la geolocalización.",
         ["Map_NoLocations_ForSpecies"] = "Esta especie aún no tiene ubicaciones registradas.",
+        ["Map_Filter_Title"] = "Filtros",
+        ["Map_Filter_Label"] = "Filtrar por práctica de conservación",
+        ["Map_Filter_NrcsPractices"] = "Prácticas NRCS",
+        ["Map_Filter_FwsActions"] = "Acciones FWS",
+        ["Map_Filter_ClearAll"] = "Limpiar todo",
+        ["Map_Filter_Apply"] = "Aplicar",
+        ["Map_Filter_Showing"] = "Mostrando {0} de {1} especies",
     };
 }

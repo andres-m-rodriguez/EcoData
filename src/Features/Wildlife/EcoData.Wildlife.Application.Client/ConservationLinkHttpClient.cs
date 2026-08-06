@@ -29,4 +29,18 @@ public sealed class ConservationLinkHttpClient(HttpClient httpClient) : IConserv
             return new RequestFailed(0, e.Message);
         }
     }
+
+    public async Task<IReadOnlyList<SpeciesConservationCodesDto>> GetCodesByMunicipalityAsync(
+        Guid municipalityId,
+        CancellationToken ct = default)
+    {
+        var response = await httpClient.GetAsync(
+            $"wildlife/conservation-links/codes-by-municipality/{municipalityId}",
+            ct);
+
+        if (!response.IsSuccessStatusCode)
+            return [];
+
+        return await response.Content.ReadFromJsonAsync<IReadOnlyList<SpeciesConservationCodesDto>>(ct) ?? [];
+    }
 }

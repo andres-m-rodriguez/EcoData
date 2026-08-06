@@ -9,6 +9,7 @@
 @inherits StatefulComponent
 @inject IMunicipalityHttpClient MunicipalityHttpClient
 @inject ISpeciesHttpClient SpeciesHttpClient
+@inject IConservationLinkHttpClient ConservationLinkHttpClient
 @inject NavigationManager NavigationManager
 @inject ISnackbar Snackbar
 @inject ILocalizer L
@@ -102,6 +103,16 @@
             </div>
         }
 
+        @* Conservation practice filter for the municipality panel *@
+        <MapConservationFilterDialog @bind-Visible="_filterDialogVisible"
+                                     AvailableNrcsPractices="@AvailableNrcsPractices"
+                                     AvailableFwsActions="@AvailableFwsActions"
+                                     SelectedNrcsPractices="@_selectedNrcsPractices"
+                                     SelectedFwsActions="@_selectedFwsActions"
+                                     OnToggleNrcsPractice="ToggleNrcsPractice"
+                                     OnToggleFwsAction="ToggleFwsAction"
+                                     OnClearFilters="ClearConservationFilters" />
+
         @* Species location navigator *@
         @if (_viewingSpecies is not null)
         {
@@ -123,8 +134,11 @@
                 {
                     <MapSpeciesPanel Title="@_selectedMunicipality.Name"
                                      IsLoading="@(LoadSpeciesState.Result is null || LoadSpeciesState.IsLoading)"
-                                     Species="@LoadSpeciesState.Result"
+                                     Species="@FilteredSpecies"
                                      LoadError="@_speciesLoadError"
+                                     TotalCount="@LoadSpeciesState.Result?.Count"
+                                     ActiveFilterCount="@ActiveFilterCount"
+                                     OnFilterClick="OpenFilterDialog"
                                      OnClose="CloseSidebar"
                                      OnSpeciesClick="OnSpeciesClicked"
                                      OnViewLocations="ViewSpeciesLocations" />
@@ -153,8 +167,11 @@
                 {
                     <MapSpeciesPanel Title="@_selectedMunicipality.Name"
                                      IsLoading="@(LoadSpeciesState.Result is null || LoadSpeciesState.IsLoading)"
-                                     Species="@LoadSpeciesState.Result"
+                                     Species="@FilteredSpecies"
                                      LoadError="@_speciesLoadError"
+                                     TotalCount="@LoadSpeciesState.Result?.Count"
+                                     ActiveFilterCount="@ActiveFilterCount"
+                                     OnFilterClick="OpenFilterDialog"
                                      OnClose="CloseSheet"
                                      OnSpeciesClick="OnSpeciesClicked"
                                      OnViewLocations="ViewSpeciesLocations" />
@@ -289,12 +306,14 @@
     {
         ClearAreaSearch();
         CloseSpeciesLocations();
+        ClearConservationFilters();
 
         _selectedMunicipality = municipality;
         _sidebarOpen = true;
         _sheetOpen = true;
         StateHasChanged();
 
+        _ = LoadConservationCodesState.TryExecute();
         await LoadSpeciesState.TryExecute();
     }
 
@@ -314,6 +333,78 @@
     }
 
     private sealed record SelectedMunicipality(Guid Id, string Name);
+
+    // ===== Conservation practice filter (municipality panel) =====
+
+    private bool _filterDialogVisible;
+    private readonly HashSet<string> _selectedNrcsPractices = [];
+    private readonly HashSet<string> _selectedFwsActions = [];
+
+    [Command]
+    private async Task<IReadOnlyList<SpeciesConservationCodesDto>?> LoadConservationCodes(CancellationToken ct) =>
+        await ConservationLinkHttpClient.GetCodesByMunicipalityAsync(_selectedMunicipality!.Id, ct);
+
+    private IReadOnlyList<string> AvailableNrcsPractices =>
+        (LoadConservationCodesState.Result ?? [])
+            .SelectMany(c => c.NrcsPracticeCodes)
+            .Distinct()
+            .Order()
+            .ToList();
+
+    private IReadOnlyList<string> AvailableFwsActions =>
+        (LoadConservationCodesState.Result ?? [])
+            .SelectMany(c => c.FwsActionCodes)
+            .Distinct()
+            .Order()
+            .ToList();
+
+    private int ActiveFilterCount => _selectedNrcsPractices.Count + _selectedFwsActions.Count;
+
+    private IReadOnlyList<SpeciesDtoForList>? FilteredSpecies
+    {
+        get
+        {
+            var species = LoadSpeciesState.Result;
+            if (species is null || ActiveFilterCount == 0)
+                return species;
+
+            var codes = (LoadConservationCodesState.Result ?? [])
+                .ToDictionary(c => c.SpeciesId);
+
+            return species
+                .Where(s =>
+                    codes.TryGetValue(s.Id, out var c)
+                    && (_selectedNrcsPractices.Count == 0
+                        || c.NrcsPracticeCodes.Any(_selectedNrcsPractices.Contains))
+                    && (_selectedFwsActions.Count == 0
+                        || c.FwsActionCodes.Any(_selectedFwsActions.Contains)))
+                .ToList();
+        }
+    }
+
+    private void OpenFilterDialog() => _filterDialogVisible = true;
+
+    private void ToggleNrcsPractice(string code)
+    {
+        if (!_selectedNrcsPractices.Remove(code))
+        {
+            _selectedNrcsPractices.Add(code);
+        }
+    }
+
+    private void ToggleFwsAction(string code)
+    {
+        if (!_selectedFwsActions.Remove(code))
+        {
+            _selectedFwsActions.Add(code);
+        }
+    }
+
+    private void ClearConservationFilters()
+    {
+        _selectedNrcsPractices.Clear();
+        _selectedFwsActions.Clear();
+    }
 
     // ===== Species near me =====
 
