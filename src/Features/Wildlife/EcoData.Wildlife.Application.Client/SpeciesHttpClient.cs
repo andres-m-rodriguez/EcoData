@@ -215,7 +215,7 @@ public sealed class SpeciesHttpClient(HttpClient httpClient) : ISpeciesHttpClien
         }
     }
 
-    public async Task<IReadOnlyList<SpeciesNearbyDto>> GetNearbyAsync(
+    public async Task<OneOf<IReadOnlyList<SpeciesNearbyDto>, RequestFailed>> GetNearbyAsync(
         double latitude,
         double longitude,
         double radiusMeters,
@@ -227,37 +227,71 @@ public sealed class SpeciesHttpClient(HttpClient httpClient) : ISpeciesHttpClien
             .Add("radiusMeters", radiusMeters.ToString(CultureInfo.InvariantCulture))
             .Build();
 
-        var response = await httpClient.GetAsync($"wildlife/species/nearby{query}", ct);
-
-        if (!response.IsSuccessStatusCode)
-            return [];
-
-        return await response.Content.ReadFromJsonAsync<IReadOnlyList<SpeciesNearbyDto>>(ct) ?? [];
+        try
+        {
+            var response = await httpClient.GetAsync($"wildlife/species/nearby{query}", ct);
+            if (!response.IsSuccessStatusCode)
+            {
+                var problem = await ProblemDetailsParser.ParseAsync(response, ct);
+                return new RequestFailed((int)response.StatusCode, problem?.Detail ?? problem?.Title);
+            }
+            var species = await response.Content.ReadFromJsonAsync<IReadOnlyList<SpeciesNearbyDto>>(ct);
+            if (species is null)
+                return new RequestFailed((int)response.StatusCode, "The server returned an empty response.");
+            return OneOf<IReadOnlyList<SpeciesNearbyDto>, RequestFailed>.FromT0(species);
+        }
+        catch (HttpRequestException e)
+        {
+            return new RequestFailed(0, e.Message);
+        }
     }
 
-    public async Task<IReadOnlyList<SpeciesNearbyDto>> GetInPolygonAsync(
+    public async Task<OneOf<IReadOnlyList<SpeciesNearbyDto>, RequestFailed>> GetInPolygonAsync(
         IReadOnlyList<PolygonCoordinate> coordinates,
         CancellationToken ct = default)
     {
-        var response = await httpClient.PostAsJsonAsync(
-            "wildlife/species/in-polygon",
-            new PolygonSearchParameters(coordinates),
-            ct);
-
-        if (!response.IsSuccessStatusCode)
-            return [];
-
-        return await response.Content.ReadFromJsonAsync<IReadOnlyList<SpeciesNearbyDto>>(ct) ?? [];
+        try
+        {
+            var response = await httpClient.PostAsJsonAsync(
+                "wildlife/species/in-polygon",
+                new PolygonSearchParameters(coordinates),
+                ct);
+            if (!response.IsSuccessStatusCode)
+            {
+                var problem = await ProblemDetailsParser.ParseAsync(response, ct);
+                return new RequestFailed((int)response.StatusCode, problem?.Detail ?? problem?.Title);
+            }
+            var species = await response.Content.ReadFromJsonAsync<IReadOnlyList<SpeciesNearbyDto>>(ct);
+            if (species is null)
+                return new RequestFailed((int)response.StatusCode, "The server returned an empty response.");
+            return OneOf<IReadOnlyList<SpeciesNearbyDto>, RequestFailed>.FromT0(species);
+        }
+        catch (HttpRequestException e)
+        {
+            return new RequestFailed(0, e.Message);
+        }
     }
 
-    public async Task<IReadOnlyList<HeatmapPointDto>> GetHeatmapAsync(CancellationToken ct = default)
+    public async Task<OneOf<IReadOnlyList<HeatmapPointDto>, RequestFailed>> GetHeatmapAsync(
+        CancellationToken ct = default)
     {
-        var response = await httpClient.GetAsync("wildlife/species/heatmap", ct);
-
-        if (!response.IsSuccessStatusCode)
-            return [];
-
-        return await response.Content.ReadFromJsonAsync<IReadOnlyList<HeatmapPointDto>>(ct) ?? [];
+        try
+        {
+            var response = await httpClient.GetAsync("wildlife/species/heatmap", ct);
+            if (!response.IsSuccessStatusCode)
+            {
+                var problem = await ProblemDetailsParser.ParseAsync(response, ct);
+                return new RequestFailed((int)response.StatusCode, problem?.Detail ?? problem?.Title);
+            }
+            var points = await response.Content.ReadFromJsonAsync<IReadOnlyList<HeatmapPointDto>>(ct);
+            if (points is null)
+                return new RequestFailed((int)response.StatusCode, "The server returned an empty response.");
+            return OneOf<IReadOnlyList<HeatmapPointDto>, RequestFailed>.FromT0(points);
+        }
+        catch (HttpRequestException e)
+        {
+            return new RequestFailed(0, e.Message);
+        }
     }
 
     private static string BuildListQueryString(SpeciesParameters parameters, bool includePageSize)

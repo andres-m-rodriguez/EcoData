@@ -5,7 +5,9 @@
 @using EcoData.Wildlife.Application.Client
 @using EcoData.Wildlife.Contracts.Dtos
 @using EcoData.Wildlife.Contracts.Parameters
+@using EcoData.Common.Problems.Contracts
 @using FaunaFinder.Client.Components.Map
+@using OneOf
 @inherits StatefulComponent
 @inject IMunicipalityHttpClient MunicipalityHttpClient
 @inject ISpeciesHttpClient SpeciesHttpClient
@@ -345,8 +347,12 @@
     private readonly HashSet<string> _selectedFwsActions = [];
 
     [Command]
-    private async Task<IReadOnlyList<SpeciesConservationCodesDto>?> LoadConservationCodes(CancellationToken ct) =>
-        await ConservationLinkHttpClient.GetCodesByMunicipalityAsync(_selectedMunicipality!.Id, ct);
+    private async Task<IReadOnlyList<SpeciesConservationCodesDto>?> LoadConservationCodes(CancellationToken ct)
+    {
+        var result = await ConservationLinkHttpClient.GetCodesByMunicipalityAsync(_selectedMunicipality!.Id, ct);
+        // Filter options are a background enhancement; a failure just leaves them empty.
+        return result.TryPickT0(out var codes, out _) ? codes : [];
+    }
 
     private IReadOnlyList<string> AvailableNrcsPractices =>
         (LoadConservationCodesState.Result ?? [])
@@ -445,6 +451,11 @@
         }
     }
 
+    private static string ErrorMessage(RequestFailed error, string fallback) =>
+        error.StatusCode == 0
+            ? "Couldn't reach the server."
+            : error.Message ?? fallback;
+
     private static string GeolocationErrorKey(string? error) => error switch
     {
         "denied" => "Map_Geolocation_Denied",
@@ -503,15 +514,24 @@
     // ===== Shared area search =====
 
     [Command]
-    private async Task<IReadOnlyList<SpeciesNearbyDto>?> SearchArea(CancellationToken ct) =>
-        _searchMode switch
+    private async Task<IReadOnlyList<SpeciesNearbyDto>?> SearchArea(CancellationToken ct)
+    {
+        OneOf<IReadOnlyList<SpeciesNearbyDto>, RequestFailed> result = _searchMode switch
         {
             AreaSearchMode.NearMe when _searchOrigin is { } origin =>
                 await SpeciesHttpClient.GetNearbyAsync(origin.Latitude, origin.Longitude, NearMeRadiusMeters, ct),
             AreaSearchMode.DrawnArea when _polygonCoordinates is { } polygon =>
                 await SpeciesHttpClient.GetInPolygonAsync(polygon, ct),
-            _ => [],
+            _ => OneOf<IReadOnlyList<SpeciesNearbyDto>, RequestFailed>.FromT0([]),
         };
+
+        if (!result.TryPickT0(out var species, out var error))
+        {
+            Snackbar.Add(ErrorMessage(error, "Something went wrong while searching the area."), Severity.Error);
+            return [];
+        }
+        return species;
+    }
 
     private void ShowNearbyCircles(IReadOnlyList<SpeciesNearbyDto>? results)
     {
@@ -587,8 +607,16 @@
     // ===== Heatmap =====
 
     [Command]
-    private async Task<IReadOnlyList<HeatmapPointDto>?> LoadHeatmap(CancellationToken ct) =>
-        await SpeciesHttpClient.GetHeatmapAsync(ct);
+    private async Task<IReadOnlyList<HeatmapPointDto>?> LoadHeatmap(CancellationToken ct)
+    {
+        var result = await SpeciesHttpClient.GetHeatmapAsync(ct);
+        if (!result.TryPickT0(out var points, out var error))
+        {
+            Snackbar.Add(ErrorMessage(error, "Something went wrong while loading the heatmap."), Severity.Error);
+            return [];
+        }
+        return points;
+    }
 
     private async Task ToggleHeatmap()
     {
@@ -618,8 +646,16 @@
     // ===== Species location viewing =====
 
     [Command]
-    private async Task<SpeciesDtoForDetail?> LoadSpeciesLocations(CancellationToken ct) =>
-        await SpeciesHttpClient.GetByIdAsync(_viewingSpeciesId, ct);
+    private async Task<SpeciesDtoForDetail?> LoadSpeciesLocations(CancellationToken ct)
+    {
+        var result = await SpeciesHttpClient.GetByIdAsync(_viewingSpeciesId, ct);
+        if (!result.TryPickT0(out var detail, out var error))
+        {
+            Snackbar.Add(ErrorMessage(error, "Something went wrong while loading species locations."), Severity.Error);
+            return null;
+        }
+        return detail;
+    }
 
     private async Task ViewSpeciesLocations(SpeciesDtoForList species)
     {
