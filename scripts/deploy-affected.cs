@@ -89,7 +89,13 @@ return 0;
 static string? GetArg(string[] args, string name)
 {
     var index = Array.IndexOf(args, name);
-    return index >= 0 && index < args.Length - 1 ? args[index + 1] : null;
+    if (index < 0 || index >= args.Length - 1)
+        return null;
+
+    // An empty value (e.g. github.event.before on a manual dispatch) collapses
+    // during shell word splitting, leaving the next flag as this flag's value.
+    var value = args[index + 1];
+    return value.StartsWith("--") ? null : value;
 }
 
 static string FindRepoRoot(string path)

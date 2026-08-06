@@ -3,6 +3,11 @@ name: Deploy to Azure
 
 on:
   workflow_dispatch:
+    inputs:
+      from:
+        description: "Git ref to diff against when picking affected services (default: previous commit)"
+        required: false
+        type: string
   push:
     branches:
       - master
@@ -62,4 +67,10 @@ jobs:
           Parameters__jwt-sensor-secret-key: ${{ secrets.JWT_SENSOR_SECRET_KEY }}
           Parameters__customDomain: ${{ vars.CUSTOM_DOMAIN }}
           Parameters__certificateName: ${{ vars.CERTIFICATE_NAME }}
-        run: dotnet run scripts/deploy-affected.cs -- --from ${{ github.event.before }} --to ${{ github.sha }}
+          # Empty on a manual dispatch, where there is no previous-push ref.
+          DEPLOY_FROM: ${{ inputs.from || github.event.before }}
+          DEPLOY_TO: ${{ github.sha }}
+        run: |
+          dotnet run scripts/deploy-affected.cs -- \
+            --from "${DEPLOY_FROM:-HEAD~1}" \
+            --to "$DEPLOY_TO"
