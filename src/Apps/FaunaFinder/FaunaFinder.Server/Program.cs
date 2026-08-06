@@ -7,6 +7,7 @@ using EcoData.Wildlife.DataAccess;
 using EcoData.Wildlife.Database.Extensions;
 using FaunaFinder.Server.Components;
 using MudBlazor.Services;
+using Tempest;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -16,6 +17,7 @@ builder.AddWildlifeDatabase();
 
 builder.Services.AddRazorComponents().AddInteractiveWebAssemblyComponents();
 builder.Services.AddMudServices();
+builder.Services.AddTempest();
 builder.Services.AddLocationsDataAccess();
 builder.Services.AddWildlifeDataAccess(builder.Configuration);
 

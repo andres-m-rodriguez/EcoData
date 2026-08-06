@@ -79,7 +79,7 @@ Per `feedback_loading_state.md`: every component uses `IFetch<T>` (single resour
 - Rewrite Species list view with `EcoDataVirtualizedList<SpeciesDtoForList, SpeciesParameters>`.
 - `CategoryChipRow` (fetches `/wildlife/species-categories` once) driving CategoryId.
 - NuiSearchBar + filter button → `SpeciesFilterDialog` for fauna/flora.
-- Signal-driven refresh (`BlazingSingularity.Signals`) matching `SensorList` pattern.
+- Reactive refresh (Tempest.Blazor `[Reactive]`/`[OnChanged]`) matching `SensorList` pattern.
 
 **Phase 3 — `/species/{id}` detail**
 - Add `GET /locations/municipalities/by-ids` endpoint + client method.

@@ -17,7 +17,7 @@
 
 @if (Id is not null)
 {
-    <NuiPageLayout Title="@LoadDetailState.Result?.Name" ParentPath="/municipalities">
+    <NuiPageLayout Title="@(LoadDetailState.IsLoading ? null : LoadDetailState.Result?.Name)" ParentPath="/municipalities">
         @if (_detailLoadError is not null)
         {
             <MudAlert Severity="Severity.Error">@_detailLoadError</MudAlert>
@@ -177,6 +177,7 @@ else
         {
             if (_loadedDetailId == id) return;
             _loadedDetailId = id;
+            _detailLoadError = null;
 
             await Task.WhenAll(
                 LoadDetailState.TryExecute(),

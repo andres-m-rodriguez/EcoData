@@ -184,7 +184,7 @@ Ranking: Organization best; Sensors richest/least consistent; Identity good-inte
 ## 6. Reactivity / state management
 
 ### Packages
-Both clients: **BlazingSingularity 1.0.0-beta.5** (beta.6 restored locally, never adopted) + MudBlazor 9.1.0. EcoPortal adds `BlazorStaticNavigation`, auth packages, `IMemoryCache`.
+Both clients: **the former reactivity package at 1.0.0-beta.5** (its beta.6 restored locally, never adopted; both clients have since migrated to Tempest.Blazor) + MudBlazor 9.1.0. EcoPortal adds `BlazorStaticNavigation`, auth packages, `IMemoryCache`.
 
 **The sharpest finding**: both apps use disjoint subsets of the same package. FaunaFinder uses only `Fetch<T>`; EcoPortal uses all four mechanisms (`Fetch<T>`, `BackgroundFetch<T>` — one site, `[RelayCommand]`, `[Signal]`). `[Signal]` is a second, parallel reactivity system: `Signal<T>` objects passed **by reference as component parameters**, mutated by the child, observed by the parent via `OnChange` — inverting Blazor's `EventCallback` flow.
 
@@ -215,5 +215,5 @@ Four loading conventions coexist: `Fetch.IsLoading` tri-state (`_fetch?.IsLoadin
 2. **Docs are aspirational, not authoritative.** Every dimension has documented rules the code contradicts (no-custom-CSS vs 7,330 LOC; no-Include vs 2; Application.Server-as-logic-layer vs interface bags/stubs; "never DB from endpoints" vs GeoTestEndpoints; stale system-design diagram). Nothing states Harmony's meta-rule that docs win and code gets fixed.
 3. **Abstractions are built speculatively, then bypassed.** Result monad (0 users), ValidationProblemDetail (0 users), messaging command/handler layer (0 users), SseEventTypes (orphaned), per-feature error records (~85% unused), LocalizedComponentBase (written to kill a pattern that then continued alongside it).
 4. **Duplication here is unmanaged fork-drift, not Harmony's deliberate duplication**: three virtualized lists, two map stacks, two search bars, two layouts, two themes, two app.css files, duplicated per-feature CommonErrors — each pair diverging silently.
-5. **The two apps are two architectures** sharing packages: MudBlazor-first vs token-CSS-first; feature-sliced vs type-first; 31 pages vs 4 mega-pages; disjoint shared-library and BlazingSingularity subsets.
+5. **The two apps are two architectures** sharing packages: MudBlazor-first vs token-CSS-first; feature-sliced vs type-first; 31 pages vs 4 mega-pages; disjoint shared-library and reactivity-package subsets.
 6. Tests exist (integration tests for Auth/Municipality/Organization/Sensors) but bypass the very registration conventions they should exercise; Wildlife/FaunaFinder have zero coverage.

@@ -23,6 +23,7 @@ using EcoPortal.Server.Components;
 using EcoPortal.Server.Services;
 using EcoPortal.Server.Workers;
 using MudBlazor.Services;
+using Tempest;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -37,6 +38,7 @@ builder.Services.AddRazorComponents().AddInteractiveWebAssemblyComponents().AddA
 builder.Services.AddCascadingAuthenticationState();
 
 builder.Services.AddMudServices();
+builder.Services.AddTempest();
 builder.Services.AddIdentityDataAccess();
 builder.Services.AddIdentityApplication(builder.Configuration);
 builder.Services.AddLocationsDataAccess();

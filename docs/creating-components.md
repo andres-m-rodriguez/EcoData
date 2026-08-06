@@ -164,13 +164,13 @@ When the user navigates away or changes filters, cancel the previous request. Us
 
 Don't reach for global state unless you need it. Component-level state is simpler and easier to reason about.
 
-### Use Signals for Reactive Updates
+### Use Reactive State for Reactive Updates
 
-When state changes need to trigger re-renders automatically, use `[Signal]` attributes. This is cleaner than manual `StateHasChanged()` calls.
+When state changes need to trigger re-renders automatically, use Tempest.Blazor's `[Reactive]` attribute (with `[OnChanged]` handlers for side effects, and `ReactiveState<T>` for reactive parameters). This is cleaner than manual `StateHasChanged()` calls.
 
-### Use RelayCommand for Async Actions
+### Use Commands for Async Actions
 
-For buttons that trigger async operations, use `[RelayCommand]`. It handles loading states and prevents double-clicks automatically.
+For buttons that trigger async operations, use Tempest.Blazor's `[Command]`. The generated `XxxState` exposes `Execute()`/`TryExecute()`, `IsLoading`, and `IsError`, so loading states and double-click prevention come for free. Commands take no parameters — stage inputs in fields before executing. For load-on-navigation data, use `[Command, RunOnLoad]` on a `Task<T?>` method and render from `LoadState.Result`.
 
 ---
 

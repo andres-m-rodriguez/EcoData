@@ -19,7 +19,7 @@
 
 @if (Id is not null)
 {
-    <NuiPageLayout Title="@LoadDetailState.Result?.ScientificName" ParentPath="/species">
+    <NuiPageLayout Title="@(LoadDetailState.IsLoading ? null : LoadDetailState.Result?.ScientificName)" ParentPath="/species">
         @if (_detailLoadError is not null)
         {
             <MudAlert Severity="Severity.Error">@_detailLoadError</MudAlert>
@@ -154,6 +154,7 @@ else
         {
             if (_loadedDetailId == id) return;
             _loadedDetailId = id;
+            _detailLoadError = null;
 
             await LoadDetailState.TryExecute();
             if (LoadDetailState.Result is not null)
