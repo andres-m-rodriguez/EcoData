@@ -76,8 +76,11 @@ export function setGeoJson(map, layers) {
                     weight: layer.strokeWidth
                 },
                 onEachFeature: (feature, leafletLayer) => {
-                    // GeoJSON feature click handler
+                    // GeoJSON feature click handler. While drawing a polygon the
+                    // click must bubble to the map's draw handler instead, so the
+                    // feature neither swallows the vertex placement nor selects.
                     leafletLayer.on('click', (e) => {
+                        if (map._nuiDraw.active) return;
                         L.DomEvent.stopPropagation(e);
                         if (map._dotNetRef) {
                             const properties = feature.properties

@@ -276,6 +276,10 @@
 
     private async void OnGeoJsonClicked(string layerId, string? properties)
     {
+        // JS suppresses these in draw mode; this also covers the interop gap
+        // between StartDrawArea and the map actually entering draw mode.
+        if (_isDrawing) return;
+
         if (layerId != "municipalities" || string.IsNullOrEmpty(properties))
             return;
 
