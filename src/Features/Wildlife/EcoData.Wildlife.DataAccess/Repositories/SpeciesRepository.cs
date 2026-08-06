@@ -1,4 +1,5 @@
 using System.Runtime.CompilerServices;
+using EcoData.Common.i18n;
 using EcoData.Wildlife.Contracts;
 using EcoData.Wildlife.Contracts.Dtos;
 using EcoData.Wildlife.Contracts.Parameters;
@@ -47,9 +48,230 @@ public sealed class SpeciesRepository(
                 s.IsEndemic,
                 s.IucnStatus,
                 s.Habitat,
-                s.LastObservedAtUtc
+                s.LastObservedAtUtc,
+                s.Locations
+                    .Select(l => new SpeciesLocationDto(
+                        l.Id,
+                        l.Latitude,
+                        l.Longitude,
+                        l.RadiusMeters,
+                        l.Description
+                    ))
+                    .ToList()
             ))
             .FirstOrDefaultAsync(cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<SpeciesNearbyDto>> GetNearbyAsync(
+        double latitude,
+        double longitude,
+        double radiusMeters,
+        CancellationToken cancellationToken = default
+    )
+    {
+        await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
+
+        // The occurrence set is small (a few hundred circles), so distances are
+        // computed in memory rather than pushing PostGIS geography into the model.
+        var speciesWithLocations = await QuerySpeciesWithLocations(context)
+            .ToListAsync(cancellationToken);
+
+        var results = new List<SpeciesNearbyDto>();
+
+        foreach (var species in speciesWithLocations)
+        {
+            foreach (var location in species.Locations)
+            {
+                var distance = HaversineDistanceMeters(
+                    latitude,
+                    longitude,
+                    location.Latitude,
+                    location.Longitude
+                );
+
+                // The occurrence is a circle; match when its edge falls inside the search radius.
+                var effectiveDistance = Math.Max(0, distance - location.RadiusMeters);
+                if (effectiveDistance <= radiusMeters)
+                {
+                    results.Add(
+                        new SpeciesNearbyDto(
+                            species.Id,
+                            species.CommonName,
+                            species.ScientificName,
+                            species.IsFauna,
+                            distance,
+                            location.Latitude,
+                            location.Longitude,
+                            location.RadiusMeters,
+                            location.Description
+                        )
+                    );
+                }
+            }
+        }
+
+        return ClosestLocationPerSpecies(results);
+    }
+
+    public async Task<IReadOnlyList<SpeciesNearbyDto>> GetInPolygonAsync(
+        IReadOnlyList<PolygonCoordinate> coordinates,
+        CancellationToken cancellationToken = default
+    )
+    {
+        if (coordinates.Count < 3)
+            return [];
+
+        await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
+
+        var speciesWithLocations = await QuerySpeciesWithLocations(context)
+            .ToListAsync(cancellationToken);
+
+        var centroidLat = coordinates.Average(c => c.Latitude);
+        var centroidLng = coordinates.Average(c => c.Longitude);
+
+        var results = new List<SpeciesNearbyDto>();
+
+        foreach (var species in speciesWithLocations)
+        {
+            foreach (var location in species.Locations)
+            {
+                if (!IsPointInPolygon(location.Latitude, location.Longitude, coordinates))
+                    continue;
+
+                var distance = HaversineDistanceMeters(
+                    centroidLat,
+                    centroidLng,
+                    location.Latitude,
+                    location.Longitude
+                );
+
+                results.Add(
+                    new SpeciesNearbyDto(
+                        species.Id,
+                        species.CommonName,
+                        species.ScientificName,
+                        species.IsFauna,
+                        distance,
+                        location.Latitude,
+                        location.Longitude,
+                        location.RadiusMeters,
+                        location.Description
+                    )
+                );
+            }
+        }
+
+        return ClosestLocationPerSpecies(results);
+    }
+
+    public async Task<IReadOnlyList<HeatmapPointDto>> GetHeatmapAsync(
+        CancellationToken cancellationToken = default
+    )
+    {
+        await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
+
+        return await context
+            .Species.AsNoTracking()
+            .Where(s => s.Locations.Any())
+            .SelectMany(s => s.Locations.Select(l => new HeatmapPointDto(
+                l.Latitude,
+                l.Longitude,
+                1.0,
+                s.IsFauna
+            )))
+            .ToListAsync(cancellationToken);
+    }
+
+    private static IQueryable<SpeciesLocationsProjection> QuerySpeciesWithLocations(
+        WildlifeDbContext context
+    ) =>
+        context
+            .Species.AsNoTracking()
+            .Where(s => s.Locations.Any())
+            .Select(s => new SpeciesLocationsProjection(
+                s.Id,
+                s.CommonName,
+                s.ScientificName,
+                s.IsFauna,
+                s.Locations
+                    .Select(l => new SpeciesLocationDto(
+                        l.Id,
+                        l.Latitude,
+                        l.Longitude,
+                        l.RadiusMeters,
+                        l.Description
+                    ))
+                    .ToList()
+            ));
+
+    private sealed record SpeciesLocationsProjection(
+        Guid Id,
+        List<LocaleValue> CommonName,
+        string ScientificName,
+        bool IsFauna,
+        List<SpeciesLocationDto> Locations
+    );
+
+    private static IReadOnlyList<SpeciesNearbyDto> ClosestLocationPerSpecies(
+        List<SpeciesNearbyDto> results
+    ) =>
+        results
+            .GroupBy(r => r.Id)
+            .Select(g => g.OrderBy(r => r.DistanceMeters).First())
+            .OrderBy(r => r.DistanceMeters)
+            .ToList();
+
+    private static double HaversineDistanceMeters(
+        double lat1,
+        double lon1,
+        double lat2,
+        double lon2
+    )
+    {
+        const double EarthRadiusMeters = 6371000;
+
+        var dLat = DegreesToRadians(lat2 - lat1);
+        var dLon = DegreesToRadians(lon2 - lon1);
+
+        var a =
+            Math.Sin(dLat / 2) * Math.Sin(dLat / 2)
+            + Math.Cos(DegreesToRadians(lat1))
+                * Math.Cos(DegreesToRadians(lat2))
+                * Math.Sin(dLon / 2)
+                * Math.Sin(dLon / 2);
+
+        var c = 2 * Math.Atan2(Math.Sqrt(a), Math.Sqrt(1 - a));
+
+        return EarthRadiusMeters * c;
+    }
+
+    private static double DegreesToRadians(double degrees) => degrees * Math.PI / 180;
+
+    private static bool IsPointInPolygon(
+        double latitude,
+        double longitude,
+        IReadOnlyList<PolygonCoordinate> polygon
+    )
+    {
+        // Ray casting: count edge crossings of a horizontal ray from the point.
+        var inside = false;
+        var j = polygon.Count - 1;
+
+        for (var i = 0; i < polygon.Count; j = i++)
+        {
+            var xi = polygon[i].Longitude;
+            var yi = polygon[i].Latitude;
+            var xj = polygon[j].Longitude;
+            var yj = polygon[j].Latitude;
+
+            if (((yi > latitude) != (yj > latitude)) &&
+                (longitude < (xj - xi) * (latitude - yi) / (yj - yi) + xi))
+            {
+                inside = !inside;
+            }
+        }
+
+        return inside;
     }
 
     public async IAsyncEnumerable<SpeciesDtoForList> GetSpeciesAsync(

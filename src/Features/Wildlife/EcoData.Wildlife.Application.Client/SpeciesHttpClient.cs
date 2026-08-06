@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Net.Http.Json;
 using EcoData.Common.Http.Helpers;
 using EcoData.Common.Problems.Contracts;
@@ -212,6 +213,51 @@ public sealed class SpeciesHttpClient(HttpClient httpClient) : ISpeciesHttpClien
         {
             return new RequestFailed(0, e.Message);
         }
+    }
+
+    public async Task<IReadOnlyList<SpeciesNearbyDto>> GetNearbyAsync(
+        double latitude,
+        double longitude,
+        double radiusMeters,
+        CancellationToken ct = default)
+    {
+        var query = new QueryStringBuilder()
+            .Add("latitude", latitude.ToString(CultureInfo.InvariantCulture))
+            .Add("longitude", longitude.ToString(CultureInfo.InvariantCulture))
+            .Add("radiusMeters", radiusMeters.ToString(CultureInfo.InvariantCulture))
+            .Build();
+
+        var response = await httpClient.GetAsync($"wildlife/species/nearby{query}", ct);
+
+        if (!response.IsSuccessStatusCode)
+            return [];
+
+        return await response.Content.ReadFromJsonAsync<IReadOnlyList<SpeciesNearbyDto>>(ct) ?? [];
+    }
+
+    public async Task<IReadOnlyList<SpeciesNearbyDto>> GetInPolygonAsync(
+        IReadOnlyList<PolygonCoordinate> coordinates,
+        CancellationToken ct = default)
+    {
+        var response = await httpClient.PostAsJsonAsync(
+            "wildlife/species/in-polygon",
+            new PolygonSearchParameters(coordinates),
+            ct);
+
+        if (!response.IsSuccessStatusCode)
+            return [];
+
+        return await response.Content.ReadFromJsonAsync<IReadOnlyList<SpeciesNearbyDto>>(ct) ?? [];
+    }
+
+    public async Task<IReadOnlyList<HeatmapPointDto>> GetHeatmapAsync(CancellationToken ct = default)
+    {
+        var response = await httpClient.GetAsync("wildlife/species/heatmap", ct);
+
+        if (!response.IsSuccessStatusCode)
+            return [];
+
+        return await response.Content.ReadFromJsonAsync<IReadOnlyList<HeatmapPointDto>>(ct) ?? [];
     }
 
     private static string BuildListQueryString(SpeciesParameters parameters, bool includePageSize)

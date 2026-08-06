@@ -604,6 +604,33 @@ public sealed class DatabaseSeederWorker(
                 }
             }
 
+            // Occurrence locations (seeded once; existing rows are left untouched)
+            if (dto.Locations is { Count: > 0 })
+            {
+                var hasLocations = await context.SpeciesLocations.AnyAsync(
+                    l => l.SpeciesId == species.Id,
+                    stoppingToken
+                );
+
+                if (!hasLocations)
+                {
+                    foreach (var location in dto.Locations)
+                    {
+                        context.SpeciesLocations.Add(
+                            new SpeciesLocation
+                            {
+                                Id = Guid.CreateVersion7(),
+                                SpeciesId = species.Id,
+                                Latitude = location.Latitude,
+                                Longitude = location.Longitude,
+                                RadiusMeters = location.RadiusMeters,
+                                Description = location.Description,
+                            }
+                        );
+                    }
+                }
+            }
+
             // Link to categories
             if (dto.CategoryCodes is { Count: > 0 })
             {
@@ -1107,6 +1134,24 @@ public sealed class DatabaseSeederWorker(
 
         [JsonPropertyName("habitat")]
         public string? Habitat { get; init; }
+
+        [JsonPropertyName("locations")]
+        public List<SpeciesLocationSeedDto>? Locations { get; init; }
+    }
+
+    private sealed class SpeciesLocationSeedDto
+    {
+        [JsonPropertyName("latitude")]
+        public required double Latitude { get; init; }
+
+        [JsonPropertyName("longitude")]
+        public required double Longitude { get; init; }
+
+        [JsonPropertyName("radiusMeters")]
+        public required double RadiusMeters { get; init; }
+
+        [JsonPropertyName("description")]
+        public string? Description { get; init; }
     }
 
     private sealed class FwsLinkDto
