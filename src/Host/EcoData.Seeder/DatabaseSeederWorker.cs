@@ -50,6 +50,9 @@ public sealed class DatabaseSeederWorker(
         catch (Exception ex)
         {
             logger.LogError(ex, "An error occurred while seeding the databases.");
+            // StopHost lets Run() return normally, so without this the container
+            // exits 0 and the Container App Job reports Succeeded on a failed seed.
+            Environment.ExitCode = 1;
             throw;
         }
         finally
