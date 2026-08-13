@@ -1,0 +1,337 @@
+@page "/practices"
+@page "/practices/{Code}"
+@using EcoData.Wildlife.Contracts.Dtos
+@using EcoData.Wildlife.Contracts.Parameters
+@inherits StatefulComponent
+@inject INrcsPracticeHttpClient PracticeClient
+@inject IConservationLinkHttpClient LinkClient
+@inject ISpeciesHttpClient SpeciesHttpClient
+@inject INativeNavbarManager Navbar
+@inject NavigationManager NavigationManager
+@inject ILocalizer L
+
+<PageTitle>FaunaFinder — @L["Practices_PageTitle"]</PageTitle>
+
+@if (Code is not null)
+{
+    @* Practice detail — the FWS actions this practice carries, and the species behind them *@
+    <NuiPageLayout Title="@PracticeTitle" ParentPath="/practices">
+        @if (_practicesLoadError is not null)
+        {
+            <MudAlert Severity="Severity.Error">@_practicesLoadError</MudAlert>
+        }
+        else
+        {
+            @if (SelectedPractice is { } practice)
+            {
+                <MudPaper Elevation="0" Class="pa-4 pa-md-6 rounded-lg border-solid border mud-border-lines-default mb-4">
+                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Class="mb-2">
+                        <MudChip T="string" Size="Size.Small" Color="Color.Secondary" Variant="Variant.Filled">
+                            @practice.Code
+                        </MudChip>
+                        <MudText Typo="Typo.h6">@Locale.Resolve(practice.Name, practice.Code)</MudText>
+                    </MudStack>
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">@L["PracticeDetail_Subline"]</MudText>
+                </MudPaper>
+            }
+
+            <MudPaper Elevation="0" Class="pa-4 pa-md-6 rounded-lg border-solid border mud-border-lines-default mb-4">
+                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Class="mb-4">
+                    <MudIcon Icon="@Icons.Material.Filled.Gavel" Color="Color.Primary" />
+                    <MudText Typo="Typo.h6">@L["PracticeDetail_Actions_Heading"]</MudText>
+                    <MudSpacer />
+                    @if (LoadActionsState.Result is { Count: > 0 } actions)
+                    {
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">@actions.Count</MudText>
+                    }
+                </MudStack>
+
+                @if (_actionsLoadError is not null)
+                {
+                    <MudAlert Severity="Severity.Error">@_actionsLoadError</MudAlert>
+                }
+                else if (LoadActionsState.Result is null || LoadActionsState.IsLoading)
+                {
+                    @* Also while loading: the component is reused across /practices/{code},
+                       so a stale result would belong to the previous practice. *@
+                    @for (int i = 0; i < 4; i++)
+                    {
+                        <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="64px" Class="mb-2 rounded" />
+                    }
+                }
+                else if (LoadActionsState.Result.Count == 0)
+                {
+                    <NuiEmptyState Icon="@Icons.Material.Outlined.Gavel"
+                                   Title="@L[PracticeActionsEmptyTitle]"
+                                   Description="@L[PracticeActionsEmptyDescription]" />
+                }
+                else
+                {
+                    <MudList T="PracticeActionDtoForList" Dense="true">
+                        @foreach (var action in LoadActionsState.Result)
+                        {
+                            <NuiListItem Title="@Locale.Resolve(action.FwsAction.Name, action.FwsAction.Code)"
+                                         Subtitle="@L["PracticeDetail_ActionCode", action.FwsAction.Code]"
+                                         Icon="@Icons.Material.Filled.Gavel"
+                                         ShowChevron="true"
+                                         OnClick="@(() => NavigateToAction(action.FwsAction))">
+                                <TrailingContent>
+                                    <MudText Typo="Typo.caption" Color="Color.Secondary">
+                                        @L["PracticeDetail_ActionSpeciesCount", action.SpeciesCount]
+                                    </MudText>
+                                </TrailingContent>
+                            </NuiListItem>
+                        }
+                    </MudList>
+                }
+            </MudPaper>
+
+            <NuiSectionHeader Title="@(LoadSpeciesCountState.Result is { } speciesCount && !LoadSpeciesCountState.IsLoading
+                                        ? L["PracticeDetail_SpeciesCount", speciesCount]
+                                        : L["PracticeDetail_Species_Heading"])" />
+
+            <NuiVirtualizedGrid @key="Code"
+                                TItem="SpeciesDtoForList"
+                                TParams="SpeciesParameters"
+                                ItemsProvider="FetchSpecies"
+                                ParametersBuilder="BuildSpeciesParameters"
+                                CursorSelector="@(s => s.Id)"
+                                ItemSize="72"
+                                OverscanCount="4">
+                <LoadingTemplate>
+                    @for (int i = 0; i < 8; i++)
+                    {
+                        <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="72px" Class="mb-2 rounded" />
+                    }
+                </LoadingTemplate>
+                <EmptyTemplate>
+                    <NuiEmptyState Icon="@Icons.Material.Outlined.Pets"
+                                   Title="@L[PracticeDetailEmptyTitle]"
+                                   Description="@L[PracticeDetailEmptyDescription]" />
+                </EmptyTemplate>
+                <ItemTemplate Context="species">
+                    <NuiListItem Title="@GetSpeciesName(species)"
+                                 Subtitle="@species.ScientificName"
+                                 Icon="@(species.IsFauna ? Icons.Material.Filled.Pets : Icons.Material.Filled.Park)"
+                                 ShowChevron="true"
+                                 OnClick="@(() => NavigateToSpecies(species.Id))">
+                        <TrailingContent>
+                            <NuiStatusBadge Status="@GetConservationStatus(species.GRank)"
+                                            Text="@(species.GRank ?? "-")"
+                                            Size="NuiStatusSize.Small" />
+                        </TrailingContent>
+                    </NuiListItem>
+                </ItemTemplate>
+                <PlaceholderTemplate>
+                    <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="72px" Class="mb-2 rounded" />
+                </PlaceholderTemplate>
+            </NuiVirtualizedGrid>
+        }
+    </NuiPageLayout>
+}
+else
+{
+    @* Practices list *@
+    <div class="ff-page pp-page">
+        @* A failed load returns an empty list, which would read as a real zero. *@
+        <PracticeEditorialHero PracticeCount="@(_practicesLoadError is null ? LoadPracticesState.Result?.Count : null)" />
+
+        @if (_practicesLoadError is not null)
+        {
+            <MudAlert Severity="Severity.Error" Class="mt-6">@_practicesLoadError</MudAlert>
+        }
+        else
+        {
+            <section class="pp-list">
+                @if (LoadPracticesState.Result is null)
+                {
+                    @for (int i = 0; i < 6; i++)
+                    {
+                        <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="72px" Class="mb-2 rounded" />
+                    }
+                }
+                else if (LoadPracticesState.Result.Count == 0)
+                {
+                    <NuiEmptyState Icon="@Icons.Material.Outlined.Agriculture"
+                                   Title="@L[PracticesEmptyTitle]"
+                                   Description="@L[PracticesEmptyDescription]" />
+                }
+                else
+                {
+                    <MudList T="NrcsPracticeDtoForList" Dense="true">
+                        @foreach (var practice in LoadPracticesState.Result)
+                        {
+                            <NuiListItem Title="@Locale.Resolve(practice.Name, practice.Code)"
+                                         Subtitle="@practice.Code"
+                                         Icon="@Icons.Material.Filled.Agriculture"
+                                         ShowChevron="true"
+                                         OnClick="@(() => NavigateToPractice(practice))">
+                            </NuiListItem>
+                        }
+                    </MudList>
+                }
+            </section>
+        }
+    </div>
+}
+
+@code {
+    [Parameter] public string? Code { get; set; }
+
+    [CascadingParameter] public LocaleContext Locale { get; set; } = LocaleContext.English;
+
+    private const int SpeciesPageSize = 24;
+
+    // Keys exposed as consts so the Razor attribute form (`Title="@L[Key]"`)
+    // compiles without nested-quote issues.
+    private const string PracticesEmptyTitle = "Practices_Empty_Title";
+    private const string PracticesEmptyDescription = "Practices_Empty_Description";
+    private const string PracticeActionsEmptyTitle = "PracticeDetail_Actions_Empty_Title";
+    private const string PracticeActionsEmptyDescription = "PracticeDetail_Actions_Empty_Description";
+    private const string PracticeDetailEmptyTitle = "PracticeDetail_Empty_Title";
+    private const string PracticeDetailEmptyDescription = "PracticeDetail_Empty_Description";
+
+    private string? _loadedCode;
+    private string? _practicesLoadError;
+    private string? _actionsLoadError;
+
+    private NrcsPracticeDtoForList? SelectedPractice =>
+        Code is null
+            ? null
+            : (LoadPracticesState.Result ?? []).FirstOrDefault(
+                p => string.Equals(p.Code, Code, StringComparison.OrdinalIgnoreCase));
+
+    // Falls back to the raw code so the navbar has a title while the list loads
+    // or when the route was opened directly.
+    private string? PracticeTitle =>
+        SelectedPractice is { } practice ? $"{practice.Code} — {Locale.Resolve(practice.Name, practice.Code)}" : Code;
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        Navbar.SetTitle(L["Nav_Practices"]);
+        L.LanguageChanged += OnLanguageChanged;
+    }
+
+    private void OnLanguageChanged()
+    {
+        if (Code is null) Navbar.SetTitle(L["Nav_Practices"]);
+        InvokeAsync(StateHasChanged);
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        // Both routes need the practice list: the detail resolves its heading
+        // from it, since the route carries only the code.
+        if (LoadPracticesState.Result is null && !LoadPracticesState.IsLoading)
+        {
+            await LoadPracticesState.TryExecute();
+        }
+
+        if (Code is { } code)
+        {
+            if (_loadedCode == code) return;
+            _loadedCode = code;
+
+            Navbar.SetTitle(PracticeTitle ?? code);
+            await LoadActionsState.TryExecute();
+            await LoadSpeciesCountState.TryExecute();
+        }
+        else
+        {
+            _loadedCode = null;
+        }
+    }
+
+    [Command]
+    private async Task<IReadOnlyList<NrcsPracticeDtoForList>?> LoadPractices(CancellationToken ct)
+    {
+        var result = await PracticeClient.GetAllAsync(ct);
+        if (result.TryPickT0(out var practices, out var error))
+        {
+            _practicesLoadError = null;
+            return practices;
+        }
+        _practicesLoadError = error.StatusCode == 0
+            ? "Couldn't reach the server."
+            : error.Message ?? "Something went wrong while loading conservation practices.";
+        return [];
+    }
+
+    [Command]
+    private async Task<IReadOnlyList<PracticeActionDtoForList>?> LoadActions(CancellationToken ct)
+    {
+        var result = await LinkClient.GetActionsByPracticeAsync(_loadedCode!, ct);
+        if (result.TryPickT0(out var actions, out var error))
+        {
+            _actionsLoadError = null;
+            return actions;
+        }
+        _actionsLoadError = error.StatusCode == 0
+            ? "Couldn't reach the server."
+            : error.Message ?? "Something went wrong while loading conservation actions.";
+        return [];
+    }
+
+    private SpeciesParameters BuildSpeciesParameters(Guid? cursor) =>
+        new(
+            PageSize: SpeciesPageSize,
+            Cursor: cursor,
+            NrcsPracticeCodes: [Code!]
+        );
+
+    private IAsyncEnumerable<SpeciesDtoForList> FetchSpecies(
+        SpeciesParameters parameters,
+        CancellationToken ct
+    ) => SpeciesHttpClient.GetSpeciesAsync(parameters, ct);
+
+    // The list pages through species itself; this is only the heading tally.
+    [Command]
+    private async Task<int?> LoadSpeciesCount(CancellationToken ct)
+    {
+        var result = await SpeciesHttpClient.GetCountAsync(
+            new SpeciesParameters(NrcsPracticeCodes: [_loadedCode!]),
+            ct
+        );
+        return result.TryPickT0(out var count, out _) ? count : null;
+    }
+
+    public override void Dispose()
+    {
+        L.LanguageChanged -= OnLanguageChanged;
+        base.Dispose();
+    }
+
+    private void NavigateToPractice(NrcsPracticeDtoForList practice)
+    {
+        Navbar.SetTitle($"{practice.Code} — {Locale.Resolve(practice.Name, practice.Code)}");
+        NavigationManager.NavigateTo($"/practices/{practice.Code}");
+    }
+
+    private void NavigateToAction(FwsActionDtoForList action)
+    {
+        Navbar.SetTitle($"{action.Code} — {Locale.Resolve(action.Name, action.Code)}");
+        NavigationManager.NavigateTo($"/actions/{action.Code}");
+    }
+
+    private void NavigateToSpecies(Guid speciesId)
+    {
+        NavigationManager.NavigateTo($"/species/{speciesId}");
+    }
+
+    private string GetSpeciesName(SpeciesDtoForList species) =>
+        Locale.Resolve(species.CommonName, species.ScientificName);
+
+    private static NuiStatusType GetConservationStatus(string? gRank)
+    {
+        if (string.IsNullOrEmpty(gRank)) return NuiStatusType.Inactive;
+
+        return gRank.ToUpperInvariant() switch
+        {
+            "G1" or "G2" => NuiStatusType.Error,
+            "G3" => NuiStatusType.Warning,
+            "G4" or "G5" => NuiStatusType.Success,
+            _ => NuiStatusType.Inactive
+        };
+    }
+}

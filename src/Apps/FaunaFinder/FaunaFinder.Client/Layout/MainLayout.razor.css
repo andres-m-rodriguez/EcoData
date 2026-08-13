@@ -191,6 +191,27 @@
     margin-bottom: 2px;
 }
 
+/* Six tabs don't fit at the default pill width on small phones —
+   tighten the box, the row gap and the caption rather than letting
+   labels wrap. Sized so the longest label ("Municipios") still clears
+   a 360px viewport. */
+@media (max-width: 420px) {
+    ::deep .bottom-nav-container {
+        gap: 2px;
+    }
+
+    ::deep .bottom-nav-item {
+        min-width: 0;
+        padding: 4px 2px;
+    }
+
+    ::deep .bottom-nav-item .mud-typography-caption {
+        font-size: 0.5625rem;
+        letter-spacing: 0;
+        white-space: nowrap;
+    }
+}
+
 /* Add padding to main content on mobile to avoid overlap with bottom nav */
 @media (max-width: 959.95px) {
     .main-content {

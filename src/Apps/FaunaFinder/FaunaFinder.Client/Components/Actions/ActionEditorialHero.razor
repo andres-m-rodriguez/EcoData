@@ -1,0 +1,34 @@
+@namespace FaunaFinder.Client.Components.Actions
+@inherits LocalizedComponentBase
+
+<section class="aa-hero">
+    <div class="aa-hero-main">
+        <div class="aa-hero-eyebrow">@EyebrowText</div>
+        <h1 class="aa-hero-heading">
+            @L["Actions_Hero_HeadingLead"] <em>Puerto Rico</em>@L["Actions_Hero_HeadingTail"]
+        </h1>
+        <p class="aa-hero-lede">@LedeText</p>
+    </div>
+    <div class="aa-hero-meta">
+        <span>@L["Hero_LastSync", LastSync]</span>
+        <span>@RecordsLine</span>
+        <span>@L["Actions_Hero_Hint"]</span>
+    </div>
+</section>
+
+@code {
+    [Parameter] public int? ActionCount { get; set; }
+
+    [Parameter] public string? Eyebrow { get; set; }
+
+    [Parameter] public string? Lede { get; set; }
+
+    private string EyebrowText => Eyebrow ?? L["Hero_Eyebrow"];
+    private string LedeText => Lede ?? L["Actions_Hero_Lede"];
+
+    private string LastSync => DateTime.Now.ToString("HH:mm") + " local";
+
+    private string RecordsLine => ActionCount is { } count
+        ? L["Actions_Hero_RecordsLine", count]
+        : L["Actions_Hero_RecordsPending"];
+}

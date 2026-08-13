@@ -26,6 +26,16 @@ public sealed record ConservationLinksDtoForSpecies(
     IReadOnlyList<FwsLinkDtoForDetail> Links
 );
 
+public sealed record PracticeActionDtoForList(
+    FwsActionDtoForList FwsAction,
+    int SpeciesCount
+);
+
+public sealed record ActionPracticeDtoForList(
+    NrcsPracticeDtoForList NrcsPractice,
+    int SpeciesCount
+);
+
 public sealed record SpeciesConservationCodesDto(
     Guid SpeciesId,
     IReadOnlyList<string> NrcsPracticeCodes,

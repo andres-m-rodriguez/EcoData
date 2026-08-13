@@ -1,0 +1,17 @@
+/* =========================================================================
+   Practices — editorial hero over a plain practice list
+   ========================================================================= */
+
+.pp-page {
+    padding-bottom: 48px;
+}
+
+.pp-list {
+    padding: 28px 0 0;
+}
+
+@media (max-width: 960px) {
+    .pp-list {
+        padding: 16px 0 0;
+    }
+}
