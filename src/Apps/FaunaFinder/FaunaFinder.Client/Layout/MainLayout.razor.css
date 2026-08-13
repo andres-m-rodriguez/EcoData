@@ -126,34 +126,11 @@
 }
 
 /* --------------------------------------------------------------------------
-   Search affordance — presentation only, no input and no wiring yet
+   Search — the component owns its own capsule and dropdown; the layout only
+   says how much of the bar it may take.
    -------------------------------------------------------------------------- */
-.ff-search-pill {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    min-width: 200px;
-    max-width: 320px;
-    margin-right: 8px;
-    padding: 7px 14px;
-    border-radius: 999px;
-    background: var(--fauna-bg-alt);
-    border: 1px solid var(--fauna-line);
-    user-select: none;
-}
-
-.ff-search-pill ::deep .mud-icon-root {
-    flex-shrink: 0;
-    font-size: 17px !important;
-    color: var(--fauna-fg-4);
-}
-
-.ff-search-pill-text {
-    font: var(--fauna-body-sm);
-    color: var(--fauna-fg-4);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+::deep .ff-search {
+    flex: 0 1 320px;
 }
 
 /* --------------------------------------------------------------------------

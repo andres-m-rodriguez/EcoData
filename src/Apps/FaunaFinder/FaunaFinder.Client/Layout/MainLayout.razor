@@ -77,14 +77,10 @@
 
                 <MudSpacer />
 
-                @* Desktop: search affordance. Presentation only for now — no input,
-                   no binding, no handler. It reserves the slot the real search will
-                   take and gives the bar its Harmony-side weight. *@
+                @* Desktop: combined species + municipio search. Desktop only —
+                   the mobile bar has no room for it yet. *@
                 <MudHidden Breakpoint="Breakpoint.SmAndDown">
-                    <div class="ff-search-pill">
-                        <MudIcon Icon="@Icons.Material.Filled.Search" Size="Size.Small" />
-                        <span class="ff-search-pill-text">@L["Shell_Search"]</span>
-                    </div>
+                    <FfSearch />
                 </MudHidden>
 
                 @* Light/dark switch. The click stamps data-theme on the root

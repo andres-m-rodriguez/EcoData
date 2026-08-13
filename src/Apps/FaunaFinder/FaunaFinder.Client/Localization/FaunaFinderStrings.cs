@@ -75,6 +75,9 @@ public static class FaunaFinderStrings
         ["Rail_Collapse"] = "Collapse the notebook",
         ["Rail_Expand"] = "Open the notebook",
         ["Shell_Search"] = "Search species and municipios",
+        ["Shell_Search_Searching"] = "Searching…",
+        ["Shell_Search_Empty"] = "Nothing found for “{0}”.",
+        ["Shell_Search_Clear"] = "Clear search",
 
         // Browse — the hub the mobile bar folds three sections into
         ["Browse_PageTitle"] = "Browse",
@@ -404,6 +407,9 @@ public static class FaunaFinderStrings
         ["Rail_Collapse"] = "Cerrar la libreta",
         ["Rail_Expand"] = "Abrir la libreta",
         ["Shell_Search"] = "Buscar especies y municipios",
+        ["Shell_Search_Searching"] = "Buscando…",
+        ["Shell_Search_Empty"] = "No se encontró nada para «{0}».",
+        ["Shell_Search_Clear"] = "Borrar la búsqueda",
 
         // Explorar — el centro donde la barra móvil agrupa tres secciones
         ["Browse_PageTitle"] = "Explorar",
