@@ -1,10 +1,15 @@
-// Gets the mobile tab bar out of the way while the reader is heading down the
-// page, and gives it back the moment they turn around.
+// Gets the mobile chrome out of the way while the reader is heading down the
+// page, and gives it back the moment they turn around. Both bars read the same
+// attribute, so the top bar and the tab bar clear out together.
 //
 // The state lives in a data attribute on <html> rather than in a class on the
-// bar itself. The bar's class is rendered by Blazor, so anything written there
-// from JS is lost on the next re-render; an attribute on the root element is
-// nobody else's business, and the stylesheet keys off it.
+// bars themselves. Their classes are rendered by Blazor, so anything written
+// there from JS is lost on the next re-render; an attribute on the root element
+// is nobody else's business, and the stylesheets key off it.
+//
+// Nothing here knows the phone breakpoint. The component that starts this
+// renders on small screens only, so the watcher exists exactly when the bars
+// do, and the one definition of "phone" stays in the markup and the sheets.
 //
 // The document is the scrollport — the shell sets min-height rather than
 // making an inner element scroll — so a plain window listener sees everything.

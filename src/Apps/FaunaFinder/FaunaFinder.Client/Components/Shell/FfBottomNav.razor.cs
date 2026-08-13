@@ -33,9 +33,15 @@ public partial class FfBottomNav : LocalizedComponentBase
     private IJSRuntime JS { get; set; } = default!;
 
     /// <summary>
-    /// The scroll watcher. It hides the bar by stamping an attribute on the
-    /// root element, so nothing here re-renders on scroll — a bar that asked
-    /// Blazor to re-render every frame would cost more than it is worth.
+    /// The scroll watcher for the mobile chrome — this bar and the app bar
+    /// both. It hides them by stamping an attribute on the root element, so
+    /// nothing here re-renders on scroll; a bar that asked Blazor to re-render
+    /// every frame would cost more than it is worth.
+    ///
+    /// <para>It lives on this component rather than the layout because this
+    /// one renders on small screens only, so the watcher exists exactly when
+    /// the bars it drives do — and the definition of "phone" stays in the
+    /// markup and the stylesheets rather than being restated in JS.</para>
     /// </summary>
     private IJSObjectReference? _autoHide;
 
