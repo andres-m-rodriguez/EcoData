@@ -44,11 +44,14 @@
     border-color: var(--fauna-primary-200);
 }
 
-/* Focus tints the capsule; the ring itself is drawn on the input below, so
-   pointer focus and keyboard focus don't read identically. */
+/* The capsule is the control as far as the reader is concerned, so it takes
+   both the tint and the ring. Drawing the ring on the inner <input> instead
+   would box just the text field, inset within the pill's own padding. */
 .ff-search-pill:focus-within {
     border-color: var(--fauna-primary-300);
     background: var(--fauna-surface);
+    outline: 2px solid var(--fauna-primary);
+    outline-offset: 2px;
 }
 
 .ff-search-pill ::deep .ff-search-glyph {
@@ -84,10 +87,11 @@
     opacity: 1;
 }
 
+/* The capsule draws the ring for the whole control; suppress the input's own
+   so the two don't nest. */
+.ff-search-pill ::deep .ff-search-input input:focus,
 .ff-search-pill ::deep .ff-search-input input:focus-visible {
-    outline: 2px solid var(--fauna-primary);
-    outline-offset: 2px;
-    border-radius: 999px;
+    outline: none;
 }
 
 /* --------------------------------------------------------------------------
