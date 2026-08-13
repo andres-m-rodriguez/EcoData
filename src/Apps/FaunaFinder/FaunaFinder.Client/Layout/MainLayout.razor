@@ -23,19 +23,11 @@
     <div class="@ShellClass">
         <MudLayout>
             <MudAppBar Elevation="0" Fixed="true" Class="ff-appbar">
-                @* Mobile: Back button + Title OR Logo *@
+                @* Mobile lead slot. It owns the Avatar event, so a detail page
+                   can put a portrait beside its title without the layout
+                   knowing which pages have one. *@
                 <MudHidden Breakpoint="Breakpoint.MdAndUp">
-                    <div class="d-flex align-center appbar-mobile-lead">
-                        @if (!IsRootPage)
-                        {
-                            <NuiNativeNavbar ShowBackButton="true" ShowTitle="false" ShowActions="false" />
-                            <span class="page-title">@Navbar.State.Title</span>
-                        }
-                        else
-                        {
-                            <span class="logo-text">FaunaFinder</span>
-                        }
-                    </div>
+                    <FfMobileTitle />
                 </MudHidden>
 
                 @* Desktop: notebook toggle + Logo + Page Title *@

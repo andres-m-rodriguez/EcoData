@@ -1,0 +1,33 @@
+@namespace FaunaFinder.Client.Components.Shell
+@inherits LocalizedComponentBase
+@inject INativeNavigationManager Navigation
+@inject INativeNavbarManager Navbar
+
+@* The mobile app bar's lead slot: the wordmark at the root, otherwise a back
+   button and the page title.
+
+   A detail page can hand it a portrait to sit beside the title — the way a
+   messaging app shows who you're looking at — by publishing Avatar. The
+   portrait is dropped on every navigation, so a page only ever has to set
+   one; nothing has to remember to clear it. *@
+
+<div class="ff-mobile-title">
+    @if (IsRootPage)
+    {
+        <span class="logo-text">FaunaFinder</span>
+    }
+    else
+    {
+        <NuiNativeNavbar ShowBackButton="true" ShowTitle="false" ShowActions="false" />
+
+        @if (_avatarSrc is not null)
+        {
+            <img class="ff-mobile-avatar"
+                 src="@_avatarSrc"
+                 alt="@(_avatarAlt ?? string.Empty)"
+                 loading="lazy" />
+        }
+
+        <span class="page-title">@Navbar.State.Title</span>
+    }
+</div>

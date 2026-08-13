@@ -71,13 +71,36 @@
     border-radius: inherit;
 }
 
-/* Mobile app bar lead slot (back button + title, or the logo) */
-.appbar-mobile-lead {
-    flex: 1;
-    min-width: 0;
+/* On a phone the bar carries a back button, a portrait, the title, the theme
+   toggle and the language pill on ~360px. The title is the only thing that
+   truncates, so it gets the slack: trim the toolbar's own padding and the
+   toggle's margin rather than letting a species name lose its last letter. */
+@media (max-width: 959.98px) {
+    ::deep .ff-appbar > .mud-toolbar {
+        padding-left: 8px;
+        padding-right: 4px;
+    }
+
+    ::deep .ff-theme-toggle {
+        margin-right: 0;
+    }
+
+    /* The spacer also grows, so it and the title slot were halving the free
+       space between them. The title is the only thing here that truncates —
+       let it take the lot and leave the spacer as a plain separator. */
+    ::deep .ff-appbar .mud-spacer {
+        flex-grow: 0;
+    }
+
+    /* The language pill sizes to its own content; cap it so a long language
+       name can't push into the title. */
+    ::deep .ff-lang-menu > .mud-button-root {
+        max-width: 68px;
+    }
 }
 
-/* Wordmark and page title — ink on paper */
+/* Wordmark and page title — the desktop copies. FfMobileTitle carries its
+   own; scoped CSS is per-component, so the mobile slot can't share these. */
 .logo-text {
     font-family: var(--fauna-font-serif);
     font-weight: 700;
@@ -92,6 +115,10 @@
     font-size: 1.125rem;
     color: var(--fauna-fg);
     letter-spacing: var(--fauna-tracking-tight);
+    /* Negative tracking is applied after the last glyph as well, so the
+       content box ends inside its ink and overflow:hidden shaves the final
+       letter. Pad the box back out; the ellipsis still lands correctly. */
+    padding-right: 0.09em;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
