@@ -5,6 +5,7 @@ using EcoData.Locations.Database.Extensions;
 using EcoData.Wildlife.Api;
 using EcoData.Wildlife.DataAccess;
 using EcoData.Wildlife.Database.Extensions;
+using EcoData.Wildlife.Mcp;
 using FaunaFinder.Server.Components;
 using MudBlazor.Services;
 using Tempest;
@@ -20,6 +21,7 @@ builder.Services.AddMudServices();
 builder.Services.AddTempest();
 builder.Services.AddLocationsDataAccess();
 builder.Services.AddWildlifeDataAccess(builder.Configuration);
+builder.Services.AddWildlifeMcp();
 
 var app = builder.Build();
 
@@ -44,5 +46,6 @@ app.MapRazorComponents<App>()
 app.MapStateEndpoints();
 app.MapMunicipalityEndpoints();
 app.MapWildlifeApiEndpoints();
+app.MapWildlifeMcp();
 
 app.Run();

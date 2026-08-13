@@ -76,6 +76,7 @@
     <Project Path="src/Features/Wildlife/EcoData.Wildlife.Contracts/EcoData.Wildlife.Contracts.csproj" />
     <Project Path="src/Features/Wildlife/EcoData.Wildlife.DataAccess/EcoData.Wildlife.DataAccess.csproj" />
     <Project Path="src/Features/Wildlife/EcoData.Wildlife.Database/EcoData.Wildlife.Database.csproj" />
+    <Project Path="src/Features/Wildlife/EcoData.Wildlife.Mcp/EcoData.Wildlife.Mcp.csproj" />
   </Folder>
   <Folder Name="/Tests/">
     <Project Path="tests/EcoData.IntegrationTests/EcoData.IntegrationTests.csproj" />
