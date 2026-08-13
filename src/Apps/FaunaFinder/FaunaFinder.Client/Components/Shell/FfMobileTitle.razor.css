@@ -20,6 +20,25 @@
     min-width: 0;
 }
 
+/* The back arrow.
+
+   NuiNativeNavbar hardcodes Color.Dark on it, which resolves to near-black in
+   either theme and disappears against the dark ground. That component is
+   shared with EcoPortal, so re-point the colour here instead of changing it
+   there. MudBlazor sets its own colour on the same element, hence the
+   !important. */
+.ff-mobile-title ::deep .mud-icon-button {
+    color: var(--fauna-fg) !important;
+}
+
+.ff-mobile-title ::deep .mud-icon-button .mud-icon-root {
+    color: inherit !important;
+}
+
+.ff-mobile-title ::deep .mud-icon-button:hover {
+    background-color: var(--fauna-bg-alt);
+}
+
 /* Wordmark, shown at the root instead of a back button */
 .logo-text {
     font-family: var(--fauna-font-serif);
