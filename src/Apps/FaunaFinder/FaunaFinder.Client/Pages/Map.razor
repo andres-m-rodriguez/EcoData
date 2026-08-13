@@ -195,6 +195,9 @@
     private MapController<MunicipalityMarker> _mapController = new();
     private bool _sidebarOpen;
     private bool _sheetOpen;
+
+    /// <summary>One frame — long enough for the closed panel to be painted.</summary>
+    private const int PanelRevealFrameMs = 16;
     private SelectedMunicipality? _selectedMunicipality;
 
     private string? _mapLoadError;
@@ -302,9 +305,7 @@
         ClearConservationFilters();
 
         _selectedMunicipality = municipality;
-        _sidebarOpen = true;
-        _sheetOpen = true;
-        StateHasChanged();
+        await RevealPanelAsync();
 
         _ = LoadConservationCodesState.TryExecute();
         await LoadSpeciesCountsState.TryExecute();
@@ -444,8 +445,7 @@
 
             _searchMode = AreaSearchMode.NearMe;
             _searchOrigin = new MapCoordinate(position.Latitude, position.Longitude);
-            _sidebarOpen = true;
-            _sheetOpen = true;
+            await RevealPanelAsync();
 
             _mapController.ShowSearchRadius(_searchOrigin.Value, NearMeRadiusMeters);
 
@@ -499,9 +499,7 @@
             _polygonCoordinates = coordinates
                 .Select(c => new PolygonCoordinate(c.Latitude, c.Longitude))
                 .ToList();
-            _sidebarOpen = true;
-            _sheetOpen = true;
-            StateHasChanged();
+            await RevealPanelAsync();
 
             await SearchAreaState.TryExecute();
             ShowNearbyCircles(SearchAreaState.Result);
@@ -742,6 +740,29 @@
 
     private void OnSpeciesClicked(SpeciesDtoForList species) =>
         NavigationManager.NavigateTo($"/species/{species.Id}");
+
+    /// <summary>
+    /// Brings the panel in with its transition intact.
+    ///
+    /// <para>Both panels are gated on <see cref="PanelVisible"/>, so setting
+    /// the content and the open flag in the same render mounts the element
+    /// already open — the browser has no earlier state to animate from and it
+    /// just appears. This paints the closed state first, then opens.</para>
+    /// </summary>
+    private async Task RevealPanelAsync()
+    {
+        _sidebarOpen = false;
+        _sheetOpen = false;
+        StateHasChanged();
+
+        // Long enough for one frame. Task.Yield resumes inside the same
+        // browser task, before a paint, and the transition is skipped again.
+        await Task.Delay(PanelRevealFrameMs);
+
+        _sidebarOpen = true;
+        _sheetOpen = true;
+        StateHasChanged();
+    }
 
     // ===== Mobile tab bar =====
 

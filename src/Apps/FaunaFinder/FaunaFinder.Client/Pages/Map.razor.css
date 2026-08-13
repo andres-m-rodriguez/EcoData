@@ -339,10 +339,14 @@
     transform: translateY(0);
 }
 
-/* The map slides when the notebook opens or closes; readers who asked for
-   less motion get the new width immediately instead. */
+/* The map slides when the notebook opens or closes and the panels slide in
+   from the edge; readers who asked for less motion get the end state
+   immediately instead. The panels still fade, which carries the change
+   without travel. */
 @media (prefers-reduced-motion: reduce) {
-    .map-page {
+    .map-page,
+    .desktop-sidebar,
+    .mobile-sheet {
         transition: none;
     }
 }
