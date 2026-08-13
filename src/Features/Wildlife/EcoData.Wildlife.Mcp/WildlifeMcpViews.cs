@@ -16,7 +16,7 @@ public sealed record SpeciesSummary(
     string ScientificName,
     string Kind,
     string? IucnStatus,
-    bool IsEndemic,
+    string EndemicStatus,
     string? TaxonCode,
     int MunicipalityCount,
     DateTimeOffset? LastObservedAtUtc
@@ -28,7 +28,7 @@ public sealed record SpeciesDetail(
     string ScientificName,
     string Kind,
     string? IucnStatus,
-    bool IsEndemic,
+    string EndemicStatus,
     string? Habitat,
     IReadOnlyList<string> Categories,
     int MunicipalityCount,

@@ -97,7 +97,13 @@
 
 
 /* --------------------------------------------------------------------------
-   Hidden state — published by a screen that needs the bottom of the viewport.
+   Hidden state — two ways in, one look.
+
+   `.is-hidden` is published by a screen that needs the bottom of the viewport,
+   such as the map's municipality sheet. The root attribute is set by
+   fauna-nav-autohide.js while the reader is scrolling down the page; it lives
+   on <html> rather than in this element's class because the class is Blazor's
+   to render and a re-render would drop anything JS wrote there.
 
    The pill slides out on a transform rather than leaving the DOM, so it
    animates in both directions and the tab it was on survives the trip. The
@@ -111,7 +117,8 @@
     will-change: transform;
 }
 
-.bottom-nav.is-hidden {
+.bottom-nav.is-hidden,
+:root[data-nav-autohide="hidden"] .bottom-nav {
     transform: translate3d(0, calc(100% + var(--fauna-shell-gutter) + env(safe-area-inset-bottom, 0px)), 0);
     opacity: 0;
     pointer-events: none;

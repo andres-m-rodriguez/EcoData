@@ -22,7 +22,7 @@
             <i class="@TaxonIcons.GetIcon(Species.TaxonCode)"></i>
         </span>
 
-        @if (Species.IsEndemic && Variant == SpeciesCardVariant.Featured)
+        @if (Species.EndemicStatus is EndemicStatus.Endemic && Variant == SpeciesCardVariant.Featured)
         {
             <span class="ff-card-endemic">
                 <MudIcon Icon="@Icons.Material.Filled.Star" Size="Size.Small" />

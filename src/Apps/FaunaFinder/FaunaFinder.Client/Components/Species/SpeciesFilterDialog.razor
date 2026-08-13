@@ -143,7 +143,7 @@
         base.OnInitialized();
         _selectedTaxa = new HashSet<string>(Initial.TaxonCodes, StringComparer.OrdinalIgnoreCase);
         _selectedStatuses = new HashSet<IucnStatus>(Initial.IucnStatuses);
-        _isEndemic = Initial.IsEndemic;
+        _isEndemic = Initial.EndemicOnly;
         _observedRecently = Initial.ObservedRecently;
         _hasPhoto = Initial.HasPhoto;
         _minMunicipalities = Initial.MinMunicipalityCount ?? 1;
@@ -210,7 +210,7 @@
         var result = new SpeciesFilterResult(
             TaxonCodes: _selectedTaxa.ToList(),
             IucnStatuses: _selectedStatuses.ToList(),
-            IsEndemic: _isEndemic,
+            EndemicOnly: _isEndemic,
             ObservedRecently: _observedRecently,
             HasPhoto: _hasPhoto,
             MinMunicipalityCount: _minMunicipalities > 1 ? _minMunicipalities : null

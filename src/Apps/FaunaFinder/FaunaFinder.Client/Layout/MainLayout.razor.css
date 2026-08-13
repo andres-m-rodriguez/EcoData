@@ -99,6 +99,42 @@
     }
 }
 
+/* --------------------------------------------------------------------------
+   Auto-hide — phones only.
+
+   The same attribute the tab bar reads, set by fauna-nav-autohide.js while
+   the reader is heading down the page, so both bars clear out together and
+   the content has the whole viewport. Phone-only on purpose: the desktop bar
+   carries the nav links and the search box, and there is no shortage of
+   screen up there to reclaim.
+
+   The selector is anchored on .ff-shell because that is the element carrying
+   this sheet's scope attribute — the app bar itself is MudBlazor's markup,
+   which is what ::deep reaches past.
+
+   It slides up by its own height plus the gutter above it, so nothing peeks
+   below a notch. Pointer events go with it, like the tab bar's.
+   -------------------------------------------------------------------------- */
+@media (max-width: 959.98px) {
+    ::deep .ff-appbar {
+        transition: transform var(--fauna-t-slow) var(--fauna-ease),
+                    opacity var(--fauna-t-base) var(--fauna-ease);
+        will-change: transform;
+    }
+
+    :root[data-nav-autohide="hidden"] .ff-shell ::deep .ff-appbar {
+        transform: translate3d(0, calc(-100% - var(--fauna-shell-gutter) - env(safe-area-inset-top, 0px)), 0);
+        opacity: 0;
+        pointer-events: none;
+    }
+}
+
+@media (max-width: 959.98px) and (prefers-reduced-motion: reduce) {
+    ::deep .ff-appbar {
+        transition: none;
+    }
+}
+
 /* Wordmark and page title — the desktop copies. FfMobileTitle carries its
    own; scoped CSS is per-component, so the mobile slot can't share these. */
 .logo-text {
