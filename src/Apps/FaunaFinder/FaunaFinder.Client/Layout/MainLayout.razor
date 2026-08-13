@@ -33,9 +33,22 @@
                     </div>
                 </MudHidden>
 
-                @* Desktop: Logo + Page Title *@
+                @* Desktop: notebook toggle + Logo + Page Title *@
                 <MudHidden Breakpoint="Breakpoint.SmAndDown">
                     <div class="d-flex align-center">
+                        @if (ShowLibraryRail)
+                        {
+                            <MudTooltip Text="@NotebookToggleLabel">
+                                <MudIconButton Icon="@NotebookToggleIcon"
+                                               Class="ff-notebook-toggle"
+                                               Edge="Edge.Start"
+                                               aria-label="@NotebookToggleLabel"
+                                               aria-expanded="@(_railOpen ? "true" : "false")"
+                                               OnClick="ToggleRail"
+                                               @onmouseenter="() => _railHovered = true"
+                                               @onmouseleave="() => _railHovered = false" />
+                            </MudTooltip>
+                        }
                         <span class="logo-text">FaunaFinder</span>
                         @if (ShowTitleDivider)
                         {
@@ -111,10 +124,12 @@
                 <div class="ff-shell-body">
                     @* Library rail — desktop only, and never on the map, which
                        claims the full width for the viewport. *@
+                    @* Collapsing hides the panel with a class rather than dropping it
+                       from the tree, so the notebook keeps what it already fetched. *@
                     @if (ShowLibraryRail)
                     {
                         <MudHidden Breakpoint="Breakpoint.SmAndDown">
-                            <aside class="ff-rail-panel">
+                            <aside class="@RailPanelClass" aria-hidden="@(_railOpen ? "false" : "true")">
                                 <FfLibraryRail />
                             </aside>
                         </MudHidden>
@@ -201,6 +216,9 @@
     private NavigationTab _currentTab = NavigationTab.Home;
     private LocaleContext _locale = LocaleContext.English;
 
+    private bool _railOpen = true;
+    private bool _railHovered;
+
     // Root ("/") only — decides logo vs. back button in the mobile app bar.
     private bool IsRootPage => Navigation.State.Path == "/" || Navigation.State.Path == "";
 
@@ -222,6 +240,18 @@
     // Each either renders its own root heading or relies on the active nav pill for context.
     private bool ShowTitleDivider =>
         !IsRootPage && !IsMapPage && !IsEditorialListPage && Navbar.State.Title is not null;
+
+    private string RailPanelClass => _railOpen ? "ff-rail-panel" : "ff-rail-panel is-collapsed";
+
+    // At rest the toggle is a plain panel; hovering swaps in the chevron that
+    // shows which way it will move. Same three-glyph trick Harmony uses.
+    private string NotebookToggleIcon => !_railHovered
+        ? FaunaFinderIcons.NotebookPanel
+        : _railOpen ? FaunaFinderIcons.NotebookCollapse : FaunaFinderIcons.NotebookExpand;
+
+    private string NotebookToggleLabel => _railOpen ? L["Rail_Collapse"] : L["Rail_Expand"];
+
+    private void ToggleRail() => _railOpen = !_railOpen;
 
     // The rail is a desktop companion column. The map is the one page that
     // wants the whole ground, so it never gets one.

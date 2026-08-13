@@ -273,6 +273,43 @@
     border: 1px solid var(--fauna-line);
     border-radius: var(--fauna-shell-radius);
     box-shadow: var(--fauna-shell-shadow);
+    transition: flex-basis var(--fauna-t-slow) var(--fauna-ease),
+                width var(--fauna-t-slow) var(--fauna-ease),
+                opacity var(--fauna-t-base) var(--fauna-ease);
+}
+
+/* Collapsed: the panel keeps its subtree — and therefore everything the
+   notebook already fetched — and just gives up its column. */
+.ff-rail-panel.is-collapsed {
+    flex-basis: 0;
+    width: 0;
+    opacity: 0;
+    border-width: 0;
+    box-shadow: none;
+    overflow: hidden;
+    pointer-events: none;
+}
+
+/* Custom panel glyph, ported from Harmony. Sits in the app bar ahead of the
+   wordmark and reads as chrome, not as a nav item. */
+::deep .ff-notebook-toggle {
+    color: var(--fauna-fg-3);
+    margin-right: 4px;
+}
+
+::deep .ff-notebook-toggle:hover {
+    color: var(--fauna-primary);
+    background-color: var(--fauna-primary-50);
+}
+
+::deep .ff-notebook-toggle .mud-icon-root {
+    font-size: 20px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .ff-rail-panel {
+        transition: none;
+    }
 }
 
 .ff-main-panel {
