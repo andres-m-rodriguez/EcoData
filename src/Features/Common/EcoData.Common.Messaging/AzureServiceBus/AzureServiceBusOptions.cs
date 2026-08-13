@@ -8,7 +8,20 @@ public sealed class AzureServiceBusOptions
     public const string SectionName = "Messaging:ServiceBus";
 
     /// <summary>
-    /// Service Bus namespace connection string. For local dev this can point at the Service Bus emulator.
+    /// How to reach the Service Bus namespace. Accepts either shape that Aspire hands us:
+    /// <list type="bullet">
+    /// <item><description>
+    /// A full connection string containing <c>Endpoint=</c> (and a shared access key) — this is what
+    /// the local Service Bus emulator supplies, e.g.
+    /// <c>Endpoint=sb://localhost:5672;SharedAccessKeyName=...;SharedAccessKey=...;UseDevelopmentEmulator=true</c>.
+    /// </description></item>
+    /// <item><description>
+    /// A bare namespace endpoint with no key, e.g. <c>https://contoso.servicebus.windows.net:443/</c> —
+    /// this is what a provisioned namespace supplies when authentication is via managed identity.
+    /// </description></item>
+    /// </list>
+    /// The property name is kept for compatibility with the <c>Messaging:ServiceBus:ConnectionString</c>
+    /// configuration key that AppHost sets; the transport picks the right client overload at runtime.
     /// </summary>
     public string ConnectionString { get; set; } = string.Empty;
 

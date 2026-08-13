@@ -1,6 +1,7 @@
 using System.Runtime.CompilerServices;
 using System.Text.Json;
 using System.Threading.Channels;
+using Azure.Identity;
 using Azure.Messaging.ServiceBus;
 using EcoData.Common.Messaging.Abstractions;
 using Microsoft.Extensions.Logging;
@@ -40,8 +41,40 @@ public sealed class AzureServiceBusTransport : IMessageTransport, IAsyncDisposab
                 $"{AzureServiceBusOptions.SectionName}:ConnectionString is required when using the Azure Service Bus transport.");
         }
 
-        _client = new ServiceBusClient(_options.ConnectionString);
+        // The overload has to be picked at runtime because the same configuration key carries two
+        // different shapes depending on where we run. The emulator (Aspire's .RunAsEmulator()) hands
+        // us a real connection string with a shared access key, while a provisioned namespace using
+        // managed identity hands us only the service endpoint URI — there is no key to put in it.
+        // ServiceBusClient(string) parses its argument strictly as a connection string, so feeding it
+        // the endpoint form throws FormatException at construction and the app never starts.
+        _client = _options.ConnectionString.Contains("Endpoint=", StringComparison.OrdinalIgnoreCase)
+            ? new ServiceBusClient(_options.ConnectionString)
+            : new ServiceBusClient(NormalizeNamespace(_options.ConnectionString), new DefaultAzureCredential());
+
         _sender = _client.CreateSender(_options.TopicName);
+    }
+
+    /// <summary>
+    /// Reduces a configured namespace endpoint to the bare host that
+    /// <see cref="ServiceBusClient(string, Azure.Core.TokenCredential)"/> expects, e.g.
+    /// <c>https://contoso.servicebus.windows.net:443/</c> → <c>contoso.servicebus.windows.net</c>.
+    /// </summary>
+    private static string NormalizeNamespace(string value)
+    {
+        var candidate = value.Trim();
+
+        // Prepend a scheme when there isn't one. A bare host carrying a port
+        // ("contoso.servicebus.windows.net:443") does parse as an absolute Uri, but the host is taken
+        // as the *scheme* and Uri.Host comes back empty — so parsing it as-is would silently hand
+        // ServiceBusClient an empty namespace instead of failing loudly.
+        if (!candidate.Contains("://", StringComparison.Ordinal))
+        {
+            candidate = "https://" + candidate;
+        }
+
+        return Uri.TryCreate(candidate, UriKind.Absolute, out var uri) && !string.IsNullOrEmpty(uri.Host)
+            ? uri.Host
+            : value.Trim();
     }
 
     public async Task PublishAsync<T>(
