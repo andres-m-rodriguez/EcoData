@@ -1,0 +1,139 @@
+@namespace FaunaFinder.Client.Components.Shell
+@inherits LocalizedComponentBase
+@using EcoData.Wildlife.Contracts.Dtos
+@using FaunaFinder.Client.Services.FieldNotebook
+@inject ISpeciesHttpClient SpeciesClient
+@inject IFieldNotebook Notebook
+
+@* The persistent field notebook. Takes no parameters — the layout renders it
+   bare. It holds the reader's own state rather than a second copy of the
+   shelves: what they starred, and what is near them.
+
+   Saved reads local storage on mount and re-reads whenever anything mutates
+   the notebook. Nearby stays cold: it asks the browser for a position only
+   after the reader presses the button. *@
+
+<aside class="ff-rail">
+    <h2 class="ff-rail-heading">@L["Rail_Heading"]</h2>
+
+    <div class="ff-rail-chips">
+        <button type="button"
+                class="@ChipClass(RailTab.Saved)"
+                aria-pressed="@AriaPressed(RailTab.Saved)"
+                @onclick="ShowSaved">
+            @L["Rail_Tab_Saved"]
+        </button>
+        <button type="button"
+                class="@ChipClass(RailTab.Nearby)"
+                aria-pressed="@AriaPressed(RailTab.Nearby)"
+                @onclick="ShowNearby">
+            @L["Rail_Tab_Nearby"]
+        </button>
+    </div>
+
+    <div class="ff-rail-list">
+        @* A null command result is the loading sentinel — no flag is kept for it. *@
+        @if (ActiveListPending)
+        {
+            @for (var i = 0; i < SkeletonRowCount; i++)
+            {
+                <div class="ff-rail-skeleton-row">
+                    <MudSkeleton SkeletonType="SkeletonType.Rectangle" Class="ff-rail-skeleton-art" />
+                    <div class="ff-rail-skeleton-text">
+                        <MudSkeleton SkeletonType="SkeletonType.Text" Class="ff-rail-skeleton-name" />
+                        <MudSkeleton SkeletonType="SkeletonType.Text" Class="ff-rail-skeleton-count" />
+                    </div>
+                </div>
+            }
+        }
+        else if (_tab == RailTab.Saved)
+        {
+            @if (LoadSavedState.Result is { Count: > 0 } saved)
+            {
+                @foreach (var entry in saved)
+                {
+                    <a class="ff-rail-item" href="@EntryHref(entry)" @key="entry.Id">
+                        @* A photograph when the record carries one; the duotone
+                           glyph tile is the fallback, not the default. *@
+                        @if (entry.HasImage)
+                        {
+                            <img class="ff-rail-art ff-rail-art--photo"
+                                 src="@SpeciesImageSrc(entry.Id)"
+                                 alt=""
+                                 loading="lazy" />
+                        }
+                        else
+                        {
+                            <span class="@ArtClass(entry.Kind)">
+                                <i class="@ArtIcon(entry.Kind)" aria-hidden="true"></i>
+                            </span>
+                        }
+                        <span class="ff-rail-body">
+                            <span class="ff-rail-name">@entry.Label</span>
+                            @if (!string.IsNullOrWhiteSpace(entry.Sublabel))
+                            {
+                                <span class="ff-rail-sci">@entry.Sublabel</span>
+                            }
+                        </span>
+                        @if (!string.IsNullOrWhiteSpace(entry.Status))
+                        {
+                            <span class="@StatusPillClass(entry.Status)">@entry.Status</span>
+                        }
+                    </a>
+                }
+            }
+            else
+            {
+                <p class="ff-rail-empty">@L["Rail_Saved_Empty"]</p>
+            }
+        }
+        else if (_nearby == NearbyState.Idle)
+        {
+            @* Opt-in: nothing is asked of the browser until this is pressed. *@
+            <button type="button" class="ff-rail-prompt" @onclick="RequestNearbyAsync">
+                <i class="fa-solid fa-location-crosshairs" aria-hidden="true"></i>
+                @L["Rail_Nearby_Prompt"]
+            </button>
+        }
+        else if (_nearby == NearbyState.Locating)
+        {
+            <p class="ff-rail-note">@L["Rail_Nearby_Locating"]</p>
+        }
+        else if (_nearby == NearbyState.Denied)
+        {
+            <p class="ff-rail-empty">@L["Rail_Nearby_Denied"]</p>
+            <button type="button" class="ff-rail-prompt" @onclick="RequestNearbyAsync">
+                <i class="fa-solid fa-location-crosshairs" aria-hidden="true"></i>
+                @L["Rail_Nearby_Prompt"]
+            </button>
+        }
+        else if (_nearby == NearbyState.Unsupported)
+        {
+            @* No retry offered — the browser won't answer differently next time. *@
+            <p class="ff-rail-empty">@L["Rail_Nearby_Unsupported"]</p>
+        }
+        else if (LoadNearbyState.Result is { Count: > 0 } nearby)
+        {
+            <p class="ff-rail-note">@L["Rail_Nearby_Origin", NearbyRadiusKm]</p>
+            @foreach (var species in nearby)
+            {
+                @* Names resolve through the cascading locale, same as the map panels. *@
+                var nearbyName = Locale.Resolve(species.CommonName, fallback: species.ScientificName);
+                <a class="ff-rail-item" href="@SpeciesHref(species.Id)" @key="species.Id">
+                    <span class="ff-rail-art ff-rail-art--species">
+                        <i class="fa-solid fa-paw" aria-hidden="true"></i>
+                    </span>
+                    <span class="ff-rail-body">
+                        <span class="ff-rail-name">@nearbyName</span>
+                        <span class="ff-rail-count">@FormatDistance(species.DistanceMeters)</span>
+                    </span>
+                </a>
+            }
+        }
+        else
+        {
+            @* Failed and empty read the same here: the rail never shouts. *@
+            <p class="ff-rail-empty">@L["Rail_Nearby_Empty", NearbyRadiusKm]</p>
+        }
+    </div>
+</aside>

@@ -1,0 +1,352 @@
+/* Map fills viewport below MudAppBar and above bottom nav.
+   Top offsets mirror MudBlazor's responsive appbar height (--mud-appbar-height defaults to 64px).
+
+   The map viewport is the one dark surface in an otherwise paper app — an
+   instrument set into a document. Everything here colours off the --fauna-map-*
+   tokens, never the paper palette. */
+.map-page {
+    position: fixed;
+    top: calc(var(--mud-appbar-height) - var(--mud-appbar-height) / 8);
+    /* Pinned to the viewport, so a flex sibling can't narrow it. The shell
+       publishes how much of the left edge the field notebook is claiming and
+       the map steps aside by that much; it resolves to 0 whenever the
+       notebook is collapsed or not rendered. Width comes from left/right —
+       a fixed 100% would ignore the offset. */
+    left: var(--fauna-rail-offset, 0px);
+    right: 0;
+    bottom: calc(64px + env(safe-area-inset-bottom, 0px));
+    background: var(--fauna-map-bg);
+    transition: left var(--fauna-t-slow) var(--fauna-ease);
+
+    /* Shared by the floating panels below (and inherited by the panel
+       components' own scoped styles through the DOM). */
+    --fauna-map-panel-shadow: 0 2px 8px rgba(0, 0, 0, 0.35), 0 24px 56px rgba(0, 0, 0, 0.5);
+    --fauna-map-hover: rgba(255, 255, 255, 0.06);
+    --fauna-map-hover-strong: rgba(255, 255, 255, 0.12);
+    --fauna-map-fill: rgba(255, 255, 255, 0.07);
+}
+
+@media (orientation: landscape) {
+    .map-page {
+        top: calc(var(--mud-appbar-height) - var(--mud-appbar-height) / 4);
+    }
+}
+
+@media (min-width: 600px) {
+    .map-page {
+        top: var(--mud-appbar-height);
+    }
+}
+
+@media (min-width: 960px) {
+    .map-page {
+        /* Desktop: no bottom nav */
+        bottom: 0;
+    }
+}
+
+.map-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: var(--fauna-map-bg);
+}
+
+/* Ground showing through/behind the tile layer stays the dark viewport. */
+.map-container ::deep .leaflet-container {
+    background: var(--fauna-map-bg);
+}
+
+/* Load-failure banner floats over the map without displacing it */
+.map-error-overlay {
+    position: absolute;
+    top: 16px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1100;
+    width: min(90%, 480px);
+}
+
+/* Crosshair cursor while drawing a polygon (class set by nuimap.js) */
+.map-container ::deep .nui-map-draw-mode {
+    cursor: crosshair;
+}
+
+/* Action FAB stack — bottom-right, above Leaflet attribution */
+.map-fabs {
+    position: absolute;
+    right: 16px;
+    bottom: 28px;
+    z-index: 500;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    align-items: flex-end;
+}
+
+/* FABs read as translucent instruments on the dark ground rather than
+   MudBlazor's light-theme buttons. */
+.map-fabs ::deep .mud-fab {
+    background-color: var(--fauna-map-fill);
+    -webkit-backdrop-filter: blur(12px) saturate(1.3);
+    backdrop-filter: blur(12px) saturate(1.3);
+    border: 1px solid var(--fauna-map-line);
+    color: var(--fauna-map-fg);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.45);
+}
+
+.map-fabs ::deep .mud-fab:hover,
+.map-fabs ::deep .mud-fab:active {
+    background-color: var(--fauna-map-hover-strong);
+}
+
+/* Near-me: the one brand-coloured action. */
+.map-fabs ::deep .mud-fab.mud-fab-primary {
+    background-color: var(--fauna-map-accent);
+    border-color: transparent;
+    color: var(--fauna-map-bg);
+}
+
+.map-fabs ::deep .mud-fab.mud-fab-primary:hover,
+.map-fabs ::deep .mud-fab.mud-fab-primary:active,
+.map-fabs ::deep .mud-fab.mud-fab-primary:focus-visible {
+    background-color: var(--fauna-map-accent);
+    filter: brightness(1.1);
+}
+
+/* Heatmap toggle, "on" state — solid so it reads as engaged. */
+.map-fabs ::deep .mud-fab.mud-fab-warning {
+    background-color: rgba(255, 255, 255, 0.92);
+    border-color: transparent;
+    color: var(--fauna-map-bg);
+}
+
+.map-fabs ::deep .mud-fab.mud-fab-warning:hover,
+.map-fabs ::deep .mud-fab.mud-fab-warning:active {
+    background-color: #fff;
+}
+
+.map-fabs ::deep .mud-fab:disabled {
+    background-color: rgba(255, 255, 255, 0.04);
+    border-color: var(--fauna-map-line);
+    color: var(--fauna-map-fg-2);
+    box-shadow: none;
+}
+
+.map-fabs ::deep .mud-fab:focus-visible {
+    outline: 2px solid var(--fauna-map-accent);
+    outline-offset: 3px;
+}
+
+/* Polygon draw instruction banner — top center */
+.draw-banner {
+    position: absolute;
+    top: 12px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 600;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    max-width: min(560px, calc(100% - 24px));
+    padding: 8px 14px;
+    background: var(--fauna-map-glass);
+    -webkit-backdrop-filter: blur(20px) saturate(1.3);
+    backdrop-filter: blur(20px) saturate(1.3);
+    border: 1px solid var(--fauna-map-line);
+    border-radius: 12px;
+    box-shadow: var(--fauna-map-panel-shadow);
+    color: var(--fauna-map-fg);
+}
+
+.draw-banner ::deep .mud-icon-root {
+    color: var(--fauna-map-accent);
+    flex-shrink: 0;
+}
+
+.draw-banner-text {
+    font: var(--fauna-body-sm);
+    color: var(--fauna-map-fg);
+    min-width: 0;
+}
+
+/* MudBlazor paints themed buttons with !important, so the accent has to match it. */
+.draw-banner ::deep .mud-button-filled {
+    background-color: var(--fauna-map-accent) !important;
+    color: var(--fauna-map-bg) !important;
+}
+
+.draw-banner ::deep .mud-button-text {
+    color: var(--fauna-map-fg-2);
+}
+
+.draw-banner ::deep .mud-button-text:hover {
+    background-color: var(--fauna-map-hover);
+    color: var(--fauna-map-fg);
+}
+
+.draw-banner ::deep .mud-button-root:focus-visible {
+    outline: 2px solid var(--fauna-map-accent);
+    outline-offset: 2px;
+}
+
+/* Heatmap filter card — top left, clear of the sidebar */
+.heatmap-card {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    z-index: 550;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 6px 8px;
+    background: var(--fauna-map-glass);
+    -webkit-backdrop-filter: blur(20px) saturate(1.3);
+    backdrop-filter: blur(20px) saturate(1.3);
+    border: 1px solid var(--fauna-map-line);
+    border-radius: 12px;
+    box-shadow: var(--fauna-map-panel-shadow);
+}
+
+.heatmap-card ::deep .mud-chip {
+    color: var(--fauna-map-fg-2);
+    border-color: var(--fauna-map-line);
+    background-color: transparent;
+}
+
+.heatmap-card ::deep .mud-chip:hover {
+    background-color: var(--fauna-map-hover);
+    color: var(--fauna-map-fg);
+}
+
+.heatmap-card ::deep .mud-chip.mud-chip-selected {
+    background-color: rgba(110, 224, 163, 0.14);
+    border-color: var(--fauna-map-accent);
+    color: var(--fauna-map-accent);
+}
+
+.heatmap-card ::deep .mud-chip:focus-visible {
+    outline: 2px solid var(--fauna-map-accent);
+    outline-offset: 2px;
+}
+
+.heatmap-close {
+    width: 26px;
+    height: 26px;
+    border-radius: 8px;
+    border: 1px solid var(--fauna-map-line);
+    background: var(--fauna-map-fill);
+    color: var(--fauna-map-fg-2);
+    cursor: pointer;
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+}
+
+.heatmap-close:hover {
+    background: var(--fauna-map-hover-strong);
+    color: var(--fauna-map-fg);
+}
+
+.heatmap-close:focus-visible {
+    outline: 2px solid var(--fauna-map-accent);
+    outline-offset: 2px;
+}
+
+.heatmap-close ::deep .mud-icon-root {
+    font-size: 15px !important;
+    color: inherit;
+}
+
+/* Desktop sidebar shell — a glass panel floating over the map, inset from its
+   edges. Inner chrome lives in MapSpeciesPanel / MapNearbyPanel. */
+.desktop-sidebar {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    width: 400px;
+    height: calc(100% - 24px);
+    background: var(--fauna-map-glass);
+    -webkit-backdrop-filter: blur(20px) saturate(1.3);
+    backdrop-filter: blur(20px) saturate(1.3);
+    border: 1px solid var(--fauna-map-line);
+    border-radius: 16px;
+    box-shadow: var(--fauna-map-panel-shadow);
+    z-index: 500;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    /* Clears the 12px inset as well as the panel width so the closed state
+       leaves no sliver against the right edge. */
+    transform: translateX(calc(100% + 24px));
+    transition: transform var(--fauna-t-slow) var(--fauna-ease);
+}
+
+.desktop-sidebar.open {
+    transform: translateX(0);
+}
+
+/* Mobile bottom sheet shell.
+   Bottom nav sits at z-index 9999 (MainLayout.razor.css). The sheet has to
+   stack above that so tapping a pin while the nav is visible doesn't send
+   the sheet behind the nav strip. */
+.mobile-sheet-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(6, 12, 10, 0.55);
+    z-index: 10000;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity var(--fauna-t-slow) var(--fauna-ease);
+}
+
+.mobile-sheet-backdrop.open {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.mobile-sheet {
+    position: fixed;
+    left: 10px;
+    right: 10px;
+    bottom: 10px;
+    /* Always fill from the bottom edge up to ~75% of the viewport so the
+       sheet's top edge is consistent regardless of how much content it
+       holds. Inner content scrolls inside. */
+    height: 75vh;
+    max-height: calc(100vh - 64px);
+    background: var(--fauna-map-glass);
+    -webkit-backdrop-filter: blur(20px) saturate(1.3);
+    backdrop-filter: blur(20px) saturate(1.3);
+    border: 1px solid var(--fauna-map-line);
+    border-radius: 16px;
+    box-shadow: var(--fauna-map-panel-shadow);
+    z-index: 10001;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    transform: translateY(100%);
+    transition: transform var(--fauna-t-slow) var(--fauna-ease);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+.mobile-sheet.open {
+    transform: translateY(0);
+}
+
+/* The map slides when the notebook opens or closes and the panels slide in
+   from the edge; readers who asked for less motion get the end state
+   immediately instead. The panels still fade, which carries the change
+   without travel. */
+@media (prefers-reduced-motion: reduce) {
+    .map-page,
+    .desktop-sidebar,
+    .mobile-sheet {
+        transition: none;
+    }
+}

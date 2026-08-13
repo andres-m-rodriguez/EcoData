@@ -1,0 +1,201 @@
+/* =========================================================================
+   Browse — editorial hero over the three reference sections
+   Same hero geometry as Practices/Actions, minus the meta column: this page
+   has no records of its own, the cards below carry the tallies.
+   ========================================================================= */
+
+.bh-page {
+    padding-bottom: 48px;
+}
+
+/* --- Hero ----------------------------------------------------------- */
+
+.bh-hero {
+    padding: 56px 0 32px;
+    border-bottom: 1px solid var(--fauna-line);
+}
+
+.bh-hero-eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    font: var(--fauna-eyebrow);
+    text-transform: uppercase;
+    letter-spacing: var(--fauna-tracking-eyebrow);
+    color: var(--fauna-accent);
+    margin-bottom: 20px;
+}
+
+.bh-hero-eyebrow::before {
+    content: "";
+    width: 24px;
+    height: 1px;
+    background: var(--fauna-accent);
+}
+
+.bh-hero-heading {
+    font: 700 clamp(2.25rem, 5vw, 4.25rem)/1.02 var(--fauna-font-serif);
+    letter-spacing: var(--fauna-tracking-tight);
+    color: var(--fauna-primary);
+    max-width: 18ch;
+    margin: 0;
+}
+
+.bh-hero-lede {
+    font: 400 1.0625rem/1.55 var(--fauna-font-sans);
+    color: var(--fauna-fg-3);
+    max-width: 620px;
+    margin: 16px 0 0;
+}
+
+/* --- Card grid ------------------------------------------------------- */
+
+.bh-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+    padding: 28px 0 0;
+}
+
+.bh-card {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 14px;
+    padding: 28px 24px 20px;
+    background: var(--fauna-surface);
+    border: 1px solid var(--fauna-line);
+    border-radius: var(--fauna-shell-radius);
+    text-decoration: none;
+    color: inherit;
+    transition: transform var(--fauna-t-slow) var(--fauna-ease),
+                border-color var(--fauna-t-slow) var(--fauna-ease),
+                box-shadow var(--fauna-t-slow) var(--fauna-ease);
+}
+
+.bh-card:hover {
+    transform: translateY(-3px);
+    border-color: var(--fauna-primary-200);
+    box-shadow: var(--fauna-shadow-4);
+}
+
+.bh-card:focus-visible {
+    outline: 2px solid var(--fauna-accent);
+    outline-offset: 3px;
+}
+
+.bh-card-icon {
+    display: grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    border-radius: var(--fauna-shell-radius);
+    background: var(--fauna-primary-50);
+    color: var(--fauna-primary);
+    transition: background-color var(--fauna-t-base) var(--fauna-ease);
+}
+
+.bh-card:hover .bh-card-icon {
+    background: var(--fauna-primary-100);
+}
+
+/* MudIcon renders its own root element, outside this file's scope. */
+.bh-card-icon ::deep .mud-icon-root {
+    font-size: 22px;
+    color: currentColor;
+}
+
+.bh-card-title {
+    font: 600 1.25rem/1.2 var(--fauna-font-serif);
+    letter-spacing: var(--fauna-tracking-tight);
+    color: var(--fauna-fg);
+    margin: 0;
+    transition: color var(--fauna-t-base) var(--fauna-ease);
+}
+
+.bh-card:hover .bh-card-title {
+    color: var(--fauna-primary);
+}
+
+.bh-card-desc {
+    font: var(--fauna-body-sm);
+    color: var(--fauna-fg-3);
+    margin: 0;
+    /* Pushes the tally to the card's floor so the three rules line up. */
+    flex: 1 1 auto;
+}
+
+.bh-card-foot {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    width: 100%;
+    padding-top: 14px;
+    border-top: 1px solid var(--fauna-line);
+}
+
+.bh-card-count {
+    font: var(--fauna-mono);
+    color: var(--fauna-fg-4);
+}
+
+.bh-card-go {
+    display: inline-flex;
+    color: var(--fauna-primary-300);
+    transition: transform var(--fauna-t-base) var(--fauna-ease),
+                color var(--fauna-t-base) var(--fauna-ease);
+}
+
+.bh-card:hover .bh-card-go {
+    color: var(--fauna-primary);
+    transform: translateX(3px);
+}
+
+.bh-card-go ::deep .mud-icon-root {
+    color: currentColor;
+}
+
+/* --- Responsive ------------------------------------------------------ */
+
+@media (max-width: 960px) {
+    .bh-grid {
+        grid-template-columns: repeat(2, 1fr);
+        padding: 20px 0 0;
+    }
+}
+
+@media (max-width: 900px) {
+    .bh-hero {
+        padding: 32px 0 24px;
+    }
+
+    .bh-hero-heading {
+        max-width: none;
+    }
+}
+
+@media (max-width: 700px) {
+    .bh-grid {
+        grid-template-columns: 1fr;
+        gap: 14px;
+    }
+
+    .bh-card {
+        padding: 22px 20px 16px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .bh-card,
+    .bh-card-icon,
+    .bh-card-title,
+    .bh-card-go {
+        transition: none;
+    }
+
+    .bh-card:hover,
+    .bh-card:hover .bh-card-go {
+        transform: none;
+    }
+}

@@ -28,6 +28,8 @@
     aspect-ratio: 4 / 3;
     overflow: hidden;
     background-color: var(--fauna-bg-alt);
+    /* Artwork: a translucent field-guide texture (brand green, brass, hatching)
+       laid over whatever ground --fauna-bg-alt resolves to. Fixed by design. */
     background-image:
         radial-gradient(circle at 20% 30%, rgba(63, 125, 95, 0.12) 0, transparent 40%),
         radial-gradient(circle at 80% 70%, rgba(138, 111, 62, 0.10) 0, transparent 45%),
@@ -70,12 +72,12 @@
     width: 28px;
     height: 28px;
     border-radius: 8px;
-    background: rgba(255, 255, 255, 0.94);
+    background: color-mix(in srgb, var(--fauna-surface) 94%, transparent);
     display: grid;
     place-items: center;
     color: var(--fauna-primary);
     backdrop-filter: blur(6px);
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+    box-shadow: var(--fauna-shadow-1);
     font-size: 13px;
 }
 
@@ -87,7 +89,9 @@
     align-items: center;
     gap: 4px;
     padding: 4px 7px;
-    background: rgba(138, 111, 62, 0.95);
+    background: color-mix(in srgb, var(--fauna-accent-warm) 95%, transparent);
+    /* The endemic badge carries its own dark brass ground on top of a photo,
+       so its label stays white on both themes. */
     color: #fff;
     border-radius: 6px;
     font: 700 9px/1 var(--fauna-font-sans);
@@ -97,7 +101,7 @@
 
 .ff-card-endemic ::deep .mud-icon-root {
     font-size: 11px !important;
-    color: #fff;
+    color: currentColor;
 }
 
 .ff-card-body {

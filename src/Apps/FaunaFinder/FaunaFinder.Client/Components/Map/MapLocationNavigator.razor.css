@@ -1,13 +1,17 @@
+/* Floats directly over the dark map viewport, so it is a glass card on
+   --fauna-map-* rather than a paper card. */
 .mln-overlay {
     position: absolute;
     bottom: 24px;
     left: 50%;
     transform: translateX(-50%);
     width: min(440px, calc(100% - 32px));
-    background: var(--fauna-surface);
-    border: 1px solid var(--fauna-line);
+    background: var(--fauna-map-glass);
+    -webkit-backdrop-filter: blur(20px) saturate(1.3);
+    backdrop-filter: blur(20px) saturate(1.3);
+    border: 1px solid var(--fauna-map-line);
     border-radius: 12px;
-    box-shadow: var(--fauna-shadow-4);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35), 0 24px 56px rgba(0, 0, 0, 0.5);
     z-index: 600;
     overflow: hidden;
 }
@@ -17,8 +21,8 @@
     align-items: center;
     gap: 8px;
     padding: 10px 12px;
-    border-bottom: 1px solid var(--fauna-line);
-    color: var(--fauna-primary);
+    border-bottom: 1px solid var(--fauna-map-line);
+    color: var(--fauna-map-accent);
 }
 
 .mln-head > ::deep .mud-icon-root {
@@ -28,7 +32,7 @@
 
 .mln-species {
     font: 500 14px/1.2 var(--fauna-font-sans);
-    color: var(--fauna-fg);
+    color: var(--fauna-map-fg);
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -38,7 +42,7 @@
 
 .mln-details {
     font: 500 12px/1 var(--fauna-font-sans);
-    color: var(--fauna-primary);
+    color: var(--fauna-map-accent);
     text-decoration: none;
     white-space: nowrap;
 }
@@ -51,9 +55,9 @@
     width: 28px;
     height: 28px;
     border-radius: 8px;
-    border: 1px solid var(--fauna-line);
-    background: var(--fauna-surface);
-    color: var(--fauna-fg-3);
+    border: 1px solid var(--fauna-map-line);
+    background: rgba(255, 255, 255, 0.07);
+    color: var(--fauna-map-fg-2);
     cursor: pointer;
     display: grid;
     place-items: center;
@@ -61,8 +65,15 @@
 }
 
 .mln-close:hover {
-    background: var(--fauna-bg-alt);
-    color: var(--fauna-fg);
+    background: rgba(255, 255, 255, 0.12);
+    color: var(--fauna-map-fg);
+}
+
+.mln-close:focus-visible,
+.mln-details:focus-visible,
+.mln-info:focus-visible {
+    outline: 2px solid var(--fauna-map-accent);
+    outline-offset: 2px;
 }
 
 .mln-close ::deep .mud-icon-root {
@@ -75,6 +86,24 @@
     align-items: center;
     gap: 4px;
     padding: 8px;
+}
+
+/* Prev/next arrows are MudIconButtons: light-theme grey by default. */
+.mln-body ::deep .mud-icon-button {
+    color: var(--fauna-map-fg);
+}
+
+.mln-body ::deep .mud-icon-button:hover {
+    background-color: rgba(255, 255, 255, 0.08);
+}
+
+.mln-body ::deep .mud-icon-button:disabled {
+    color: rgba(255, 255, 255, 0.25);
+}
+
+.mln-body ::deep .mud-icon-button:focus-visible {
+    outline: 2px solid var(--fauna-map-accent);
+    outline-offset: 2px;
 }
 
 .mln-info {
@@ -93,12 +122,12 @@
 }
 
 .mln-info:hover {
-    background: var(--fauna-primary-50);
+    background: rgba(255, 255, 255, 0.08);
 }
 
 .mln-location {
     font: 500 14px/1.3 var(--fauna-font-sans);
-    color: var(--fauna-fg);
+    color: var(--fauna-map-fg);
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -108,6 +137,6 @@
 .mln-counter {
     font: var(--fauna-mono);
     font-size: 11px;
-    color: var(--fauna-fg-4);
+    color: var(--fauna-map-fg-2);
     letter-spacing: 0.04em;
 }

@@ -1,0 +1,46 @@
+@namespace FaunaFinder.Client.Components.Shell
+@inherits LocalizedComponentBase
+@inject INativeNavigationManager Navigation
+
+@* The mobile tab bar — a floating pill, not a docked strip.
+
+   It owns the Hidden/Shown events any page can publish to get it out of the
+   way, so a screen that needs the bottom of the viewport (the map's
+   municipality sheet) doesn't have to reach into the layout. The pill stays
+   in the DOM and slides out on a transform, so it animates both ways. *@
+
+<nav class="@BarClass" aria-hidden="@(_hidden ? "true" : "false")">
+    <MudStack Row="true" Justify="Justify.SpaceAround" AlignItems="AlignItems.Center" Class="bottom-nav-container">
+        <MudButton Variant="Variant.Text" Color="@TabColor(NavigationTab.Map)" Class="@TabClass(NavigationTab.Map)"
+                   OnClick="@(() => GoTo(NavigationTab.Map))">
+            <MudStack AlignItems="AlignItems.Center" Spacing="0">
+                <MudIcon Icon="@Icons.Material.Filled.Map" Size="Size.Small" />
+                <MudText Typo="Typo.caption">@L["Nav_Map"]</MudText>
+            </MudStack>
+        </MudButton>
+        <MudButton Variant="Variant.Text" Color="@TabColor(NavigationTab.Species)" Class="@TabClass(NavigationTab.Species)"
+                   OnClick="@(() => GoTo(NavigationTab.Species))">
+            <MudStack AlignItems="AlignItems.Center" Spacing="0">
+                <MudIcon Icon="@Icons.Material.Filled.Pets" Size="Size.Small" />
+                <MudText Typo="Typo.caption">@L["Nav_Species"]</MudText>
+            </MudStack>
+        </MudButton>
+        <MudButton Variant="Variant.Text" Color="@TabColor(NavigationTab.Municipalities)" Class="@TabClass(NavigationTab.Municipalities)"
+                   OnClick="@(() => GoTo(NavigationTab.Municipalities))">
+            <MudStack AlignItems="AlignItems.Center" Spacing="0">
+                <MudIcon Icon="@Icons.Material.Filled.LocationCity" Size="Size.Small" />
+                <MudText Typo="Typo.caption">@L["Nav_Municipios"]</MudText>
+            </MudStack>
+        </MudButton>
+        @* Categories, Practices and Actions fold in here. Six labels don't fit
+           a phone, and all three are reference browsing — /browse fans back
+           out. The desktop nav still links each one directly. *@
+        <MudButton Variant="Variant.Text" Color="@TabColor(NavigationTab.Browse)" Class="@TabClass(NavigationTab.Browse)"
+                   OnClick="@(() => GoTo(NavigationTab.Browse))">
+            <MudStack AlignItems="AlignItems.Center" Spacing="0">
+                <MudIcon Icon="@Icons.Material.Filled.GridView" Size="Size.Small" />
+                <MudText Typo="Typo.caption">@L["Nav_Browse"]</MudText>
+            </MudStack>
+        </MudButton>
+    </MudStack>
+</nav>

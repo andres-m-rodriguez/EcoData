@@ -1,0 +1,279 @@
+/* ==========================================================================
+   FfSearch — the app bar's combined species + municipio search.
+
+   At rest this is the capsule the layout used to draw itself: a rounded pill
+   on the well ground (--fauna-bg-alt) with a hairline edge, a leading glyph
+   and placeholder-weight text. Everything below is a --fauna-* token, so the
+   dark ground re-grounds it along with the rest of the shell.
+
+   Scoping note: MudIcon, MudTextField and MudOverlay are components, so Blazor
+   never stamps this file's scope attribute on their markup — every rule that
+   reaches into them goes through ::deep from an element that does carry it.
+   ========================================================================== */
+
+.ff-search {
+    position: relative;
+    display: flex;
+    align-items: center;
+    flex: 0 1 320px;
+    min-width: 200px;
+    max-width: 320px;
+    margin-right: 8px;
+}
+
+/* --------------------------------------------------------------------------
+   The capsule
+   -------------------------------------------------------------------------- */
+.ff-search-pill {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    min-width: 0;
+    /* The placeholder pill was a flat 7px/14px box. The right side gives some
+       of that back to the clear button, which carries its own hit area. */
+    padding: 2px 6px 2px 14px;
+    border-radius: 999px;
+    background: var(--fauna-bg-alt);
+    border: 1px solid var(--fauna-line);
+    transition: border-color var(--fauna-t-base) var(--fauna-ease),
+                background-color var(--fauna-t-base) var(--fauna-ease);
+}
+
+.ff-search-pill:hover {
+    border-color: var(--fauna-primary-200);
+}
+
+/* The capsule is the control as far as the reader is concerned, so it takes
+   both the tint and the ring. Drawing the ring on the inner <input> instead
+   would box just the text field, inset within the pill's own padding. */
+.ff-search-pill:focus-within {
+    border-color: var(--fauna-primary-300);
+    background: var(--fauna-surface);
+    outline: 2px solid var(--fauna-primary);
+    outline-offset: 2px;
+}
+
+.ff-search-pill ::deep .ff-search-glyph {
+    flex-shrink: 0;
+    font-size: 17px !important;
+    color: var(--fauna-fg-4);
+}
+
+/* --------------------------------------------------------------------------
+   The input — MudTextField in Variant.Text with no underline, so all the
+   chrome it shows is the text itself.
+   -------------------------------------------------------------------------- */
+.ff-search-pill ::deep .ff-search-input {
+    flex: 1 1 auto;
+    min-width: 0;
+    margin: 0;
+}
+
+.ff-search-pill ::deep .ff-search-input .mud-input {
+    margin-top: 0;
+    color: var(--fauna-fg);
+}
+
+.ff-search-pill ::deep .ff-search-input input {
+    font: var(--fauna-body-sm);
+    color: var(--fauna-fg);
+    padding: 6px 0;
+    text-overflow: ellipsis;
+}
+
+.ff-search-pill ::deep .ff-search-input input::placeholder {
+    color: var(--fauna-fg-4);
+    opacity: 1;
+}
+
+/* The capsule draws the ring for the whole control; suppress the input's own
+   so the two don't nest. */
+.ff-search-pill ::deep .ff-search-input input:focus,
+.ff-search-pill ::deep .ff-search-input input:focus-visible {
+    outline: none;
+}
+
+/* --------------------------------------------------------------------------
+   Clear button — appears only once there is text to clear
+   -------------------------------------------------------------------------- */
+.ff-search-clear {
+    appearance: none;
+    flex: none;
+    display: grid;
+    place-items: center;
+    width: 26px;
+    height: 26px;
+    padding: 0;
+    border: 0;
+    border-radius: 999px;
+    background: transparent;
+    color: var(--fauna-fg-4);
+    cursor: pointer;
+    transition: background-color var(--fauna-t-base) var(--fauna-ease),
+                color var(--fauna-t-base) var(--fauna-ease);
+}
+
+.ff-search-clear:hover {
+    background: var(--fauna-primary-50);
+    color: var(--fauna-primary);
+}
+
+.ff-search-clear:focus-visible {
+    outline: 2px solid var(--fauna-primary);
+    outline-offset: 2px;
+}
+
+.ff-search-clear ::deep .mud-icon-root {
+    font-size: 15px !important;
+    color: currentColor;
+}
+
+/* --------------------------------------------------------------------------
+   Dropdown panel
+   --------------------------------------------------------------------------
+   Stacking: .ff-appbar is fixed and backdrop-filtered, so it is its own
+   stacking context and everything here paints inside it. Within that context
+   the panel must clear the shell's two published ceilings — .ff-appbar's own
+   MudBlazor layer (--mud-zindex-appbar, 1100) and .bottom-nav's 9999
+   (MainLayout.razor.css) — so it sits at 10050, one step above the map's
+   mobile sheet at 10000, with the overlay parked just beneath it.
+   -------------------------------------------------------------------------- */
+.ff-search-panel {
+    position: absolute;
+    top: calc(100% + 10px);
+    right: 0;
+    z-index: 10050;
+    width: 340px;
+    max-width: calc(100vw - 2 * var(--fauna-shell-gutter));
+    max-height: min(60vh, 460px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: 4px;
+    background: var(--fauna-surface);
+    border: 1px solid var(--fauna-line);
+    border-radius: var(--fauna-shell-radius);
+    box-shadow: var(--fauna-shell-shadow-float);
+}
+
+/* The click-outside catcher renders inside this component, so it needs to
+   stack over the page but under the panel it is closing. */
+.ff-search ::deep .mud-overlay {
+    z-index: 10040;
+}
+
+/* Group heading — uppercase and tracked, the same eyebrow the nav pills use. */
+.ff-search-group {
+    margin: 0;
+    padding: 10px 10px 6px;
+    font: 700 10px/1 var(--fauna-font-sans);
+    letter-spacing: var(--fauna-tracking-eyebrow);
+    text-transform: uppercase;
+    color: var(--fauna-fg-4);
+}
+
+/* A searching or empty line. Never an alert — search is chrome. */
+.ff-search-note {
+    margin: 0;
+    padding: 14px 12px;
+    font: var(--fauna-body-sm);
+    color: var(--fauna-fg-4);
+}
+
+/* --------------------------------------------------------------------------
+   Result rows — the rail's item geometry at a slightly tighter tile
+   -------------------------------------------------------------------------- */
+.ff-search-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 6px 8px;
+    border-radius: 8px;
+    text-decoration: none;
+    color: var(--fauna-fg);
+    transition: background-color var(--fauna-t-base) var(--fauna-ease);
+}
+
+.ff-search-item:hover {
+    background: var(--fauna-bg-alt);
+}
+
+.ff-search-item:focus-visible {
+    outline: 2px solid var(--fauna-primary-500);
+    outline-offset: -2px;
+}
+
+/* 36px art tile — a duotone field-guide chip holding one Font Awesome glyph.
+   The tile carries its own saturated ground, so the glyph stays white on both
+   themes; the gradients are artwork and stay fixed for the same reason. */
+.ff-search-art {
+    flex: none;
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    display: grid;
+    place-items: center;
+    color: #ffffff;
+    box-shadow: var(--fauna-shadow-1);
+}
+
+.ff-search-art i {
+    font-size: 15px;
+    line-height: 1;
+    color: currentColor;
+}
+
+/* The photo variant is an <img>, so it needs the box explicitly — `display:
+   grid` centres a glyph but would stretch a bitmap. */
+.ff-search-art--photo {
+    display: block;
+    object-fit: cover;
+    background: var(--fauna-bg-alt);
+}
+
+.ff-search-art--species {
+    background: linear-gradient(135deg, var(--fauna-primary) 0%, var(--fauna-primary-500) 100%);
+}
+
+.ff-search-art--place {
+    /* Teal duotone — artwork, deliberately off the brand ramp and theme-fixed. */
+    background: linear-gradient(135deg, #1d4e4e 0%, #3f8f8a 100%);
+}
+
+.ff-search-body {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.ff-search-name {
+    font: 600 0.9375rem/1.25 var(--fauna-font-serif);
+    letter-spacing: var(--fauna-tracking-tight);
+    color: var(--fauna-fg);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Scientific name — serif italic, the field-guide convention. */
+.ff-search-sci {
+    font: italic 400 0.8125rem/1.3 var(--fauna-font-serif);
+    color: var(--fauna-fg-3);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .ff-search-pill,
+    .ff-search-clear,
+    .ff-search-item {
+        transition: none;
+    }
+
+    .ff-search ::deep .mud-overlay {
+        transition: none;
+    }
+}

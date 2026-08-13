@@ -151,10 +151,12 @@
                 border-color var(--fauna-t-base) var(--fauna-ease);
 }
 
+/* Filled-primary hover: the label takes the ground colour so it inverts with
+   the theme rather than staying white on a light-green dark-mode primary. */
 .mm-row-details:hover {
     background: var(--fauna-primary);
     border-color: var(--fauna-primary);
-    color: #fff;
+    color: var(--fauna-surface);
 }
 
 .mm-row-details ::deep .mud-icon-root {
@@ -162,7 +164,7 @@
 }
 
 .mm-row-details:hover ::deep .mud-icon-root {
-    color: #fff;
+    color: var(--fauna-surface);
 }
 
 .mm-row-skeleton {

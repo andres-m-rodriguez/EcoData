@@ -2,7 +2,13 @@
    Base Typography
    ========================================================================== */
 html, body {
-    font-family: 'Inter', sans-serif;
+    font-family: var(--fauna-font-sans);
+}
+
+/* The shell's ground colour, so overscroll never flashes white behind the
+   floating panels. */
+body {
+    background-color: var(--fauna-bg);
 }
 
 h1:focus {
@@ -56,13 +62,14 @@ h1:focus {
 }
 
 /* ==========================================================================
-   Map Layout - AppBar is 48px when Dense="true"
+   Map Layout — the page pins itself to the viewport in Map.razor.css
+   (top/left/right/bottom off --mud-appbar-height); no height here, or the
+   box would outrun the floating app bar's offsets.
    ========================================================================== */
 .map-page {
     display: flex;
     flex: 1;
     position: relative;
-    height: calc(100vh - 48px);
 }
 
 .map-container {
@@ -195,14 +202,6 @@ h1:focus {
 }
 
 /* ==========================================================================
-   AppBar with Backdrop Blur (FaunaFinder uses colored navbar)
-   ========================================================================== */
-.app-bar-blur {
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-}
-
-/* ==========================================================================
    Utility Classes
    ========================================================================== */
 .narrow-page {
@@ -232,9 +231,10 @@ h1:focus {
    Mobile Bottom Navigation Spacing
    ========================================================================== */
 @media (max-width: 959.95px) {
-    /* Ensure content doesn't get hidden behind fixed bottom nav (64px + safe area) */
+    /* Clear the floating bottom pill: strip height + the gutter it floats
+       above + one more gutter of breathing room, plus the safe area. */
     .mud-main-content {
-        padding-bottom: 80px !important;
+        padding-bottom: calc(var(--ff-bottom-nav-height, 64px) + var(--fauna-shell-gutter, 10px) * 2 + env(safe-area-inset-bottom, 0px)) !important;
     }
 }
 
@@ -385,4 +385,16 @@ h1:focus {
     font-size: 0.875rem;
     color: var(--mud-palette-text-secondary);
     max-width: 320px;
+}
+
+/* ==========================================================================
+   Menu item check placeholder
+   --------------------------------------------------------------------------
+   Holds the check column in sort menus so checked and unchecked labels line
+   up. Global rather than scoped: MudMenu renders its items into a popover
+   at the app root, outside the owning component's DOM subtree, so neither a
+   scoped selector nor ::deep can reach them.
+   ========================================================================== */
+.mm-sort-check-placeholder {
+    visibility: hidden;
 }

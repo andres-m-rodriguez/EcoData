@@ -8,6 +8,26 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <base href="/" />
     <title>FaunaFinder - Puerto Rico Wildlife</title>
+
+    @* Theme boot. Blocking and inline on purpose: it has to stamp data-theme
+       before the token sheets below are applied, or a dark-mode reader gets a
+       white flash on every load. The app renders WebAssembly with prerender
+       disabled, so Blazor is not running yet — plain JS, no interop.
+       No stored choice means no attribute, which leaves the sheet's
+       prefers-color-scheme fallback in charge. *@
+    <script>
+        (function () {
+            try {
+                var stored = window.localStorage.getItem('faunafinder-theme');
+                if (stored === 'dark' || stored === 'light') {
+                    document.documentElement.setAttribute('data-theme', stored);
+                }
+            } catch (e) {
+                // storage blocked — fall through to prefers-color-scheme
+            }
+        })();
+    </script>
+
     <link
     href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;0,6..72,700;1,6..72,400;1,6..72,500&family=JetBrains+Mono:wght@400;500;600&display=swap"
     rel="stylesheet" />

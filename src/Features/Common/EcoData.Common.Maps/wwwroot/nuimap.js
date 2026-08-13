@@ -1,11 +1,83 @@
 // Leaflet map interop for NuiMap component
 
+const OSM_ATTRIBUTION =
+    '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
+
+// One basemap per ground. The host decides which by stamping data-theme on
+// <html> — the same signal the token sheets key off — so the tiles flip with
+// the rest of the shell instead of staying paper-white under a dark UI.
+const BASEMAPS = {
+    light: {
+        url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+        options: { attribution: OSM_ATTRIBUTION }
+    },
+    dark: {
+        url: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
+        options: {
+            attribution:
+                OSM_ATTRIBUTION +
+                ' &copy; <a href="https://carto.com/attributions">CARTO</a>',
+            subdomains: 'abcd',
+            maxZoom: 20
+        }
+    }
+};
+
+// Three states, matching the token sheets: an explicit stamp wins, and with
+// nothing stamped the OS decides.
+function resolveTheme() {
+    const stamped = document.documentElement.getAttribute('data-theme');
+    if (stamped === 'dark' || stamped === 'light') {
+        return stamped;
+    }
+
+    return typeof window.matchMedia === 'function'
+        && window.matchMedia('(prefers-color-scheme: dark)').matches
+        ? 'dark'
+        : 'light';
+}
+
+function applyBasemap(map, theme) {
+    if (map._nuiTheme === theme) return;
+
+    if (map._nuiTiles) {
+        map.removeLayer(map._nuiTiles);
+    }
+
+    const basemap = BASEMAPS[theme] ?? BASEMAPS.light;
+    map._nuiTiles = L.tileLayer(basemap.url, basemap.options).addTo(map);
+    // Added last, so it would otherwise sit over the markers and polygons
+    // already on the map when the theme flips mid-session.
+    map._nuiTiles.bringToBack();
+    map._nuiTheme = theme;
+}
+
+// A map can outlive any one theme, so it watches both sources rather than
+// reading once at init.
+function watchTheme(map) {
+    const onThemeChanged = () => applyBasemap(map, resolveTheme());
+
+    const observer = new MutationObserver(onThemeChanged);
+    observer.observe(document.documentElement, {
+        attributes: true,
+        attributeFilter: ['data-theme']
+    });
+
+    const media = typeof window.matchMedia === 'function'
+        ? window.matchMedia('(prefers-color-scheme: dark)')
+        : null;
+    media?.addEventListener('change', onThemeChanged);
+
+    map._nuiThemeWatch = { observer, media, onThemeChanged };
+}
+
 export function initialize(element, lat, lng, zoom, dotNetRef) {
     const map = L.map(element).setView([lat, lng], zoom);
 
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-    }).addTo(map);
+    map._nuiTiles = null;
+    map._nuiTheme = null;
+    applyBasemap(map, resolveTheme());
+    watchTheme(map);
 
     map._nuiMarkers = L.layerGroup().addTo(map);
     map._nuiGeoJson = L.layerGroup().addTo(map);
@@ -551,6 +623,15 @@ export function dispose(map) {
     if (map) {
         if (map._nuiDraw && map._nuiDraw.handlers) {
             document.removeEventListener('keydown', map._nuiDraw.handlers.onKeyDown);
+        }
+        // Both theme listeners are attached to document/window, so they outlive
+        // the map element unless they come off explicitly.
+        if (map._nuiThemeWatch) {
+            map._nuiThemeWatch.observer.disconnect();
+            map._nuiThemeWatch.media?.removeEventListener(
+                'change',
+                map._nuiThemeWatch.onThemeChanged);
+            map._nuiThemeWatch = null;
         }
         map.remove();
     }

@@ -1,0 +1,125 @@
+/* ==========================================================================
+   Mobile tab bar — a floating pill, not a docked strip.
+
+   Moved here from MainLayout when the bar became its own component so it
+   could own the Hidden/Shown events. `.bottom-nav` is this component's own
+   markup and carries the scope attribute; MudStack and MudButton are
+   components, so their internals still need ::deep.
+   ========================================================================== */
+
+.bottom-nav {
+    position: fixed !important;
+    left: var(--fauna-shell-gutter);
+    right: var(--fauna-shell-gutter);
+    bottom: calc(var(--fauna-shell-gutter) + env(safe-area-inset-bottom, 0px));
+    z-index: 9999;
+    border: 1px solid var(--fauna-line);
+    border-radius: 20px;
+    background-color: color-mix(in srgb, var(--fauna-surface) 86%, transparent);
+    backdrop-filter: blur(18px) saturate(1.4);
+    -webkit-backdrop-filter: blur(18px) saturate(1.4);
+    box-shadow: var(--fauna-shell-shadow-float);
+    overflow: hidden;
+    transform: translate3d(0, 0, 0);
+    isolation: isolate;
+}
+
+/* Seven tabs share the bar: each takes an equal slice and is allowed to
+   shrink below its content width, so the row never scrolls or wraps.
+   MudStack is a component, so this only reaches it through ::deep. */
+::deep .bottom-nav-container {
+    height: var(--ff-bottom-nav-height);
+    padding: 4px 6px;
+    flex-wrap: nowrap;
+    overflow: hidden;
+    gap: 0;
+}
+
+::deep .bottom-nav-item {
+    flex: 1 1 0;
+    min-width: 0;
+    margin: 0 1px;
+    padding: 4px 4px;
+    overflow: hidden;
+    border-radius: 14px;
+    color: var(--fauna-fg-3);
+    text-transform: none !important;
+    transition: background-color var(--fauna-t-base) var(--fauna-ease),
+                color var(--fauna-t-base) var(--fauna-ease);
+}
+
+::deep .bottom-nav-item .mud-button-label {
+    min-width: 0;
+}
+
+::deep .bottom-nav-item .mud-icon-root {
+    margin-bottom: 2px;
+}
+
+::deep .bottom-nav-item .mud-typography-caption {
+    font-size: 0.625rem;
+    letter-spacing: 0;
+    line-height: 1.2;
+    white-space: nowrap;
+}
+
+/* Active tab reads as a filled pine chip */
+::deep .bottom-nav-item.is-active {
+    background-color: var(--fauna-primary);
+    color: var(--fauna-surface) !important;
+}
+
+::deep .bottom-nav-item.is-active .mud-icon-root,
+::deep .bottom-nav-item.is-active .mud-typography {
+    color: var(--fauna-surface) !important;
+}
+
+::deep .bottom-nav-item:focus-visible {
+    outline: 2px solid var(--fauna-primary);
+    outline-offset: -2px;
+}
+
+/* Seven tabs don't fit at the default pill width on small phones —
+   tighten the box, the row gap and the caption rather than letting
+   labels wrap. Sized so the longest label ("Municipios") still clears
+   a 360px viewport. */
+@media (max-width: 420px) {
+    ::deep .bottom-nav-item {
+        margin: 0;
+        padding: 4px 1px;
+    }
+
+    ::deep .bottom-nav-item .mud-typography-caption {
+        font-size: 0.5rem;
+        letter-spacing: -0.01em;
+    }
+}
+
+
+/* --------------------------------------------------------------------------
+   Hidden state — published by a screen that needs the bottom of the viewport.
+
+   The pill slides out on a transform rather than leaving the DOM, so it
+   animates in both directions and the tab it was on survives the trip. The
+   distance clears its own height, its gutter and the safe area, so nothing
+   peeks on a device with a home indicator. Pointer events go with it, or an
+   off-screen pill would still swallow taps along the bottom edge.
+   -------------------------------------------------------------------------- */
+.bottom-nav {
+    transition: transform var(--fauna-t-slow) var(--fauna-ease),
+                opacity var(--fauna-t-base) var(--fauna-ease);
+    will-change: transform;
+}
+
+.bottom-nav.is-hidden {
+    transform: translate3d(0, calc(100% + var(--fauna-shell-gutter) + env(safe-area-inset-bottom, 0px)), 0);
+    opacity: 0;
+    pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .bottom-nav,
+    ::deep .bottom-nav-item {
+        transition: none;
+    }
+}

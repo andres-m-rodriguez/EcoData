@@ -75,6 +75,199 @@
     --status-cr-bg: #f1d9d9;
     --status-dd-bg: #ededed;
     --status-ex-bg: #dcdcdc;
+
+    /* Pill ink. Usually the status colour itself, but NT/VU/EN need a darker
+       ink than their dot colour to clear their own paper tint. Tokenised so
+       the dark ground can re-point them instead of being stuck on paper hexes.
+       DD deliberately borrows EX's ink — both are "no signal" greys. */
+    --status-lc-fg: var(--status-lc);
+    --status-nt-fg: #6a6430;
+    --status-vu-fg: #7d5c20;
+    --status-en-fg: #8b4a25;
+    --status-cr-fg: var(--status-cr);
+    --status-ex-fg: var(--status-ex);
+    --status-dd-fg: var(--status-ex);
+}
+
+/* --- App shell -------------------------------------------------------
+   Harmony's geometry (a gutter of ground, panels floating in it) on
+   FaunaFinder's paper. Panels separate by hairline + soft shadow rather
+   than by the pure value contrast a dark shell gets for free. */
+:root {
+    --fauna-shell-gutter: 10px;
+    --fauna-shell-radius: 12px;
+    --fauna-shell-topbar: 58px;
+    --fauna-rail-width: 264px;
+
+    --fauna-shell-shadow: 0 1px 2px rgba(26, 31, 28, 0.05), 0 10px 28px rgba(26, 31, 28, 0.07);
+    --fauna-shell-shadow-float: 0 12px 32px rgba(26, 31, 28, 0.18);
+
+    /* The map viewport stays dark on any ground — an instrument set into
+       a paper document. These are deliberately NOT --fauna-surface. */
+    --fauna-map-bg: #0f1c17;
+    --fauna-map-glass: rgba(16, 30, 24, 0.9);
+    --fauna-map-line: rgba(255, 255, 255, 0.11);
+    --fauna-map-fg: #f0f4f1;
+    --fauna-map-fg-2: #9fb3a8;
+    --fauna-map-accent: #6ee0a3;
+}
+
+/* ==========================================================================
+   Dark ground
+   --------------------------------------------------------------------------
+   Three states, not two. The bare :root above is the complete light palette
+   and always loads first; the two blocks below only redefine what changes.
+
+     - no data-theme stamped  -> the OS decides, via prefers-color-scheme
+     - data-theme="light"     -> wins over a dark OS (the :not() guard)
+     - data-theme="dark"      -> wins over a light OS (the second block)
+
+   Both blocks carry identical bodies. Keep them in sync.
+
+   The ground itself is Harmony's, the sibling app this shell is modelled on:
+     #000000 frame · #121212 panel · #181818 elevated
+     #1f1f1f hover · #282828 well  · #b3b3b3 secondary text
+
+   NOT redefined here, on purpose:
+     --fauna-map-*  the map viewport is dark on both grounds — the one constant
+     typography, tracking, motion — ground-independent
+   ========================================================================== */
+
+@media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+        /* --- Surfaces (Harmony ground) ---------------------------------- */
+        --fauna-bg: #000000; /* frame */
+        --fauna-bg-alt: #1f1f1f; /* hover / well */
+        --fauna-surface: #121212; /* panel */
+        --fauna-surface-alt: #181818; /* elevated */
+        /* Hairline rather than a fill: 9% white over the #121212 panel lands
+           on Harmony's #282828 well edge, and keeps working on the #000 frame. */
+        --fauna-line: rgba(255, 255, 255, 0.09);
+        --fauna-line-soft: rgba(79, 209, 139, 0.22);
+
+        /* --- Brand: re-tuned, not reused -------------------------------- */
+        /* #1f4d3a is a deep forest that vanishes on black, so the anchor moves
+           to a mint-forest legible as both accent and body-weight text. The
+           numbered ramp keeps its light-mode direction (higher number = deeper
+           green), but the anchor now sits at the bright end of it instead of
+           the dark end — on this ground "emphatic" means lighter, so the ramp
+           reads as one step-down sequence from --fauna-primary either way. */
+        --fauna-primary: #4fd18b;
+        --fauna-primary-700: #3fbe7a;
+        --fauna-primary-600: #34a86b;
+        --fauna-primary-500: #2c8f5b;
+        --fauna-primary-400: #24734a;
+        --fauna-primary-300: #1c5a3a;
+        --fauna-primary-200: #16452d;
+        --fauna-primary-100: #103322;
+        --fauna-primary-50: #0c261a; /* faintest wash — a tint of black, not of white */
+
+        --fauna-accent: #43c07d;
+        --fauna-accent-warm: #d9b46a; /* brass lifted off black — endemic */
+
+        /* --- Text: ramp inverts, #b3b3b3 is Harmony's secondary ---------- */
+        --fauna-fg: #f5f5f5;
+        --fauna-fg-2: #e0e0e0;
+        --fauna-fg-3: #b3b3b3;
+        --fauna-fg-4: #8f8f8f;
+        --fauna-fg-5: #6f6f6f;
+
+        /* --- Shadows: a paper shadow is invisible on black --------------- */
+        --fauna-shadow-1: 0 1px 3px rgba(0, 0, 0, 0.6);
+        --fauna-shadow-4: 0 12px 32px -4px rgba(0, 0, 0, 0.66);
+        --fauna-shadow-hero: 0 25px 50px -12px rgba(0, 0, 0, 0.85);
+        --fauna-shell-shadow: 0 1px 2px rgba(0, 0, 0, 0.6), 0 10px 28px rgba(0, 0, 0, 0.55);
+        --fauna-shell-shadow-float: 0 12px 32px rgba(0, 0, 0, 0.72);
+
+        /* --- IUCN conservation status ------------------------------------
+           Brighter inks on low-alpha tints of themselves, so a pill glows
+           rather than sitting in a muddy paper swatch. LC is pushed toward
+           leaf/yellow-green, well clear of the mint --fauna-primary: a
+           conservation reading must never be mistaken for brand chrome.
+           EX inverts outright — near-black ink is unreadable here. */
+        --status-lc: #7fc96b;
+        --status-nt: #d9cc63;
+        --status-vu: #e8b356;
+        --status-en: #ef8f5c;
+        --status-cr: #f0625f;
+        --status-ex: #d0d0d0;
+        --status-dd: #9a9a9a;
+
+        --status-lc-bg: rgba(127, 201, 107, 0.16);
+        --status-nt-bg: rgba(217, 204, 99, 0.16);
+        --status-vu-bg: rgba(232, 179, 86, 0.16);
+        --status-en-bg: rgba(239, 143, 92, 0.16);
+        --status-cr-bg: rgba(240, 98, 95, 0.18);
+        --status-dd-bg: rgba(255, 255, 255, 0.08);
+        --status-ex-bg: rgba(255, 255, 255, 0.13);
+
+        /* On paper these three are darkened to clear their tint; on a 16%
+           tint of black they would be dark-on-dark, so the ink is just the
+           status colour. The other four alias --status-* and follow along. */
+        --status-nt-fg: var(--status-nt);
+        --status-vu-fg: var(--status-vu);
+        --status-en-fg: var(--status-en);
+    }
+}
+
+/* Explicit dark choice — same body, so it also wins over a light OS. */
+:root[data-theme="dark"] {
+    /* --- Surfaces (Harmony ground) -------------------------------------- */
+    --fauna-bg: #000000; /* frame */
+    --fauna-bg-alt: #1f1f1f; /* hover / well */
+    --fauna-surface: #121212; /* panel */
+    --fauna-surface-alt: #181818; /* elevated */
+    --fauna-line: rgba(255, 255, 255, 0.09);
+    --fauna-line-soft: rgba(79, 209, 139, 0.22);
+
+    /* --- Brand: re-tuned, not reused ------------------------------------ */
+    --fauna-primary: #4fd18b;
+    --fauna-primary-700: #3fbe7a;
+    --fauna-primary-600: #34a86b;
+    --fauna-primary-500: #2c8f5b;
+    --fauna-primary-400: #24734a;
+    --fauna-primary-300: #1c5a3a;
+    --fauna-primary-200: #16452d;
+    --fauna-primary-100: #103322;
+    --fauna-primary-50: #0c261a;
+
+    --fauna-accent: #43c07d;
+    --fauna-accent-warm: #d9b46a;
+
+    /* --- Text ------------------------------------------------------------ */
+    --fauna-fg: #f5f5f5;
+    --fauna-fg-2: #e0e0e0;
+    --fauna-fg-3: #b3b3b3;
+    --fauna-fg-4: #8f8f8f;
+    --fauna-fg-5: #6f6f6f;
+
+    /* --- Shadows --------------------------------------------------------- */
+    --fauna-shadow-1: 0 1px 3px rgba(0, 0, 0, 0.6);
+    --fauna-shadow-4: 0 12px 32px -4px rgba(0, 0, 0, 0.66);
+    --fauna-shadow-hero: 0 25px 50px -12px rgba(0, 0, 0, 0.85);
+    --fauna-shell-shadow: 0 1px 2px rgba(0, 0, 0, 0.6), 0 10px 28px rgba(0, 0, 0, 0.55);
+    --fauna-shell-shadow-float: 0 12px 32px rgba(0, 0, 0, 0.72);
+
+    /* --- IUCN conservation status ---------------------------------------- */
+    --status-lc: #7fc96b;
+    --status-nt: #d9cc63;
+    --status-vu: #e8b356;
+    --status-en: #ef8f5c;
+    --status-cr: #f0625f;
+    --status-ex: #d0d0d0;
+    --status-dd: #9a9a9a;
+
+    --status-lc-bg: rgba(127, 201, 107, 0.16);
+    --status-nt-bg: rgba(217, 204, 99, 0.16);
+    --status-vu-bg: rgba(232, 179, 86, 0.16);
+    --status-en-bg: rgba(239, 143, 92, 0.16);
+    --status-cr-bg: rgba(240, 98, 95, 0.18);
+    --status-dd-bg: rgba(255, 255, 255, 0.08);
+    --status-ex-bg: rgba(255, 255, 255, 0.13);
+
+    --status-nt-fg: var(--status-nt);
+    --status-vu-fg: var(--status-vu);
+    --status-en-fg: var(--status-en);
 }
 
 /* Page frame shared by editorial species page */
@@ -100,10 +293,10 @@
     letter-spacing: var(--fauna-tracking-pill);
 }
 
-.ff-status-pill.status-LC { background: var(--status-lc-bg); color: var(--status-lc); }
-.ff-status-pill.status-NT { background: var(--status-nt-bg); color: #6a6430; }
-.ff-status-pill.status-VU { background: var(--status-vu-bg); color: #7d5c20; }
-.ff-status-pill.status-EN { background: var(--status-en-bg); color: #8b4a25; }
-.ff-status-pill.status-CR { background: var(--status-cr-bg); color: var(--status-cr); }
-.ff-status-pill.status-EX { background: var(--status-ex-bg); color: var(--status-ex); }
-.ff-status-pill.status-DD { background: var(--status-dd-bg); color: var(--status-ex); }
+.ff-status-pill.status-LC { background: var(--status-lc-bg); color: var(--status-lc-fg); }
+.ff-status-pill.status-NT { background: var(--status-nt-bg); color: var(--status-nt-fg); }
+.ff-status-pill.status-VU { background: var(--status-vu-bg); color: var(--status-vu-fg); }
+.ff-status-pill.status-EN { background: var(--status-en-bg); color: var(--status-en-fg); }
+.ff-status-pill.status-CR { background: var(--status-cr-bg); color: var(--status-cr-fg); }
+.ff-status-pill.status-EX { background: var(--status-ex-bg); color: var(--status-ex-fg); }
+.ff-status-pill.status-DD { background: var(--status-dd-bg); color: var(--status-dd-fg); }

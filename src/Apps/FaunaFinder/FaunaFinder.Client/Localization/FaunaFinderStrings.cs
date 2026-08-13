@@ -59,11 +59,57 @@ public static class FaunaFinderStrings
 
         // Layout / navigation
         ["Nav_Map"] = "Map",
+        ["Nav_Browse"] = "Browse",
         ["Nav_Species"] = "Species",
         ["Nav_Municipios"] = "Municipios",
         ["Nav_Categories"] = "Categories",
         ["Nav_Practices"] = "Practices",
         ["Nav_Actions"] = "Actions",
+
+
+        // App shell — the library rail
+        ["Rail_Heading"] = "Field notebook",
+        ["Rail_Tab_Municipios"] = "Municipios",
+        ["Rail_Tab_Taxa"] = "Taxa",
+        ["Rail_Empty"] = "Nothing recorded yet.",
+        ["Rail_Collapse"] = "Collapse the notebook",
+        ["Rail_Expand"] = "Open the notebook",
+        ["Shell_Search"] = "Search species and municipios",
+        ["Shell_Search_Searching"] = "Searching…",
+        ["Shell_Search_Empty"] = "Nothing found for “{0}”.",
+        ["Shell_Search_Clear"] = "Clear search",
+
+        // Browse — the hub the mobile bar folds three sections into
+        ["Browse_PageTitle"] = "Browse",
+        ["Browse_Eyebrow"] = "Reference · Puerto Rico",
+        ["Browse_Heading"] = "The catalogue behind the map.",
+        ["Browse_Lede"] = "Three ways into the same record: by what a species is, by the conservation work that protects it, and by the recovery actions that work delivers.",
+        ["Browse_Categories_Desc"] = "Every taxonomic group recorded on the island, with the species catalogued under each.",
+        ["Browse_Practices_Desc"] = "NRCS conservation practices, each paired with the recovery actions it carries.",
+        ["Browse_Actions_Desc"] = "Fish & Wildlife Service recovery actions, and the practices that deliver them.",
+        ["Browse_Count_Pending"] = "—",
+        ["Theme_ToDark"] = "Switch to dark",
+        ["Theme_ToLight"] = "Switch to paper",
+
+        // Field notebook — the reader's own state
+        ["Rail_Tab_Saved"] = "Saved",
+        ["Rail_Tab_Nearby"] = "Near me",
+        ["Rail_Saved_Empty"] = "Star a species or municipio to keep it here.",
+        ["Rail_Nearby_Empty"] = "Nothing recorded within {0} km.",
+        ["Rail_Nearby_Prompt"] = "Use my location",
+        ["Rail_Nearby_Locating"] = "Finding you…",
+        ["Rail_Nearby_Denied"] = "Location permission was declined.",
+        ["Rail_Nearby_Unsupported"] = "This browser can't share a location.",
+        ["Rail_Nearby_Origin"] = "Within {0} km of you",
+        ["Rail_Distance_M"] = "{0} m",
+        ["Rail_Distance_Km"] = "{0} km",
+        ["Notebook_Save"] = "Save to notebook",
+        ["Notebook_Unsave"] = "Remove from notebook",
+        ["Notebook_Saved"] = "Saved",
+        ["Time_JustNow"] = "just now",
+        ["Time_MinutesAgo"] = "{0} min ago",
+        ["Time_HoursAgo"] = "{0} h ago",
+        ["Time_DaysAgo"] = "{0} d ago",
 
         // Hero (shared eyebrow)
         ["Hero_Eyebrow"] = "Volume 03 · Living Atlas",
@@ -345,11 +391,57 @@ public static class FaunaFinderStrings
 
         // Layout / navigation
         ["Nav_Map"] = "Mapa",
+        ["Nav_Browse"] = "Explorar",
         ["Nav_Species"] = "Especies",
         ["Nav_Municipios"] = "Municipios",
         ["Nav_Categories"] = "Categorías",
         ["Nav_Practices"] = "Prácticas",
         ["Nav_Actions"] = "Acciones",
+
+
+        // Estructura — la libreta lateral
+        ["Rail_Heading"] = "Libreta de campo",
+        ["Rail_Tab_Municipios"] = "Municipios",
+        ["Rail_Tab_Taxa"] = "Taxones",
+        ["Rail_Empty"] = "Todavía no hay registros.",
+        ["Rail_Collapse"] = "Cerrar la libreta",
+        ["Rail_Expand"] = "Abrir la libreta",
+        ["Shell_Search"] = "Buscar especies y municipios",
+        ["Shell_Search_Searching"] = "Buscando…",
+        ["Shell_Search_Empty"] = "No se encontró nada para «{0}».",
+        ["Shell_Search_Clear"] = "Borrar la búsqueda",
+
+        // Explorar — el centro donde la barra móvil agrupa tres secciones
+        ["Browse_PageTitle"] = "Explorar",
+        ["Browse_Eyebrow"] = "Referencia · Puerto Rico",
+        ["Browse_Heading"] = "El catálogo detrás del mapa.",
+        ["Browse_Lede"] = "Tres formas de entrar al mismo registro: por lo que es una especie, por el trabajo de conservación que la protege y por las acciones de recuperación que ese trabajo ejecuta.",
+        ["Browse_Categories_Desc"] = "Todos los grupos taxonómicos registrados en la isla, con las especies catalogadas en cada uno.",
+        ["Browse_Practices_Desc"] = "Prácticas de conservación del NRCS, cada una emparejada con las acciones que conlleva.",
+        ["Browse_Actions_Desc"] = "Acciones de recuperación del Servicio de Pesca y Vida Silvestre, y las prácticas que las ejecutan.",
+        ["Browse_Count_Pending"] = "—",
+        ["Theme_ToDark"] = "Cambiar a oscuro",
+        ["Theme_ToLight"] = "Cambiar a claro",
+
+        // Libreta de campo — lo que guarda el lector
+        ["Rail_Tab_Saved"] = "Guardadas",
+        ["Rail_Tab_Nearby"] = "Cerca de mí",
+        ["Rail_Saved_Empty"] = "Marca una especie o municipio para guardarlo aquí.",
+        ["Rail_Nearby_Empty"] = "No hay registros a menos de {0} km.",
+        ["Rail_Nearby_Prompt"] = "Usar mi ubicación",
+        ["Rail_Nearby_Locating"] = "Buscándote…",
+        ["Rail_Nearby_Denied"] = "No se concedió permiso de ubicación.",
+        ["Rail_Nearby_Unsupported"] = "Este navegador no puede compartir la ubicación.",
+        ["Rail_Nearby_Origin"] = "A menos de {0} km de ti",
+        ["Rail_Distance_M"] = "{0} m",
+        ["Rail_Distance_Km"] = "{0} km",
+        ["Notebook_Save"] = "Guardar en la libreta",
+        ["Notebook_Unsave"] = "Quitar de la libreta",
+        ["Notebook_Saved"] = "Guardada",
+        ["Time_JustNow"] = "ahora mismo",
+        ["Time_MinutesAgo"] = "hace {0} min",
+        ["Time_HoursAgo"] = "hace {0} h",
+        ["Time_DaysAgo"] = "hace {0} d",
 
         // Hero
         ["Hero_Eyebrow"] = "Volumen 03 · Atlas Viviente",

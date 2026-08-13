@@ -1,4 +1,5 @@
 @page "/"
+@page "/map"
 @using EcoData.Common.Maps
 @using EcoData.Common.Maps.Models
 @using EcoData.Wildlife.Application.Client
@@ -194,6 +195,9 @@
     private MapController<MunicipalityMarker> _mapController = new();
     private bool _sidebarOpen;
     private bool _sheetOpen;
+
+    /// <summary>One frame — long enough for the closed panel to be painted.</summary>
+    private const int PanelRevealFrameMs = 16;
     private SelectedMunicipality? _selectedMunicipality;
 
     private string? _mapLoadError;
@@ -301,9 +305,7 @@
         ClearConservationFilters();
 
         _selectedMunicipality = municipality;
-        _sidebarOpen = true;
-        _sheetOpen = true;
-        StateHasChanged();
+        await RevealPanelAsync();
 
         _ = LoadConservationCodesState.TryExecute();
         await LoadSpeciesCountsState.TryExecute();
@@ -443,8 +445,7 @@
 
             _searchMode = AreaSearchMode.NearMe;
             _searchOrigin = new MapCoordinate(position.Latitude, position.Longitude);
-            _sidebarOpen = true;
-            _sheetOpen = true;
+            await RevealPanelAsync();
 
             _mapController.ShowSearchRadius(_searchOrigin.Value, NearMeRadiusMeters);
 
@@ -498,9 +499,7 @@
             _polygonCoordinates = coordinates
                 .Select(c => new PolygonCoordinate(c.Latitude, c.Longitude))
                 .ToList();
-            _sidebarOpen = true;
-            _sheetOpen = true;
-            StateHasChanged();
+            await RevealPanelAsync();
 
             await SearchAreaState.TryExecute();
             ShowNearbyCircles(SearchAreaState.Result);
@@ -742,8 +741,65 @@
     private void OnSpeciesClicked(SpeciesDtoForList species) =>
         NavigationManager.NavigateTo($"/species/{species.Id}");
 
+    /// <summary>
+    /// Brings the panel in with its transition intact.
+    ///
+    /// <para>Both panels are gated on <see cref="PanelVisible"/>, so setting
+    /// the content and the open flag in the same render mounts the element
+    /// already open — the browser has no earlier state to animate from and it
+    /// just appears. This paints the closed state first, then opens.</para>
+    /// </summary>
+    private async Task RevealPanelAsync()
+    {
+        _sidebarOpen = false;
+        _sheetOpen = false;
+        StateHasChanged();
+
+        // Long enough for one frame. Task.Yield resumes inside the same
+        // browser task, before a paint, and the transition is skipped again.
+        await Task.Delay(PanelRevealFrameMs);
+
+        _sidebarOpen = true;
+        _sheetOpen = true;
+        StateHasChanged();
+    }
+
+    // ===== Mobile tab bar =====
+
+    /// <summary>
+    /// The sheet occupies the bottom of the viewport, which is exactly where
+    /// the tab bar lives, so the bar steps aside while a panel is up.
+    ///
+    /// <para>Driven from <c>OnAfterRender</c> rather than from each of the
+    /// half-dozen places the sheet opens or closes: the guard makes it
+    /// idempotent, so one call site can't be forgotten and leave the bar
+    /// stranded off-screen.</para>
+    /// </summary>
+    private bool _bottomNavHidden;
+
+    protected override void OnAfterRender(bool firstRender) => SyncBottomNav(_sheetOpen && PanelVisible);
+
+    private void SyncBottomNav(bool hidden)
+    {
+        if (hidden == _bottomNavHidden) return;
+
+        _bottomNavHidden = hidden;
+        if (hidden)
+        {
+            Bus.Publish<FfBottomNav.Hidden>();
+        }
+        else
+        {
+            Bus.Publish<FfBottomNav.Shown>();
+        }
+    }
+
     public override void Dispose()
     {
+        // Leaving with a sheet open would otherwise strand the bar off-screen
+        // on whatever page comes next.
+        SyncBottomNav(false);
+
         L.LanguageChanged -= OnLanguageChanged;
         _mapController.OnGeoJsonClicked -= OnGeoJsonClicked;
         _mapController.OnGeoJsonLoaded -= OnGeoJsonLoaded;

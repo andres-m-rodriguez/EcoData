@@ -1,0 +1,119 @@
+@page "/browse"
+@inherits StatefulComponent
+@inject ISpeciesCategoryHttpClient CategoryClient
+@inject INrcsPracticeHttpClient PracticeClient
+@inject IFwsActionHttpClient ActionClient
+@inject INativeNavbarManager Navbar
+@inject ILocalizer L
+
+<PageTitle>FaunaFinder — @L["Browse_PageTitle"]</PageTitle>
+
+@* The three reference sections collapse behind one bottom-bar tab; this hub
+   is where that tab lands, so it has to be worth the extra hop — each card
+   carries the section's live tally, not just its name. *@
+<div class="ff-page bh-page">
+
+    <section class="bh-hero">
+        <div class="bh-hero-eyebrow">@L["Browse_Eyebrow"]</div>
+        <h1 class="bh-hero-heading">@L["Browse_Heading"]</h1>
+        <p class="bh-hero-lede">@L["Browse_Lede"]</p>
+    </section>
+
+    <nav class="bh-grid">
+
+        <a class="bh-card" href="/categories">
+            <span class="bh-card-icon"><MudIcon Icon="@Icons.Material.Filled.Category" /></span>
+            <h2 class="bh-card-title">@L["Nav_Categories"]</h2>
+            <p class="bh-card-desc">@L["Browse_Categories_Desc"]</p>
+            <span class="bh-card-foot">
+                <span class="bh-card-count">@CategoriesCountText</span>
+                <span class="bh-card-go"><MudIcon Icon="@Icons.Material.Filled.ArrowForward" Size="Size.Small" /></span>
+            </span>
+        </a>
+
+        <a class="bh-card" href="/practices">
+            <span class="bh-card-icon"><MudIcon Icon="@Icons.Material.Filled.Agriculture" /></span>
+            <h2 class="bh-card-title">@L["Nav_Practices"]</h2>
+            <p class="bh-card-desc">@L["Browse_Practices_Desc"]</p>
+            <span class="bh-card-foot">
+                <span class="bh-card-count">@PracticesCountText</span>
+                <span class="bh-card-go"><MudIcon Icon="@Icons.Material.Filled.ArrowForward" Size="Size.Small" /></span>
+            </span>
+        </a>
+
+        <a class="bh-card" href="/actions">
+            <span class="bh-card-icon"><MudIcon Icon="@Icons.Material.Filled.Gavel" /></span>
+            <h2 class="bh-card-title">@L["Nav_Actions"]</h2>
+            <p class="bh-card-desc">@L["Browse_Actions_Desc"]</p>
+            <span class="bh-card-foot">
+                <span class="bh-card-count">@ActionsCountText</span>
+                <span class="bh-card-go"><MudIcon Icon="@Icons.Material.Filled.ArrowForward" Size="Size.Small" /></span>
+            </span>
+        </a>
+
+    </nav>
+</div>
+
+@code {
+    // A null result is both "still loading" and "the fetch failed" — either way
+    // the card shows the pending dash and the hub keeps rendering.
+    private string CategoriesCountText => LoadCategoryCountState.Result is { } count
+        ? count.ToString()
+        : L["Browse_Count_Pending"];
+
+    private string PracticesCountText => LoadPracticeCountState.Result is { } count
+        ? L["Practices_Hero_RecordsLine", count]
+        : L["Browse_Count_Pending"];
+
+    private string ActionsCountText => LoadActionCountState.Result is { } count
+        ? L["Actions_Hero_RecordsLine", count]
+        : L["Browse_Count_Pending"];
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        Navbar.SetTitle(L["Browse_PageTitle"]);
+        L.LanguageChanged += OnLanguageChanged;
+    }
+
+    private void OnLanguageChanged()
+    {
+        Navbar.SetTitle(L["Browse_PageTitle"]);
+        InvokeAsync(StateHasChanged);
+    }
+
+    // Categories has no count endpoint of its own — the taxon facets are the
+    // catalogued groups, so their number is the tally the card wants.
+    [Command, RunOnLoad]
+    private async Task<int?> LoadCategoryCount(CancellationToken ct)
+    {
+        var result = await CategoryClient.GetCountsAsync(ct);
+        if (!result.TryPickT0(out var taxa, out _)) return null;
+
+        return taxa.Count;
+    }
+
+    [Command, RunOnLoad]
+    private async Task<int?> LoadPracticeCount(CancellationToken ct)
+    {
+        var result = await PracticeClient.GetAllAsync(ct);
+        if (!result.TryPickT0(out var practices, out _)) return null;
+
+        return practices.Count;
+    }
+
+    [Command, RunOnLoad]
+    private async Task<int?> LoadActionCount(CancellationToken ct)
+    {
+        var result = await ActionClient.GetAllAsync(ct);
+        if (!result.TryPickT0(out var actions, out _)) return null;
+
+        return actions.Count;
+    }
+
+    public override void Dispose()
+    {
+        L.LanguageChanged -= OnLanguageChanged;
+        base.Dispose();
+    }
+}

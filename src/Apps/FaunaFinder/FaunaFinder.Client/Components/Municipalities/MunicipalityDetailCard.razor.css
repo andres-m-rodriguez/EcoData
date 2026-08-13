@@ -4,7 +4,7 @@
     left: 16px;
     width: 320px;
     max-width: calc(100% - 32px);
-    background: #fff;
+    background: var(--fauna-surface);
     border: 1px solid var(--fauna-line);
     border-radius: 14px;
     box-shadow: var(--fauna-shadow-4);

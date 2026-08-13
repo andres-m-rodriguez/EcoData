@@ -1,0 +1,30 @@
+/* =========================================================================
+   Species detail — notebook star
+   ========================================================================= */
+
+/* SpeciesHero renders its own MudPaper, heading and image, so the star is
+   layered into the paper's top-right gutter instead of joining the heading
+   row. The wrapper only establishes the containing block — it adds no box
+   of its own, so the hero's own spacing is untouched. */
+.ff-hero-slot {
+    position: relative;
+}
+
+.ff-hero-save {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    z-index: 1;
+}
+
+/* The hero's photo runs edge to edge under the star on narrow screens, so
+   the button carries its own ground to stay legible over a photograph. */
+.ff-hero-save ::deep .mud-icon-button {
+    background: color-mix(in srgb, var(--fauna-surface) 85%, transparent);
+    border: 1px solid var(--fauna-line);
+    backdrop-filter: blur(4px);
+}
+
+.ff-hero-save ::deep .mud-icon-button:hover {
+    background: var(--fauna-surface);
+}

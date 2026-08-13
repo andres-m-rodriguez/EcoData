@@ -3,178 +3,239 @@
 @inject INativeNavigationManager Navigation
 @inject INativeNavbarManager Navbar
 @inject ILocalizer L
+@inject IJSRuntime JS
 @implements IDisposable
 
-<MudThemeProvider Theme="FaunaFinderTheme.Default" />
+@* IsDarkMode carries the same state the data-theme attribute does, so the
+   MudBlazor surfaces the token sheet can't reach — dialogs, menus, snackbars,
+   skeletons, alerts — flip with the rest of the shell. FaunaFinderTheme
+   already ships the PaletteDark this activates. *@
+<MudThemeProvider Theme="FaunaFinderTheme.Default" IsDarkMode="_isDarkMode" />
 <MudPopoverProvider />
 <MudDialogProvider />
 <MudSnackbarProvider />
 
 <CascadingValue Value="_locale" IsFixed="false">
-    <MudLayout>
-        <MudAppBar Color="Color.Primary" Elevation="0" Fixed="true" Class="app-bar-blur ff-appbar">
-            @* Mobile: Back button + Title OR Logo *@
-            <MudHidden Breakpoint="Breakpoint.MdAndUp">
-                <div class="d-flex align-center" style="flex: 1;">
-                    @if (!IsHomePage)
-                    {
-                        <NuiNativeNavbar ShowBackButton="true" ShowTitle="false" ShowActions="false" />
-                        <span class="page-title">@Navbar.State.Title</span>
-                    }
-                    else
-                    {
+    @* .ff-shell is the cream ground every panel floats in. It is also the only
+       plain element wrapping MudLayout/MudAppBar/MudMainContent, so it is what
+       carries Blazor's scope attribute — every ::deep rule in the companion
+       stylesheet resolves through it. *@
+    <div class="@ShellClass">
+        <MudLayout>
+            <MudAppBar Elevation="0" Fixed="true" Class="ff-appbar">
+                @* Mobile: Back button + Title OR Logo *@
+                <MudHidden Breakpoint="Breakpoint.MdAndUp">
+                    <div class="d-flex align-center appbar-mobile-lead">
+                        @if (!IsRootPage)
+                        {
+                            <NuiNativeNavbar ShowBackButton="true" ShowTitle="false" ShowActions="false" />
+                            <span class="page-title">@Navbar.State.Title</span>
+                        }
+                        else
+                        {
+                            <span class="logo-text">FaunaFinder</span>
+                        }
+                    </div>
+                </MudHidden>
+
+                @* Desktop: notebook toggle + Logo + Page Title *@
+                <MudHidden Breakpoint="Breakpoint.SmAndDown">
+                    <div class="d-flex align-center">
+                        @if (ShowLibraryRail)
+                        {
+                            <MudTooltip Text="@NotebookToggleLabel">
+                                <MudIconButton Icon="@NotebookToggleIcon"
+                                               Class="ff-notebook-toggle"
+                                               Edge="Edge.Start"
+                                               aria-label="@NotebookToggleLabel"
+                                               aria-expanded="@(_railOpen ? "true" : "false")"
+                                               OnClick="ToggleRail"
+                                               @onmouseenter="() => _railHovered = true"
+                                               @onmouseleave="() => _railHovered = false" />
+                            </MudTooltip>
+                        }
                         <span class="logo-text">FaunaFinder</span>
-                    }
-                </div>
-            </MudHidden>
+                        @if (ShowTitleDivider)
+                        {
+                            <MudDivider Vertical="true" FlexItem="true" Class="mx-4 my-3" />
+                            <span class="page-title">@Navbar.State.Title</span>
+                        }
+                    </div>
+                </MudHidden>
 
-            @* Desktop: Logo + Page Title *@
-            <MudHidden Breakpoint="Breakpoint.SmAndDown">
-                <div class="d-flex align-center">
-                    <span class="logo-text">FaunaFinder</span>
-                    @if (ShowTitleDivider)
+                @* Desktop: Navigation links *@
+                <MudHidden Breakpoint="Breakpoint.SmAndDown">
+                    <nav class="ff-nav ml-6">
+                        <a href="/" class="@GetNavLinkClass("/", exact: true)">@L["Nav_Map"]</a>
+                        <a href="/species" class="@GetNavLinkClass("/species")">@L["Nav_Species"]</a>
+                        <a href="/municipalities" class="@GetNavLinkClass("/municipalities")">@L["Nav_Municipios"]</a>
+                        <a href="/categories" class="@GetNavLinkClass("/categories")">@L["Nav_Categories"]</a>
+                        <a href="/practices" class="@GetNavLinkClass("/practices")">@L["Nav_Practices"]</a>
+                        <a href="/actions" class="@GetNavLinkClass("/actions")">@L["Nav_Actions"]</a>
+                    </nav>
+                </MudHidden>
+
+                <MudSpacer />
+
+                @* Desktop: combined species + municipio search. Desktop only —
+                   the mobile bar has no room for it yet. *@
+                <MudHidden Breakpoint="Breakpoint.SmAndDown">
+                    <FfSearch />
+                </MudHidden>
+
+                @* Light/dark switch. The click stamps data-theme on the root
+                   element, which is what the token sheet keys off; _isDarkMode
+                   keeps MudBlazor's own palette in step. *@
+                <MudTooltip Text="@ThemeToggleLabel">
+                    <MudIconButton Icon="@ThemeToggleIcon"
+                                   Class="ff-theme-toggle"
+                                   Size="Size.Small"
+                                   aria-label="@ThemeToggleLabel"
+                                   OnClick="ToggleThemeAsync" />
+                </MudTooltip>
+
+                @* Language dropdown — MudMenu using its built-in activator
+                   (Label + StartIcon + EndIcon) instead of ActivatorContent.
+                   The Activator-content route wouldn't open inside MudAppBar;
+                   built-in mode uses MudBlazor's tested internal wiring. *@
+                <MudMenu Label="@L.CurrentLanguage.ToUpperInvariant()"
+                         StartIcon="@Icons.Material.Filled.Language"
+                         EndIcon="@Icons.Material.Filled.KeyboardArrowDown"
+                         Variant="Variant.Text"
+                         Color="Color.Inherit"
+                         Size="Size.Small"
+                         AriaLabel="Language"
+                         AnchorOrigin="Origin.BottomRight"
+                         TransformOrigin="Origin.TopRight"
+                         Class="ff-lang-menu">
+                    @foreach (var lang in L.GetAvailableLanguages())
                     {
-                        <MudDivider Vertical="true" FlexItem="true" Class="mx-4 my-3" />
-                        <span class="page-title">@Navbar.State.Title</span>
+                        var langCode = lang.Code;
+                        var isActive = string.Equals(langCode, L.CurrentLanguage, StringComparison.OrdinalIgnoreCase);
+                        <MudMenuItem OnClick="@(() => L.SetLanguage(langCode))">
+                            <div class="@(isActive ? "ff-lang-item is-active" : "ff-lang-item")">
+                                <MudIcon Icon="@Icons.Material.Filled.Check" Size="Size.Small" />
+                                <span class="ff-lang-item-name">@lang.Name</span>
+                                <span class="ff-lang-item-code">@langCode.ToUpperInvariant()</span>
+                            </div>
+                        </MudMenuItem>
                     }
+                </MudMenu>
+
+                @* Mobile: Action button(s) at far right *@
+                <MudHidden Breakpoint="Breakpoint.MdAndUp">
+                    @if (!IsRootPage)
+                    {
+                        <NuiNativeNavbar ShowBackButton="false" ShowTitle="false" />
+                    }
+                </MudHidden>
+            </MudAppBar>
+
+            <MudMainContent Class="main-content">
+                <div class="ff-shell-body">
+                    @* Field notebook — desktop only, on every page including the
+                       map. Collapsing hides the panel with a class rather than
+                       dropping it from the tree, so it keeps what it fetched. *@
+                    @if (ShowLibraryRail)
+                    {
+                        <MudHidden Breakpoint="Breakpoint.SmAndDown">
+                            <aside class="@RailPanelClass" aria-hidden="@(_railOpen ? "false" : "true")">
+                                <FfLibraryRail />
+                            </aside>
+                        </MudHidden>
+                    }
+
+                    <div class="ff-main-panel">
+                        @if (IsFullBleedPage)
+                        {
+                            @Body
+                        }
+                        else
+                        {
+                            <MudContainer MaxWidth="MaxWidth.Large" Class="py-6 px-4">
+                                @Body
+                            </MudContainer>
+                        }
+                    </div>
                 </div>
-            </MudHidden>
+            </MudMainContent>
+        </MudLayout>
 
-            @* Desktop: Navigation links *@
-            <MudHidden Breakpoint="Breakpoint.SmAndDown">
-                <nav class="ff-nav ml-6">
-                    <a href="/" class="@GetNavLinkClass("/", exact: true)">@L["Nav_Map"]</a>
-                    <a href="/species" class="@GetNavLinkClass("/species")">@L["Nav_Species"]</a>
-                    <a href="/municipalities" class="@GetNavLinkClass("/municipalities")">@L["Nav_Municipios"]</a>
-                    <a href="/categories" class="@GetNavLinkClass("/categories")">@L["Nav_Categories"]</a>
-                    <a href="/practices" class="@GetNavLinkClass("/practices")">@L["Nav_Practices"]</a>
-                    <a href="/actions" class="@GetNavLinkClass("/actions")">@L["Nav_Actions"]</a>
-                </nav>
-            </MudHidden>
-
-            <MudSpacer />
-
-            @* Language dropdown — MudMenu using its built-in activator
-               (Label + StartIcon + EndIcon) instead of ActivatorContent.
-               The Activator-content route wouldn't open inside MudAppBar;
-               built-in mode uses MudBlazor's tested internal wiring. *@
-            <MudMenu Label="@L.CurrentLanguage.ToUpperInvariant()"
-                     StartIcon="@Icons.Material.Filled.Language"
-                     EndIcon="@Icons.Material.Filled.KeyboardArrowDown"
-                     Variant="Variant.Text"
-                     Color="Color.Inherit"
-                     Size="Size.Small"
-                     AriaLabel="Language"
-                     AnchorOrigin="Origin.BottomRight"
-                     TransformOrigin="Origin.TopRight"
-                     Class="ff-lang-menu">
-                @foreach (var lang in L.GetAvailableLanguages())
-                {
-                    var langCode = lang.Code;
-                    var isActive = string.Equals(langCode, L.CurrentLanguage, StringComparison.OrdinalIgnoreCase);
-                    <MudMenuItem OnClick="@(() => L.SetLanguage(langCode))">
-                        <div class="@(isActive ? "ff-lang-item is-active" : "ff-lang-item")">
-                            <MudIcon Icon="@Icons.Material.Filled.Check" Size="Size.Small" />
-                            <span class="ff-lang-item-name">@lang.Name</span>
-                            <span class="ff-lang-item-code">@langCode.ToUpperInvariant()</span>
-                        </div>
-                    </MudMenuItem>
-                }
-            </MudMenu>
-
-            @* Mobile: Action button(s) at far right *@
-            <MudHidden Breakpoint="Breakpoint.MdAndUp">
-                @if (!IsHomePage)
-                {
-                    <NuiNativeNavbar ShowBackButton="false" ShowTitle="false" />
-                }
-            </MudHidden>
-        </MudAppBar>
-
-        <MudMainContent Class="main-content">
-            @if (IsHomePage || IsEditorialListPage)
-            {
-                @Body
-            }
-            else
-            {
-                <MudContainer MaxWidth="MaxWidth.Large" Class="py-6 px-4 content-container">
-                    @Body
-                </MudContainer>
-            }
-        </MudMainContent>
-    </MudLayout>
-
-    @* Mobile Bottom Navigation - Outside MudLayout for stability *@
-    <MudHidden Breakpoint="Breakpoint.MdAndUp">
-        <div class="bottom-nav">
-            <MudStack Row="true" Justify="Justify.SpaceAround" AlignItems="AlignItems.Center" Class="bottom-nav-container">
-                <MudButton Variant="Variant.Text" Color="@GetBottomNavColor(NavigationTab.Map)" Class="bottom-nav-item"
-                           OnClick="@(() => NavigateToTab(NavigationTab.Map))">
-                    <MudStack AlignItems="AlignItems.Center" Spacing="0">
-                        <MudIcon Icon="@Icons.Material.Filled.Map" Size="Size.Medium" />
-                        <MudText Typo="Typo.caption">@L["Nav_Map"]</MudText>
-                    </MudStack>
-                </MudButton>
-                <MudButton Variant="Variant.Text" Color="@GetBottomNavColor(NavigationTab.Species)" Class="bottom-nav-item"
-                           OnClick="@(() => NavigateToTab(NavigationTab.Species))">
-                    <MudStack AlignItems="AlignItems.Center" Spacing="0">
-                        <MudIcon Icon="@Icons.Material.Filled.Pets" Size="Size.Medium" />
-                        <MudText Typo="Typo.caption">@L["Nav_Species"]</MudText>
-                    </MudStack>
-                </MudButton>
-                <MudButton Variant="Variant.Text" Color="@GetBottomNavColor(NavigationTab.Municipalities)" Class="bottom-nav-item"
-                           OnClick="@(() => NavigateToTab(NavigationTab.Municipalities))">
-                    <MudStack AlignItems="AlignItems.Center" Spacing="0">
-                        <MudIcon Icon="@Icons.Material.Filled.LocationCity" Size="Size.Medium" />
-                        <MudText Typo="Typo.caption">@L["Nav_Municipios"]</MudText>
-                    </MudStack>
-                </MudButton>
-                <MudButton Variant="Variant.Text" Color="@GetBottomNavColor(NavigationTab.Categories)" Class="bottom-nav-item"
-                           OnClick="@(() => NavigateToTab(NavigationTab.Categories))">
-                    <MudStack AlignItems="AlignItems.Center" Spacing="0">
-                        <MudIcon Icon="@Icons.Material.Filled.Category" Size="Size.Medium" />
-                        <MudText Typo="Typo.caption">@L["Nav_Categories"]</MudText>
-                    </MudStack>
-                </MudButton>
-                <MudButton Variant="Variant.Text" Color="@GetBottomNavColor(NavigationTab.Practices)" Class="bottom-nav-item"
-                           OnClick="@(() => NavigateToTab(NavigationTab.Practices))">
-                    <MudStack AlignItems="AlignItems.Center" Spacing="0">
-                        <MudIcon Icon="@Icons.Material.Filled.Agriculture" Size="Size.Medium" />
-                        <MudText Typo="Typo.caption">@L["Nav_Practices"]</MudText>
-                    </MudStack>
-                </MudButton>
-                <MudButton Variant="Variant.Text" Color="@GetBottomNavColor(NavigationTab.Actions)" Class="bottom-nav-item"
-                           OnClick="@(() => NavigateToTab(NavigationTab.Actions))">
-                    <MudStack AlignItems="AlignItems.Center" Spacing="0">
-                        <MudIcon Icon="@Icons.Material.Filled.Gavel" Size="Size.Medium" />
-                        <MudText Typo="Typo.caption">@L["Nav_Actions"]</MudText>
-                    </MudStack>
-                </MudButton>
-            </MudStack>
-        </div>
-    </MudHidden>
+        @* Mobile tab bar. It owns its own Hidden/Shown events so a screen
+           that needs the bottom of the viewport can get it out of the way
+           without the layout knowing anything about that screen. *@
+        <MudHidden Breakpoint="Breakpoint.MdAndUp">
+            <FfBottomNav />
+        </MudHidden>
+    </div>
 </CascadingValue>
 
 @code {
-    private enum NavigationTab { Map, Species, Municipalities, Categories, Practices, Actions }
 
-    private NavigationTab _currentTab = NavigationTab.Map;
+
     private LocaleContext _locale = LocaleContext.English;
 
-    private bool IsHomePage => Navigation.State.Path == "/" || Navigation.State.Path == "";
+    private bool _railOpen = true;
+    private bool _railHovered;
+
+    // Starts false so the first render matches the paper palette the boot
+    // script leaves in place for anyone without a stored choice; the real
+    // effective theme — stored value, else the OS — arrives from JS on first
+    // render below.
+    private bool _isDarkMode;
+    private IJSObjectReference? _themeModule;
+
+    // Root ("/") only — decides logo vs. back button in the mobile app bar.
+    private bool IsRootPage => Navigation.State.Path == "/" || Navigation.State.Path == "";
+
+    // The map is the landing page. It keeps /map as an alias so older links
+    // still resolve, so this can't just test for root.
+    private bool IsMapPage =>
+        IsRootPage || Navigation.State.Path.StartsWith("/map", StringComparison.OrdinalIgnoreCase);
 
     private bool IsEditorialListPage =>
         string.Equals(Navigation.State.Path, "/species", StringComparison.OrdinalIgnoreCase) ||
         string.Equals(Navigation.State.Path, "/municipalities", StringComparison.OrdinalIgnoreCase) ||
+        string.Equals(Navigation.State.Path, "/browse", StringComparison.OrdinalIgnoreCase) ||
         string.Equals(Navigation.State.Path, "/categories", StringComparison.OrdinalIgnoreCase) ||
         string.Equals(Navigation.State.Path, "/practices", StringComparison.OrdinalIgnoreCase) ||
         string.Equals(Navigation.State.Path, "/actions", StringComparison.OrdinalIgnoreCase);
 
-    // Hide the divider+title on top-level list pages (home, species, muni, categories).
-    // Each either renders its own root heading or relies on the active nav pill for context.
+    // Pages that draw their own chrome: the full-screen map and the top-level
+    // list pages. They get @Body with no MudContainer.
+    private bool IsFullBleedPage => IsMapPage || IsEditorialListPage;
+
+    // Hide the divider+title on top-level pages. Each either renders its own
+    // root heading or relies on the active nav pill for context.
     private bool ShowTitleDivider =>
-        !IsHomePage && !IsEditorialListPage && Navbar.State.Title is not null;
+        !IsMapPage && !IsEditorialListPage && Navbar.State.Title is not null;
+
+    private string RailPanelClass => _railOpen ? "ff-rail-panel" : "ff-rail-panel is-collapsed";
+
+    // At rest the toggle is a plain panel; hovering swaps in the chevron that
+    // shows which way it will move. Same three-glyph trick Harmony uses.
+    private string NotebookToggleIcon => !_railHovered
+        ? FaunaFinderIcons.NotebookPanel
+        : _railOpen ? FaunaFinderIcons.NotebookCollapse : FaunaFinderIcons.NotebookExpand;
+
+    private string NotebookToggleLabel => _railOpen ? L["Rail_Collapse"] : L["Rail_Expand"];
+
+    private void ToggleRail() => _railOpen = !_railOpen;
+
+    // Sun when we're dark (click goes to light), moon when we're light.
+    private string ThemeToggleIcon => _isDarkMode
+        ? Icons.Material.Filled.LightMode
+        : Icons.Material.Filled.DarkMode;
+
+    private string ThemeToggleLabel => _isDarkMode ? L["Theme_ToLight"] : L["Theme_ToDark"];
+
+    // The rail is a desktop companion column. The map is the one page that
+    // wants the whole ground, so it never gets one.
+    // The notebook rides every page, the map included — it pins itself to the
+    // viewport rather than flexing, so the shell hands it an offset instead.
+    private bool ShowLibraryRail => true;
+
+    private string ShellClass => _railOpen ? "ff-shell has-rail-open" : "ff-shell";
 
     protected override void OnInitialized()
     {
@@ -182,12 +243,58 @@
         Navbar.OnStateChanged += HandleNavbarStateChanged;
         L.LanguageChanged += HandleLanguageChanged;
         _locale = L.CurrentLanguage == "es" ? LocaleContext.Spanish : LocaleContext.English;
-        UpdateCurrentTab();
+    }
+
+    // This is a WebAssembly client, so the module import is async and can only
+    // run once there's a document to talk to — never from OnInitialized.
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender)
+        {
+            return;
+        }
+
+        try
+        {
+            _themeModule = await JS.InvokeAsync<IJSObjectReference>("import", "./js/fauna-theme.js");
+            var theme = await _themeModule.InvokeAsync<string>("getTheme");
+            _isDarkMode = string.Equals(theme, "dark", StringComparison.OrdinalIgnoreCase);
+            StateHasChanged();
+        }
+        catch (JSException)
+        {
+            // Theming is an enhancement, not a dependency: if the module can't
+            // load, the shell stays on whatever the stylesheet resolved to and
+            // the toggle simply does nothing.
+            _themeModule = null;
+        }
+    }
+
+    private async Task ToggleThemeAsync()
+    {
+        if (_themeModule is null)
+        {
+            return;
+        }
+
+        var next = _isDarkMode ? "light" : "dark";
+
+        try
+        {
+            await _themeModule.InvokeVoidAsync("setTheme", next);
+        }
+        catch (JSException)
+        {
+            // The stamp never landed — leave MudBlazor on the palette the
+            // page is still showing rather than splitting the two.
+            return;
+        }
+
+        _isDarkMode = next == "dark";
     }
 
     private void HandleNavigationStateChanged()
     {
-        UpdateCurrentTab();
         InvokeAsync(StateHasChanged);
     }
 
@@ -202,20 +309,6 @@
         InvokeAsync(StateHasChanged);
     }
 
-    private void UpdateCurrentTab()
-    {
-        var path = Navigation.State.Path;
-        _currentTab = path switch
-        {
-            "/" or "" => NavigationTab.Map,
-            var p when p.StartsWith("/species", StringComparison.OrdinalIgnoreCase) => NavigationTab.Species,
-            var p when p.StartsWith("/municipalities", StringComparison.OrdinalIgnoreCase) => NavigationTab.Municipalities,
-            var p when p.StartsWith("/categories", StringComparison.OrdinalIgnoreCase) => NavigationTab.Categories,
-            var p when p.StartsWith("/practices", StringComparison.OrdinalIgnoreCase) => NavigationTab.Practices,
-            var p when p.StartsWith("/actions", StringComparison.OrdinalIgnoreCase) => NavigationTab.Actions,
-            _ => NavigationTab.Map
-        };
-    }
 
     private string GetNavLinkClass(string path, bool exact = false)
     {
@@ -227,25 +320,9 @@
         return isActive ? "ff-nav-link is-active" : "ff-nav-link";
     }
 
-    private Color GetBottomNavColor(NavigationTab tab)
-    {
-        return _currentTab == tab ? Color.Primary : Color.Default;
-    }
 
-    private void NavigateToTab(NavigationTab tab)
-    {
-        var path = tab switch
-        {
-            NavigationTab.Map => "/",
-            NavigationTab.Species => "/species",
-            NavigationTab.Municipalities => "/municipalities",
-            NavigationTab.Categories => "/categories",
-            NavigationTab.Practices => "/practices",
-            NavigationTab.Actions => "/actions",
-            _ => "/"
-        };
-        Navigation.NavigateTo(path);
-    }
+    // The active tab reads as a filled pine chip, which MudBlazor's Color
+    // parameter can't express on a text button — the class carries the fill.
 
     private void SetLocale(string code) => L.SetLanguage(code);
 
