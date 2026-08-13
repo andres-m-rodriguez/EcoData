@@ -1,5 +1,7 @@
 using EcoData.NativeUi;
 using FaunaFinder.Client.Localization;
+using Microsoft.AspNetCore.Components;
+using Microsoft.JSInterop;
 using MudBlazor;
 using Tempest;
 
@@ -27,6 +29,16 @@ public partial class FfBottomNav : LocalizedComponentBase
     private bool _hidden;
     private NavigationTab _currentTab = NavigationTab.Map;
 
+    [Inject]
+    private IJSRuntime JS { get; set; } = default!;
+
+    /// <summary>
+    /// The scroll watcher. It hides the bar by stamping an attribute on the
+    /// root element, so nothing here re-renders on scroll — a bar that asked
+    /// Blazor to re-render every frame would cost more than it is worth.
+    /// </summary>
+    private IJSObjectReference? _autoHide;
+
     private string BarClass => _hidden ? "bottom-nav is-hidden" : "bottom-nav";
 
     protected override void OnInitialized()
@@ -36,10 +48,67 @@ public partial class FfBottomNav : LocalizedComponentBase
         UpdateCurrentTab();
     }
 
+    // This is a WebAssembly client, so the module import is async and can only
+    // run once there's a document to talk to — never from OnInitialized. The
+    // bar renders on small screens only, so on a desktop this never runs and
+    // no listener is attached.
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        await base.OnAfterRenderAsync(firstRender);
+
+        if (!firstRender)
+        {
+            return;
+        }
+
+        try
+        {
+            _autoHide = await JS.InvokeAsync<IJSObjectReference>(
+                "import",
+                "./js/fauna-nav-autohide.js"
+            );
+
+            await _autoHide.InvokeVoidAsync("start");
+        }
+        catch (JSException)
+        {
+            // Auto-hiding is an enhancement, not a dependency: if the module
+            // can't load, the bar simply stays put.
+            _autoHide = null;
+        }
+    }
+
     public override void Dispose()
     {
         Navigation.OnStateChanged -= HandleNavigationStateChanged;
+
+        if (_autoHide is not null)
+        {
+            // Dispose is synchronous, so this can only be started, not awaited.
+            // The module clears the attribute itself, so the bar is never left
+            // hidden by a watcher that has gone away.
+            _ = StopAutoHideAsync(_autoHide);
+            _autoHide = null;
+        }
+
         base.Dispose();
+    }
+
+    private static async Task StopAutoHideAsync(IJSObjectReference module)
+    {
+        try
+        {
+            await module.InvokeVoidAsync("stop");
+            await module.DisposeAsync();
+        }
+        catch (JSDisconnectedException)
+        {
+            // The circuit or page is already gone; there is nothing to clean up.
+        }
+        catch (JSException)
+        {
+            // Same: teardown is best effort.
+        }
     }
 
     [Event]
