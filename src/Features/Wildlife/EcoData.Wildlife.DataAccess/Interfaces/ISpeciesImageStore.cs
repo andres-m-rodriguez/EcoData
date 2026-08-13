@@ -19,8 +19,12 @@ public interface ISpeciesImageStore
     );
 
     /// <summary>
-    /// Opens the stored image for reading, or returns <see langword="null"/> when
-    /// the blob is gone — a row can outlive its image, and that is a 404, not a 500.
+    /// Absolute base for public image URLs — container included, trailing slash
+    /// present — so a projection can concatenate a blob name onto it and hand the
+    /// browser a URL it fetches from storage directly.
+    ///
+    /// <para>A plain string rather than a method so it can be captured as a local
+    /// and translated into SQL concatenation inside an EF projection.</para>
     /// </summary>
-    Task<Stream?> OpenReadAsync(string blobName, CancellationToken cancellationToken = default);
+    string PublicBaseUrl { get; }
 }

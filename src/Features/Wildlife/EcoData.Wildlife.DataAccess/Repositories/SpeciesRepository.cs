@@ -11,21 +11,20 @@ namespace EcoData.Wildlife.DataAccess.Repositories;
 
 public sealed class SpeciesRepository(
     IDbContextFactory<WildlifeDbContext> contextFactory,
-    IOptions<WildlifeOptions> options
+    IOptions<WildlifeOptions> options,
+    ISpeciesImageStore imageStore
 ) : ISpeciesRepository
 {
-    /// <summary>
-    /// What rows seeded before the content type was recorded are served as, and
-    /// what the image endpoint returned unconditionally before the move to blobs.
-    /// </summary>
-    private const string DefaultImageContentType = "image/jpeg";
-
     public async Task<SpeciesDtoForDetail?> GetByIdAsync(
         Guid id,
         CancellationToken cancellationToken = default
     )
     {
         await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
+
+        // Concatenated in SQL so the row carries a URL the browser fetches from
+        // storage directly; the API never sees the bytes.
+        var imageBase = imageStore.PublicBaseUrl;
 
         return await context
             .Species.Where(s => s.Id == id)
@@ -38,7 +37,7 @@ public sealed class SpeciesRepository(
                 s.GRank,
                 s.SRank,
                 s.ImageSourceUrl,
-                s.ProfileImageBlobName != null,
+                s.ProfileImageBlobName == null ? null : imageBase + s.ProfileImageBlobName,
                 s.CategoryLinks
                     .Select(cl => new SpeciesCategoryDtoForList(
                         cl.Category.Id,
@@ -426,17 +425,19 @@ public sealed class SpeciesRepository(
             _ => query.OrderByDescending(s => s.Id),
         };
 
+        var imageBase = imageStore.PublicBaseUrl;
+
         await foreach (
             var species in query
                 .Take(parameters.PageSize + 1)
-                .Select(static s => new SpeciesDtoForList(
+                .Select(s => new SpeciesDtoForList(
                     s.Id,
                     s.CommonName,
                     s.ScientificName,
                     s.IsFauna,
                     s.GRank,
                     s.SRank,
-                    s.ProfileImageBlobName != null,
+                    s.ProfileImageBlobName == null ? null : imageBase + s.ProfileImageBlobName,
                     s.EndemicStatus,
                     s.IucnStatus,
                     s.CategoryLinks.Select(cl => cl.Category.Code).FirstOrDefault(),
@@ -535,24 +536,6 @@ public sealed class SpeciesRepository(
         }
 
         return await query.CountAsync(cancellationToken);
-    }
-
-    public async Task<SpeciesImageReference?> GetProfileImageReferenceAsync(
-        Guid id,
-        CancellationToken cancellationToken = default
-    )
-    {
-        await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
-
-        // A species without an image projects to null, so callers 404 on the row
-        // alone rather than going to blob storage to find nothing there.
-        return await context
-            .Species.Where(s => s.Id == id && s.ProfileImageBlobName != null)
-            .Select(s => new SpeciesImageReference(
-                s.ProfileImageBlobName!,
-                s.ProfileImageContentType ?? DefaultImageContentType
-            ))
-            .FirstOrDefaultAsync(cancellationToken);
     }
 
     public async Task<SpeciesStatsDto> GetStatsAsync(CancellationToken cancellationToken = default)
@@ -742,6 +725,8 @@ public sealed class SpeciesRepository(
     {
         await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
 
+        var imageBase = imageStore.PublicBaseUrl;
+
         // Prefer species with a photo, then randomise. IsFeatured stays as a
         // curatorial pin mechanism (empty flag = random, pinned rows surface first).
         return await context
@@ -749,14 +734,14 @@ public sealed class SpeciesRepository(
             .ThenByDescending(s => s.ProfileImageBlobName != null)
             .ThenBy(s => EF.Functions.Random())
             .Take(3)
-            .Select(static s => new SpeciesDtoForList(
+            .Select(s => new SpeciesDtoForList(
                 s.Id,
                 s.CommonName,
                 s.ScientificName,
                 s.IsFauna,
                 s.GRank,
                 s.SRank,
-                s.ProfileImageBlobName != null,
+                s.ProfileImageBlobName == null ? null : imageBase + s.ProfileImageBlobName,
                 s.EndemicStatus,
                 s.IucnStatus,
                 s.CategoryLinks.Select(cl => cl.Category.Code).FirstOrDefault(),

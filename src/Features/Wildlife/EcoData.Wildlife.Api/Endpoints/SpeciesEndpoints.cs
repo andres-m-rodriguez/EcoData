@@ -59,32 +59,6 @@ public static class SpeciesEndpoints
 
         group
             .MapGet(
-                "/{id:guid}/image",
-                async Task<Results<FileStreamHttpResult, NotFound>> (
-                    Guid id,
-                    ISpeciesRepository repository,
-                    ISpeciesImageStore imageStore,
-                    CancellationToken ct
-                ) =>
-                {
-                    // The row resolves the blob, the store streams it: the bytes
-                    // are never buffered in the API on their way out.
-                    var image = await repository.GetProfileImageReferenceAsync(id, ct);
-                    if (image is null)
-                    {
-                        return TypedResults.NotFound();
-                    }
-
-                    var content = await imageStore.OpenReadAsync(image.BlobName, ct);
-                    return content is null
-                        ? TypedResults.NotFound()
-                        : TypedResults.File(content, image.ContentType);
-                }
-            )
-            .WithName("GetSpeciesImage");
-
-        group
-            .MapGet(
                 "/stats",
                 async Task<Ok<SpeciesStatsDto>> (
                     ISpeciesRepository repository,

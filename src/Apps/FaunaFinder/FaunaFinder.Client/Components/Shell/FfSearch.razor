@@ -70,10 +70,10 @@
                            href="@SpeciesHref(match.Id)"
                            @key="match.Id"
                            @onclick="Close">
-                            @if (match.HasProfileImage)
+                            @if (match.ProfileImageUrl is not null)
                             {
                                 <img class="ff-search-art ff-search-art--photo"
-                                     src="@SpeciesImageSrc(match.Id)"
+                                     src="@match.ProfileImageUrl"
                                      alt=""
                                      loading="lazy" />
                             }

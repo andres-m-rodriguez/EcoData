@@ -87,9 +87,6 @@ public partial class FfLibraryRail : LocalizedComponentBase
 
     private static string SpeciesHref(Guid id) => $"/species/{id}";
 
-    /// <summary>Same profile-image route the species cards use.</summary>
-    private static string SpeciesImageSrc(Guid id) => $"/wildlife/species/{id}/image";
-
     private static string EntryHref(NotebookEntry entry) => entry.Kind switch
     {
         NotebookEntryKind.Municipality => $"/municipalities/{entry.Id}",

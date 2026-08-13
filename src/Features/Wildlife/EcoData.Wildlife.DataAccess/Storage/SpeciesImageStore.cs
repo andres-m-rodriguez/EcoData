@@ -15,6 +15,14 @@ internal sealed class SpeciesImageStore(BlobServiceClient blobServiceClient) : I
 {
     private const string ContainerName = "species-images";
 
+    /// <summary>
+    /// Built from the client's own endpoint so it follows the account it is
+    /// pointed at — Azurite locally, the storage account in Azure — rather than
+    /// being configured a second time.
+    /// </summary>
+    public string PublicBaseUrl { get; } =
+        $"{blobServiceClient.Uri.AbsoluteUri.TrimEnd('/')}/{ContainerName}/";
+
     public async Task<string> SaveAsync(
         Guid speciesId,
         byte[] content,
@@ -28,7 +36,15 @@ internal sealed class SpeciesImageStore(BlobServiceClient blobServiceClient) : I
         // no containers either, so the write path creates it. Unconditional
         // rather than cached: the call is idempotent, and images are written by
         // the seeder and by uploads, never on a hot path.
-        await container.CreateIfNotExistsAsync(cancellationToken: cancellationToken);
+        //
+        // Blob-level public access: these are catalogue photographs of wild
+        // species, already served anonymously, and the browser fetches them
+        // straight from storage. Public on the blob, not the container, so the
+        // listing stays private and only a known URL resolves.
+        await container.CreateIfNotExistsAsync(
+            PublicAccessType.Blob,
+            cancellationToken: cancellationToken
+        );
 
         var blobName = BuildBlobName(speciesId, contentType);
 
@@ -45,26 +61,6 @@ internal sealed class SpeciesImageStore(BlobServiceClient blobServiceClient) : I
             );
 
         return blobName;
-    }
-
-    public async Task<Stream?> OpenReadAsync(
-        string blobName,
-        CancellationToken cancellationToken = default
-    )
-    {
-        var blob = blobServiceClient.GetBlobContainerClient(ContainerName).GetBlobClient(blobName);
-
-        try
-        {
-            var download = await blob.DownloadStreamingAsync(cancellationToken: cancellationToken);
-            return download.Value.Content;
-        }
-        catch (RequestFailedException ex) when (ex.Status is 404)
-        {
-            // Covers both a missing blob and a missing container — a row whose
-            // image never made it to storage reads as "no image".
-            return null;
-        }
     }
 
     private static string BuildBlobName(Guid speciesId, string contentType) =>
