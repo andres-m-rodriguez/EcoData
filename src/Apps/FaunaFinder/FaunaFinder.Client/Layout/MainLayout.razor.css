@@ -157,6 +157,29 @@
 }
 
 /* --------------------------------------------------------------------------
+   Light/dark toggle — same chrome weight as the notebook glyph at the other
+   end of the bar: a bare icon that reads as furniture, not as a nav item.
+   -------------------------------------------------------------------------- */
+::deep .ff-theme-toggle {
+    color: var(--fauna-fg-3);
+    margin-right: 4px;
+}
+
+::deep .ff-theme-toggle:hover {
+    color: var(--fauna-primary);
+    background-color: var(--fauna-primary-50);
+}
+
+::deep .ff-theme-toggle .mud-icon-root {
+    font-size: 20px;
+}
+
+::deep .ff-theme-toggle:focus-visible {
+    outline: 2px solid var(--fauna-primary);
+    outline-offset: 2px;
+}
+
+/* --------------------------------------------------------------------------
    Language dropdown — MudMenu in built-in activator mode. MudMenu renders an
    internal MudButton; we style it as a paper pill and leave the popover to
    MudBlazor.

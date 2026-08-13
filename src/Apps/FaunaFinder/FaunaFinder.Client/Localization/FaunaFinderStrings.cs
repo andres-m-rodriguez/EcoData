@@ -97,6 +97,8 @@ public static class FaunaFinderStrings
         ["Rail_Collapse"] = "Collapse the notebook",
         ["Rail_Expand"] = "Open the notebook",
         ["Shell_Search"] = "Search species and municipios",
+        ["Theme_ToDark"] = "Switch to dark",
+        ["Theme_ToLight"] = "Switch to paper",
 
         // Hero (shared eyebrow)
         ["Hero_Eyebrow"] = "Volume 03 · Living Atlas",
@@ -416,6 +418,8 @@ public static class FaunaFinderStrings
         ["Rail_Collapse"] = "Cerrar la libreta",
         ["Rail_Expand"] = "Abrir la libreta",
         ["Shell_Search"] = "Buscar especies y municipios",
+        ["Theme_ToDark"] = "Cambiar a oscuro",
+        ["Theme_ToLight"] = "Cambiar a claro",
 
         // Hero
         ["Hero_Eyebrow"] = "Volumen 03 · Atlas Viviente",

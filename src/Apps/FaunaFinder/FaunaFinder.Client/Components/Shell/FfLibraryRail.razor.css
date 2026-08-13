@@ -104,7 +104,9 @@
     outline-offset: 2px;
 }
 
-/* 42px art tile — a duotone field-guide chip holding one Font Awesome glyph. */
+/* 42px art tile — a duotone field-guide chip holding one Font Awesome glyph.
+   The tile carries its own saturated ground, so the glyph stays white on both
+   themes; the gradients below are artwork and stay fixed for the same reason. */
 .ff-rail-art {
     flex: none;
     width: 42px;
@@ -119,10 +121,11 @@
 .ff-rail-art i {
     font-size: 17px;
     line-height: 1;
-    color: #ffffff;
+    color: currentColor;
 }
 
 .ff-rail-art--place {
+    /* Teal duotone — artwork, deliberately off the brand ramp and theme-fixed. */
     background: linear-gradient(135deg, #1d4e4e 0%, #3f8f8a 100%);
 }
 

@@ -3,9 +3,14 @@
 @inject INativeNavigationManager Navigation
 @inject INativeNavbarManager Navbar
 @inject ILocalizer L
+@inject IJSRuntime JS
 @implements IDisposable
 
-<MudThemeProvider Theme="FaunaFinderTheme.Default" />
+@* IsDarkMode carries the same state the data-theme attribute does, so the
+   MudBlazor surfaces the token sheet can't reach — dialogs, menus, snackbars,
+   skeletons, alerts — flip with the rest of the shell. FaunaFinderTheme
+   already ships the PaletteDark this activates. *@
+<MudThemeProvider Theme="FaunaFinderTheme.Default" IsDarkMode="_isDarkMode" />
 <MudPopoverProvider />
 <MudDialogProvider />
 <MudSnackbarProvider />
@@ -82,6 +87,17 @@
                         <span class="ff-search-pill-text">@L["Shell_Search"]</span>
                     </div>
                 </MudHidden>
+
+                @* Light/dark switch. The click stamps data-theme on the root
+                   element, which is what the token sheet keys off; _isDarkMode
+                   keeps MudBlazor's own palette in step. *@
+                <MudTooltip Text="@ThemeToggleLabel">
+                    <MudIconButton Icon="@ThemeToggleIcon"
+                                   Class="ff-theme-toggle"
+                                   Size="Size.Small"
+                                   aria-label="@ThemeToggleLabel"
+                                   OnClick="ToggleThemeAsync" />
+                </MudTooltip>
 
                 @* Language dropdown — MudMenu using its built-in activator
                    (Label + StartIcon + EndIcon) instead of ActivatorContent.
@@ -219,6 +235,13 @@
     private bool _railOpen = true;
     private bool _railHovered;
 
+    // Starts false so the first render matches the paper palette the boot
+    // script leaves in place for anyone without a stored choice; the real
+    // effective theme — stored value, else the OS — arrives from JS on first
+    // render below.
+    private bool _isDarkMode;
+    private IJSObjectReference? _themeModule;
+
     // Root ("/") only — decides logo vs. back button in the mobile app bar.
     private bool IsRootPage => Navigation.State.Path == "/" || Navigation.State.Path == "";
 
@@ -253,6 +276,13 @@
 
     private void ToggleRail() => _railOpen = !_railOpen;
 
+    // Sun when we're dark (click goes to light), moon when we're light.
+    private string ThemeToggleIcon => _isDarkMode
+        ? Icons.Material.Filled.LightMode
+        : Icons.Material.Filled.DarkMode;
+
+    private string ThemeToggleLabel => _isDarkMode ? L["Theme_ToLight"] : L["Theme_ToDark"];
+
     // The rail is a desktop companion column. The map is the one page that
     // wants the whole ground, so it never gets one.
     private bool ShowLibraryRail => !IsMapPage;
@@ -264,6 +294,54 @@
         L.LanguageChanged += HandleLanguageChanged;
         _locale = L.CurrentLanguage == "es" ? LocaleContext.Spanish : LocaleContext.English;
         UpdateCurrentTab();
+    }
+
+    // This is a WebAssembly client, so the module import is async and can only
+    // run once there's a document to talk to — never from OnInitialized.
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender)
+        {
+            return;
+        }
+
+        try
+        {
+            _themeModule = await JS.InvokeAsync<IJSObjectReference>("import", "./js/fauna-theme.js");
+            var theme = await _themeModule.InvokeAsync<string>("getTheme");
+            _isDarkMode = string.Equals(theme, "dark", StringComparison.OrdinalIgnoreCase);
+            StateHasChanged();
+        }
+        catch (JSException)
+        {
+            // Theming is an enhancement, not a dependency: if the module can't
+            // load, the shell stays on whatever the stylesheet resolved to and
+            // the toggle simply does nothing.
+            _themeModule = null;
+        }
+    }
+
+    private async Task ToggleThemeAsync()
+    {
+        if (_themeModule is null)
+        {
+            return;
+        }
+
+        var next = _isDarkMode ? "light" : "dark";
+
+        try
+        {
+            await _themeModule.InvokeVoidAsync("setTheme", next);
+        }
+        catch (JSException)
+        {
+            // The stamp never landed — leave MudBlazor on the palette the
+            // page is still showing rather than splitting the two.
+            return;
+        }
+
+        _isDarkMode = next == "dark";
     }
 
     private void HandleNavigationStateChanged()

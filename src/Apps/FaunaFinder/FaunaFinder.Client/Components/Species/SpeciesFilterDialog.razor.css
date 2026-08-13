@@ -100,15 +100,17 @@
     background: var(--fauna-primary-50);
 }
 
+/* Selected chip is filled with primary, so its label takes the ground colour
+   and inverts with the theme instead of pinning to white. */
 .ff-taxa-chip.is-on {
     background: var(--fauna-primary);
     border-color: var(--fauna-primary);
-    color: #fff;
+    color: var(--fauna-surface);
 }
 
 .ff-taxa-chip.is-on i,
 .ff-taxa-chip.is-on .count {
-    color: rgba(255, 255, 255, 0.85);
+    color: color-mix(in srgb, currentColor 85%, transparent);
 }
 
 /* Status list */

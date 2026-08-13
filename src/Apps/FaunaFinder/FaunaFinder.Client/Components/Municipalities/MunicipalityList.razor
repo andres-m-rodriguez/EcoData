@@ -29,7 +29,9 @@
                             }
                             else
                             {
-                                <MudIcon Icon="@Icons.Material.Filled.Check" Size="Size.Small" Class="mr-2" Style="visibility:hidden" />
+                                @* Hidden rather than absent: it holds the column so the
+                                   labels of checked and unchecked options line up. *@
+                                <MudIcon Icon="@Icons.Material.Filled.Check" Size="Size.Small" Class="mr-2 mm-sort-check-placeholder" />
                             }
                             @L[option.LabelKey]
                         </MudMenuItem>

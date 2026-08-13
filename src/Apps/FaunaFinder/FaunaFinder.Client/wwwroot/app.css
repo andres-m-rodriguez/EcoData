@@ -386,3 +386,15 @@ h1:focus {
     color: var(--mud-palette-text-secondary);
     max-width: 320px;
 }
+
+/* ==========================================================================
+   Menu item check placeholder
+   --------------------------------------------------------------------------
+   Holds the check column in sort menus so checked and unchecked labels line
+   up. Global rather than scoped: MudMenu renders its items into a popover
+   at the app root, outside the owning component's DOM subtree, so neither a
+   scoped selector nor ::deep can reach them.
+   ========================================================================== */
+.mm-sort-check-placeholder {
+    visibility: hidden;
+}
