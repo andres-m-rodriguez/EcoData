@@ -191,25 +191,15 @@
                             <MudText Typo="Typo.caption">@L["Nav_Municipios"]</MudText>
                         </MudStack>
                     </MudButton>
-                    <MudButton Variant="Variant.Text" Color="@GetBottomNavColor(NavigationTab.Categories)" Class="@GetBottomNavClass(NavigationTab.Categories)"
-                               OnClick="@(() => NavigateToTab(NavigationTab.Categories))">
+                    @* Categories, Practices and Actions fold into one tab here.
+                       Six labels don't fit a phone, and all three are reference
+                       browsing — /browse is the hub that fans back out. The
+                       desktop nav above still links to each one directly. *@
+                    <MudButton Variant="Variant.Text" Color="@GetBottomNavColor(NavigationTab.Browse)" Class="@GetBottomNavClass(NavigationTab.Browse)"
+                               OnClick="@(() => NavigateToTab(NavigationTab.Browse))">
                         <MudStack AlignItems="AlignItems.Center" Spacing="0">
-                            <MudIcon Icon="@Icons.Material.Filled.Category" Size="Size.Small" />
-                            <MudText Typo="Typo.caption">@L["Nav_Categories"]</MudText>
-                        </MudStack>
-                    </MudButton>
-                    <MudButton Variant="Variant.Text" Color="@GetBottomNavColor(NavigationTab.Practices)" Class="@GetBottomNavClass(NavigationTab.Practices)"
-                               OnClick="@(() => NavigateToTab(NavigationTab.Practices))">
-                        <MudStack AlignItems="AlignItems.Center" Spacing="0">
-                            <MudIcon Icon="@Icons.Material.Filled.Agriculture" Size="Size.Small" />
-                            <MudText Typo="Typo.caption">@L["Nav_Practices"]</MudText>
-                        </MudStack>
-                    </MudButton>
-                    <MudButton Variant="Variant.Text" Color="@GetBottomNavColor(NavigationTab.Actions)" Class="@GetBottomNavClass(NavigationTab.Actions)"
-                               OnClick="@(() => NavigateToTab(NavigationTab.Actions))">
-                        <MudStack AlignItems="AlignItems.Center" Spacing="0">
-                            <MudIcon Icon="@Icons.Material.Filled.Gavel" Size="Size.Small" />
-                            <MudText Typo="Typo.caption">@L["Nav_Actions"]</MudText>
+                            <MudIcon Icon="@Icons.Material.Filled.GridView" Size="Size.Small" />
+                            <MudText Typo="Typo.caption">@L["Nav_Browse"]</MudText>
                         </MudStack>
                     </MudButton>
                 </MudStack>
@@ -219,7 +209,10 @@
 </CascadingValue>
 
 @code {
-    private enum NavigationTab { Map, Species, Municipalities, Categories, Practices, Actions }
+    // Bottom-bar tabs only. The desktop nav links to each section directly and
+    // doesn't use this — which is why the three reference sections collapse to
+    // one Browse member here without losing anything up there.
+    private enum NavigationTab { Map, Species, Municipalities, Browse }
 
     private NavigationTab _currentTab = NavigationTab.Map;
     private LocaleContext _locale = LocaleContext.English;
@@ -245,6 +238,7 @@
     private bool IsEditorialListPage =>
         string.Equals(Navigation.State.Path, "/species", StringComparison.OrdinalIgnoreCase) ||
         string.Equals(Navigation.State.Path, "/municipalities", StringComparison.OrdinalIgnoreCase) ||
+        string.Equals(Navigation.State.Path, "/browse", StringComparison.OrdinalIgnoreCase) ||
         string.Equals(Navigation.State.Path, "/categories", StringComparison.OrdinalIgnoreCase) ||
         string.Equals(Navigation.State.Path, "/practices", StringComparison.OrdinalIgnoreCase) ||
         string.Equals(Navigation.State.Path, "/actions", StringComparison.OrdinalIgnoreCase);
@@ -365,9 +359,11 @@
             var p when p.StartsWith("/species", StringComparison.OrdinalIgnoreCase) => NavigationTab.Species,
 
             var p when p.StartsWith("/municipalities", StringComparison.OrdinalIgnoreCase) => NavigationTab.Municipalities,
-            var p when p.StartsWith("/categories", StringComparison.OrdinalIgnoreCase) => NavigationTab.Categories,
-            var p when p.StartsWith("/practices", StringComparison.OrdinalIgnoreCase) => NavigationTab.Practices,
-            var p when p.StartsWith("/actions", StringComparison.OrdinalIgnoreCase) => NavigationTab.Actions,
+            // Every reference section lights the one Browse tab.
+            var p when p.StartsWith("/browse", StringComparison.OrdinalIgnoreCase) => NavigationTab.Browse,
+            var p when p.StartsWith("/categories", StringComparison.OrdinalIgnoreCase) => NavigationTab.Browse,
+            var p when p.StartsWith("/practices", StringComparison.OrdinalIgnoreCase) => NavigationTab.Browse,
+            var p when p.StartsWith("/actions", StringComparison.OrdinalIgnoreCase) => NavigationTab.Browse,
             _ => NavigationTab.Map
         };
     }
@@ -401,9 +397,7 @@
             NavigationTab.Map => "/",
             NavigationTab.Species => "/species",
             NavigationTab.Municipalities => "/municipalities",
-            NavigationTab.Categories => "/categories",
-            NavigationTab.Practices => "/practices",
-            NavigationTab.Actions => "/actions",
+            NavigationTab.Browse => "/browse",
             _ => "/"
         };
         Navigation.NavigateTo(path);

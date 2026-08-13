@@ -59,6 +59,7 @@ public static class FaunaFinderStrings
 
         // Layout / navigation
         ["Nav_Map"] = "Map",
+        ["Nav_Browse"] = "Browse",
         ["Nav_Species"] = "Species",
         ["Nav_Municipios"] = "Municipios",
         ["Nav_Categories"] = "Categories",
@@ -74,6 +75,16 @@ public static class FaunaFinderStrings
         ["Rail_Collapse"] = "Collapse the notebook",
         ["Rail_Expand"] = "Open the notebook",
         ["Shell_Search"] = "Search species and municipios",
+
+        // Browse — the hub the mobile bar folds three sections into
+        ["Browse_PageTitle"] = "Browse",
+        ["Browse_Eyebrow"] = "Reference · Puerto Rico",
+        ["Browse_Heading"] = "The catalogue behind the map.",
+        ["Browse_Lede"] = "Three ways into the same record: by what a species is, by the conservation work that protects it, and by the recovery actions that work delivers.",
+        ["Browse_Categories_Desc"] = "Every taxonomic group recorded on the island, with the species catalogued under each.",
+        ["Browse_Practices_Desc"] = "NRCS conservation practices, each paired with the recovery actions it carries.",
+        ["Browse_Actions_Desc"] = "Fish & Wildlife Service recovery actions, and the practices that deliver them.",
+        ["Browse_Count_Pending"] = "—",
         ["Theme_ToDark"] = "Switch to dark",
         ["Theme_ToLight"] = "Switch to paper",
 
@@ -377,6 +388,7 @@ public static class FaunaFinderStrings
 
         // Layout / navigation
         ["Nav_Map"] = "Mapa",
+        ["Nav_Browse"] = "Explorar",
         ["Nav_Species"] = "Especies",
         ["Nav_Municipios"] = "Municipios",
         ["Nav_Categories"] = "Categorías",
@@ -392,6 +404,16 @@ public static class FaunaFinderStrings
         ["Rail_Collapse"] = "Cerrar la libreta",
         ["Rail_Expand"] = "Abrir la libreta",
         ["Shell_Search"] = "Buscar especies y municipios",
+
+        // Explorar — el centro donde la barra móvil agrupa tres secciones
+        ["Browse_PageTitle"] = "Explorar",
+        ["Browse_Eyebrow"] = "Referencia · Puerto Rico",
+        ["Browse_Heading"] = "El catálogo detrás del mapa.",
+        ["Browse_Lede"] = "Tres formas de entrar al mismo registro: por lo que es una especie, por el trabajo de conservación que la protege y por las acciones de recuperación que ese trabajo ejecuta.",
+        ["Browse_Categories_Desc"] = "Todos los grupos taxonómicos registrados en la isla, con las especies catalogadas en cada uno.",
+        ["Browse_Practices_Desc"] = "Prácticas de conservación del NRCS, cada una emparejada con las acciones que conlleva.",
+        ["Browse_Actions_Desc"] = "Acciones de recuperación del Servicio de Pesca y Vida Silvestre, y las prácticas que las ejecutan.",
+        ["Browse_Count_Pending"] = "—",
         ["Theme_ToDark"] = "Cambiar a oscuro",
         ["Theme_ToLight"] = "Cambiar a claro",
 
