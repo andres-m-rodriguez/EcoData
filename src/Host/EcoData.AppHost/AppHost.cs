@@ -121,8 +121,15 @@ var faunafinder = builder
     .PublishAsAzureContainerApp(
         (infra, app) =>
         {
-            // Configure 2 max replicas
-            app.Template.Scale.MinReplicas = 1;
+            // Scales to zero when idle. faunafinder has external HTTP ingress, so
+            // ACA's HTTP scale trigger wakes a replica on the next request — with
+            // MinReplicas = 1 we were paying the idle-replica rate around the clock
+            // (~$12 in July) for a month in which the app served no requests at all.
+            // The cost is a cold start on the first request after an idle period:
+            // image pull plus .NET startup, on the order of tens of seconds. Do not
+            // copy this to sensors-ingestion — it has no ingress, so no HTTP trigger
+            // would ever start it back up.
+            app.Template.Scale.MinReplicas = 0;
             app.Template.Scale.MaxReplicas = 2;
         }
     );
