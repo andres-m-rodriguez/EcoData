@@ -1,0 +1,90 @@
+@namespace FaunaFinder.Client.Components.Shell
+@inherits LocalizedComponentBase
+@using EcoData.Wildlife.Contracts.Dtos
+@inject ISpeciesHttpClient SpeciesClient
+@inject ISpeciesCategoryHttpClient SpeciesCategoryClient
+@inject IMunicipalityHttpClient MunicipalityClient
+
+@* The persistent field notebook. Takes no parameters — the layout renders it
+   bare. Both lists load once on mount; the chips only switch which one shows. *@
+
+<aside class="ff-rail">
+    <h2 class="ff-rail-heading">@L["Rail_Heading"]</h2>
+
+    <div class="ff-rail-chips">
+        <button type="button"
+                class="@ChipClass(RailTab.Municipios)"
+                aria-pressed="@AriaPressed(RailTab.Municipios)"
+                @onclick="ShowMunicipios">
+            @L["Rail_Tab_Municipios"]
+        </button>
+        <button type="button"
+                class="@ChipClass(RailTab.Taxa)"
+                aria-pressed="@AriaPressed(RailTab.Taxa)"
+                @onclick="ShowTaxa">
+            @L["Rail_Tab_Taxa"]
+        </button>
+    </div>
+
+    <div class="ff-rail-list">
+        @* A null Result is the loading sentinel — no flag is kept for it. *@
+        @if (ActiveListPending)
+        {
+            @for (var i = 0; i < SkeletonRowCount; i++)
+            {
+                <div class="ff-rail-skeleton-row">
+                    <MudSkeleton SkeletonType="SkeletonType.Rectangle" Class="ff-rail-skeleton-art" />
+                    <div class="ff-rail-skeleton-text">
+                        <MudSkeleton SkeletonType="SkeletonType.Text" Class="ff-rail-skeleton-name" />
+                        <MudSkeleton SkeletonType="SkeletonType.Text" Class="ff-rail-skeleton-count" />
+                    </div>
+                </div>
+            }
+        }
+        else if (_tab == RailTab.Municipios)
+        {
+            @if (LoadMunicipiosState.Result is { Count: > 0 } municipios)
+            {
+                @foreach (var municipio in municipios)
+                {
+                    <a class="ff-rail-item" href="@MunicipioHref(municipio.Id)" @key="municipio.Id">
+                        <span class="ff-rail-art ff-rail-art--place">
+                            <i class="fa-solid fa-mountain-sun" aria-hidden="true"></i>
+                        </span>
+                        <span class="ff-rail-body">
+                            <span class="ff-rail-name">@municipio.Name</span>
+                            <span class="ff-rail-count">@L["Home_MunicipioCount", municipio.Count]</span>
+                        </span>
+                    </a>
+                }
+            }
+            else
+            {
+                @* Failed and empty read the same here: the rail never shouts. *@
+                <p class="ff-rail-empty">@L["Rail_Empty"]</p>
+            }
+        }
+        else
+        {
+            @if (LoadTaxaState.Result is { Count: > 0 } taxa)
+            {
+                @foreach (var taxon in taxa)
+                {
+                    <a class="ff-rail-item" href="/categories" @key="taxon.Code">
+                        <span class="ff-rail-art ff-rail-art--taxon">
+                            <i class="@TaxonIcons.GetIcon(taxon.Code)" aria-hidden="true"></i>
+                        </span>
+                        <span class="ff-rail-body">
+                            <span class="ff-rail-name">@L[TaxonIcons.GetLabelKey(taxon.Code)]</span>
+                            <span class="ff-rail-count">@L["Home_TaxonCount", taxon.Count]</span>
+                        </span>
+                    </a>
+                }
+            }
+            else
+            {
+                <p class="ff-rail-empty">@L["Rail_Empty"]</p>
+            }
+        }
+    </div>
+</aside>

@@ -77,6 +77,29 @@
     --status-ex-bg: #dcdcdc;
 }
 
+/* --- App shell -------------------------------------------------------
+   Harmony's geometry (a gutter of ground, panels floating in it) on
+   FaunaFinder's paper. Panels separate by hairline + soft shadow rather
+   than by the pure value contrast a dark shell gets for free. */
+:root {
+    --fauna-shell-gutter: 10px;
+    --fauna-shell-radius: 12px;
+    --fauna-shell-topbar: 58px;
+    --fauna-rail-width: 264px;
+
+    --fauna-shell-shadow: 0 1px 2px rgba(26, 31, 28, 0.05), 0 10px 28px rgba(26, 31, 28, 0.07);
+    --fauna-shell-shadow-float: 0 12px 32px rgba(26, 31, 28, 0.18);
+
+    /* The map viewport stays dark on any ground — an instrument set into
+       a paper document. These are deliberately NOT --fauna-surface. */
+    --fauna-map-bg: #0f1c17;
+    --fauna-map-glass: rgba(16, 30, 24, 0.9);
+    --fauna-map-line: rgba(255, 255, 255, 0.11);
+    --fauna-map-fg: #f0f4f1;
+    --fauna-map-fg-2: #9fb3a8;
+    --fauna-map-accent: #6ee0a3;
+}
+
 /* Page frame shared by editorial species page */
 .ff-page {
     max-width: 1360px;

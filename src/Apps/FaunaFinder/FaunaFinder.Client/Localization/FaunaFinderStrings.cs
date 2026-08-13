@@ -89,6 +89,15 @@ public static class FaunaFinderStrings
         ["Home_Empty_Description"] = "Once species are recorded they'll appear here.",
         ["Home_LoadError"] = "Couldn't reach the server.",
 
+        // App shell — the library rail
+        ["Rail_Heading"] = "Field notebook",
+        ["Rail_Tab_Municipios"] = "Municipios",
+        ["Rail_Tab_Taxa"] = "Taxa",
+        ["Rail_Empty"] = "Nothing recorded yet.",
+        ["Rail_Collapse"] = "Collapse the notebook",
+        ["Rail_Expand"] = "Open the notebook",
+        ["Shell_Search"] = "Search species and municipios",
+
         // Hero (shared eyebrow)
         ["Hero_Eyebrow"] = "Volume 03 · Living Atlas",
         ["Hero_LastSync"] = "Last sync · {0}",
@@ -398,6 +407,15 @@ public static class FaunaFinderStrings
         ["Home_Empty_Title"] = "Todavía no hay nada",
         ["Home_Empty_Description"] = "Cuando se registren especies aparecerán aquí.",
         ["Home_LoadError"] = "No se pudo conectar con el servidor.",
+
+        // Estructura — la libreta lateral
+        ["Rail_Heading"] = "Libreta de campo",
+        ["Rail_Tab_Municipios"] = "Municipios",
+        ["Rail_Tab_Taxa"] = "Taxones",
+        ["Rail_Empty"] = "Todavía no hay registros.",
+        ["Rail_Collapse"] = "Cerrar la libreta",
+        ["Rail_Expand"] = "Abrir la libreta",
+        ["Shell_Search"] = "Buscar especies y municipios",
 
         // Hero
         ["Hero_Eyebrow"] = "Volumen 03 · Atlas Viviente",

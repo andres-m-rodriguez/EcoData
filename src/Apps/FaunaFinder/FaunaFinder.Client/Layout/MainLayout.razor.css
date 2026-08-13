@@ -1,112 +1,194 @@
-::deep .content-container {
-    background: var(--mud-palette-surface);
-    border-radius: 12px;
-    border: 1px solid var(--mud-palette-lines-default);
-}
+/* ==========================================================================
+   FaunaFinder app shell
 
-.main-content {
-    background: var(--mud-palette-background);
-    padding-top: 16px;
-    padding-bottom: 16px;
+   Harmony's geometry on FaunaFinder's material: the viewport is a cream
+   ground (--fauna-bg) and the app bar, the library rail and the page itself
+   are white panels floating in it, inset by --fauna-shell-gutter and set
+   apart by a hairline plus a soft shadow rather than by value contrast.
+
+   Scoping note: MudLayout / MudAppBar / MudMainContent are components, so
+   Blazor never stamps this file's scope attribute on their markup. .ff-shell
+   is the plain wrapper that does carry it, and every ::deep rule below
+   resolves through that wrapper.
+   ========================================================================== */
+
+.ff-shell {
+    position: relative;
     min-height: 100vh;
+    background: var(--fauna-bg);
+
+    /* Everything MudBlazor positions off the app bar — main content padding,
+       the fixed .map-page offsets — has to clear a floating panel, not a
+       flush-to-top bar: gutter + bar + gutter. */
+    --mud-appbar-height: calc(var(--fauna-shell-topbar) + var(--fauna-shell-gutter) * 2);
+
+    /* Height of the mobile tab strip inside the floating pill. Read back by
+       app.css for the main content's bottom padding. */
+    --ff-bottom-nav-height: 64px;
 }
 
-/* Full-bleed map page - no padding, positioned for map to fill */
-.main-content:has(.map-page) {
-    padding: 0;
-    background: transparent;
-    overflow: hidden;
-}
-
-/* AppBar — slightly denser, translucent pine */
+/* --------------------------------------------------------------------------
+   App bar panel
+   -------------------------------------------------------------------------- */
 ::deep .ff-appbar {
-    background: rgba(31, 77, 58, 0.96) !important;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
+    position: fixed;
+    top: var(--fauna-shell-gutter);
+    right: var(--fauna-shell-gutter);
+    left: var(--fauna-shell-gutter);
+    width: auto;
+    height: var(--fauna-shell-topbar);
+    min-height: var(--fauna-shell-topbar);
+    color: var(--fauna-fg);
+    background: color-mix(in srgb, var(--fauna-surface) 90%, transparent);
+    border: 1px solid var(--fauna-line);
+    border-radius: var(--fauna-shell-radius);
+    box-shadow: var(--fauna-shell-shadow);
+    backdrop-filter: blur(14px) saturate(1.3);
+    -webkit-backdrop-filter: blur(14px) saturate(1.3);
 }
 
-/* Logo — serif */
+::deep .ff-appbar > .mud-toolbar {
+    height: var(--fauna-shell-topbar);
+    min-height: var(--fauna-shell-topbar);
+    padding-left: 16px;
+    padding-right: 12px;
+    border-radius: inherit;
+}
+
 /* Mobile app bar lead slot (back button + title, or the logo) */
 .appbar-mobile-lead {
     flex: 1;
     min-width: 0;
 }
 
+/* Wordmark and page title — ink on paper */
 .logo-text {
-    font-family: 'Newsreader', serif;
+    font-family: var(--fauna-font-serif);
     font-weight: 700;
     font-size: 1.375rem;
-    color: #ffffff;
-    letter-spacing: -0.015em;
+    color: var(--fauna-primary);
+    letter-spacing: var(--fauna-tracking-tight);
 }
 
 .page-title {
-    font-family: 'Newsreader', serif;
+    font-family: var(--fauna-font-serif);
     font-weight: 600;
     font-size: 1.125rem;
-    color: #ffffff;
-    letter-spacing: -0.015em;
+    color: var(--fauna-fg);
+    letter-spacing: var(--fauna-tracking-tight);
     white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
-/* Nav — uppercase tracked, pill-style active */
+/* --------------------------------------------------------------------------
+   Nav — uppercase tracked, pill-style active
+   -------------------------------------------------------------------------- */
 ::deep .ff-nav {
     display: flex;
     gap: 2px;
     align-items: center;
-    font-family: 'Inter', sans-serif;
+    font-family: var(--fauna-font-sans);
 }
 
 ::deep .ff-nav-link {
-    color: rgba(255, 255, 255, 0.72);
+    color: var(--fauna-fg-3);
     padding: 8px 12px;
-    border-radius: 6px;
+    border-radius: 999px;
     font-weight: 500;
     font-size: 11px;
-    letter-spacing: 0.14em;
+    letter-spacing: var(--fauna-tracking-pill);
     text-transform: uppercase;
     text-decoration: none;
-    transition: color 0.2s ease, background-color 0.2s ease;
+    transition: color var(--fauna-t-base) var(--fauna-ease),
+                background-color var(--fauna-t-base) var(--fauna-ease);
     line-height: 1;
 }
 
 ::deep .ff-nav-link:hover {
-    color: #ffffff;
-    background: rgba(255, 255, 255, 0.06);
+    color: var(--fauna-primary);
+    background: var(--fauna-primary-50);
 }
 
 ::deep .ff-nav-link.is-active {
-    color: #ffffff;
-    background: rgba(255, 255, 255, 0.1);
+    color: var(--fauna-surface);
+    background: var(--fauna-primary);
 }
 
-/* Language dropdown — MudMenu in built-in activator mode. MudMenu
-   renders an internal MudButton; we style it as a pine pill and
-   leave the popover to MudBlazor. Scoped ::deep reaches into
-   MudBlazor's DOM. */
+::deep .ff-nav-link.is-active:hover {
+    color: var(--fauna-surface);
+    background: var(--fauna-primary-700);
+}
+
+::deep .ff-nav-link:focus-visible {
+    outline: 2px solid var(--fauna-primary);
+    outline-offset: 2px;
+}
+
+/* --------------------------------------------------------------------------
+   Search affordance — presentation only, no input and no wiring yet
+   -------------------------------------------------------------------------- */
+.ff-search-pill {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 200px;
+    max-width: 320px;
+    margin-right: 8px;
+    padding: 7px 14px;
+    border-radius: 999px;
+    background: var(--fauna-bg-alt);
+    border: 1px solid var(--fauna-line);
+    user-select: none;
+}
+
+.ff-search-pill ::deep .mud-icon-root {
+    flex-shrink: 0;
+    font-size: 17px !important;
+    color: var(--fauna-fg-4);
+}
+
+.ff-search-pill-text {
+    font: var(--fauna-body-sm);
+    color: var(--fauna-fg-4);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* --------------------------------------------------------------------------
+   Language dropdown — MudMenu in built-in activator mode. MudMenu renders an
+   internal MudButton; we style it as a paper pill and leave the popover to
+   MudBlazor.
+   -------------------------------------------------------------------------- */
 ::deep .ff-lang-menu {
     margin-left: 0;
 }
 
 ::deep .ff-lang-menu > .mud-button-root {
-    background: rgba(255, 255, 255, 0.08) !important;
-    border: 1px solid rgba(255, 255, 255, 0.12) !important;
+    background: var(--fauna-surface) !important;
+    border: 1px solid var(--fauna-line) !important;
     border-radius: 999px !important;
-    color: rgba(255, 255, 255, 0.9) !important;
-    font: 600 11px/1 'Inter', sans-serif !important;
+    color: var(--fauna-fg-2) !important;
+    font: 600 11px/1 var(--fauna-font-sans) !important;
     letter-spacing: 0.06em !important;
     text-transform: none !important;
     padding: 4px 8px 4px 12px !important;
     min-width: 0 !important;
-    transition: background-color 0.2s ease, border-color 0.2s ease,
-                color 0.2s ease;
+    transition: background-color var(--fauna-t-base) var(--fauna-ease),
+                border-color var(--fauna-t-base) var(--fauna-ease),
+                color var(--fauna-t-base) var(--fauna-ease);
 }
 
 ::deep .ff-lang-menu > .mud-button-root:hover {
-    background: rgba(255, 255, 255, 0.14) !important;
-    border-color: rgba(255, 255, 255, 0.22) !important;
-    color: #ffffff !important;
+    background: var(--fauna-primary-50) !important;
+    border-color: var(--fauna-primary-200) !important;
+    color: var(--fauna-primary) !important;
+}
+
+::deep .ff-lang-menu > .mud-button-root:focus-visible {
+    outline: 2px solid var(--fauna-primary);
+    outline-offset: 2px;
 }
 
 ::deep .ff-lang-menu > .mud-button-root .mud-icon-root {
@@ -125,7 +207,7 @@
 .ff-lang-item ::deep .mud-icon-root {
     visibility: hidden;
     font-size: 16px !important;
-    color: var(--fauna-primary, #1f4d3a);
+    color: var(--fauna-primary);
 }
 
 .ff-lang-item.is-active ::deep .mud-icon-root {
@@ -134,14 +216,14 @@
 
 .ff-lang-item-name {
     flex: 1;
-    font: 500 13px/1.3 'Inter', sans-serif;
+    font: 500 13px/1.3 var(--fauna-font-sans);
     letter-spacing: 0;
 }
 
 .ff-lang-item-code {
-    font: 600 10px/1 'JetBrains Mono', monospace;
+    font: 600 10px/1 var(--fauna-font-mono);
     letter-spacing: 0.08em;
-    color: var(--fauna-fg-4, #888);
+    color: var(--fauna-fg-4);
 }
 
 /* Mobile — tighter pill */
@@ -156,40 +238,104 @@
     }
 }
 
-/* App bar backdrop blur (kept from before) */
-::deep .app-bar-blur {
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
+/* --------------------------------------------------------------------------
+   Ground + panels below the app bar
+   -------------------------------------------------------------------------- */
+::deep .main-content {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    background: transparent;
+    padding-top: calc(var(--fauna-shell-topbar) + var(--fauna-shell-gutter) * 2);
+    padding-bottom: var(--fauna-shell-gutter);
 }
 
-/* Bottom navigation styling */
+.ff-shell-body {
+    flex: 1 1 auto;
+    display: flex;
+    align-items: flex-start;
+    gap: var(--fauna-shell-gutter);
+    padding: 0 var(--fauna-shell-gutter);
+    min-width: 0;
+}
+
+/* Library rail — its own panel, parked under the app bar while the page
+   scrolls past it. */
+.ff-rail-panel {
+    flex: 0 0 var(--fauna-rail-width);
+    width: var(--fauna-rail-width);
+    position: sticky;
+    top: calc(var(--fauna-shell-topbar) + var(--fauna-shell-gutter) * 2);
+    max-height: calc(100vh - var(--fauna-shell-topbar) - var(--fauna-shell-gutter) * 3);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    background: var(--fauna-surface);
+    border: 1px solid var(--fauna-line);
+    border-radius: var(--fauna-shell-radius);
+    box-shadow: var(--fauna-shell-shadow);
+}
+
+.ff-main-panel {
+    flex: 1 1 auto;
+    align-self: stretch;
+    min-width: 0;
+    /* clip, not hidden: rounds off page content at the corners without
+       turning the panel into a scrollport, which would break sticky
+       headers inside the pages. */
+    overflow: clip;
+    background: var(--fauna-surface);
+    border: 1px solid var(--fauna-line);
+    border-radius: var(--fauna-shell-radius);
+    box-shadow: var(--fauna-shell-shadow);
+}
+
+/* Full-bleed map page — the map positions itself against the viewport, so the
+   panel steps out of the way entirely and leaves only the floating app bar
+   over it. */
+::deep .main-content:has(.map-page) {
+    padding: 0 !important;
+    overflow: hidden;
+}
+
+::deep .main-content:has(.map-page) .ff-shell-body {
+    padding: 0;
+    gap: 0;
+}
+
+::deep .main-content:has(.map-page) .ff-main-panel {
+    overflow: visible;
+    background: transparent;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+}
+
+/* --------------------------------------------------------------------------
+   Mobile bottom navigation — a floating pill, not a docked bar
+   -------------------------------------------------------------------------- */
 .bottom-nav {
     position: fixed !important;
-    bottom: 0 !important;
-    left: 0;
-    right: 0;
+    left: var(--fauna-shell-gutter);
+    right: var(--fauna-shell-gutter);
+    bottom: calc(var(--fauna-shell-gutter) + env(safe-area-inset-bottom, 0px));
     z-index: 9999;
-    background-color: rgba(244, 244, 239, 0.92);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border-top: 1px solid var(--mud-palette-lines-default);
-    padding-bottom: env(safe-area-inset-bottom, 0);
+    border: 1px solid var(--fauna-line);
+    border-radius: 20px;
+    background-color: color-mix(in srgb, var(--fauna-surface) 86%, transparent);
+    backdrop-filter: blur(18px) saturate(1.4);
+    -webkit-backdrop-filter: blur(18px) saturate(1.4);
+    box-shadow: var(--fauna-shell-shadow-float);
+    overflow: hidden;
     transform: translate3d(0, 0, 0);
     isolation: isolate;
 }
 
-::deep .mud-theme-dark .bottom-nav {
-    background-color: rgba(28, 28, 30, 0.9);
-}
-
-.bottom-nav-container {
-    height: 64px;
-    padding: 4px 0;
-}
-
 /* Seven tabs share the bar: each takes an equal slice and is allowed to
-   shrink below its content width, so the row never scrolls or wraps. */
+   shrink below its content width, so the row never scrolls or wraps.
+   MudStack is a component, so this only reaches it through ::deep. */
 ::deep .bottom-nav-container {
+    height: var(--ff-bottom-nav-height);
+    padding: 4px 6px;
     flex-wrap: nowrap;
     overflow: hidden;
     gap: 0;
@@ -198,9 +344,14 @@
 ::deep .bottom-nav-item {
     flex: 1 1 0;
     min-width: 0;
+    margin: 0 1px;
     padding: 4px 4px;
     overflow: hidden;
+    border-radius: 14px;
+    color: var(--fauna-fg-3);
     text-transform: none !important;
+    transition: background-color var(--fauna-t-base) var(--fauna-ease),
+                color var(--fauna-t-base) var(--fauna-ease);
 }
 
 ::deep .bottom-nav-item .mud-button-label {
@@ -218,12 +369,29 @@
     white-space: nowrap;
 }
 
+/* Active tab reads as a filled pine chip */
+::deep .bottom-nav-item.is-active {
+    background-color: var(--fauna-primary);
+    color: var(--fauna-surface) !important;
+}
+
+::deep .bottom-nav-item.is-active .mud-icon-root,
+::deep .bottom-nav-item.is-active .mud-typography {
+    color: var(--fauna-surface) !important;
+}
+
+::deep .bottom-nav-item:focus-visible {
+    outline: 2px solid var(--fauna-primary);
+    outline-offset: -2px;
+}
+
 /* Seven tabs don't fit at the default pill width on small phones —
    tighten the box, the row gap and the caption rather than letting
    labels wrap. Sized so the longest label ("Municipios") still clears
    a 360px viewport. */
 @media (max-width: 420px) {
     ::deep .bottom-nav-item {
+        margin: 0;
         padding: 4px 1px;
     }
 
@@ -233,14 +401,17 @@
     }
 }
 
-/* Add padding to main content on mobile to avoid overlap with bottom nav */
+/* Keep content clear of the floating pill: strip height + the gutter it
+   floats above + one more gutter of breathing room. */
 @media (max-width: 959.95px) {
-    .main-content {
-        padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px)) !important;
+    ::deep .main-content {
+        padding-bottom: calc(var(--ff-bottom-nav-height) + var(--fauna-shell-gutter) * 2 + env(safe-area-inset-bottom, 0px));
     }
 }
 
-/* Page transition animations */
+/* --------------------------------------------------------------------------
+   Page transition animations
+   -------------------------------------------------------------------------- */
 @keyframes slide-in-right {
     from { opacity: 0; }
     to { opacity: 1; }
@@ -262,4 +433,17 @@
 
 .page-transition-back {
     animation: slide-in-left 0.2s ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .page-transition-forward,
+    .page-transition-back {
+        animation: none;
+    }
+
+    ::deep .ff-nav-link,
+    ::deep .ff-lang-menu > .mud-button-root,
+    ::deep .bottom-nav-item {
+        transition: none;
+    }
 }
