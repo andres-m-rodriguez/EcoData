@@ -743,8 +743,42 @@
     private void OnSpeciesClicked(SpeciesDtoForList species) =>
         NavigationManager.NavigateTo($"/species/{species.Id}");
 
+    // ===== Mobile tab bar =====
+
+    /// <summary>
+    /// The sheet occupies the bottom of the viewport, which is exactly where
+    /// the tab bar lives, so the bar steps aside while a panel is up.
+    ///
+    /// <para>Driven from <c>OnAfterRender</c> rather than from each of the
+    /// half-dozen places the sheet opens or closes: the guard makes it
+    /// idempotent, so one call site can't be forgotten and leave the bar
+    /// stranded off-screen.</para>
+    /// </summary>
+    private bool _bottomNavHidden;
+
+    protected override void OnAfterRender(bool firstRender) => SyncBottomNav(_sheetOpen && PanelVisible);
+
+    private void SyncBottomNav(bool hidden)
+    {
+        if (hidden == _bottomNavHidden) return;
+
+        _bottomNavHidden = hidden;
+        if (hidden)
+        {
+            Bus.Publish<FfBottomNav.Hidden>();
+        }
+        else
+        {
+            Bus.Publish<FfBottomNav.Shown>();
+        }
+    }
+
     public override void Dispose()
     {
+        // Leaving with a sheet open would otherwise strand the bar off-screen
+        // on whatever page comes next.
+        SyncBottomNav(false);
+
         L.LanguageChanged -= OnLanguageChanged;
         _mapController.OnGeoJsonClicked -= OnGeoJsonClicked;
         _mapController.OnGeoJsonLoaded -= OnGeoJsonLoaded;

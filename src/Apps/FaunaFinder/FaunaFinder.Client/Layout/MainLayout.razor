@@ -161,55 +161,18 @@
             </MudMainContent>
         </MudLayout>
 
-        @* Mobile Bottom Navigation - Outside MudLayout for stability *@
+        @* Mobile tab bar. It owns its own Hidden/Shown events so a screen
+           that needs the bottom of the viewport can get it out of the way
+           without the layout knowing anything about that screen. *@
         <MudHidden Breakpoint="Breakpoint.MdAndUp">
-            <div class="bottom-nav">
-                <MudStack Row="true" Justify="Justify.SpaceAround" AlignItems="AlignItems.Center" Class="bottom-nav-container">
-                    <MudButton Variant="Variant.Text" Color="@GetBottomNavColor(NavigationTab.Map)" Class="@GetBottomNavClass(NavigationTab.Map)"
-                               OnClick="@(() => NavigateToTab(NavigationTab.Map))">
-                        <MudStack AlignItems="AlignItems.Center" Spacing="0">
-                            <MudIcon Icon="@Icons.Material.Filled.Map" Size="Size.Small" />
-                            <MudText Typo="Typo.caption">@L["Nav_Map"]</MudText>
-                        </MudStack>
-                    </MudButton>
-                    <MudButton Variant="Variant.Text" Color="@GetBottomNavColor(NavigationTab.Species)" Class="@GetBottomNavClass(NavigationTab.Species)"
-                               OnClick="@(() => NavigateToTab(NavigationTab.Species))">
-                        <MudStack AlignItems="AlignItems.Center" Spacing="0">
-                            <MudIcon Icon="@Icons.Material.Filled.Pets" Size="Size.Small" />
-                            <MudText Typo="Typo.caption">@L["Nav_Species"]</MudText>
-                        </MudStack>
-                    </MudButton>
-                    <MudButton Variant="Variant.Text" Color="@GetBottomNavColor(NavigationTab.Municipalities)" Class="@GetBottomNavClass(NavigationTab.Municipalities)"
-                               OnClick="@(() => NavigateToTab(NavigationTab.Municipalities))">
-                        <MudStack AlignItems="AlignItems.Center" Spacing="0">
-                            <MudIcon Icon="@Icons.Material.Filled.LocationCity" Size="Size.Small" />
-                            <MudText Typo="Typo.caption">@L["Nav_Municipios"]</MudText>
-                        </MudStack>
-                    </MudButton>
-                    @* Categories, Practices and Actions fold into one tab here.
-                       Six labels don't fit a phone, and all three are reference
-                       browsing — /browse is the hub that fans back out. The
-                       desktop nav above still links to each one directly. *@
-                    <MudButton Variant="Variant.Text" Color="@GetBottomNavColor(NavigationTab.Browse)" Class="@GetBottomNavClass(NavigationTab.Browse)"
-                               OnClick="@(() => NavigateToTab(NavigationTab.Browse))">
-                        <MudStack AlignItems="AlignItems.Center" Spacing="0">
-                            <MudIcon Icon="@Icons.Material.Filled.GridView" Size="Size.Small" />
-                            <MudText Typo="Typo.caption">@L["Nav_Browse"]</MudText>
-                        </MudStack>
-                    </MudButton>
-                </MudStack>
-            </div>
+            <FfBottomNav />
         </MudHidden>
     </div>
 </CascadingValue>
 
 @code {
-    // Bottom-bar tabs only. The desktop nav links to each section directly and
-    // doesn't use this — which is why the three reference sections collapse to
-    // one Browse member here without losing anything up there.
-    private enum NavigationTab { Map, Species, Municipalities, Browse }
 
-    private NavigationTab _currentTab = NavigationTab.Map;
+
     private LocaleContext _locale = LocaleContext.English;
 
     private bool _railOpen = true;
@@ -280,7 +243,6 @@
         Navbar.OnStateChanged += HandleNavbarStateChanged;
         L.LanguageChanged += HandleLanguageChanged;
         _locale = L.CurrentLanguage == "es" ? LocaleContext.Spanish : LocaleContext.English;
-        UpdateCurrentTab();
     }
 
     // This is a WebAssembly client, so the module import is async and can only
@@ -333,7 +295,6 @@
 
     private void HandleNavigationStateChanged()
     {
-        UpdateCurrentTab();
         InvokeAsync(StateHasChanged);
     }
 
@@ -348,24 +309,6 @@
         InvokeAsync(StateHasChanged);
     }
 
-    private void UpdateCurrentTab()
-    {
-        var path = Navigation.State.Path;
-        _currentTab = path switch
-        {
-            "/" or "" => NavigationTab.Map,
-            var p when p.StartsWith("/map", StringComparison.OrdinalIgnoreCase) => NavigationTab.Map,
-            var p when p.StartsWith("/species", StringComparison.OrdinalIgnoreCase) => NavigationTab.Species,
-
-            var p when p.StartsWith("/municipalities", StringComparison.OrdinalIgnoreCase) => NavigationTab.Municipalities,
-            // Every reference section lights the one Browse tab.
-            var p when p.StartsWith("/browse", StringComparison.OrdinalIgnoreCase) => NavigationTab.Browse,
-            var p when p.StartsWith("/categories", StringComparison.OrdinalIgnoreCase) => NavigationTab.Browse,
-            var p when p.StartsWith("/practices", StringComparison.OrdinalIgnoreCase) => NavigationTab.Browse,
-            var p when p.StartsWith("/actions", StringComparison.OrdinalIgnoreCase) => NavigationTab.Browse,
-            _ => NavigationTab.Map
-        };
-    }
 
     private string GetNavLinkClass(string path, bool exact = false)
     {
@@ -377,30 +320,9 @@
         return isActive ? "ff-nav-link is-active" : "ff-nav-link";
     }
 
-    private Color GetBottomNavColor(NavigationTab tab)
-    {
-        return _currentTab == tab ? Color.Primary : Color.Default;
-    }
 
     // The active tab reads as a filled pine chip, which MudBlazor's Color
     // parameter can't express on a text button — the class carries the fill.
-    private string GetBottomNavClass(NavigationTab tab)
-    {
-        return _currentTab == tab ? "bottom-nav-item is-active" : "bottom-nav-item";
-    }
-
-    private void NavigateToTab(NavigationTab tab)
-    {
-        var path = tab switch
-        {
-            NavigationTab.Map => "/",
-            NavigationTab.Species => "/species",
-            NavigationTab.Municipalities => "/municipalities",
-            NavigationTab.Browse => "/browse",
-            _ => "/"
-        };
-        Navigation.NavigateTo(path);
-    }
 
     private void SetLocale(string code) => L.SetLanguage(code);
 
