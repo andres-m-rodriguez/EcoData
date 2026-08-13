@@ -58,12 +58,36 @@ public static class FaunaFinderStrings
         ["Common_Verified"] = "Verified",
 
         // Layout / navigation
+        ["Nav_Home"] = "Home",
         ["Nav_Map"] = "Map",
         ["Nav_Species"] = "Species",
         ["Nav_Municipios"] = "Municipios",
         ["Nav_Categories"] = "Categories",
         ["Nav_Practices"] = "Practices",
         ["Nav_Actions"] = "Actions",
+
+        // Home — the shelf-based landing page
+        ["Home_Greeting_Morning"] = "Good morning",
+        ["Home_Greeting_Afternoon"] = "Good afternoon",
+        ["Home_Greeting_Evening"] = "Good evening",
+        ["Home_Greeting_Sub"] = "{0} species recorded across {1} municipios.",
+        ["Home_Greeting_Sub_Loading"] = "Loading the atlas…",
+        ["Home_Quick_Map"] = "Open the map",
+        ["Home_Quick_Species"] = "All species",
+        ["Home_Quick_Endemic"] = "Endemic only",
+        ["Home_Quick_Threatened"] = "Threatened",
+        ["Home_Featured_Heading"] = "Featured today",
+        ["Home_Featured_Sub"] = "Species with photographs, rotated each visit",
+        ["Home_Taxa_Heading"] = "Explore by taxon",
+        ["Home_Taxa_Sub"] = "Every group recorded on the island",
+        ["Home_Municipios_Heading"] = "Municipios to explore",
+        ["Home_Municipios_Sub"] = "Ranked by species recorded",
+        ["Home_ShowAll"] = "See all",
+        ["Home_TaxonCount"] = "{0} species",
+        ["Home_MunicipioCount"] = "{0} species",
+        ["Home_Empty_Title"] = "Nothing to show yet",
+        ["Home_Empty_Description"] = "Once species are recorded they'll appear here.",
+        ["Home_LoadError"] = "Couldn't reach the server.",
 
         // Hero (shared eyebrow)
         ["Hero_Eyebrow"] = "Volume 03 · Living Atlas",
@@ -344,12 +368,36 @@ public static class FaunaFinderStrings
         ["Common_Verified"] = "Verificado",
 
         // Layout / navigation
+        ["Nav_Home"] = "Inicio",
         ["Nav_Map"] = "Mapa",
         ["Nav_Species"] = "Especies",
         ["Nav_Municipios"] = "Municipios",
         ["Nav_Categories"] = "Categorías",
         ["Nav_Practices"] = "Prácticas",
         ["Nav_Actions"] = "Acciones",
+
+        // Inicio — la portada de estantes
+        ["Home_Greeting_Morning"] = "Buenos días",
+        ["Home_Greeting_Afternoon"] = "Buenas tardes",
+        ["Home_Greeting_Evening"] = "Buenas noches",
+        ["Home_Greeting_Sub"] = "{0} especies registradas en {1} municipios.",
+        ["Home_Greeting_Sub_Loading"] = "Cargando el atlas…",
+        ["Home_Quick_Map"] = "Abrir el mapa",
+        ["Home_Quick_Species"] = "Todas las especies",
+        ["Home_Quick_Endemic"] = "Solo endémicas",
+        ["Home_Quick_Threatened"] = "Amenazadas",
+        ["Home_Featured_Heading"] = "Destacadas hoy",
+        ["Home_Featured_Sub"] = "Especies con fotografía, rotadas en cada visita",
+        ["Home_Taxa_Heading"] = "Explora por taxón",
+        ["Home_Taxa_Sub"] = "Todos los grupos registrados en la isla",
+        ["Home_Municipios_Heading"] = "Municipios para explorar",
+        ["Home_Municipios_Sub"] = "Ordenados por especies registradas",
+        ["Home_ShowAll"] = "Ver todo",
+        ["Home_TaxonCount"] = "{0} especies",
+        ["Home_MunicipioCount"] = "{0} especies",
+        ["Home_Empty_Title"] = "Todavía no hay nada",
+        ["Home_Empty_Description"] = "Cuando se registren especies aparecerán aquí.",
+        ["Home_LoadError"] = "No se pudo conectar con el servidor.",
 
         // Hero
         ["Hero_Eyebrow"] = "Volumen 03 · Atlas Viviente",

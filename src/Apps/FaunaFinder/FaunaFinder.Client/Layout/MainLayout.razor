@@ -15,8 +15,8 @@
         <MudAppBar Color="Color.Primary" Elevation="0" Fixed="true" Class="app-bar-blur ff-appbar">
             @* Mobile: Back button + Title OR Logo *@
             <MudHidden Breakpoint="Breakpoint.MdAndUp">
-                <div class="d-flex align-center" style="flex: 1;">
-                    @if (!IsHomePage)
+                <div class="d-flex align-center appbar-mobile-lead">
+                    @if (!IsRootPage)
                     {
                         <NuiNativeNavbar ShowBackButton="true" ShowTitle="false" ShowActions="false" />
                         <span class="page-title">@Navbar.State.Title</span>
@@ -43,7 +43,8 @@
             @* Desktop: Navigation links *@
             <MudHidden Breakpoint="Breakpoint.SmAndDown">
                 <nav class="ff-nav ml-6">
-                    <a href="/" class="@GetNavLinkClass("/", exact: true)">@L["Nav_Map"]</a>
+                    <a href="/" class="@GetNavLinkClass("/", exact: true)">@L["Nav_Home"]</a>
+                    <a href="/map" class="@GetNavLinkClass("/map")">@L["Nav_Map"]</a>
                     <a href="/species" class="@GetNavLinkClass("/species")">@L["Nav_Species"]</a>
                     <a href="/municipalities" class="@GetNavLinkClass("/municipalities")">@L["Nav_Municipios"]</a>
                     <a href="/categories" class="@GetNavLinkClass("/categories")">@L["Nav_Categories"]</a>
@@ -84,7 +85,7 @@
 
             @* Mobile: Action button(s) at far right *@
             <MudHidden Breakpoint="Breakpoint.MdAndUp">
-                @if (!IsHomePage)
+                @if (!IsRootPage)
                 {
                     <NuiNativeNavbar ShowBackButton="false" ShowTitle="false" />
                 }
@@ -92,7 +93,7 @@
         </MudAppBar>
 
         <MudMainContent Class="main-content">
-            @if (IsHomePage || IsEditorialListPage)
+            @if (IsFullBleedPage)
             {
                 @Body
             }
@@ -109,45 +110,52 @@
     <MudHidden Breakpoint="Breakpoint.MdAndUp">
         <div class="bottom-nav">
             <MudStack Row="true" Justify="Justify.SpaceAround" AlignItems="AlignItems.Center" Class="bottom-nav-container">
+                <MudButton Variant="Variant.Text" Color="@GetBottomNavColor(NavigationTab.Home)" Class="bottom-nav-item"
+                           OnClick="@(() => NavigateToTab(NavigationTab.Home))">
+                    <MudStack AlignItems="AlignItems.Center" Spacing="0">
+                        <MudIcon Icon="@Icons.Material.Filled.Home" Size="Size.Small" />
+                        <MudText Typo="Typo.caption">@L["Nav_Home"]</MudText>
+                    </MudStack>
+                </MudButton>
                 <MudButton Variant="Variant.Text" Color="@GetBottomNavColor(NavigationTab.Map)" Class="bottom-nav-item"
                            OnClick="@(() => NavigateToTab(NavigationTab.Map))">
                     <MudStack AlignItems="AlignItems.Center" Spacing="0">
-                        <MudIcon Icon="@Icons.Material.Filled.Map" Size="Size.Medium" />
+                        <MudIcon Icon="@Icons.Material.Filled.Map" Size="Size.Small" />
                         <MudText Typo="Typo.caption">@L["Nav_Map"]</MudText>
                     </MudStack>
                 </MudButton>
                 <MudButton Variant="Variant.Text" Color="@GetBottomNavColor(NavigationTab.Species)" Class="bottom-nav-item"
                            OnClick="@(() => NavigateToTab(NavigationTab.Species))">
                     <MudStack AlignItems="AlignItems.Center" Spacing="0">
-                        <MudIcon Icon="@Icons.Material.Filled.Pets" Size="Size.Medium" />
+                        <MudIcon Icon="@Icons.Material.Filled.Pets" Size="Size.Small" />
                         <MudText Typo="Typo.caption">@L["Nav_Species"]</MudText>
                     </MudStack>
                 </MudButton>
                 <MudButton Variant="Variant.Text" Color="@GetBottomNavColor(NavigationTab.Municipalities)" Class="bottom-nav-item"
                            OnClick="@(() => NavigateToTab(NavigationTab.Municipalities))">
                     <MudStack AlignItems="AlignItems.Center" Spacing="0">
-                        <MudIcon Icon="@Icons.Material.Filled.LocationCity" Size="Size.Medium" />
+                        <MudIcon Icon="@Icons.Material.Filled.LocationCity" Size="Size.Small" />
                         <MudText Typo="Typo.caption">@L["Nav_Municipios"]</MudText>
                     </MudStack>
                 </MudButton>
                 <MudButton Variant="Variant.Text" Color="@GetBottomNavColor(NavigationTab.Categories)" Class="bottom-nav-item"
                            OnClick="@(() => NavigateToTab(NavigationTab.Categories))">
                     <MudStack AlignItems="AlignItems.Center" Spacing="0">
-                        <MudIcon Icon="@Icons.Material.Filled.Category" Size="Size.Medium" />
+                        <MudIcon Icon="@Icons.Material.Filled.Category" Size="Size.Small" />
                         <MudText Typo="Typo.caption">@L["Nav_Categories"]</MudText>
                     </MudStack>
                 </MudButton>
                 <MudButton Variant="Variant.Text" Color="@GetBottomNavColor(NavigationTab.Practices)" Class="bottom-nav-item"
                            OnClick="@(() => NavigateToTab(NavigationTab.Practices))">
                     <MudStack AlignItems="AlignItems.Center" Spacing="0">
-                        <MudIcon Icon="@Icons.Material.Filled.Agriculture" Size="Size.Medium" />
+                        <MudIcon Icon="@Icons.Material.Filled.Agriculture" Size="Size.Small" />
                         <MudText Typo="Typo.caption">@L["Nav_Practices"]</MudText>
                     </MudStack>
                 </MudButton>
                 <MudButton Variant="Variant.Text" Color="@GetBottomNavColor(NavigationTab.Actions)" Class="bottom-nav-item"
                            OnClick="@(() => NavigateToTab(NavigationTab.Actions))">
                     <MudStack AlignItems="AlignItems.Center" Spacing="0">
-                        <MudIcon Icon="@Icons.Material.Filled.Gavel" Size="Size.Medium" />
+                        <MudIcon Icon="@Icons.Material.Filled.Gavel" Size="Size.Small" />
                         <MudText Typo="Typo.caption">@L["Nav_Actions"]</MudText>
                     </MudStack>
                 </MudButton>
@@ -157,12 +165,16 @@
 </CascadingValue>
 
 @code {
-    private enum NavigationTab { Map, Species, Municipalities, Categories, Practices, Actions }
+    private enum NavigationTab { Home, Map, Species, Municipalities, Categories, Practices, Actions }
 
-    private NavigationTab _currentTab = NavigationTab.Map;
+    private NavigationTab _currentTab = NavigationTab.Home;
     private LocaleContext _locale = LocaleContext.English;
 
-    private bool IsHomePage => Navigation.State.Path == "/" || Navigation.State.Path == "";
+    // Root ("/") only — decides logo vs. back button in the mobile app bar.
+    private bool IsRootPage => Navigation.State.Path == "/" || Navigation.State.Path == "";
+
+    private bool IsMapPage =>
+        Navigation.State.Path.StartsWith("/map", StringComparison.OrdinalIgnoreCase);
 
     private bool IsEditorialListPage =>
         string.Equals(Navigation.State.Path, "/species", StringComparison.OrdinalIgnoreCase) ||
@@ -171,10 +183,14 @@
         string.Equals(Navigation.State.Path, "/practices", StringComparison.OrdinalIgnoreCase) ||
         string.Equals(Navigation.State.Path, "/actions", StringComparison.OrdinalIgnoreCase);
 
-    // Hide the divider+title on top-level list pages (home, species, muni, categories).
+    // Pages that draw their own page chrome: the editorial home, the full-screen
+    // map, and the top-level list pages. They get @Body with no MudContainer.
+    private bool IsFullBleedPage => IsRootPage || IsMapPage || IsEditorialListPage;
+
+    // Hide the divider+title on top-level pages (home, map, species, muni, categories).
     // Each either renders its own root heading or relies on the active nav pill for context.
     private bool ShowTitleDivider =>
-        !IsHomePage && !IsEditorialListPage && Navbar.State.Title is not null;
+        !IsRootPage && !IsMapPage && !IsEditorialListPage && Navbar.State.Title is not null;
 
     protected override void OnInitialized()
     {
@@ -207,13 +223,14 @@
         var path = Navigation.State.Path;
         _currentTab = path switch
         {
-            "/" or "" => NavigationTab.Map,
+            "/" or "" => NavigationTab.Home,
+            var p when p.StartsWith("/map", StringComparison.OrdinalIgnoreCase) => NavigationTab.Map,
             var p when p.StartsWith("/species", StringComparison.OrdinalIgnoreCase) => NavigationTab.Species,
             var p when p.StartsWith("/municipalities", StringComparison.OrdinalIgnoreCase) => NavigationTab.Municipalities,
             var p when p.StartsWith("/categories", StringComparison.OrdinalIgnoreCase) => NavigationTab.Categories,
             var p when p.StartsWith("/practices", StringComparison.OrdinalIgnoreCase) => NavigationTab.Practices,
             var p when p.StartsWith("/actions", StringComparison.OrdinalIgnoreCase) => NavigationTab.Actions,
-            _ => NavigationTab.Map
+            _ => NavigationTab.Home
         };
     }
 
@@ -236,7 +253,8 @@
     {
         var path = tab switch
         {
-            NavigationTab.Map => "/",
+            NavigationTab.Home => "/",
+            NavigationTab.Map => "/map",
             NavigationTab.Species => "/species",
             NavigationTab.Municipalities => "/municipalities",
             NavigationTab.Categories => "/categories",

@@ -1,0 +1,76 @@
+.ff-taxon-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 12px 10px 14px;
+    border-radius: 12px;
+    background: transparent;
+    text-decoration: none;
+    color: var(--fauna-fg);
+    transition: background-color var(--fauna-t-base) var(--fauna-ease);
+}
+
+.ff-taxon-card:hover {
+    background: var(--fauna-bg-alt);
+}
+
+.ff-taxon-card:focus-visible {
+    outline: 2px solid var(--fauna-primary-500);
+    outline-offset: 2px;
+}
+
+.ff-taxon-art {
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    margin-bottom: 8px;
+    color: #ffffff;
+    box-shadow: var(--fauna-shadow-1);
+}
+
+.ff-taxon-art i {
+    font-size: 30px;
+    line-height: 1;
+    color: #ffffff;
+}
+
+.ff-taxon-label {
+    max-width: 100%;
+    font: 600 0.9375rem/1.2 var(--fauna-font-serif);
+    letter-spacing: var(--fauna-tracking-tight);
+    color: var(--fauna-fg);
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.ff-taxon-meta {
+    max-width: 100%;
+    font: var(--fauna-mono);
+    font-size: 11px;
+    color: var(--fauna-fg-4);
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* --- Duotone field-guide palette ---------------------------------------- */
+.tone-0 { background: linear-gradient(135deg, #1f4d3a 0%, #3f7d5f 100%); }
+.tone-1 { background: linear-gradient(135deg, #6f5a2f 0%, #c9a24a 100%); }
+.tone-2 { background: linear-gradient(135deg, #1d4e4e 0%, #3f8f8a 100%); }
+.tone-3 { background: linear-gradient(135deg, #453a5c 0%, #7d6a94 100%); }
+.tone-4 { background: linear-gradient(135deg, #7d3a26 0%, #c26a3a 100%); }
+.tone-5 { background: linear-gradient(135deg, #4a5a22 0%, #8aa04a 100%); }
+.tone-6 { background: linear-gradient(135deg, #2a3f5c 0%, #5a7a9b 100%); }
+.tone-7 { background: linear-gradient(135deg, #5f4234 0%, #a8785a 100%); }
+
+@media (prefers-reduced-motion: reduce) {
+    .ff-taxon-card {
+        transition: none;
+    }
+}

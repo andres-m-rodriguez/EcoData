@@ -1,0 +1,105 @@
+.ff-shelf {
+    padding: 24px 0 4px;
+}
+
+.ff-shelf-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 0 0 14px;
+}
+
+.ff-shelf-heading {
+    min-width: 0;
+}
+
+.ff-shelf-title {
+    margin: 0;
+    font: 600 1.375rem/1.15 var(--fauna-font-serif);
+    letter-spacing: var(--fauna-tracking-tight);
+    color: var(--fauna-fg);
+}
+
+.ff-shelf-sub {
+    margin: 4px 0 0;
+    font: var(--fauna-body-sm);
+    color: var(--fauna-fg-4);
+}
+
+.ff-shelf-action {
+    flex: none;
+    font: var(--fauna-eyebrow);
+    letter-spacing: var(--fauna-tracking-pill);
+    text-transform: uppercase;
+    color: var(--fauna-primary-500);
+    text-decoration: none;
+    border-radius: 6px;
+    padding: 4px 6px;
+    transition: color var(--fauna-t-base) var(--fauna-ease),
+                background-color var(--fauna-t-base) var(--fauna-ease);
+}
+
+.ff-shelf-action:hover {
+    color: var(--fauna-primary);
+    background: var(--fauna-primary-50);
+}
+
+.ff-shelf-action:focus-visible {
+    outline: 2px solid var(--fauna-primary-500);
+    outline-offset: 2px;
+}
+
+/* Desktop: a single clipped row. Items that do not fit the first row land on
+   an auto row of height 0 and are hidden, so the shelf never wraps. */
+.ff-shelf-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    grid-template-rows: 1fr;
+    grid-auto-rows: 0;
+    gap: 16px;
+    overflow: hidden;
+}
+
+/* Mobile: a snapping horizontal scroller with a hidden scrollbar. */
+@media (max-width: 767.98px) {
+    .ff-shelf {
+        padding: 20px 0 4px;
+    }
+
+    .ff-shelf-row {
+        display: flex;
+        grid-template-columns: none;
+        grid-template-rows: none;
+        grid-auto-rows: auto;
+        gap: 12px;
+        overflow-x: auto;
+        overflow-y: hidden;
+        scroll-snap-type: x mandatory;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+        padding-bottom: 2px;
+    }
+
+    .ff-shelf-row::-webkit-scrollbar {
+        display: none;
+    }
+
+    /* Children come from the caller's render tree, so they carry the caller's
+       scope id — ::deep is required to reach them. */
+    .ff-shelf-row ::deep > * {
+        flex: 0 0 150px;
+        scroll-snap-align: start;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .ff-shelf-action {
+        transition: none;
+    }
+
+    .ff-shelf-row {
+        scroll-behavior: auto;
+    }
+}

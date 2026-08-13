@@ -1,0 +1,22 @@
+@namespace FaunaFinder.Client.Components.Home
+
+@* Short 48px tile: duotone art square + label. Label arrives pre-translated. *@
+
+<a class="ff-quickpick" href="@Href">
+    <span class="ff-quickpick-art @ToneClass">
+        <MudIcon Icon="@Icon" Size="Size.Small" />
+    </span>
+    <span class="ff-quickpick-label">@Label</span>
+</a>
+
+@code {
+    [Parameter, EditorRequired] public required string Label { get; set; }
+
+    [Parameter, EditorRequired] public required string Icon { get; set; }
+
+    [Parameter, EditorRequired] public required string Href { get; set; }
+
+    [Parameter] public int Tone { get; set; }
+
+    private string ToneClass => $"tone-{((Tone % 8) + 8) % 8}";
+}

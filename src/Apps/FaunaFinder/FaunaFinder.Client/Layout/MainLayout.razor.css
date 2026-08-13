@@ -27,6 +27,12 @@
 }
 
 /* Logo — serif */
+/* Mobile app bar lead slot (back button + title, or the logo) */
+.appbar-mobile-lead {
+    flex: 1;
+    min-width: 0;
+}
+
 .logo-text {
     font-family: 'Newsreader', serif;
     font-weight: 700;
@@ -181,34 +187,49 @@
     padding: 4px 0;
 }
 
+/* Seven tabs share the bar: each takes an equal slice and is allowed to
+   shrink below its content width, so the row never scrolls or wraps. */
+::deep .bottom-nav-container {
+    flex-wrap: nowrap;
+    overflow: hidden;
+    gap: 0;
+}
+
 ::deep .bottom-nav-item {
-    min-width: 64px;
-    padding: 4px 12px;
+    flex: 1 1 0;
+    min-width: 0;
+    padding: 4px 4px;
+    overflow: hidden;
     text-transform: none !important;
+}
+
+::deep .bottom-nav-item .mud-button-label {
+    min-width: 0;
 }
 
 ::deep .bottom-nav-item .mud-icon-root {
     margin-bottom: 2px;
 }
 
-/* Six tabs don't fit at the default pill width on small phones —
+::deep .bottom-nav-item .mud-typography-caption {
+    font-size: 0.625rem;
+    letter-spacing: 0;
+    line-height: 1.2;
+    white-space: nowrap;
+}
+
+/* Seven tabs don't fit at the default pill width on small phones —
    tighten the box, the row gap and the caption rather than letting
    labels wrap. Sized so the longest label ("Municipios") still clears
    a 360px viewport. */
 @media (max-width: 420px) {
-    ::deep .bottom-nav-container {
-        gap: 2px;
-    }
-
     ::deep .bottom-nav-item {
-        min-width: 0;
-        padding: 4px 2px;
+        padding: 4px 1px;
     }
 
     ::deep .bottom-nav-item .mud-typography-caption {
-        font-size: 0.5625rem;
-        letter-spacing: 0;
-        white-space: nowrap;
+        font-size: 0.5rem;
+        letter-spacing: -0.01em;
     }
 }
 

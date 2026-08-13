@@ -1,204 +1,68 @@
-/* Map fills viewport below MudAppBar and above bottom nav.
-   Top offsets mirror MudBlazor's responsive appbar height (--mud-appbar-height defaults to 64px). */
-.map-page {
-    position: fixed;
-    top: calc(var(--mud-appbar-height) - var(--mud-appbar-height) / 8);
-    left: 0;
-    right: 0;
-    bottom: calc(64px + env(safe-area-inset-bottom, 0px));
-    width: 100%;
+/* =========================================================================
+   Home — greeting block + shelf stack
+
+   The layout hands this page the full viewport width, so `.ff-page` (global,
+   from fauna-tokens.css) supplies the max-width and gutters; everything here
+   is the greeting and the rhythm between shelves. Shelf internals live in
+   FfShelf/FfQuickPick/FfTaxonCard's own scoped sheets.
+   ========================================================================= */
+
+.ff-home {
+    padding-bottom: 56px;
 }
 
-@media (orientation: landscape) {
-    .map-page {
-        top: calc(var(--mud-appbar-height) - var(--mud-appbar-height) / 4);
-    }
+/* --- Greeting ------------------------------------------------------- */
+
+.ff-home-greeting {
+    padding: 36px 0 20px;
 }
 
-@media (min-width: 600px) {
-    .map-page {
-        top: var(--mud-appbar-height);
-    }
-}
-
-@media (min-width: 960px) {
-    .map-page {
-        /* Desktop: no bottom nav */
-        bottom: 0;
-    }
-}
-
-.map-container {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-}
-
-/* Load-failure banner floats over the map without displacing it */
-.map-error-overlay {
-    position: absolute;
-    top: 16px;
-    left: 50%;
-    transform: translateX(-50%);
-    z-index: 1100;
-    width: min(90%, 480px);
-}
-
-/* Crosshair cursor while drawing a polygon (class set by nuimap.js) */
-.map-container ::deep .nui-map-draw-mode {
-    cursor: crosshair;
-}
-
-/* Action FAB stack — bottom-right, above Leaflet attribution */
-.map-fabs {
-    position: absolute;
-    right: 16px;
-    bottom: 28px;
-    z-index: 500;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    align-items: flex-end;
-}
-
-/* Polygon draw instruction banner — top center */
-.draw-banner {
-    position: absolute;
-    top: 12px;
-    left: 50%;
-    transform: translateX(-50%);
-    z-index: 600;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    max-width: min(560px, calc(100% - 24px));
-    padding: 8px 14px;
-    background: var(--fauna-surface);
-    border: 1px solid var(--fauna-line);
-    border-radius: 12px;
-    box-shadow: var(--fauna-shadow-4);
-    color: var(--fauna-fg-2);
-}
-
-.draw-banner ::deep .mud-icon-root {
-    color: var(--fauna-primary);
-    flex-shrink: 0;
-}
-
-.draw-banner-text {
-    font: var(--fauna-body-sm);
-    color: var(--fauna-fg-2);
-    min-width: 0;
-}
-
-/* Heatmap filter card — top left, clear of the sidebar */
-.heatmap-card {
-    position: absolute;
-    top: 12px;
-    left: 12px;
-    z-index: 550;
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    padding: 6px 8px;
-    background: var(--fauna-surface);
-    border: 1px solid var(--fauna-line);
-    border-radius: 12px;
-    box-shadow: var(--fauna-shadow-4);
-}
-
-.heatmap-close {
-    width: 26px;
-    height: 26px;
-    border-radius: 8px;
-    border: 1px solid var(--fauna-line);
-    background: var(--fauna-surface);
-    color: var(--fauna-fg-3);
-    cursor: pointer;
-    display: grid;
-    place-items: center;
-    flex-shrink: 0;
-}
-
-.heatmap-close:hover {
-    background: var(--fauna-bg-alt);
+.ff-home-greeting h1 {
+    margin: 0;
+    font: 600 2.125rem/1.1 var(--fauna-font-serif);
+    letter-spacing: var(--fauna-tracking-tight);
     color: var(--fauna-fg);
 }
 
-.heatmap-close ::deep .mud-icon-root {
-    font-size: 15px !important;
-    color: inherit;
->>>>>>> fca6594 (feat(faunafinder): map parity with original — near-me search, polygon draw, heatmap, species location navigator)
+.ff-home-greeting p {
+    margin: 8px 0 0;
+    font: var(--fauna-body);
+    color: var(--fauna-fg-3);
 }
 
-/* Desktop sidebar shell — inner chrome lives in MapSpeciesPanel */
-.desktop-sidebar {
-    position: absolute;
-    top: 0;
-    right: 0;
-    width: 400px;
-    height: 100%;
-    background: var(--fauna-surface);
-    border-left: 1px solid var(--fauna-line);
-    box-shadow: var(--fauna-shadow-4);
-    z-index: 500;
-    display: flex;
-    flex-direction: column;
-    transform: translateX(100%);
-    transition: transform var(--fauna-t-slow) var(--fauna-ease);
+/* --- Empty state ---------------------------------------------------- */
+
+.ff-home-empty {
+    padding: 56px 0 24px;
 }
 
-.desktop-sidebar.open {
-    transform: translateX(0);
+/* --- Responsive ----------------------------------------------------- */
+
+@media (max-width: 900px) {
+    .ff-home-greeting h1 {
+        font-size: 1.875rem;
+    }
 }
 
-/* Mobile bottom sheet shell.
-   Bottom nav sits at z-index 9999 (MainLayout.razor.css). The sheet has to
-   stack above that so tapping a pin while the nav is visible doesn't send
-   the sheet behind the nav strip. */
-.mobile-sheet-backdrop {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: rgba(17, 17, 17, 0.45);
-    z-index: 10000;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity var(--fauna-t-slow) var(--fauna-ease);
-}
+@media (max-width: 600px) {
+    .ff-home {
+        padding-bottom: 40px;
+    }
 
-.mobile-sheet-backdrop.open {
-    opacity: 1;
-    pointer-events: auto;
-}
+    .ff-home-greeting {
+        padding: 24px 0 16px;
+    }
 
-.mobile-sheet {
-    position: fixed;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    /* Always fill from the bottom edge up to ~75% of the viewport so the
-       sheet's top edge is consistent regardless of how much content it
-       holds. Inner content scrolls inside. */
-    height: 75vh;
-    max-height: calc(100vh - 64px);
-    background: var(--fauna-surface);
-    border-top: 1px solid var(--fauna-line);
-    border-radius: 16px 16px 0 0;
-    box-shadow: 0 -4px 24px rgba(17, 17, 17, 0.18);
-    z-index: 10001;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-    transform: translateY(100%);
-    transition: transform var(--fauna-t-slow) var(--fauna-ease);
-    padding-bottom: env(safe-area-inset-bottom, 0px);
-}
+    .ff-home-greeting h1 {
+        font-size: 1.625rem;
+    }
 
-.mobile-sheet.open {
-    transform: translateY(0);
+    .ff-home-greeting p {
+        font: var(--fauna-body-sm);
+        color: var(--fauna-fg-3);
+    }
+
+    .ff-home-empty {
+        padding: 40px 0 16px;
+    }
 }
