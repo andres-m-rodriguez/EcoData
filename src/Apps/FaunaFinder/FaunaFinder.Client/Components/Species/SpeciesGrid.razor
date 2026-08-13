@@ -1,4 +1,5 @@
 @namespace FaunaFinder.Client.Components.Species
+@using EcoData.Wildlife.Contracts
 @using EcoData.Wildlife.Contracts.Dtos
 @using EcoData.Wildlife.Contracts.Parameters
 @using EcoData.Wildlife.Application.Client
@@ -163,7 +164,7 @@
         Search: string.IsNullOrWhiteSpace(Search) ? null : Search,
         CategoryId: CategoryId,
         MunicipalityId: MunicipalityId,
-        IsEndemic: Filter.IsEndemic ? true : null,
+        EndemicStatuses: Filter.EndemicOnly ? [EndemicStatus.Endemic] : null,
         HasProfileImage: Filter.HasPhoto ? true : null,
         IucnStatuses: Filter.IucnStatuses.Count > 0 ? Filter.IucnStatuses.ToArray() : null,
         TaxonCodes: Filter.TaxonCodes.Count > 0 ? Filter.TaxonCodes.ToArray() : null,

@@ -43,8 +43,12 @@ public sealed class SpeciesTools
         string? taxonCode = null,
         [Description("IUCN Red List status: LC, NT, VU, EN, CR, DD or EX.")]
         string? iucnStatus = null,
-        [Description("True to return only species endemic to Puerto Rico.")]
-        bool? endemicOnly = null,
+        [Description("""
+            Origin relative to Puerto Rico: 'Endemic' (found nowhere else),
+            'Native', 'Introduced', or 'Unknown' for species with no assessment
+            on record. Omit for any.
+            """)]
+        string? endemicStatus = null,
         [Description("True for animals only, false for plants only, omit for both.")]
         bool? faunaOnly = null,
         [Description("How many to return, 1-50. Defaults to 20.")]
@@ -55,7 +59,7 @@ public sealed class SpeciesTools
             PageSize: Math.Clamp(limit, 1, MaxResults),
             Search: search,
             IsFauna: faunaOnly,
-            IsEndemic: endemicOnly,
+            EndemicStatuses: ParseEndemicStatus(endemicStatus),
             IucnStatuses: ParseIucnStatus(iucnStatus),
             TaxonCodes: string.IsNullOrWhiteSpace(taxonCode) ? null : [taxonCode]
         );
@@ -102,7 +106,7 @@ public sealed class SpeciesTools
             species.ScientificName,
             WildlifeMcpMapping.Kind(species.IsFauna),
             species.IucnStatus?.ToString(),
-            species.IsEndemic,
+            species.EndemicStatus.ToString(),
             species.Habitat,
             categories,
             species.MunicipalityIds.Count,
@@ -244,7 +248,7 @@ public sealed class SpeciesTools
             species.ScientificName,
             WildlifeMcpMapping.Kind(species.IsFauna),
             species.IucnStatus?.ToString(),
-            species.IsEndemic,
+            species.EndemicStatus.ToString(),
             species.TaxonCode,
             species.MunicipalityCount,
             species.LastObservedAtUtc
@@ -257,6 +261,12 @@ public sealed class SpeciesTools
     /// </summary>
     private static IucnStatus[]? ParseIucnStatus(string? status) =>
         Enum.TryParse<IucnStatus>(status, ignoreCase: true, out var parsed)
+            ? [parsed]
+            : null;
+
+    /// <inheritdoc cref="ParseIucnStatus" />
+    private static EndemicStatus[]? ParseEndemicStatus(string? status) =>
+        Enum.TryParse<EndemicStatus>(status, ignoreCase: true, out var parsed)
             ? [parsed]
             : null;
 }

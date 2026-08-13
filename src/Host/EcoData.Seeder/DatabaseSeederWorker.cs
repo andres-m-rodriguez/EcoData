@@ -605,13 +605,12 @@ public sealed class DatabaseSeederWorker(
                 }
 
                 // Backfill editorial fields for rows that predated the Plan 1 migration.
-                if (species.IucnStatus is null)
+                // Only ever from the JSON: a species with no assessment stays unknown
+                // rather than being handed a derived value.
+                species.IucnStatus ??= dto.IucnStatus;
+                if (species.EndemicStatus is EndemicStatus.Unknown)
                 {
-                    species.IucnStatus = dto.IucnStatus ?? MapGRankToIucn(species.GRank);
-                }
-                if (!species.IsEndemic)
-                {
-                    species.IsEndemic = dto.IsEndemic ?? species.GRank.Contains('T');
+                    species.EndemicStatus = dto.EndemicStatus ?? EndemicStatus.Unknown;
                 }
             }
             else
@@ -631,12 +630,8 @@ public sealed class DatabaseSeederWorker(
                     ElCode = dto.ElCode ?? "",
                     GRank = gRank,
                     SRank = dto.SRank ?? "",
-                    // GRank → IUCN mapping is advisory: NatureServe ranks don't align
-                    // 1:1 with IUCN categories. Good enough for UI seed data.
-                    IucnStatus = dto.IucnStatus ?? MapGRankToIucn(gRank),
-                    // Treat subspecies-level "T" ranks (e.g. G5T2) as endemic-by-proxy
-                    // until the JSON carries an explicit flag.
-                    IsEndemic = dto.IsEndemic ?? gRank.Contains('T'),
+                    IucnStatus = dto.IucnStatus,
+                    EndemicStatus = dto.EndemicStatus ?? EndemicStatus.Unknown,
                     IsFeatured = dto.IsFeatured ?? false,
                     Habitat = dto.Habitat,
                     LastObservedAtUtc = null,
@@ -822,38 +817,6 @@ public sealed class DatabaseSeederWorker(
         "fern" => "plant",
         _ => code,
     };
-
-    private static IucnStatus? MapGRankToIucn(string gRank)
-    {
-        if (string.IsNullOrWhiteSpace(gRank))
-        {
-            return null;
-        }
-
-        if (gRank.StartsWith("GH", StringComparison.OrdinalIgnoreCase)
-            || gRank.StartsWith("GX", StringComparison.OrdinalIgnoreCase))
-        {
-            return IucnStatus.EX;
-        }
-
-        if (gRank.StartsWith("GNR", StringComparison.OrdinalIgnoreCase)
-            || gRank.StartsWith("GU", StringComparison.OrdinalIgnoreCase))
-        {
-            return IucnStatus.DD;
-        }
-
-        return gRank.Length >= 2 && gRank[0] is 'G' or 'g'
-            ? gRank[1] switch
-            {
-                '1' => IucnStatus.CR,
-                '2' => IucnStatus.EN,
-                '3' => IucnStatus.VU,
-                '4' => IucnStatus.NT,
-                '5' => IucnStatus.LC,
-                _ => IucnStatus.DD,
-            }
-            : null;
-    }
 
     private async Task SeedFwsLinksAsync(WildlifeDbContext context, CancellationToken stoppingToken)
     {
@@ -1288,8 +1251,8 @@ public sealed class DatabaseSeederWorker(
         [JsonPropertyName("sRank")]
         public string? SRank { get; init; }
 
-        [JsonPropertyName("isEndemic")]
-        public bool? IsEndemic { get; init; }
+        [JsonPropertyName("endemicStatus")]
+        public EndemicStatus? EndemicStatus { get; init; }
 
         [JsonPropertyName("iucnStatus")]
         public IucnStatus? IucnStatus { get; init; }

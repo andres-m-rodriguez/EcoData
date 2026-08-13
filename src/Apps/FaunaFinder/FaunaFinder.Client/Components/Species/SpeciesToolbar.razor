@@ -68,7 +68,7 @@
                 </button>
             </span>
         }
-        @if (Filter.IsEndemic)
+        @if (Filter.EndemicOnly)
         {
             <span class="ff-active-chip">
                 @L["Species_Chip_Endemic"]
@@ -144,7 +144,7 @@
     private bool HasActiveFilters =>
         Filter.TaxonCodes.Count > 0
         || Filter.IucnStatuses.Count > 0
-        || Filter.IsEndemic
+        || Filter.EndemicOnly
         || Filter.ObservedRecently
         || Filter.HasPhoto
         || Filter.MinMunicipalityCount is > 1;
@@ -156,7 +156,7 @@
             var count = 0;
             if (Filter.TaxonCodes.Count > 0) count++;
             if (Filter.IucnStatuses.Count > 0) count++;
-            if (Filter.IsEndemic) count++;
+            if (Filter.EndemicOnly) count++;
             if (Filter.ObservedRecently) count++;
             if (Filter.HasPhoto) count++;
             if (Filter.MinMunicipalityCount is > 1) count++;
@@ -183,7 +183,7 @@
 
     private Task ClearTaxa() => Emit(Filter with { TaxonCodes = [] });
     private Task ClearStatuses() => Emit(Filter with { IucnStatuses = [] });
-    private Task ClearEndemic() => Emit(Filter with { IsEndemic = false });
+    private Task ClearEndemic() => Emit(Filter with { EndemicOnly = false });
     private Task ClearObservedRecently() => Emit(Filter with { ObservedRecently = false });
     private Task ClearHasPhoto() => Emit(Filter with { HasPhoto = false });
     private Task ClearMinMunicipalities() => Emit(Filter with { MinMunicipalityCount = null });

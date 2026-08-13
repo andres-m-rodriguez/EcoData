@@ -41,7 +41,7 @@ public sealed class SpeciesRepository(
                     ))
                     .ToList(),
                 s.MunicipalitySpecies.Select(ms => ms.MunicipalityId).ToList(),
-                s.IsEndemic,
+                s.EndemicStatus,
                 s.IucnStatus,
                 s.Habitat,
                 s.LastObservedAtUtc,
@@ -287,9 +287,9 @@ public sealed class SpeciesRepository(
             query = query.Where(s => s.IsFauna == parameters.IsFauna.Value);
         }
 
-        if (parameters.IsEndemic.HasValue)
+        if (parameters.EndemicStatuses is { Length: > 0 })
         {
-            query = query.Where(s => s.IsEndemic == parameters.IsEndemic.Value);
+            query = query.Where(s => parameters.EndemicStatuses.Contains(s.EndemicStatus));
         }
 
         if (parameters.HasProfileImage.HasValue)
@@ -431,7 +431,7 @@ public sealed class SpeciesRepository(
                     s.GRank,
                     s.SRank,
                     s.ProfileImageData != null,
-                    s.IsEndemic,
+                    s.EndemicStatus,
                     s.IucnStatus,
                     s.CategoryLinks.Select(cl => cl.Category.Code).FirstOrDefault(),
                     s.MunicipalitySpecies.Count,
@@ -470,9 +470,9 @@ public sealed class SpeciesRepository(
             query = query.Where(s => s.IsFauna == parameters.IsFauna.Value);
         }
 
-        if (parameters.IsEndemic.HasValue)
+        if (parameters.EndemicStatuses is { Length: > 0 })
         {
-            query = query.Where(s => s.IsEndemic == parameters.IsEndemic.Value);
+            query = query.Where(s => parameters.EndemicStatuses.Contains(s.EndemicStatus));
         }
 
         if (parameters.HasProfileImage.HasValue)
@@ -551,7 +551,10 @@ public sealed class SpeciesRepository(
         IucnStatus[] threatenedStatuses = [IucnStatus.VU, IucnStatus.EN, IucnStatus.CR];
 
         var totalSpecies = await context.Species.CountAsync(cancellationToken);
-        var endemicCount = await context.Species.CountAsync(s => s.IsEndemic, cancellationToken);
+        var endemicCount = await context.Species.CountAsync(
+            s => s.EndemicStatus == EndemicStatus.Endemic,
+            cancellationToken
+        );
         var threatenedCount = await context
             .Species.CountAsync(
                 s => s.IucnStatus != null && threatenedStatuses.Contains(s.IucnStatus.Value),
@@ -572,7 +575,7 @@ public sealed class SpeciesRepository(
         // metric surfaced on the Municipios page.
         const int endemicHotspotThreshold = 10;
         var endemicHotspotCount = await context
-            .MunicipalitySpecies.Where(ms => ms.Species.IsEndemic)
+            .MunicipalitySpecies.Where(ms => ms.Species.EndemicStatus == EndemicStatus.Endemic)
             .GroupBy(ms => ms.MunicipalityId)
             .Where(g => g.Count() >= endemicHotspotThreshold)
             .CountAsync(cancellationToken);
@@ -625,9 +628,9 @@ public sealed class SpeciesRepository(
             filtered = filtered.Where(s => s.IsFauna == parameters.IsFauna.Value);
         }
 
-        if (parameters.IsEndemic.HasValue)
+        if (parameters.EndemicStatuses is { Length: > 0 })
         {
-            filtered = filtered.Where(s => s.IsEndemic == parameters.IsEndemic.Value);
+            filtered = filtered.Where(s => parameters.EndemicStatuses.Contains(s.EndemicStatus));
         }
 
         if (parameters.HasProfileImage.HasValue)
@@ -699,7 +702,10 @@ public sealed class SpeciesRepository(
             .Select(g => new IucnFacetDto(g.Key, g.Count()))
             .ToListAsync(cancellationToken);
 
-        var endemicCount = await filtered.CountAsync(s => s.IsEndemic, cancellationToken);
+        var endemicCount = await filtered.CountAsync(
+            s => s.EndemicStatus == EndemicStatus.Endemic,
+            cancellationToken
+        );
         var recentCutoff = DateTimeOffset.UtcNow.AddYears(-1);
         var recentlyObservedCount = await filtered.CountAsync(
             s => s.LastObservedAtUtc >= recentCutoff,
@@ -740,7 +746,7 @@ public sealed class SpeciesRepository(
                 s.GRank,
                 s.SRank,
                 s.ProfileImageData != null,
-                s.IsEndemic,
+                s.EndemicStatus,
                 s.IucnStatus,
                 s.CategoryLinks.Select(cl => cl.Category.Code).FirstOrDefault(),
                 s.MunicipalitySpecies.Count,

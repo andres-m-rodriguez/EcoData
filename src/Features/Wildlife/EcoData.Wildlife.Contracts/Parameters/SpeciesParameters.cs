@@ -9,7 +9,7 @@ public sealed record SpeciesParameters(
     Guid? CategoryId = null,
     Guid? MunicipalityId = null,
     bool? IsFauna = null,
-    bool? IsEndemic = null,
+    EndemicStatus[]? EndemicStatuses = null,
     bool? HasProfileImage = null,
     IucnStatus[]? IucnStatuses = null,
     string[]? TaxonCodes = null,

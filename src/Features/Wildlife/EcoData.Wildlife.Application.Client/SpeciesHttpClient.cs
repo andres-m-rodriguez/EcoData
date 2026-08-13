@@ -252,7 +252,7 @@ public sealed class SpeciesHttpClient(HttpClient httpClient) : ISpeciesHttpClien
             .Add("categoryId", parameters.CategoryId)
             .Add("municipalityId", parameters.MunicipalityId)
             .Add("isFauna", parameters.IsFauna)
-            .Add("isEndemic", parameters.IsEndemic)
+            .Add("endemicStatuses", parameters.EndemicStatuses)
             .Add("hasProfileImage", parameters.HasProfileImage)
             .Add("iucnStatuses", parameters.IucnStatuses)
             .Add("taxonCodes", parameters.TaxonCodes)

@@ -30,7 +30,11 @@ public sealed class Species
     /// </summary>
     public required string SRank { get; set; }
 
-    public required bool IsEndemic { get; set; }
+    /// <summary>
+    /// Origin relative to Puerto Rico. <see cref="EndemicStatus.Unknown"/> means
+    /// no assessment has been recorded.
+    /// </summary>
+    public required EndemicStatus EndemicStatus { get; set; }
     public required IucnStatus? IucnStatus { get; set; }
     public required bool IsFeatured { get; set; }
     public required string? Habitat { get; set; }
@@ -71,6 +75,12 @@ public sealed class Species
                 .HasMaxLength(8);
 
             builder
+                .Property(static e => e.EndemicStatus)
+                .HasConversion<string>()
+                .HasMaxLength(16)
+                .HasDefaultValue(EndemicStatus.Unknown);
+
+            builder
                 .Property(static e => e.CreatedAtUtc)
                 .HasDefaultValueSql("now()");
 
@@ -85,9 +95,8 @@ public sealed class Species
                 .HasDatabaseName("species_is_featured_ix");
 
             builder
-                .HasIndex(static e => e.IsEndemic)
-                .HasFilter("is_endemic = true")
-                .HasDatabaseName("species_is_endemic_ix");
+                .HasIndex(static e => e.EndemicStatus)
+                .HasDatabaseName("species_endemic_status_ix");
 
             builder
                 .HasIndex(static e => e.IucnStatus)

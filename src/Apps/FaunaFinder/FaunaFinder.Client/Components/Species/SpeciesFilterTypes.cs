@@ -12,7 +12,7 @@ public enum FaunaFilter
 public sealed record SpeciesFilterResult(
     IReadOnlyList<string> TaxonCodes,
     IReadOnlyList<IucnStatus> IucnStatuses,
-    bool IsEndemic,
+    bool EndemicOnly,
     bool ObservedRecently,
     bool HasPhoto,
     int? MinMunicipalityCount
