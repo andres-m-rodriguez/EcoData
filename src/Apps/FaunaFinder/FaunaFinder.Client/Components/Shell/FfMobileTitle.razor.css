@@ -11,7 +11,12 @@
     /* Tight on purpose — the title is the only child that truncates, so every
        pixel spent here comes out of a species name. */
     gap: 6px;
-    flex: 1;
+
+    /* Basis auto, not `flex: 1`. With a 0 basis the slot's own content counts
+       for nothing and it merely splits leftover space with the toolbar's
+       spacer, which leaves a species name about one letter wide. Starting
+       from the content width means it only gives ground when it has to. */
+    flex: 1 1 auto;
     min-width: 0;
 }
 

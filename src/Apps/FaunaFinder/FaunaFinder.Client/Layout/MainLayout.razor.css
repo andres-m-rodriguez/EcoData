@@ -84,6 +84,19 @@
     ::deep .ff-theme-toggle {
         margin-right: 0;
     }
+
+    /* The spacer also grows, so it and the title slot were halving the free
+       space between them. The title is the only thing here that truncates —
+       let it take the lot and leave the spacer as a plain separator. */
+    ::deep .ff-appbar .mud-spacer {
+        flex-grow: 0;
+    }
+
+    /* The language pill sizes to its own content; cap it so a long language
+       name can't push into the title. */
+    ::deep .ff-lang-menu > .mud-button-root {
+        max-width: 68px;
+    }
 }
 
 /* Wordmark and page title — the desktop copies. FfMobileTitle carries its
