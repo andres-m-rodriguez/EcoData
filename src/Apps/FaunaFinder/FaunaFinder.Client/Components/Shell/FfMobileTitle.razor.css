@@ -8,7 +8,9 @@
 .ff-mobile-title {
     display: flex;
     align-items: center;
-    gap: 8px;
+    /* Tight on purpose — the title is the only child that truncates, so every
+       pixel spent here comes out of a species name. */
+    gap: 6px;
     flex: 1;
     min-width: 0;
 }
@@ -28,6 +30,10 @@
     font-size: 1.125rem;
     color: var(--fauna-fg);
     letter-spacing: var(--fauna-tracking-tight);
+    /* Negative tracking is applied after the last glyph as well, so the
+       content box ends inside its ink and overflow:hidden shaves the final
+       letter. Pad the box back out; the ellipsis still lands correctly. */
+    padding-right: 0.09em;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -40,8 +46,8 @@
    it circular when a long name squeezes the row. */
 .ff-mobile-avatar {
     flex: none;
-    width: 30px;
-    height: 30px;
+    width: 28px;
+    height: 28px;
     border-radius: 50%;
     object-fit: cover;
     background: var(--fauna-bg-alt);
