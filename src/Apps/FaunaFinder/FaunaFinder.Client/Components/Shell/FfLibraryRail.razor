@@ -1,33 +1,44 @@
 @namespace FaunaFinder.Client.Components.Shell
 @inherits LocalizedComponentBase
 @using EcoData.Wildlife.Contracts.Dtos
+@using FaunaFinder.Client.Services.FieldNotebook
 @inject ISpeciesHttpClient SpeciesClient
-@inject ISpeciesCategoryHttpClient SpeciesCategoryClient
-@inject IMunicipalityHttpClient MunicipalityClient
+@inject IFieldNotebook Notebook
 
 @* The persistent field notebook. Takes no parameters — the layout renders it
-   bare. Both lists load once on mount; the chips only switch which one shows. *@
+   bare. It holds the reader's own state rather than a second copy of the
+   shelves: what they starred, what they opened, and what is near them.
+
+   Saved and Recent read local storage on mount and re-read whenever anything
+   mutates the notebook. Nearby stays cold: it asks the browser for a position
+   only after the reader presses the button. *@
 
 <aside class="ff-rail">
     <h2 class="ff-rail-heading">@L["Rail_Heading"]</h2>
 
     <div class="ff-rail-chips">
         <button type="button"
-                class="@ChipClass(RailTab.Municipios)"
-                aria-pressed="@AriaPressed(RailTab.Municipios)"
-                @onclick="ShowMunicipios">
-            @L["Rail_Tab_Municipios"]
+                class="@ChipClass(RailTab.Saved)"
+                aria-pressed="@AriaPressed(RailTab.Saved)"
+                @onclick="ShowSaved">
+            @L["Rail_Tab_Saved"]
         </button>
         <button type="button"
-                class="@ChipClass(RailTab.Taxa)"
-                aria-pressed="@AriaPressed(RailTab.Taxa)"
-                @onclick="ShowTaxa">
-            @L["Rail_Tab_Taxa"]
+                class="@ChipClass(RailTab.Recent)"
+                aria-pressed="@AriaPressed(RailTab.Recent)"
+                @onclick="ShowRecent">
+            @L["Rail_Tab_Recent"]
+        </button>
+        <button type="button"
+                class="@ChipClass(RailTab.Nearby)"
+                aria-pressed="@AriaPressed(RailTab.Nearby)"
+                @onclick="ShowNearby">
+            @L["Rail_Tab_Nearby"]
         </button>
     </div>
 
     <div class="ff-rail-list">
-        @* A null Result is the loading sentinel — no flag is kept for it. *@
+        @* A null command result is the loading sentinel — no flag is kept for it. *@
         @if (ActiveListPending)
         {
             @for (var i = 0; i < SkeletonRowCount; i++)
@@ -41,50 +52,108 @@
                 </div>
             }
         }
-        else if (_tab == RailTab.Municipios)
+        else if (_tab == RailTab.Saved)
         {
-            @if (LoadMunicipiosState.Result is { Count: > 0 } municipios)
+            @if (LoadSavedState.Result is { Count: > 0 } saved)
             {
-                @foreach (var municipio in municipios)
+                @foreach (var entry in saved)
                 {
-                    <a class="ff-rail-item" href="@MunicipioHref(municipio.Id)" @key="municipio.Id">
-                        <span class="ff-rail-art ff-rail-art--place">
-                            <i class="fa-solid fa-mountain-sun" aria-hidden="true"></i>
+                    <a class="ff-rail-item" href="@EntryHref(entry)" @key="entry.Id">
+                        <span class="@ArtClass(entry.Kind)">
+                            <i class="@ArtIcon(entry.Kind)" aria-hidden="true"></i>
                         </span>
                         <span class="ff-rail-body">
-                            <span class="ff-rail-name">@municipio.Name</span>
-                            <span class="ff-rail-count">@L["Home_MunicipioCount", municipio.Count]</span>
+                            <span class="ff-rail-name">@entry.Label</span>
+                            @if (!string.IsNullOrWhiteSpace(entry.Sublabel))
+                            {
+                                <span class="ff-rail-sci">@entry.Sublabel</span>
+                            }
                         </span>
+                        @if (!string.IsNullOrWhiteSpace(entry.Status))
+                        {
+                            <span class="@StatusPillClass(entry.Status)">@entry.Status</span>
+                        }
                     </a>
                 }
             }
             else
             {
-                @* Failed and empty read the same here: the rail never shouts. *@
-                <p class="ff-rail-empty">@L["Rail_Empty"]</p>
+                <p class="ff-rail-empty">@L["Rail_Saved_Empty"]</p>
+            }
+        }
+        else if (_tab == RailTab.Recent)
+        {
+            @if (LoadRecentState.Result is { Count: > 0 } recent)
+            {
+                @foreach (var entry in recent)
+                {
+                    <a class="ff-rail-item" href="@EntryHref(entry)" @key="entry.Id">
+                        <span class="@ArtClass(entry.Kind)">
+                            <i class="@ArtIcon(entry.Kind)" aria-hidden="true"></i>
+                        </span>
+                        <span class="ff-rail-body">
+                            <span class="ff-rail-name">@entry.Label</span>
+                            <span class="ff-rail-count">@RelativeTime(entry.RecordedAtUtc)</span>
+                        </span>
+                        @if (!string.IsNullOrWhiteSpace(entry.Status))
+                        {
+                            <span class="@StatusPillClass(entry.Status)">@entry.Status</span>
+                        }
+                    </a>
+                }
+            }
+            else
+            {
+                <p class="ff-rail-empty">@L["Rail_Recent_Empty"]</p>
+            }
+        }
+        else if (_nearby == NearbyState.Idle)
+        {
+            @* Opt-in: nothing is asked of the browser until this is pressed. *@
+            <button type="button" class="ff-rail-prompt" @onclick="RequestNearbyAsync">
+                <i class="fa-solid fa-location-crosshairs" aria-hidden="true"></i>
+                @L["Rail_Nearby_Prompt"]
+            </button>
+        }
+        else if (_nearby == NearbyState.Locating)
+        {
+            <p class="ff-rail-note">@L["Rail_Nearby_Locating"]</p>
+        }
+        else if (_nearby == NearbyState.Denied)
+        {
+            <p class="ff-rail-empty">@L["Rail_Nearby_Denied"]</p>
+            <button type="button" class="ff-rail-prompt" @onclick="RequestNearbyAsync">
+                <i class="fa-solid fa-location-crosshairs" aria-hidden="true"></i>
+                @L["Rail_Nearby_Prompt"]
+            </button>
+        }
+        else if (_nearby == NearbyState.Unsupported)
+        {
+            @* No retry offered — the browser won't answer differently next time. *@
+            <p class="ff-rail-empty">@L["Rail_Nearby_Unsupported"]</p>
+        }
+        else if (LoadNearbyState.Result is { Count: > 0 } nearby)
+        {
+            <p class="ff-rail-note">@L["Rail_Nearby_Origin", NearbyRadiusKm]</p>
+            @foreach (var species in nearby)
+            {
+                @* Names resolve through the cascading locale, same as the map panels. *@
+                var nearbyName = Locale.Resolve(species.CommonName, fallback: species.ScientificName);
+                <a class="ff-rail-item" href="@SpeciesHref(species.Id)" @key="species.Id">
+                    <span class="ff-rail-art ff-rail-art--species">
+                        <i class="fa-solid fa-paw" aria-hidden="true"></i>
+                    </span>
+                    <span class="ff-rail-body">
+                        <span class="ff-rail-name">@nearbyName</span>
+                        <span class="ff-rail-count">@FormatDistance(species.DistanceMeters)</span>
+                    </span>
+                </a>
             }
         }
         else
         {
-            @if (LoadTaxaState.Result is { Count: > 0 } taxa)
-            {
-                @foreach (var taxon in taxa)
-                {
-                    <a class="ff-rail-item" href="/categories" @key="taxon.Code">
-                        <span class="ff-rail-art ff-rail-art--taxon">
-                            <i class="@TaxonIcons.GetIcon(taxon.Code)" aria-hidden="true"></i>
-                        </span>
-                        <span class="ff-rail-body">
-                            <span class="ff-rail-name">@L[TaxonIcons.GetLabelKey(taxon.Code)]</span>
-                            <span class="ff-rail-count">@L["Home_TaxonCount", taxon.Count]</span>
-                        </span>
-                    </a>
-                }
-            }
-            else
-            {
-                <p class="ff-rail-empty">@L["Rail_Empty"]</p>
-            }
+            @* Failed and empty read the same here: the rail never shouts. *@
+            <p class="ff-rail-empty">@L["Rail_Nearby_Empty", NearbyRadiusKm]</p>
         }
     </div>
 </aside>

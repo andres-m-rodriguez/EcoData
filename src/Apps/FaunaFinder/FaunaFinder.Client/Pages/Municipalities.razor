@@ -7,11 +7,13 @@
 @using EcoData.Wildlife.Contracts.Dtos
 @using EcoData.Wildlife.Contracts.Parameters
 @using FaunaFinder.Client.Components.Municipalities
+@using FaunaFinder.Client.Services.FieldNotebook
 @inherits StatefulComponent
 @inject IMunicipalityHttpClient MunicipalityClient
 @inject ISpeciesHttpClient SpeciesClient
 @inject INativeNavbarManager Navbar
 @inject NavigationManager NavigationManager
+@inject IFieldNotebook Notebook
 @inject ILocalizer L
 
 <PageTitle>@L["Muni_PageTitle"]</PageTitle>
@@ -32,7 +34,17 @@
         else if (LoadDetailState.Result is { } detail)
         {
             <MudPaper Elevation="0" Class="pa-4 pa-md-6 rounded-lg border-solid border mud-border-lines-default mb-4">
-                <MudText Typo="Typo.h5" GutterBottom="true">@detail.Name</MudText>
+                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Class="mm-detail-head">
+                    <MudText Typo="Typo.h5" GutterBottom="true">@detail.Name</MudText>
+                    <MudSpacer />
+                    <MudTooltip Text="@SaveLabel">
+                        <MudIconButton Icon="@SaveIcon"
+                                       Color="@(_isSaved ? Color.Warning : Color.Default)"
+                                       aria-label="@SaveLabel"
+                                       aria-pressed="@(_isSaved ? "true" : "false")"
+                                       OnClick="@(() => ToggleSaved(detail))" />
+                    </MudTooltip>
+                </MudStack>
                 <MudText Typo="Typo.subtitle1" Color="Color.Secondary" Class="mb-2">
                     @L["MuniDetail_Subline", detail.StateName, detail.CountyFipsCode]
                 </MudText>
@@ -133,6 +145,11 @@ else
 
     private Guid? _loadedDetailId;
 
+    // The visit is filed once per municipality, not once per detail load — the
+    // id sticks around so a re-run of the notebook command can't double-file it.
+    private Guid? _recordedVisitId;
+    private bool _isSaved;
+
     private string? _statsLoadError;
     private string? _municipalitiesLoadError;
     private string? _detailLoadError;
@@ -151,11 +168,17 @@ else
             if (_loadedDetailId == id) return;
             _loadedDetailId = id;
             _detailLoadError = null;
+            _isSaved = false;
 
             await Task.WhenAll(
                 LoadDetailState.TryExecute(),
                 LoadDetailSpeciesCountState.TryExecute()
             );
+
+            if (LoadDetailState.Result is not null)
+            {
+                _ = SyncNotebookState.TryExecute();
+            }
         }
         else
         {
@@ -250,6 +273,40 @@ else
         );
         return result.TryPickT0(out var count, out _) ? count : null;
     }
+
+    // Notebook chrome: reads the pin state and files the visit. It runs beside
+    // the detail rather than in front of it — nothing rendered waits on it.
+    [Command]
+    private async Task SyncNotebook(CancellationToken ct)
+    {
+        if (LoadDetailState.Result is not { } detail) return;
+
+        _isSaved = await Notebook.IsSavedAsync(NotebookEntryKind.Municipality, detail.Id, ct);
+
+        if (_recordedVisitId == detail.Id) return;
+        _recordedVisitId = detail.Id;
+        await Notebook.RecordVisitAsync(ToNotebookEntry(detail), ct);
+    }
+
+    private async Task ToggleSaved(MunicipalityDtoForDetail detail)
+    {
+        _isSaved = await Notebook.ToggleSavedAsync(ToNotebookEntry(detail));
+    }
+
+    private string SaveLabel => _isSaved ? L["Notebook_Unsave"] : L["Notebook_Save"];
+
+    private string SaveIcon => _isSaved
+        ? Icons.Material.Filled.Star
+        : Icons.Material.Outlined.StarBorder;
+
+    private static NotebookEntry ToNotebookEntry(MunicipalityDtoForDetail detail) => new(
+        NotebookEntryKind.Municipality,
+        detail.Id,
+        detail.Name,
+        null,
+        null,
+        DateTimeOffset.UtcNow
+    );
 
     private Task HandleSelected(MunicipalityDtoForList muni)
     {

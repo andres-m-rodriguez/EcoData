@@ -5,6 +5,7 @@
 @using EcoData.Locations.Contracts.Dtos
 @using EcoData.Locations.Application.Client
 @using EcoData.NativeUi.Components.NativeNavbar
+@using FaunaFinder.Client.Services.FieldNotebook
 @inherits StatefulComponent
 @inject ISpeciesHttpClient SpeciesHttpClient
 @inject ISpeciesCategoryHttpClient SpeciesCategoryHttpClient
@@ -13,6 +14,7 @@
 @inject NavigationManager NavigationManager
 @inject IDialogService Dialogs
 @inject IBrowserViewportService Viewport
+@inject IFieldNotebook Notebook
 @inject ILocalizer L
 
 <PageTitle>@L["Species_PageTitle"]</PageTitle>
@@ -32,7 +34,21 @@
         }
         else if (LoadDetailState.Result is { } detail)
         {
-            <SpeciesHero Species="detail" />
+            @* The hero owns the visible heading and is not ours to change, so the
+               star rides in its top-right gutter rather than in the heading row. *@
+            <div class="ff-hero-slot">
+                <SpeciesHero Species="detail" />
+
+                <div class="ff-hero-save">
+                    <MudTooltip Text="@SaveLabel">
+                        <MudIconButton Icon="@SaveIcon"
+                                       Color="@(_isSaved ? Color.Warning : Color.Default)"
+                                       aria-label="@SaveLabel"
+                                       aria-pressed="@(_isSaved ? "true" : "false")"
+                                       OnClick="@(() => ToggleSaved(detail))" />
+                    </MudTooltip>
+                </div>
+            </div>
 
             <MudPaper Elevation="0" Class="pa-4 pa-md-6 rounded-lg border-solid border mud-border-lines-default mb-4">
                 <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Class="mb-4">
@@ -129,7 +145,14 @@ else
     private const string SpeciesDetailNotFoundTitle = "SpeciesDetail_NotFound_Title";
     private const string SpeciesDetailNotFoundDescription = "SpeciesDetail_NotFound_Description";
 
+    [CascadingParameter] public LocaleContext Locale { get; set; } = LocaleContext.English;
+
     private Guid? _loadedDetailId;
+
+    // The visit is filed once per species, not once per detail load — the id
+    // sticks around so a re-run of the notebook command can't double-file it.
+    private Guid? _recordedVisitId;
+    private bool _isSaved;
 
     private string? _detailLoadError;
     private string? _municipalitiesLoadError;
@@ -155,11 +178,13 @@ else
             if (_loadedDetailId == id) return;
             _loadedDetailId = id;
             _detailLoadError = null;
+            _isSaved = false;
 
             await LoadDetailState.TryExecute();
             if (LoadDetailState.Result is not null)
             {
                 _ = LoadMunicipalitiesState.TryExecute();
+                _ = SyncNotebookState.TryExecute();
             }
         }
         else
@@ -248,6 +273,42 @@ else
             : error.Message ?? "Something went wrong while loading municipalities.";
         return [];
     }
+
+    // Notebook chrome: reads the pin state and files the visit. It runs beside
+    // the detail rather than in front of it — nothing rendered waits on it.
+    [Command]
+    private async Task SyncNotebook(CancellationToken ct)
+    {
+        if (LoadDetailState.Result is not { } detail) return;
+
+        _isSaved = await Notebook.IsSavedAsync(NotebookEntryKind.Species, detail.Id, ct);
+
+        if (_recordedVisitId == detail.Id) return;
+        _recordedVisitId = detail.Id;
+        await Notebook.RecordVisitAsync(ToNotebookEntry(detail), ct);
+    }
+
+    private async Task ToggleSaved(SpeciesDtoForDetail detail)
+    {
+        _isSaved = await Notebook.ToggleSavedAsync(ToNotebookEntry(detail));
+    }
+
+    private string SaveLabel => _isSaved ? L["Notebook_Unsave"] : L["Notebook_Save"];
+
+    private string SaveIcon => _isSaved
+        ? Icons.Material.Filled.Star
+        : Icons.Material.Outlined.StarBorder;
+
+    // The labels are a snapshot, so they are resolved in the reader's current
+    // language at the moment the entry is written.
+    private NotebookEntry ToNotebookEntry(SpeciesDtoForDetail detail) => new(
+        NotebookEntryKind.Species,
+        detail.Id,
+        Locale.Resolve(detail.CommonName, fallback: detail.ScientificName),
+        detail.ScientificName,
+        detail.IucnStatus?.ToString(),
+        DateTimeOffset.UtcNow
+    );
 
     private SpeciesParameters BuildFacetParameters() => new(
         Search: string.IsNullOrWhiteSpace(_search) ? null : _search,

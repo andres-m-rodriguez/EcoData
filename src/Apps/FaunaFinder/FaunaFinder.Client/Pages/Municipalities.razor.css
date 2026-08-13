@@ -15,6 +15,17 @@
     height: calc(100vh - 64px - 320px);
 }
 
+/* --- Detail header ------------------------------------------------- */
+
+/* The title keeps its own gutter so the subline below sits exactly where it
+   always did; the star is pulled off that gutter so it reads level with the
+   title, and never squeezes when a long municipality name wraps. MudTooltip
+   wraps the button in its own root, which is the actual flex child. */
+.mm-detail-head ::deep .mud-tooltip-root {
+    flex: 0 0 auto;
+    align-self: flex-start;
+}
+
 /* --- Mobile tab pill (hidden on desktop) --------------------------- */
 .mm-tab-input { display: none; }
 

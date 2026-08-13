@@ -3,6 +3,7 @@ using EcoData.Locations.Application.Client;
 using EcoData.NativeUi;
 using EcoData.Wildlife.Application.Client;
 using FaunaFinder.Client.Localization;
+using FaunaFinder.Client.Services.FieldNotebook;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using MudBlazor.Services;
 using Tempest;
@@ -18,6 +19,10 @@ builder.Services.AddWildlifeClient(baseAddress);
 
 builder.Services.AddNativeUi();
 builder.Services.AddMudServices();
+
+// The reader's browser-local state. Singleton, not scoped: one browser, and the
+// library rail has to see writes made by a page.
+builder.Services.AddSingleton<IFieldNotebook, FieldNotebook>();
 
 // Localization — single Localizer instance fed from FaunaFinderStrings.
 builder.Services.AddSingleton<ILocalizer>(_ => new Localizer(
