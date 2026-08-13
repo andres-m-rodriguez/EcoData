@@ -16,6 +16,9 @@ var builder = WebApplication.CreateBuilder(args);
 builder.AddServiceDefaults();
 builder.AddLocationsDatabase();
 builder.AddWildlifeDatabase();
+// Backs the species image endpoint: the row carries the blob name, the bytes
+// come from storage.
+builder.AddAzureBlobServiceClient("images");
 
 builder.Services.AddRazorComponents().AddInteractiveWebAssemblyComponents();
 builder.Services.AddMudServices();

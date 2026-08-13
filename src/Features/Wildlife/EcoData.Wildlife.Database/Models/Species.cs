@@ -10,7 +10,12 @@ public sealed class Species
     public required Guid Id { get; set; }
     public required List<LocaleValue> CommonName { get; set; }
     public required string ScientificName { get; set; }
-    public required byte[]? ProfileImageData { get; set; }
+    /// <summary>
+    /// Name of the blob holding the profile image, or <see langword="null"/> when
+    /// the species has none. The bytes live in blob storage; this column is what
+    /// resolves them and what the "has an image" filters read.
+    /// </summary>
+    public required string? ProfileImageBlobName { get; set; }
     public required string? ProfileImageContentType { get; set; }
     public required string? ImageSourceUrl { get; set; }
     public required bool IsFauna { get; set; }
@@ -56,6 +61,8 @@ public sealed class Species
             builder.OwnsMany(static e => e.CommonName, b => b.ToJson());
 
             builder.Property(static e => e.ScientificName).HasMaxLength(200).IsRequired();
+
+            builder.Property(static e => e.ProfileImageBlobName).HasMaxLength(200);
 
             builder.Property(static e => e.ProfileImageContentType).HasMaxLength(100);
 

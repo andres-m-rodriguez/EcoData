@@ -9,6 +9,7 @@ using EcoData.Organization.Database;
 using EcoData.Sensors.Database;
 using EcoData.Sensors.Database.Models;
 using EcoData.Wildlife.Contracts;
+using EcoData.Wildlife.DataAccess.Interfaces;
 using EcoData.Wildlife.Database;
 using EcoData.Wildlife.Database.Models;
 using Microsoft.AspNetCore.Identity;
@@ -338,11 +339,12 @@ public sealed class DatabaseSeederWorker(
     {
         var context = services.GetRequiredService<WildlifeDbContext>();
         var locationsContext = services.GetRequiredService<LocationsDbContext>();
+        var imageStore = services.GetRequiredService<ISpeciesImageStore>();
 
         await SeedSpeciesCategoriesAsync(context, stoppingToken);
         await SeedNrcsPracticesAsync(context, stoppingToken);
         await SeedFwsActionsAsync(context, stoppingToken);
-        await SeedSpeciesAsync(context, locationsContext, stoppingToken);
+        await SeedSpeciesAsync(context, locationsContext, imageStore, stoppingToken);
         await SeedFwsLinksAsync(context, stoppingToken);
     }
 
@@ -543,6 +545,7 @@ public sealed class DatabaseSeederWorker(
     private async Task SeedSpeciesAsync(
         WildlifeDbContext context,
         LocationsDbContext locationsContext,
+        ISpeciesImageStore imageStore,
         CancellationToken stoppingToken
     )
     {
@@ -592,13 +595,6 @@ public sealed class DatabaseSeederWorker(
                 species.IsFauna = dto.IsFauna;
                 species.CommonName = BuildCommonName(dto);
 
-                // Update image if we have one and the existing doesn't
-                if (species.ProfileImageData is null && !string.IsNullOrEmpty(dto.ImageBase64))
-                {
-                    species.ProfileImageData = Convert.FromBase64String(dto.ImageBase64);
-                    species.ProfileImageContentType = dto.ImageContentType;
-                }
-
                 if (species.ImageSourceUrl is null && !string.IsNullOrEmpty(dto.ImageSourceUrl))
                 {
                     species.ImageSourceUrl = dto.ImageSourceUrl;
@@ -621,10 +617,10 @@ public sealed class DatabaseSeederWorker(
                     Id = Guid.CreateVersion7(),
                     CommonName = BuildCommonName(dto),
                     ScientificName = dto.ScientificName,
-                    ProfileImageData = string.IsNullOrEmpty(dto.ImageBase64)
-                        ? null
-                        : Convert.FromBase64String(dto.ImageBase64),
-                    ProfileImageContentType = dto.ImageContentType,
+                    // Both filled in by the image upload below, once the row has
+                    // an Id to name the blob after.
+                    ProfileImageBlobName = null,
+                    ProfileImageContentType = null,
                     ImageSourceUrl = dto.ImageSourceUrl,
                     IsFauna = dto.IsFauna,
                     ElCode = dto.ElCode ?? "",
@@ -641,6 +637,22 @@ public sealed class DatabaseSeederWorker(
                 await context.SaveChangesAsync(stoppingToken);
                 existingSpecies[dto.ScientificName] = species;
                 seededCount++;
+            }
+
+            // The image goes to blob storage and only its name lands on the row.
+            // Species that already carry one are left alone: the blob is the copy
+            // of record once written, and re-uploading it every run would cost a
+            // full round trip per species for no change.
+            if (species.ProfileImageBlobName is null && !string.IsNullOrEmpty(dto.ImageBase64))
+            {
+                var contentType = dto.ImageContentType ?? "image/jpeg";
+                species.ProfileImageBlobName = await imageStore.SaveAsync(
+                    species.Id,
+                    Convert.FromBase64String(dto.ImageBase64),
+                    contentType,
+                    stoppingToken
+                );
+                species.ProfileImageContentType = contentType;
             }
 
             // Link to municipalities
@@ -771,7 +783,7 @@ public sealed class DatabaseSeederWorker(
                 : s.IucnStatus == IucnStatus.EN ? 1
                 : s.IucnStatus == IucnStatus.VU ? 2
                 : 3)
-            .ThenByDescending(s => s.ProfileImageData != null)
+            .ThenByDescending(s => s.ProfileImageBlobName != null)
             .ThenBy(s => s.ScientificName)
             .Take(3 - alreadyFeatured)
             .ToListAsync(stoppingToken);

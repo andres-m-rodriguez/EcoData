@@ -66,6 +66,17 @@ eventsTopic.AddServiceBusSubscription(ReadingCreatedEvent.SubscriptionName);
 eventsTopic.AddServiceBusSubscription(SensorHealthAlertEvent.SubscriptionName);
 eventsTopic.AddServiceBusSubscription(UserNotificationEvent.SubscriptionName);
 
+// Azure Storage — runs as the Azurite emulator locally, provisions a real
+// storage account in publish mode. Species profile images live here rather than
+// in a Postgres byte[] column; the wildlife rows only carry the blob name. The
+// data volume keeps seeded images across `aspire run` restarts, so a rerun of
+// the seeder finds them already uploaded instead of re-decoding species.json.
+var storage = builder
+    .AddAzureStorage("storage")
+    .RunAsEmulator(emulator => emulator.WithDataVolume());
+
+var imageBlobs = storage.AddBlobs("images");
+
 var seeder = builder
     .AddProject<Projects.EcoData_Seeder>("seeder")
     .WithReference(organizationDb)
@@ -73,6 +84,8 @@ var seeder = builder
     .WithReference(identityDb)
     .WithReference(locationsDb)
     .WithReference(wildlifeDb)
+    .WithReference(imageBlobs)
+    .WaitFor(imageBlobs)
     .WaitFor(organizationDb)
     .WaitFor(sensorsDb)
     .WaitFor(identityDb)
@@ -94,6 +107,7 @@ var ecoportal = builder
     .WithReference(identityDb)
     .WithReference(wildlifeDb)
     .WithReference(serviceBus)
+    .WithReference(imageBlobs)
     .WaitFor(eventsTopic)
     .WithEnvironment("Jwt__SensorSecretKey", jwtSensorSecretKey)
     .WithEnvironment("Jwt__UserSecretKey", jwtUserSecretKey)
@@ -117,6 +131,7 @@ var faunafinder = builder
     .WithExternalHttpEndpoints()
     .WithReference(locationsDb)
     .WithReference(wildlifeDb)
+    .WithReference(imageBlobs)
     .WaitFor(seeder)
     .PublishAsAzureContainerApp(
         (infra, app) =>
