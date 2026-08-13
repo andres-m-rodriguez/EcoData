@@ -7,11 +7,16 @@
 .map-page {
     position: fixed;
     top: calc(var(--mud-appbar-height) - var(--mud-appbar-height) / 8);
-    left: 0;
+    /* Pinned to the viewport, so a flex sibling can't narrow it. The shell
+       publishes how much of the left edge the field notebook is claiming and
+       the map steps aside by that much; it resolves to 0 whenever the
+       notebook is collapsed or not rendered. Width comes from left/right —
+       a fixed 100% would ignore the offset. */
+    left: var(--fauna-rail-offset, 0px);
     right: 0;
     bottom: calc(64px + env(safe-area-inset-bottom, 0px));
-    width: 100%;
     background: var(--fauna-map-bg);
+    transition: left var(--fauna-t-slow) var(--fauna-ease);
 
     /* Shared by the floating panels below (and inherited by the panel
        components' own scoped styles through the DOM). */
@@ -332,4 +337,12 @@
 
 .mobile-sheet.open {
     transform: translateY(0);
+}
+
+/* The map slides when the notebook opens or closes; readers who asked for
+   less motion get the new width immediately instead. */
+@media (prefers-reduced-motion: reduce) {
+    .map-page {
+        transition: none;
+    }
 }

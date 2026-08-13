@@ -20,7 +20,7 @@
        plain element wrapping MudLayout/MudAppBar/MudMainContent, so it is what
        carries Blazor's scope attribute — every ::deep rule in the companion
        stylesheet resolves through it. *@
-    <div class="ff-shell">
+    <div class="@ShellClass">
         <MudLayout>
             <MudAppBar Elevation="0" Fixed="true" Class="ff-appbar">
                 @* Mobile: Back button + Title OR Logo *@
@@ -133,10 +133,9 @@
 
             <MudMainContent Class="main-content">
                 <div class="ff-shell-body">
-                    @* Library rail — desktop only, and never on the map, which
-                       claims the full width for the viewport. *@
-                    @* Collapsing hides the panel with a class rather than dropping it
-                       from the tree, so the notebook keeps what it already fetched. *@
+                    @* Field notebook — desktop only, on every page including the
+                       map. Collapsing hides the panel with a class rather than
+                       dropping it from the tree, so it keeps what it fetched. *@
                     @if (ShowLibraryRail)
                     {
                         <MudHidden Breakpoint="Breakpoint.SmAndDown">
@@ -269,7 +268,11 @@
 
     // The rail is a desktop companion column. The map is the one page that
     // wants the whole ground, so it never gets one.
-    private bool ShowLibraryRail => !IsMapPage;
+    // The notebook rides every page, the map included — it pins itself to the
+    // viewport rather than flexing, so the shell hands it an offset instead.
+    private bool ShowLibraryRail => true;
+
+    private string ShellClass => _railOpen ? "ff-shell has-rail-open" : "ff-shell";
 
     protected override void OnInitialized()
     {

@@ -25,6 +25,22 @@
     /* Height of the mobile tab strip inside the floating pill. Read back by
        app.css for the main content's bottom padding. */
     --ff-bottom-nav-height: 64px;
+
+    /* How much of the left edge the notebook is claiming. Panels that flex
+       ignore this — they're already sized by the grid. It exists for the map,
+       which pins itself to the viewport and so can't be narrowed by a
+       sibling; Map.razor.css reads it for its `left`. Zero unless the
+       notebook is both rendered and open. */
+    --fauna-rail-offset: 0px;
+}
+
+/* The notebook is desktop-only (MudHidden SmAndDown), so the offset only
+   applies above that breakpoint — otherwise a phone would shift the map by a
+   panel that was never rendered. */
+@media (min-width: 960px) {
+    .ff-shell.has-rail-open {
+        --fauna-rail-offset: calc(var(--fauna-rail-width) + var(--fauna-shell-gutter) * 2);
+    }
 }
 
 /* --------------------------------------------------------------------------
@@ -345,6 +361,14 @@
     border: 0;
     border-radius: 0;
     box-shadow: none;
+}
+
+/* The body's padding is zeroed above so the map can run to the edges, which
+   would weld the notebook to the viewport edge with it. Give the panel its
+   gutter back on this page only. */
+::deep .main-content:has(.map-page) .ff-rail-panel {
+    margin: var(--fauna-shell-gutter) 0 var(--fauna-shell-gutter) var(--fauna-shell-gutter);
+    max-height: calc(100vh - var(--fauna-shell-topbar) - var(--fauna-shell-gutter) * 3);
 }
 
 /* --------------------------------------------------------------------------
