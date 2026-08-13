@@ -51,7 +51,6 @@ public partial class FfLibraryRail : LocalizedComponentBase
     private bool ActiveListPending => _tab switch
     {
         RailTab.Saved => LoadSavedState.Result is null,
-        RailTab.Recent => LoadRecentState.Result is null,
         _ => _nearby == NearbyState.Ready && LoadNearbyState.Result is null,
     };
 
@@ -74,13 +73,10 @@ public partial class FfLibraryRail : LocalizedComponentBase
     private async Task RefreshNotebookAsync()
     {
         await LoadSavedState.TryExecute();
-        await LoadRecentState.TryExecute();
         StateHasChanged();
     }
 
     private void ShowSaved() => _tab = RailTab.Saved;
-
-    private void ShowRecent() => _tab = RailTab.Recent;
 
     private void ShowNearby() => _tab = RailTab.Nearby;
 
@@ -90,6 +86,9 @@ public partial class FfLibraryRail : LocalizedComponentBase
     private string AriaPressed(RailTab tab) => tab == _tab ? "true" : "false";
 
     private static string SpeciesHref(Guid id) => $"/species/{id}";
+
+    /// <summary>Same profile-image route the species cards use.</summary>
+    private static string SpeciesImageSrc(Guid id) => $"/wildlife/species/{id}/image";
 
     private static string EntryHref(NotebookEntry entry) => entry.Kind switch
     {
@@ -109,32 +108,6 @@ public partial class FfLibraryRail : LocalizedComponentBase
 
     // The status pill palette is global (fauna-tokens.css), keyed by IUCN code.
     private static string StatusPillClass(string status) => $"ff-status-pill status-{status}";
-
-    /// <summary>
-    /// Coarse "how long ago" for a visited entry — the notebook only ever shows
-    /// the newest twenty, so nothing beyond days needs a phrasing of its own.
-    /// </summary>
-    private string RelativeTime(DateTimeOffset recordedAtUtc)
-    {
-        var elapsed = DateTimeOffset.UtcNow - recordedAtUtc;
-
-        if (elapsed < TimeSpan.FromMinutes(1))
-        {
-            return L["Time_JustNow"];
-        }
-
-        if (elapsed < TimeSpan.FromHours(1))
-        {
-            return L["Time_MinutesAgo", (int)elapsed.TotalMinutes];
-        }
-
-        if (elapsed < TimeSpan.FromDays(1))
-        {
-            return L["Time_HoursAgo", (int)elapsed.TotalHours];
-        }
-
-        return L["Time_DaysAgo", (int)elapsed.TotalDays];
-    }
 
     private string FormatDistance(double meters) =>
         meters < 1000
@@ -189,10 +162,6 @@ public partial class FfLibraryRail : LocalizedComponentBase
     private async Task<IReadOnlyList<NotebookEntry>?> LoadSaved(CancellationToken ct) =>
         await Notebook.GetSavedAsync(ct);
 
-    [Command, RunOnLoad]
-    private async Task<IReadOnlyList<NotebookEntry>?> LoadRecent(CancellationToken ct) =>
-        await Notebook.GetRecentAsync(ct);
-
     // User-triggered: runs only once RequestNearbyAsync has an origin to search from.
     [Command]
     private async Task<IReadOnlyList<SpeciesNearbyDto>?> LoadNearby(CancellationToken ct)
@@ -216,7 +185,6 @@ public partial class FfLibraryRail : LocalizedComponentBase
     private enum RailTab
     {
         Saved,
-        Recent,
         Nearby
     }
 

@@ -1,9 +1,0 @@
-@namespace FaunaFinder.Client.Components.Home
-
-@* Responsive grid of short quick-pick tiles: 2 up, 4 up from 900px. *@
-
-<div class="ff-quickpick-row">@ChildContent</div>
-
-@code {
-    [Parameter, EditorRequired] public required RenderFragment ChildContent { get; set; }
-}

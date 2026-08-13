@@ -124,6 +124,15 @@
     color: currentColor;
 }
 
+/* The photo variant is an <img>, so it needs the box explicitly — `display:
+   grid` centres a glyph but would stretch a bitmap. The tinted ground shows
+   only while the image is in flight. */
+.ff-rail-art--photo {
+    display: block;
+    object-fit: cover;
+    background: var(--fauna-bg-alt);
+}
+
 .ff-rail-art--place {
     /* Teal duotone — artwork, deliberately off the brand ramp and theme-fixed. */
     background: linear-gradient(135deg, #1d4e4e 0%, #3f8f8a 100%);

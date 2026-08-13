@@ -307,7 +307,8 @@ else
         Locale.Resolve(detail.CommonName, fallback: detail.ScientificName),
         detail.ScientificName,
         detail.IucnStatus?.ToString(),
-        DateTimeOffset.UtcNow
+        DateTimeOffset.UtcNow,
+        detail.HasProfileImage
     );
 
     private SpeciesParameters BuildFacetParameters() => new(

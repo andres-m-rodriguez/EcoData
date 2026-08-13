@@ -18,11 +18,18 @@ public enum NotebookEntryKind
 /// <see cref="Sublabel"/> carries the scientific name for species, which is
 /// language-neutral.</para>
 /// </summary>
+/// <param name="HasImage">
+/// Whether the thing has a profile photograph to show. Species serve theirs
+/// from <c>/wildlife/species/{id}/image</c>; municipios have none. Trailing
+/// and defaulted on purpose — entries written before this existed deserialize
+/// with it false rather than failing the whole blob.
+/// </param>
 public sealed record NotebookEntry(
     NotebookEntryKind Kind,
     Guid Id,
     string Label,
     string? Sublabel,
     string? Status,
-    DateTimeOffset RecordedAtUtc
+    DateTimeOffset RecordedAtUtc,
+    bool HasImage = false
 );
