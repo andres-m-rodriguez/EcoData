@@ -30,6 +30,28 @@ public static class ConservationLinkEndpoints
 
         linksGroup
             .MapGet(
+                "/practice/{practiceCode}/actions",
+                async Task<Ok<IReadOnlyList<PracticeActionDtoForList>>> (
+                    string practiceCode,
+                    IConservationLinkRepository repository,
+                    CancellationToken ct
+                ) => TypedResults.Ok(await repository.GetActionsByPracticeAsync(practiceCode, ct))
+            )
+            .WithName("GetConservationActionsForPractice");
+
+        linksGroup
+            .MapGet(
+                "/action/{actionCode}/practices",
+                async Task<Ok<IReadOnlyList<ActionPracticeDtoForList>>> (
+                    string actionCode,
+                    IConservationLinkRepository repository,
+                    CancellationToken ct
+                ) => TypedResults.Ok(await repository.GetPracticesByActionAsync(actionCode, ct))
+            )
+            .WithName("GetConservationPracticesForAction");
+
+        linksGroup
+            .MapGet(
                 "/codes-by-municipality/{municipalityId:guid}",
                 async Task<Ok<IReadOnlyList<SpeciesConservationCodesDto>>> (
                     Guid municipalityId,

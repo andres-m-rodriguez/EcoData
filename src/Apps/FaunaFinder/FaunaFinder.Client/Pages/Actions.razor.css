@@ -1,0 +1,17 @@
+/* =========================================================================
+   Actions — editorial hero over a plain FWS action list
+   ========================================================================= */
+
+.aa-page {
+    padding-bottom: 48px;
+}
+
+.aa-list {
+    padding: 28px 0 0;
+}
+
+@media (max-width: 960px) {
+    .aa-list {
+        padding: 16px 0 0;
+    }
+}
