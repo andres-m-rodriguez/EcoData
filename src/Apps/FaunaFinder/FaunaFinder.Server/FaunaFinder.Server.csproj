@@ -17,6 +17,7 @@
     <ProjectReference Include="..\..\..\Features\Wildlife\EcoData.Wildlife.Api\EcoData.Wildlife.Api.csproj" />
     <ProjectReference Include="..\..\..\Features\Wildlife\EcoData.Wildlife.DataAccess\EcoData.Wildlife.DataAccess.csproj" />
     <ProjectReference Include="..\..\..\Features\Wildlife\EcoData.Wildlife.Database\EcoData.Wildlife.Database.csproj" />
+    <ProjectReference Include="..\..\..\Features\Wildlife\EcoData.Wildlife.Mcp\EcoData.Wildlife.Mcp.csproj" />
     <ProjectReference Include="..\..\..\Features\Locations\EcoData.Locations.Api\EcoData.Locations.Api.csproj" />
     <ProjectReference Include="..\..\..\Features\Locations\EcoData.Locations.DataAccess\EcoData.Locations.DataAccess.csproj" />
     <ProjectReference Include="..\..\..\Features\Locations\EcoData.Locations.Database\EcoData.Locations.Database.csproj" />
