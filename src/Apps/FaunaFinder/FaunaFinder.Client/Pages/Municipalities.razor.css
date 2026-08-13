@@ -15,12 +15,6 @@
     height: calc(100vh - 64px - 320px);
 }
 
-.mm-detail-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 16px;
-}
-
 /* --- Mobile tab pill (hidden on desktop) --------------------------- */
 .mm-tab-input { display: none; }
 
@@ -99,8 +93,6 @@
        ::deep bridges the boundary. */
     #mm-tab-map:checked ~ .mm-layout ::deep .mm-rail { display: none; }
     #mm-tab-list:checked ~ .mm-layout ::deep .mm-map { display: none; }
-
-    .mm-detail-grid { grid-template-columns: 1fr; }
 }
 
 @media (max-width: 600px) {

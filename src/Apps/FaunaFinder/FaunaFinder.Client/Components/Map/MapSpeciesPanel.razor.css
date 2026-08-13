@@ -120,7 +120,7 @@
 .msp-row {
     padding: 12px 16px 12px 20px;
     display: grid;
-    grid-template-columns: 28px 22px 1fr auto auto;
+    grid-template-columns: 22px 1fr auto auto;
     gap: 12px;
     align-items: center;
     cursor: pointer;
@@ -153,14 +153,6 @@
 
 .msp-row:hover {
     background: var(--fauna-primary-50);
-}
-
-.msp-row-idx {
-    font: var(--fauna-mono);
-    font-size: 11px;
-    color: var(--fauna-fg-5);
-    letter-spacing: 0.05em;
-    text-align: right;
 }
 
 .msp-row-icon {

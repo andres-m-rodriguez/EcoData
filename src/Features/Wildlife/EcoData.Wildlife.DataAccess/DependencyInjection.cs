@@ -19,7 +19,9 @@ public static class DependencyInjection
 
         services.AddScoped<ISpeciesRepository, SpeciesRepository>();
         services.AddScoped<ISpeciesCategoryRepository, SpeciesCategoryRepository>();
-        services.AddScoped<IConservationRepository, ConservationRepository>();
+        services.AddScoped<INrcsPracticeRepository, NrcsPracticeRepository>();
+        services.AddScoped<IFwsActionRepository, FwsActionRepository>();
+        services.AddScoped<IConservationLinkRepository, ConservationLinkRepository>();
 
         return services;
     }

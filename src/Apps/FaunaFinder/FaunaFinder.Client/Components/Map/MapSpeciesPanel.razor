@@ -2,7 +2,11 @@
 @inherits LocalizedComponentBase
 @using EcoData.Wildlife.Contracts
 @using EcoData.Wildlife.Contracts.Dtos
+@using EcoData.Wildlife.Contracts.Parameters
+@using EcoData.Wildlife.Application.Client
+@using EcoData.NativeUi.Components.VirtualizedList
 @using FaunaFinder.Client.Components.Species
+@inject ISpeciesHttpClient SpeciesClient
 
 <header class="msp-head">
     <div class="msp-head-meta">
@@ -25,66 +29,61 @@
     </button>
 </header>
 
-@if (LoadError is not null)
-{
-    <MudAlert Severity="Severity.Error" Class="ma-3">@LoadError</MudAlert>
-}
-else if (IsLoading)
-{
-    <div class="msp-list">
-        @for (var i = 0; i < 6; i++)
-        {
-            <div class="msp-row msp-row-skeleton">
-                <MudSkeleton SkeletonType="SkeletonType.Text" Width="80%" Height="20px" />
-                <MudSkeleton SkeletonType="SkeletonType.Text" Width="55%" Height="14px" />
-            </div>
-        }
-    </div>
-}
-else if (Species is null || Species.Count == 0)
-{
-    <div class="msp-empty">
-        <MudIcon Icon="@Icons.Material.Outlined.Pets" Size="Size.Medium" />
-        <div class="msp-empty-title">@L["Map_Panel_NoSpecies_Title"]</div>
-        <div class="msp-empty-sub">@L["Map_Panel_NoSpecies_Description"]</div>
-    </div>
-}
-else
+@if (FilteredCount is { } shown and > 0)
 {
     <div class="msp-meta">
-        @if (TotalCount is { } total && total != Species.Count)
+        @if (TotalCount is { } total && shown != total)
         {
-            @L["Map_Filter_Showing", Species.Count, total]
+            @L["Map_Filter_Showing", shown, total]
         }
         else
         {
-            @L["Map_Panel_SpeciesObserved", Species.Count]
+            @L["Map_Panel_SpeciesObserved", shown]
         }
     </div>
-    <div class="msp-list">
-        @{
-            var idx = 0;
-        }
-        @foreach (var s in Species)
-        {
-            var position = ++idx;
-            var current = s;
-            <div class="msp-row" @onclick="@(() => HandleClick(current))">
-                <div class="msp-row-idx">@position.ToString("00")</div>
-                <div class="msp-row-icon" title="@L[TaxonIcons.GetLabelKey(current.TaxonCode)]">
-                    <i class="@TaxonIcons.GetIcon(current.TaxonCode)"></i>
+}
+
+<div class="msp-list">
+    <NuiVirtualizedGrid @ref="_grid"
+                        TItem="SpeciesDtoForList"
+                        TParams="SpeciesParameters"
+                        ItemsProvider="FetchSpecies"
+                        ParametersBuilder="BuildParameters"
+                        CursorSelector="@(s => s.Id)"
+                        ItemSize="@RowHeight"
+                        OverscanCount="4">
+        <LoadingTemplate>
+            @for (var i = 0; i < 6; i++)
+            {
+                <div class="msp-row msp-row-skeleton">
+                    <MudSkeleton SkeletonType="SkeletonType.Text" Width="80%" Height="20px" />
+                    <MudSkeleton SkeletonType="SkeletonType.Text" Width="55%" Height="14px" />
+                </div>
+            }
+        </LoadingTemplate>
+        <EmptyTemplate>
+            <div class="msp-empty">
+                <MudIcon Icon="@Icons.Material.Outlined.Pets" Size="Size.Medium" />
+                <div class="msp-empty-title">@L["Map_Panel_NoSpecies_Title"]</div>
+                <div class="msp-empty-sub">@L["Map_Panel_NoSpecies_Description"]</div>
+            </div>
+        </EmptyTemplate>
+        <ItemTemplate Context="species">
+            <div class="msp-row" @onclick="@(() => HandleClick(species))">
+                <div class="msp-row-icon" title="@L[TaxonIcons.GetLabelKey(species.TaxonCode)]">
+                    <i class="@TaxonIcons.GetIcon(species.TaxonCode)"></i>
                 </div>
                 <div class="msp-row-body">
                     @{
-                        var panelName = Locale.Resolve(current.CommonName, fallback: current.ScientificName);
+                        var panelName = Locale.Resolve(species.CommonName, fallback: species.ScientificName);
                     }
                     <div class="msp-row-name">@panelName</div>
-                    @if (!SpeciesNaming.EchoesScientificName(panelName, current.ScientificName))
+                    @if (!SpeciesNaming.EchoesScientificName(panelName, species.ScientificName))
                     {
-                        <div class="msp-row-sci">@current.ScientificName</div>
+                        <div class="msp-row-sci">@species.ScientificName</div>
                     }
                 </div>
-                @if (current.IucnStatus is { } status)
+                @if (species.IucnStatus is { } status)
                 {
                     <span class="ff-status-pill @($"status-{status}")">@status</span>
                 }
@@ -95,30 +94,95 @@ else
                 @if (OnViewLocations.HasDelegate)
                 {
                     <button type="button" class="msp-row-map" title="@L["Map_ViewLocations"]"
-                            @onclick:stopPropagation @onclick="@(() => HandleViewLocations(current))">
+                            @onclick:stopPropagation @onclick="@(() => HandleViewLocations(species))">
                         <MudIcon Icon="@Icons.Material.Filled.MyLocation" Size="Size.Small" />
                     </button>
                 }
             </div>
-        }
-    </div>
-}
+        </ItemTemplate>
+        <PlaceholderTemplate>
+            <div class="msp-row msp-row-skeleton">
+                <MudSkeleton SkeletonType="SkeletonType.Text" Width="80%" Height="20px" />
+                <MudSkeleton SkeletonType="SkeletonType.Text" Width="55%" Height="14px" />
+            </div>
+        </PlaceholderTemplate>
+    </NuiVirtualizedGrid>
+</div>
 
 @code {
+    private const int PageSize = 30;
+
+    /// <summary>Measured height of a single .msp-row, used for Virtualize's scroll math.</summary>
+    private const float RowHeight = 62;
+
     [Parameter] public string? Title { get; set; }
-    [Parameter] public IReadOnlyList<SpeciesDtoForList>? Species { get; set; }
-    [Parameter] public bool IsLoading { get; set; }
-    [Parameter] public string? LoadError { get; set; }
+    [Parameter] public Guid? MunicipalityId { get; set; }
+    [Parameter] public string[]? NrcsPracticeCodes { get; set; }
+    [Parameter] public string[]? FwsActionCodes { get; set; }
     [Parameter] public EventCallback OnClose { get; set; }
     [Parameter] public EventCallback<SpeciesDtoForList> OnSpeciesClick { get; set; }
     [Parameter] public EventCallback<SpeciesDtoForList> OnViewLocations { get; set; }
     [Parameter] public EventCallback OnFilterClick { get; set; }
     [Parameter] public int ActiveFilterCount { get; set; }
+
+    /// <summary>Species in this municipality before conservation filtering.</summary>
     [Parameter] public int? TotalCount { get; set; }
+
+    /// <summary>Species left after conservation filtering; equals <see cref="TotalCount"/> when nothing is filtered.</summary>
+    [Parameter] public int? FilteredCount { get; set; }
 
     [CascadingParameter] public LocaleContext Locale { get; set; } = LocaleContext.English;
 
+    private NuiVirtualizedGrid<SpeciesDtoForList, SpeciesParameters>? _grid;
+
+    private Guid? _lastMunicipalityId;
+    private string[]? _lastNrcsPracticeCodes;
+    private string[]? _lastFwsActionCodes;
+
     private string CloseLabel => L["Common_Close"];
+
+    protected override void OnParametersSet()
+    {
+        if (_grid is null)
+        {
+            // Pre-render pass: the grid's own initial load uses these values, so
+            // bank them here or the first re-render reads as a change.
+            _lastMunicipalityId = MunicipalityId;
+            _lastNrcsPracticeCodes = NrcsPracticeCodes;
+            _lastFwsActionCodes = FwsActionCodes;
+            return;
+        }
+
+        var scopeChanged =
+            _lastMunicipalityId != MunicipalityId
+            || !CodesMatch(_lastNrcsPracticeCodes, NrcsPracticeCodes)
+            || !CodesMatch(_lastFwsActionCodes, FwsActionCodes);
+
+        if (!scopeChanged) return;
+
+        _lastMunicipalityId = MunicipalityId;
+        _lastNrcsPracticeCodes = NrcsPracticeCodes;
+        _lastFwsActionCodes = FwsActionCodes;
+        _grid.Refresh();
+    }
+
+    // Selections arrive as a fresh array each render, so reference equality would
+    // refresh the grid on every parameter set.
+    private static bool CodesMatch(string[]? left, string[]? right) =>
+        (left ?? []).SequenceEqual(right ?? []);
+
+    private SpeciesParameters BuildParameters(Guid? cursor) => new(
+        PageSize: PageSize,
+        Cursor: cursor,
+        MunicipalityId: MunicipalityId,
+        NrcsPracticeCodes: NrcsPracticeCodes,
+        FwsActionCodes: FwsActionCodes
+    );
+
+    private IAsyncEnumerable<SpeciesDtoForList> FetchSpecies(
+        SpeciesParameters parameters,
+        CancellationToken ct
+    ) => SpeciesClient.GetSpeciesAsync(parameters, ct);
 
     private Task HandleClose() => OnClose.InvokeAsync();
     private Task HandleClick(SpeciesDtoForList s) => OnSpeciesClick.InvokeAsync(s);

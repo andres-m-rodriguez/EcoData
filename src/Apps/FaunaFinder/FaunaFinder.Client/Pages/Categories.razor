@@ -1,6 +1,7 @@
 @page "/categories"
 @page "/categories/{Id:guid}"
 @using EcoData.Wildlife.Contracts.Dtos
+@using EcoData.Wildlife.Contracts.Parameters
 @inherits StatefulComponent
 @inject ISpeciesCategoryHttpClient CategoryHttpClient
 @inject ISpeciesHttpClient SpeciesHttpClient
@@ -14,43 +15,47 @@
 {
     @* Category Detail - Show species in this category *@
     <NuiPageLayout Title="@_categoryName" ParentPath="/categories">
-        @if (_speciesLoadError is not null)
+        @if (LoadSpeciesCountState.Result is { } speciesCount and > 0)
         {
-            <MudAlert Severity="Severity.Error">@_speciesLoadError</MudAlert>
+            <NuiSectionHeader Title="@L["CategoryDetail_SpeciesCount", speciesCount]" />
         }
-        else if (LoadSpeciesInCategoryState.Result is null || LoadSpeciesInCategoryState.IsLoading)
-        {
-            @for (int i = 0; i < 8; i++)
-            {
-                <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="72px" Class="mb-2 rounded" />
-            }
-        }
-        else if (LoadSpeciesInCategoryState.Result.Count == 0)
-        {
-            <NuiEmptyState Icon="@Icons.Material.Outlined.Pets"
-                           Title="@L[CategoryDetailEmptyTitle]"
-                           Description="@L[CategoryDetailEmptyDescription]" />
-        }
-        else
-        {
-            <NuiSectionHeader Title="@SpeciesCountHeading" />
-            <MudList T="SpeciesDtoForList" Dense="true">
-                @foreach (var species in LoadSpeciesInCategoryState.Result)
+
+        <NuiVirtualizedGrid @key="Id"
+                            TItem="SpeciesDtoForList"
+                            TParams="SpeciesParameters"
+                            ItemsProvider="FetchSpecies"
+                            ParametersBuilder="BuildSpeciesParameters"
+                            CursorSelector="@(s => s.Id)"
+                            ItemSize="72"
+                            OverscanCount="4">
+            <LoadingTemplate>
+                @for (int i = 0; i < 8; i++)
                 {
-                    <NuiListItem Title="@GetSpeciesName(species)"
-                                 Subtitle="@species.ScientificName"
-                                 Icon="@(species.IsFauna ? Icons.Material.Filled.Pets : Icons.Material.Filled.Park)"
-                                 ShowChevron="true"
-                                 OnClick="@(() => NavigateToSpecies(species.Id))">
-                        <TrailingContent>
-                            <NuiStatusBadge Status="@GetConservationStatus(species.GRank)"
-                                            Text="@(species.GRank ?? "-")"
-                                            Size="NuiStatusSize.Small" />
-                        </TrailingContent>
-                    </NuiListItem>
+                    <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="72px" Class="mb-2 rounded" />
                 }
-            </MudList>
-        }
+            </LoadingTemplate>
+            <EmptyTemplate>
+                <NuiEmptyState Icon="@Icons.Material.Outlined.Pets"
+                               Title="@L[CategoryDetailEmptyTitle]"
+                               Description="@L[CategoryDetailEmptyDescription]" />
+            </EmptyTemplate>
+            <ItemTemplate Context="species">
+                <NuiListItem Title="@GetSpeciesName(species)"
+                             Subtitle="@species.ScientificName"
+                             Icon="@(species.IsFauna ? Icons.Material.Filled.Pets : Icons.Material.Filled.Park)"
+                             ShowChevron="true"
+                             OnClick="@(() => NavigateToSpecies(species.Id))">
+                    <TrailingContent>
+                        <NuiStatusBadge Status="@GetConservationStatus(species.GRank)"
+                                        Text="@(species.GRank ?? "-")"
+                                        Size="NuiStatusSize.Small" />
+                    </TrailingContent>
+                </NuiListItem>
+            </ItemTemplate>
+            <PlaceholderTemplate>
+                <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="72px" Class="mb-2 rounded" />
+            </PlaceholderTemplate>
+        </NuiVirtualizedGrid>
     </NuiPageLayout>
 }
 else
@@ -94,6 +99,8 @@ else
 @code {
     [Parameter] public Guid? Id { get; set; }
 
+    private const int SpeciesPageSize = 24;
+
     // Keys exposed as consts so the Razor attribute form (`Title="@L[Key]"`)
     // compiles without nested-quote issues.
     private const string CategoriesEmptyTitle = "Categories_Empty_Title";
@@ -105,10 +112,6 @@ else
     private Guid? _loadedCategoryId;
 
     private string? _categoriesLoadError;
-    private string? _speciesLoadError;
-
-    private string SpeciesCountHeading =>
-        L["CategoryDetail_SpeciesCount", LoadSpeciesInCategoryState.Result?.Count ?? 0];
 
     protected override void OnInitialized()
     {
@@ -130,7 +133,7 @@ else
             if (_loadedCategoryId == id) return;
             _loadedCategoryId = id;
 
-            await LoadSpeciesInCategoryState.TryExecute();
+            await LoadSpeciesCountState.TryExecute();
         }
         else
         {
@@ -157,19 +160,23 @@ else
         return [];
     }
 
+    private SpeciesParameters BuildSpeciesParameters(Guid? cursor) =>
+        new(PageSize: SpeciesPageSize, Cursor: cursor, CategoryId: Id!.Value);
+
+    private IAsyncEnumerable<SpeciesDtoForList> FetchSpecies(
+        SpeciesParameters parameters,
+        CancellationToken ct
+    ) => SpeciesHttpClient.GetSpeciesAsync(parameters, ct);
+
+    // The list pages through species itself; this is only the heading tally.
     [Command]
-    private async Task<IReadOnlyList<SpeciesDtoForList>?> LoadSpeciesInCategory(CancellationToken ct)
+    private async Task<int?> LoadSpeciesCount(CancellationToken ct)
     {
-        var result = await SpeciesHttpClient.GetByCategoryAsync(_loadedCategoryId!.Value, ct);
-        if (result.TryPickT0(out var species, out var error))
-        {
-            _speciesLoadError = null;
-            return species;
-        }
-        _speciesLoadError = error.StatusCode == 0
-            ? "Couldn't reach the server."
-            : error.Message ?? "Something went wrong while loading species.";
-        return [];
+        var result = await SpeciesHttpClient.GetCountAsync(
+            new SpeciesParameters(CategoryId: _loadedCategoryId!.Value),
+            ct
+        );
+        return result.TryPickT0(out var count, out _) ? count : null;
     }
 
     public override void Dispose()

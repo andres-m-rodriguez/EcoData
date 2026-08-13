@@ -1,5 +1,4 @@
 using System.Runtime.CompilerServices;
-using EcoData.Common.i18n;
 using EcoData.Wildlife.Contracts;
 using EcoData.Wildlife.Contracts.Dtos;
 using EcoData.Wildlife.Contracts.Parameters;
@@ -15,9 +14,6 @@ public sealed class SpeciesRepository(
     IOptions<WildlifeOptions> options
 ) : ISpeciesRepository
 {
-    private static readonly IucnStatus[] ThreatenedStatuses =
-        [IucnStatus.VU, IucnStatus.EN, IucnStatus.CR];
-
     public async Task<SpeciesDtoForDetail?> GetByIdAsync(
         Guid id,
         CancellationToken cancellationToken = default
@@ -73,7 +69,25 @@ public sealed class SpeciesRepository(
 
         // The occurrence set is small (a few hundred circles), so distances are
         // computed in memory rather than pushing PostGIS geography into the model.
-        var speciesWithLocations = await QuerySpeciesWithLocations(context)
+        var speciesWithLocations = await context
+            .Species.AsNoTracking()
+            .Where(s => s.Locations.Any())
+            .Select(s => new
+            {
+                s.Id,
+                s.CommonName,
+                s.ScientificName,
+                s.IsFauna,
+                Locations = s
+                    .Locations.Select(l => new SpeciesLocationDto(
+                        l.Id,
+                        l.Latitude,
+                        l.Longitude,
+                        l.RadiusMeters,
+                        l.Description
+                    ))
+                    .ToList(),
+            })
             .ToListAsync(cancellationToken);
 
         var results = new List<SpeciesNearbyDto>();
@@ -82,12 +96,20 @@ public sealed class SpeciesRepository(
         {
             foreach (var location in species.Locations)
             {
-                var distance = HaversineDistanceMeters(
-                    latitude,
-                    longitude,
-                    location.Latitude,
-                    location.Longitude
-                );
+                const double earthRadiusMeters = 6371000;
+
+                var dLat = (location.Latitude - latitude) * Math.PI / 180;
+                var dLon = (location.Longitude - longitude) * Math.PI / 180;
+
+                var a =
+                    Math.Sin(dLat / 2) * Math.Sin(dLat / 2)
+                    + Math.Cos(latitude * Math.PI / 180)
+                        * Math.Cos(location.Latitude * Math.PI / 180)
+                        * Math.Sin(dLon / 2)
+                        * Math.Sin(dLon / 2);
+
+                var distance =
+                    earthRadiusMeters * 2 * Math.Atan2(Math.Sqrt(a), Math.Sqrt(1 - a));
 
                 // The occurrence is a circle; match when its edge falls inside the search radius.
                 var effectiveDistance = Math.Max(0, distance - location.RadiusMeters);
@@ -110,7 +132,12 @@ public sealed class SpeciesRepository(
             }
         }
 
-        return ClosestLocationPerSpecies(results);
+        // One row per species: the occurrence closest to the search point.
+        return results
+            .GroupBy(r => r.Id)
+            .Select(g => g.OrderBy(r => r.DistanceMeters).First())
+            .OrderBy(r => r.DistanceMeters)
+            .ToList();
     }
 
     public async Task<IReadOnlyList<SpeciesNearbyDto>> GetInPolygonAsync(
@@ -123,7 +150,25 @@ public sealed class SpeciesRepository(
 
         await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
 
-        var speciesWithLocations = await QuerySpeciesWithLocations(context)
+        var speciesWithLocations = await context
+            .Species.AsNoTracking()
+            .Where(s => s.Locations.Any())
+            .Select(s => new
+            {
+                s.Id,
+                s.CommonName,
+                s.ScientificName,
+                s.IsFauna,
+                Locations = s
+                    .Locations.Select(l => new SpeciesLocationDto(
+                        l.Id,
+                        l.Latitude,
+                        l.Longitude,
+                        l.RadiusMeters,
+                        l.Description
+                    ))
+                    .ToList(),
+            })
             .ToListAsync(cancellationToken);
 
         var centroidLat = coordinates.Average(c => c.Latitude);
@@ -135,15 +180,44 @@ public sealed class SpeciesRepository(
         {
             foreach (var location in species.Locations)
             {
-                if (!IsPointInPolygon(location.Latitude, location.Longitude, coordinates))
+                // Ray casting: count edge crossings of a horizontal ray from the point.
+                var inside = false;
+                for (int i = 0, j = coordinates.Count - 1; i < coordinates.Count; j = i++)
+                {
+                    var xi = coordinates[i].Longitude;
+                    var yi = coordinates[i].Latitude;
+                    var xj = coordinates[j].Longitude;
+                    var yj = coordinates[j].Latitude;
+
+                    if (
+                        ((yi > location.Latitude) != (yj > location.Latitude))
+                        && (
+                            location.Longitude
+                            < (xj - xi) * (location.Latitude - yi) / (yj - yi) + xi
+                        )
+                    )
+                    {
+                        inside = !inside;
+                    }
+                }
+
+                if (!inside)
                     continue;
 
-                var distance = HaversineDistanceMeters(
-                    centroidLat,
-                    centroidLng,
-                    location.Latitude,
-                    location.Longitude
-                );
+                const double earthRadiusMeters = 6371000;
+
+                var dLat = (location.Latitude - centroidLat) * Math.PI / 180;
+                var dLon = (location.Longitude - centroidLng) * Math.PI / 180;
+
+                var a =
+                    Math.Sin(dLat / 2) * Math.Sin(dLat / 2)
+                    + Math.Cos(centroidLat * Math.PI / 180)
+                        * Math.Cos(location.Latitude * Math.PI / 180)
+                        * Math.Sin(dLon / 2)
+                        * Math.Sin(dLon / 2);
+
+                var distance =
+                    earthRadiusMeters * 2 * Math.Atan2(Math.Sqrt(a), Math.Sqrt(1 - a));
 
                 results.Add(
                     new SpeciesNearbyDto(
@@ -161,7 +235,12 @@ public sealed class SpeciesRepository(
             }
         }
 
-        return ClosestLocationPerSpecies(results);
+        // One row per species: the occurrence closest to the polygon centroid.
+        return results
+            .GroupBy(r => r.Id)
+            .Select(g => g.OrderBy(r => r.DistanceMeters).First())
+            .OrderBy(r => r.DistanceMeters)
+            .ToList();
     }
 
     public async Task<IReadOnlyList<HeatmapPointDto>> GetHeatmapAsync(
@@ -182,98 +261,6 @@ public sealed class SpeciesRepository(
             .ToListAsync(cancellationToken);
     }
 
-    private static IQueryable<SpeciesLocationsProjection> QuerySpeciesWithLocations(
-        WildlifeDbContext context
-    ) =>
-        context
-            .Species.AsNoTracking()
-            .Where(s => s.Locations.Any())
-            .Select(s => new SpeciesLocationsProjection(
-                s.Id,
-                s.CommonName,
-                s.ScientificName,
-                s.IsFauna,
-                s.Locations
-                    .Select(l => new SpeciesLocationDto(
-                        l.Id,
-                        l.Latitude,
-                        l.Longitude,
-                        l.RadiusMeters,
-                        l.Description
-                    ))
-                    .ToList()
-            ));
-
-    private sealed record SpeciesLocationsProjection(
-        Guid Id,
-        List<LocaleValue> CommonName,
-        string ScientificName,
-        bool IsFauna,
-        List<SpeciesLocationDto> Locations
-    );
-
-    private static IReadOnlyList<SpeciesNearbyDto> ClosestLocationPerSpecies(
-        List<SpeciesNearbyDto> results
-    ) =>
-        results
-            .GroupBy(r => r.Id)
-            .Select(g => g.OrderBy(r => r.DistanceMeters).First())
-            .OrderBy(r => r.DistanceMeters)
-            .ToList();
-
-    private static double HaversineDistanceMeters(
-        double lat1,
-        double lon1,
-        double lat2,
-        double lon2
-    )
-    {
-        const double EarthRadiusMeters = 6371000;
-
-        var dLat = DegreesToRadians(lat2 - lat1);
-        var dLon = DegreesToRadians(lon2 - lon1);
-
-        var a =
-            Math.Sin(dLat / 2) * Math.Sin(dLat / 2)
-            + Math.Cos(DegreesToRadians(lat1))
-                * Math.Cos(DegreesToRadians(lat2))
-                * Math.Sin(dLon / 2)
-                * Math.Sin(dLon / 2);
-
-        var c = 2 * Math.Atan2(Math.Sqrt(a), Math.Sqrt(1 - a));
-
-        return EarthRadiusMeters * c;
-    }
-
-    private static double DegreesToRadians(double degrees) => degrees * Math.PI / 180;
-
-    private static bool IsPointInPolygon(
-        double latitude,
-        double longitude,
-        IReadOnlyList<PolygonCoordinate> polygon
-    )
-    {
-        // Ray casting: count edge crossings of a horizontal ray from the point.
-        var inside = false;
-        var j = polygon.Count - 1;
-
-        for (var i = 0; i < polygon.Count; j = i++)
-        {
-            var xi = polygon[i].Longitude;
-            var yi = polygon[i].Latitude;
-            var xj = polygon[j].Longitude;
-            var yj = polygon[j].Latitude;
-
-            if (((yi > latitude) != (yj > latitude)) &&
-                (longitude < (xj - xi) * (latitude - yi) / (yj - yi) + xi))
-            {
-                inside = !inside;
-            }
-        }
-
-        return inside;
-    }
-
     public async IAsyncEnumerable<SpeciesDtoForList> GetSpeciesAsync(
         SpeciesParameters parameters,
         [EnumeratorCancellation] CancellationToken cancellationToken = default
@@ -283,9 +270,80 @@ public sealed class SpeciesRepository(
 
         var query = context.Species.AsQueryable();
 
-        query = ApplyFilters(query, parameters);
+        if (!string.IsNullOrWhiteSpace(parameters.Search))
+        {
+            // Municipality-name search requires crossing into the Locations module
+            // and is out of scope for this pass (tracked as follow-up in issue #188).
+            var pattern =
+                $"%{parameters.Search.Trim().Replace("\\", "\\\\").Replace("%", "\\%").Replace("_", "\\_")}%";
+            query = query.Where(s =>
+                EF.Functions.ILike(s.ScientificName, pattern)
+                || s.CommonName.Any(c => EF.Functions.ILike(c.Value, pattern))
+            );
+        }
 
-        query = ApplySort(query, parameters.Sort);
+        if (parameters.IsFauna.HasValue)
+        {
+            query = query.Where(s => s.IsFauna == parameters.IsFauna.Value);
+        }
+
+        if (parameters.IsEndemic.HasValue)
+        {
+            query = query.Where(s => s.IsEndemic == parameters.IsEndemic.Value);
+        }
+
+        if (parameters.HasProfileImage.HasValue)
+        {
+            query = parameters.HasProfileImage.Value
+                ? query.Where(s => s.ProfileImageData != null)
+                : query.Where(s => s.ProfileImageData == null);
+        }
+
+        if (parameters.CategoryId.HasValue)
+        {
+            query = query.Where(s =>
+                s.CategoryLinks.Any(cl => cl.CategoryId == parameters.CategoryId.Value)
+            );
+        }
+
+        if (parameters.MunicipalityId.HasValue)
+        {
+            query = query.Where(s =>
+                s.MunicipalitySpecies.Any(ms => ms.MunicipalityId == parameters.MunicipalityId.Value)
+            );
+        }
+
+        if (parameters.IucnStatuses is { Length: > 0 } statuses)
+        {
+            query = query.Where(s => s.IucnStatus != null && statuses.Contains(s.IucnStatus.Value));
+        }
+
+        if (parameters.TaxonCodes is { Length: > 0 } codes)
+        {
+            query = query.Where(s => s.CategoryLinks.Any(cl => codes.Contains(cl.Category.Code)));
+        }
+
+        if (parameters.MinMunicipalityCount is { } minCount)
+        {
+            query = query.Where(s => s.MunicipalitySpecies.Count >= minCount);
+        }
+
+        if (parameters.ObservedSinceUtc is { } observedSince)
+        {
+            query = query.Where(s => s.LastObservedAtUtc >= observedSince);
+        }
+
+        if (parameters.NrcsPracticeCodes is { Length: > 0 } nrcsCodes)
+        {
+            query = query.Where(s =>
+                s.FwsLinks.Any(l => nrcsCodes.Contains(l.NrcsPractice.Code))
+            );
+        }
+
+        if (parameters.FwsActionCodes is { Length: > 0 } fwsCodes)
+        {
+            query = query.Where(s => s.FwsLinks.Any(l => fwsCodes.Contains(l.FwsAction.Code)));
+        }
 
         if (parameters.Cursor.HasValue)
         {
@@ -295,19 +353,72 @@ public sealed class SpeciesRepository(
             // ORDER BY on the name returns rows the caller has already seen.
             var cursor = await context
                 .Species.Where(s => s.Id == parameters.Cursor.Value)
-                .Select(s => new SpeciesCursor(
+                .Select(s => new
+                {
                     s.Id,
                     s.ScientificName,
                     s.LastObservedAtUtc,
-                    s.MunicipalitySpecies.Count
-                ))
+                    MunicipalityCount = s.MunicipalitySpecies.Count,
+                })
                 .FirstOrDefaultAsync(cancellationToken);
 
             if (cursor is not null)
             {
-                query = ApplyCursor(query, parameters.Sort, cursor);
+                // Each branch mirrors the matching ordering below, including its Id
+                // tiebreaker; the two must be changed together.
+                query = parameters.Sort switch
+                {
+                    SpeciesSort.ScientificNameAsc => query.Where(s =>
+                        string.Compare(s.ScientificName, cursor.ScientificName) > 0
+                        || (s.ScientificName == cursor.ScientificName && s.Id > cursor.Id)
+                    ),
+                    SpeciesSort.ScientificNameDesc => query.Where(s =>
+                        string.Compare(s.ScientificName, cursor.ScientificName) < 0
+                        || (s.ScientificName == cursor.ScientificName && s.Id < cursor.Id)
+                    ),
+                    // Postgres sorts NULLs first under DESC, so an unobserved cursor is
+                    // still inside the leading null block and every dated row comes after it.
+                    SpeciesSort.RecentlyObserved => cursor.LastObservedAtUtc is null
+                        ? query.Where(s =>
+                            s.LastObservedAtUtc != null
+                            || (s.LastObservedAtUtc == null && s.Id < cursor.Id)
+                        )
+                        : query.Where(s =>
+                            s.LastObservedAtUtc != null
+                            && (
+                                s.LastObservedAtUtc < cursor.LastObservedAtUtc
+                                || (
+                                    s.LastObservedAtUtc == cursor.LastObservedAtUtc
+                                    && s.Id < cursor.Id
+                                )
+                            )
+                        ),
+                    SpeciesSort.MostMunicipalities => query.Where(s =>
+                        s.MunicipalitySpecies.Count < cursor.MunicipalityCount
+                        || (
+                            s.MunicipalitySpecies.Count == cursor.MunicipalityCount
+                            && s.Id < cursor.Id
+                        )
+                    ),
+                    _ => query.Where(s => s.Id < cursor.Id),
+                };
             }
         }
+
+        query = parameters.Sort switch
+        {
+            SpeciesSort.ScientificNameAsc => query.OrderBy(s => s.ScientificName).ThenBy(s => s.Id),
+            SpeciesSort.ScientificNameDesc => query
+                .OrderByDescending(s => s.ScientificName)
+                .ThenByDescending(s => s.Id),
+            SpeciesSort.RecentlyObserved => query
+                .OrderByDescending(s => s.LastObservedAtUtc)
+                .ThenByDescending(s => s.Id),
+            SpeciesSort.MostMunicipalities => query
+                .OrderByDescending(s => s.MunicipalitySpecies.Count)
+                .ThenByDescending(s => s.Id),
+            _ => query.OrderByDescending(s => s.Id),
+        };
 
         await foreach (
             var species in query
@@ -343,63 +454,81 @@ public sealed class SpeciesRepository(
         await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
 
         var query = context.Species.AsQueryable();
-        query = ApplyFilters(query, parameters);
+
+        if (!string.IsNullOrWhiteSpace(parameters.Search))
+        {
+            var pattern =
+                $"%{parameters.Search.Trim().Replace("\\", "\\\\").Replace("%", "\\%").Replace("_", "\\_")}%";
+            query = query.Where(s =>
+                EF.Functions.ILike(s.ScientificName, pattern)
+                || s.CommonName.Any(c => EF.Functions.ILike(c.Value, pattern))
+            );
+        }
+
+        if (parameters.IsFauna.HasValue)
+        {
+            query = query.Where(s => s.IsFauna == parameters.IsFauna.Value);
+        }
+
+        if (parameters.IsEndemic.HasValue)
+        {
+            query = query.Where(s => s.IsEndemic == parameters.IsEndemic.Value);
+        }
+
+        if (parameters.HasProfileImage.HasValue)
+        {
+            query = parameters.HasProfileImage.Value
+                ? query.Where(s => s.ProfileImageData != null)
+                : query.Where(s => s.ProfileImageData == null);
+        }
+
+        if (parameters.CategoryId.HasValue)
+        {
+            query = query.Where(s =>
+                s.CategoryLinks.Any(cl => cl.CategoryId == parameters.CategoryId.Value)
+            );
+        }
+
+        if (parameters.MunicipalityId.HasValue)
+        {
+            query = query.Where(s =>
+                s.MunicipalitySpecies.Any(ms => ms.MunicipalityId == parameters.MunicipalityId.Value)
+            );
+        }
+
+        if (parameters.IucnStatuses is { Length: > 0 } statuses)
+        {
+            query = query.Where(s => s.IucnStatus != null && statuses.Contains(s.IucnStatus.Value));
+        }
+
+        if (parameters.TaxonCodes is { Length: > 0 } codes)
+        {
+            query = query.Where(s => s.CategoryLinks.Any(cl => codes.Contains(cl.Category.Code)));
+        }
+
+        if (parameters.MinMunicipalityCount is { } minCount)
+        {
+            query = query.Where(s => s.MunicipalitySpecies.Count >= minCount);
+        }
+
+        if (parameters.ObservedSinceUtc is { } observedSince)
+        {
+            query = query.Where(s => s.LastObservedAtUtc >= observedSince);
+        }
+
+        if (parameters.NrcsPracticeCodes is { Length: > 0 } nrcsCodes)
+        {
+            query = query.Where(s =>
+                s.FwsLinks.Any(l => nrcsCodes.Contains(l.NrcsPractice.Code))
+            );
+        }
+
+        if (parameters.FwsActionCodes is { Length: > 0 } fwsCodes)
+        {
+            query = query.Where(s => s.FwsLinks.Any(l => fwsCodes.Contains(l.FwsAction.Code)));
+        }
 
         return await query.CountAsync(cancellationToken);
-    }
-
-    public async Task<IReadOnlyList<SpeciesDtoForList>> GetByMunicipalityAsync(
-        Guid municipalityId,
-        CancellationToken cancellationToken = default
-    )
-    {
-        await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
-
-        return await context
-            .MunicipalitySpecies.Where(ms => ms.MunicipalityId == municipalityId)
-            .Select(static ms => new SpeciesDtoForList(
-                ms.Species.Id,
-                ms.Species.CommonName,
-                ms.Species.ScientificName,
-                ms.Species.IsFauna,
-                ms.Species.GRank,
-                ms.Species.SRank,
-                ms.Species.ProfileImageData != null,
-                ms.Species.IsEndemic,
-                ms.Species.IucnStatus,
-                ms.Species.CategoryLinks.Select(cl => cl.Category.Code).FirstOrDefault(),
-                ms.Species.MunicipalitySpecies.Count,
-                ms.Species.LastObservedAtUtc,
-                ms.Species.IsFeatured
-            ))
-            .ToListAsync(cancellationToken);
-    }
-
-    public async Task<IReadOnlyList<SpeciesDtoForList>> GetByCategoryAsync(
-        Guid categoryId,
-        CancellationToken cancellationToken = default
-    )
-    {
-        await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
-
-        return await context
-            .SpeciesCategoryLinks.Where(scl => scl.CategoryId == categoryId)
-            .Select(static scl => new SpeciesDtoForList(
-                scl.Species.Id,
-                scl.Species.CommonName,
-                scl.Species.ScientificName,
-                scl.Species.IsFauna,
-                scl.Species.GRank,
-                scl.Species.SRank,
-                scl.Species.ProfileImageData != null,
-                scl.Species.IsEndemic,
-                scl.Species.IucnStatus,
-                scl.Species.CategoryLinks.Select(cl => cl.Category.Code).FirstOrDefault(),
-                scl.Species.MunicipalitySpecies.Count,
-                scl.Species.LastObservedAtUtc,
-                scl.Species.IsFeatured
-            ))
-            .ToListAsync(cancellationToken);
     }
 
     public async Task<byte[]?> GetProfileImageAsync(
@@ -419,11 +548,13 @@ public sealed class SpeciesRepository(
     {
         await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
 
+        IucnStatus[] threatenedStatuses = [IucnStatus.VU, IucnStatus.EN, IucnStatus.CR];
+
         var totalSpecies = await context.Species.CountAsync(cancellationToken);
         var endemicCount = await context.Species.CountAsync(s => s.IsEndemic, cancellationToken);
         var threatenedCount = await context
             .Species.CountAsync(
-                s => s.IucnStatus != null && ThreatenedStatuses.Contains(s.IucnStatus.Value),
+                s => s.IucnStatus != null && threatenedStatuses.Contains(s.IucnStatus.Value),
                 cancellationToken
             );
         var municipalitiesCovered = await context
@@ -432,8 +563,10 @@ public sealed class SpeciesRepository(
             .CountAsync(cancellationToken);
 
         var quarterAgo = DateTimeOffset.UtcNow.AddDays(-90);
-        var addedThisQuarter = await context
-            .Species.CountAsync(s => s.CreatedAtUtc >= quarterAgo, cancellationToken);
+        var addedThisQuarter = await context.Species.CountAsync(
+            s => s.CreatedAtUtc >= quarterAgo,
+            cancellationToken
+        );
 
         // Municipalities with ≥10 endemic species recorded — the "biodiversity hotspot"
         // metric surfaced on the Municipios page.
@@ -475,7 +608,84 @@ public sealed class SpeciesRepository(
     {
         await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
 
-        var filtered = ApplyFilters(context.Species.AsQueryable(), parameters);
+        var filtered = context.Species.AsQueryable();
+
+        if (!string.IsNullOrWhiteSpace(parameters.Search))
+        {
+            var pattern =
+                $"%{parameters.Search.Trim().Replace("\\", "\\\\").Replace("%", "\\%").Replace("_", "\\_")}%";
+            filtered = filtered.Where(s =>
+                EF.Functions.ILike(s.ScientificName, pattern)
+                || s.CommonName.Any(c => EF.Functions.ILike(c.Value, pattern))
+            );
+        }
+
+        if (parameters.IsFauna.HasValue)
+        {
+            filtered = filtered.Where(s => s.IsFauna == parameters.IsFauna.Value);
+        }
+
+        if (parameters.IsEndemic.HasValue)
+        {
+            filtered = filtered.Where(s => s.IsEndemic == parameters.IsEndemic.Value);
+        }
+
+        if (parameters.HasProfileImage.HasValue)
+        {
+            filtered = parameters.HasProfileImage.Value
+                ? filtered.Where(s => s.ProfileImageData != null)
+                : filtered.Where(s => s.ProfileImageData == null);
+        }
+
+        if (parameters.CategoryId.HasValue)
+        {
+            filtered = filtered.Where(s =>
+                s.CategoryLinks.Any(cl => cl.CategoryId == parameters.CategoryId.Value)
+            );
+        }
+
+        if (parameters.MunicipalityId.HasValue)
+        {
+            filtered = filtered.Where(s =>
+                s.MunicipalitySpecies.Any(ms => ms.MunicipalityId == parameters.MunicipalityId.Value)
+            );
+        }
+
+        if (parameters.IucnStatuses is { Length: > 0 } statuses)
+        {
+            filtered = filtered.Where(s =>
+                s.IucnStatus != null && statuses.Contains(s.IucnStatus.Value)
+            );
+        }
+
+        if (parameters.TaxonCodes is { Length: > 0 } codes)
+        {
+            filtered = filtered.Where(s =>
+                s.CategoryLinks.Any(cl => codes.Contains(cl.Category.Code))
+            );
+        }
+
+        if (parameters.MinMunicipalityCount is { } minCount)
+        {
+            filtered = filtered.Where(s => s.MunicipalitySpecies.Count >= minCount);
+        }
+
+        if (parameters.ObservedSinceUtc is { } observedSince)
+        {
+            filtered = filtered.Where(s => s.LastObservedAtUtc >= observedSince);
+        }
+
+        if (parameters.NrcsPracticeCodes is { Length: > 0 } nrcsCodes)
+        {
+            filtered = filtered.Where(s =>
+                s.FwsLinks.Any(l => nrcsCodes.Contains(l.NrcsPractice.Code))
+            );
+        }
+
+        if (parameters.FwsActionCodes is { Length: > 0 } fwsCodes)
+        {
+            filtered = filtered.Where(s => s.FwsLinks.Any(l => fwsCodes.Contains(l.FwsAction.Code)));
+        }
 
         var taxa = await filtered
             .SelectMany(s => s.CategoryLinks)
@@ -483,7 +693,7 @@ public sealed class SpeciesRepository(
             .Select(g => new TaxonFacetDto(g.Key, g.Count()))
             .ToListAsync(cancellationToken);
 
-        var statuses = await filtered
+        var statusFacets = await filtered
             .Where(s => s.IucnStatus != null)
             .GroupBy(s => s.IucnStatus!.Value)
             .Select(g => new IucnFacetDto(g.Key, g.Count()))
@@ -502,7 +712,7 @@ public sealed class SpeciesRepository(
 
         return new SpeciesFacetsDto(
             taxa,
-            statuses,
+            statusFacets,
             endemicCount,
             recentlyObservedCount,
             withImageCount
@@ -539,144 +749,4 @@ public sealed class SpeciesRepository(
             ))
             .ToListAsync(cancellationToken);
     }
-
-    private static IQueryable<Database.Models.Species> ApplyFilters(
-        IQueryable<Database.Models.Species> query,
-        SpeciesParameters parameters
-    )
-    {
-        if (!string.IsNullOrWhiteSpace(parameters.Search))
-        {
-            // Municipality-name search requires crossing into the Locations module
-            // and is out of scope for this pass (tracked as follow-up in issue #188).
-            var pattern = $"%{parameters.Search.Trim().Replace("\\", "\\\\").Replace("%", "\\%").Replace("_", "\\_")}%";
-            query = query.Where(s =>
-                EF.Functions.ILike(s.ScientificName, pattern)
-                || s.CommonName.Any(c => EF.Functions.ILike(c.Value, pattern))
-            );
-        }
-
-        if (parameters.IsFauna.HasValue)
-        {
-            query = query.Where(s => s.IsFauna == parameters.IsFauna.Value);
-        }
-
-        if (parameters.IsEndemic.HasValue)
-        {
-            query = query.Where(s => s.IsEndemic == parameters.IsEndemic.Value);
-        }
-
-        if (parameters.HasProfileImage.HasValue)
-        {
-            query = parameters.HasProfileImage.Value
-                ? query.Where(s => s.ProfileImageData != null)
-                : query.Where(s => s.ProfileImageData == null);
-        }
-
-        if (parameters.CategoryId.HasValue)
-        {
-            query = query.Where(s =>
-                s.CategoryLinks.Any(cl => cl.CategoryId == parameters.CategoryId.Value)
-            );
-        }
-
-        if (parameters.MunicipalityId.HasValue)
-        {
-            query = query.Where(s =>
-                s.MunicipalitySpecies.Any(ms =>
-                    ms.MunicipalityId == parameters.MunicipalityId.Value
-                )
-            );
-        }
-
-        if (parameters.IucnStatuses is { Length: > 0 } statuses)
-        {
-            query = query.Where(s => s.IucnStatus != null && statuses.Contains(s.IucnStatus.Value));
-        }
-
-        if (parameters.TaxonCodes is { Length: > 0 } codes)
-        {
-            query = query.Where(s => s.CategoryLinks.Any(cl => codes.Contains(cl.Category.Code)));
-        }
-
-        if (parameters.MinMunicipalityCount is { } minCount)
-        {
-            query = query.Where(s => s.MunicipalitySpecies.Count >= minCount);
-        }
-
-        if (parameters.ObservedSinceUtc is { } observedSince)
-        {
-            query = query.Where(s => s.LastObservedAtUtc >= observedSince);
-        }
-
-        return query;
-    }
-
-    /// <summary>
-    /// Sort position of the row a cursor points at, so the next page can resume
-    /// from it under whichever ordering is in play.
-    /// </summary>
-    private sealed record SpeciesCursor(
-        Guid Id,
-        string ScientificName,
-        DateTimeOffset? LastObservedAtUtc,
-        int MunicipalityCount
-    );
-
-    /// <summary>
-    /// Rows strictly after <paramref name="cursor"/> in <paramref name="sort"/> order.
-    /// Each branch mirrors the matching <see cref="ApplySort"/> branch, including its
-    /// Id tiebreaker; the two must be changed together.
-    /// </summary>
-    private static IQueryable<Database.Models.Species> ApplyCursor(
-        IQueryable<Database.Models.Species> query,
-        SpeciesSort sort,
-        SpeciesCursor cursor
-    ) => sort switch
-    {
-        SpeciesSort.ScientificNameAsc => query.Where(s =>
-            string.Compare(s.ScientificName, cursor.ScientificName) > 0
-            || (s.ScientificName == cursor.ScientificName && s.Id > cursor.Id)
-        ),
-        SpeciesSort.ScientificNameDesc => query.Where(s =>
-            string.Compare(s.ScientificName, cursor.ScientificName) < 0
-            || (s.ScientificName == cursor.ScientificName && s.Id < cursor.Id)
-        ),
-        // Postgres sorts NULLs first under DESC, so an unobserved cursor is still
-        // inside the leading null block and every dated row comes after it.
-        SpeciesSort.RecentlyObserved => cursor.LastObservedAtUtc is null
-            ? query.Where(s =>
-                s.LastObservedAtUtc != null || (s.LastObservedAtUtc == null && s.Id < cursor.Id)
-            )
-            : query.Where(s =>
-                s.LastObservedAtUtc != null
-                && (
-                    s.LastObservedAtUtc < cursor.LastObservedAtUtc
-                    || (s.LastObservedAtUtc == cursor.LastObservedAtUtc && s.Id < cursor.Id)
-                )
-            ),
-        SpeciesSort.MostMunicipalities => query.Where(s =>
-            s.MunicipalitySpecies.Count < cursor.MunicipalityCount
-            || (s.MunicipalitySpecies.Count == cursor.MunicipalityCount && s.Id < cursor.Id)
-        ),
-        _ => query.Where(s => s.Id < cursor.Id),
-    };
-
-    private static IQueryable<Database.Models.Species> ApplySort(
-        IQueryable<Database.Models.Species> query,
-        SpeciesSort sort
-    ) => sort switch
-    {
-        SpeciesSort.ScientificNameAsc => query.OrderBy(s => s.ScientificName).ThenBy(s => s.Id),
-        SpeciesSort.ScientificNameDesc => query
-            .OrderByDescending(s => s.ScientificName)
-            .ThenByDescending(s => s.Id),
-        SpeciesSort.RecentlyObserved => query
-            .OrderByDescending(s => s.LastObservedAtUtc)
-            .ThenByDescending(s => s.Id),
-        SpeciesSort.MostMunicipalities => query
-            .OrderByDescending(s => s.MunicipalitySpecies.Count)
-            .ThenByDescending(s => s.Id),
-        _ => query.OrderByDescending(s => s.Id),
-    };
 }
