@@ -245,7 +245,18 @@ else
         if (result.TryPickT0(out var detail, out var error))
         {
             _detailLoadError = null;
-            Navbar.SetTitle(GetSpeciesName(detail));
+
+            var name = GetSpeciesName(detail);
+            Navbar.SetTitle(name);
+
+            // Put the animal beside its own name in the mobile bar. Alt is
+            // empty on purpose: the title next to it already says the name,
+            // and a screen reader shouldn't hear it twice. The mobile slot
+            // drops the portrait on navigation, so there is nothing to undo.
+            Bus.Publish(new FfMobileTitle.Avatar(
+                detail.HasProfileImage ? $"/wildlife/species/{detail.Id}/image" : null,
+                Alt: string.Empty));
+
             return detail;
         }
         // A missing species keeps the dedicated not-found empty state.

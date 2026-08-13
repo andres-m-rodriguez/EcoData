@@ -71,13 +71,8 @@
     border-radius: inherit;
 }
 
-/* Mobile app bar lead slot (back button + title, or the logo) */
-.appbar-mobile-lead {
-    flex: 1;
-    min-width: 0;
-}
-
-/* Wordmark and page title — ink on paper */
+/* Wordmark and page title — the desktop copies. FfMobileTitle carries its
+   own; scoped CSS is per-component, so the mobile slot can't share these. */
 .logo-text {
     font-family: var(--fauna-font-serif);
     font-weight: 700;
