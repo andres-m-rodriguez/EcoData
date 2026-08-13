@@ -7,6 +7,7 @@ using EcoData.Wildlife.DataAccess;
 using EcoData.Wildlife.Database.Extensions;
 using EcoData.Wildlife.Mcp;
 using FaunaFinder.Server.Components;
+using FaunaFinder.Server.RateLimiting;
 using MudBlazor.Services;
 using Tempest;
 
@@ -22,8 +23,13 @@ builder.Services.AddTempest();
 builder.Services.AddLocationsDataAccess();
 builder.Services.AddWildlifeDataAccess(builder.Configuration);
 builder.Services.AddWildlifeMcp();
+builder.Services.AddFaunaFinderRateLimiting();
 
 var app = builder.Build();
+
+// First in the pipeline: everything downstream that cares who is calling —
+// the rate limiter above all — reads the address this restores.
+app.UseForwardedHeaders();
 
 app.MapDefaultEndpoints();
 
@@ -37,6 +43,7 @@ else
 }
 
 app.UseAntiforgery();
+app.UseRateLimiter();
 
 app.MapStaticAssets();
 app.MapRazorComponents<App>()
