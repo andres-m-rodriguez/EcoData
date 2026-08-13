@@ -10,7 +10,9 @@ public static class WildlifeApiExtensions
     {
         app.MapSpeciesEndpoints();
         app.MapSpeciesCategoryEndpoints();
-        app.MapConservationEndpoints();
+        app.MapNrcsPracticeEndpoints();
+        app.MapFwsActionEndpoints();
+        app.MapConservationLinkEndpoints();
 
         return app;
     }

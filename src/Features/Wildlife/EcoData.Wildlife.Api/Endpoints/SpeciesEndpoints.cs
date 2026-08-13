@@ -76,36 +76,6 @@ public static class SpeciesEndpoints
 
         group
             .MapGet(
-                "/by-municipality/{municipalityId:guid}",
-                async Task<Ok<IReadOnlyList<SpeciesDtoForList>>> (
-                    Guid municipalityId,
-                    ISpeciesRepository repository,
-                    CancellationToken ct
-                ) =>
-                {
-                    var species = await repository.GetByMunicipalityAsync(municipalityId, ct);
-                    return TypedResults.Ok(species);
-                }
-            )
-            .WithName("GetSpeciesByMunicipality");
-
-        group
-            .MapGet(
-                "/by-category/{categoryId:guid}",
-                async Task<Ok<IReadOnlyList<SpeciesDtoForList>>> (
-                    Guid categoryId,
-                    ISpeciesRepository repository,
-                    CancellationToken ct
-                ) =>
-                {
-                    var species = await repository.GetByCategoryAsync(categoryId, ct);
-                    return TypedResults.Ok(species);
-                }
-            )
-            .WithName("GetSpeciesByCategory");
-
-        group
-            .MapGet(
                 "/stats",
                 async Task<Ok<SpeciesStatsDto>> (
                     ISpeciesRepository repository,

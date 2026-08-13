@@ -54,20 +54,24 @@
 @code {
     private const int PageSize = 24;
 
-    // Kept as const keys so the Razor attribute form compiles; L resolves them at render.
-    private const string EmptyTitleKey = "Species_Grid_Empty_Title";
-    private const string EmptyDescriptionKey = "Species_Grid_Empty_Description";
-
     [Parameter] public SpeciesFilterResult Filter { get; set; } = SpeciesFilterResult.Empty;
     [Parameter] public string? Search { get; set; }
     [Parameter] public SpeciesSort Sort { get; set; } = SpeciesSort.ScientificNameAsc;
+    [Parameter] public Guid? MunicipalityId { get; set; }
+    [Parameter] public Guid? CategoryId { get; set; }
     [Parameter] public EventCallback<SpeciesDtoForList> OnSpeciesClick { get; set; }
+
+    // Localization keys, so a host page can keep its own empty-state copy.
+    [Parameter] public string EmptyTitleKey { get; set; } = "Species_Grid_Empty_Title";
+    [Parameter] public string EmptyDescriptionKey { get; set; } = "Species_Grid_Empty_Description";
 
     private NuiVirtualizedGrid<SpeciesDtoForList, SpeciesParameters>? _grid;
 
     private SpeciesFilterResult _lastFilter = SpeciesFilterResult.Empty;
     private string? _lastSearch;
     private SpeciesSort _lastSort = SpeciesSort.ScientificNameAsc;
+    private Guid? _lastMunicipalityId;
+    private Guid? _lastCategoryId;
 
     private int _columns = 3;
     private float _rowHeight = 460;
@@ -116,17 +120,30 @@
 
     protected override void OnParametersSet()
     {
-        if (_grid is null) return;
+        if (_grid is null)
+        {
+            // Pre-render pass: the grid's own initial load uses these values, so
+            // bank them here or the first re-render reads as a change.
+            _lastFilter = Filter;
+            _lastSearch = Search;
+            _lastSort = Sort;
+            _lastMunicipalityId = MunicipalityId;
+            _lastCategoryId = CategoryId;
+            return;
+        }
 
         var filterChanged = _lastFilter != Filter;
         var searchChanged = !string.Equals(_lastSearch, Search, StringComparison.Ordinal);
         var sortChanged = _lastSort != Sort;
+        var scopeChanged = _lastMunicipalityId != MunicipalityId || _lastCategoryId != CategoryId;
 
-        if (filterChanged || searchChanged || sortChanged)
+        if (filterChanged || searchChanged || sortChanged || scopeChanged)
         {
             _lastFilter = Filter;
             _lastSearch = Search;
             _lastSort = Sort;
+            _lastMunicipalityId = MunicipalityId;
+            _lastCategoryId = CategoryId;
             _grid.Refresh();
         }
     }
@@ -144,6 +161,8 @@
         PageSize: PageSize,
         Cursor: cursor,
         Search: string.IsNullOrWhiteSpace(Search) ? null : Search,
+        CategoryId: CategoryId,
+        MunicipalityId: MunicipalityId,
         IsEndemic: Filter.IsEndemic ? true : null,
         HasProfileImage: Filter.HasPhoto ? true : null,
         IucnStatuses: Filter.IucnStatuses.Count > 0 ? Filter.IucnStatuses.ToArray() : null,

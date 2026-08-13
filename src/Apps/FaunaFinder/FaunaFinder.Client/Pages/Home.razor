@@ -102,7 +102,7 @@
                                      SelectedFwsActions="@_selectedFwsActions"
                                      OnToggleNrcsPractice="ToggleNrcsPractice"
                                      OnToggleFwsAction="ToggleFwsAction"
-                                     OnClearFilters="ClearConservationFilters" />
+                                     OnClearFilters="ClearConservationFiltersAndReload" />
 
         @* Species location navigator *@
         @if (_viewingSpecies is not null)
@@ -124,10 +124,11 @@
                 @if (_selectedMunicipality is not null)
                 {
                     <MapSpeciesPanel Title="@_selectedMunicipality.Name"
-                                     IsLoading="@(LoadSpeciesState.Result is null || LoadSpeciesState.IsLoading)"
-                                     Species="@FilteredSpecies"
-                                     LoadError="@_speciesLoadError"
-                                     TotalCount="@LoadSpeciesState.Result?.Count"
+                                     MunicipalityId="@_selectedMunicipality.Id"
+                                     NrcsPracticeCodes="@SelectedNrcsPracticeCodes"
+                                     FwsActionCodes="@SelectedFwsActionCodes"
+                                     TotalCount="@LoadSpeciesCountsState.Result?.Total"
+                                     FilteredCount="@LoadSpeciesCountsState.Result?.Filtered"
                                      ActiveFilterCount="@ActiveFilterCount"
                                      OnFilterClick="OpenFilterDialog"
                                      OnClose="CloseSidebar"
@@ -157,10 +158,11 @@
                 @if (_selectedMunicipality is not null)
                 {
                     <MapSpeciesPanel Title="@_selectedMunicipality.Name"
-                                     IsLoading="@(LoadSpeciesState.Result is null || LoadSpeciesState.IsLoading)"
-                                     Species="@FilteredSpecies"
-                                     LoadError="@_speciesLoadError"
-                                     TotalCount="@LoadSpeciesState.Result?.Count"
+                                     MunicipalityId="@_selectedMunicipality.Id"
+                                     NrcsPracticeCodes="@SelectedNrcsPracticeCodes"
+                                     FwsActionCodes="@SelectedFwsActionCodes"
+                                     TotalCount="@LoadSpeciesCountsState.Result?.Total"
+                                     FilteredCount="@LoadSpeciesCountsState.Result?.Filtered"
                                      ActiveFilterCount="@ActiveFilterCount"
                                      OnFilterClick="OpenFilterDialog"
                                      OnClose="CloseSheet"
@@ -195,7 +197,6 @@
     private SelectedMunicipality? _selectedMunicipality;
 
     private string? _mapLoadError;
-    private string? _speciesLoadError;
 
     private AreaSearchMode _searchMode;
     private MapCoordinate? _searchOrigin;
@@ -305,23 +306,48 @@
         StateHasChanged();
 
         _ = LoadConservationCodesState.TryExecute();
-        await LoadSpeciesState.TryExecute();
+        await LoadSpeciesCountsState.TryExecute();
     }
 
+    /// <summary>
+    /// The panel pages through species itself; these are the tallies behind its
+    /// "showing X of Y" line. The filtered count is a second round trip, so it
+    /// only runs while a conservation filter is actually on.
+    /// </summary>
     [Command]
-    private async Task<IReadOnlyList<SpeciesDtoForList>?> LoadSpecies(CancellationToken ct)
+    private async Task<SpeciesCounts?> LoadSpeciesCounts(CancellationToken ct)
     {
-        var result = await SpeciesHttpClient.GetByMunicipalityAsync(_selectedMunicipality!.Id, ct);
-        if (result.TryPickT0(out var species, out var error))
+        var municipalityId = _selectedMunicipality!.Id;
+
+        var totalResult = await SpeciesHttpClient.GetCountAsync(
+            new SpeciesParameters(MunicipalityId: municipalityId),
+            ct
+        );
+        if (!totalResult.TryPickT0(out var total, out _))
         {
-            _speciesLoadError = null;
-            return species;
+            return null;
         }
-        _speciesLoadError = error.StatusCode == 0
-            ? "Couldn't reach the server."
-            : error.Message ?? "Something went wrong while loading species.";
-        return [];
+
+        if (ActiveFilterCount == 0)
+        {
+            return new SpeciesCounts(total, total);
+        }
+
+        var filteredResult = await SpeciesHttpClient.GetCountAsync(
+            new SpeciesParameters(
+                MunicipalityId: municipalityId,
+                NrcsPracticeCodes: SelectedNrcsPracticeCodes,
+                FwsActionCodes: SelectedFwsActionCodes
+            ),
+            ct
+        );
+
+        return filteredResult.TryPickT0(out var filtered, out _)
+            ? new SpeciesCounts(total, filtered)
+            : new SpeciesCounts(total, total);
     }
+
+    private sealed record SpeciesCounts(int Total, int Filtered);
 
     private sealed record SelectedMunicipality(Guid Id, string Name);
 
@@ -355,50 +381,45 @@
 
     private int ActiveFilterCount => _selectedNrcsPractices.Count + _selectedFwsActions.Count;
 
-    private IReadOnlyList<SpeciesDtoForList>? FilteredSpecies
-    {
-        get
-        {
-            var species = LoadSpeciesState.Result;
-            if (species is null || ActiveFilterCount == 0)
-                return species;
+    // Ordered so the panel can tell a real selection change from a re-render.
+    private string[]? SelectedNrcsPracticeCodes =>
+        _selectedNrcsPractices.Count > 0 ? _selectedNrcsPractices.Order().ToArray() : null;
 
-            var codes = (LoadConservationCodesState.Result ?? [])
-                .ToDictionary(c => c.SpeciesId);
-
-            return species
-                .Where(s =>
-                    codes.TryGetValue(s.Id, out var c)
-                    && (_selectedNrcsPractices.Count == 0
-                        || c.NrcsPracticeCodes.Any(_selectedNrcsPractices.Contains))
-                    && (_selectedFwsActions.Count == 0
-                        || c.FwsActionCodes.Any(_selectedFwsActions.Contains)))
-                .ToList();
-        }
-    }
+    private string[]? SelectedFwsActionCodes =>
+        _selectedFwsActions.Count > 0 ? _selectedFwsActions.Order().ToArray() : null;
 
     private void OpenFilterDialog() => _filterDialogVisible = true;
 
-    private void ToggleNrcsPractice(string code)
+    private async Task ToggleNrcsPractice(string code)
     {
         if (!_selectedNrcsPractices.Remove(code))
         {
             _selectedNrcsPractices.Add(code);
         }
+
+        await LoadSpeciesCountsState.TryExecute();
     }
 
-    private void ToggleFwsAction(string code)
+    private async Task ToggleFwsAction(string code)
     {
         if (!_selectedFwsActions.Remove(code))
         {
             _selectedFwsActions.Add(code);
         }
+
+        await LoadSpeciesCountsState.TryExecute();
     }
 
     private void ClearConservationFilters()
     {
         _selectedNrcsPractices.Clear();
         _selectedFwsActions.Clear();
+    }
+
+    private async Task ClearConservationFiltersAndReload()
+    {
+        ClearConservationFilters();
+        await LoadSpeciesCountsState.TryExecute();
     }
 
     // ===== Species near me =====

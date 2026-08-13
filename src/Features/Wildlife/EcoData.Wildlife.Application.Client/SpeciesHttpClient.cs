@@ -73,56 +73,6 @@ public sealed class SpeciesHttpClient(HttpClient httpClient) : ISpeciesHttpClien
         }
     }
 
-    public async Task<OneOf<IReadOnlyList<SpeciesDtoForList>, RequestFailed>> GetByMunicipalityAsync(
-        Guid municipalityId,
-        CancellationToken ct = default)
-    {
-        try
-        {
-            var response = await httpClient.GetAsync(
-                $"wildlife/species/by-municipality/{municipalityId}",
-                ct);
-            if (!response.IsSuccessStatusCode)
-            {
-                var problem = await ProblemDetailsParser.ParseAsync(response, ct);
-                return new RequestFailed((int)response.StatusCode, problem?.Detail ?? problem?.Title);
-            }
-            var species = await response.Content.ReadFromJsonAsync<IReadOnlyList<SpeciesDtoForList>>(ct);
-            if (species is null)
-                return new RequestFailed((int)response.StatusCode, "The server returned an empty response.");
-            return OneOf<IReadOnlyList<SpeciesDtoForList>, RequestFailed>.FromT0(species);
-        }
-        catch (HttpRequestException e)
-        {
-            return new RequestFailed(0, e.Message);
-        }
-    }
-
-    public async Task<OneOf<IReadOnlyList<SpeciesDtoForList>, RequestFailed>> GetByCategoryAsync(
-        Guid categoryId,
-        CancellationToken ct = default)
-    {
-        try
-        {
-            var response = await httpClient.GetAsync(
-                $"wildlife/species/by-category/{categoryId}",
-                ct);
-            if (!response.IsSuccessStatusCode)
-            {
-                var problem = await ProblemDetailsParser.ParseAsync(response, ct);
-                return new RequestFailed((int)response.StatusCode, problem?.Detail ?? problem?.Title);
-            }
-            var species = await response.Content.ReadFromJsonAsync<IReadOnlyList<SpeciesDtoForList>>(ct);
-            if (species is null)
-                return new RequestFailed((int)response.StatusCode, "The server returned an empty response.");
-            return OneOf<IReadOnlyList<SpeciesDtoForList>, RequestFailed>.FromT0(species);
-        }
-        catch (HttpRequestException e)
-        {
-            return new RequestFailed(0, e.Message);
-        }
-    }
-
     public async Task<OneOf<SpeciesStatsDto, RequestFailed>> GetStatsAsync(CancellationToken ct = default)
     {
         try
@@ -307,7 +257,9 @@ public sealed class SpeciesHttpClient(HttpClient httpClient) : ISpeciesHttpClien
             .Add("iucnStatuses", parameters.IucnStatuses)
             .Add("taxonCodes", parameters.TaxonCodes)
             .Add("minMunicipalityCount", parameters.MinMunicipalityCount)
-            .Add("observedSinceUtc", parameters.ObservedSinceUtc);
+            .Add("observedSinceUtc", parameters.ObservedSinceUtc)
+            .Add("nrcsPracticeCodes", parameters.NrcsPracticeCodes)
+            .Add("fwsActionCodes", parameters.FwsActionCodes);
 
         if (parameters.Sort != SpeciesSort.ScientificNameAsc)
         {

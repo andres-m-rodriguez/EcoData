@@ -15,6 +15,8 @@ public sealed record SpeciesParameters(
     string[]? TaxonCodes = null,
     int? MinMunicipalityCount = null,
     DateTimeOffset? ObservedSinceUtc = null,
+    string[]? NrcsPracticeCodes = null,
+    string[]? FwsActionCodes = null,
     SpeciesSort Sort = SpeciesSort.ScientificNameAsc
 ) : CursorParameters(PageSize, Cursor);
 

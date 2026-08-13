@@ -5,6 +5,7 @@
 @using EcoData.Locations.Contracts.Parameters
 @using EcoData.Wildlife.Application.Client
 @using EcoData.Wildlife.Contracts.Dtos
+@using EcoData.Wildlife.Contracts.Parameters
 @using FaunaFinder.Client.Components.Municipalities
 @inherits StatefulComponent
 @inject IMunicipalityHttpClient MunicipalityClient
@@ -47,45 +48,18 @@
                     <MudIcon Icon="@Icons.Material.Filled.Pets" Color="Color.Primary" />
                     <MudText Typo="Typo.h6">@L["MuniDetail_Species_Heading"]</MudText>
                     <MudSpacer />
-                    @if (LoadDetailSpeciesState.Result is { Count: > 0 } list)
+                    @if (LoadDetailSpeciesCountState.Result is { } speciesCount and > 0)
                     {
                         <MudText Typo="Typo.caption" Color="Color.Secondary">
-                            @list.Count
+                            @speciesCount
                         </MudText>
                     }
                 </MudStack>
 
-                @if (_detailSpeciesLoadError is not null)
-                {
-                    <MudAlert Severity="Severity.Error">@_detailSpeciesLoadError</MudAlert>
-                }
-                else if (LoadDetailSpeciesState.Result is null || LoadDetailSpeciesState.IsLoading)
-                {
-                    <MudGrid Spacing="2">
-                        @for (var i = 0; i < 6; i++)
-                        {
-                            <MudItem xs="12" sm="6" md="4">
-                                <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="200px" Class="rounded-lg" />
-                            </MudItem>
-                        }
-                    </MudGrid>
-                }
-                else if (LoadDetailSpeciesState.Result.Count == 0)
-                {
-                    <NuiEmptyState Icon="@Icons.Material.Outlined.Pets"
-                                   Title="@L[MuniDetailSpeciesEmptyTitle]"
-                                   Description="@L[MuniDetailSpeciesEmptyDescription]" />
-                }
-                else
-                {
-                    <div class="mm-detail-grid">
-                        @foreach (var species in LoadDetailSpeciesState.Result)
-                        {
-                            <SpeciesCard Species="species"
-                                         OnClick="@(s => NavigationManager.NavigateTo($"/species/{s.Id}"))" />
-                        }
-                    </div>
-                }
+                <SpeciesGrid MunicipalityId="@Id"
+                             EmptyTitleKey="@MuniDetailSpeciesEmptyTitle"
+                             EmptyDescriptionKey="@MuniDetailSpeciesEmptyDescription"
+                             OnSpeciesClick="@(s => NavigationManager.NavigateTo($"/species/{s.Id}"))" />
             </MudPaper>
         }
         else
@@ -162,7 +136,6 @@ else
     private string? _statsLoadError;
     private string? _municipalitiesLoadError;
     private string? _detailLoadError;
-    private string? _detailSpeciesLoadError;
 
     protected override void OnInitialized()
     {
@@ -181,7 +154,7 @@ else
 
             await Task.WhenAll(
                 LoadDetailState.TryExecute(),
-                LoadDetailSpeciesState.TryExecute()
+                LoadDetailSpeciesCountState.TryExecute()
             );
         }
         else
@@ -267,19 +240,15 @@ else
         return null;
     }
 
+    // The grid pages through species itself; this is only the heading tally.
     [Command]
-    private async Task<IReadOnlyList<SpeciesDtoForList>?> LoadDetailSpecies(CancellationToken ct)
+    private async Task<int?> LoadDetailSpeciesCount(CancellationToken ct)
     {
-        var result = await SpeciesClient.GetByMunicipalityAsync(_loadedDetailId!.Value, ct);
-        if (result.TryPickT0(out var species, out var error))
-        {
-            _detailSpeciesLoadError = null;
-            return species;
-        }
-        _detailSpeciesLoadError = error.StatusCode == 0
-            ? "Couldn't reach the server."
-            : error.Message ?? "Something went wrong while loading species.";
-        return [];
+        var result = await SpeciesClient.GetCountAsync(
+            new SpeciesParameters(MunicipalityId: _loadedDetailId!.Value),
+            ct
+        );
+        return result.TryPickT0(out var count, out _) ? count : null;
     }
 
     private Task HandleSelected(MunicipalityDtoForList muni)

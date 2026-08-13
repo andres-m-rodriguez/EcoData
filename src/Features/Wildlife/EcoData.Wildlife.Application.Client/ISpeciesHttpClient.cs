@@ -17,14 +17,6 @@ public interface ISpeciesHttpClient
 
     Task<OneOf<SpeciesDtoForDetail, RequestFailed>> GetByIdAsync(Guid id, CancellationToken ct = default);
 
-    Task<OneOf<IReadOnlyList<SpeciesDtoForList>, RequestFailed>> GetByMunicipalityAsync(
-        Guid municipalityId,
-        CancellationToken ct = default);
-
-    Task<OneOf<IReadOnlyList<SpeciesDtoForList>, RequestFailed>> GetByCategoryAsync(
-        Guid categoryId,
-        CancellationToken ct = default);
-
     Task<OneOf<SpeciesStatsDto, RequestFailed>> GetStatsAsync(CancellationToken ct = default);
 
     Task<OneOf<SpeciesFacetsDto, RequestFailed>> GetFacetsAsync(
