@@ -66,17 +66,7 @@ public sealed class SpeciesTools
             .GetSpeciesAsync(parameters, cancellationToken)
             .WithCancellation(cancellationToken))
         {
-            results.Add(new SpeciesSummary(
-                species.Id,
-                WildlifeMcpMapping.ResolveName(species.CommonName, species.ScientificName),
-                species.ScientificName,
-                WildlifeMcpMapping.Kind(species.IsFauna),
-                species.IucnStatus?.ToString(),
-                species.IsEndemic,
-                species.TaxonCode,
-                species.MunicipalityCount,
-                species.LastObservedAtUtc
-            ));
+            results.Add(ToSummary(species));
         }
 
         return results;
@@ -155,6 +145,57 @@ public sealed class SpeciesTools
             .ToList();
     }
 
+    [McpServerTool(Name = "list_species_in_municipality")]
+    [Description("""
+        List the species recorded in one municipio. Municipio ids come from
+        search_municipalities or find_municipality_at_point. This is filed
+        against the municipio a record belongs to, so unlike find_species_near
+        it does not depend on a radius.
+        """)]
+    public static async Task<IReadOnlyList<SpeciesSummary>> ListSpeciesInMunicipality(
+        ISpeciesRepository repository,
+        CancellationToken cancellationToken,
+        [Description("The municipio id.")] Guid municipalityId,
+        [Description("How many to return, 1-50. Defaults to 20.")]
+        int limit = DefaultResults
+    )
+    {
+        var parameters = new SpeciesParameters(
+            PageSize: Math.Clamp(limit, 1, MaxResults),
+            MunicipalityId: municipalityId
+        );
+
+        var results = new List<SpeciesSummary>();
+
+        await foreach (var species in repository
+            .GetSpeciesAsync(parameters, cancellationToken)
+            .WithCancellation(cancellationToken))
+        {
+            results.Add(ToSummary(species));
+        }
+
+        return results;
+    }
+
+    [McpServerTool(Name = "get_species_richness_by_municipality")]
+    [Description("""
+        How many species are recorded in each municipio, for comparing one place
+        against another. Returns municipio ids and counts only — pair it with
+        search_municipalities, which returns every id with its name, to put
+        names to them.
+        """)]
+    public static async Task<IReadOnlyList<MunicipalityRichness>> GetSpeciesRichnessByMunicipality(
+        ISpeciesRepository repository,
+        CancellationToken cancellationToken
+    )
+    {
+        var counts = await repository.GetCountsByMunicipalityAsync(cancellationToken);
+
+        return counts
+            .Select(count => new MunicipalityRichness(count.MunicipalityId, count.Count))
+            .ToList();
+    }
+
     [McpServerTool(Name = "list_taxon_categories")]
     [Description("""
         List the taxonomic groups species are catalogued under. The codes
@@ -195,6 +236,19 @@ public sealed class SpeciesTools
             stats.TotalMunicipalities
         );
     }
+
+    private static SpeciesSummary ToSummary(Contracts.Dtos.SpeciesDtoForList species) =>
+        new(
+            species.Id,
+            WildlifeMcpMapping.ResolveName(species.CommonName, species.ScientificName),
+            species.ScientificName,
+            WildlifeMcpMapping.Kind(species.IsFauna),
+            species.IucnStatus?.ToString(),
+            species.IsEndemic,
+            species.TaxonCode,
+            species.MunicipalityCount,
+            species.LastObservedAtUtc
+        );
 
     /// <summary>
     /// A status the model spelled itself, so an unparseable one is treated as no

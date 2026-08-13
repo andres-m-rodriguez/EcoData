@@ -45,6 +45,13 @@ public sealed record NearbySpecies(
     string? LocationDescription
 );
 
+/// <summary>
+/// How many species one municipio has on record. Carries the id rather than the
+/// name: the municipio list lives in the locations feature, and a model that
+/// wants names has it in one call from there.
+/// </summary>
+public sealed record MunicipalityRichness(Guid MunicipalityId, int SpeciesCount);
+
 public sealed record TaxonCategory(string Code, string Name);
 
 public sealed record ConservationPractice(string Code, string Name);

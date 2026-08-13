@@ -51,6 +51,7 @@
     <Project Path="src/Features/Locations/EcoData.Locations.Contracts/EcoData.Locations.Contracts.csproj" />
     <Project Path="src/Features/Locations/EcoData.Locations.DataAccess/EcoData.Locations.DataAccess.csproj" />
     <Project Path="src/Features/Locations/EcoData.Locations.Database/EcoData.Locations.Database.csproj" />
+    <Project Path="src/Features/Locations/EcoData.Locations.Mcp/EcoData.Locations.Mcp.csproj" />
     <Project Path="src/Features/Locations/EcoData.Locations.Helpers/EcoData.Locations.Helpers.csproj" />
   </Folder>
   <Folder Name="/Features/Organization/">
