@@ -5,9 +5,9 @@
 
 <article class="@CardClass" @onclick="HandleClick">
     <div class="ff-card-img">
-        @if (Species.HasProfileImage)
+        @if (Species.ProfileImageUrl is not null)
         {
-            <img src="@($"/wildlife/species/{Species.Id}/image")"
+            <img src="@Species.ProfileImageUrl"
                  alt="@CommonName"
                  loading="lazy" />
         }

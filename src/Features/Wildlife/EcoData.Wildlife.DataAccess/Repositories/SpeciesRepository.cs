@@ -11,7 +11,8 @@ namespace EcoData.Wildlife.DataAccess.Repositories;
 
 public sealed class SpeciesRepository(
     IDbContextFactory<WildlifeDbContext> contextFactory,
-    IOptions<WildlifeOptions> options
+    IOptions<WildlifeOptions> options,
+    ISpeciesImageStore imageStore
 ) : ISpeciesRepository
 {
     public async Task<SpeciesDtoForDetail?> GetByIdAsync(
@@ -20,6 +21,10 @@ public sealed class SpeciesRepository(
     )
     {
         await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
+
+        // Concatenated in SQL so the row carries a URL the browser fetches from
+        // storage directly; the API never sees the bytes.
+        var imageBase = imageStore.PublicBaseUrl;
 
         return await context
             .Species.Where(s => s.Id == id)
@@ -32,7 +37,7 @@ public sealed class SpeciesRepository(
                 s.GRank,
                 s.SRank,
                 s.ImageSourceUrl,
-                s.ProfileImageData != null,
+                s.ProfileImageBlobName == null ? null : imageBase + s.ProfileImageBlobName,
                 s.CategoryLinks
                     .Select(cl => new SpeciesCategoryDtoForList(
                         cl.Category.Id,
@@ -295,8 +300,8 @@ public sealed class SpeciesRepository(
         if (parameters.HasProfileImage.HasValue)
         {
             query = parameters.HasProfileImage.Value
-                ? query.Where(s => s.ProfileImageData != null)
-                : query.Where(s => s.ProfileImageData == null);
+                ? query.Where(s => s.ProfileImageBlobName != null)
+                : query.Where(s => s.ProfileImageBlobName == null);
         }
 
         if (parameters.CategoryId.HasValue)
@@ -420,17 +425,19 @@ public sealed class SpeciesRepository(
             _ => query.OrderByDescending(s => s.Id),
         };
 
+        var imageBase = imageStore.PublicBaseUrl;
+
         await foreach (
             var species in query
                 .Take(parameters.PageSize + 1)
-                .Select(static s => new SpeciesDtoForList(
+                .Select(s => new SpeciesDtoForList(
                     s.Id,
                     s.CommonName,
                     s.ScientificName,
                     s.IsFauna,
                     s.GRank,
                     s.SRank,
-                    s.ProfileImageData != null,
+                    s.ProfileImageBlobName == null ? null : imageBase + s.ProfileImageBlobName,
                     s.EndemicStatus,
                     s.IucnStatus,
                     s.CategoryLinks.Select(cl => cl.Category.Code).FirstOrDefault(),
@@ -478,8 +485,8 @@ public sealed class SpeciesRepository(
         if (parameters.HasProfileImage.HasValue)
         {
             query = parameters.HasProfileImage.Value
-                ? query.Where(s => s.ProfileImageData != null)
-                : query.Where(s => s.ProfileImageData == null);
+                ? query.Where(s => s.ProfileImageBlobName != null)
+                : query.Where(s => s.ProfileImageBlobName == null);
         }
 
         if (parameters.CategoryId.HasValue)
@@ -529,19 +536,6 @@ public sealed class SpeciesRepository(
         }
 
         return await query.CountAsync(cancellationToken);
-    }
-
-    public async Task<byte[]?> GetProfileImageAsync(
-        Guid id,
-        CancellationToken cancellationToken = default
-    )
-    {
-        await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
-
-        return await context
-            .Species.Where(s => s.Id == id)
-            .Select(s => s.ProfileImageData)
-            .FirstOrDefaultAsync(cancellationToken);
     }
 
     public async Task<SpeciesStatsDto> GetStatsAsync(CancellationToken cancellationToken = default)
@@ -636,8 +630,8 @@ public sealed class SpeciesRepository(
         if (parameters.HasProfileImage.HasValue)
         {
             filtered = parameters.HasProfileImage.Value
-                ? filtered.Where(s => s.ProfileImageData != null)
-                : filtered.Where(s => s.ProfileImageData == null);
+                ? filtered.Where(s => s.ProfileImageBlobName != null)
+                : filtered.Where(s => s.ProfileImageBlobName == null);
         }
 
         if (parameters.CategoryId.HasValue)
@@ -712,7 +706,7 @@ public sealed class SpeciesRepository(
             cancellationToken
         );
         var withImageCount = await filtered.CountAsync(
-            s => s.ProfileImageData != null,
+            s => s.ProfileImageBlobName != null,
             cancellationToken
         );
 
@@ -731,21 +725,23 @@ public sealed class SpeciesRepository(
     {
         await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
 
+        var imageBase = imageStore.PublicBaseUrl;
+
         // Prefer species with a photo, then randomise. IsFeatured stays as a
         // curatorial pin mechanism (empty flag = random, pinned rows surface first).
         return await context
             .Species.OrderByDescending(s => s.IsFeatured)
-            .ThenByDescending(s => s.ProfileImageData != null)
+            .ThenByDescending(s => s.ProfileImageBlobName != null)
             .ThenBy(s => EF.Functions.Random())
             .Take(3)
-            .Select(static s => new SpeciesDtoForList(
+            .Select(s => new SpeciesDtoForList(
                 s.Id,
                 s.CommonName,
                 s.ScientificName,
                 s.IsFauna,
                 s.GRank,
                 s.SRank,
-                s.ProfileImageData != null,
+                s.ProfileImageBlobName == null ? null : imageBase + s.ProfileImageBlobName,
                 s.EndemicStatus,
                 s.IucnStatus,
                 s.CategoryLinks.Select(cl => cl.Category.Code).FirstOrDefault(),

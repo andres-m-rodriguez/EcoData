@@ -254,9 +254,7 @@ else
             // empty on purpose: the title next to it already says the name,
             // and a screen reader shouldn't hear it twice. The mobile slot
             // drops the portrait on navigation, so there is nothing to undo.
-            Bus.Publish(new FfMobileTitle.Avatar(
-                detail.HasProfileImage ? $"/wildlife/species/{detail.Id}/image" : null,
-                Alt: string.Empty));
+            Bus.Publish(new FfMobileTitle.Avatar(detail.ProfileImageUrl, Alt: string.Empty));
 
             return detail;
         }
@@ -320,7 +318,7 @@ else
         detail.ScientificName,
         detail.IucnStatus?.ToString(),
         DateTimeOffset.UtcNow,
-        detail.HasProfileImage
+        detail.ProfileImageUrl
     );
 
     private SpeciesParameters BuildFacetParameters() => new(

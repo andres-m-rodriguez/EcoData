@@ -14,8 +14,6 @@ public interface ISpeciesRepository
 
     Task<int> GetCountAsync(SpeciesParameters parameters, CancellationToken cancellationToken = default);
 
-    Task<byte[]?> GetProfileImageAsync(Guid id, CancellationToken cancellationToken = default);
-
     Task<SpeciesStatsDto> GetStatsAsync(CancellationToken cancellationToken = default);
 
     Task<SpeciesFacetsDto> GetFacetsAsync(

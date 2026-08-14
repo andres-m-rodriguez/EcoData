@@ -55,10 +55,10 @@
                     <a class="ff-rail-item" href="@EntryHref(entry)" @key="entry.Id">
                         @* A photograph when the record carries one; the duotone
                            glyph tile is the fallback, not the default. *@
-                        @if (entry.HasImage)
+                        @if (entry.ImageUrl is not null)
                         {
                             <img class="ff-rail-art ff-rail-art--photo"
-                                 src="@SpeciesImageSrc(entry.Id)"
+                                 src="@entry.ImageUrl"
                                  alt=""
                                  loading="lazy" />
                         }

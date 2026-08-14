@@ -7,6 +7,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Aspire.Azure.Storage.Blobs" Version="13.2.0" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.3">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -21,6 +22,7 @@
     <ProjectReference Include="..\..\Features\Sensors\EcoData.Sensors.Database\EcoData.Sensors.Database.csproj" />
     <ProjectReference Include="..\..\Features\Identity\EcoData.Identity.Database\EcoData.Identity.Database.csproj" />
     <ProjectReference Include="..\..\Features\Locations\EcoData.Locations.Database\EcoData.Locations.Database.csproj" />
+    <ProjectReference Include="..\..\Features\Wildlife\EcoData.Wildlife.DataAccess\EcoData.Wildlife.DataAccess.csproj" />
     <ProjectReference Include="..\..\Features\Wildlife\EcoData.Wildlife.Database\EcoData.Wildlife.Database.csproj" />
   </ItemGroup>
 

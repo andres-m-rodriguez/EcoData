@@ -148,9 +148,6 @@ public partial class FfSearch : LocalizedComponentBase
 
     private static string MunicipalityHref(Guid id) => $"/municipalities/{id}";
 
-    /// <summary>Same profile-image route the species cards use.</summary>
-    private static string SpeciesImageSrc(Guid id) => $"/wildlife/species/{id}/image";
-
     // Query-driven, so neither command runs on load. The list streams carry no
     // error channel — the transport exception is the only signal — and a search
     // that can't reach the server degrades to the same empty line a genuine

@@ -59,23 +59,6 @@ public static class SpeciesEndpoints
 
         group
             .MapGet(
-                "/{id:guid}/image",
-                async Task<Results<FileContentHttpResult, NotFound>> (
-                    Guid id,
-                    ISpeciesRepository repository,
-                    CancellationToken ct
-                ) =>
-                {
-                    var imageData = await repository.GetProfileImageAsync(id, ct);
-                    return imageData is null
-                        ? TypedResults.NotFound()
-                        : TypedResults.File(imageData, "image/jpeg");
-                }
-            )
-            .WithName("GetSpeciesImage");
-
-        group
-            .MapGet(
                 "/stats",
                 async Task<Ok<SpeciesStatsDto>> (
                     ISpeciesRepository repository,
