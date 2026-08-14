@@ -74,3 +74,46 @@ jobs:
           dotnet run scripts/deploy-affected.cs -- \
             --from "${DEPLOY_FROM:-HEAD~1}" \
             --to "$DEPLOY_TO"
+
+      # Housekeeping, not shipping: every deploy pushes new image tags and
+      # nothing ever removed the old ones, so the Basic-SKU registry was
+      # creeping towards its included 10 GiB (past that Azure bills per GiB).
+      # Runs only after a successful deploy of master, and never fails the run.
+      - name: Purge Stale Container Images
+        if: github.ref == 'refs/heads/master'
+        continue-on-error: true
+        run: |
+          set -euo pipefail
+
+          registry=$(az acr list \
+            --resource-group "$AZURE_RESOURCE_GROUP" \
+            --query "[0].name" -o tsv)
+
+          if [ -z "$registry" ]; then
+            echo "No container registry in $AZURE_RESOURCE_GROUP; nothing to purge."
+            exit 0
+          fi
+
+          # Every repository, discovered rather than hard-coded, so repositories
+          # added by a future service are cleaned up without touching this file.
+          filters=""
+          for repo in $(az acr repository list --name "$registry" -o tsv); do
+            filters="$filters --filter '$repo:.*'"
+          done
+
+          if [ -z "$filters" ]; then
+            echo "Registry $registry has no repositories; nothing to purge."
+            exit 0
+          fi
+
+          echo "Purging $registry:$filters"
+
+          # --ago 0d with --keep 10 means "every tag except the 10 most recent",
+          # which is the rollback window.
+          az acr run --registry "$registry" --timeout 3600 \
+            --cmd "acr purge $filters --ago 0d --keep 10" /dev/null
+
+          # Manifests orphaned when a tag moved to a newer digest. The 7-day
+          # floor leaves digests a recently deployed revision may still pin.
+          az acr run --registry "$registry" --timeout 3600 \
+            --cmd "acr purge $filters --ago 7d --untagged" /dev/null

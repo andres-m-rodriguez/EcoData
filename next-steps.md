@@ -53,6 +53,16 @@ In addition, for each project resource referenced by your app host, a `container
 
 Visit the *Cost Management + Billing* page in Azure Portal to track current spend. For more information about how you're billed, and how you can monitor the costs incurred in your Azure subscriptions, visit [billing overview](https://learn.microsoft.com/azure/developer/intro/azure-developer-billing).
 
+### Container image retention
+
+The registry is on the Basic SKU, which includes 10 GiB of storage in its flat monthly fee and bills per GiB beyond that. Because every deploy pushes new image tags and nothing removed the old ones, the `Purge Stale Container Images` step in `.github/workflows/azure-dev.yml` runs an [ACR purge task](https://learn.microsoft.com/azure/container-registry/container-registry-auto-purge) after each successful deploy:
+
+- **The 10 most recent tags per repository are kept.** Older tags are deleted. Anything within that window is still available to roll back to.
+- **Untagged manifests are deleted once they are older than 7 days.** These are digests orphaned when a tag moved to a newer image; the delay leaves digests that a recently deployed revision might still pin.
+- It applies to **every repository in the registry**, discovered at run time rather than listed in the workflow, so a new service is covered automatically.
+
+The step only runs on `master`, only after the deploy succeeds, and is marked `continue-on-error` — purging is housekeeping, so a registry problem is reported but never fails a deploy that already shipped. If it consistently reports failures, check that the deploy identity can run tasks and delete images in the registry (`Contributor`, or `AcrDelete` plus task-run rights).
+
 ## Troubleshooting
 
 Q: I visited the service endpoint listed, and I'm seeing a blank page, a generic welcome page, or an error page.
