@@ -5,6 +5,7 @@
     <Project Path="src/Host/EcoData.Seeder/EcoData.Seeder.csproj" />
     <Project Path="src/Host/Aspire.Hosting.Zig/Aspire.Hosting.Zig.csproj" />
   </Folder>
+  <Folder Name="/Apps/" />
   <Folder Name="/Apps/EcoPortal/">
     <Project Path="src/Apps/EcoPortal/EcoPortal.Server/EcoPortal.Server.csproj" />
     <Project Path="src/Apps/EcoPortal/EcoPortal.Client/EcoPortal.Client.csproj" />
@@ -26,15 +27,18 @@
     <File Path="src/Features/Genomics/EcoData.Genomics.Api/src/web/RouteParams.zig" />
     <File Path="src/Features/Genomics/EcoData.Genomics.Api/src/web/parsing.zig" />
   </Folder>
+  <Folder Name="/Features/" />
   <Folder Name="/Features/Common/">
     <Project Path="src/Features/Common/EcoData.Common.Http.Helpers/EcoData.Common.Http.Helpers.csproj" />
     <Project Path="src/Features/Common/EcoData.Common.i18n/EcoData.Common.i18n.csproj" />
-    <Project Path="src/Features/Common/EcoData.Common.Maps/EcoData.Common.Maps.csproj" />
     <Project Path="src/Features/Common/EcoData.Common.Messaging/EcoData.Common.Messaging.csproj" />
     <Project Path="src/Features/Common/EcoData.Common.Pagination/EcoData.Common.Pagination.csproj" />
     <Project Path="src/Features/Common/EcoData.Common.Pagination.Blazor/EcoData.Common.Pagination.Blazor.csproj" />
     <Project Path="src/Features/Common/EcoData.Common.Problems.Contracts/EcoData.Common.Problems.Contracts.csproj" />
     <Project Path="src/Features/Common/EcoData.NativeUi/EcoData.NativeUi.csproj" />
+    <Project Path="src/Features/Common/EcoData.Spa.Core/EcoData.Spa.Core.csproj" />
+    <Project Path="src/Features/Common/EcoData.Spa.Map/EcoData.Spa.Map.csproj" />
+    <Project Path="src/Features/Common/EcoData.Spa.Navigation/EcoData.Spa.Navigation.csproj" />
   </Folder>
   <Folder Name="/Features/Identity/">
     <Project Path="src/Features/Identity/EcoData.Identity.Api/EcoData.Identity.Api.csproj" />

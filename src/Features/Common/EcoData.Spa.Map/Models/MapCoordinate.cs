@@ -1,4 +1,4 @@
-namespace EcoData.Common.Maps.Models;
+namespace EcoData.Spa.Map;
 
 /// <summary>
 /// Represents a geographic coordinate (latitude/longitude).

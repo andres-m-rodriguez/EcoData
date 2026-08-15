@@ -1,4 +1,4 @@
-namespace EcoData.Common.Maps.Models;
+namespace EcoData.Spa.Map;
 
 /// <summary>
 /// A weighted point for the heatmap layer. <see cref="IsFauna"/> feeds the

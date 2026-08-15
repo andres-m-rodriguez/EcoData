@@ -2,7 +2,7 @@ namespace FaunaFinder.Client.Components.Map;
 
 /// <summary>
 /// Shared definition of the Puerto Rico municipality-boundary GeoJSON layer.
-/// The data is fetched JS-side by NuiMap and cached in localStorage, so the
+/// The data is fetched JS-side by SpaMap and cached in localStorage, so the
 /// map renders immediately and repeat visits skip the network entirely.
 /// </summary>
 public static class MunicipalityBoundaries

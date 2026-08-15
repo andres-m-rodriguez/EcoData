@@ -1,9 +1,7 @@
 @namespace FaunaFinder.Client.Components.Municipalities
 @inherits LocalizedComponentBase
 @using System.Text.Json
-@using EcoData.Common.Maps
-@using EcoData.Common.Maps.Components
-@using EcoData.Common.Maps.Models
+@using EcoData.Spa.Map
 @using EcoData.Locations.Contracts.Dtos
 @using FaunaFinder.Client.Components.Map
 
@@ -14,7 +12,7 @@
             <MudAlert Severity="Severity.Error">@_geoJsonLoadError</MudAlert>
         </div>
     }
-    <NuiMap TMarker="MunicipalityMarker"
+    <SpaMap TMarker="MunicipalityMarker"
             Controller="_controller"
             Height="100%"
             Width="100%" />

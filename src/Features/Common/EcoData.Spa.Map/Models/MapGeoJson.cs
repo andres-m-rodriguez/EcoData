@@ -1,4 +1,4 @@
-namespace EcoData.Common.Maps.Models;
+namespace EcoData.Spa.Map;
 
 /// <summary>
 /// Represents GeoJSON data that can be rendered on the map.

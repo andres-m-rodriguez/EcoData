@@ -1,5 +1,4 @@
-@namespace EcoData.Common.Maps.Components
-@using EcoData.Common.Maps.Models
+@namespace EcoData.Spa.Map
 @typeparam TMarker where TMarker : IMapMarker
 @implements IAsyncDisposable
 @inject IJSRuntime JS
@@ -10,7 +9,7 @@
     private ElementReference _mapElement;
     private IJSObjectReference? _module;
     private IJSObjectReference? _mapInstance;
-    private DotNetObjectReference<NuiMap<TMarker>>? _dotNetRef;
+    private DotNetObjectReference<SpaMap<TMarker>>? _dotNetRef;
     private bool _isInitialized;
 
     [Parameter, EditorRequired]
@@ -46,7 +45,7 @@
         {
             _dotNetRef = DotNetObjectReference.Create(this);
             _module = await JS.InvokeAsync<IJSObjectReference>(
-                "import", "./_content/EcoData.Common.Maps/nuimap.js");
+                "import", "./_content/EcoData.Spa.Map/spamap.js");
 
             _mapInstance = await _module.InvokeAsync<IJSObjectReference>(
                 "initialize",
@@ -309,7 +308,7 @@
 
     private string GetContainerClass()
     {
-        var classes = new List<string> { "nui-map" };
+        var classes = new List<string> { "spa-map" };
         if (!string.IsNullOrEmpty(Class))
             classes.Add(Class);
         return string.Join(" ", classes);

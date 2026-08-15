@@ -69,8 +69,8 @@
     width: min(90%, 480px);
 }
 
-/* Crosshair cursor while drawing a polygon (class set by nuimap.js) */
-.map-container ::deep .nui-map-draw-mode {
+/* Crosshair cursor while drawing a polygon (class set by spamap.js) */
+.map-container ::deep .spa-map-draw-mode {
     cursor: crosshair;
 }
 

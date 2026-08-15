@@ -136,14 +136,14 @@ public partial class FfLibraryRail : LocalizedComponentBase
     /// Asks the browser where the reader is.
     ///
     /// <para>The only geolocation call in the codebase today is welded to
-    /// <c>NuiMap</c>'s ES module, and the rail must not render a hidden map to
+    /// <c>SpaMap</c>'s ES module, and the rail must not render a hidden map to
     /// borrow it. Until FaunaFinder's own module exports the lookup this reports
     /// "unsupported", so the tab says so plainly instead of pretending to
     /// search. Swapping in the interop call is the only change the path needs —
     /// everything downstream of it is already wired.</para>
     /// </summary>
     // The map gets its location through IMapController, which only exists
-    // inside NuiMap — borrowing it here would mean rendering a hidden map.
+    // inside SpaMap — borrowing it here would mean rendering a hidden map.
     // BrowserGeolocation is the same capability without the component, and
     // it never throws: a failed import reports as Unavailable.
     private async Task<GeolocationOutcome> ResolvePositionAsync()
@@ -202,7 +202,7 @@ public partial class FfLibraryRail : LocalizedComponentBase
 
     /// <summary>
     /// What a geolocation lookup answers: a position, or one of the error codes
-    /// above. Mirrors the shape <c>nuimap.js</c>'s <c>getCurrentPosition</c> returns.
+    /// above. Mirrors the shape <c>spamap.js</c>'s <c>getCurrentPosition</c> returns.
     /// </summary>
     private readonly record struct GeolocationOutcome(
         double Latitude,

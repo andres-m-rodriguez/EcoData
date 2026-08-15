@@ -1,6 +1,5 @@
-using EcoData.Common.Maps.Models;
 
-namespace EcoData.Common.Maps;
+namespace EcoData.Spa.Map;
 
 /// <summary>
 /// Default implementation of <see cref="IMapController{TMarker}"/>.
