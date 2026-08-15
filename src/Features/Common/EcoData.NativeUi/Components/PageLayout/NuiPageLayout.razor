@@ -1,8 +1,6 @@
 @namespace EcoData.NativeUi.Components.PageLayout
-@using EcoData.NativeUi.Components.NativeNavbar
-@using EcoData.NativeUi.Components.NativeNavigation
-@inject INativeNavigationManager Navigation
-@inject INativeNavbarManager Navbar
+@inject INavigationManager Navigation
+@inject INavbarManager Navbar
 
 <div class="nui-page-layout">
     @if (!string.IsNullOrEmpty(ParentPath))

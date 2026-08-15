@@ -1,10 +1,8 @@
 @using EcoData.Common.i18n
-@inherits LayoutComponentBase
-@inject INativeNavigationManager Navigation
-@inject INativeNavbarManager Navbar
-@inject ILocalizer L
+@inherits EcoDataLayout
+@inject INavigationManager Navigation
+@inject INavbarManager Navbar
 @inject IJSRuntime JS
-@implements IDisposable
 
 @* IsDarkMode carries the same state the data-theme attribute does, so the
    MudBlazor surfaces the token sheet can't reach — dialogs, menus, snackbars,
@@ -231,9 +229,7 @@
 
     protected override void OnInitialized()
     {
-        Navigation.OnStateChanged += HandleNavigationStateChanged;
-        Navbar.OnStateChanged += HandleNavbarStateChanged;
-        L.LanguageChanged += HandleLanguageChanged;
+        base.OnInitialized();
         _locale = L.CurrentLanguage == "es" ? LocaleContext.Spanish : LocaleContext.English;
     }
 
@@ -285,22 +281,6 @@
         _isDarkMode = next == "dark";
     }
 
-    private void HandleNavigationStateChanged()
-    {
-        InvokeAsync(StateHasChanged);
-    }
-
-    private void HandleNavbarStateChanged()
-    {
-        InvokeAsync(StateHasChanged);
-    }
-
-    private void HandleLanguageChanged()
-    {
-        _locale = L.CurrentLanguage == "es" ? LocaleContext.Spanish : LocaleContext.English;
-        InvokeAsync(StateHasChanged);
-    }
-
 
     private string GetNavLinkClass(string path, bool exact = false)
     {
@@ -318,10 +298,4 @@
 
     private void SetLocale(string code) => L.SetLanguage(code);
 
-    public void Dispose()
-    {
-        Navigation.OnStateChanged -= HandleNavigationStateChanged;
-        Navbar.OnStateChanged -= HandleNavbarStateChanged;
-        L.LanguageChanged -= HandleLanguageChanged;
-    }
 }

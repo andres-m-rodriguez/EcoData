@@ -1,3 +1,4 @@
+using EcoData.Spa.Blazor;
 using System.Globalization;
 using EcoData.Wildlife.Contracts.Dtos;
 using FaunaFinder.Client.Localization;
@@ -11,9 +12,9 @@ namespace FaunaFinder.Client.Components.Shell;
 
 // The [Command]s live in this code-behind (with the base stated explicitly)
 // because Tempest's razor frontend matches the @inherits text by simple name and
-// can't see that LocalizedComponentBase is a StatefulComponent; the C# symbol
+// can't see that EcoDataComponent is a StatefulComponent; the C# symbol
 // frontend can.
-public partial class FfLibraryRail : LocalizedComponentBase
+public partial class FfLibraryRail : EcoDataComponent
 {
     private const int SkeletonRowCount = 6;
 

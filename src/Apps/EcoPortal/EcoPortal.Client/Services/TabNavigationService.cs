@@ -1,4 +1,4 @@
-using EcoData.NativeUi.Components.NativeNavigation;
+using EcoData.Spa.Navigation;
 
 namespace EcoPortal.Client.Services;
 
@@ -35,9 +35,9 @@ public interface ITabNavigationService
 /// </summary>
 public sealed class TabNavigationService : ITabNavigationService
 {
-    private readonly INativeNavigationManager _nav;
+    private readonly INavigationManager _nav;
 
-    public TabNavigationService(INativeNavigationManager nav) => _nav = nav;
+    public TabNavigationService(INavigationManager nav) => _nav = nav;
 
     public NavigationTab CurrentTab => GetTabFromPath(_nav.State.Path);
 

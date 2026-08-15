@@ -1,3 +1,4 @@
+using EcoData.Spa.Blazor;
 using System.Net.Http;
 using EcoData.Locations.Contracts.Dtos;
 using EcoData.Locations.Contracts.Parameters;
@@ -13,9 +14,9 @@ namespace FaunaFinder.Client.Components.Shell;
 
 // The [Command]s live in this code-behind (with the base stated explicitly)
 // because Tempest's razor frontend matches the @inherits text by simple name and
-// can't see that LocalizedComponentBase is a StatefulComponent; the C# symbol
+// can't see that EcoDataComponent is a StatefulComponent; the C# symbol
 // frontend can.
-public partial class FfSearch : LocalizedComponentBase
+public partial class FfSearch : EcoDataComponent
 {
     /// <summary>Below this, nothing is shown and no request is made.</summary>
     private const int MinQueryLength = 2;

@@ -1,4 +1,5 @@
-using EcoData.NativeUi;
+using EcoData.Spa.Blazor;
+using EcoData.Spa.Navigation.Events;
 using FaunaFinder.Client.Localization;
 using Tempest;
 
@@ -6,9 +7,9 @@ namespace FaunaFinder.Client.Components.Shell;
 
 // The [Event] handler lives in this code-behind (with the base stated
 // explicitly) because Tempest's razor frontend matches the @inherits text by
-// simple name and can't see that LocalizedComponentBase is a StatefulComponent;
+// simple name and can't see that EcoDataComponent is a StatefulComponent;
 // the C# symbol frontend can.
-public partial class FfMobileTitle : LocalizedComponentBase
+public partial class FfMobileTitle : EcoDataComponent
 {
     /// <summary>
     /// A portrait to show beside the mobile page title — the species you have
@@ -32,20 +33,6 @@ public partial class FfMobileTitle : LocalizedComponentBase
     private bool IsRootPage =>
         Navigation.State.Path is "/" or "";
 
-    protected override void OnInitialized()
-    {
-        base.OnInitialized();
-        Navigation.OnStateChanged += HandleNavigationStateChanged;
-        Navbar.OnStateChanged += HandleNavbarStateChanged;
-    }
-
-    public override void Dispose()
-    {
-        Navigation.OnStateChanged -= HandleNavigationStateChanged;
-        Navbar.OnStateChanged -= HandleNavbarStateChanged;
-        base.Dispose();
-    }
-
     [Event]
     private void OnAvatar(Avatar avatar)
     {
@@ -56,12 +43,14 @@ public partial class FfMobileTitle : LocalizedComponentBase
     // Dropping the portrait here rather than asking pages to clear it on the
     // way out: a page that forgets would leave its animal sitting over the
     // next screen's title.
-    private void HandleNavigationStateChanged()
+    [Event]
+    private void OnNavigationChanged(NavigationChanged _)
     {
         _avatarSrc = null;
         _avatarAlt = null;
-        InvokeAsync(StateHasChanged);
     }
 
-    private void HandleNavbarStateChanged() => InvokeAsync(StateHasChanged);
+    // The title renders straight off Navbar.State, so subscribing is the whole job.
+    [Event]
+    private void OnNavbarChanged(NavbarChanged _) { }
 }

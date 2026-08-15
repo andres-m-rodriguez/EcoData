@@ -1,4 +1,6 @@
-using EcoData.NativeUi;
+using EcoData.Spa.Blazor;
+using EcoData.Spa.Navigation;
+using EcoData.Spa.Navigation.Events;
 using FaunaFinder.Client.Localization;
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
@@ -9,9 +11,9 @@ namespace FaunaFinder.Client.Components.Shell;
 
 // The [Event] handlers live in this code-behind (with the base stated
 // explicitly) because Tempest's razor frontend matches the @inherits text by
-// simple name and can't see that LocalizedComponentBase is a StatefulComponent;
+// simple name and can't see that EcoDataComponent is a StatefulComponent;
 // the C# symbol frontend can.
-public partial class FfBottomNav : LocalizedComponentBase
+public partial class FfBottomNav : EcoDataComponent
 {
     /// <summary>
     /// Get the tab bar out of the way — published by a screen that needs the
@@ -50,8 +52,7 @@ public partial class FfBottomNav : LocalizedComponentBase
     protected override void OnInitialized()
     {
         base.OnInitialized();
-        Navigation.OnStateChanged += HandleNavigationStateChanged;
-        UpdateCurrentTab();
+        UpdateCurrentTab(Navigation.State.Path);
     }
 
     // This is a WebAssembly client, so the module import is async and can only
@@ -86,8 +87,6 @@ public partial class FfBottomNav : LocalizedComponentBase
 
     public override void Dispose()
     {
-        Navigation.OnStateChanged -= HandleNavigationStateChanged;
-
         if (_autoHide is not null)
         {
             // Dispose is synchronous, so this can only be started, not awaited.
@@ -123,15 +122,11 @@ public partial class FfBottomNav : LocalizedComponentBase
     [Event]
     private void OnShown(Shown _) => _hidden = false;
 
-    private void HandleNavigationStateChanged()
-    {
-        UpdateCurrentTab();
-        InvokeAsync(StateHasChanged);
-    }
+    [Event]
+    private void OnNavigationChanged(NavigationChanged e) => UpdateCurrentTab(e.State.Path);
 
-    private void UpdateCurrentTab()
+    private void UpdateCurrentTab(string path)
     {
-        var path = Navigation.State.Path;
         _currentTab = path switch
         {
             "/" or "" => NavigationTab.Map,
