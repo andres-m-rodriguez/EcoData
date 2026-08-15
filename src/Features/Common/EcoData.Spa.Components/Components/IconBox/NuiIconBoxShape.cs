@@ -1,4 +1,4 @@
-namespace EcoData.NativeUi.Components.IconBox;
+namespace EcoData.Spa.Components;
 
 public enum NuiIconBoxShape
 {

@@ -1,10 +1,9 @@
 @using EcoData.Common.i18n
-@inherits LayoutComponentBase
-@inject INativeNavigationManager Navigation
-@inject INativeNavbarManager Navbar
+@inherits StatefulLayoutComponent
+@inject INavigationManager Navigation
+@inject INavbarManager Navbar
 @inject ILocalizer L
 @inject IJSRuntime JS
-@implements IDisposable
 
 @* IsDarkMode carries the same state the data-theme attribute does, so the
    MudBlazor surfaces the token sheet can't reach — dialogs, menus, snackbars,
@@ -231,8 +230,7 @@
 
     protected override void OnInitialized()
     {
-        Navigation.OnStateChanged += HandleNavigationStateChanged;
-        Navbar.OnStateChanged += HandleNavbarStateChanged;
+        base.OnInitialized();
         L.LanguageChanged += HandleLanguageChanged;
         _locale = L.CurrentLanguage == "es" ? LocaleContext.Spanish : LocaleContext.English;
     }
@@ -285,16 +283,15 @@
         _isDarkMode = next == "dark";
     }
 
-    private void HandleNavigationStateChanged()
-    {
-        InvokeAsync(StateHasChanged);
-    }
+    // The shell renders straight off the two managers' State, so subscribing is
+    // the whole job — the handler body has nothing to add.
+    [Event]
+    private void OnNavigationChanged(NavigationChanged _) { }
 
-    private void HandleNavbarStateChanged()
-    {
-        InvokeAsync(StateHasChanged);
-    }
+    [Event]
+    private void OnNavbarChanged(NavbarChanged _) { }
 
+    // The localizer is not on the bus, so this one still marshals by hand.
     private void HandleLanguageChanged()
     {
         _locale = L.CurrentLanguage == "es" ? LocaleContext.Spanish : LocaleContext.English;
@@ -318,10 +315,9 @@
 
     private void SetLocale(string code) => L.SetLanguage(code);
 
-    public void Dispose()
+    public override void Dispose()
     {
-        Navigation.OnStateChanged -= HandleNavigationStateChanged;
-        Navbar.OnStateChanged -= HandleNavbarStateChanged;
         L.LanguageChanged -= HandleLanguageChanged;
+        base.Dispose();
     }
 }

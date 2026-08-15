@@ -2,7 +2,7 @@ using EcoData.Common.Pagination;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web.Virtualization;
 
-namespace EcoData.NativeUi.Components.VirtualizedList;
+namespace EcoData.Spa.Components;
 
 /// <summary>
 /// Cursor-paginated virtualized grid. Internally groups items into rows of

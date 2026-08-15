@@ -4,8 +4,8 @@
 @using EcoPortal.Client.Services
 @using EcoPortal.Client.Themes
 @inject AuthStateService AuthState
-@inject INativeNavigationManager Navigation
-@inject INativeNavbarManager Navbar
+@inject INavigationManager Navigation
+@inject INavbarManager Navbar
 @inject ITabNavigationService Tabs
 @inject NotificationService NotificationService
 
@@ -228,8 +228,6 @@
 
     protected override async Task OnInitializedAsync()
     {
-        Navigation.OnStateChanged += HandleNavigationStateChanged;
-        Navbar.OnStateChanged += HandleNavbarStateChanged;
         await AuthState.InitializeAsync();
 
         if (AuthState.IsAuthenticated)
@@ -247,13 +245,14 @@
         }
     }
 
-    private void HandleNavigationStateChanged()
+    [Event]
+    private void OnNavigationChanged(NavigationChanged e)
     {
         // Only change key and transition class on actual navigation (URI change)
-        if (_lastUri != Navigation.State.Uri)
+        if (_lastUri != e.State.Uri)
         {
-            _lastUri = Navigation.State.Uri;
-            _pageTransitionClass = Navigation.State.Direction switch
+            _lastUri = e.State.Uri;
+            _pageTransitionClass = e.State.Direction switch
             {
                 NavigationDirection.Forward => "page-transition-forward",
                 NavigationDirection.Back => "page-transition-back",
@@ -261,13 +260,11 @@
             };
             _navigationKey = Guid.NewGuid().ToString();
         }
-        InvokeAsync(StateHasChanged);
     }
 
-    private void HandleNavbarStateChanged()
-    {
-        InvokeAsync(StateHasChanged);
-    }
+    // The app bar renders straight off Navbar.State, so subscribing is the whole job.
+    [Event]
+    private void OnNavbarChanged(NavbarChanged _) { }
 
     private string GetUserInitial()
     {
@@ -311,12 +308,5 @@
     private async Task LogoutAsync()
     {
         await LogoutState.Execute();
-    }
-
-    public override void Dispose()
-    {
-        Navigation.OnStateChanged -= HandleNavigationStateChanged;
-        Navbar.OnStateChanged -= HandleNavbarStateChanged;
-        base.Dispose();
     }
 }

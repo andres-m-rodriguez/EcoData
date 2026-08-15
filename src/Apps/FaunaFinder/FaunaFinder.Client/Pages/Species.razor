@@ -5,13 +5,12 @@
 @using EcoData.Wildlife.Contracts.Parameters
 @using EcoData.Locations.Contracts.Dtos
 @using EcoData.Locations.Application.Client
-@using EcoData.NativeUi.Components.NativeNavbar
 @using FaunaFinder.Client.Services.FieldNotebook
 @inherits StatefulComponent
 @inject ISpeciesHttpClient SpeciesHttpClient
 @inject ISpeciesCategoryHttpClient SpeciesCategoryHttpClient
 @inject IMunicipalityHttpClient MunicipalityHttpClient
-@inject INativeNavbarManager Navbar
+@inject INavbarManager Navbar
 @inject NavigationManager NavigationManager
 @inject IDialogService Dialogs
 @inject IBrowserViewportService Viewport

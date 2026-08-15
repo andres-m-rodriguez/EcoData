@@ -1,8 +1,7 @@
-@namespace EcoData.NativeUi.Components.NativeNavbar
-@using EcoData.NativeUi.Components.NativeNavigation
-@inject INativeNavbarManager Navbar
-@inject INativeNavigationManager Navigation
-@implements IDisposable
+@namespace EcoData.Spa.Components
+@inherits StatefulComponent
+@inject INavbarManager Navbar
+@inject INavigationManager Navigation
 
 @* Back button *@
 @if (ShowBackButton && Navigation.State.CanGoBack)
@@ -73,25 +72,16 @@
     [Parameter]
     public string? TitleClass { get; set; }
 
-    protected override void OnInitialized()
-    {
-        Navbar.OnStateChanged += HandleStateChanged;
-        Navigation.OnStateChanged += HandleStateChanged;
-    }
+    // The bar renders straight off the two managers' State, so the handlers have
+    // no work of their own: the subscription itself is the re-render.
+    [Event]
+    private void OnNavbarChanged(NavbarChanged _) { }
 
-    private void HandleStateChanged()
-    {
-        InvokeAsync(StateHasChanged);
-    }
+    [Event]
+    private void OnNavigationChanged(NavigationChanged _) { }
 
     private async Task GoBackAsync()
     {
         await Navigation.GoBackAsync();
-    }
-
-    public void Dispose()
-    {
-        Navbar.OnStateChanged -= HandleStateChanged;
-        Navigation.OnStateChanged -= HandleStateChanged;
     }
 }

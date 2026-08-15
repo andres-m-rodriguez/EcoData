@@ -1,6 +1,6 @@
 using EcoData.Identity.Application.Client;
 using EcoData.Locations.Application.Client;
-using EcoData.NativeUi;
+using EcoData.Spa.Core;
 using EcoData.Organization.Application.Client;
 using EcoData.Sensors.Application.Client;
 using EcoPortal.Client.Authorization;
@@ -39,7 +39,7 @@ builder.Services.AddScoped<ILeafletMapService, LeafletMapService>();
 builder.Services.AddScoped<IChartService, ChartService>();
 
 // Navigation services
-builder.Services.AddNativeUi();
+builder.Services.AddSpaCore();
 builder.Services.AddScoped<ITabNavigationService, TabNavigationService>();
 
 builder.Services.AddScoped<AuthStateService>();

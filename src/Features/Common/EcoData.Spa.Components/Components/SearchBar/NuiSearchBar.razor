@@ -1,4 +1,4 @@
-@namespace EcoData.NativeUi.Components.SearchBar
+@namespace EcoData.Spa.Components
 @inject IJSRuntime JS
 @implements IAsyncDisposable
 
@@ -68,7 +68,7 @@
         if (firstRender && EnableSticky)
         {
             _dotNetRef = DotNetObjectReference.Create(this);
-            _jsModule = await JS.InvokeAsync<IJSObjectReference>("import", "./_content/EcoData.NativeUi/js/stickySearch.js");
+            _jsModule = await JS.InvokeAsync<IJSObjectReference>("import", "./_content/EcoData.Spa.Components/js/stickySearch.js");
             await _jsModule.InvokeVoidAsync("initStickySearch", _searchBarRef, _dotNetRef);
         }
     }

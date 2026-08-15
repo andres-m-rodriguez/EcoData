@@ -1,4 +1,4 @@
-namespace EcoData.NativeUi.Components.StatusBadge;
+namespace EcoData.Spa.Components;
 
 public enum NuiStatusType
 {
