@@ -1,5 +1,4 @@
-@namespace EcoData.Common.Maps.Components
-@using EcoData.Common.Maps.Models
+@namespace EcoData.Spa.Map
 @typeparam TMarker where TMarker : IMapMarker
 @implements IAsyncDisposable
 @inject IJSRuntime JS
@@ -46,7 +45,7 @@
         {
             _dotNetRef = DotNetObjectReference.Create(this);
             _module = await JS.InvokeAsync<IJSObjectReference>(
-                "import", "./_content/EcoData.Common.Maps/nuimap.js");
+                "import", "./_content/EcoData.Spa.Map/nuimap.js");
 
             _mapInstance = await _module.InvokeAsync<IJSObjectReference>(
                 "initialize",

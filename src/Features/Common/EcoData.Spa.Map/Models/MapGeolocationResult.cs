@@ -1,4 +1,4 @@
-namespace EcoData.Common.Maps.Models;
+namespace EcoData.Spa.Map;
 
 /// <summary>
 /// Result of a browser geolocation request. <see cref="Error"/> is one of

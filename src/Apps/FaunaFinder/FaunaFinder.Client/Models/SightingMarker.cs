@@ -1,4 +1,4 @@
-using EcoData.Common.Maps.Models;
+using EcoData.Spa.Map;
 
 namespace FaunaFinder.Client.Models;
 

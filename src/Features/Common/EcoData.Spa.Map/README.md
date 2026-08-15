@@ -1,4 +1,4 @@
-# EcoData.Common.Maps (Experimental)
+# EcoData.Spa.Map (Experimental)
 
 A Blazor component library for interactive maps using Leaflet.js.
 
@@ -6,7 +6,7 @@ A Blazor component library for interactive maps using Leaflet.js.
 
 ## Installation
 
-1. Add a project reference to `EcoData.Common.Maps`
+1. Add a project reference to `EcoData.Spa.Map`
 
 2. Add Leaflet CSS and JS to your `App.razor` or `index.html`:
 
@@ -20,9 +20,9 @@ A Blazor component library for interactive maps using Leaflet.js.
 ### Basic Map with Markers
 
 ```razor
-@using EcoData.Common.Maps
-@using EcoData.Common.Maps.Components
-@using EcoData.Common.Maps.Models
+@using EcoData.Spa.Map
+@using EcoData.Spa.Map
+@using EcoData.Spa.Map
 
 <NuiMap TMarker="MyMarker" Controller="_mapController" Height="400px" />
 

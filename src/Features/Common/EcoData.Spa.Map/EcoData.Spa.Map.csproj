@@ -10,6 +10,9 @@
     <SupportedPlatform Include="browser" />
   </ItemGroup>
 
+  <!-- No MudBlazor: the map is Leaflet behind a controller, so it owes nothing
+       to a design system. No Spa.Core either — the controller is created per
+       map instance rather than registered, so it has no use for the bus. -->
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="10.0.4" />
   </ItemGroup>

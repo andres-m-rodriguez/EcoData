@@ -31,13 +31,13 @@
   <Folder Name="/Features/Common/">
     <Project Path="src/Features/Common/EcoData.Common.Http.Helpers/EcoData.Common.Http.Helpers.csproj" />
     <Project Path="src/Features/Common/EcoData.Common.i18n/EcoData.Common.i18n.csproj" />
-    <Project Path="src/Features/Common/EcoData.Common.Maps/EcoData.Common.Maps.csproj" />
     <Project Path="src/Features/Common/EcoData.Common.Messaging/EcoData.Common.Messaging.csproj" />
     <Project Path="src/Features/Common/EcoData.Common.Pagination/EcoData.Common.Pagination.csproj" />
     <Project Path="src/Features/Common/EcoData.Common.Pagination.Blazor/EcoData.Common.Pagination.Blazor.csproj" />
     <Project Path="src/Features/Common/EcoData.Common.Problems.Contracts/EcoData.Common.Problems.Contracts.csproj" />
     <Project Path="src/Features/Common/EcoData.NativeUi/EcoData.NativeUi.csproj" />
     <Project Path="src/Features/Common/EcoData.Spa.Core/EcoData.Spa.Core.csproj" />
+    <Project Path="src/Features/Common/EcoData.Spa.Map/EcoData.Spa.Map.csproj" />
     <Project Path="src/Features/Common/EcoData.Spa.Navigation/EcoData.Spa.Navigation.csproj" />
   </Folder>
   <Folder Name="/Features/Identity/">
