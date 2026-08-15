@@ -1,3 +1,4 @@
+using EcoData.Spa.Blazor;
 using EcoData.Wildlife.Contracts.Parameters;
 using FaunaFinder.Client.Localization;
 using Tempest;
@@ -6,8 +7,8 @@ namespace FaunaFinder.Client.Components.Municipalities;
 
 // The [Command] lives in this code-behind (with the base stated explicitly) because
 // Tempest's razor frontend matches the @inherits text by simple name and can't see
-// that LocalizedComponentBase is a StatefulComponent; the C# symbol frontend can.
-public partial class MunicipalityCard : LocalizedComponentBase
+// that EcoDataComponent is a StatefulComponent; the C# symbol frontend can.
+public partial class MunicipalityCard : EcoDataComponent
 {
     private string? _countLoadError;
 

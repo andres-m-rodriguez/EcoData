@@ -36,6 +36,7 @@
     <Project Path="src/Features/Common/EcoData.Common.Pagination.Blazor/EcoData.Common.Pagination.Blazor.csproj" />
     <Project Path="src/Features/Common/EcoData.Common.Problems.Contracts/EcoData.Common.Problems.Contracts.csproj" />
     <Project Path="src/Features/Common/EcoData.NativeUi/EcoData.NativeUi.csproj" />
+    <Project Path="src/Features/Common/EcoData.Spa.Blazor/EcoData.Spa.Blazor.csproj" />
     <Project Path="src/Features/Common/EcoData.Spa.Core/EcoData.Spa.Core.csproj" />
     <Project Path="src/Features/Common/EcoData.Spa.Map/EcoData.Spa.Map.csproj" />
     <Project Path="src/Features/Common/EcoData.Spa.Navigation/EcoData.Spa.Navigation.csproj" />

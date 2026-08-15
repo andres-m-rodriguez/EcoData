@@ -1,8 +1,7 @@
 @using EcoData.Common.i18n
-@inherits StatefulLayoutComponent
+@inherits EcoDataLayout
 @inject INavigationManager Navigation
 @inject INavbarManager Navbar
-@inject ILocalizer L
 @inject IJSRuntime JS
 
 @* IsDarkMode carries the same state the data-theme attribute does, so the
@@ -231,7 +230,6 @@
     protected override void OnInitialized()
     {
         base.OnInitialized();
-        L.LanguageChanged += HandleLanguageChanged;
         _locale = L.CurrentLanguage == "es" ? LocaleContext.Spanish : LocaleContext.English;
     }
 
@@ -283,21 +281,6 @@
         _isDarkMode = next == "dark";
     }
 
-    // The shell renders straight off the two managers' State, so subscribing is
-    // the whole job — the handler body has nothing to add.
-    [Event]
-    private void OnNavigationChanged(NavigationChanged _) { }
-
-    [Event]
-    private void OnNavbarChanged(NavbarChanged _) { }
-
-    // The localizer is not on the bus, so this one still marshals by hand.
-    private void HandleLanguageChanged()
-    {
-        _locale = L.CurrentLanguage == "es" ? LocaleContext.Spanish : LocaleContext.English;
-        InvokeAsync(StateHasChanged);
-    }
-
 
     private string GetNavLinkClass(string path, bool exact = false)
     {
@@ -315,9 +298,4 @@
 
     private void SetLocale(string code) => L.SetLanguage(code);
 
-    public override void Dispose()
-    {
-        L.LanguageChanged -= HandleLanguageChanged;
-        base.Dispose();
-    }
 }

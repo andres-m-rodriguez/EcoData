@@ -1,3 +1,4 @@
+using EcoData.Spa.Blazor;
 using EcoData.Spa.Navigation.Events;
 using FaunaFinder.Client.Localization;
 using Tempest;
@@ -6,9 +7,9 @@ namespace FaunaFinder.Client.Components.Shell;
 
 // The [Event] handler lives in this code-behind (with the base stated
 // explicitly) because Tempest's razor frontend matches the @inherits text by
-// simple name and can't see that LocalizedComponentBase is a StatefulComponent;
+// simple name and can't see that EcoDataComponent is a StatefulComponent;
 // the C# symbol frontend can.
-public partial class FfMobileTitle : LocalizedComponentBase
+public partial class FfMobileTitle : EcoDataComponent
 {
     /// <summary>
     /// A portrait to show beside the mobile page title — the species you have

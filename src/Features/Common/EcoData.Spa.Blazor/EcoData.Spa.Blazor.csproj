@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <SupportedPlatform Include="browser" />
+  </ItemGroup>
+
+  <!-- Base classes only — no MudBlazor. Component libraries build on these; a
+       host that wants a design system brings its own. -->
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="10.0.4" />
+    <PackageReference Include="Tempest.Blazor" Version="1.0.0-beta.6" />
+    <PackageReference Include="Tempest.Abstract" Version="1.0.0-beta.8" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\EcoData.Common.i18n\EcoData.Common.i18n.csproj" />
+    <ProjectReference Include="..\EcoData.Spa.Core\EcoData.Spa.Core.csproj" />
+  </ItemGroup>
+
+</Project>
