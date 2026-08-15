@@ -22,7 +22,7 @@ public sealed record GeoPosition(GeoStatus Status, double Latitude, double Longi
 /// Reads the browser's location.
 ///
 /// <para>The map has its own geolocation through <c>IMapController</c>, but
-/// that is welded to the <c>NuiMap</c> component — anything outside a map
+/// that is welded to the <c>SpaMap</c> component — anything outside a map
 /// would have to render a hidden one to borrow it. This is the same
 /// capability without the component.</para>
 /// </summary>

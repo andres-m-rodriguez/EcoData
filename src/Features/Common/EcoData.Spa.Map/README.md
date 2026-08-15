@@ -24,7 +24,7 @@ A Blazor component library for interactive maps using Leaflet.js.
 @using EcoData.Spa.Map
 @using EcoData.Spa.Map
 
-<NuiMap TMarker="MyMarker" Controller="_mapController" Height="400px" />
+<SpaMap TMarker="MyMarker" Controller="_mapController" Height="400px" />
 
 @code {
     private readonly MapController<MyMarker> _mapController = new();
@@ -149,7 +149,7 @@ _mapController.FitToBounds(new MapBounds(
 
 ## API Reference
 
-### NuiMap Component
+### SpaMap Component
 
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|

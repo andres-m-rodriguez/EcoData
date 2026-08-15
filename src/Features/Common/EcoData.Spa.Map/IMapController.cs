@@ -2,7 +2,7 @@
 namespace EcoData.Spa.Map;
 
 /// <summary>
-/// Controller for programmatic manipulation of a NuiMap.
+/// Controller for programmatic manipulation of a SpaMap.
 /// </summary>
 /// <typeparam name="TMarker">The type of marker data.</typeparam>
 public interface IMapController<TMarker>

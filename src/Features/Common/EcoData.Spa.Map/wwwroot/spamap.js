@@ -1,4 +1,4 @@
-// Leaflet map interop for NuiMap component
+// Leaflet map interop for SpaMap component
 
 const OSM_ATTRIBUTION =
     '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
@@ -38,18 +38,18 @@ function resolveTheme() {
 }
 
 function applyBasemap(map, theme) {
-    if (map._nuiTheme === theme) return;
+    if (map._spaTheme === theme) return;
 
-    if (map._nuiTiles) {
-        map.removeLayer(map._nuiTiles);
+    if (map._spaTiles) {
+        map.removeLayer(map._spaTiles);
     }
 
     const basemap = BASEMAPS[theme] ?? BASEMAPS.light;
-    map._nuiTiles = L.tileLayer(basemap.url, basemap.options).addTo(map);
+    map._spaTiles = L.tileLayer(basemap.url, basemap.options).addTo(map);
     // Added last, so it would otherwise sit over the markers and polygons
     // already on the map when the theme flips mid-session.
-    map._nuiTiles.bringToBack();
-    map._nuiTheme = theme;
+    map._spaTiles.bringToBack();
+    map._spaTheme = theme;
 }
 
 // A map can outlive any one theme, so it watches both sources rather than
@@ -68,30 +68,30 @@ function watchTheme(map) {
         : null;
     media?.addEventListener('change', onThemeChanged);
 
-    map._nuiThemeWatch = { observer, media, onThemeChanged };
+    map._spaThemeWatch = { observer, media, onThemeChanged };
 }
 
 export function initialize(element, lat, lng, zoom, dotNetRef) {
     const map = L.map(element).setView([lat, lng], zoom);
 
-    map._nuiTiles = null;
-    map._nuiTheme = null;
+    map._spaTiles = null;
+    map._spaTheme = null;
     applyBasemap(map, resolveTheme());
     watchTheme(map);
 
-    map._nuiMarkers = L.layerGroup().addTo(map);
-    map._nuiGeoJson = L.layerGroup().addTo(map);
-    map._nuiCircles = L.layerGroup().addTo(map);
+    map._spaMarkers = L.layerGroup().addTo(map);
+    map._spaGeoJson = L.layerGroup().addTo(map);
+    map._spaCircles = L.layerGroup().addTo(map);
     map._dotNetRef = dotNetRef;
-    map._nuiSearchRadius = null;
-    map._nuiUserLocation = null;
-    map._nuiHeat = { layer: null, points: [], filter: 'all' };
-    map._nuiDraw = { active: false, points: [], markers: [], polygon: null, previewLine: null, handlers: null };
-    map._nuiGeoJsonGeneration = 0;
+    map._spaSearchRadius = null;
+    map._spaUserLocation = null;
+    map._spaHeat = { layer: null, points: [], filter: 'all' };
+    map._spaDraw = { active: false, points: [], markers: [], polygon: null, previewLine: null, handlers: null };
+    map._spaGeoJsonGeneration = 0;
 
     // Map click handler (suppressed while drawing a polygon)
     map.on('click', (e) => {
-        if (map._nuiDraw.active) return;
+        if (map._spaDraw.active) return;
         if (map._dotNetRef) {
             map._dotNetRef.invokeMethodAsync('OnMapClickedFromJs', e.latlng.lat, e.latlng.lng);
         }
@@ -109,7 +109,7 @@ export function setView(map, lat, lng, zoom) {
 export function setMarkers(map, markers) {
     if (!map) return;
 
-    map._nuiMarkers.clearLayers();
+    map._spaMarkers.clearLayers();
 
     markers.forEach(m => {
         const marker = L.marker([m.lat, m.lng]);
@@ -129,17 +129,17 @@ export function setMarkers(map, markers) {
             }
         });
 
-        map._nuiMarkers.addLayer(marker);
+        map._spaMarkers.addLayer(marker);
     });
 }
 
 export function setGeoJson(map, layers) {
     if (!map) return;
 
-    map._nuiGeoJson.clearLayers();
+    map._spaGeoJson.clearLayers();
     // Invalidates URL fetches still in flight from a previous setGeoJson call,
     // so they don't add layers on top of the cleared state.
-    const generation = ++map._nuiGeoJsonGeneration;
+    const generation = ++map._spaGeoJsonGeneration;
 
     layers.forEach(layer => {
         if (layer.data) {
@@ -156,7 +156,7 @@ export function setGeoJson(map, layers) {
 
 function loadGeoJsonFromUrl(map, layer, generation) {
     const notify = (success) => {
-        if (map._dotNetRef && map._nuiGeoJsonGeneration === generation) {
+        if (map._dotNetRef && map._spaGeoJsonGeneration === generation) {
             map._dotNetRef.invokeMethodAsync('OnGeoJsonLoadedFromJs', layer.id, success);
         }
     };
@@ -182,7 +182,7 @@ function loadGeoJsonFromUrl(map, layer, generation) {
         })
         .then(text => {
             const data = JSON.parse(text);
-            if (map._nuiGeoJsonGeneration !== generation) return;
+            if (map._spaGeoJsonGeneration !== generation) return;
 
             if (layer.cacheKey) {
                 try {
@@ -214,7 +214,7 @@ function addGeoJsonLayer(map, layer, geoJsonData) {
             // click must bubble to the map's draw handler instead, so the
             // feature neither swallows the vertex placement nor selects.
             leafletLayer.on('click', (e) => {
-                if (map._nuiDraw.active) return;
+                if (map._spaDraw.active) return;
                 L.DomEvent.stopPropagation(e);
                 if (map._dotNetRef) {
                     const properties = feature.properties
@@ -225,13 +225,13 @@ function addGeoJsonLayer(map, layer, geoJsonData) {
             });
         }
     });
-    map._nuiGeoJson.addLayer(geoJsonLayer);
+    map._spaGeoJson.addLayer(geoJsonLayer);
 }
 
 export function fitToMarkers(map) {
     if (!map) return;
 
-    const layers = map._nuiMarkers.getLayers();
+    const layers = map._spaMarkers.getLayers();
     if (layers.length > 0) {
         const group = L.featureGroup(layers);
         map.fitBounds(group.getBounds(), { padding: [20, 20] });
@@ -253,7 +253,7 @@ export function fitToBounds(map, southWestLat, southWestLng, northEastLat, north
 export function setCircles(map, circles) {
     if (!map) return;
 
-    map._nuiCircles.clearLayers();
+    map._spaCircles.clearLayers();
 
     circles.forEach(c => {
         const circle = L.circle([c.lat, c.lng], {
@@ -274,19 +274,19 @@ export function setCircles(map, circles) {
             }
         });
 
-        map._nuiCircles.addLayer(circle);
+        map._spaCircles.addLayer(circle);
     });
 }
 
 export function clearCircles(map) {
     if (!map) return;
-    map._nuiCircles.clearLayers();
+    map._spaCircles.clearLayers();
 }
 
 export function focusCircle(map, index) {
     if (!map) return;
 
-    const layers = map._nuiCircles.getLayers();
+    const layers = map._spaCircles.getLayers();
     if (index < 0 || index >= layers.length) return;
 
     const circle = layers[index];
@@ -297,7 +297,7 @@ export function focusCircle(map, index) {
 export function focusAllCircles(map) {
     if (!map) return;
 
-    const layers = map._nuiCircles.getLayers();
+    const layers = map._spaCircles.getLayers();
     if (layers.length === 0) return;
 
     const group = L.featureGroup(layers);
@@ -311,7 +311,7 @@ export function showSearchRadius(map, lat, lng, radiusMeters) {
 
     clearSearchRadius(map);
 
-    map._nuiUserLocation = L.circleMarker([lat, lng], {
+    map._spaUserLocation = L.circleMarker([lat, lng], {
         radius: 8,
         fillColor: '#2563eb',
         color: '#ffffff',
@@ -319,7 +319,7 @@ export function showSearchRadius(map, lat, lng, radiusMeters) {
         fillOpacity: 1
     }).addTo(map);
 
-    map._nuiSearchRadius = L.circle([lat, lng], {
+    map._spaSearchRadius = L.circle([lat, lng], {
         radius: radiusMeters,
         fillColor: '#3b82f6',
         color: '#2563eb',
@@ -328,19 +328,19 @@ export function showSearchRadius(map, lat, lng, radiusMeters) {
         dashArray: '8, 6'
     }).addTo(map);
 
-    map.flyToBounds(map._nuiSearchRadius.getBounds(), { padding: [30, 30], duration: 0.8 });
+    map.flyToBounds(map._spaSearchRadius.getBounds(), { padding: [30, 30], duration: 0.8 });
 }
 
 export function clearSearchRadius(map) {
     if (!map) return;
 
-    if (map._nuiSearchRadius) {
-        map.removeLayer(map._nuiSearchRadius);
-        map._nuiSearchRadius = null;
+    if (map._spaSearchRadius) {
+        map.removeLayer(map._spaSearchRadius);
+        map._spaSearchRadius = null;
     }
-    if (map._nuiUserLocation) {
-        map.removeLayer(map._nuiUserLocation);
-        map._nuiUserLocation = null;
+    if (map._spaUserLocation) {
+        map.removeLayer(map._spaUserLocation);
+        map._spaUserLocation = null;
     }
 }
 
@@ -376,14 +376,14 @@ export function getCurrentPosition() {
 // ===== Polygon draw mode =====
 
 export function enablePolygonDraw(map) {
-    if (!map || map._nuiDraw.active) return;
+    if (!map || map._spaDraw.active) return;
 
-    const draw = map._nuiDraw;
+    const draw = map._spaDraw;
     draw.active = true;
     clearDrawnPolygon(map);
 
     const container = map.getContainer();
-    container.classList.add('nui-map-draw-mode');
+    container.classList.add('spa-map-draw-mode');
     map.dragging.disable();
     map.doubleClickZoom.disable();
 
@@ -503,8 +503,8 @@ export function enablePolygonDraw(map) {
 }
 
 export function finishPolygonDraw(map) {
-    if (!map || !map._nuiDraw.active || !map._nuiDraw.handlers) return;
-    map._nuiDraw.handlers.finish();
+    if (!map || !map._spaDraw.active || !map._spaDraw.handlers) return;
+    map._spaDraw.handlers.finish();
 }
 
 export function cancelPolygonDraw(map) {
@@ -514,14 +514,14 @@ export function cancelPolygonDraw(map) {
 }
 
 export function getDrawnPointCount(map) {
-    return map ? map._nuiDraw.points.length : 0;
+    return map ? map._spaDraw.points.length : 0;
 }
 
 function disablePolygonDraw(map) {
-    const draw = map._nuiDraw;
+    const draw = map._spaDraw;
     draw.active = false;
 
-    map.getContainer().classList.remove('nui-map-draw-mode');
+    map.getContainer().classList.remove('spa-map-draw-mode');
     map.dragging.enable();
     map.doubleClickZoom.enable();
 
@@ -542,7 +542,7 @@ function disablePolygonDraw(map) {
 export function clearDrawnPolygon(map) {
     if (!map) return;
 
-    const draw = map._nuiDraw;
+    const draw = map._spaDraw;
     if (draw.polygon) {
         map.removeLayer(draw.polygon);
         draw.polygon = null;
@@ -561,50 +561,50 @@ export function clearDrawnPolygon(map) {
 export function showHeatmap(map, points, filter) {
     if (!map) return;
 
-    map._nuiHeat.points = points;
-    map._nuiHeat.filter = filter || 'all';
+    map._spaHeat.points = points;
+    map._spaHeat.filter = filter || 'all';
     updateHeatLayer(map);
 }
 
 export function setHeatmapFilter(map, filter) {
     if (!map) return;
 
-    map._nuiHeat.filter = filter;
+    map._spaHeat.filter = filter;
     updateHeatLayer(map);
 }
 
 export function hideHeatmap(map) {
     if (!map) return;
 
-    if (map._nuiHeat.layer) {
-        map.removeLayer(map._nuiHeat.layer);
-        map._nuiHeat.layer = null;
+    if (map._spaHeat.layer) {
+        map.removeLayer(map._spaHeat.layer);
+        map._spaHeat.layer = null;
     }
-    map._nuiHeat.points = [];
+    map._spaHeat.points = [];
 }
 
 function updateHeatLayer(map) {
     if (typeof L.heatLayer !== 'function') {
-        console.warn('nuimap: leaflet.heat plugin is not loaded; heatmap is unavailable.');
+        console.warn('spamap: leaflet.heat plugin is not loaded; heatmap is unavailable.');
         return;
     }
 
-    if (map._nuiHeat.layer) {
-        map.removeLayer(map._nuiHeat.layer);
-        map._nuiHeat.layer = null;
+    if (map._spaHeat.layer) {
+        map.removeLayer(map._spaHeat.layer);
+        map._spaHeat.layer = null;
     }
 
-    let filtered = map._nuiHeat.points;
-    if (map._nuiHeat.filter === 'fauna') {
+    let filtered = map._spaHeat.points;
+    if (map._spaHeat.filter === 'fauna') {
         filtered = filtered.filter(p => p.isFauna);
-    } else if (map._nuiHeat.filter === 'flora') {
+    } else if (map._spaHeat.filter === 'flora') {
         filtered = filtered.filter(p => !p.isFauna);
     }
 
     if (filtered.length === 0) return;
 
     const heatData = filtered.map(p => [p.latitude, p.longitude, p.intensity]);
-    map._nuiHeat.layer = L.heatLayer(heatData, {
+    map._spaHeat.layer = L.heatLayer(heatData, {
         radius: 25,
         blur: 15,
         maxZoom: 17,
@@ -621,17 +621,17 @@ function updateHeatLayer(map) {
 
 export function dispose(map) {
     if (map) {
-        if (map._nuiDraw && map._nuiDraw.handlers) {
-            document.removeEventListener('keydown', map._nuiDraw.handlers.onKeyDown);
+        if (map._spaDraw && map._spaDraw.handlers) {
+            document.removeEventListener('keydown', map._spaDraw.handlers.onKeyDown);
         }
         // Both theme listeners are attached to document/window, so they outlive
         // the map element unless they come off explicitly.
-        if (map._nuiThemeWatch) {
-            map._nuiThemeWatch.observer.disconnect();
-            map._nuiThemeWatch.media?.removeEventListener(
+        if (map._spaThemeWatch) {
+            map._spaThemeWatch.observer.disconnect();
+            map._spaThemeWatch.media?.removeEventListener(
                 'change',
-                map._nuiThemeWatch.onThemeChanged);
-            map._nuiThemeWatch = null;
+                map._spaThemeWatch.onThemeChanged);
+            map._spaThemeWatch = null;
         }
         map.remove();
     }
