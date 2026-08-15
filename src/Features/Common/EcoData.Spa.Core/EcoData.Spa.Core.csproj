@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <SupportedPlatform Include="browser" />
+  </ItemGroup>
+
+  <!-- Services only: no MudBlazor, no Razor SDK. Components live in the
+       satellite libraries so a host can take Core without taking a design
+       system. -->
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Components" Version="10.0.4" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.4" />
+    <PackageReference Include="Microsoft.JSInterop" Version="10.0.4" />
+    <PackageReference Include="Tempest.Abstract" Version="1.0.0-beta.8" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\EcoData.Spa.Contracts\EcoData.Spa.Contracts.csproj" />
+  </ItemGroup>
+
+</Project>
