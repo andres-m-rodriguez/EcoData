@@ -61,7 +61,7 @@
 else
 {
     @* Categories List *@
-    <NuiPageLayout Title="Categories">
+    <NuiPageLayout Title="Categories" ParentPath="/browse">
         @if (_categoriesLoadError is not null)
         {
             <MudAlert Severity="Severity.Error">@_categoriesLoadError</MudAlert>
