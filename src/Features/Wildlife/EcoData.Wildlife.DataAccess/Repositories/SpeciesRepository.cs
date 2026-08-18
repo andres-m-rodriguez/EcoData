@@ -585,7 +585,7 @@ public sealed class SpeciesRepository(
             endemicCount,
             threatenedCount,
             municipalitiesCovered,
-            options.Value.TotalMunicipalitiesInRegion,
+            options.Value.TotalMunicipalities,
             addedThisQuarter,
             ReclassifiedThisQuarter: 0,
             endemicHotspotCount

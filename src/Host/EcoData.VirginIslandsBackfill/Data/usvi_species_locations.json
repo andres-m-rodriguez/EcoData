@@ -1,11 +1,12 @@
 {
   "source": "GBIF occurrence search, country=VI, hasCoordinate=true, hasGeospatialIssue=false",
-  "note": "Point records, not generalized occurrence polygons; radiusMeters is a nominal 100 m. Kept only points falling on a USVI island (200 m shoreline tolerance), capped at 30 most-recent per species.",
+  "boundarySource": "Census cartographic boundary file 1:500,000 (cb_2023_us_county_500k), land-clipped",
+  "note": "Point records, not generalized occurrence polygons; radiusMeters is a nominal 100 m. Kept only points within 1 km of a USVI island — the boundaries are clipped to the coastline like Puerto Rico's, and 1 km covers genuine coastal records plus GBIF coordinate uncertainty while rejecting records placed kilometres out to sea. Capped at 30 most-recent per species.",
   "excluded": {
     "Chilabothrus monensis": "legacy sensu lato records; range belongs to C. granti"
   },
-  "speciesCount": 13,
-  "locationCount": 125,
+  "speciesCount": 12,
+  "locationCount": 117,
   "species": [
     {
       "scientificName": "Agave eggersiana",
@@ -122,7 +123,7 @@
     },
     {
       "scientificName": "Ameiva polops",
-      "locationCount": 19,
+      "locationCount": 15,
       "islandGeoJsonIds": [
         "78010"
       ],
@@ -152,14 +153,6 @@
           "year": 2021
         },
         {
-          "latitude": 17.671612,
-          "longitude": -64.688828,
-          "radiusMeters": 100.0,
-          "islandGeoJsonId": "78010",
-          "gbifId": 4424169360,
-          "year": 2020
-        },
-        {
           "latitude": 17.797465,
           "longitude": -64.617599,
           "radiusMeters": 100.0,
@@ -173,14 +166,6 @@
           "radiusMeters": 100.0,
           "islandGeoJsonId": "78010",
           "gbifId": 1946192036,
-          "year": 2016
-        },
-        {
-          "latitude": 17.625279,
-          "longitude": -64.782993,
-          "radiusMeters": 100.0,
-          "islandGeoJsonId": "78010",
-          "gbifId": 1457583635,
           "year": 2016
         },
         {
@@ -208,28 +193,12 @@
           "year": 2014
         },
         {
-          "latitude": 17.793347,
-          "longitude": -64.771059,
-          "radiusMeters": 100.0,
-          "islandGeoJsonId": "78010",
-          "gbifId": 891147219,
-          "year": 2013
-        },
-        {
           "latitude": 17.75613,
           "longitude": -64.709187,
           "radiusMeters": 100.0,
           "islandGeoJsonId": "78010",
           "gbifId": 891161457,
           "year": 2013
-        },
-        {
-          "latitude": 17.675881,
-          "longitude": -64.691122,
-          "radiusMeters": 100.0,
-          "islandGeoJsonId": "78010",
-          "gbifId": 891145306,
-          "year": 2012
         },
         {
           "latitude": 17.7657,
@@ -324,31 +293,6 @@
       ]
     },
     {
-      "scientificName": "Caretta caretta",
-      "locationCount": 2,
-      "islandGeoJsonIds": [
-        "78030"
-      ],
-      "locations": [
-        {
-          "latitude": 18.222104,
-          "longitude": -64.897204,
-          "radiusMeters": 100.0,
-          "islandGeoJsonId": "78030",
-          "gbifId": 2234734105,
-          "year": 2017
-        },
-        {
-          "latitude": 18.213665,
-          "longitude": -64.80433,
-          "radiusMeters": 100.0,
-          "islandGeoJsonId": "78030",
-          "gbifId": 5828611918,
-          "year": 2015
-        }
-      ]
-    },
-    {
       "scientificName": "Catesbaea melanocarpa",
       "locationCount": 1,
       "islandGeoJsonIds": [
@@ -409,59 +353,11 @@
       ],
       "locations": [
         {
-          "latitude": 18.210426,
-          "longitude": -64.84639,
-          "radiusMeters": 100.0,
-          "islandGeoJsonId": "78030",
-          "gbifId": 5938180494,
-          "year": 2026
-        },
-        {
           "latitude": 18.331657,
           "longitude": -64.723766,
           "radiusMeters": 100.0,
           "islandGeoJsonId": "78020",
           "gbifId": 6130586309,
-          "year": 2026
-        },
-        {
-          "latitude": 18.287357,
-          "longitude": -64.787821,
-          "radiusMeters": 100.0,
-          "islandGeoJsonId": "78030",
-          "gbifId": 6131675765,
-          "year": 2026
-        },
-        {
-          "latitude": 18.259658,
-          "longitude": -64.731983,
-          "radiusMeters": 100.0,
-          "islandGeoJsonId": "78020",
-          "gbifId": 6133410455,
-          "year": 2026
-        },
-        {
-          "latitude": 18.234839,
-          "longitude": -64.832979,
-          "radiusMeters": 100.0,
-          "islandGeoJsonId": "78030",
-          "gbifId": 6147557947,
-          "year": 2026
-        },
-        {
-          "latitude": 18.217554,
-          "longitude": -64.906299,
-          "radiusMeters": 100.0,
-          "islandGeoJsonId": "78030",
-          "gbifId": 6178367197,
-          "year": 2026
-        },
-        {
-          "latitude": 18.229845,
-          "longitude": -64.800193,
-          "radiusMeters": 100.0,
-          "islandGeoJsonId": "78030",
-          "gbifId": 6178390851,
           "year": 2026
         },
         {
@@ -481,35 +377,11 @@
           "year": 2026
         },
         {
-          "latitude": 17.654999,
-          "longitude": -64.907242,
-          "radiusMeters": 100.0,
-          "islandGeoJsonId": "78010",
-          "gbifId": 6178746144,
-          "year": 2026
-        },
-        {
-          "latitude": 18.252782,
-          "longitude": -64.795841,
-          "radiusMeters": 100.0,
-          "islandGeoJsonId": "78030",
-          "gbifId": 6251527938,
-          "year": 2026
-        },
-        {
           "latitude": 18.328892,
           "longitude": -64.763558,
           "radiusMeters": 100.0,
           "islandGeoJsonId": "78020",
           "gbifId": 6251634272,
-          "year": 2026
-        },
-        {
-          "latitude": 18.364803,
-          "longitude": -64.658061,
-          "radiusMeters": 100.0,
-          "islandGeoJsonId": "78020",
-          "gbifId": 6252363945,
           "year": 2026
         },
         {
@@ -521,67 +393,11 @@
           "year": 2026
         },
         {
-          "latitude": 17.643028,
-          "longitude": -64.827697,
-          "radiusMeters": 100.0,
-          "islandGeoJsonId": "78010",
-          "gbifId": 6252530763,
-          "year": 2026
-        },
-        {
-          "latitude": 18.303236,
-          "longitude": -64.775204,
-          "radiusMeters": 100.0,
-          "islandGeoJsonId": "78020",
-          "gbifId": 6252583800,
-          "year": 2026
-        },
-        {
-          "latitude": 17.688234,
-          "longitude": -64.943033,
-          "radiusMeters": 100.0,
-          "islandGeoJsonId": "78010",
-          "gbifId": 6252762016,
-          "year": 2026
-        },
-        {
-          "latitude": 17.63227,
-          "longitude": -64.930434,
-          "radiusMeters": 100.0,
-          "islandGeoJsonId": "78010",
-          "gbifId": 6252890061,
-          "year": 2026
-        },
-        {
           "latitude": 17.771975,
           "longitude": -64.882854,
           "radiusMeters": 100.0,
           "islandGeoJsonId": "78010",
           "gbifId": 6253174964,
-          "year": 2026
-        },
-        {
-          "latitude": 18.251401,
-          "longitude": -64.782486,
-          "radiusMeters": 100.0,
-          "islandGeoJsonId": "78030",
-          "gbifId": 6253347868,
-          "year": 2026
-        },
-        {
-          "latitude": 17.7307,
-          "longitude": -64.921695,
-          "radiusMeters": 100.0,
-          "islandGeoJsonId": "78010",
-          "gbifId": 6321196805,
-          "year": 2026
-        },
-        {
-          "latitude": 18.267667,
-          "longitude": -64.952308,
-          "radiusMeters": 100.0,
-          "islandGeoJsonId": "78030",
-          "gbifId": 6431052892,
           "year": 2026
         },
         {
@@ -617,14 +433,6 @@
           "year": 2026
         },
         {
-          "latitude": 17.636112,
-          "longitude": -64.920315,
-          "radiusMeters": 100.0,
-          "islandGeoJsonId": "78010",
-          "gbifId": 6441848638,
-          "year": 2026
-        },
-        {
           "latitude": 18.322788,
           "longitude": -64.649259,
           "radiusMeters": 100.0,
@@ -641,31 +449,159 @@
           "year": 2026
         },
         {
-          "latitude": 18.251135,
-          "longitude": -64.68921,
+          "latitude": 18.310865,
+          "longitude": -64.908302,
+          "radiusMeters": 100.0,
+          "islandGeoJsonId": "78030",
+          "gbifId": 6452604954,
+          "year": 2026
+        },
+        {
+          "latitude": 17.752799,
+          "longitude": -64.829545,
+          "radiusMeters": 100.0,
+          "islandGeoJsonId": "78010",
+          "gbifId": 6451923644,
+          "year": 2026
+        },
+        {
+          "latitude": 17.716973,
+          "longitude": -64.865076,
+          "radiusMeters": 100.0,
+          "islandGeoJsonId": "78010",
+          "gbifId": 6470715008,
+          "year": 2026
+        },
+        {
+          "latitude": 18.355018,
+          "longitude": -64.85474,
+          "radiusMeters": 100.0,
+          "islandGeoJsonId": "78030",
+          "gbifId": 5140697887,
+          "year": 2025
+        },
+        {
+          "latitude": 18.355923,
+          "longitude": -64.912634,
+          "radiusMeters": 100.0,
+          "islandGeoJsonId": "78030",
+          "gbifId": 5140761087,
+          "year": 2025
+        },
+        {
+          "latitude": 17.717854,
+          "longitude": -64.795035,
+          "radiusMeters": 100.0,
+          "islandGeoJsonId": "78010",
+          "gbifId": 5064045800,
+          "year": 2025
+        },
+        {
+          "latitude": 18.387921,
+          "longitude": -64.937063,
+          "radiusMeters": 100.0,
+          "islandGeoJsonId": "78030",
+          "gbifId": 5076951142,
+          "year": 2025
+        },
+        {
+          "latitude": 18.310856,
+          "longitude": -64.909988,
+          "radiusMeters": 100.0,
+          "islandGeoJsonId": "78030",
+          "gbifId": 5108303429,
+          "year": 2025
+        },
+        {
+          "latitude": 18.341139,
+          "longitude": -64.665392,
           "radiusMeters": 100.0,
           "islandGeoJsonId": "78020",
-          "gbifId": 6451757719,
-          "year": 2026
+          "gbifId": 5087418359,
+          "year": 2025
+        },
+        {
+          "latitude": 18.368217,
+          "longitude": -64.719374,
+          "radiusMeters": 100.0,
+          "islandGeoJsonId": "78020",
+          "gbifId": 5087766303,
+          "year": 2025
+        },
+        {
+          "latitude": 18.318123,
+          "longitude": -64.743003,
+          "radiusMeters": 100.0,
+          "islandGeoJsonId": "78020",
+          "gbifId": 5087921176,
+          "year": 2025
+        },
+        {
+          "latitude": 18.367685,
+          "longitude": -64.747629,
+          "radiusMeters": 100.0,
+          "islandGeoJsonId": "78020",
+          "gbifId": 5087922478,
+          "year": 2025
+        },
+        {
+          "latitude": 18.329641,
+          "longitude": -64.78736,
+          "radiusMeters": 100.0,
+          "islandGeoJsonId": "78020",
+          "gbifId": 6130825394,
+          "year": 2025
+        },
+        {
+          "latitude": 17.688342,
+          "longitude": -64.88148,
+          "radiusMeters": 100.0,
+          "islandGeoJsonId": "78010",
+          "gbifId": 5133267460,
+          "year": 2025
+        },
+        {
+          "latitude": 18.308413,
+          "longitude": -64.863532,
+          "radiusMeters": 100.0,
+          "islandGeoJsonId": "78030",
+          "gbifId": 5932509583,
+          "year": 2025
+        },
+        {
+          "latitude": 18.364905,
+          "longitude": -64.75858,
+          "radiusMeters": 100.0,
+          "islandGeoJsonId": "78020",
+          "gbifId": 6413645731,
+          "year": 2025
+        },
+        {
+          "latitude": 17.751055,
+          "longitude": -64.742557,
+          "radiusMeters": 100.0,
+          "islandGeoJsonId": "78010",
+          "gbifId": 5231025851,
+          "year": 2025
+        },
+        {
+          "latitude": 18.331833,
+          "longitude": -64.904494,
+          "radiusMeters": 100.0,
+          "islandGeoJsonId": "78030",
+          "gbifId": 5282622917,
+          "year": 2025
         }
       ]
     },
     {
       "scientificName": "Chilabothrus granti",
-      "locationCount": 9,
+      "locationCount": 8,
       "islandGeoJsonIds": [
         "78020",
         "78030"
       ],
       "locations": [
-        {
-          "latitude": 18.229466,
-          "longitude": -64.842095,
-          "radiusMeters": 100.0,
-          "islandGeoJsonId": "78030",
-          "gbifId": 4091556019,
-          "year": 2023
-        },
         {
           "latitude": 18.354603,
           "longitude": -64.894248,
@@ -783,60 +719,12 @@
           "year": 2026
         },
         {
-          "latitude": 18.247406,
-          "longitude": -64.791259,
-          "radiusMeters": 100.0,
-          "islandGeoJsonId": "78030",
-          "gbifId": 5217040789,
-          "year": 2025
-        },
-        {
-          "latitude": 18.391447,
-          "longitude": -64.794781,
-          "radiusMeters": 100.0,
-          "islandGeoJsonId": "78020",
-          "gbifId": 4522749954,
-          "year": 2024
-        },
-        {
-          "latitude": 18.287237,
-          "longitude": -64.908665,
-          "radiusMeters": 100.0,
-          "islandGeoJsonId": "78030",
-          "gbifId": 5167826058,
-          "year": 2024
-        },
-        {
           "latitude": 17.735462,
           "longitude": -64.824973,
           "radiusMeters": 100.0,
           "islandGeoJsonId": "78010",
           "gbifId": 4436144206,
           "year": 2023
-        },
-        {
-          "latitude": 18.319179,
-          "longitude": -64.672103,
-          "radiusMeters": 100.0,
-          "islandGeoJsonId": "78020",
-          "gbifId": 4453707548,
-          "year": 2022
-        },
-        {
-          "latitude": 18.30007,
-          "longitude": -64.946103,
-          "radiusMeters": 100.0,
-          "islandGeoJsonId": "78030",
-          "gbifId": 3988641105,
-          "year": 2022
-        },
-        {
-          "latitude": 18.261081,
-          "longitude": -64.833557,
-          "radiusMeters": 100.0,
-          "islandGeoJsonId": "78030",
-          "gbifId": 3327934527,
-          "year": 2021
         },
         {
           "latitude": 18.310788,
@@ -847,36 +735,12 @@
           "year": 2021
         },
         {
-          "latitude": 18.289413,
-          "longitude": -64.671885,
-          "radiusMeters": 100.0,
-          "islandGeoJsonId": "78020",
-          "gbifId": 3355222362,
-          "year": 2021
-        },
-        {
           "latitude": 17.677658,
           "longitude": -64.856216,
           "radiusMeters": 100.0,
           "islandGeoJsonId": "78010",
           "gbifId": 4901515528,
           "year": 2021
-        },
-        {
-          "latitude": 18.258868,
-          "longitude": -64.816508,
-          "radiusMeters": 100.0,
-          "islandGeoJsonId": "78030",
-          "gbifId": 2429313272,
-          "year": 2019
-        },
-        {
-          "latitude": 18.2929,
-          "longitude": -64.7137,
-          "radiusMeters": 100.0,
-          "islandGeoJsonId": "78020",
-          "gbifId": 2634304581,
-          "year": 2019
         },
         {
           "latitude": 18.344345,
@@ -911,36 +775,12 @@
           "year": 2017
         },
         {
-          "latitude": 18.268621,
-          "longitude": -64.930754,
-          "radiusMeters": 100.0,
-          "islandGeoJsonId": "78030",
-          "gbifId": 1993752986,
-          "year": 2017
-        },
-        {
-          "latitude": 18.381222,
-          "longitude": -64.887195,
-          "radiusMeters": 100.0,
-          "islandGeoJsonId": "78030",
-          "gbifId": 2234734122,
-          "year": 2017
-        },
-        {
           "latitude": 18.298953,
           "longitude": -64.8642,
           "radiusMeters": 100.0,
           "islandGeoJsonId": "78030",
           "gbifId": 1993752556,
           "year": 2017
-        },
-        {
-          "latitude": 18.384031,
-          "longitude": -64.833979,
-          "radiusMeters": 100.0,
-          "islandGeoJsonId": "78020",
-          "gbifId": 4424489554,
-          "year": 2016
         },
         {
           "latitude": 18.369638,
@@ -951,27 +791,11 @@
           "year": 2016
         },
         {
-          "latitude": 18.294099,
-          "longitude": -64.97384,
-          "radiusMeters": 100.0,
-          "islandGeoJsonId": "78030",
-          "gbifId": 2006036661,
-          "year": 2016
-        },
-        {
           "latitude": 18.347984,
           "longitude": -64.916481,
           "radiusMeters": 100.0,
           "islandGeoJsonId": "78030",
           "gbifId": 2234734114,
-          "year": 2016
-        },
-        {
-          "latitude": 18.285555,
-          "longitude": -64.811023,
-          "radiusMeters": 100.0,
-          "islandGeoJsonId": "78030",
-          "gbifId": 2236828800,
           "year": 2016
         },
         {
@@ -991,28 +815,140 @@
           "year": 2016
         },
         {
-          "latitude": 18.370256,
-          "longitude": -64.856546,
-          "radiusMeters": 100.0,
-          "islandGeoJsonId": "78030",
-          "gbifId": 1993752391,
-          "year": 2016
-        },
-        {
-          "latitude": 17.7704,
-          "longitude": -64.7075,
-          "radiusMeters": 100.0,
-          "islandGeoJsonId": "78010",
-          "gbifId": 1323867521,
-          "year": 2016
-        },
-        {
           "latitude": 17.765631,
           "longitude": -64.788225,
           "radiusMeters": 100.0,
           "islandGeoJsonId": "78010",
           "gbifId": 2422824519,
           "year": 2016
+        },
+        {
+          "latitude": 18.332002,
+          "longitude": -64.844609,
+          "radiusMeters": 100.0,
+          "islandGeoJsonId": "78030",
+          "gbifId": 3337870324,
+          "year": 2016
+        },
+        {
+          "latitude": 18.350889,
+          "longitude": -65.00725,
+          "radiusMeters": 100.0,
+          "islandGeoJsonId": "78030",
+          "gbifId": 2234734142,
+          "year": 2016
+        },
+        {
+          "latitude": 18.310946,
+          "longitude": -64.835398,
+          "radiusMeters": 100.0,
+          "islandGeoJsonId": "78030",
+          "gbifId": 4407404620,
+          "year": 2015
+        },
+        {
+          "latitude": 18.340478,
+          "longitude": -64.89336,
+          "radiusMeters": 100.0,
+          "islandGeoJsonId": "78030",
+          "gbifId": 2005280544,
+          "year": 2015
+        },
+        {
+          "latitude": 18.321321,
+          "longitude": -64.656276,
+          "radiusMeters": 100.0,
+          "islandGeoJsonId": "78020",
+          "gbifId": 3456387285,
+          "year": 2013
+        },
+        {
+          "latitude": 18.286639,
+          "longitude": -64.813108,
+          "radiusMeters": 100.0,
+          "islandGeoJsonId": "78030",
+          "gbifId": 4145522154,
+          "year": 2013
+        },
+        {
+          "latitude": 18.354499,
+          "longitude": -64.852288,
+          "radiusMeters": 100.0,
+          "islandGeoJsonId": "78030",
+          "gbifId": 4130051687,
+          "year": 2012
+        },
+        {
+          "latitude": 18.27777,
+          "longitude": -64.879691,
+          "radiusMeters": 100.0,
+          "islandGeoJsonId": "78030",
+          "gbifId": 1306576525,
+          "year": 2012
+        },
+        {
+          "latitude": 18.333495,
+          "longitude": -64.806195,
+          "radiusMeters": 100.0,
+          "islandGeoJsonId": "78020",
+          "gbifId": 4076190813,
+          "year": 2011
+        },
+        {
+          "latitude": 18.35857,
+          "longitude": -64.920602,
+          "radiusMeters": 100.0,
+          "islandGeoJsonId": "78030",
+          "gbifId": 5828095793,
+          "year": 2010
+        },
+        {
+          "latitude": 18.278,
+          "longitude": -64.895,
+          "radiusMeters": 100.0,
+          "islandGeoJsonId": "78030",
+          "gbifId": 3089901081,
+          "year": 2010
+        },
+        {
+          "latitude": 18.307,
+          "longitude": -64.968,
+          "radiusMeters": 100.0,
+          "islandGeoJsonId": "78030",
+          "gbifId": 3089901093,
+          "year": 2010
+        },
+        {
+          "latitude": 17.7282,
+          "longitude": -64.8137,
+          "radiusMeters": 100.0,
+          "islandGeoJsonId": "78010",
+          "gbifId": 1063852627,
+          "year": 2006
+        },
+        {
+          "latitude": 18.349735,
+          "longitude": -64.708919,
+          "radiusMeters": 100.0,
+          "islandGeoJsonId": "78020",
+          "gbifId": 3456155744,
+          "year": 2005
+        },
+        {
+          "latitude": 18.327935,
+          "longitude": -64.724706,
+          "radiusMeters": 100.0,
+          "islandGeoJsonId": "78020",
+          "gbifId": 3457069303,
+          "year": 2005
+        },
+        {
+          "latitude": 18.367109,
+          "longitude": -64.809711,
+          "radiusMeters": 100.0,
+          "islandGeoJsonId": "78020",
+          "gbifId": 3416025715,
+          "year": 2002
         }
       ]
     },
@@ -1068,7 +1004,7 @@
     },
     {
       "scientificName": "Zanthoxylum thomasianum",
-      "locationCount": 7,
+      "locationCount": 6,
       "islandGeoJsonIds": [
         "78020",
         "78030"
@@ -1080,14 +1016,6 @@
           "radiusMeters": 100.0,
           "islandGeoJsonId": "78030",
           "gbifId": 5063296529,
-          "year": 2025
-        },
-        {
-          "latitude": 18.256584,
-          "longitude": -64.892045,
-          "radiusMeters": 100.0,
-          "islandGeoJsonId": "78030",
-          "gbifId": 5108218706,
           "year": 2025
         },
         {

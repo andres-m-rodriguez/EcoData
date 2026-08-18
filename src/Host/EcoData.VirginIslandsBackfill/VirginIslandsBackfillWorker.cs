@@ -25,8 +25,10 @@ namespace EcoData.VirginIslandsBackfill;
 /// seeding returns early once Puerto Rico exists, so an existing database would never reach
 /// it. It also runs no migrations — the seeder owns those.
 ///
-/// Safe to run repeatedly: the geography step is a no-op once the VI state row exists, and
-/// the species step skips any species that already carries a USVI-sourced location.
+/// Safe to run repeatedly, and self-correcting rather than merely idempotent: both steps
+/// compare what is stored against what the data files ship and write only the difference. A
+/// re-run with unchanged data touches nothing; a re-run after the data is corrected brings
+/// the database up to date instead of skipping it.
 /// </remarks>
 public sealed class VirginIslandsBackfillWorker(
     IServiceProvider serviceProvider,
@@ -84,23 +86,32 @@ public sealed class VirginIslandsBackfillWorker(
     {
         var context = services.GetRequiredService<LocationsDbContext>();
 
-        if (await context.States.AnyAsync(s => s.Code == StateCode, stoppingToken))
-        {
-            logger.LogInformation("U.S. Virgin Islands already seeded. Skipping...");
-            return;
-        }
-
         var geoJsonPath = Path.Combine(AppContext.BaseDirectory, "Data", "usvi-islands.geojson");
         if (!File.Exists(geoJsonPath))
         {
             throw new FileNotFoundException("usvi-islands.geojson not found.", geoJsonPath);
         }
 
-        logger.LogInformation("Seeding U.S. Virgin Islands geography...");
-
         var geoJsonContent = await File.ReadAllTextAsync(geoJsonPath, stoppingToken);
         var geoJsonReader = new GeoJsonReader();
         var now = DateTimeOffset.UtcNow;
+
+        var existingState = await context.States.FirstOrDefaultAsync(
+            s => s.Code == StateCode,
+            stoppingToken
+        );
+
+        // Already seeded: refresh geometry in place rather than skipping. The first release
+        // used Census's generalized web-display boundaries, which dropped every offshore cay
+        // and traced a coarser coastline than Puerto Rico's; re-running now corrects that.
+        if (existingState is not null)
+        {
+            await RefreshIslandBoundariesAsync(context, geoJsonContent, geoJsonReader, stoppingToken);
+            return;
+        }
+
+        logger.LogInformation("Seeding U.S. Virgin Islands geography...");
+
         var stateId = Guid.CreateVersion7();
 
         context.States.Add(
@@ -164,6 +175,69 @@ public sealed class VirginIslandsBackfillWorker(
         logger.LogInformation("Seeded {Count} U.S. Virgin Islands islands.", islands.Count);
     }
 
+    /// <summary>
+    /// Brings already-seeded islands up to the geometry currently shipped in the data file.
+    /// Only writes rows whose boundary actually differs, so a re-run with unchanged data is
+    /// a no-op rather than a pointless update.
+    /// </summary>
+    private async Task RefreshIslandBoundariesAsync(
+        LocationsDbContext context,
+        string geoJsonContent,
+        GeoJsonReader geoJsonReader,
+        CancellationToken stoppingToken
+    )
+    {
+        // The context is registered NoTracking, so updates need tracking turned back on.
+        var islands = await context
+            .Municipalities.AsTracking()
+            .Where(m => m.GeoJsonId.StartsWith(StateFips))
+            .ToDictionaryAsync(m => m.GeoJsonId, stoppingToken);
+
+        using var doc = JsonDocument.Parse(geoJsonContent);
+        if (!doc.RootElement.TryGetProperty("features", out var features))
+        {
+            throw new InvalidOperationException("usvi-islands.geojson has no features array.");
+        }
+
+        var refreshed = 0;
+
+        foreach (var feature in features.EnumerateArray())
+        {
+            if (!feature.TryGetProperty("properties", out var properties))
+                continue;
+
+            if (!feature.TryGetProperty("geometry", out var geometryElement))
+                continue;
+
+            var geoJsonId = $"{properties.GetProperty("STATE").GetString()}"
+                + $"{properties.GetProperty("COUNTY").GetString()}";
+
+            if (!islands.TryGetValue(geoJsonId, out var island))
+                continue;
+
+            var boundary = geoJsonReader.Read<Geometry>(geometryElement.GetRawText());
+            boundary.SRID = 4326;
+
+            if (island.Boundary is not null && island.Boundary.EqualsTopologically(boundary))
+                continue;
+
+            var centroid = boundary.Centroid;
+            island.Boundary = boundary;
+            island.CentroidLatitude = (decimal)centroid.Y;
+            island.CentroidLongitude = (decimal)centroid.X;
+            refreshed++;
+        }
+
+        if (refreshed == 0)
+        {
+            logger.LogInformation("U.S. Virgin Islands geography already current. Skipping...");
+            return;
+        }
+
+        await context.SaveChangesAsync(stoppingToken);
+        logger.LogInformation("Refreshed boundaries for {Count} U.S. Virgin Islands.", refreshed);
+    }
+
     private async Task SeedOccurrencesAsync(
         IServiceProvider services,
         CancellationToken stoppingToken
@@ -201,9 +275,12 @@ public sealed class VirginIslandsBackfillWorker(
             );
         }
 
+        var islandIds = islands.Values.ToHashSet();
+
         var seededSpecies = 0;
         var seededLocations = 0;
         var seededLinks = 0;
+        var resyncedSpecies = 0;
         var unknown = new List<string>();
 
         foreach (var dto in payload.Species)
@@ -222,19 +299,44 @@ public sealed class VirginIslandsBackfillWorker(
                 continue;
             }
 
-            var alreadySeeded = await context.SpeciesLocations.AnyAsync(
-                l =>
+            var existing = await context
+                .SpeciesLocations.AsTracking()
+                .Where(l =>
                     l.SpeciesId == species.Id
                     && l.Description != null
-                    && l.Description.StartsWith(DescriptionPrefix),
-                stoppingToken
-            );
+                    && l.Description.StartsWith(DescriptionPrefix)
+                )
+                .ToListAsync(stoppingToken);
 
-            if (alreadySeeded)
+            var expected = dto
+                .Locations.Select(l => $"{DescriptionPrefix}{l.GbifId}")
+                .ToHashSet(StringComparer.Ordinal);
+
+            // Already carrying exactly this set: nothing to do.
+            if (existing.Count > 0 && existing.Select(l => l.Description!).ToHashSet(StringComparer.Ordinal).SetEquals(expected))
                 continue;
 
+            if (existing.Count > 0)
+            {
+                // The shipped data changed — the first release assigned occurrences against
+                // generalized boundaries that reached far offshore, so points kilometres out
+                // to sea were accepted. Replace the set rather than accumulating both.
+                context.SpeciesLocations.RemoveRange(existing);
+
+                // Island links are rebuilt below from the new points; drop the old ones so a
+                // species that lost every point on an island stops claiming it.
+                var staleLinks = await context
+                    .MunicipalitySpecies.AsTracking()
+                    .Where(ms => ms.SpeciesId == species.Id && islandIds.Contains(ms.MunicipalityId))
+                    .ToListAsync(stoppingToken);
+                context.MunicipalitySpecies.RemoveRange(staleLinks);
+                resyncedSpecies++;
+            }
+
             var existingLinks = await context
-                .MunicipalitySpecies.Where(ms => ms.SpeciesId == species.Id)
+                .MunicipalitySpecies.Where(ms =>
+                    ms.SpeciesId == species.Id && !islandIds.Contains(ms.MunicipalityId)
+                )
                 .Select(ms => ms.MunicipalityId)
                 .ToHashSetAsync(stoppingToken);
 
@@ -283,15 +385,17 @@ public sealed class VirginIslandsBackfillWorker(
 
         if (seededSpecies == 0)
         {
-            logger.LogInformation("U.S. Virgin Islands occurrences already seeded. Skipping...");
+            logger.LogInformation("U.S. Virgin Islands occurrences already current. Skipping...");
             return;
         }
 
         logger.LogInformation(
-            "Seeded {Locations} occurrences across {Species} species and {Links} island links.",
+            "Seeded {Locations} occurrences across {Species} species and {Links} island links "
+                + "({Resynced} species replaced because the shipped data changed).",
             seededLocations,
             seededSpecies,
-            seededLinks
+            seededLinks,
+            resyncedSpecies
         );
     }
 

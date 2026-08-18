@@ -6,8 +6,8 @@ using ModelContextProtocol.Server;
 namespace EcoData.Locations.Mcp.Tools;
 
 /// <summary>
-/// The places half of the connector: Puerto Rico's 78 municipios, which are
-/// what the wildlife records are filed against.
+/// The places half of the connector: the 78 Puerto Rico municipios and the 3 U.S.
+/// Virgin Islands, which are what the wildlife records are filed against.
 ///
 /// <para>Sealed rather than static so the type can be a generic argument to
 /// <c>WithTools</c>; every tool is a static method and nothing is
@@ -17,19 +17,20 @@ namespace EcoData.Locations.Mcp.Tools;
 public sealed class MunicipalityTools
 {
     /// <summary>
-    /// Puerto Rico has 78 municipios, so the default returns all of them — the
-    /// whole list is small enough to be worth having in one call, and a model
-    /// that has it can resolve a name to an id without asking again.
+    /// 78 Puerto Rico municipios plus 3 U.S. Virgin Islands, so the default returns
+    /// all of them — the whole list is small enough to be worth having in one call,
+    /// and a model that has it can resolve a name to an id without asking again.
     /// </summary>
-    private const int DefaultResults = 78;
+    private const int DefaultResults = 81;
 
     private const int MaxResults = 100;
 
     [McpServerTool(Name = "search_municipalities")]
     [Description("""
-        List or search Puerto Rico's municipios. With no arguments this returns
-        all of them with their ids and centre points, which is what the wildlife
-        tools take as municipalityId. Pass search to narrow by name.
+        List or search the catalogue's places: Puerto Rico's municipios and the
+        U.S. Virgin Islands. With no arguments this returns all of them with their
+        ids and centre points, which is what the wildlife tools take as
+        municipalityId. Pass search to narrow by name.
         """)]
     public static async Task<IReadOnlyList<MunicipalitySummary>> SearchMunicipalities(
         IMunicipalityRepository repository,

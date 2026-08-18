@@ -1,0 +1,51 @@
+@namespace FaunaFinder.Client.Components.Map
+@inherits EcoDataComponent
+
+<div class="mts-overlay" role="dialog" aria-modal="true" aria-label="@L["Map_Travel_Title"]">
+    <header class="mts-head">
+        <div class="mts-title">@L["Map_Travel_Title"]</div>
+        <button type="button" class="mts-close" @onclick="HandleClose" aria-label="@L["Common_Close"]">
+            <MudIcon Icon="@Icons.Material.Filled.Close" Size="Size.Small" />
+        </button>
+    </header>
+
+    <div class="mts-list" role="radiogroup">
+        @foreach (var region in MapRegions.All)
+        {
+            var isCurrent = region.Code == Current.Code;
+            <button type="button"
+                    class="@(isCurrent ? "mts-row mts-row-current" : "mts-row")"
+                    role="radio"
+                    aria-checked="@isCurrent"
+                    @onclick="() => HandleSelect(region)">
+                <MudIcon Icon="@(isCurrent ? Icons.Material.Filled.RadioButtonChecked : Icons.Material.Filled.RadioButtonUnchecked)"
+                         Size="Size.Small" />
+                <span class="mts-row-meta">
+                    <span class="mts-row-name">@L[region.NameKey]</span>
+                    <span class="mts-row-sub">@L[region.SubtitleKey]</span>
+                </span>
+            </button>
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter, EditorRequired] public MapRegion Current { get; set; } = null!;
+    [Parameter] public EventCallback<MapRegion> OnSelect { get; set; }
+    [Parameter] public EventCallback OnClose { get; set; }
+
+    private Task HandleClose() => OnClose.InvokeAsync();
+
+    private async Task HandleSelect(MapRegion region)
+    {
+        // Selecting the region already shown should still close; re-travelling would
+        // refetch the layer and yank the view back for no reason.
+        if (region.Code == Current.Code)
+        {
+            await OnClose.InvokeAsync();
+            return;
+        }
+
+        await OnSelect.InvokeAsync(region);
+    }
+}

@@ -15,7 +15,7 @@ public sealed class ConservationTools
 {
     [McpServerTool(Name = "list_conservation_practices")]
     [Description("""
-        List the NRCS conservation practices recorded for Puerto Rico, by code
+        List the NRCS conservation practices recorded for the Caribbean area, by code
         and name. These are the on-the-ground practices a landowner can carry
         out; list_recovery_actions covers the outcomes they serve.
         """)]
