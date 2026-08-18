@@ -17,7 +17,9 @@ var baseAddress = new Uri(builder.HostEnvironment.BaseAddress);
 builder.Services.AddLocationsClient(baseAddress);
 builder.Services.AddWildlifeClient(baseAddress);
 
-builder.Services.AddSpaNavigation();
+// The four bottom-nav destinations. Everything else — including Browse's
+// single-segment children — is a page you can go back from.
+builder.Services.AddSpaNavigation("/", "/species", "/municipalities", "/browse");
 builder.Services.AddMudServices();
 
 // The reader's browser-local state. Singleton, not scoped: one browser, and the

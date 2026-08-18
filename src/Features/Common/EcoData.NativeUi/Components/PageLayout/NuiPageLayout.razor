@@ -3,9 +3,12 @@
 @inject INavbarManager Navbar
 
 <div class="nui-page-layout">
+    @* Desktop only. On mobile the app bar owns going back, and SmAndDown is
+       what both shells mean by mobile — Xs alone would leave this button in the
+       page on a 600-960px viewport while the bar showed one too. *@
     @if (!string.IsNullOrEmpty(ParentPath))
     {
-        <MudHidden Breakpoint="Breakpoint.Xs">
+        <MudHidden Breakpoint="Breakpoint.SmAndDown">
             <MudButton Variant="Variant.Text"
                        StartIcon="@Icons.Material.Filled.ArrowBack"
                        OnClick="GoBack"
@@ -28,9 +31,11 @@
                     }
                 </MudStack>
 
+                @* Same rule: SetActions has already handed these to the app bar,
+                   so showing them inline on mobile would render each twice. *@
                 @if (Actions is { Count: > 0 })
                 {
-                    <MudHidden Breakpoint="Breakpoint.Xs">
+                    <MudHidden Breakpoint="Breakpoint.SmAndDown">
                         <div class="nui-page-actions">
                             <MudStack Row Spacing="2">
                                 @foreach (var action in Actions)

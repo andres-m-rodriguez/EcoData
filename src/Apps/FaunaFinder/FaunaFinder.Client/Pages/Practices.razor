@@ -7,6 +7,7 @@
 @inject IConservationLinkHttpClient LinkClient
 @inject ISpeciesHttpClient SpeciesHttpClient
 @inject INavbarManager Navbar
+@inject INavigationManager Navigation
 @inject NavigationManager NavigationManager
 @inject ILocalizer L
 
@@ -221,6 +222,15 @@ else
 
     protected override async Task OnParametersSetAsync()
     {
+        // The list sits one level under Browse, but its path has a single
+        // segment, so the manager reads it as a navigation root and offers no
+        // back button on its own. Saying so here is what puts one there. The
+        // detail route gets the same treatment from NuiPageLayout's ParentPath.
+        if (Code is null)
+        {
+            Navigation.SetParentPath("/browse");
+        }
+
         // Both routes need the practice list: the detail resolves its heading
         // from it, since the route carries only the code.
         if (LoadPracticesState.Result is null && !LoadPracticesState.IsLoading)
