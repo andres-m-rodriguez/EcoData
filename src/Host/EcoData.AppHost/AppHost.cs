@@ -85,6 +85,15 @@ if (builder.Environment.EnvironmentName == "Testing")
     seeder.WithEnvironment("SEED_TEST_DATA", "true");
 }
 
+// One-shot backfill: adds the U.S. Virgin Islands jurisdiction and the USVI occurrences of
+// species already in the catalogue. Manual-trigger job; a no-op once it has run.
+builder
+    .AddProject<Projects.EcoData_VirginIslandsBackfill>("virgin-islands-backfill")
+    .WithReference(locationsDb)
+    .WithReference(wildlifeDb)
+    .WaitFor(seeder)
+    .PublishAsAzureContainerAppJob();
+
 var ecoportal = builder
     .AddProject<Projects.EcoPortal_Server>("ecoportal")
     .WithExternalHttpEndpoints()

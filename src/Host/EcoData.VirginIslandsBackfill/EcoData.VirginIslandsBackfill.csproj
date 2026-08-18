@@ -1,0 +1,31 @@
+<Project Sdk="Microsoft.NET.Sdk.Worker">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="NetTopologySuite.IO.GeoJSON" Version="4.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\EcoData.ServiceDefaults\EcoData.ServiceDefaults.csproj" />
+    <ProjectReference Include="..\..\Features\Locations\EcoData.Locations.Database\EcoData.Locations.Database.csproj" />
+    <ProjectReference Include="..\..\Features\Wildlife\EcoData.Wildlife.Database\EcoData.Wildlife.Database.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Update="Data\**\*.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <!-- .geojson is not in the SDK's default Content globs, so Update alone never matches it
+         and the file is silently left out of the published output. -->
+    <None Remove="Data\**\*.geojson" />
+    <Content Include="Data\**\*.geojson">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+</Project>
