@@ -56,6 +56,13 @@
                             aria-label="@(_heatmapVisible ? L["Map_Heatmap_Hide"] : L["Map_Heatmap_Show"])"
                             OnClick="ToggleHeatmap" />
                 </MudTooltip>
+                <MudTooltip Text="@L["Map_Travel_Label"]" Placement="Placement.Left">
+                    <MudFab Color="Color.Default"
+                            StartIcon="@Icons.Material.Filled.Public"
+                            Size="Size.Medium"
+                            aria-label="@L["Map_Travel_Label"]"
+                            OnClick="OpenTravelSheet" />
+                </MudTooltip>
             </div>
         }
 
@@ -113,6 +120,14 @@
                                   OnPrevious="PreviousLocation"
                                   OnNext="NextLocation"
                                   OnFocusCurrent="FocusCurrentLocation" />
+        }
+
+        @* Region travel *@
+        @if (_travelSheetOpen)
+        {
+            <MapTravelSheet Current="_region"
+                            OnSelect="TravelTo"
+                            OnClose="CloseTravelSheet" />
         }
     </div>
 
@@ -191,7 +206,12 @@
     private static readonly string[] CirclePalette =
         ["#10b981", "#3b82f6", "#f59e0b", "#8b5cf6", "#ef4444", "#06b6d4", "#ec4899", "#84cc16"];
 
+    /// <summary>Fits Puerto Rico; travel refits to the destination's bounds instead.</summary>
+    private const int InitialZoom = 9;
+
     private MapController<MunicipalityMarker> _mapController = new();
+    private MapRegion _region = MapRegions.Default;
+    private bool _travelSheetOpen;
     private bool _sidebarOpen;
     private bool _sheetOpen;
 
@@ -219,7 +239,7 @@
     private bool PanelVisible => _selectedMunicipality is not null || _searchMode != AreaSearchMode.None;
 
     private bool ShowActionButtons =>
-        !PanelVisible && !_isDrawing && _viewingSpecies is null;
+        !PanelVisible && !_isDrawing && _viewingSpecies is null && !_travelSheetOpen;
 
     private string SearchTitle =>
         _searchMode == AreaSearchMode.NearMe ? L["Map_NearMe_Title"] : L["Map_DrawArea_Title"];
@@ -240,24 +260,53 @@
 
         // Boundaries are fetched JS-side (localStorage-cached), so the map
         // renders immediately instead of waiting on the payload.
-        _mapController.AddGeoJson(new MapGeoJson
-        {
-            Id = MunicipalityBoundaries.LayerId,
-            Url = MunicipalityBoundaries.Url,
-            CacheKey = MunicipalityBoundaries.CacheKey,
-            CacheVersion = MunicipalityBoundaries.CacheVersion,
-            FillColor = "#40916c",
-            FillOpacity = 0.3,
-            StrokeColor = "#2d6a4f",
-            StrokeWidth = 2
-        });
+        _mapController.SetView(_region.Center, InitialZoom);
+        _mapController.AddGeoJson(MunicipalityBoundaries.ForRegion(_region));
+    }
+
+    // ===== Region travel =====
+
+    private void OpenTravelSheet()
+    {
+        _travelSheetOpen = true;
+        StateHasChanged();
+    }
+
+    private void CloseTravelSheet()
+    {
+        _travelSheetOpen = false;
+        StateHasChanged();
+    }
+
+    /// <summary>
+    /// Puerto Rico and the U.S. Virgin Islands are ~150 km apart, so this replaces the
+    /// boundary layer rather than adding to it and refits the view to the new region.
+    /// </summary>
+    private void TravelTo(MapRegion region)
+    {
+        _travelSheetOpen = false;
+        var leaving = _region;
+        _region = region;
+
+        // Anything anchored to the region we are leaving would otherwise linger offscreen.
+        _sidebarOpen = false;
+        _sheetOpen = false;
+        _selectedMunicipality = null;
+        CloseSpeciesLocations();
+        ClearAreaSearch();
+
+        _mapController.RemoveGeoJson(MunicipalityBoundaries.LayerIdFor(leaving));
+        _mapController.AddGeoJson(MunicipalityBoundaries.ForRegion(region));
+        _mapController.FitToBounds(region.Bounds);
+
+        StateHasChanged();
     }
 
     private void OnLanguageChanged() => InvokeAsync(StateHasChanged);
 
     private void OnGeoJsonLoaded(string layerId, bool success)
     {
-        if (layerId != MunicipalityBoundaries.LayerId) return;
+        if (!MunicipalityBoundaries.IsBoundaryLayer(layerId)) return;
 
         _mapLoadError = success ? null : "Something went wrong while loading the map.";
         InvokeAsync(StateHasChanged);
@@ -271,7 +320,7 @@
         // between StartDrawArea and the map actually entering draw mode.
         if (_isDrawing) return;
 
-        if (layerId != "municipalities" || string.IsNullOrEmpty(properties))
+        if (!MunicipalityBoundaries.IsBoundaryLayer(layerId) || string.IsNullOrEmpty(properties))
             return;
 
         try

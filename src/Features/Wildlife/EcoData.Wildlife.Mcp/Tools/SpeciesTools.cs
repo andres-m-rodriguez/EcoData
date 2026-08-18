@@ -24,12 +24,13 @@ public sealed class SpeciesTools
     private const int MaxResults = 50;
     private const int DefaultResults = 20;
 
-    /// <summary>Puerto Rico is small; a radius past this stops meaning "near".</summary>
+    /// <summary>The covered islands are small; a radius past this stops meaning "near".</summary>
     private const double MaxRadiusMeters = 50_000;
 
     [McpServerTool(Name = "search_species")]
     [Description("""
-        Search the Puerto Rico wildlife catalogue. Returns a summary per match;
+        Search the Caribbean listed-species catalogue covering Puerto Rico and the
+        U.S. Virgin Islands. Returns a summary per match;
         call get_species for the full record. Every filter is optional — with no
         arguments this returns the first page of the whole catalogue. Use
         list_taxon_categories first if you need valid taxon codes.
@@ -44,7 +45,9 @@ public sealed class SpeciesTools
         [Description("IUCN Red List status: LC, NT, VU, EN, CR, DD or EX.")]
         string? iucnStatus = null,
         [Description("""
-            Origin relative to Puerto Rico: 'Endemic' (found nowhere else),
+            Origin relative to Puerto Rico: 'Endemic' (occurs naturally only in
+            Puerto Rico and its islands), 'Native' (also occurs elsewhere, the
+            U.S. Virgin Islands included),
             'Native', 'Introduced', or 'Unknown' for species with no assessment
             on record. Omit for any.
             """)]
@@ -118,8 +121,9 @@ public sealed class SpeciesTools
     [McpServerTool(Name = "find_species_near")]
     [Description("""
         Find species recorded within a radius of a point, nearest first.
-        Coordinates are decimal degrees (WGS 84); Puerto Rico spans roughly
-        latitude 17.9 to 18.5 and longitude -67.3 to -65.2.
+        Coordinates are decimal degrees (WGS 84). Puerto Rico spans roughly
+        latitude 17.9 to 18.5 and longitude -67.3 to -65.2; the U.S. Virgin
+        Islands latitude 17.6 to 18.5 and longitude -65.2 to -64.5.
         """)]
     public static async Task<IReadOnlyList<NearbySpecies>> FindSpeciesNear(
         ISpeciesRepository repository,

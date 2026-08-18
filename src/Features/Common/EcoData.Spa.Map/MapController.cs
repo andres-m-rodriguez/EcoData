@@ -15,7 +15,11 @@ public class MapController<TMarker> : IMapController<TMarker>
 
     public IReadOnlyList<MapCircle> Circles => _circles;
 
-    public MapCoordinate Center { get; private set; } = MapCoordinate.PuertoRicoCenter;
+    /// <summary>
+    /// No default location: this library is region-agnostic, so consumers call
+    /// <see cref="SetView"/> during initialization to place the map.
+    /// </summary>
+    public MapCoordinate Center { get; private set; }
 
     public int Zoom { get; private set; } = 9;
 

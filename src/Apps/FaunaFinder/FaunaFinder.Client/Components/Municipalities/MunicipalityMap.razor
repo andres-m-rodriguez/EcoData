@@ -57,17 +57,20 @@
         _controller.OnGeoJsonClicked += HandleGeoJsonClicked;
         _controller.OnGeoJsonLoaded += HandleGeoJsonLoaded;
 
-        _controller.AddGeoJson(new MapGeoJson
+        // Spa.Map has no default location, so place the map before the first render.
+        _controller.SetView(MapRegions.Default.Center, 9);
+
+        // A picker rather than a travel view: every region is selectable at once, so
+        // both layers go on and the handlers accept whichever was clicked.
+        foreach (var region in MapRegions.All)
         {
-            Id = MunicipalityBoundaries.LayerId,
-            Url = MunicipalityBoundaries.Url,
-            CacheKey = MunicipalityBoundaries.CacheKey,
-            CacheVersion = MunicipalityBoundaries.CacheVersion,
-            FillColor = "#3f7d5f",
-            FillOpacity = 0.22,
-            StrokeColor = "#1f4d3a",
-            StrokeWidth = 2
-        });
+            _controller.AddGeoJson(MunicipalityBoundaries.ForRegion(
+                region,
+                fillColor: "#3f7d5f",
+                fillOpacity: 0.22,
+                strokeColor: "#1f4d3a",
+                strokeWidth: 2));
+        }
     }
 
     protected override void OnParametersSet()
@@ -89,7 +92,7 @@
 
     private void HandleGeoJsonLoaded(string layerId, bool success)
     {
-        if (layerId != MunicipalityBoundaries.LayerId) return;
+        if (!MunicipalityBoundaries.IsBoundaryLayer(layerId)) return;
 
         _geoJsonLoaded = success;
         _geoJsonLoadError = success ? null : "Something went wrong while loading the map.";
@@ -98,7 +101,7 @@
 
     private void HandleGeoJsonClicked(string layerId, string? propertiesJson)
     {
-        if (layerId != MunicipalityBoundaries.LayerId) return;
+        if (!MunicipalityBoundaries.IsBoundaryLayer(layerId)) return;
         if (Municipalities is null || string.IsNullOrEmpty(propertiesJson)) return;
 
         try
