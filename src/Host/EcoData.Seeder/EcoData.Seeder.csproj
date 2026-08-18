@@ -25,7 +25,15 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Content Update="Data\**\*">
+    <Content Update="Data\**\*.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <!-- .geojson is not in the SDK's default Content globs, so Update alone never matched it
+         and pr-municipios.geojson was silently absent from the published output. Municipality
+         seeding then logged "GeoJSON file not found" and returned without throwing, so the
+         job reported success having seeded no municipalities at all. -->
+    <None Remove="Data\**\*.geojson" />
+    <Content Include="Data\**\*.geojson">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
