@@ -1,0 +1,7 @@
+{
+  "repo": "https://github.com/andres-m-rodriguez/EcoData.git",
+  "branchPrefix": "ecodata-agents",
+  "pr": true,
+  "prBase": "master",
+  "timeout": 45
+}
