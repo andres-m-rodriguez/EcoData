@@ -30,6 +30,7 @@
   </Folder>
   <Folder Name="/Features/" />
   <Folder Name="/Features/Common/">
+    <Project Path="src/Features/Common/EcoData.Common.Authorization/EcoData.Common.Authorization.csproj" />
     <Project Path="src/Features/Common/EcoData.Common.Http.Helpers/EcoData.Common.Http.Helpers.csproj" />
     <Project Path="src/Features/Common/EcoData.Common.i18n/EcoData.Common.i18n.csproj" />
     <Project Path="src/Features/Common/EcoData.Common.Messaging/EcoData.Common.Messaging.csproj" />
