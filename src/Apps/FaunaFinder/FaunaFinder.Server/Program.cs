@@ -59,7 +59,7 @@ builder.Services.AddLoginRateLimiting();
 builder.Services.Configure<FaunaFinderOptions>(
     builder.Configuration.GetSection(FaunaFinderOptions.SectionName)
 );
-builder.Services.AddSingleton<FaunaFinderOrganization>();
+builder.Services.AddSingleton<FaunaFinderOrganizationAccessor>();
 builder.Services.AddHostedService<FaunaFinderOrganizationResolver>();
 builder.Services.AddScoped<IFaunaFinderPermission, FaunaFinderPermission>();
 

@@ -1,15 +1,21 @@
 namespace FaunaFinder.Server.Authorization;
 
 /// <summary>
-/// The resolved id of the organization FaunaFinder contributes to, filled in once at
-/// startup by <see cref="FaunaFinderOrganizationResolver"/>.
+/// The organization FaunaFinder contributes to, read once at startup and held in memory.
 /// </summary>
 /// <remarks>
-/// <see cref="Id"/> stays null when the configured slug matches no organization. That is
-/// not fatal — FaunaFinder is a public catalogue first, so it serves anonymous traffic
-/// normally and every contributor permission simply answers false.
+/// Carries more than the id because the rest is useful to the app and free once resolved —
+/// the name and branding for "contributing to…" surfaces, the slug for links back to the
+/// organization page. Fields the catalogue has no business holding (tax id, legal status)
+/// are deliberately not copied across.
 /// </remarks>
-public sealed class FaunaFinderOrganization
-{
-    public Guid? Id { get; internal set; }
-}
+public sealed record FaunaFinderOrganization(
+    Guid Id,
+    string Slug,
+    string Name,
+    string? Tagline,
+    string? ProfilePictureUrl,
+    string? WebsiteUrl,
+    string? PrimaryColor,
+    string? AccentColor
+);

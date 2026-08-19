@@ -5,7 +5,7 @@ namespace FaunaFinder.Server.Authorization;
 
 public sealed class FaunaFinderPermission(
     IAuthorization authorization,
-    FaunaFinderOrganization organization
+    FaunaFinderOrganizationAccessor accessor
 ) : IFaunaFinderPermission
 {
     public Task<bool> CanSubmitOccurrenceAsync(CancellationToken cancellationToken = default) =>
@@ -16,13 +16,14 @@ public sealed class FaunaFinderPermission(
 
     private Task<bool> HasAsync(string permission, CancellationToken cancellationToken)
     {
-        // Unresolved organization means the deployment has no contributor org configured;
-        // deny rather than ask, since there is no scope to ask about.
-        if (organization.Id is not { } organizationId)
+        // No configured organization means there is no scope to ask about, so deny rather
+        // than ask. The single check here is why the accessor holds one nullable reference
+        // instead of a nullable field per property.
+        if (accessor.Organization is not { } organization)
             return Task.FromResult(false);
 
         return authorization.HasPermissionAsync(
-            PermissionScope.Organization(organizationId),
+            PermissionScope.Organization(organization.Id),
             permission,
             cancellationToken
         );

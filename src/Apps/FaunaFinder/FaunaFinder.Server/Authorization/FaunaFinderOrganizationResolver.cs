@@ -4,12 +4,12 @@ using Microsoft.Extensions.Options;
 namespace FaunaFinder.Server.Authorization;
 
 /// <summary>
-/// Turns the configured slug into an organization id once, before the app serves traffic.
+/// Reads the configured organization once, before the app serves traffic.
 /// </summary>
 public sealed class FaunaFinderOrganizationResolver(
     IServiceScopeFactory scopeFactory,
     IOptions<FaunaFinderOptions> options,
-    FaunaFinderOrganization organization,
+    FaunaFinderOrganizationAccessor accessor,
     ILogger<FaunaFinderOrganizationResolver> logger
 ) : IHostedService
 {
@@ -44,11 +44,21 @@ public sealed class FaunaFinderOrganizationResolver(
             return;
         }
 
-        organization.Id = resolved.Id;
+        accessor.Organization = new FaunaFinderOrganization(
+            resolved.Id,
+            resolved.Slug,
+            resolved.Name,
+            resolved.Tagline,
+            resolved.ProfilePictureUrl,
+            resolved.WebsiteUrl,
+            resolved.PrimaryColor,
+            resolved.AccentColor
+        );
 
         logger.LogInformation(
-            "FaunaFinder contributes to organization '{Slug}' ({OrganizationId}).",
-            slug,
+            "FaunaFinder contributes to {Name} ('{Slug}', {OrganizationId}).",
+            resolved.Name,
+            resolved.Slug,
             resolved.Id
         );
     }
