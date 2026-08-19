@@ -60,7 +60,8 @@ builder.Services.Configure<FaunaFinderOptions>(
     builder.Configuration.GetSection(FaunaFinderOptions.SectionName)
 );
 builder.Services.AddSingleton<FaunaFinderOrganizationAccessor>();
-builder.Services.AddHostedService<FaunaFinderOrganizationResolver>();
+builder.Services.AddScoped<FaunaFinderOrganizationResolver>();
+builder.Services.AddHostedService<FaunaFinderOrganizationStartupTask>();
 builder.Services.AddScoped<IFaunaFinderPermission, FaunaFinderPermission>();
 
 var app = builder.Build();

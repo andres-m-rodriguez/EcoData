@@ -4,16 +4,23 @@ using Microsoft.Extensions.Options;
 namespace FaunaFinder.Server.Authorization;
 
 /// <summary>
-/// Reads the configured organization once, before the app serves traffic.
+/// Reads the configured organization. Says nothing about when it runs — the host decides
+/// whether that is once at startup, lazily on first use, or on a refresh.
 /// </summary>
 public sealed class FaunaFinderOrganizationResolver(
-    IServiceScopeFactory scopeFactory,
     IOptions<FaunaFinderOptions> options,
-    FaunaFinderOrganizationAccessor accessor,
+    IOrganizationRepository organizations,
     ILogger<FaunaFinderOrganizationResolver> logger
-) : IHostedService
+)
 {
-    public async Task StartAsync(CancellationToken cancellationToken)
+    /// <returns>
+    /// The organization, or <see langword="null"/> when none is configured or the
+    /// configured slug matches nothing. Both cases are logged and neither throws:
+    /// FaunaFinder is a public catalogue first and has to keep serving anonymous traffic.
+    /// </returns>
+    public async Task<FaunaFinderOrganization?> ResolveAsync(
+        CancellationToken cancellationToken = default
+    )
     {
         var slug = options.Value.OrganizationSlug;
 
@@ -25,12 +32,9 @@ public sealed class FaunaFinderOrganizationResolver(
                 nameof(FaunaFinderOptions.OrganizationSlug)
             );
 
-            return;
+            return null;
         }
 
-        await using var scope = scopeFactory.CreateAsyncScope();
-
-        var organizations = scope.ServiceProvider.GetRequiredService<IOrganizationRepository>();
         var resolved = await organizations.GetBySlugAsync(slug, cancellationToken);
 
         if (resolved is null)
@@ -41,10 +45,17 @@ public sealed class FaunaFinderOrganizationResolver(
                 slug
             );
 
-            return;
+            return null;
         }
 
-        accessor.Organization = new FaunaFinderOrganization(
+        logger.LogInformation(
+            "FaunaFinder contributes to {Name} ('{Slug}', {OrganizationId}).",
+            resolved.Name,
+            resolved.Slug,
+            resolved.Id
+        );
+
+        return new FaunaFinderOrganization(
             resolved.Id,
             resolved.Slug,
             resolved.Name,
@@ -54,14 +65,5 @@ public sealed class FaunaFinderOrganizationResolver(
             resolved.PrimaryColor,
             resolved.AccentColor
         );
-
-        logger.LogInformation(
-            "FaunaFinder contributes to {Name} ('{Slug}', {OrganizationId}).",
-            resolved.Name,
-            resolved.Slug,
-            resolved.Id
-        );
     }
-
-    public Task StopAsync(CancellationToken cancellationToken) => Task.CompletedTask;
 }
