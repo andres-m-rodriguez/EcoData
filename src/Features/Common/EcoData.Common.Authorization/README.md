@@ -236,12 +236,12 @@ Each host registers only the kinds it uses.
 
 ```csharp
 // EcoPortal.Server
-builder.Services.AddAuthorization();
+builder.Services.AddPermissions();
 builder.Services.AddPermissionSource<OrganizationPermissionSource>();
 builder.Services.AddPermissionSource<GlobalPermissionSource>();
 
 // EcoPortal.Client
-builder.Services.AddAuthorization();
+builder.Services.AddPermissions();
 builder.Services.AddPermissionSource<OrganizationPermissionSource>();   // the HTTP one
 ```
 
@@ -252,7 +252,7 @@ FaunaFinder additionally resolves its organization once, at startup:
 builder.Services.Configure<FaunaFinderOptions>(
     builder.Configuration.GetSection(FaunaFinderOptions.SectionName)
 );
-builder.Services.AddAuthorization();
+builder.Services.AddPermissions();
 builder.Services.AddPermissionSource<OrganizationPermissionSource>();
 
 var app = builder.Build();

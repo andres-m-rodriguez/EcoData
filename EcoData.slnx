@@ -65,6 +65,7 @@
     <Project Path="src/Features/Organization/EcoData.Organization.Api/EcoData.Organization.Api.csproj" />
     <Project Path="src/Features/Organization/EcoData.Organization.Application.Client/EcoData.Organization.Application.Client.csproj" />
     <Project Path="src/Features/Organization/EcoData.Organization.Application.Server/EcoData.Organization.Application.Server.csproj" />
+    <Project Path="src/Features/Organization/EcoData.Organization.Authorization/EcoData.Organization.Authorization.csproj" />
     <Project Path="src/Features/Organization/EcoData.Organization.Contracts/EcoData.Organization.Contracts.csproj" />
     <Project Path="src/Features/Organization/EcoData.Organization.DataAccess/EcoData.Organization.DataAccess.csproj" />
     <Project Path="src/Features/Organization/EcoData.Organization.Database/EcoData.Organization.Database.csproj" />

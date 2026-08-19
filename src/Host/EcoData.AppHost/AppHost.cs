@@ -124,8 +124,21 @@ var ecoportal = builder
 var faunafinder = builder
     .AddProject<Projects.FaunaFinder_Server>("faunafinder")
     .WithExternalHttpEndpoints()
+    .WithReference(identityDb)
     .WithReference(locationsDb)
+    .WithReference(organizationDb)
     .WithReference(wildlifeDb)
+    // FaunaFinder signs users in itself. auth_token is host-only and SameSite=Strict, so an
+    // EcoPortal session cannot reach this host — same accounts, separate cookie. It shares
+    // the user signing key so a token minted here validates here.
+    .WithEnvironment("Jwt__UserSecretKey", jwtUserSecretKey)
+    .WithEnvironment("Jwt__SensorSecretKey", jwtSensorSecretKey)
+    .WithEnvironment("Jwt__Issuer", "EcoData")
+    .WithEnvironment("Jwt__Audience", "EcoData")
+    .WithEnvironment("Jwt__ExpirationHours", "24")
+    // Contributors are members of the organization that runs FaunaFinder. A slug, not an
+    // id: organizations are created at runtime, so the guid differs per environment.
+    .WithEnvironment("FaunaFinder__OrganizationSlug", "intermetro")
     .WaitFor(seeder)
     .PublishAsAzureContainerApp(
         (infra, app) =>

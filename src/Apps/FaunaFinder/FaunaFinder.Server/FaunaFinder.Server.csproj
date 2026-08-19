@@ -14,6 +14,14 @@
   <ItemGroup>
     <ProjectReference Include="..\FaunaFinder.Client\FaunaFinder.Client.csproj" />
     <ProjectReference Include="..\..\..\Host\EcoData.ServiceDefaults\EcoData.ServiceDefaults.csproj" />
+    <ProjectReference Include="..\..\..\Features\Common\EcoData.Common.Authorization\EcoData.Common.Authorization.csproj" />
+    <ProjectReference Include="..\..\..\Features\Identity\EcoData.Identity.Api\EcoData.Identity.Api.csproj" />
+    <ProjectReference Include="..\..\..\Features\Identity\EcoData.Identity.Application\EcoData.Identity.Application.csproj" />
+    <ProjectReference Include="..\..\..\Features\Identity\EcoData.Identity.DataAccess\EcoData.Identity.DataAccess.csproj" />
+    <ProjectReference Include="..\..\..\Features\Identity\EcoData.Identity.Database\EcoData.Identity.Database.csproj" />
+    <ProjectReference Include="..\..\..\Features\Organization\EcoData.Organization.Authorization\EcoData.Organization.Authorization.csproj" />
+    <ProjectReference Include="..\..\..\Features\Organization\EcoData.Organization.DataAccess\EcoData.Organization.DataAccess.csproj" />
+    <ProjectReference Include="..\..\..\Features\Organization\EcoData.Organization.Database\EcoData.Organization.Database.csproj" />
     <ProjectReference Include="..\..\..\Features\Wildlife\EcoData.Wildlife.Api\EcoData.Wildlife.Api.csproj" />
     <ProjectReference Include="..\..\..\Features\Wildlife\EcoData.Wildlife.DataAccess\EcoData.Wildlife.DataAccess.csproj" />
     <ProjectReference Include="..\..\..\Features\Wildlife\EcoData.Wildlife.Database\EcoData.Wildlife.Database.csproj" />
