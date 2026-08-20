@@ -3,9 +3,9 @@
 One call shape for every authorization question. A scope varies in **kind** — organization or global — and each kind is answered by whichever module owns its storage.
 
 ```csharp
-await auth.HasPermissionAsync(PermissionScope.Organization(orgId), "wildlife:occurrence:submit");
-await auth.IsInRoleAsync(PermissionScope.Organization(orgId), "Owner");
-await auth.IsInRoleAsync(PermissionScope.Global, "GlobalAdmin");
+await auth.HasOrgPermissionAsync(orgId, "wildlife:occurrence:submit");
+await auth.IsInOrgRoleAsync(orgId, "Owner");
+await auth.IsInGlobalRoleAsync("GlobalAdmin");
 ```
 
 Per-app permissions are modelled as an organization: FaunaFinder resolves to the org that runs it, so there is one mechanism rather than two. See §3.
@@ -332,3 +332,9 @@ group
 - Client answers shape UI only. They can be more permissive than the server, which sees rules the browser cannot. The endpoint check is the enforcement.
 - Permission keys appear in `<Feature>.Application` and inside sources. Never at a call site.
 - FaunaFinder's organization is configuration, not a constant. It becomes wrong the day a second institution contributes — at which point the fix is a new scope kind behind `IFaunaFinderPermission`, and no call site changes.
+
+The generic form stays available for a scope kind with no shorthand:
+
+```csharp
+await auth.HasPermissionAsync(PermissionScope.Custom("project", projectId), "project:publish");
+```

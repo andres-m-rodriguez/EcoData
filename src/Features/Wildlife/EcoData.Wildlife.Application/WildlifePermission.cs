@@ -9,26 +9,30 @@ public sealed class WildlifePermission(IAuthorization authorization) : IWildlife
     public Task<bool> CanReadSpeciesAsync(
         Guid organizationId,
         CancellationToken cancellationToken = default
-    ) => HasAsync(organizationId, WildlifePermissions.ReadSpecies, cancellationToken);
+    ) =>
+        authorization.HasOrgPermissionAsync(
+            organizationId,
+            WildlifePermissions.ReadSpecies,
+            cancellationToken
+        );
 
     public Task<bool> CanSubmitOccurrenceAsync(
         Guid organizationId,
         CancellationToken cancellationToken = default
-    ) => HasAsync(organizationId, WildlifePermissions.SubmitOccurrence, cancellationToken);
+    ) =>
+        authorization.HasOrgPermissionAsync(
+            organizationId,
+            WildlifePermissions.SubmitOccurrence,
+            cancellationToken
+        );
 
     public Task<bool> CanVerifyOccurrenceAsync(
         Guid organizationId,
         CancellationToken cancellationToken = default
-    ) => HasAsync(organizationId, WildlifePermissions.VerifyOccurrence, cancellationToken);
-
-    private Task<bool> HasAsync(
-        Guid organizationId,
-        string permission,
-        CancellationToken cancellationToken
     ) =>
-        authorization.HasPermissionAsync(
-            PermissionScope.Organization(organizationId),
-            permission,
+        authorization.HasOrgPermissionAsync(
+            organizationId,
+            WildlifePermissions.VerifyOccurrence,
             cancellationToken
         );
 }
