@@ -1,3 +1,4 @@
+using EcoData.Common.Authorization;
 using EcoData.Common.Messaging;
 using EcoData.Identity.Api.Authentication;
 using EcoData.Identity.Api.Endpoints;
@@ -10,6 +11,7 @@ using EcoData.Locations.DataAccess.Extensions;
 using EcoData.Locations.Database.Extensions;
 using EcoData.Organization.Api;
 using EcoData.Organization.Api.Authorization;
+using EcoData.Organization.Authorization;
 using EcoData.Organization.DataAccess;
 using EcoData.Organization.Database.Extensions;
 using EcoData.Sensors.Api;
@@ -17,6 +19,7 @@ using EcoData.Sensors.Api.RateLimiting;
 using EcoData.Sensors.DataAccess;
 using EcoData.Sensors.Database.Extensions;
 using EcoData.Wildlife.Api;
+using EcoData.Wildlife.Application;
 using EcoData.Wildlife.DataAccess;
 using EcoData.Wildlife.Database.Extensions;
 using EcoPortal.Server.Components;
@@ -65,6 +68,9 @@ builder
     .AddSensorJwtAuthentication(builder.Configuration);
 
 builder.Services.AddOrganizationAuthorization();
+builder.Services.AddPermissions();
+builder.Services.AddOrganizationPermissionSource();
+builder.Services.AddWildlifeAuthorization();
 builder.Services.AddLoginRateLimiting();
 builder.Services.AddSensorReadingsRateLimiting();
 builder.Services.AddMemoryCache();

@@ -26,13 +26,16 @@
     <ProjectReference Include="..\..\..\Features\Locations\EcoData.Locations.Database\EcoData.Locations.Database.csproj" />
     <ProjectReference Include="..\..\..\Features\Locations\EcoData.Locations.DataAccess\EcoData.Locations.DataAccess.csproj" />
     <ProjectReference Include="..\..\..\Features\Locations\EcoData.Locations.Api\EcoData.Locations.Api.csproj" />
+    <ProjectReference Include="..\..\..\Features\Common\EcoData.Common.Authorization\EcoData.Common.Authorization.csproj" />
     <ProjectReference Include="..\..\..\Features\Organization\EcoData.Organization.Api\EcoData.Organization.Api.csproj" />
+    <ProjectReference Include="..\..\..\Features\Organization\EcoData.Organization.Authorization\EcoData.Organization.Authorization.csproj" />
     <ProjectReference Include="..\..\..\Features\Organization\EcoData.Organization.DataAccess\EcoData.Organization.DataAccess.csproj" />
     <ProjectReference Include="..\..\..\Features\Organization\EcoData.Organization.Database\EcoData.Organization.Database.csproj" />
     <ProjectReference Include="..\..\..\Features\Sensors\EcoData.Sensors.Api\EcoData.Sensors.Api.csproj" />
     <ProjectReference Include="..\..\..\Features\Sensors\EcoData.Sensors.DataAccess\EcoData.Sensors.DataAccess.csproj" />
     <ProjectReference Include="..\..\..\Features\Sensors\EcoData.Sensors.Database\EcoData.Sensors.Database.csproj" />
     <ProjectReference Include="..\..\..\Features\Wildlife\EcoData.Wildlife.Api\EcoData.Wildlife.Api.csproj" />
+    <ProjectReference Include="..\..\..\Features\Wildlife\EcoData.Wildlife.Application\EcoData.Wildlife.Application.csproj" />
     <ProjectReference Include="..\..\..\Features\Wildlife\EcoData.Wildlife.DataAccess\EcoData.Wildlife.DataAccess.csproj" />
     <ProjectReference Include="..\..\..\Features\Wildlife\EcoData.Wildlife.Database\EcoData.Wildlife.Database.csproj" />
   </ItemGroup>

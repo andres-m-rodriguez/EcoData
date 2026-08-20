@@ -5,10 +5,11 @@ namespace EcoData.Common.Authorization;
 public static class DependencyInjection
 {
     /// <summary>
-    /// Registers the unified <see cref="IAuthorization"/> entry point. Add a source per
+    /// Registers the unified <see cref="IAuthorization"/> entry point. Named to avoid
+    /// colliding with ASP.NET Core's AddAuthorization, which hosts also call. Add a source per
     /// scope kind the host uses with <see cref="AddPermissionSource{T}"/>.
     /// </summary>
-    public static IServiceCollection AddAuthorization(this IServiceCollection services)
+    public static IServiceCollection AddPermissions(this IServiceCollection services)
     {
         services.AddScoped<IAuthorization, Authorization>();
 
