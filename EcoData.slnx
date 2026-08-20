@@ -79,6 +79,7 @@
   </Folder>
   <Folder Name="/Features/Wildlife/">
     <Project Path="src/Features/Wildlife/EcoData.Wildlife.Api/EcoData.Wildlife.Api.csproj" />
+    <Project Path="src/Features/Wildlife/EcoData.Wildlife.Application/EcoData.Wildlife.Application.csproj" />
     <Project Path="src/Features/Wildlife/EcoData.Wildlife.Application.Client/EcoData.Wildlife.Application.Client.csproj" />
     <Project Path="src/Features/Wildlife/EcoData.Wildlife.Application.Server/EcoData.Wildlife.Application.Server.csproj" />
     <Project Path="src/Features/Wildlife/EcoData.Wildlife.Contracts/EcoData.Wildlife.Contracts.csproj" />
