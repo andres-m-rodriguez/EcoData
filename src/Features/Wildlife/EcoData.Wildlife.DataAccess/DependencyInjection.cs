@@ -17,7 +17,11 @@ public static class DependencyInjection
             .AddOptions<WildlifeOptions>()
             .Bind(configuration.GetSection(WildlifeOptions.SectionName));
 
-        services.AddScoped<ISpeciesRepository, SpeciesRepository>();
+        // The stats decorator needs a cache; AddMemoryCache is a TryAdd, so a host
+        // that already registered one keeps its own.
+        services.AddMemoryCache();
+        services.AddScoped<SpeciesRepository>();
+        services.AddScoped<ISpeciesRepository, CachedSpeciesRepository>();
         services.AddScoped<ISpeciesCategoryRepository, SpeciesCategoryRepository>();
         services.AddScoped<INrcsPracticeRepository, NrcsPracticeRepository>();
         services.AddScoped<IFwsActionRepository, FwsActionRepository>();
