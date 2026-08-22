@@ -16,7 +16,7 @@
 <MudDialogProvider />
 <MudSnackbarProvider />
 
-<UiShell Bleed="IsMapPage" RailOpen="_railOpen">
+<UiShell RailOpen="_railOpen">
     <AppBar>
         <MudHidden Breakpoint="Breakpoint.MdAndUp">
             <UiMobileTitle BrandText="Ecoportal" IsRoot="IsHomePage" />
@@ -160,14 +160,10 @@
     // The organizations sub-nav belongs to the area, not to a workspace inside it.
     private bool IsOrganizationsArea =>
         Path.StartsWith("/organizations", StringComparison.OrdinalIgnoreCase) && OrganizationId is null;
-
-    private bool IsMapPage => Path.EndsWith("/map", StringComparison.OrdinalIgnoreCase);
-
     // Pages that draw their own chrome get @Body with no container. A workspace
     // is one: it fills the panel beside the rail.
     private bool IsFullBleedPage =>
         IsHomePage
-        || IsMapPage
         || OrganizationId is not null
         || Path.StartsWith("/data", StringComparison.OrdinalIgnoreCase)
         || Path.Equals("/organizations/discover", StringComparison.OrdinalIgnoreCase)
