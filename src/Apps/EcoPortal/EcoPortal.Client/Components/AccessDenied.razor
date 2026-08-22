@@ -1,6 +1,4 @@
-@using System.Text.RegularExpressions
 @using EcoPortal.Client.Services
-@inject NavigationManager Navigation
 @inject AuthStateService AuthState
 
 <PageTitle>No Access - EcoData</PageTitle>
@@ -29,16 +27,16 @@
         </MudStack>
 
         <MudStack Row="true" Spacing="2" Class="mt-4 flex-wrap justify-center">
-            @if (OrganizationPath is { } organizationPath)
+            @if (OrganizationId is { } organizationId)
             {
                 <MudButton Variant="Variant.Filled"
                            Color="Color.Primary"
                            StartIcon="@Icons.Material.Filled.Business"
-                           Href="@organizationPath">
+                           Href="@($"/organizations/{organizationId}")">
                     Back to organization
                 </MudButton>
             }
-            <MudButton Variant="@(OrganizationPath is null ? Variant.Filled : Variant.Outlined)"
+            <MudButton Variant="@(OrganizationId is null ? Variant.Filled : Variant.Outlined)"
                        Color="Color.Primary"
                        StartIcon="@Icons.Material.Filled.Home"
                        Href="/">
@@ -49,17 +47,7 @@
 </MudContainer>
 
 @code {
-    private const string OrganizationRoutePattern =
-        @"/organizations/([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})";
-
-    // The denied page is usually one level inside an organization; offer the way back to it.
-    private string? OrganizationPath
-    {
-        get
-        {
-            var match = Regex.Match(Navigation.Uri, OrganizationRoutePattern, RegexOptions.IgnoreCase);
-
-            return match.Success ? $"/organizations/{match.Groups[1].Value}" : null;
-        }
-    }
+    // The organization the denied page belongs to, when its route has one.
+    [Parameter]
+    public Guid? OrganizationId { get; set; }
 }
