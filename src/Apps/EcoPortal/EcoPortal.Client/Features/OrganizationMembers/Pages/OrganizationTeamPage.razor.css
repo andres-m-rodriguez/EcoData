@@ -1,0 +1,6 @@
+/* At /team a phone shows the drill list instead of the members list. */
+@media (max-width: 959.95px) {
+    .team-members--desktop-only {
+        display: none;
+    }
+}

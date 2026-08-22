@@ -1,0 +1,41 @@
+.ui-section-head {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 18px;
+}
+
+.ui-section-text {
+    min-width: 0;
+}
+
+.ui-section-eyebrow {
+    font: 700 10px/1 var(--ui-font-sans);
+    letter-spacing: var(--ui-tracking-eyebrow);
+    text-transform: uppercase;
+    color: var(--ui-fg-4);
+    margin-bottom: 6px;
+}
+
+.ui-section-title {
+    margin: 0;
+    font: 600 1.5rem/1.15 var(--ui-font-serif);
+    letter-spacing: var(--ui-tracking-tight);
+    color: var(--ui-fg);
+    text-wrap: balance;
+}
+
+.ui-section-sub {
+    margin: 4px 0 0;
+    color: var(--ui-fg-3);
+    max-width: 60ch;
+    font: 400 14px/1.5 var(--ui-font-sans);
+}
+
+.ui-section-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}

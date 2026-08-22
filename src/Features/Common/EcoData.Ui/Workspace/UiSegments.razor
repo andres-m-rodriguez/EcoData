@@ -1,0 +1,28 @@
+@namespace EcoData.Ui.Workspace
+
+@* A segmented control of links — sub-areas of one section, one level deep. *@
+
+<nav class="ui-segments" role="tablist" aria-label="@Label">
+    @foreach (var segment in Segments)
+    {
+        <a href="@segment.Href" role="tab" aria-selected="@(segment.Key == ActiveKey ? "true" : "false")"
+           class="@(segment.Key == ActiveKey ? "ui-segment is-active" : "ui-segment")">
+            <span>@segment.Label</span>
+            @if (segment.Count is { } count)
+            {
+                <span class="@(segment.Hot && count > 0 ? "ui-segment-count is-hot" : "ui-segment-count")">@count</span>
+            }
+        </a>
+    }
+</nav>
+
+@code {
+    [Parameter, EditorRequired]
+    public required IReadOnlyList<UiSegment> Segments { get; set; }
+
+    [Parameter]
+    public string? ActiveKey { get; set; }
+
+    [Parameter]
+    public string? Label { get; set; }
+}

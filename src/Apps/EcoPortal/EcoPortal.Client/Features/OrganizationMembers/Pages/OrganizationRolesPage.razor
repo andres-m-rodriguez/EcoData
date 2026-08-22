@@ -1,22 +1,30 @@
+@page "/organizations/{OrganizationId:guid}/team/roles"
 @page "/organizations/{OrganizationId:guid}/roles"
 @using EcoData.Organization.Contracts
-@using EcoData.Common.Problems.Contracts
 @using EcoPortal.Client.Authorization
 @attribute [OrganizationPermission(Permissions.Organization.ManageMembers)]
 @using EcoData.Organization.Contracts.Dtos
 @using EcoData.Organization.Contracts.Requests
 @using EcoData.Organization.Application.Client
 @using EcoPortal.Client.Components
+@using EcoPortal.Client.Features.Organizations.Workspace
 @using EcoPortal.Client.Features.OrganizationMembers.Dialogs
 @inherits StatefulComponent
 @inject IOrganizationRoleHttpClient RoleClient
 @inject IDialogService DialogService
 @inject ISnackbar Snackbar
 
-<PageTitle>Roles - EcoData</PageTitle>
+<OrganizationWorkspace OrganizationId="OrganizationId" Section="OrganizationSection.Team">
+    <TeamNav Context="context" Active="@TeamNav.Roles" />
 
-<NuiPageLayout Title="Roles" ParentPath="@($"/organizations/{OrganizationId}/team")"
-               Actions="@([new("New role", OnNewRole)])">
+    <UiSectionHead Title="Roles" Eyebrow="People" Subtitle="What each role can do. Members hold exactly one.">
+        <Actions>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small" StartIcon="@Icons.Material.Filled.Add" OnClick="OnNewRole">
+                New role
+            </MudButton>
+        </Actions>
+    </UiSectionHead>
+
     @if (LoadRolesState.IsLoading || !LoadRolesState.HasResult)
     {
         <MudPaper Elevation="0" Class="rounded-lg">
@@ -37,25 +45,7 @@
             <MudStack AlignItems="AlignItems.Center">
                 <MudIcon Icon="@Icons.Material.Filled.Error" Size="Size.Large" Color="Color.Error" />
                 <MudText Typo="Typo.h6" Color="Color.Error" Class="mt-2">@_loadError</MudText>
-                <MudButton Variant="Variant.Outlined" Color="Color.Primary" OnClick="@(() => LoadRolesState.Execute())" Class="mt-3">
-                    Try again
-                </MudButton>
-            </MudStack>
-        </MudPaper>
-    }
-    else if (LoadRolesState.Result.Count == 0)
-    {
-        <MudPaper Elevation="0" Class="pa-8 rounded-lg">
-            <MudStack AlignItems="AlignItems.Center">
-                <MudIcon Icon="@Icons.Material.Filled.AdminPanelSettings" Size="Size.Large" Color="Color.Secondary" />
-                <MudText Typo="Typo.h6" Color="Color.Secondary" Class="mt-2">No roles yet</MudText>
-                <MudText Typo="Typo.body2" Color="Color.Secondary">
-                    Roles decide what members of this organization can do.
-                </MudText>
-                <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add"
-                           OnClick="OnNewRole" Class="mt-3">
-                    New role
-                </MudButton>
+                <MudButton Variant="Variant.Outlined" Color="Color.Primary" OnClick="@(() => LoadRolesState.Execute())" Class="mt-3">Try again</MudButton>
             </MudStack>
         </MudPaper>
     }
@@ -75,29 +65,25 @@
                             </MudStack>
                             @if (role.Permissions.Count == 0)
                             {
-                                <MudText Typo="Typo.body2" Color="Color.Secondary">No permissions</MudText>
+                                <MudText Typo="Typo.body2" Color="Color.Secondary">No permissions — the public profile only.</MudText>
                             }
                             else
                             {
                                 <MudChipSet T="string" ReadOnly="true" Class="flex-wrap">
                                     @foreach (var permission in role.Permissions)
                                     {
-                                        <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined">
-                                            @PermissionCatalog.Label(permission)
-                                        </MudChip>
+                                        <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined">@PermissionCatalog.Label(permission)</MudChip>
                                     }
                                 </MudChipSet>
                             }
                         </MudStack>
                         <MudStack Row Spacing="1">
                             <MudTooltip Text="Edit role">
-                                <MudIconButton Icon="@Icons.Material.Outlined.Edit" Size="Size.Small"
-                                               OnClick="@(() => OpenEditor(role))" />
+                                <MudIconButton Icon="@Icons.Material.Outlined.Edit" Size="Size.Small" OnClick="@(() => OpenEditor(role))" />
                             </MudTooltip>
                             <MudTooltip Text="@(role.MemberCount > 0 ? "Move its members to another role first" : "Delete role")">
                                 <MudIconButton Icon="@Icons.Material.Outlined.Delete" Size="Size.Small" Color="Color.Error"
-                                               Disabled="@(role.MemberCount > 0)"
-                                               OnClick="@(() => ConfirmDelete(role))" />
+                                               Disabled="@(role.MemberCount > 0)" OnClick="@(() => ConfirmDelete(role))" />
                             </MudTooltip>
                         </MudStack>
                     </MudStack>
@@ -105,7 +91,7 @@
             }
         </MudPaper>
     }
-</NuiPageLayout>
+</OrganizationWorkspace>
 
 @code {
     [Parameter]
@@ -174,7 +160,6 @@
         }
 
         var deleted = await RoleClient.DeleteAsync(OrganizationId, role.Id);
-
         if (!deleted.TryPickT0(out _, out var failure))
         {
             Snackbar.Add(failure.Message ?? "Failed to delete role", Severity.Error);

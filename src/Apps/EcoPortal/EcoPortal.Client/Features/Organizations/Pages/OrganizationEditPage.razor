@@ -1,3 +1,4 @@
+@page "/organizations/{Id:guid}/settings"
 @page "/organizations/{Id:guid}/edit"
 @using EcoData.Organization.Contracts
 @using EcoPortal.Client.Authorization
@@ -5,85 +6,76 @@
 @using EcoData.Organization.Contracts.Dtos
 @using EcoData.Organization.Application.Client
 @using EcoPortal.Client.Components
-@using EcoPortal.Client.Services
 @using EcoPortal.Client.Features.Organizations.Components
+@using EcoPortal.Client.Features.Organizations.Workspace
 @inherits StatefulComponent
 @inject IOrganizationHttpClient OrganizationClient
 @inject INavigationManager Navigation
+@inject IDialogService DialogService
 @inject ISnackbar Snackbar
-@inject AuthStateService AuthState
+@inject OrganizationWorkspaceState State
 
-<PageTitle>Edit Organization - EcoData</PageTitle>
+<OrganizationWorkspace OrganizationId="Id" Section="OrganizationSection.Settings">
+    <UiSectionHead Title="Settings" Eyebrow="Organization" Subtitle="The profile people see, and the colours the organization goes by." />
 
-<NuiPageLayout Title="Edit Organization" ParentPath="@($"/organizations/{Id}")">
-        @if (LoadState.IsLoading)
-        {
-            <MudPaper Elevation="1" Class="pa-6 rounded-lg">
-                <MudSkeleton Width="200px" Height="32px" />
-                <MudSkeleton Width="100%" Height="56px" Class="mt-4" />
-                <MudSkeleton Width="100%" Height="56px" Class="mt-4" />
-                <MudSkeleton Width="100%" Height="120px" Class="mt-4" />
-                <MudSkeleton Width="100%" Height="56px" Class="mt-4" />
-            </MudPaper>
-        }
-        else if (_organization is null)
-        {
-            <MudPaper Elevation="1" Class="pa-6 rounded-lg">
-                <MudStack AlignItems="AlignItems.Center">
-                    <MudIcon Icon="@Icons.Material.Filled.Error" Size="Size.Large" Color="Color.Error" />
-                    <MudText Typo="Typo.h6" Color="Color.Error" Class="mt-2">Organization not found</MudText>
-                </MudStack>
-            </MudPaper>
-        }
-        else
-        {
-            <MudPaper Elevation="1" Class="pa-6 rounded-lg">
-                <OrganizationForm Model="_model" SubmitButtonText="Save Changes" ErrorMessage="@_errorMessage"
-                                  IsLoading="SaveState.IsLoading" OnSubmit="HandleSubmit" OnCancel="NavigateToDetails" />
-            </MudPaper>
-        }
-</NuiPageLayout>
+    @{ Prime(context.Organization); }
+
+    <MudPaper Elevation="0" Class="pa-6 rounded-lg">
+        <OrganizationForm Model="_model" SubmitButtonText="Save changes" ErrorMessage="@_errorMessage"
+                          IsLoading="SaveState.IsLoading" OnSubmit="HandleSubmit" OnCancel="NavigateToOverview" />
+    </MudPaper>
+
+    @if (context.Can(Permissions.Organization.Delete))
+    {
+        <div class="settings-danger">
+            <div>
+                <h3>Delete organization</h3>
+                <p>Removes the organization, its roles and memberships. Sensors must be deleted or reassigned first.</p>
+            </div>
+            <MudButton Variant="Variant.Outlined" Color="Color.Error" StartIcon="@Icons.Material.Outlined.Delete"
+                       OnClick="@(() => ConfirmDelete(context.Organization.Name))">
+                Delete…
+            </MudButton>
+        </div>
+    }
+</OrganizationWorkspace>
 
 @code {
     [Parameter]
     public Guid Id { get; set; }
 
-    private OrganizationDtoForDetail? _organization;
     private readonly OrganizationForm.OrganizationFormModel _model = new();
+    private Guid _primedFor;
     private string? _errorMessage;
 
-    [Command, RunOnLoad]
-    private async Task Load(CancellationToken ct)
+    // The form starts from the organization the workspace already loaded; no
+    // second fetch. Primed once per organization so typing is never overwritten.
+    private void Prime(OrganizationDtoForDetail organization)
     {
-        var result = await OrganizationClient.GetByIdAsync(Id, ct);
-        result.Switch(
-            organization =>
-            {
-                _organization = organization;
-                _model.Name = organization.Name;
-                _model.Slug = organization.Slug;
-                _model.Tagline = organization.Tagline;
-                _model.ProfilePictureUrl = organization.ProfilePictureUrl;
-                _model.CardPictureUrl = organization.CardPictureUrl;
-                _model.AboutUs = organization.AboutUs;
-                _model.WebsiteUrl = organization.WebsiteUrl;
-                _model.Location = organization.Location;
-                _model.FoundedYear = organization.FoundedYear;
-                _model.LegalStatus = organization.LegalStatus;
-                _model.TaxId = organization.TaxId;
-                _model.PrimaryColor = organization.PrimaryColor;
-                _model.AccentColor = organization.AccentColor;
-                _model.ContactEmail = organization.ContactEmail;
-                _model.Type = organization.Type;
-            },
-            _ => _organization = null
-        );
+        if (_primedFor == organization.Id)
+        {
+            return;
+        }
+
+        _primedFor = organization.Id;
+        _model.Name = organization.Name;
+        _model.Slug = organization.Slug;
+        _model.Tagline = organization.Tagline;
+        _model.ProfilePictureUrl = organization.ProfilePictureUrl;
+        _model.CardPictureUrl = organization.CardPictureUrl;
+        _model.AboutUs = organization.AboutUs;
+        _model.WebsiteUrl = organization.WebsiteUrl;
+        _model.Location = organization.Location;
+        _model.FoundedYear = organization.FoundedYear;
+        _model.LegalStatus = organization.LegalStatus;
+        _model.TaxId = organization.TaxId;
+        _model.PrimaryColor = organization.PrimaryColor;
+        _model.AccentColor = organization.AccentColor;
+        _model.ContactEmail = organization.ContactEmail;
+        _model.Type = organization.Type;
     }
 
-    private async Task HandleSubmit(OrganizationForm.OrganizationFormModel model)
-    {
-        await SaveState.Execute();
-    }
+    private async Task HandleSubmit(OrganizationForm.OrganizationFormModel model) => await SaveState.Execute();
 
     [Command]
     private async Task Save()
@@ -116,15 +108,45 @@
 
         var result = await OrganizationClient.UpdateAsync(Id, dto);
 
+        if (!result.TryPickT0(out _, out var error))
+        {
+            _errorMessage = error.Message ?? "Failed to update organization";
+            return;
+        }
+
+        Snackbar.Add("Saved", Severity.Success);
+        State.Invalidate(Id);
+        Navigation.NavigateTo(OrganizationSections.Path(Id, OrganizationSection.Overview));
+    }
+
+    private async Task ConfirmDelete(string name)
+    {
+        var parameters = new DialogParameters<ConfirmDialog>
+        {
+            { x => x.ContentText, $"Delete \"{name}\"? This cannot be undone." },
+            { x => x.ButtonText, "Delete" },
+            { x => x.Color, Color.Error }
+        };
+        var dialog = await DialogService.ShowAsync<ConfirmDialog>("Delete organization", parameters);
+        var dialogResult = await dialog.Result;
+
+        if (dialogResult is not { Canceled: false })
+        {
+            return;
+        }
+
+        var result = await OrganizationClient.DeleteAsync(Id);
         result.Switch(
             _ =>
             {
-                Snackbar.Add("Organization updated successfully", Severity.Success);
-                Navigation.NavigateTo($"/organizations/{Id}");
+                Snackbar.Add("Organization deleted", Severity.Success);
+                State.Invalidate(Id);
+                Navigation.NavigateTo("/organizations/my");
             },
-            error => _errorMessage = error.Message ?? "Failed to update organization"
+            error => Snackbar.Add(error.Message ?? "Failed to delete organization", Severity.Error)
         );
     }
 
-    private void NavigateToDetails() => _ = Navigation.GoBackAsync();
+    private void NavigateToOverview() =>
+        Navigation.NavigateTo(OrganizationSections.Path(Id, OrganizationSection.Overview));
 }

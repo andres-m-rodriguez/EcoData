@@ -1,0 +1,28 @@
+@namespace EcoData.Ui.Workspace
+
+@* Phone stand-in for the rail: the same links as a sticky, horizontally
+   scrolling row of chips under the workspace header. *@
+
+<nav class="ui-strip" aria-label="@Label">
+    @foreach (var link in Links)
+    {
+        <a href="@link.Href" class="@(link.Key == ActiveKey ? "ui-strip-chip is-active" : "ui-strip-chip")">
+            <span>@link.Label</span>
+            @if (link.Badge > 0)
+            {
+                <span class="ui-strip-badge">@link.Badge</span>
+            }
+        </a>
+    }
+</nav>
+
+@code {
+    [Parameter, EditorRequired]
+    public required IReadOnlyList<UiRailLink> Links { get; set; }
+
+    [Parameter]
+    public string? ActiveKey { get; set; }
+
+    [Parameter]
+    public string? Label { get; set; }
+}

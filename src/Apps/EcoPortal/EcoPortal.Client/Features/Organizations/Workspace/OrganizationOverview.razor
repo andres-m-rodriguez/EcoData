@@ -1,0 +1,88 @@
+@namespace EcoPortal.Client.Features.Organizations.Workspace
+@using EcoData.Organization.Contracts
+@using EcoData.Sensors.Contracts.Dtos
+@using EcoPortal.Client.Features.Sensors.Components
+@using SensorPermissions = EcoData.Sensors.Contracts.Permissions
+@inject OrganizationWorkspaceState State
+@inject INavigationManager Navigation
+
+@* A member's landing: the numbers that matter today, what's online, and the
+   organization's own words. *@
+
+<UiSectionHead Title="Overview" Eyebrow="Today">
+    <Actions>
+        @if (Context.Can(SensorPermissions.Sensor.Create))
+        {
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small" StartIcon="@Icons.Material.Filled.Add"
+                       Href="@($"{OrganizationSections.Path(Context.Organization.Id, OrganizationSection.Sensors)}/create")">
+                Add sensor
+            </MudButton>
+        }
+    </Actions>
+</UiSectionHead>
+
+<div class="ov-stats">
+    <a class="ov-stat" href="@OrganizationSections.Path(Context.Organization.Id, OrganizationSection.Sensors)">
+        <div class="ov-k">Sensors</div>
+        <div class="ov-v">@Number(_counts?.Sensors)</div>
+        <div class="ov-d">registered with this organization</div>
+    </a>
+    @if (Context.Can(Permissions.Organization.ManageMembers))
+    {
+        <a class="ov-stat" href="@OrganizationSections.Path(Context.Organization.Id, OrganizationSection.Team)">
+            <div class="ov-k">Members</div>
+            <div class="ov-v">@Number(_counts?.Members)</div>
+            <div class="ov-d">across every role</div>
+        </a>
+        <a class="ov-stat" href="@TeamNav.Href(Context.Organization.Id, TeamNav.Requests)">
+            <div class="ov-k">Access requests</div>
+            <div class="ov-v">@Number(_counts?.PendingRequests)</div>
+            <div class="@(_counts?.PendingRequests > 0 ? "ov-d is-warn" : "ov-d")">
+                @(_counts?.PendingRequests > 0 ? "waiting for review" : "none pending")
+            </div>
+        </a>
+    }
+    <div class="ov-stat">
+        <div class="ov-k">With us since</div>
+        <div class="ov-v">@Context.Organization.CreatedAt.Year</div>
+        <div class="ov-d">joined @Context.Organization.CreatedAt.ToString("MMM d, yyyy")</div>
+    </div>
+</div>
+
+<div class="ov-grid">
+    @if (Context.Can(SensorPermissions.Sensor.Read))
+    {
+        <section class="ov-card">
+            <div class="ov-card-head">
+                <h3>What's online</h3>
+                <a href="@OrganizationSections.Path(Context.Organization.Id, OrganizationSection.Sensors)">All sensors</a>
+            </div>
+            <SensorList OrganizationId="Context.Organization.Id" ShowFilters="false" Elevation="0"
+                        EmptyMessage="No sensors yet" EmptySubMessage="Register a sensor to start gathering data."
+                        OnSensorClick="NavigateToSensor" />
+        </section>
+    }
+    @if (!string.IsNullOrWhiteSpace(Context.Organization.AboutUs))
+    {
+        <section class="ov-card">
+            <div class="ov-card-head"><h3>About</h3></div>
+            <p class="ov-about">@Context.Organization.AboutUs</p>
+        </section>
+    }
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public required OrganizationContext Context { get; set; }
+
+    private OrganizationCounts? _counts;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        _counts = await State.GetCountsAsync(Context);
+    }
+
+    private void NavigateToSensor(SensorDtoForList sensor) => Navigation.NavigateTo($"/sensor/{sensor.Id}");
+
+    private static string Number(int? value) => value?.ToString("N0") ?? "—";
+}

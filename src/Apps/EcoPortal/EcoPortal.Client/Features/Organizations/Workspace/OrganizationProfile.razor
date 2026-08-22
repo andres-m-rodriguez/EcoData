@@ -1,0 +1,101 @@
+@namespace EcoPortal.Client.Features.Organizations.Workspace
+@using EcoData.Organization.Contracts.Dtos
+@using EcoData.Sensors.Contracts.Dtos
+@using EcoPortal.Client.Services
+@using EcoPortal.Client.Features.Sensors.Components
+@using EcoPortal.Client.Features.OrganizationAccessRequests.Dialogs
+@inject AuthStateService AuthState
+@inject INavigationManager Navigation
+@inject IDialogService DialogService
+
+@* What a visitor sees: who the organization is and how to join it. Members
+   get the workspace instead. *@
+
+<section class="profile-hero">
+    @if (!string.IsNullOrWhiteSpace(Context.Organization.ProfilePictureUrl))
+    {
+        <img class="profile-mark profile-mark--photo" src="@Context.Organization.ProfilePictureUrl" alt="" />
+    }
+    else
+    {
+        <div class="profile-mark">@Initials(Context.Organization.Name)</div>
+    }
+    <div class="profile-text">
+        <div class="profile-eyebrow">
+            @(Context.Organization.Type?.ToString() ?? "Organization")
+            @if (!string.IsNullOrWhiteSpace(Context.Organization.Location))
+            {
+                <span> · @Context.Organization.Location</span>
+            }
+        </div>
+        <h1 class="profile-name">@Context.Organization.Name</h1>
+        @if (!string.IsNullOrWhiteSpace(Context.Organization.Tagline))
+        {
+            <p class="profile-tagline">@Context.Organization.Tagline</p>
+        }
+        @if (!string.IsNullOrWhiteSpace(Context.Organization.AboutUs))
+        {
+            <p class="profile-about">@Context.Organization.AboutUs</p>
+        }
+        <div class="profile-cta">
+            @if (AuthState.IsAuthenticated)
+            {
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Outlined.PersonAdd"
+                           OnClick="OpenRequestAccessDialog">Request access</MudButton>
+            }
+            else
+            {
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" Href="@($"/login?returnUrl=/organizations/{Context.Organization.Id}")">
+                    Sign in to request access
+                </MudButton>
+            }
+            @if (!string.IsNullOrWhiteSpace(Context.Organization.WebsiteUrl))
+            {
+                <MudButton Variant="Variant.Outlined" Href="@Context.Organization.WebsiteUrl" Target="_blank"
+                           StartIcon="@Icons.Material.Outlined.Link">@Host(Context.Organization.WebsiteUrl)</MudButton>
+            }
+        </div>
+    </div>
+</section>
+
+<section class="profile-body">
+    <div class="profile-card">
+        <UiSectionHead Title="Stations" Eyebrow="Public" Subtitle="Sensors this organization runs on EcoPortal." />
+        <SensorList OrganizationId="Context.Organization.Id" ShowFilters="false" Elevation="0"
+                    EmptyMessage="No sensors yet" EmptySubMessage="This organization has not registered any sensors."
+                    OnSensorClick="NavigateToSensor" />
+    </div>
+</section>
+
+@code {
+    [Parameter, EditorRequired]
+    public required OrganizationContext Context { get; set; }
+
+    private async Task OpenRequestAccessDialog()
+    {
+        var org = Context.Organization;
+        var forList = new OrganizationDtoForList(
+            org.Id, org.Name, org.Slug, org.Tagline, org.ProfilePictureUrl, org.CardPictureUrl, org.AboutUs,
+            org.WebsiteUrl, org.Location, org.PrimaryColor, org.AccentColor, org.Type, org.CreatedAt
+        );
+
+        var parameters = new DialogParameters<RequestAccessDialog> { { x => x.PreselectedOrganization, forList } };
+        await DialogService.ShowAsync<RequestAccessDialog>("Request Access", parameters);
+    }
+
+    private void NavigateToSensor(SensorDtoForList sensor) => Navigation.NavigateTo($"/sensor/{sensor.Id}");
+
+    private static string Initials(string name)
+    {
+        var parts = name.Split([' ', '—', '-'], StringSplitOptions.RemoveEmptyEntries);
+        return parts.Length switch
+        {
+            0 => "?",
+            1 => parts[0][..Math.Min(2, parts[0].Length)].ToUpperInvariant(),
+            _ => string.Concat(parts[0][0], parts[1][0]).ToUpperInvariant(),
+        };
+    }
+
+    private static string Host(string url) =>
+        Uri.TryCreate(url, UriKind.Absolute, out var uri) ? uri.Host : url;
+}

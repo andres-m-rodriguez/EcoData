@@ -137,8 +137,12 @@
 
     private bool IsHomePage => Tabs.CurrentTab == NavigationTab.Home;
 
+    // The organizations sub-nav belongs to the area, not to a workspace inside it.
     private bool IsOrganizationsArea =>
-        Path.StartsWith("/organizations", StringComparison.OrdinalIgnoreCase);
+        Path.StartsWith("/organizations", StringComparison.OrdinalIgnoreCase) && !IsInsideOrganization;
+
+    private bool IsInsideOrganization =>
+        Path.Split('/', StringSplitOptions.RemoveEmptyEntries) is [_, var id, ..] && Guid.TryParse(id, out _);
 
     private bool IsMapPage => Path.EndsWith("/map", StringComparison.OrdinalIgnoreCase);
 

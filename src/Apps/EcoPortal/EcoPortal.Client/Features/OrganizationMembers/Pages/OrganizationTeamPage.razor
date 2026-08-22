@@ -1,115 +1,59 @@
-@page "/organizations/{OrganizationId:guid}/members"
 @page "/organizations/{OrganizationId:guid}/team"
+@page "/organizations/{OrganizationId:guid}/team/members"
+@page "/organizations/{OrganizationId:guid}/members"
 @using EcoData.Organization.Contracts
-@using EcoData.Common.Problems.Contracts
 @using EcoPortal.Client.Authorization
 @attribute [OrganizationPermission(Permissions.Organization.ManageMembers)]
 @using EcoData.Organization.Contracts.Dtos
 @using EcoData.Organization.Contracts.Parameters
 @using EcoData.Organization.Application.Client
 @using EcoPortal.Client.Components
+@using EcoPortal.Client.Features.Organizations.Workspace
 @using EcoPortal.Client.Features.OrganizationMembers.Components
 @using EcoPortal.Client.Features.OrganizationMembers.Dialogs
 @using EcoData.Common.Pagination.Blazor
 @inherits StatefulComponent
-@inject IOrganizationHttpClient OrganizationClient
 @inject IOrganizationMemberHttpClient MemberClient
 @inject INavigationManager Navigation
 @inject IDialogService DialogService
 @inject ISnackbar Snackbar
+@inject OrganizationWorkspaceState State
 
-<PageTitle>Team - EcoData</PageTitle>
+@* /team is the members list on desktop and the drill-in list on a phone;
+   /team/members is the members list on both. *@
 
-<NuiPageLayout Title="Teams" ParentPath="@($"/organizations/{OrganizationId}")"
-                 Actions="@([new("Requests", NavigateToRequests), new("Roles", NavigateToRoles)])">
-        <SearchHeader @bind-Value="SearchTextState.Value" Placeholder="Search members..." EnableSticky="true" />
+<OrganizationWorkspace OrganizationId="OrganizationId" Section="OrganizationSection.Team">
+    @if (IsTeamRoot)
+    {
+        <MudHidden Breakpoint="Breakpoint.MdAndUp">
+            <UiSectionHead Title="Team" Eyebrow="People" />
+            <UiDrillList Items="DrillItems" />
+        </MudHidden>
+    }
 
-        @if (LoadOrganizationState.IsLoading)
+    <div class="@(IsTeamRoot ? "team-members team-members--desktop-only" : "team-members")">
+        @if (!IsTeamRoot)
         {
-            <MudPaper Elevation="0" Class="rounded-lg">
-                @for (var i = 0; i < 5; i++)
-                {
-                    <MudPaper Elevation="0" Class="pa-3 border-b">
-                        <MudStack Row AlignItems="AlignItems.Center" Spacing="3">
-                            <MudSkeleton SkeletonType="SkeletonType.Circle" Width="40px" Height="40px" />
-                            <MudStack Spacing="1">
-                                <MudSkeleton Width="150px" Height="16px" />
-                                <MudSkeleton Width="200px" Height="12px" />
-                            </MudStack>
-                            <MudSpacer />
-                            <MudSkeleton Width="80px" Height="24px" />
-                        </MudStack>
-                    </MudPaper>
-                }
-            </MudPaper>
-        }
-        else if (_organization is null)
-        {
-            <MudPaper Elevation="0" Class="pa-8 rounded-lg">
-                <MudStack AlignItems="AlignItems.Center">
-                    <MudIcon Icon="@Icons.Material.Filled.Error" Size="Size.Large" Color="Color.Error" />
-                    <MudText Typo="Typo.h6" Color="Color.Error" Class="mt-2">Organization not found</MudText>
-                </MudStack>
-            </MudPaper>
+            <TeamNav Context="context" Active="@TeamNav.Members" />
         }
         else
         {
-            <MudPaper Elevation="0" Class="rounded-lg">
-                <EcoDataVirtualizedList @ref="_virtualizedList" TItem="OrganizationMemberDto"
-                                        TParams="OrganizationMemberParameters" ItemsProvider="GetItemsAsync" ParametersBuilder="BuildParameters"
-                                        CursorSelector="m => m.Id" ItemSize="65" OverscanCount="3">
-                    <LoadingTemplate>
-                        @for (var i = 0; i < 5; i++)
-                        {
-                            <MudPaper Elevation="0" Class="pa-3 border-b">
-                                <MudStack Row AlignItems="AlignItems.Center" Spacing="3">
-                                    <MudSkeleton SkeletonType="SkeletonType.Circle" Width="40px" Height="40px" />
-                                    <MudStack Spacing="1">
-                                        <MudSkeleton Width="150px" Height="16px" />
-                                        <MudSkeleton Width="200px" Height="12px" />
-                                    </MudStack>
-                                    <MudSpacer />
-                                    <MudSkeleton Width="80px" Height="24px" />
-                                </MudStack>
-                            </MudPaper>
-                        }
-                    </LoadingTemplate>
-                    <EmptyTemplate>
-                        @if (HasActiveFilters)
-                        {
-                            <MudStack AlignItems="AlignItems.Center" Class="pa-8">
-                                <MudIcon Icon="@Icons.Material.Filled.SearchOff" Size="Size.Large" Color="Color.Secondary" />
-                                <MudText Typo="Typo.h6" Color="Color.Secondary" Class="mt-2">No members found</MudText>
-                                <MudText Typo="Typo.body2" Color="Color.Secondary">
-                                    No members match your search criteria.
-                                </MudText>
-                                <MudButton Variant="Variant.Outlined" Color="Color.Primary"
-                                           StartIcon="@Icons.Material.Filled.FilterAltOff" OnClick="ClearFilters" Class="mt-3">
-                                    Clear Filters
-                                </MudButton>
-                            </MudStack>
-                        }
-                        else
-                        {
-                            <MudStack AlignItems="AlignItems.Center" Class="pa-8">
-                                <MudIcon Icon="@Icons.Material.Filled.Group" Size="Size.Large" Color="Color.Secondary" />
-                                <MudText Typo="Typo.h6" Color="Color.Secondary" Class="mt-2">No members yet</MudText>
-                                <MudText Typo="Typo.body2" Color="Color.Secondary">
-                                    Approve access requests to add members to this organization.
-                                </MudText>
-                                <MudButton Variant="Variant.Filled" Color="Color.Primary"
-                                           StartIcon="@Icons.Material.Filled.Inbox"
-                                           Href="@($"/organizations/{OrganizationId}/requests")" Class="mt-3">
-                                    View Requests
-                                </MudButton>
-                            </MudStack>
-                        }
-                    </EmptyTemplate>
-                    <ItemTemplate Context="member">
-                        <MemberListItem Member="member" ShowActions="true" OnChangeRole="OpenChangeRoleDialog"
-                                        OnRemove="ConfirmRemoveMember" />
-                    </ItemTemplate>
-                    <PlaceholderTemplate>
+            <MudHidden Breakpoint="Breakpoint.SmAndDown">
+                <TeamNav Context="context" Active="@TeamNav.Members" />
+            </MudHidden>
+        }
+
+        <UiSectionHead Title="Members" Eyebrow="People" Subtitle="Who is in the organization and the role each holds." />
+
+        <SearchHeader @bind-Value="SearchTextState.Value" Placeholder="Search members..." EnableSticky="false" />
+
+        <MudPaper Elevation="0" Class="rounded-lg mt-3">
+            <EcoDataVirtualizedList @ref="_virtualizedList" TItem="OrganizationMemberDto"
+                                    TParams="OrganizationMemberParameters" ItemsProvider="GetItemsAsync" ParametersBuilder="BuildParameters"
+                                    CursorSelector="m => m.Id" ItemSize="65" OverscanCount="3">
+                <LoadingTemplate>
+                    @for (var i = 0; i < 5; i++)
+                    {
                         <MudPaper Elevation="0" Class="pa-3 border-b">
                             <MudStack Row AlignItems="AlignItems.Center" Spacing="3">
                                 <MudSkeleton SkeletonType="SkeletonType.Circle" Width="40px" Height="40px" />
@@ -117,15 +61,56 @@
                                     <MudSkeleton Width="150px" Height="16px" />
                                     <MudSkeleton Width="200px" Height="12px" />
                                 </MudStack>
-                                <MudSpacer />
-                                <MudSkeleton Width="80px" Height="24px" />
                             </MudStack>
                         </MudPaper>
-                    </PlaceholderTemplate>
-                </EcoDataVirtualizedList>
-            </MudPaper>
-        }
-</NuiPageLayout>
+                    }
+                </LoadingTemplate>
+                <EmptyTemplate>
+                    @if (HasActiveFilters)
+                    {
+                        <MudStack AlignItems="AlignItems.Center" Class="pa-8">
+                            <MudIcon Icon="@Icons.Material.Filled.SearchOff" Size="Size.Large" Color="Color.Secondary" />
+                            <MudText Typo="Typo.h6" Color="Color.Secondary" Class="mt-2">No members found</MudText>
+                            <MudButton Variant="Variant.Outlined" Color="Color.Primary"
+                                       StartIcon="@Icons.Material.Filled.FilterAltOff" OnClick="ClearFilters" Class="mt-3">
+                                Clear search
+                            </MudButton>
+                        </MudStack>
+                    }
+                    else
+                    {
+                        <MudStack AlignItems="AlignItems.Center" Class="pa-8">
+                            <MudIcon Icon="@Icons.Material.Filled.Group" Size="Size.Large" Color="Color.Secondary" />
+                            <MudText Typo="Typo.h6" Color="Color.Secondary" Class="mt-2">No members yet</MudText>
+                            <MudText Typo="Typo.body2" Color="Color.Secondary">
+                                Approve access requests to add members to this organization.
+                            </MudText>
+                            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Inbox"
+                                       Href="@TeamNav.Href(OrganizationId, TeamNav.Requests)" Class="mt-3">
+                                View requests
+                            </MudButton>
+                        </MudStack>
+                    }
+                </EmptyTemplate>
+                <ItemTemplate Context="member">
+                    <MemberListItem Member="member" ShowActions="true" OnChangeRole="OpenChangeRoleDialog"
+                                    OnRemove="ConfirmRemoveMember" />
+                </ItemTemplate>
+                <PlaceholderTemplate>
+                    <MudPaper Elevation="0" Class="pa-3 border-b">
+                        <MudStack Row AlignItems="AlignItems.Center" Spacing="3">
+                            <MudSkeleton SkeletonType="SkeletonType.Circle" Width="40px" Height="40px" />
+                            <MudStack Spacing="1">
+                                <MudSkeleton Width="150px" Height="16px" />
+                                <MudSkeleton Width="200px" Height="12px" />
+                            </MudStack>
+                        </MudStack>
+                    </MudPaper>
+                </PlaceholderTemplate>
+            </EcoDataVirtualizedList>
+        </MudPaper>
+    </div>
+</OrganizationWorkspace>
 
 @code {
     private EcoDataVirtualizedList<OrganizationMemberDto, OrganizationMemberParameters>? _virtualizedList;
@@ -133,25 +118,25 @@
     [Parameter]
     public Guid OrganizationId { get; set; }
 
-    private OrganizationDtoForDetail? _organization;
-
     [Reactive]
     private string? _searchText;
 
     private bool HasActiveFilters => !string.IsNullOrWhiteSpace(_searchText);
 
+    // /team and /members are the root; /team/members is the explicit list.
+    private bool IsTeamRoot =>
+        !Navigation.State.Path.EndsWith("/team/members", StringComparison.OrdinalIgnoreCase);
+
+    private IReadOnlyList<UiDrillItem> DrillItems =>
+    [
+        new("Members", "Who is in the organization and their roles", TeamNav.Href(OrganizationId, TeamNav.Members) + "/members"),
+        new("Requests", "People asking to join, with the role they want", TeamNav.Href(OrganizationId, TeamNav.Requests), Hot: true),
+        new("Blocked", "Accounts that cannot request access", TeamNav.Href(OrganizationId, TeamNav.Blocked)),
+        new("Roles", "What each role can do", TeamNav.Href(OrganizationId, TeamNav.Roles)),
+    ];
+
     [OnChanged]
     private void OnSearchTextChanged(string? value) => _virtualizedList?.Refresh();
-
-    [Command, RunOnLoad]
-    private async Task LoadOrganization(CancellationToken ct)
-    {
-        var result = await OrganizationClient.GetByIdAsync(OrganizationId, ct);
-        result.Switch(
-            organization => _organization = organization,
-            _ => _organization = null
-        );
-    }
 
     private OrganizationMemberParameters BuildParameters(Guid? cursor) => new(
         PageSize: 50,
@@ -159,23 +144,10 @@
         Search: string.IsNullOrWhiteSpace(_searchText) ? null : _searchText
     );
 
-    private IAsyncEnumerable<OrganizationMemberDto> GetItemsAsync(OrganizationMemberParameters parameters, CancellationToken
-cancellationToken)
-    {
-        return MemberClient.GetAllAsync(OrganizationId, parameters, cancellationToken);
-    }
+    private IAsyncEnumerable<OrganizationMemberDto> GetItemsAsync(OrganizationMemberParameters parameters, CancellationToken ct) =>
+        MemberClient.GetAllAsync(OrganizationId, parameters, ct);
 
-    private void ClearFilters()
-    {
-        SearchTextState.Value = null;
-    }
-
-    private void NavigateToRoles() => Navigation.NavigateTo($"/organizations/{OrganizationId}/roles");
-
-    private void NavigateToRequests()
-    {
-        Navigation.NavigateTo($"/organizations/{OrganizationId}/requests");
-    }
+    private void ClearFilters() => SearchTextState.Value = null;
 
     private async Task OpenChangeRoleDialog(OrganizationMemberDto member)
     {
@@ -189,25 +161,27 @@ cancellationToken)
         var dialog = await DialogService.ShowAsync<ChangeRoleDialog>("Change Role", parameters, options);
         var result = await dialog.Result;
 
-        if (result is { Canceled: false, Data: UpdateMemberRoleRequest request })
+        if (result is not { Canceled: false, Data: UpdateMemberRoleRequest request })
         {
-            var updateResult = await MemberClient.UpdateAsync(OrganizationId, member.UserId, request);
-            updateResult.Switch(
-                _ =>
-                {
-                    Snackbar.Add("Role updated successfully", Severity.Success);
-                    _virtualizedList?.Refresh();
-                },
-                error => Snackbar.Add(error.Message ?? "Failed to update role", Severity.Error)
-            );
+            return;
         }
+
+        var updateResult = await MemberClient.UpdateAsync(OrganizationId, member.UserId, request);
+        updateResult.Switch(
+            _ =>
+            {
+                Snackbar.Add($"{member.DisplayName} is now {request.Role}", Severity.Success);
+                _virtualizedList?.Refresh();
+            },
+            error => Snackbar.Add(error.Message ?? "Failed to update role", Severity.Error)
+        );
     }
 
     private async Task ConfirmRemoveMember(OrganizationMemberDto member)
     {
         var parameters = new DialogParameters<ConfirmDialog>
         {
-            { x => x.ContentText, $"Are you sure you want to remove {member.DisplayName} from this organization?" },
+            { x => x.ContentText, $"Remove {member.DisplayName} from this organization? They can request access again." },
             { x => x.ButtonText, "Remove" },
             { x => x.Color, Color.Error }
         };
@@ -215,17 +189,20 @@ cancellationToken)
         var dialog = await DialogService.ShowAsync<ConfirmDialog>("Remove Member", parameters, options);
         var result = await dialog.Result;
 
-        if (result is { Canceled: false })
+        if (result is not { Canceled: false })
         {
-            var deleteResult = await MemberClient.DeleteAsync(OrganizationId, member.UserId);
-            deleteResult.Switch(
-                _ =>
-                {
-                    Snackbar.Add("Member removed successfully", Severity.Success);
-                    _virtualizedList?.Refresh();
-                },
-                error => Snackbar.Add(error.Message ?? "Failed to remove member", Severity.Error)
-            );
+            return;
         }
+
+        var deleteResult = await MemberClient.DeleteAsync(OrganizationId, member.UserId);
+        deleteResult.Switch(
+            _ =>
+            {
+                Snackbar.Add("Member removed", Severity.Success);
+                State.Invalidate(OrganizationId);
+                _virtualizedList?.Refresh();
+            },
+            error => Snackbar.Add(error.Message ?? "Failed to remove member", Severity.Error)
+        );
     }
 }

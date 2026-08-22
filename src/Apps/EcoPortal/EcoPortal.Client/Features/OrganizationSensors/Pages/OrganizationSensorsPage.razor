@@ -2,48 +2,33 @@
 @using EcoData.Sensors.Contracts
 @using EcoPortal.Client.Authorization
 @attribute [OrganizationPermission(Permissions.Sensor.Read)]
-@using EcoData.Organization.Contracts.Dtos
-@using EcoData.Organization.Application.Client
 @using EcoData.Sensors.Contracts.Dtos
-@using EcoPortal.Client.Components
-@using EcoPortal.Client.Services
 @using EcoPortal.Client.Features.Sensors.Components
-@using EcoPortal.Client.Features.Organizations.Authorization
-@inherits StatefulComponent
-@inject IOrganizationHttpClient OrganizationClient
+@using EcoPortal.Client.Features.Organizations.Workspace
 @inject INavigationManager Navigation
-@inject AuthStateService AuthState
 
-<PageTitle>Sensors - EcoData</PageTitle>
+<OrganizationWorkspace OrganizationId="OrganizationId" Section="OrganizationSection.Sensors">
+    <UiSectionHead Title="Sensors" Eyebrow="Stations">
+        <Actions>
+            @if (context.Can(Permissions.Sensor.Create))
+            {
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small" StartIcon="@Icons.Material.Filled.Add"
+                           Href="@($"/organizations/{OrganizationId}/sensors/create")">
+                    Add sensor
+                </MudButton>
+            }
+        </Actions>
+    </UiSectionHead>
 
-<NuiPageLayout Title="Sensors" ParentPath="@($"/organizations/{OrganizationId}")"
-                 Actions="@([new("Add", NavigateToCreateSensor)])">
-    <SensorList OrganizationId="OrganizationId"
+    <SensorList OrganizationId="OrganizationId" Elevation="0"
                 EmptyMessage="No sensors yet"
                 EmptySubMessage="Add sensors to start monitoring water quality."
                 OnSensorClick="NavigateToDetail" />
-</NuiPageLayout>
+</OrganizationWorkspace>
 
 @code {
     [Parameter]
     public Guid OrganizationId { get; set; }
 
-    private OrganizationDtoForDetail? _organization;
-
-    [Command, RunOnLoad]
-    private async Task Load(CancellationToken ct)
-    {
-        var result = await OrganizationClient.GetByIdAsync(OrganizationId, ct);
-        result.Switch(
-            organization => _organization = organization,
-            _ => _organization = null
-        );
-    }
-
-    private void NavigateToCreateSensor() => Navigation.NavigateTo($"/organizations/{OrganizationId}/sensors/create");
-
-    private void NavigateToDetail(SensorDtoForList sensor)
-    {
-        Navigation.NavigateTo($"/sensor/{sensor.Id}");
-    }
+    private void NavigateToDetail(SensorDtoForList sensor) => Navigation.NavigateTo($"/sensor/{sensor.Id}");
 }

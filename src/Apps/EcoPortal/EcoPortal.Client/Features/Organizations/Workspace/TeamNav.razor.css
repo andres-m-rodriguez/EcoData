@@ -1,0 +1,17 @@
+.team-nav {
+    margin-bottom: 18px;
+}
+
+.team-back {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 12px;
+    color: var(--ui-primary-500);
+    font: 500 12px/1 var(--ui-font-sans);
+    text-decoration: none;
+}
+
+.team-back:hover {
+    color: var(--ui-primary);
+}

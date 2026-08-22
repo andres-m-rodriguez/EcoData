@@ -1,0 +1,45 @@
+@namespace EcoData.Ui.Workspace
+
+@* A workspace: a header that says where you are, a rail of sections beside
+   the content on desktop, the same sections as a chip strip above it on a
+   phone. The host supplies the header and the links; this only lays them out. *@
+
+<div class="ui-workspace">
+    @if (Header is not null)
+    {
+        <header class="ui-workspace-head">@Header</header>
+    }
+    <div class="ui-workspace-body">
+        <MudHidden Breakpoint="Breakpoint.SmAndDown">
+            <UiRail Links="Links" ActiveKey="@ActiveKey" Label="@RailLabel" Footer="RailFooter" />
+        </MudHidden>
+        <div class="ui-workspace-content">
+            <MudHidden Breakpoint="Breakpoint.MdAndUp">
+                <UiChipStrip Links="Links" ActiveKey="@ActiveKey" Label="@RailLabel" />
+            </MudHidden>
+            <div class="ui-workspace-page">
+                @ChildContent
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public required IReadOnlyList<UiRailLink> Links { get; set; }
+
+    [Parameter]
+    public string? ActiveKey { get; set; }
+
+    [Parameter]
+    public string? RailLabel { get; set; }
+
+    [Parameter]
+    public RenderFragment? Header { get; set; }
+
+    [Parameter]
+    public RenderFragment? RailFooter { get; set; }
+
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+}
