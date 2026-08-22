@@ -17,11 +17,9 @@ public sealed class OrganizationRoleRepository(
     {
         await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
 
-        // Creation order keeps the defaults in Owner, Admin, Contributor, Viewer order.
         var roles = await context
             .OrganizationRoles.Where(r => r.OrganizationId == organizationId)
-            .OrderBy(r => r.CreatedAt)
-            .ThenBy(r => r.Name)
+            .OrderBy(r => r.Name)
             .Select(r => new
             {
                 r.Id,

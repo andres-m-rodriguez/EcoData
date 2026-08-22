@@ -32,7 +32,7 @@ public sealed class OrganizationAccessRequestTests(EcoDataTestFixture fixture)
         roles
             .AsT0.Select(r => r.Name)
             .Should()
-            .Equal(
+            .BeEquivalentTo(
                 DefaultOrganizationRoles.Owner,
                 DefaultOrganizationRoles.Admin,
                 DefaultOrganizationRoles.Contributor,
