@@ -1,6 +1,5 @@
 using EcoData.Spa.Navigation.Events;
 using Microsoft.AspNetCore.Components;
-using Microsoft.JSInterop;
 using Tempest;
 
 namespace EcoData.Ui.Shell.Navbar;
@@ -22,11 +21,11 @@ public partial class UiBottomNav : StatefulComponent
     [Parameter]
     public EventCallback<string> OnSelect { get; set; }
 
+    // Transient: this bar owns its watcher for as long as it is on screen.
     [Inject]
-    private IJSRuntime JS { get; set; } = default!;
+    private NavAutoHide AutoHide { get; set; } = default!;
 
     private bool _hidden;
-    private NavAutoHide? _autoHide;
 
     private string BarClass => _hidden ? "ui-bottom-nav is-hidden" : "ui-bottom-nav";
 
@@ -34,24 +33,16 @@ public partial class UiBottomNav : StatefulComponent
     {
         await base.OnAfterRenderAsync(firstRender);
 
-        if (!firstRender)
+        if (firstRender)
         {
-            return;
+            await AutoHide.StartAsync();
         }
-
-        _autoHide = new NavAutoHide(JS);
-        await _autoHide.StartAsync();
     }
 
     public override void Dispose()
     {
-        if (_autoHide is not null)
-        {
-            // Dispose is synchronous, so this can only be started, not awaited.
-            _ = _autoHide.DisposeAsync();
-            _autoHide = null;
-        }
-
+        // Dispose is synchronous, so this can only be started, not awaited.
+        _ = AutoHide.DisposeAsync().AsTask();
         base.Dispose();
         GC.SuppressFinalize(this);
     }
