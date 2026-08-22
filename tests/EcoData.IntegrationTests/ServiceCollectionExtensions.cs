@@ -27,6 +27,9 @@ public static class ServiceCollectionExtensions
         // HTTP clients (must share HttpClient for cookie auth)
         services.AddSingleton<IAuthHttpClient, AuthHttpClient>();
         services.AddSingleton<IOrganizationHttpClient, OrganizationHttpClient>();
+        services.AddSingleton<IOrganizationAccessRequestHttpClient, OrganizationAccessRequestHttpClient>();
+        services.AddSingleton<IOrganizationMemberHttpClient, OrganizationMemberHttpClient>();
+        services.AddSingleton<IOrganizationRoleHttpClient, OrganizationRoleHttpClient>();
         services.AddSingleton<ISensorHttpClient, SensorHttpClient>();
         services.AddSingleton<ISensorReadingHttpClient, SensorReadingHttpClient>();
         services.AddSingleton<ISensorHealthHttpClient, SensorHealthHttpClient>();
