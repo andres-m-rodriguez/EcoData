@@ -62,7 +62,7 @@
                             <MudStack Spacing="0">
                                 <MudText Typo="Typo.subtitle1">@request.OrganizationName</MudText>
                                 <MudText Typo="Typo.body2" Color="Color.Secondary">
-                                    Requested @FormatDate(request.CreatedAt)
+                                    Requested @FormatDate(request.CreatedAt)@(request.RoleName is null ? "" : $" as {request.RoleName}")
                                 </MudText>
                                 @if (!string.IsNullOrWhiteSpace(request.RequestMessage))
                                 {

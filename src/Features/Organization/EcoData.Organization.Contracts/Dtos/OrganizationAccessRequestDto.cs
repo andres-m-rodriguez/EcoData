@@ -9,6 +9,7 @@ public sealed record OrganizationAccessRequestDto(
     string OrganizationName,
     string Status,
     string? RequestMessage,
+    string? RoleName,
     string? ReviewNotes,
     Guid? ReviewedByUserId,
     string? ReviewedByDisplayName,

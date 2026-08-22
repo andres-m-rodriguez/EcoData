@@ -1,9 +1,11 @@
+@using EcoData.Organization.Contracts
 @using EcoData.Organization.Contracts.Dtos
 @using EcoData.Organization.Contracts.Requests
 @using EcoData.Organization.Application.Client
 @using EcoPortal.Client.Features.Organizations.Components
 @inherits StatefulComponent
 @inject IOrganizationAccessRequestHttpClient AccessRequestClient
+@inject IOrganizationRoleHttpClient RoleClient
 @inject ISnackbar Snackbar
 
 <MudDialog>
@@ -24,11 +26,25 @@
                     <MudText Typo="Typo.body2" Color="Color.Secondary">
                         Select an organization to request access. An administrator will review your request.
                     </MudText>
-                    <OrganizationSelect @bind-Value="_selectedOrganization"
+                    <OrganizationSelect Value="_selectedOrganization"
+                                        ValueChanged="OnOrganizationChanged"
                                         Label="Organization"
                                         Required="true"
                                         RequiredError="Please select an organization" />
                 }
+                <MudSelect T="string"
+                           @bind-Value="_selectedRoleName"
+                           Label="Role"
+                           Variant="Variant.Outlined"
+                           Required="true"
+                           RequiredError="Please select a role"
+                           Disabled="@(_roles is null || _roles.Count == 0)"
+                           HelperText="@RoleHelperText">
+                    @foreach (var role in _roles ?? [])
+                    {
+                        <MudSelectItem T="string" Value="@role.Name">@role.Name</MudSelectItem>
+                    }
+                </MudSelect>
                 <MudTextField @bind-Value="_requestMessage"
                               Label="Message (Optional)"
                               Placeholder="Why would you like to join this organization?"
@@ -43,7 +59,7 @@
         <MudButton Color="Color.Primary"
                    Variant="Variant.Filled"
                    OnClick="@(() => SubmitState.Execute())"
-                   Disabled="@(!_isValid || SubmitState.IsLoading)">
+                   Disabled="@(!CanSubmit || SubmitState.IsLoading)">
             @if (SubmitState.IsLoading)
             {
                 <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
@@ -63,18 +79,57 @@
     private MudForm _form = null!;
     private bool _isValid;
     private OrganizationDtoForList? _selectedOrganization;
+    private IReadOnlyList<OrganizationRoleDto>? _roles;
+    private string? _selectedRoleName;
     private string? _requestMessage;
 
     private bool IsOrganizationPreselected => PreselectedOrganization is not null;
 
-    protected override void OnInitialized()
+    private bool CanSubmit =>
+        _selectedOrganization is not null && _selectedRoleName is not null && (IsOrganizationPreselected || _isValid);
+
+    private string RoleHelperText =>
+        _selectedOrganization is null ? "Select an organization first"
+        : _roles is null ? "Loading roles…"
+        : _roles.Count == 0 ? "This organization has no roles to request"
+        : "The role you are asking for. Administrators can change it when reviewing.";
+
+    protected override async Task OnInitializedAsync()
     {
-        base.OnInitialized();
         if (PreselectedOrganization is not null)
         {
-            _selectedOrganization = PreselectedOrganization;
-            _isValid = true; // No required fields when org is preselected
+            await OnOrganizationChanged(PreselectedOrganization);
         }
+    }
+
+    private async Task OnOrganizationChanged(OrganizationDtoForList? organization)
+    {
+        _selectedOrganization = organization;
+        _roles = null;
+        _selectedRoleName = null;
+
+        if (organization is null)
+        {
+            return;
+        }
+
+        var result = await RoleClient.GetAllAsync(organization.Id);
+
+        result.Switch(
+            roles =>
+            {
+                _roles = roles;
+                // Viewer was the role every approval used to grant, so it stays the default.
+                _selectedRoleName =
+                    roles.FirstOrDefault(r => r.Name == DefaultOrganizationRoles.Viewer)?.Name
+                    ?? roles.FirstOrDefault()?.Name;
+            },
+            error =>
+            {
+                _roles = [];
+                Snackbar.Add(error.Message ?? "Failed to load roles", Severity.Error);
+            }
+        );
     }
 
     private void Cancel() => MudDialog.Cancel();
@@ -82,17 +137,24 @@
     [Command]
     private async Task Submit()
     {
-        await _form.ValidateAsync();
-        if (!_isValid || _selectedOrganization == null)
+        await _form.Validate();
+        if (!CanSubmit || _selectedOrganization is null || _selectedRoleName is null)
             return;
 
-        var request = new CreateOrganizationAccessRequestRequest(_selectedOrganization.Id, _requestMessage);
+        var request = new CreateOrganizationAccessRequestRequest(
+            _selectedOrganization.Id,
+            _selectedRoleName,
+            _requestMessage
+        );
         var result = await AccessRequestClient.CreateAsync(_selectedOrganization.Id, request);
 
         result.Switch(
             _ =>
             {
-                Snackbar.Add($"Access request submitted for {_selectedOrganization.Name}", Severity.Success);
+                Snackbar.Add(
+                    $"Access request submitted for {_selectedOrganization.Name} as {_selectedRoleName}",
+                    Severity.Success
+                );
                 MudDialog.Close(DialogResult.Ok(true));
             },
             error => Snackbar.Add(error.Message ?? "Failed to submit request", Severity.Error)

@@ -54,6 +54,7 @@ public sealed class OrganizationAccessRequestRepository(
                 OrganizationName = r.Organization!.Name,
                 r.Status,
                 r.RequestMessage,
+                RoleName = r.Role != null ? r.Role.Name : null,
                 r.ReviewNotes,
                 r.ReviewedByUserId,
                 r.ReviewedAt,
@@ -91,6 +92,7 @@ public sealed class OrganizationAccessRequestRepository(
                 request.OrganizationName,
                 request.Status.ToString(),
                 request.RequestMessage,
+                request.RoleName,
                 request.ReviewNotes,
                 request.ReviewedByUserId,
                 reviewer?.DisplayName,
@@ -144,6 +146,7 @@ public sealed class OrganizationAccessRequestRepository(
                 OrganizationName = r.Organization!.Name,
                 r.Status,
                 r.RequestMessage,
+                RoleName = r.Role != null ? r.Role.Name : null,
                 r.ReviewNotes,
                 r.ReviewedByUserId,
                 r.ReviewedAt,
@@ -180,6 +183,7 @@ public sealed class OrganizationAccessRequestRepository(
                 request.OrganizationName,
                 request.Status.ToString(),
                 request.RequestMessage,
+                request.RoleName,
                 request.ReviewNotes,
                 request.ReviewedByUserId,
                 reviewer?.DisplayName,
@@ -206,6 +210,7 @@ public sealed class OrganizationAccessRequestRepository(
                 OrganizationName = r.Organization!.Name,
                 r.Status,
                 r.RequestMessage,
+                RoleName = r.Role != null ? r.Role.Name : null,
                 r.ReviewNotes,
                 r.ReviewedByUserId,
                 r.ReviewedAt,
@@ -235,6 +240,7 @@ public sealed class OrganizationAccessRequestRepository(
             request.OrganizationName,
             request.Status.ToString(),
             request.RequestMessage,
+            request.RoleName,
             request.ReviewNotes,
             request.ReviewedByUserId,
             reviewer?.DisplayName,
@@ -246,6 +252,7 @@ public sealed class OrganizationAccessRequestRepository(
     public async Task<OrganizationAccessRequestDto> CreateAsync(
         Guid userId,
         Guid organizationId,
+        Guid roleId,
         string? requestMessage,
         CancellationToken cancellationToken = default
     )
@@ -257,12 +264,15 @@ public sealed class OrganizationAccessRequestRepository(
             .Select(o => new { o.Id, o.Name })
             .FirstAsync(cancellationToken);
 
+        var roleName = await RoleNameAsync(context, roleId, cancellationToken);
+
         var now = DateTimeOffset.UtcNow;
         var entity = new OrganizationAccessRequest
         {
             Id = Guid.CreateVersion7(),
             UserId = userId,
             OrganizationId = organizationId,
+            RoleId = roleId,
             Status = OrganizationAccessRequestStatus.Pending,
             RequestMessage = requestMessage,
             ReviewNotes = null,
@@ -285,6 +295,7 @@ public sealed class OrganizationAccessRequestRepository(
             organization.Name,
             entity.Status.ToString(),
             entity.RequestMessage,
+            roleName,
             null,
             null,
             null,
@@ -324,6 +335,8 @@ public sealed class OrganizationAccessRequestRepository(
             .Select(o => o.Name)
             .FirstOrDefaultAsync(cancellationToken) ?? "";
 
+        var roleName = await RoleNameAsync(context, entity.RoleId, cancellationToken);
+
         var user = await userLookupService.GetByIdAsync(entity.UserId, cancellationToken);
         var reviewer = await userLookupService.GetByIdAsync(reviewedByUserId, cancellationToken);
 
@@ -336,6 +349,7 @@ public sealed class OrganizationAccessRequestRepository(
             organizationName,
             entity.Status.ToString(),
             entity.RequestMessage,
+            roleName,
             entity.ReviewNotes,
             entity.ReviewedByUserId,
             reviewer?.DisplayName,
@@ -388,6 +402,8 @@ public sealed class OrganizationAccessRequestRepository(
             .Select(o => o.Name)
             .FirstOrDefaultAsync(cancellationToken) ?? "";
 
+        var roleName = await RoleNameAsync(context, entity.RoleId, cancellationToken);
+
         var user = await userLookupService.GetByIdAsync(entity.UserId, cancellationToken);
 
         return new OrganizationAccessRequestDto(
@@ -399,6 +415,7 @@ public sealed class OrganizationAccessRequestRepository(
             organizationName,
             entity.Status.ToString(),
             entity.RequestMessage,
+            roleName,
             entity.ReviewNotes,
             entity.ReviewedByUserId,
             null,
@@ -422,5 +439,22 @@ public sealed class OrganizationAccessRequestRepository(
                 && r.Status == OrganizationAccessRequestStatus.Pending,
             cancellationToken
         );
+    }
+
+    private static async Task<string?> RoleNameAsync(
+        OrganizationDbContext context,
+        Guid? roleId,
+        CancellationToken cancellationToken
+    )
+    {
+        if (roleId is null)
+        {
+            return null;
+        }
+
+        return await context
+            .OrganizationRoles.Where(r => r.Id == roleId)
+            .Select(r => r.Name)
+            .FirstOrDefaultAsync(cancellationToken);
     }
 }

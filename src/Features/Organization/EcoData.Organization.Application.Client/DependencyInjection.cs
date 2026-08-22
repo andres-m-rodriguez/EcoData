@@ -32,6 +32,11 @@ public static class DependencyInjection
             configureClient?.Invoke(client);
         });
 
+        services.AddHttpClient<IOrganizationRoleHttpClient, OrganizationRoleHttpClient>(client =>
+        {
+            configureClient?.Invoke(client);
+        });
+
         services.AddHttpClient<IPermissionHttpClient, PermissionHttpClient>(client =>
         {
             configureClient?.Invoke(client);

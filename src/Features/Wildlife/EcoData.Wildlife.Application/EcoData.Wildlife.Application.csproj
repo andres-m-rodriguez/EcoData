@@ -12,6 +12,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\Common\EcoData.Common.Authorization\EcoData.Common.Authorization.csproj" />
+    <ProjectReference Include="..\EcoData.Wildlife.Contracts\EcoData.Wildlife.Contracts.csproj" />
   </ItemGroup>
 
 </Project>

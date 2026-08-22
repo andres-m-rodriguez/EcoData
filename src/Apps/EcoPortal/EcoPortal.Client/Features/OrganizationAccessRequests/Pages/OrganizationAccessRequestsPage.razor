@@ -90,7 +90,7 @@
                                         @request.UserEmail
                                     </MudText>
                                     <MudText Typo="Typo.caption" Color="Color.Secondary">
-                                        Requested @FormatDate(request.CreatedAt)
+                                        Requested @FormatDate(request.CreatedAt) as <strong>@(request.RoleName ?? DefaultOrganizationRoles.Viewer)</strong>
                                     </MudText>
                                     @if (!string.IsNullOrWhiteSpace(request.RequestMessage))
                                     {
@@ -188,7 +188,7 @@
     {
         var parameters = new DialogParameters<ConfirmDialog>
         {
-            { x => x.ContentText, $"Approve access request from {request.UserDisplayName}? They will be added as a {DefaultOrganizationRoles.Viewer}." },
+            { x => x.ContentText, $"Approve access request from {request.UserDisplayName}? They will be added as {request.RoleName ?? DefaultOrganizationRoles.Viewer}." },
             { x => x.ButtonText, "Approve" },
             { x => x.Color, Color.Success }
         };

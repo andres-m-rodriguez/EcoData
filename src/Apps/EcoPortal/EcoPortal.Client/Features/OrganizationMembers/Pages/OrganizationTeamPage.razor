@@ -21,7 +21,7 @@
 <PageTitle>Team - EcoData</PageTitle>
 
 <NuiPageLayout Title="Teams" ParentPath="@($"/organizations/{OrganizationId}")"
-                 Actions="@([new("Requests", NavigateToRequests)])">
+                 Actions="@([new("Requests", NavigateToRequests), new("Roles", NavigateToRoles)])">
         <SearchHeader @bind-Value="SearchTextState.Value" Placeholder="Search members..." EnableSticky="true" />
 
         @if (LoadOrganizationState.IsLoading)
@@ -170,6 +170,8 @@ cancellationToken)
         SearchTextState.Value = null;
     }
 
+    private void NavigateToRoles() => Navigation.NavigateTo($"/organizations/{OrganizationId}/roles");
+
     private void NavigateToRequests()
     {
         Navigation.NavigateTo($"/organizations/{OrganizationId}/requests");
@@ -180,6 +182,7 @@ cancellationToken)
         var parameters = new DialogParameters<ChangeRoleDialog>
         {
             { x => x.MemberName, member.DisplayName },
+            { x => x.OrganizationId, OrganizationId },
             { x => x.CurrentRole, member.RoleName }
         };
         var options = new DialogOptions { CloseOnEscapeKey = true, MaxWidth = MaxWidth.Small, FullWidth = true };
