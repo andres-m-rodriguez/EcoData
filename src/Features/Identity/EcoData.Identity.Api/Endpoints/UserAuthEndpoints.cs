@@ -94,8 +94,16 @@ public static class UserAuthEndpoints
         group
             .MapGet(
                 "/me",
-                async (ClaimsPrincipal user, IAuthService authService, CancellationToken ct) =>
-                    TypedResults.Ok<UserInfo?>(await authService.GetCurrentUserAsync(user, ct))
+                // Ok(null) writes a 200 with an empty body, which no JSON reader can parse;
+                // "no signed-in user" is a 401, not an empty success.
+                async Task<Results<Ok<UserInfo>, UnauthorizedHttpResult>> (
+                    ClaimsPrincipal user,
+                    IAuthService authService,
+                    CancellationToken ct
+                ) =>
+                    await authService.GetCurrentUserAsync(user, ct) is { } userInfo
+                        ? TypedResults.Ok(userInfo)
+                        : TypedResults.Unauthorized()
             )
             .WithName("GetCurrentUser");
 
