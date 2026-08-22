@@ -17,7 +17,10 @@ public sealed class OrganizationPermissionHttpSource(IPermissionHttpClient permi
         CancellationToken cancellationToken = default
     )
     {
-        var permissions = await GetPermissionsAsync(organizationId, cancellationToken);
+        // The fetch is shared by every caller asking about this organization, so it never
+        // carries one caller's token: a component cancelling its own check (Tempest's
+        // latest-wins re-execute) must not fault the task cached for everyone else.
+        var permissions = await GetPermissionsAsync(organizationId).WaitAsync(cancellationToken);
 
         if (permissions.IsGlobalAdmin)
         {
@@ -27,38 +30,44 @@ public sealed class OrganizationPermissionHttpSource(IPermissionHttpClient permi
         return permissions.Permissions.Contains(permission.Key);
     }
 
-    private Task<UserPermissionsDto> GetPermissionsAsync(
-        Guid organizationId,
-        CancellationToken cancellationToken
-    )
+    private Task<UserPermissionsDto> GetPermissionsAsync(Guid organizationId)
     {
         if (_cache.TryGetValue(organizationId, out var cachedTask))
         {
             return cachedTask;
         }
 
-        var task = FetchPermissionsAsync(organizationId, cancellationToken);
+        var task = FetchPermissionsAsync(organizationId);
         _cache[organizationId] = task;
 
         return task;
     }
 
-    private async Task<UserPermissionsDto> FetchPermissionsAsync(
-        Guid organizationId,
-        CancellationToken cancellationToken
-    )
+    private async Task<UserPermissionsDto> FetchPermissionsAsync(Guid organizationId)
     {
-        var result = await permissionClient.GetMyPermissionsAsync(organizationId, cancellationToken);
+        try
+        {
+            var result = await permissionClient.GetMyPermissionsAsync(
+                organizationId,
+                CancellationToken.None
+            );
 
-        return result.Match(
-            permissions => permissions,
-            _ =>
-            {
-                // Don't cache failures — a later call should be able to retry.
-                _cache.Remove(organizationId);
-                return new UserPermissionsDto(organizationId, [], IsGlobalAdmin: false);
-            }
-        );
+            return result.Match(
+                permissions => permissions,
+                _ =>
+                {
+                    // Don't cache failures — a later call should be able to retry.
+                    _cache.Remove(organizationId);
+                    return new UserPermissionsDto(organizationId, [], IsGlobalAdmin: false);
+                }
+            );
+        }
+        catch
+        {
+            // Same rule for a fetch that throws: a faulted task must not be served from cache.
+            _cache.Remove(organizationId);
+            throw;
+        }
     }
 
     public void InvalidateCache(Guid? organizationId = null)
