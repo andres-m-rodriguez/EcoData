@@ -13,8 +13,6 @@
 @using EcoPortal.Client.Features.Organizations.Components
 @using EcoPortal.Client.Features.OrganizationAccessRequests.Dialogs
 @inherits StatefulComponent
-@using OrgPermissions = EcoData.Organization.Contracts.Permissions
-@using SensorPermissions = EcoData.Sensors.Contracts.Permissions
 @inject IOrganizationHttpClient OrganizationClient
 @inject AuthStateService AuthState
 @inject ISensorHttpClient SensorClient
@@ -181,7 +179,7 @@
                             </div>
                         </div>
                         <div class="hero-card-actions">
-                            <RequireOrganizationPermission Permission="@OrgPermissions.Organization.Update" OrganizationId="Id">
+                            <RequireOrganizationPermission Permission="OrganizationPermissions.UpdateOrganization" OrganizationId="Id">
                                 <Authorized>
                                     <MudButton Variant="Variant.Filled" Class="btn-pri-org" StartIcon="@Icons.Material.Outlined.Edit"
                                                Style="color: white !important;"
@@ -204,7 +202,7 @@
                                        OnClick="NavigateToMap">
                                 View sensor map
                             </MudButton>
-                            <RequireOrganizationPermission Permission="@OrgPermissions.Organization.Delete" OrganizationId="Id">
+                            <RequireOrganizationPermission Permission="OrganizationPermissions.DeleteOrganization" OrganizationId="Id">
                                 <MudButton Variant="Variant.Text" Class="btn-danger-light" StartIcon="@Icons.Material.Outlined.Delete"
                                            OnClick="ConfirmDelete">
                                     Delete
@@ -322,14 +320,14 @@
                                     <h2 class="section-title">What's online</h2>
                                 </div>
                                 <MudStack Row Spacing="2">
-                                    <RequireOrganizationPermission Permission="@SensorPermissions.Sensor.Update"
+                                    <RequireOrganizationPermission Permission="SensorPermissions.UpdateSensor"
                                                                    OrganizationId="Id">
                                         <MudButton Variant="Variant.Outlined" Color="Color.Primary" Size="Size.Small"
                                                    StartIcon="@Icons.Material.Filled.Settings" OnClick="NavigateToSensors">
                                             Manage
                                         </MudButton>
                                     </RequireOrganizationPermission>
-                                    <RequireOrganizationPermission Permission="@SensorPermissions.Sensor.Create"
+                                    <RequireOrganizationPermission Permission="SensorPermissions.CreateSensor"
                                                                    OrganizationId="Id">
                                         <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small"
                                                    StartIcon="@Icons.Material.Filled.Add" OnClick="NavigateToCreateSensor">
@@ -392,7 +390,7 @@
                                     <div class="section-eyebrow">Leadership</div>
                                     <h2 class="section-title">The team</h2>
                                 </div>
-                                <RequireOrganizationPermission Permission="@OrgPermissions.Organization.ManageMembers"
+                                <RequireOrganizationPermission Permission="OrganizationPermissions.ManageMembers"
                                                                OrganizationId="Id">
                                     <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small"
                                                StartIcon="@Icons.Material.Filled.Settings" OnClick="NavigateToTeam">

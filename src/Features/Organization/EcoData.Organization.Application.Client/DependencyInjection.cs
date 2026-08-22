@@ -1,3 +1,4 @@
+using EcoData.Common.Authorization;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace EcoData.Organization.Application.Client;
@@ -45,5 +46,16 @@ public static class DependencyInjection
     )
     {
         return services.AddOrganizationClient(client => client.BaseAddress = baseAddress);
+    }
+
+    // Registered concretely as well, so the host can reach InvalidateCache on auth changes.
+    public static IServiceCollection AddOrganizationPermissionHttpSource(this IServiceCollection services)
+    {
+        services.AddScoped<OrganizationPermissionHttpSource>();
+        services.AddScoped<IOrganizationPermissionSource>(sp =>
+            sp.GetRequiredService<OrganizationPermissionHttpSource>()
+        );
+
+        return services;
     }
 }

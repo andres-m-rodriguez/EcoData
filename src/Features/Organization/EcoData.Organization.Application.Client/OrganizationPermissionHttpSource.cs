@@ -1,26 +1,22 @@
-using EcoData.Organization.Application.Client;
+using EcoData.Common.Authorization;
 using EcoData.Organization.Contracts.Dtos;
 
-namespace EcoPortal.Client.Services;
+namespace EcoData.Organization.Application.Client;
 
-public sealed class PermissionContextService(
-    IPermissionHttpClient permissionClient,
-    AuthStateService authState
-)
+// Client half of the client/server source pair — same contract as the server's
+// storage-backed source, answered from a per-organization cached HTTP fetch.
+// Client answers only shape UI; the endpoint check on the server is the enforcement.
+public sealed class OrganizationPermissionHttpSource(IPermissionHttpClient permissionClient)
+    : IOrganizationPermissionSource
 {
     private readonly Dictionary<Guid, Task<UserPermissionsDto>> _cache = [];
 
-    public async Task<bool> HasPermissionAsync(
+    public async Task<bool> HasAsync(
+        IOrganizationPermission permission,
         Guid organizationId,
-        string permission,
         CancellationToken cancellationToken = default
     )
     {
-        if (authState.IsGlobalAdmin)
-        {
-            return true;
-        }
-
         var permissions = await GetPermissionsAsync(organizationId, cancellationToken);
 
         if (permissions.IsGlobalAdmin)
@@ -28,12 +24,12 @@ public sealed class PermissionContextService(
             return true;
         }
 
-        return permissions.Permissions.Contains(permission);
+        return permissions.Permissions.Contains(permission.Key);
     }
 
-    public Task<UserPermissionsDto> GetPermissionsAsync(
+    private Task<UserPermissionsDto> GetPermissionsAsync(
         Guid organizationId,
-        CancellationToken cancellationToken = default
+        CancellationToken cancellationToken
     )
     {
         if (_cache.TryGetValue(organizationId, out var cachedTask))

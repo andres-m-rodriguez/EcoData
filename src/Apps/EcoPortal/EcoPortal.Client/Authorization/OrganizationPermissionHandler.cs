@@ -1,5 +1,5 @@
 using System.Text.RegularExpressions;
-using EcoPortal.Client.Services;
+using EcoData.Common.Authorization;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Components;
 
@@ -7,7 +7,7 @@ namespace EcoPortal.Client.Authorization;
 
 public sealed partial class OrganizationPermissionHandler(
     NavigationManager navigationManager,
-    PermissionContextService permissionContext
+    IAuthorization auth
 ) : AuthorizationHandler<OrganizationPermissionRequirement>
 {
     protected override async Task HandleRequirementAsync(
@@ -31,10 +31,10 @@ public sealed partial class OrganizationPermissionHandler(
             return;
         }
 
-        // HasPermissionAsync already checks for global admin
-        var hasPermission = await permissionContext.HasPermissionAsync(
-            organizationId.Value,
-            requirement.Permission
+        // The permission source's DTO carries IsGlobalAdmin, so admins pass without a grant.
+        var hasPermission = await auth.HasAsync(
+            new OrgPermission(requirement.Permission),
+            organizationId.Value
         );
 
         if (hasPermission)
