@@ -8,6 +8,8 @@ public sealed class OrganizationAccessRequest
     public required Guid Id { get; set; }
     public required Guid UserId { get; set; }
     public required Guid OrganizationId { get; set; }
+    // Nullable only for requests that predate role selection; new requests always carry one.
+    public required Guid? RoleId { get; set; }
     public required OrganizationAccessRequestStatus Status { get; set; }
     public required string? RequestMessage { get; set; }
     public required string? ReviewNotes { get; set; }
@@ -16,6 +18,7 @@ public sealed class OrganizationAccessRequest
     public required DateTimeOffset CreatedAt { get; set; }
 
     public Organization? Organization { get; set; }
+    public OrganizationRole? Role { get; set; }
 
     public sealed class EntityConfiguration : IEntityTypeConfiguration<OrganizationAccessRequest>
     {
@@ -49,6 +52,12 @@ public sealed class OrganizationAccessRequest
                 .WithMany()
                 .HasForeignKey(static e => e.OrganizationId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            builder
+                .HasOne(static e => e.Role)
+                .WithMany()
+                .HasForeignKey(static e => e.RoleId)
+                .OnDelete(DeleteBehavior.Restrict);
         }
     }
 }

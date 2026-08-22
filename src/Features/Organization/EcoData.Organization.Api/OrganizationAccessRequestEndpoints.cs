@@ -37,6 +37,7 @@ public static class OrganizationAccessRequestEndpoints
                     IOrganizationAccessRequestRepository repository,
                     IOrganizationMemberRepository memberRepository,
                     IOrganizationBlockedUserRepository blockedUserRepository,
+                    IOrganizationRoleRepository roleRepository,
                     CancellationToken ct
                 ) =>
                 {
@@ -85,9 +86,20 @@ public static class OrganizationAccessRequestEndpoints
                         );
                     }
 
+                    var role = await roleRepository.GetByNameAsync(organizationId, request.RoleName, ct);
+
+                    if (role is null)
+                    {
+                        return TypedResults.Problem(
+                            detail: $"Role '{request.RoleName}' does not exist in this organization.",
+                            statusCode: StatusCodes.Status400BadRequest
+                        );
+                    }
+
                     var accessRequest = await repository.CreateAsync(
                         token.UserId.Value,
                         organizationId,
+                        role.Id,
                         request.RequestMessage,
                         ct
                     );
@@ -249,7 +261,8 @@ public static class OrganizationAccessRequestEndpoints
                         await memberRepository.CreateAsync(
                             organizationId,
                             existingRequest.UserId,
-                            DefaultRoles.Viewer,
+                            // Requests made before role selection existed carry no role; they join as Viewer.
+                            existingRequest.RoleName ?? DefaultRoles.Viewer,
                             ct
                         );
                     }

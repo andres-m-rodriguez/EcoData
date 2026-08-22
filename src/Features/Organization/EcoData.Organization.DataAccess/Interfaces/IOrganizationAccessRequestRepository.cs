@@ -26,6 +26,7 @@ public interface IOrganizationAccessRequestRepository
     Task<OrganizationAccessRequestDto> CreateAsync(
         Guid userId,
         Guid organizationId,
+        Guid roleId,
         string? requestMessage,
         CancellationToken cancellationToken = default
     );

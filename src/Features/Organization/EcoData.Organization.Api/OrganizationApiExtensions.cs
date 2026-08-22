@@ -8,6 +8,7 @@ public static class OrganizationApiExtensions
     {
         app.MapOrganizationEndpoints();
         app.MapOrganizationAccessRequestEndpoints();
+        app.MapOrganizationRoleEndpoints();
         app.MapOrganizationBlockedUserEndpoints();
         app.MapMemberEndpoints();
         app.MapPermissionEndpoints();
