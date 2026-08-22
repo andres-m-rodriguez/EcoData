@@ -118,7 +118,8 @@
 }
 
 .bottom-nav.is-hidden,
-:root[data-nav-autohide="hidden"] .bottom-nav {
+:root[data-nav-autohide="hidden"] .bottom-nav,
+:root:has(.mud-dialog-container) .bottom-nav {
     transform: translate3d(0, calc(100% + var(--fauna-shell-gutter) + env(safe-area-inset-bottom, 0px)), 0);
     opacity: 0;
     pointer-events: none;

@@ -69,11 +69,14 @@
     outline-offset: -2px;
 }
 
-/* Two ways to hide, one look: `.is-hidden` from a page's Hidden event, the
-   root attribute from nav-autohide.js. The pill slides out on a transform so
-   it animates both ways and keeps its active tab. */
+/* Three ways to hide, one look: `.is-hidden` from a page's Hidden event, the
+   root attribute from nav-autohide.js, and any open MudBlazor dialog — a modal
+   owns the viewport, and a tab bar peeking under its scrim reads as reachable
+   when it is not. The pill slides out on a transform so it animates both ways
+   and keeps its active tab. */
 .ui-bottom-nav.is-hidden,
-:root[data-nav-autohide="hidden"] .ui-bottom-nav {
+:root[data-nav-autohide="hidden"] .ui-bottom-nav,
+:root:has(.mud-dialog-container) .ui-bottom-nav {
     transform: translate3d(0, calc(100% + var(--ui-shell-gutter) + env(safe-area-inset-bottom, 0px)), 0);
     opacity: 0;
     pointer-events: none;
