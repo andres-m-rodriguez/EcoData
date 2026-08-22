@@ -1,0 +1,5 @@
+{
+  "appHost": {
+    "path": "src/Host/EcoData.AppHost/EcoData.AppHost.csproj"
+  }
+}
