@@ -21,6 +21,8 @@ using EcoData.Sensors.Database.Extensions;
 using EcoData.Wildlife.Api;
 using EcoData.Wildlife.DataAccess;
 using EcoData.Wildlife.Database.Extensions;
+using EcoPortal.Server.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using EcoPortal.Server.Components;
 using EcoPortal.Server.Services;
 using EcoPortal.Server.Workers;
@@ -38,6 +40,7 @@ builder.AddWildlifeDatabase();
 
 builder.Services.AddRazorComponents().AddInteractiveWebAssemblyComponents().AddAuthenticationStateSerialization();
 builder.Services.AddCascadingAuthenticationState();
+builder.Services.AddSingleton<IAuthorizationMiddlewareResultHandler, ClientRoutedPageAuthorizationHandler>();
 
 builder.Services.AddMudServices();
 builder.Services.AddTempest();
