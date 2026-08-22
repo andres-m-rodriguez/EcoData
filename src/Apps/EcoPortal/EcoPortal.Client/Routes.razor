@@ -1,3 +1,4 @@
+@using EcoPortal.Client.Components
 @using EcoPortal.Client.Layout
 @using Microsoft.AspNetCore.Components.Authorization
 @inject NavigationManager Navigation
@@ -6,7 +7,14 @@
     <Found Context="routeData">
         <AuthorizeRouteView RouteData="routeData" DefaultLayout="typeof(MainLayout)">
             <NotAuthorized>
-                @{
+                @* Only a missing sign-in is fixed by logging in. A signed-in user who lacks a
+                   permission is told so in place, on the URL they asked for. *@
+                @if (context.User.Identity?.IsAuthenticated == true)
+                {
+                    <AccessDenied />
+                }
+                else
+                {
                     var returnUrl = Uri.EscapeDataString(Navigation.ToBaseRelativePath(Navigation.Uri));
                     Navigation.NavigateTo($"/login?returnUrl={returnUrl}", forceLoad: false);
                 }

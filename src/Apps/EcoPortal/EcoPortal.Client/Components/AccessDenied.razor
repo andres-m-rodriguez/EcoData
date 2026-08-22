@@ -1,0 +1,65 @@
+@using System.Text.RegularExpressions
+@using EcoPortal.Client.Services
+@inject NavigationManager Navigation
+@inject AuthStateService AuthState
+
+<PageTitle>No Access - EcoData</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.Small" Class="d-flex align-center justify-center pa-8 mt-16">
+    <MudStack AlignItems="AlignItems.Center" Spacing="4">
+        <MudAvatar Color="Color.Warning" Size="Size.Large">
+            <MudIcon Icon="@Icons.Material.Filled.Lock" />
+        </MudAvatar>
+
+        <MudStack Spacing="1" AlignItems="AlignItems.Center">
+            <MudText Typo="Typo.h5" Align="Align.Center">You don't have access to this page</MudText>
+            <MudText Typo="Typo.body1" Color="Color.Secondary" Align="Align.Center">
+                @if (AuthState.CurrentUser is { } user)
+                {
+                    <text>You're signed in as <strong>@user.Email</strong>, but your role in this organization doesn't include the permission this page needs.</text>
+                }
+                else
+                {
+                    <text>Your role in this organization doesn't include the permission this page needs.</text>
+                }
+            </MudText>
+            <MudText Typo="Typo.body2" Color="Color.Secondary" Align="Align.Center">
+                Ask an administrator of the organization to grant it to your role.
+            </MudText>
+        </MudStack>
+
+        <MudStack Row="true" Spacing="2" Class="mt-4 flex-wrap justify-center">
+            @if (OrganizationPath is { } organizationPath)
+            {
+                <MudButton Variant="Variant.Filled"
+                           Color="Color.Primary"
+                           StartIcon="@Icons.Material.Filled.Business"
+                           Href="@organizationPath">
+                    Back to organization
+                </MudButton>
+            }
+            <MudButton Variant="@(OrganizationPath is null ? Variant.Filled : Variant.Outlined)"
+                       Color="Color.Primary"
+                       StartIcon="@Icons.Material.Filled.Home"
+                       Href="/">
+                Go to Dashboard
+            </MudButton>
+        </MudStack>
+    </MudStack>
+</MudContainer>
+
+@code {
+    private const string OrganizationRoutePattern =
+        @"/organizations/([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})";
+
+    // The denied page is usually one level inside an organization; offer the way back to it.
+    private string? OrganizationPath
+    {
+        get
+        {
+            var match = Regex.Match(Navigation.Uri, OrganizationRoutePattern, RegexOptions.IgnoreCase);
+
+            return match.Success ? $"/organizations/{match.Groups[1].Value}" : null;
+        }
+    }
+}
