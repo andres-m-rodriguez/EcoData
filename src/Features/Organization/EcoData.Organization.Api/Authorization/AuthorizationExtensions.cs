@@ -17,7 +17,9 @@ public static class AuthorizationExtensions
         {
             options.AddPolicy(
                 PolicyNames.Admin,
-                policy => policy.RequireClaim(ClaimTypes.Role, "Admin")
+                // The role claim carries the GlobalRole enum name: the JWT and the client principal both
+                // emit it that way, so the policy matches that value, not its own name.
+                policy => policy.RequireClaim(ClaimTypes.Role, nameof(GlobalRole.GlobalAdmin))
             );
         });
 

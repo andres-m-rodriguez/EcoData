@@ -7,14 +7,14 @@
 @using EcoData.Locations.Contracts.Dtos
 @using EcoPortal.Client.Services
 @using EcoPortal.Client.Components
-@using SensorPermissions = EcoData.Sensors.Contracts.Permissions
+@using EcoData.Common.Authorization
 @inherits StatefulComponent
 @inject ISensorHttpClient SensorClient
 @inject ISensorHealthHttpClient HealthClient
 @inject IMunicipalityHttpClient MunicipalityClient
 @inject INavigationManager Navigation
 @inject ISnackbar Snackbar
-@inject PermissionContextService PermissionContext
+@inject IAuthorization Auth
 @inject AuthStateService AuthState
 
 <PageTitle>Configure Sensor - EcoData</PageTitle>
@@ -296,8 +296,7 @@
             await AuthState.InitializeAsync();
         }
 
-        _hasPermission = AuthState.IsGlobalAdmin ||
-            await PermissionContext.HasPermissionAsync(_sensor.OrganizationId, SensorPermissions.Sensor.Update);
+        _hasPermission = await Auth.HasAsync(SensorPermissions.UpdateSensor, _sensor.OrganizationId);
 
         if (!_hasPermission) return;
 

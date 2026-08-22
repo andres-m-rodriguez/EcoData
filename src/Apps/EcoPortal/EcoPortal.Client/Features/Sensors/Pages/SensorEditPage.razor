@@ -7,12 +7,12 @@
 @using EcoPortal.Client.Services
 @using EcoPortal.Client.Components
 @using static EcoPortal.Client.Features.Sensors.Components.SensorForm
-@using SensorPermissions = EcoData.Sensors.Contracts.Permissions
+@using EcoData.Common.Authorization
 @inherits StatefulComponent
 @inject ISensorHttpClient SensorClient
 @inject INavigationManager Navigation
 @inject ISnackbar Snackbar
-@inject PermissionContextService PermissionContext
+@inject IAuthorization Auth
 @inject AuthStateService AuthState
 
 <PageTitle>Edit Sensor - EcoData</PageTitle>
@@ -96,8 +96,7 @@
             await AuthState.InitializeAsync();
         }
 
-        _hasPermission = AuthState.IsGlobalAdmin ||
-            await PermissionContext.HasPermissionAsync(_sensor.OrganizationId, SensorPermissions.Sensor.Update);
+        _hasPermission = await Auth.HasAsync(SensorPermissions.UpdateSensor, _sensor.OrganizationId);
 
         if (!_hasPermission)
         {

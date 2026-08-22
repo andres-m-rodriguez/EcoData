@@ -17,9 +17,8 @@ public sealed class CustomUserClaimsPrincipalFactory(
         identity.AddClaim(new Claim("DisplayName", user.DisplayName));
 
         if (user.GlobalRole == GlobalRole.GlobalAdmin)
-        {
-            identity.AddClaim(new Claim(ClaimTypes.Role, "Admin"));
-        }
+            identity.AddClaim(new Claim(ClaimTypes.Role, nameof(GlobalRole.GlobalAdmin)));
+
 
         return identity;
     }

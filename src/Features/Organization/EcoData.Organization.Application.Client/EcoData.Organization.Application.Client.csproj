@@ -9,6 +9,7 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\EcoData.Organization.Contracts\EcoData.Organization.Contracts.csproj" />
+    <ProjectReference Include="..\..\Common\EcoData.Common.Authorization\EcoData.Common.Authorization.csproj" />
     <ProjectReference Include="..\..\Common\EcoData.Common.Http.Helpers\EcoData.Common.Http.Helpers.csproj" />
     <ProjectReference Include="..\..\Common\EcoData.Common.Problems.Contracts\EcoData.Common.Problems.Contracts.csproj" />
   </ItemGroup>

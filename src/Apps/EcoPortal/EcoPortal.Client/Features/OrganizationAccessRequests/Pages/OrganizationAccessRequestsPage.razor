@@ -17,7 +17,7 @@
 <PageTitle>Requests - EcoData</PageTitle>
 
 <NuiPageLayout Title="Requests" ParentPath="@($"/organizations/{OrganizationId}/team")">
-        <RequireOrganizationPermission OrganizationId="OrganizationId" Permission="EcoData.Organization.Contracts.Permissions.Organization.ManageMembers">
+        <RequireOrganizationPermission OrganizationId="OrganizationId" Permission="OrganizationPermissions.ManageMembers">
             <Authorized>
                 <MudChipSet T="string" SelectedValue="_statusFilter" SelectedValueChanged="OnStatusFilterChanged" SelectionMode="SelectionMode.SingleSelection" Class="mb-4">
                     <MudChip T="string" Value="@("")" Color="Color.Default" Variant="Variant.Outlined">All</MudChip>

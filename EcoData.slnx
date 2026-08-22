@@ -65,6 +65,7 @@
     <Project Path="src/Features/Organization/EcoData.Organization.Api/EcoData.Organization.Api.csproj" />
     <Project Path="src/Features/Organization/EcoData.Organization.Application.Client/EcoData.Organization.Application.Client.csproj" />
     <Project Path="src/Features/Organization/EcoData.Organization.Application.Server/EcoData.Organization.Application.Server.csproj" />
+    <Project Path="src/Features/Organization/EcoData.Organization.Authorization/EcoData.Organization.Authorization.csproj" />
     <Project Path="src/Features/Organization/EcoData.Organization.Contracts/EcoData.Organization.Contracts.csproj" />
     <Project Path="src/Features/Organization/EcoData.Organization.DataAccess/EcoData.Organization.DataAccess.csproj" />
     <Project Path="src/Features/Organization/EcoData.Organization.Database/EcoData.Organization.Database.csproj" />
@@ -79,6 +80,7 @@
   </Folder>
   <Folder Name="/Features/Wildlife/">
     <Project Path="src/Features/Wildlife/EcoData.Wildlife.Api/EcoData.Wildlife.Api.csproj" />
+    <Project Path="src/Features/Wildlife/EcoData.Wildlife.Application/EcoData.Wildlife.Application.csproj" />
     <Project Path="src/Features/Wildlife/EcoData.Wildlife.Application.Client/EcoData.Wildlife.Application.Client.csproj" />
     <Project Path="src/Features/Wildlife/EcoData.Wildlife.Application.Server/EcoData.Wildlife.Application.Server.csproj" />
     <Project Path="src/Features/Wildlife/EcoData.Wildlife.Contracts/EcoData.Wildlife.Contracts.csproj" />

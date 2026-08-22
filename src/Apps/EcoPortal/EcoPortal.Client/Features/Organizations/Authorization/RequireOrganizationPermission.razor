@@ -1,7 +1,8 @@
+@using EcoData.Common.Authorization
 @using EcoPortal.Client.Services
 @inherits StatefulComponent
 @inject AuthStateService AuthState
-@inject PermissionContextService PermissionContext
+@inject IAuthorization Auth
 
 @if (CheckPermissionState.IsLoading || !CheckPermissionState.HasResult)
 {
@@ -27,8 +28,8 @@ else if (NotAuthorized is not null)
 }
 
 @code {
-    [Parameter]
-    public string Permission { get; set; } = string.Empty;
+    [Parameter, EditorRequired]
+    public required IOrganizationPermission Permission { get; set; }
 
     [Parameter]
     public Guid OrganizationId { get; set; }
@@ -68,16 +69,11 @@ else if (NotAuthorized is not null)
             await AuthState.InitializeAsync();
         }
 
-        if (AuthState.IsGlobalAdmin)
-        {
-            return true;
-        }
-
-        if (OrganizationId == Guid.Empty || string.IsNullOrEmpty(Permission))
+        if (OrganizationId == Guid.Empty)
         {
             return false;
         }
 
-        return await PermissionContext.HasPermissionAsync(OrganizationId, Permission);
+        return await Auth.HasAsync(Permission, OrganizationId, ct);
     }
 }

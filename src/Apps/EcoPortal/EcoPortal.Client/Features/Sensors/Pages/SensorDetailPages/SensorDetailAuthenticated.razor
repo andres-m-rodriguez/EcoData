@@ -6,7 +6,6 @@
 @using EcoPortal.Client.Features.Organizations.Authorization
 @using EcoPortal.Client.Features.Sensors.Pages.SensorDetailPages.Components
 @using EcoPortal.Client.Features.Sensors.Components
-@using SensorPermissions = EcoData.Sensors.Contracts.Permissions
 @inherits StatefulComponent
 @inject ISensorHttpClient SensorClient
 @inject ISensorHealthHttpClient HealthClient
@@ -69,7 +68,7 @@
                 <MudStack Row="true" Spacing="2" AlignItems="AlignItems.Center">
                     <SensorSubscriptionToggle SensorId="Sensor.Id"
                                               HealthMonitoringEnabled="@(LoadHealthState.Result is not null)" />
-                    <RequireOrganizationPermission Permission="@SensorPermissions.Sensor.Delete"
+                    <RequireOrganizationPermission Permission="SensorPermissions.DeleteSensor"
                                                    OrganizationId="Sensor.OrganizationId">
                         <MudTooltip Text="Delete Sensor">
                             <MudIconButton Icon="@Icons.Material.Outlined.Delete" Color="Color.Error" Variant="Variant.Outlined"
@@ -246,7 +245,7 @@
                 <QuickActionCard Icon="@Icons.Material.Filled.Refresh" Title="Refresh Readings" Description="Reload latest data"
                                  OnClick="RefreshReadings" />
                 <QuickActionCard Icon="@Icons.Material.Filled.Download" Title="Export Data" Description="CSV, JSON, or PDF" />
-                <RequireOrganizationPermission Permission="@SensorPermissions.Sensor.Update"
+                <RequireOrganizationPermission Permission="SensorPermissions.UpdateSensor"
                                                OrganizationId="Sensor.OrganizationId">
                     <QuickActionCard Icon="@Icons.Material.Filled.Settings" Title="Configure Sensor" Description="Health & settings"
                                      OnClick="NavigateToConfigure" />

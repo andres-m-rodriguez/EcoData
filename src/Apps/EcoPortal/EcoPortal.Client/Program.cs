@@ -1,3 +1,4 @@
+using EcoData.Common.Authorization;
 using EcoData.Identity.Application.Client;
 using EcoData.Locations.Application.Client;
 using EcoData.Spa.Navigation;
@@ -5,6 +6,7 @@ using EcoData.Organization.Application.Client;
 using EcoData.Sensors.Application.Client;
 using EcoPortal.Client.Authorization;
 using EcoPortal.Client.Features.Organizations.Services;
+using EcoPortal.Client.Layout;
 using EcoPortal.Client.Services;
 using EcoPortal.Client.Services.Charts;
 using Microsoft.AspNetCore.Authorization;
@@ -44,8 +46,11 @@ builder.Services.AddScoped<ITabNavigationService, TabNavigationService>();
 
 builder.Services.AddScoped<AuthStateService>();
 builder.Services.AddScoped<AuthenticationStateProvider, EcoPortalAuthStateProvider>();
-builder.Services.AddScoped<PermissionContextService>();
 builder.Services.AddScoped<NotificationService>();
+
+// Same AddPermissions the server calls; only the source registration differs.
+builder.Services.AddPermissions();
+builder.Services.AddOrganizationPermissionHttpSource();
 
 // Register custom policy provider BEFORE AddAuthorizationCore (uses TryAddSingleton)
 builder.Services.AddSingleton<IAuthorizationPolicyProvider, OrganizationPermissionPolicyProvider>();
@@ -54,4 +59,18 @@ builder.Services.AddAuthorizationCore();
 
 builder.Services.AddMudServices();
 
-await builder.Build().RunAsync();
+var host = builder.Build();
+
+// Cached grants belong to one user, so an auth change drops them.
+var bus = host.Services.GetRequiredService<IEventBus>();
+var permissionSource = host.Services.GetRequiredService<OrganizationPermissionHttpSource>();
+bus.Subscribe(
+    typeof(MainLayout.AuthChanged),
+    _ =>
+    {
+        permissionSource.InvalidateCache();
+        return Task.CompletedTask;
+    }
+);
+
+await host.RunAsync();

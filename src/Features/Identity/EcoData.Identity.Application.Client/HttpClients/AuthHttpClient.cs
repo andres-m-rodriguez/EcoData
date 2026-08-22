@@ -109,6 +109,11 @@ public sealed class AuthHttpClient(HttpClient httpClient) : IAuthHttpClient
             if (!response.IsSuccessStatusCode)
                 return null;
 
+            // A 2xx with an empty body (older servers wrote Ok(null) that way) is "not
+            // signed in", not JSON to parse.
+            if (response.Content.Headers.ContentLength is 0)
+                return null;
+
             return await response.Content.ReadFromJsonAsync<UserInfo?>(cancellationToken);
         }
         catch (HttpRequestException)
