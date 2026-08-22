@@ -15,111 +15,86 @@
 <MudDialogProvider />
 <MudSnackbarProvider />
 
-@* .ep-shell is the ground every panel floats in. It is also the only plain
-   element wrapping MudLayout/MudAppBar/MudMainContent, so it is what carries
-   Blazor's scope attribute — every ::deep rule in the stylesheet resolves
-   through it. *@
-<div class="ep-shell">
-    <MudLayout>
-        <MudAppBar Elevation="0" Fixed="true" Class="ep-appbar">
-            <MudHidden Breakpoint="Breakpoint.MdAndUp">
-                <EpMobileTitle />
-            </MudHidden>
+<UiShell Bleed="IsMapPage">
+    <AppBar>
+        <MudHidden Breakpoint="Breakpoint.MdAndUp">
+            <UiMobileTitle BrandText="Ecoportal" IsRoot="IsHomePage" />
+        </MudHidden>
 
-            <MudHidden Breakpoint="Breakpoint.SmAndDown">
-                <div class="d-flex align-center">
-                    <a href="/" class="logo-text">Ecoportal</a>
-                    @if (ShowTitleDivider)
-                    {
-                        <MudDivider Vertical="true" FlexItem="true" Class="mx-4 my-3" />
-                        <span class="page-title">@Navbar.State.Title</span>
-                    }
-                </div>
-            </MudHidden>
+        <MudHidden Breakpoint="Breakpoint.SmAndDown">
+            <UiBrand Text="Ecoportal" Title="@DesktopTitle" />
+            <UiNav Links="NavLinks" />
+        </MudHidden>
 
-            <MudHidden Breakpoint="Breakpoint.SmAndDown">
-                <nav class="ep-nav ml-6">
-                    @foreach (var (href, label, match) in NavLinks)
-                    {
-                        <a href="@href" class="@NavLinkClass(match)">@label</a>
-                    }
-                </nav>
-            </MudHidden>
+        <MudSpacer />
 
-            <MudSpacer />
+        <MudHidden Breakpoint="Breakpoint.SmAndDown">
+            <EpSearch />
+        </MudHidden>
 
-            <MudHidden Breakpoint="Breakpoint.SmAndDown">
-                <EpSearch />
-            </MudHidden>
+        @if (AuthState.IsAuthenticated)
+        {
+            <NotificationBell />
+        }
 
+        <MudHidden Breakpoint="Breakpoint.MdAndUp">
+            @if (!IsHomePage)
+            {
+                <UiPageActions />
+            }
+        </MudHidden>
+
+        <MudHidden Breakpoint="Breakpoint.SmAndDown">
             @if (AuthState.IsAuthenticated)
             {
-                <NotificationBell />
+                <a href="/account" class="ep-user-pill">
+                    <span class="ep-user-initial">@UserInitial</span>
+                    <span class="ep-user-name">@AuthState.CurrentUser?.DisplayName</span>
+                </a>
             }
+            else
+            {
+                <a href="/login" class="ep-signin">Sign in</a>
+            }
+        </MudHidden>
+    </AppBar>
 
-            <MudHidden Breakpoint="Breakpoint.MdAndUp">
-                @if (Tabs.CurrentTab != NavigationTab.Home)
-                {
-                    <NuiNativeNavbar ShowBackButton="false" ShowTitle="false" />
-                }
-            </MudHidden>
-
-            <MudHidden Breakpoint="Breakpoint.SmAndDown">
-                @if (AuthState.IsAuthenticated)
-                {
-                    <a href="/account" class="ep-user-pill">
-                        <span class="ep-user-initial">@UserInitial</span>
-                        <span class="ep-user-name">@AuthState.CurrentUser?.DisplayName</span>
-                    </a>
-                }
-                else
-                {
-                    <a href="/login" class="ep-signin">Sign in</a>
-                }
-            </MudHidden>
-        </MudAppBar>
-
-        <MudMainContent Class="main-content">
-            <div class="ep-shell-body">
-                <div class="ep-main-panel">
-                    <MudHidden Breakpoint="Breakpoint.SmAndDown">
-                        @if (AuthState.IsAuthenticated && IsOrganizationsArea)
-                        {
-                            <nav class="ep-subnav">
-                                @foreach (var (href, label, icon) in OrganizationLinks)
-                                {
-                                    <a href="@href" class="@SubnavLinkClass(href)">
-                                        <MudIcon Icon="@icon" Size="Size.Small" />
-                                        <span>@label</span>
-                                    </a>
-                                }
-                            </nav>
-                        }
-                    </MudHidden>
-
-                    @if (IsFullBleedPage)
+    <ChildContent>
+        <MudHidden Breakpoint="Breakpoint.SmAndDown">
+            @if (AuthState.IsAuthenticated && IsOrganizationsArea)
+            {
+                <nav class="ep-subnav">
+                    @foreach (var (href, label, icon) in OrganizationLinks)
                     {
-                        <div class="@_pageTransitionClass" @key="_navigationKey">
-                            @Body
-                        </div>
+                        <a href="@href" class="@SubnavLinkClass(href)">
+                            <MudIcon Icon="@icon" Size="Size.Small" />
+                            <span>@label</span>
+                        </a>
                     }
-                    else
-                    {
-                        <MudContainer MaxWidth="MaxWidth.Large" Class="py-6 px-4">
-                            <div class="@_pageTransitionClass" @key="_navigationKey">
-                                @Body
-                            </div>
-                        </MudContainer>
-                    }
-                </div>
+                </nav>
+            }
+        </MudHidden>
+
+        @if (IsFullBleedPage)
+        {
+            <div class="@_pageTransitionClass" @key="_navigationKey">
+                @Body
             </div>
-        </MudMainContent>
-    </MudLayout>
+        }
+        else
+        {
+            <MudContainer MaxWidth="MaxWidth.Large" Class="py-6 px-4">
+                <div class="@_pageTransitionClass" @key="_navigationKey">
+                    @Body
+                </div>
+            </MudContainer>
+        }
+    </ChildContent>
 
-    <MudHidden Breakpoint="Breakpoint.MdAndUp">
-        <EpBottomNav />
-    </MudHidden>
-</div>
+    <BottomNav>
+        <UiBottomNav Items="BottomTabs" ActiveKey="@Tabs.CurrentTab.ToString()" OnSelect="SelectTab" />
+    </BottomNav>
+</UiShell>
 
 @code {
     /// <summary>The signed-in user changed (login, logout, profile update).
@@ -127,15 +102,24 @@
     /// chrome reacts through this record.</summary>
     public sealed record AuthChanged;
 
-    private static readonly (string Href, string Label, string Match)[] NavLinks =
+    private static readonly UiNavLink[] NavLinks =
     [
-        (HomePage.Path, "Home", HomePage.Path),
-        (DataHubPage.Path, "Data", DataHubPage.Path),
-        (SensorsPage.Path, "Sensors", SensorsPage.Path),
-        (HealthAlertsPage.Path, "Alerts", HealthAlertsPage.Path),
-        ("/organizations/discover", "Organizations", "/organizations"),
-        (GettingStartedPage.Path, "Getting Started", GettingStartedPage.Path),
-        (ContactPage.Path, "Contact", ContactPage.Path),
+        new(HomePage.Path, "Home"),
+        new(DataHubPage.Path, "Data"),
+        new(SensorsPage.Path, "Sensors"),
+        new(HealthAlertsPage.Path, "Alerts"),
+        new("/organizations/discover", "Organizations", Match: "/organizations"),
+        new(GettingStartedPage.Path, "Getting Started"),
+        new(ContactPage.Path, "Contact"),
+    ];
+
+    private static readonly UiBottomNavItem[] BottomTabs =
+    [
+        new(nameof(NavigationTab.Home), Icons.Material.Filled.Home, "Home"),
+        new(nameof(NavigationTab.Data), Icons.Material.Filled.QueryStats, "Data"),
+        new(nameof(NavigationTab.Monitor), Icons.Material.Filled.Sensors, "Monitor"),
+        new(nameof(NavigationTab.Orgs), Icons.Material.Filled.Groups, "Orgs"),
+        new(nameof(NavigationTab.Account), Icons.Material.Filled.Person, "Account"),
     ];
 
     private static readonly (string Href, string Label, string Icon)[] OrganizationLinks =
@@ -156,19 +140,22 @@
     private bool IsOrganizationsArea =>
         Path.StartsWith("/organizations", StringComparison.OrdinalIgnoreCase);
 
+    private bool IsMapPage => Path.EndsWith("/map", StringComparison.OrdinalIgnoreCase);
+
     // Pages that draw their own chrome get @Body with no container.
     private bool IsFullBleedPage =>
         IsHomePage
+        || IsMapPage
         || Path.StartsWith("/data", StringComparison.OrdinalIgnoreCase)
         || Path.Equals("/organizations/discover", StringComparison.OrdinalIgnoreCase)
         || Path.Equals("/sensor-dashboard", StringComparison.OrdinalIgnoreCase);
 
-    // Top-level pages render their own heading or rely on the active pill;
-    // the divider + title is for pages one level in.
-    private bool ShowTitleDivider =>
-        Navbar.State.Title is not null
-        && !IsHomePage
-        && !NavLinks.Any(l => Path.Equals(l.Href, StringComparison.OrdinalIgnoreCase));
+    // Top-level pages carry their own heading or rely on the active pill; the
+    // title beside the wordmark is for pages one level in.
+    private string? DesktopTitle =>
+        IsHomePage || NavLinks.Any(l => Path.Equals(l.Href, StringComparison.OrdinalIgnoreCase))
+            ? null
+            : Navbar.State.Title;
 
     private string UserInitial
     {
@@ -219,13 +206,12 @@
     [Event]
     private void OnNavbarChanged(NavbarChanged _) { }
 
-    private string NavLinkClass(string match)
+    private void SelectTab(string key)
     {
-        var isActive = match == "/"
-            ? Path is "/" or ""
-            : Path.StartsWith(match, StringComparison.OrdinalIgnoreCase);
-
-        return isActive ? "ep-nav-link is-active" : "ep-nav-link";
+        if (Enum.TryParse<NavigationTab>(key, out var tab))
+        {
+            Tabs.NavigateToTab(tab);
+        }
     }
 
     private string SubnavLinkClass(string href) =>

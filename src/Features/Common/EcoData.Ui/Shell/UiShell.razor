@@ -1,0 +1,48 @@
+@namespace EcoData.Ui.Shell
+
+@* The app frame: a ground the app bar and the page float in as panels.
+
+   .ui-shell is the only plain element wrapping MudLayout/MudAppBar/
+   MudMainContent, so it carries Blazor's scope attribute and every ::deep rule
+   in the stylesheet resolves through it. *@
+
+<div class="@ShellClass">
+    <MudLayout>
+        <MudAppBar Elevation="0" Fixed="true" Class="ui-appbar">
+            @AppBar
+        </MudAppBar>
+
+        <MudMainContent Class="ui-main">
+            <div class="ui-shell-body">
+                <div class="ui-main-panel">
+                    @ChildContent
+                </div>
+            </div>
+        </MudMainContent>
+    </MudLayout>
+
+    @if (BottomNav is not null)
+    {
+        <MudHidden Breakpoint="Breakpoint.MdAndUp">
+            @BottomNav
+        </MudHidden>
+    }
+</div>
+
+@code {
+    [Parameter]
+    public RenderFragment? AppBar { get; set; }
+
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+
+    [Parameter]
+    public RenderFragment? BottomNav { get; set; }
+
+    // A page that sizes itself to the viewport (a map) gets the ground with no
+    // panel around it, and only the floating bar over it.
+    [Parameter]
+    public bool Bleed { get; set; }
+
+    private string ShellClass => Bleed ? "ui-shell is-bleed" : "ui-shell";
+}

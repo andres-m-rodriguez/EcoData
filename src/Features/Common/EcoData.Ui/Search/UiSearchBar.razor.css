@@ -1,0 +1,135 @@
+/* The capsule and the dropdown frame. MudIcon, MudTextField and MudOverlay
+   are components, so rules reaching into them go through ::deep. */
+
+.ui-search {
+    position: relative;
+    display: flex;
+    align-items: center;
+    flex: 0 1 320px;
+    min-width: 200px;
+    max-width: 320px;
+    margin-right: 8px;
+}
+
+.ui-search-pill {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    min-width: 0;
+    padding: 2px 6px 2px 14px;
+    border-radius: 999px;
+    background: var(--ui-bg-alt);
+    border: 1px solid var(--ui-line);
+    transition: border-color var(--ui-t-base) var(--ui-ease),
+                background-color var(--ui-t-base) var(--ui-ease);
+}
+
+.ui-search-pill:hover {
+    border-color: var(--ui-primary-200);
+}
+
+/* The capsule is the control, so it takes both the tint and the focus ring. */
+.ui-search-pill:focus-within {
+    border-color: var(--ui-primary-300);
+    background: var(--ui-surface);
+    outline: 2px solid var(--ui-primary);
+    outline-offset: 2px;
+}
+
+.ui-search-pill ::deep .ui-search-glyph {
+    flex-shrink: 0;
+    font-size: 17px !important;
+    color: var(--ui-fg-4);
+}
+
+.ui-search-pill ::deep .ui-search-input {
+    flex: 1 1 auto;
+    min-width: 0;
+    margin: 0;
+}
+
+.ui-search-pill ::deep .ui-search-input .mud-input {
+    margin-top: 0;
+    color: var(--ui-fg);
+}
+
+.ui-search-pill ::deep .ui-search-input input {
+    font: 400 0.875rem/1.5 var(--ui-font-sans);
+    color: var(--ui-fg);
+    padding: 6px 0;
+    text-overflow: ellipsis;
+}
+
+.ui-search-pill ::deep .ui-search-input input::placeholder {
+    color: var(--ui-fg-4);
+    opacity: 1;
+}
+
+.ui-search-pill ::deep .ui-search-input input:focus,
+.ui-search-pill ::deep .ui-search-input input:focus-visible {
+    outline: none;
+}
+
+.ui-search-clear {
+    appearance: none;
+    flex: none;
+    display: grid;
+    place-items: center;
+    width: 26px;
+    height: 26px;
+    padding: 0;
+    border: 0;
+    border-radius: 999px;
+    background: transparent;
+    color: var(--ui-fg-4);
+    cursor: pointer;
+    transition: background-color var(--ui-t-base) var(--ui-ease),
+                color var(--ui-t-base) var(--ui-ease);
+}
+
+.ui-search-clear:hover {
+    background: var(--ui-primary-50);
+    color: var(--ui-primary);
+}
+
+.ui-search-clear:focus-visible {
+    outline: 2px solid var(--ui-primary);
+    outline-offset: 2px;
+}
+
+.ui-search-clear ::deep .mud-icon-root {
+    font-size: 15px !important;
+    color: currentColor;
+}
+
+/* The app bar is fixed and backdrop-filtered, so it is its own stacking
+   context; the panel must also clear the bottom nav's 9999. */
+.ui-search-panel {
+    position: absolute;
+    top: calc(100% + 10px);
+    right: 0;
+    z-index: 10050;
+    width: 340px;
+    max-width: calc(100vw - 2 * var(--ui-shell-gutter));
+    max-height: min(60vh, 460px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: 4px;
+    background: var(--ui-surface);
+    border: 1px solid var(--ui-line);
+    border-radius: var(--ui-shell-radius);
+    box-shadow: var(--ui-shell-shadow-float);
+}
+
+.ui-search ::deep .mud-overlay {
+    z-index: 10040;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .ui-search-pill,
+    .ui-search-clear,
+    .ui-search ::deep .mud-overlay {
+        transition: none;
+    }
+}

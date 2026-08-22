@@ -1,0 +1,99 @@
+@namespace EcoData.Ui.Search
+@inject NavigationManager Navigation
+@implements IDisposable
+
+
+<div class="ui-search" @onkeydown="HandleKeyDown" @onfocusin="HandleFocusIn">
+    <div class="ui-search-pill">
+        <MudIcon Icon="@Icons.Material.Filled.Search" Class="ui-search-glyph" />
+        <MudTextField T="string" Value="@Query" ValueChanged="HandleQueryChanged" Placeholder="@Placeholder"
+                      Variant="Variant.Text" Margin="Margin.None" Underline="false" Immediate="true"
+                      DebounceInterval="@DebounceInterval" Class="ui-search-input" />
+        @if (!string.IsNullOrWhiteSpace(Query))
+        {
+            <button type="button" class="ui-search-clear" aria-label="Clear search" @onclick="Clear">
+                <MudIcon Icon="@Icons.Material.Filled.Close" />
+            </button>
+        }
+    </div>
+
+    @if (IsPanelOpen)
+    {
+        <div class="ui-search-panel">
+            @ChildContent
+        </div>
+    }
+
+    <MudOverlay Visible="@IsPanelOpen" OnClick="Close" />
+</div>
+
+@code {
+    [Parameter]
+    public string? Query { get; set; }
+    [Parameter]
+    public EventCallback<string?> QueryChanged { get; set; }
+    [Parameter]
+    public string Placeholder { get; set; } = "Search";
+    [Parameter]
+    public int MinQueryLength { get; set; } = 2;
+    [Parameter]
+    public int DebounceInterval { get; set; } = 300;
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+
+    private bool _open;
+
+    private bool HasQuery => (Query?.Trim().Length ?? 0) >= MinQueryLength;
+
+    private bool IsPanelOpen => _open && HasQuery;
+
+    protected override void OnInitialized()
+    {
+        Navigation.LocationChanged += HandleLocationChanged;
+    }
+    public void Dispose()
+    {
+        Navigation.LocationChanged -= HandleLocationChanged;
+    }
+    private void HandleLocationChanged(object? sender, LocationChangedEventArgs e)
+    {
+        if (string.IsNullOrEmpty(Query) && !_open)
+        {
+            return;
+        }
+
+        _ = InvokeAsync(async () =>
+        {
+            await Clear();
+            StateHasChanged();
+        });
+    }
+
+    private async Task HandleQueryChanged(string? value)
+    {
+        Query = value;
+        _open = HasQuery;
+        await QueryChanged.InvokeAsync(value);
+    }
+    private void HandleFocusIn()
+    {
+        if (HasQuery)
+        {
+            _open = true;
+        }
+    }
+    private void HandleKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key == "Escape")
+        {
+            Close();
+        }
+    }
+    public void Close() => _open = false;
+    private async Task Clear()
+    {
+        _open = false;
+        Query = null;
+        await QueryChanged.InvokeAsync(null);
+    }
+}

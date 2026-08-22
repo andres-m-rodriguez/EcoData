@@ -42,6 +42,7 @@
     <Project Path="src/Features/Common/EcoData.Spa.Core/EcoData.Spa.Core.csproj" />
     <Project Path="src/Features/Common/EcoData.Spa.Map/EcoData.Spa.Map.csproj" />
     <Project Path="src/Features/Common/EcoData.Spa.Navigation/EcoData.Spa.Navigation.csproj" />
+    <Project Path="src/Features/Common/EcoData.Ui/EcoData.Ui.csproj" />
   </Folder>
   <Folder Name="/Features/Identity/">
     <Project Path="src/Features/Identity/EcoData.Identity.Api/EcoData.Identity.Api.csproj" />

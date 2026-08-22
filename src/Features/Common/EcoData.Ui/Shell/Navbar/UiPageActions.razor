@@ -1,0 +1,34 @@
+@namespace EcoData.Ui.Shell.Navbar
+@inherits StatefulComponent
+@inject INavbarManager Navbar
+
+@* The current page's actions, as published through INavbarManager: one action
+   is a button, more fold into a menu. *@
+
+@if (Navbar.State.Actions.Count == 1)
+{
+    <MudButton Variant="Variant.Filled"
+               Color="Color.Primary"
+               Size="Size.Small"
+               Class="ui-page-action"
+               OnClick="@(() => Navbar.State.Actions[0].OnClick())">
+        @Navbar.State.Actions[0].Title
+    </MudButton>
+}
+else if (Navbar.State.Actions.Count > 1)
+{
+    <MudMenu Icon="@Icons.Material.Filled.MoreVert"
+             AnchorOrigin="Origin.BottomRight"
+             TransformOrigin="Origin.TopRight"
+             AriaLabel="Page actions">
+        @foreach (var action in Navbar.State.Actions)
+        {
+            <MudMenuItem OnClick="@(() => action.OnClick())">@action.Title</MudMenuItem>
+        }
+    </MudMenu>
+}
+
+@code {
+    [Event]
+    private void OnNavbarChanged(NavbarChanged _) { }
+}

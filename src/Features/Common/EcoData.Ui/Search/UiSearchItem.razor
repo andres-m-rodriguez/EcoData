@@ -1,0 +1,29 @@
+@namespace EcoData.Ui.Search
+
+<a class="ui-search-item" href="@Href" @onclick="OnClick">
+    @if (Art is not null)
+    {
+        <span class="ui-search-art">@Art</span>
+    }
+    <span class="ui-search-body">
+        <span class="ui-search-name">@Name</span>
+        @if (Meta is not null)
+        {
+            <span class="ui-search-meta">@Meta</span>
+        }
+    </span>
+</a>
+
+
+@code {
+    [Parameter, EditorRequired]
+    public required string Href { get; set; }
+    [Parameter, EditorRequired]
+    public required string Name { get; set; }
+    [Parameter]
+    public string? Meta { get; set; }
+    [Parameter]
+    public RenderFragment? Art { get; set; }
+    [Parameter]
+    public EventCallback OnClick { get; set; }
+}

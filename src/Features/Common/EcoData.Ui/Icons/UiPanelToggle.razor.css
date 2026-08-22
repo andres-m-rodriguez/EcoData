@@ -1,0 +1,45 @@
+/* MudTooltip and MudIconButton are components, so the button is reached through ::deep. */
+
+::deep .ui-panel-toggle {
+    color: var(--ui-fg-3);
+    margin-right: 4px;
+    transition: color var(--ui-t-base) var(--ui-ease),
+                background-color var(--ui-t-base) var(--ui-ease);
+}
+
+::deep .ui-panel-toggle:hover {
+    color: var(--ui-primary);
+    background-color: var(--ui-primary-50);
+}
+
+::deep .ui-panel-toggle .mud-icon-root {
+    font-size: 20px;
+    transition: transform var(--ui-t-base) var(--ui-ease);
+}
+
+/* The chevron glyph lands with a small press, so the swap reads as motion
+   rather than a flicker. */
+::deep .ui-panel-toggle:hover .mud-icon-root {
+    transform: scale(1.08);
+}
+
+::deep .ui-panel-toggle:active .mud-icon-root {
+    transform: scale(0.94);
+}
+
+::deep .ui-panel-toggle:focus-visible {
+    outline: 2px solid var(--ui-primary);
+    outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    ::deep .ui-panel-toggle,
+    ::deep .ui-panel-toggle .mud-icon-root {
+        transition: none;
+    }
+
+    ::deep .ui-panel-toggle:hover .mud-icon-root,
+    ::deep .ui-panel-toggle:active .mud-icon-root {
+        transform: none;
+    }
+}

@@ -9,107 +9,80 @@
 @inherits StatefulComponent
 @inject ISensorHttpClient SensorClient
 @inject IOrganizationHttpClient OrganizationClient
-@inject NavigationManager Navigation
 
-@* The app bar's search: sensors and organizations in one dropdown. Nothing is
-   asked of the server until two characters are typed, and a transport failure
-   reads exactly like a genuine no-match — search is chrome, never an alert. *@
+@* Sensors and organizations in one dropdown. The bar is the library's; this
+   only decides what a query means. A transport failure reads exactly like a
+   genuine no-match. *@
 
-<div class="ep-search" @onkeydown="HandleKeyDown" @onfocusin="HandleFocusIn">
-    <div class="ep-search-pill">
-        <MudIcon Icon="@Icons.Material.Filled.Search" Class="ep-search-glyph" />
-        <MudTextField T="string"
-                      Value="@_query"
-                      ValueChanged="HandleQueryChanged"
-                      Placeholder="Search sensors and organizations"
-                      Variant="Variant.Text"
-                      Margin="Margin.None"
-                      Underline="false"
-                      Immediate="true"
-                      DebounceInterval="300"
-                      Class="ep-search-input" />
-        @if (HasText)
-        {
-            <button type="button" class="ep-search-clear" aria-label="Clear search" @onclick="Clear">
-                <MudIcon Icon="@Icons.Material.Filled.Close" />
-            </button>
-        }
-    </div>
-
-    @if (IsPanelOpen)
+<UiSearchBar @ref="_bar" Query="@_query" QueryChanged="HandleQueryChanged" Placeholder="Search sensors and organizations">
+    @if (IsPending)
     {
-        <div class="ep-search-panel">
-            @if (IsPending)
-            {
-                <p class="ep-search-note">Searching…</p>
-            }
-            else if (ShowEmpty)
-            {
-                <p class="ep-search-note">Nothing matches "@Query"</p>
-            }
-            else
-            {
-                @if (SensorResults is { Count: > 0 } sensors)
+        <UiSearchNote>Searching…</UiSearchNote>
+    }
+    else if (ShowEmpty)
+    {
+        <UiSearchNote>Nothing matches "@Query"</UiSearchNote>
+    }
+    else
+    {
+        @if (SensorResults is { Count: > 0 } sensors)
+        {
+            <UiSearchGroup Title="Sensors">
+                @foreach (var sensor in sensors)
                 {
-                    <p class="ep-search-group">Sensors</p>
-                    @foreach (var sensor in sensors)
-                    {
-                        <a class="ep-search-item" href="@($"/sensor/{sensor.Id}")" @key="sensor.Id" @onclick="Close">
-                            <span class="ep-search-art ep-search-art--sensor">
+                    <UiSearchItem @key="sensor.Id"
+                                  Href="@($"/sensor/{sensor.Id}")"
+                                  Name="@sensor.Name"
+                                  Meta="@(sensor.DataSourceName ?? sensor.ExternalId)"
+                                  OnClick="Close">
+                        <Art>
+                            <span class="ep-search-tile ep-search-tile--sensor">
                                 <MudIcon Icon="@Icons.Material.Filled.Sensors" />
                             </span>
-                            <span class="ep-search-body">
-                                <span class="ep-search-name">@sensor.Name</span>
-                                <span class="ep-search-meta">@(sensor.DataSourceName ?? sensor.ExternalId)</span>
-                            </span>
-                        </a>
-                    }
+                        </Art>
+                    </UiSearchItem>
                 }
+            </UiSearchGroup>
+        }
 
-                @if (OrganizationResults is { Count: > 0 } organizations)
+        @if (OrganizationResults is { Count: > 0 } organizations)
+        {
+            <UiSearchGroup Title="Organizations">
+                @foreach (var organization in organizations)
                 {
-                    <p class="ep-search-group">Organizations</p>
-                    @foreach (var organization in organizations)
-                    {
-                        <a class="ep-search-item" href="@($"/organizations/{organization.Id}")" @key="organization.Id" @onclick="Close">
+                    <UiSearchItem @key="organization.Id"
+                                  Href="@($"/organizations/{organization.Id}")"
+                                  Name="@organization.Name"
+                                  Meta="@organization.Location"
+                                  OnClick="Close">
+                        <Art>
                             @if (organization.ProfilePictureUrl is { Length: > 0 } picture)
                             {
-                                <img class="ep-search-art ep-search-art--photo" src="@picture" alt="" loading="lazy" />
+                                <img src="@picture" alt="" loading="lazy" />
                             }
                             else
                             {
-                                <span class="ep-search-art ep-search-art--organization">
+                                <span class="ep-search-tile ep-search-tile--organization">
                                     <MudIcon Icon="@Icons.Material.Filled.Business" />
                                 </span>
                             }
-                            <span class="ep-search-body">
-                                <span class="ep-search-name">@organization.Name</span>
-                                @if (organization.Location is { Length: > 0 } location)
-                                {
-                                    <span class="ep-search-meta">@location</span>
-                                }
-                            </span>
-                        </a>
-                    }
+                        </Art>
+                    </UiSearchItem>
                 }
-            }
-        </div>
+            </UiSearchGroup>
+        }
     }
-
-    <MudOverlay Visible="@IsPanelOpen" OnClick="Close" />
-</div>
+</UiSearchBar>
 
 @code {
     private const int MinQueryLength = 2;
     private const int ResultsPerGroup = 5;
 
+    private UiSearchBar? _bar;
     private string? _query;
-    private bool _open;
 
     private string Query => _query?.Trim() ?? string.Empty;
-    private bool HasText => !string.IsNullOrWhiteSpace(_query);
     private bool HasQuery => Query.Length >= MinQueryLength;
-    private bool IsPanelOpen => _open && HasQuery;
 
     private IReadOnlyList<SensorDtoForList>? SensorResults => SearchSensorsState.Result;
     private IReadOnlyList<OrganizationDtoForList>? OrganizationResults => SearchOrganizationsState.Result;
@@ -123,69 +96,19 @@
 
     private bool ShowEmpty => SensorResults is not null && OrganizationResults is not null && !HasAnyRow;
 
-    protected override void OnInitialized()
-    {
-        base.OnInitialized();
-        Navigation.LocationChanged += HandleLocationChanged;
-    }
-
-    public override void Dispose()
-    {
-        Navigation.LocationChanged -= HandleLocationChanged;
-        base.Dispose();
-    }
-
-    // Leaving the page drops the query — the bar goes back to its resting
-    // capsule rather than following the reader around.
-    private void HandleLocationChanged(object? sender, LocationChangedEventArgs e)
-    {
-        if (!HasText && !_open)
-        {
-            return;
-        }
-
-        Clear();
-        InvokeAsync(StateHasChanged);
-    }
-
     private async Task HandleQueryChanged(string? value)
     {
         _query = value;
 
         if (!HasQuery)
         {
-            _open = false;
             return;
         }
-
-        _open = true;
 
         await Task.WhenAll(SearchSensorsState.TryExecute(), SearchOrganizationsState.TryExecute());
     }
 
-    private void HandleFocusIn()
-    {
-        if (HasQuery)
-        {
-            _open = true;
-        }
-    }
-
-    private void HandleKeyDown(KeyboardEventArgs e)
-    {
-        if (e.Key == "Escape")
-        {
-            Close();
-        }
-    }
-
-    private void Close() => _open = false;
-
-    private void Clear()
-    {
-        _query = null;
-        _open = false;
-    }
+    private void Close() => _bar?.Close();
 
     [Command]
     private async Task<IReadOnlyList<SensorDtoForList>?> SearchSensors(CancellationToken ct)

@@ -1,0 +1,87 @@
+.ui-bottom-nav {
+    position: fixed !important;
+    left: var(--ui-shell-gutter);
+    right: var(--ui-shell-gutter);
+    bottom: calc(var(--ui-shell-gutter) + env(safe-area-inset-bottom, 0px));
+    z-index: 9999;
+    border: 1px solid var(--ui-line);
+    border-radius: 20px;
+    background-color: color-mix(in srgb, var(--ui-surface) 86%, transparent);
+    backdrop-filter: blur(18px) saturate(1.4);
+    -webkit-backdrop-filter: blur(18px) saturate(1.4);
+    box-shadow: var(--ui-shell-shadow-float);
+    overflow: hidden;
+    transform: translate3d(0, 0, 0);
+    isolation: isolate;
+    transition: transform var(--ui-t-slow) var(--ui-ease),
+                opacity var(--ui-t-base) var(--ui-ease);
+    will-change: transform;
+}
+
+::deep .ui-bottom-nav-row {
+    height: var(--ui-bottom-nav-height);
+    padding: 4px 6px;
+    flex-wrap: nowrap;
+    overflow: hidden;
+    gap: 0;
+}
+
+::deep .ui-bottom-nav-item {
+    flex: 1 1 0;
+    min-width: 0;
+    margin: 0 1px;
+    padding: 4px 4px;
+    overflow: hidden;
+    border-radius: 14px;
+    color: var(--ui-fg-3);
+    text-transform: none !important;
+    transition: background-color var(--ui-t-base) var(--ui-ease),
+                color var(--ui-t-base) var(--ui-ease);
+}
+
+::deep .ui-bottom-nav-item .mud-button-label {
+    min-width: 0;
+}
+
+::deep .ui-bottom-nav-item .mud-icon-root {
+    margin-bottom: 2px;
+}
+
+::deep .ui-bottom-nav-item .mud-typography-caption {
+    font-size: 0.625rem;
+    letter-spacing: 0;
+    line-height: 1.2;
+    white-space: nowrap;
+}
+
+::deep .ui-bottom-nav-item.is-active {
+    background-color: var(--ui-primary);
+    color: var(--ui-surface) !important;
+}
+
+::deep .ui-bottom-nav-item.is-active .mud-icon-root,
+::deep .ui-bottom-nav-item.is-active .mud-typography {
+    color: var(--ui-surface) !important;
+}
+
+::deep .ui-bottom-nav-item:focus-visible {
+    outline: 2px solid var(--ui-primary);
+    outline-offset: -2px;
+}
+
+/* Two ways to hide, one look: `.is-hidden` from a page's Hidden event, the
+   root attribute from nav-autohide.js. The pill slides out on a transform so
+   it animates both ways and keeps its active tab. */
+.ui-bottom-nav.is-hidden,
+:root[data-nav-autohide="hidden"] .ui-bottom-nav {
+    transform: translate3d(0, calc(100% + var(--ui-shell-gutter) + env(safe-area-inset-bottom, 0px)), 0);
+    opacity: 0;
+    pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .ui-bottom-nav,
+    ::deep .ui-bottom-nav-item {
+        transition: none;
+    }
+}

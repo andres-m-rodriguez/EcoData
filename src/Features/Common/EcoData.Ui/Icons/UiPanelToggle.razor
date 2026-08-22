@@ -1,0 +1,40 @@
+@namespace EcoData.Ui.Icons
+
+@* A side-panel toggle. At rest the glyph is a plain panel; hovering swaps in
+   the chevron that shows which way it will move — the same three-glyph trick
+   Harmony uses. The button reads as chrome, not as a nav item. *@
+
+<MudTooltip Text="@Label">
+    <MudIconButton Icon="@Glyph"
+                   Class="ui-panel-toggle"
+                   Edge="Edge.Start"
+                   aria-label="@Label"
+                   aria-expanded="@(Open ? "true" : "false")"
+                   OnClick="Toggle"
+                   @onmouseenter="() => _hovered = true"
+                   @onmouseleave="() => _hovered = false" />
+</MudTooltip>
+
+@code {
+    [Parameter]
+    public bool Open { get; set; }
+
+    [Parameter]
+    public EventCallback<bool> OpenChanged { get; set; }
+
+    [Parameter]
+    public string CollapseLabel { get; set; } = "Collapse panel";
+
+    [Parameter]
+    public string ExpandLabel { get; set; } = "Expand panel";
+
+    private bool _hovered;
+
+    private string Glyph => !_hovered
+        ? UiIcons.Panel
+        : Open ? UiIcons.PanelCollapse : UiIcons.PanelExpand;
+
+    private string Label => Open ? CollapseLabel : ExpandLabel;
+
+    private Task Toggle() => OpenChanged.InvokeAsync(!Open);
+}

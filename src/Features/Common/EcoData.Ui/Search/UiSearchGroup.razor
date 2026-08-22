@@ -1,0 +1,12 @@
+@namespace EcoData.Ui.Search
+
+<p class="ui-search-group">@Title</p>
+@ChildContent
+
+@code {
+    [Parameter, EditorRequired]
+    public required string Title { get; set; }
+
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+}
