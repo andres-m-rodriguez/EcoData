@@ -12,7 +12,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\EcoData.Organization.Application.Server\EcoData.Organization.Application.Server.csproj" />
-    <ProjectReference Include="..\EcoData.Organization.DataAccess\EcoData.Organization.DataAccess.csproj" />
     <ProjectReference Include="..\..\Common\EcoData.Common.Authorization\EcoData.Common.Authorization.csproj" />
     <ProjectReference Include="..\..\Identity\EcoData.Identity.Contracts\EcoData.Identity.Contracts.csproj" />
   </ItemGroup>

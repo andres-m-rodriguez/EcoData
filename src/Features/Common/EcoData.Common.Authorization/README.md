@@ -1,294 +1,87 @@
 # EcoData.Common.Authorization
 
-One call shape for every authorization question. A scope varies in **kind** — organization or global — and each kind is answered by whichever module owns its storage.
+One verb for every authorization question. Scope lives in the permission's *type*, so the
+compiler enforces the call shape: an organization permission cannot be checked without an
+organization id, and a global one cannot be given one.
 
 ```csharp
-await auth.HasOrgPermissionAsync(orgId, "wildlife:occurrence:submit");
-await auth.IsInOrgRoleAsync(orgId, "Owner");
-await auth.IsInGlobalRoleAsync("GlobalAdmin");
+await auth.HasAsync(WildlifePermissions.VerifyOccurrence, occurrence.OrganizationId, ct);
+await auth.HasAsync(OrganizationPermissions.Create, ct);
 ```
 
-Per-app permissions are modelled as an organization: FaunaFinder resolves to the org that runs it, so there is one mechanism rather than two. See §3.
+## 1. Declare the keys — `<Feature>.Contracts`
 
-## 1. Declare the keys — `<Feature>.Application`
+Raw strings, zero dependencies — this is what the wire and the membership storage speak.
 
-Namespaced by feature, never by app — the org mapping is a deployment decision, the permission is a domain fact.
+```csharp
+namespace EcoData.Wildlife.Contracts;
+
+public static class Permissions
+{
+    public static class Occurrence
+    {
+        public const string Submit = "wildlife:occurrence:submit";
+        public const string Verify = "wildlife:occurrence:verify";
+    }
+}
+```
+
+## 2. Declare the typed permissions — `<Feature>.Application`
+
+The type picks the scope. Call sites reference these fields; nobody types a key twice.
 
 ```csharp
 namespace EcoData.Wildlife.Application;
 
 public static class WildlifePermissions
 {
-    public const string ReadSpecies = "wildlife:species:read";
-    public const string SubmitOccurrence = "wildlife:occurrence:submit";
-    public const string VerifyOccurrence = "wildlife:occurrence:verify";
+    public static readonly OrgPermission SubmitOccurrence = new(Permissions.Occurrence.Submit);
+
+    public static readonly OrgPermission VerifyOccurrence = new(Permissions.Occurrence.Verify);
 }
 ```
 
-## 2. Wrap them in a typed contract — `<Feature>.Application`
-
-One method per permission, so no call site types a key.
+A global action granted by holding a role rather than a stored grant is declared with the
+role — the call site still names the action, never the role:
 
 ```csharp
-public interface IWildlifePermission
-{
-    Task<bool> CanReadSpeciesAsync(
-        Guid organizationId,
-        CancellationToken cancellationToken = default
-    );
-
-    Task<bool> CanVerifyOccurrenceAsync(
-        Guid organizationId,
-        CancellationToken cancellationToken = default
-    );
-}
+public static readonly GlobalRolePermission Create =
+    new(Permissions.Organization.Create, GlobalRoles.GlobalAdmin);
 ```
 
-## 3. Hide the organization where it is fixed
+## 3. Implement a source per scope type
 
-FaunaFinder's contributors are members of the organization that runs it. Call sites should not know that — resolving the org here means swapping to a real app scope later touches one file.
+Only the module that owns the storage writes one. Organization implements
+`IOrganizationPermissionSource` from membership storage; Identity implements
+`IGlobalPermissionSource` from global roles. Features never implement sources.
 
-```csharp
-// FaunaFinder.Server/Options/FaunaFinderOptions.cs
-public sealed class FaunaFinderOptions
-{
-    public const string SectionName = "FaunaFinder";
+The same interfaces get HTTP-backed implementations in `.Application.Client` projects, so
+Blazor pages keep the same call shape with different wiring: Organization implements
+`OrganizationPermissionHttpSource` (per-organization cached fetch of the caller's grants),
+and EcoPortal.Client registers it with `AddOrganizationPermissionHttpSource()`. An auth
+change calls its `InvalidateCache()` — cached grants belong to one user.
 
-    // A slug, not a guid: organizations are created at runtime, so the id differs per
-    // environment and cannot be committed as configuration. The slug is stable.
-    public required string OrganizationSlug { get; set; }
-}
+## 4. Register — host
 
-// Resolved once at startup, then held as the id.
-public sealed class FaunaFinderOrganization(Guid id)
-{
-    public Guid Id { get; } = id;
-}
-
-public interface IFaunaFinderPermission
-{
-    Task<bool> CanSubmitOccurrenceAsync(CancellationToken cancellationToken = default);
-}
-
-public sealed class FaunaFinderPermission(IAuthorization auth, FaunaFinderOrganization organization)
-    : IFaunaFinderPermission
-{
-    public Task<bool> CanSubmitOccurrenceAsync(CancellationToken cancellationToken = default) =>
-        auth.HasPermissionAsync(
-            PermissionScope.Organization(organization.Id),
-            WildlifePermissions.SubmitOccurrence,
-            cancellationToken
-        );
-}
-```
-
-## 4. Implement a source per scope kind
-
-Only the module that owns the storage writes one. Features never do.
-
-### Organization — server
+Each host registers only the scope types it uses.
 
 ```csharp
-public sealed class OrganizationPermissionSource(
-    IHttpContextAccessor httpContextAccessor,
-    IOrganizationPermissionService permissions,
-    IOrganizationMembershipRepository memberships
-) : IPermissionSource
-{
-    public string ScopeKind => PermissionScope.OrganizationKind;
-
-    public async Task<bool> HasPermissionAsync(
-        PermissionScope scope,
-        string permission,
-        CancellationToken cancellationToken = default
-    )
-    {
-        if (!TryResolve(scope, out var userId, out var organizationId))
-            return false;
-
-        return await permissions.HasPermissionAsync(
-            userId,
-            organizationId,
-            permission,
-            cancellationToken
-        );
-    }
-
-    public async Task<bool> IsInRoleAsync(
-        PermissionScope scope,
-        string role,
-        CancellationToken cancellationToken = default
-    )
-    {
-        if (!TryResolve(scope, out var userId, out var organizationId))
-            return false;
-
-        var membership = await memberships.GetAsync(userId, organizationId, cancellationToken);
-
-        return string.Equals(membership?.RoleName, role, StringComparison.OrdinalIgnoreCase);
-    }
-
-    private bool TryResolve(PermissionScope scope, out Guid userId, out Guid organizationId)
-    {
-        userId = default;
-
-        if (!Guid.TryParse(scope.Id, out organizationId))
-            return false;
-
-        var user = httpContextAccessor.HttpContext?.User;
-
-        if (user is null)
-            return false;
-
-        var token = new RequestClaimToken(user);
-
-        if (!token.IsAuthenticated)
-            return false;
-
-        userId = token.UserId.Value;
-
-        return true;
-    }
-}
-```
-
-### Global — server
-
-No scope id. Roles come off the principal; nothing is granted globally except by role.
-
-```csharp
-public sealed class GlobalPermissionSource(IHttpContextAccessor httpContextAccessor)
-    : IPermissionSource
-{
-    public string ScopeKind => PermissionScope.GlobalKind;
-
-    public Task<bool> HasPermissionAsync(
-        PermissionScope scope,
-        string permission,
-        CancellationToken cancellationToken = default
-    ) => Task.FromResult(false);
-
-    public Task<bool> IsInRoleAsync(
-        PermissionScope scope,
-        string role,
-        CancellationToken cancellationToken = default
-    )
-    {
-        var user = httpContextAccessor.HttpContext?.User;
-
-        return Task.FromResult(user?.IsInRole(role) ?? false);
-    }
-}
-```
-
-### Organization — client
-
-Same scope kind, different transport: one fetch per scope, cached, answering every question about it.
-
-```csharp
-public sealed class OrganizationPermissionSource(IPermissionHttpClient permissionClient)
-    : IPermissionSource
-{
-    private readonly Dictionary<Guid, Task<UserPermissionsDto>> _cache = [];
-
-    public string ScopeKind => PermissionScope.OrganizationKind;
-
-    public async Task<bool> HasPermissionAsync(
-        PermissionScope scope,
-        string permission,
-        CancellationToken cancellationToken = default
-    )
-    {
-        if (!Guid.TryParse(scope.Id, out var organizationId))
-            return false;
-
-        var permissions = await GetAsync(organizationId, cancellationToken);
-
-        return permissions.IsGlobalAdmin || permissions.Permissions.Contains(permission);
-    }
-
-    public Task<bool> IsInRoleAsync(
-        PermissionScope scope,
-        string role,
-        CancellationToken cancellationToken = default
-    ) => Task.FromResult(false);
-
-    // Caches the Task, not the result, so concurrent callers share one request.
-    private Task<UserPermissionsDto> GetAsync(
-        Guid organizationId,
-        CancellationToken cancellationToken
-    )
-    {
-        if (_cache.TryGetValue(organizationId, out var cached))
-            return cached;
-
-        var task = FetchAsync(organizationId, cancellationToken);
-        _cache[organizationId] = task;
-
-        return task;
-    }
-}
-```
-
-## 5. Register — host
-
-Each host registers only the kinds it uses.
-
-```csharp
-// EcoPortal.Server
 builder.Services.AddPermissions();
-builder.Services.AddPermissionSource<OrganizationPermissionSource>();
-builder.Services.AddPermissionSource<GlobalPermissionSource>();
-
-// EcoPortal.Client
-builder.Services.AddPermissions();
-builder.Services.AddPermissionSource<OrganizationPermissionSource>();   // the HTTP one
+builder.Services.AddOrganizationPermissionSource();
+builder.Services.AddGlobalPermissionSource();
 ```
 
-FaunaFinder additionally resolves its organization once, at startup:
+## 5. Use it
+
+The shape for the future occurrence endpoints — the org id comes off the loaded entity:
 
 ```csharp
-// FaunaFinder.Server/Program.cs
-builder.Services.Configure<FaunaFinderOptions>(
-    builder.Configuration.GetSection(FaunaFinderOptions.SectionName)
-);
-builder.Services.AddPermissions();
-builder.Services.AddPermissionSource<OrganizationPermissionSource>();
-
-var app = builder.Build();
-
-await using (var scope = app.Services.CreateAsyncScope())
-{
-    var slug = scope
-        .ServiceProvider.GetRequiredService<IOptions<FaunaFinderOptions>>()
-        .Value.OrganizationSlug;
-
-    var organization =
-        await scope
-            .ServiceProvider.GetRequiredService<IOrganizationRepository>()
-            .GetBySlugAsync(slug)
-        ?? throw new InvalidOperationException(
-            $"FaunaFinder is configured for organization '{slug}', which does not exist."
-        );
-
-    app.Services.GetRequiredService<FaunaFinderOrganization>();   // registered from organization.Id
-}
-```
-
-```json
-{ "FaunaFinder": { "OrganizationSlug": "intermetro" } }
-```
-
-## 6. Use it
-
-```csharp
-// Endpoint
 group
     .MapPost(
         "/{id:guid}/verify",
         async Task<Results<NoContent, ForbidHttpResult, NotFound>> (
             Guid id,
-            IWildlifePermission wildlife,
+            IAuthorization auth,
             IOccurrenceRepository repository,
             CancellationToken ct
         ) =>
@@ -298,7 +91,7 @@ group
             if (occurrence is null)
                 return TypedResults.NotFound();
 
-            if (!await wildlife.CanVerifyOccurrenceAsync(occurrence.OrganizationId, ct))
+            if (!await auth.HasAsync(WildlifePermissions.VerifyOccurrence, occurrence.OrganizationId, ct))
                 return TypedResults.Forbid();
 
             await repository.VerifyAsync(id, ct);
@@ -309,32 +102,17 @@ group
     .RequireAuthorization();
 ```
 
-```razor
-@inject IFaunaFinderPermission Permission
-
-@if (_canSubmit)
-{
-    <MudButton OnClick="SubmitAsync">Submit sighting</MudButton>
-}
-
-@code {
-    private bool _canSubmit;
-
-    protected override async Task OnInitializedAsync() =>
-        _canSubmit = await Permission.CanSubmitOccurrenceAsync();
-}
-```
-
 ## Rules
 
-- Adding a scope kind means adding a source. An unregistered kind **throws** naming the missing kind — it never denies silently, because a silent `false` is indistinguishable from a correct denial.
-- Two sources claiming one kind throws when `IAuthorization` is first resolved.
-- Client answers shape UI only. They can be more permissive than the server, which sees rules the browser cannot. The endpoint check is the enforcement.
-- Permission keys appear in `<Feature>.Application` and inside sources. Never at a call site.
-- FaunaFinder's organization is configuration, not a constant. It becomes wrong the day a second institution contributes — at which point the fix is a new scope kind behind `IFaunaFinderPermission`, and no call site changes.
-
-The generic form stays available for a scope kind with no shorthand:
-
-```csharp
-await auth.HasPermissionAsync(PermissionScope.Custom("project", projectId), "project:publish");
-```
+- A check against a scope type with no registered source **throws**, naming the missing
+  source and the permission key. It never denies silently — a silent `false` is
+  indistinguishable from a correct denial.
+- A plain `GlobalPermission` throws until a global grant store exists. Declare role-backed
+  actions as `GlobalRolePermission`.
+- Client answers shape UI only. They can be more permissive than the server, which sees
+  rules the browser cannot. The endpoint check is the enforcement.
+- Permission keys appear in `<Feature>.Contracts` and inside sources. Never at a call site.
+- Org roles are not part of the API. Model grants, not role checks — a role is how an
+  organization bundles permissions, not something an endpoint asks about.
+- One typed source interface per scope, one owning module. Re-registering a source is an
+  ordinary DI override, not an error.

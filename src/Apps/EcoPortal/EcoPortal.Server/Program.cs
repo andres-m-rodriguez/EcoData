@@ -19,7 +19,6 @@ using EcoData.Sensors.Api.RateLimiting;
 using EcoData.Sensors.DataAccess;
 using EcoData.Sensors.Database.Extensions;
 using EcoData.Wildlife.Api;
-using EcoData.Wildlife.Application;
 using EcoData.Wildlife.DataAccess;
 using EcoData.Wildlife.Database.Extensions;
 using EcoPortal.Server.Components;
@@ -70,7 +69,6 @@ builder
 builder.Services.AddOrganizationAuthorization();
 builder.Services.AddPermissions();
 builder.Services.AddOrganizationPermissionSource();
-builder.Services.AddWildlifeAuthorization();
 builder.Services.AddLoginRateLimiting();
 builder.Services.AddSensorReadingsRateLimiting();
 builder.Services.AddMemoryCache();
