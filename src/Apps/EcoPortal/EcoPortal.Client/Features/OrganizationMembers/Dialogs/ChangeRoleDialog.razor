@@ -1,5 +1,8 @@
 @using EcoData.Organization.Contracts
 @using EcoData.Organization.Contracts.Dtos
+@using EcoData.Organization.Application.Client
+@inject IOrganizationRoleHttpClient RoleClient
+@inject ISnackbar Snackbar
 
 <MudDialog>
     <TitleContent>
@@ -16,10 +19,13 @@
             <MudSelect T="string"
                        @bind-Value="_role"
                        Label="Role"
-                       Variant="Variant.Outlined">
-                <MudSelectItem Value="@DefaultOrganizationRoles.Viewer">Viewer</MudSelectItem>
-                <MudSelectItem Value="@DefaultOrganizationRoles.Contributor">Contributor</MudSelectItem>
-                <MudSelectItem Value="@DefaultOrganizationRoles.Admin">Admin</MudSelectItem>
+                       Variant="Variant.Outlined"
+                       Disabled="@(_roles is null)"
+                       HelperText="@(_roles is null ? "Loading roles…" : null)">
+                @foreach (var role in _roles ?? [])
+                {
+                    <MudSelectItem T="string" Value="@role.Name">@role.Name</MudSelectItem>
+                }
             </MudSelect>
         </MudStack>
     </DialogContent>
@@ -28,7 +34,7 @@
         <MudButton Color="Color.Primary"
                    Variant="Variant.Filled"
                    OnClick="Submit"
-                   Disabled="@(_role == CurrentRole)">
+                   Disabled="@(_roles is null || _role == CurrentRole)">
             Update Role
         </MudButton>
     </DialogActions>
@@ -39,16 +45,31 @@
     private IMudDialogInstance MudDialog { get; set; } = null!;
 
     [Parameter]
+    public Guid OrganizationId { get; set; }
+
+    [Parameter]
     public string MemberName { get; set; } = string.Empty;
 
     [Parameter]
     public string CurrentRole { get; set; } = DefaultOrganizationRoles.Viewer;
 
+    private IReadOnlyList<OrganizationRoleDto>? _roles;
     private string _role = DefaultOrganizationRoles.Viewer;
 
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
         _role = CurrentRole;
+
+        var result = await RoleClient.GetAllAsync(OrganizationId);
+
+        result.Switch(
+            roles => _roles = roles,
+            error =>
+            {
+                _roles = [];
+                Snackbar.Add(error.Message ?? "Failed to load roles", Severity.Error);
+            }
+        );
     }
 
     private void Submit()
