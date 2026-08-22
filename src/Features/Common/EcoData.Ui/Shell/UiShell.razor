@@ -1,6 +1,7 @@
 @namespace EcoData.Ui.Shell
 
-@* The app frame: a ground the app bar and the page float in as panels.
+@* The app frame: a ground the app bar, an optional side panel and the page
+   float in as panels.
 
    .ui-shell is the only plain element wrapping MudLayout/MudAppBar/
    MudMainContent, so it carries Blazor's scope attribute and every ::deep rule
@@ -14,6 +15,16 @@
 
         <MudMainContent Class="ui-main">
             <div class="ui-shell-body">
+                @if (Rail is not null)
+                {
+                    @* Collapsing hides the panel with a class rather than dropping
+                       it from the tree, so it keeps whatever it has loaded. *@
+                    <MudHidden Breakpoint="Breakpoint.SmAndDown">
+                        <aside class="@RailClass" aria-hidden="@(RailOpen ? "false" : "true")">
+                            @Rail
+                        </aside>
+                    </MudHidden>
+                }
                 <div class="ui-main-panel">
                     @ChildContent
                 </div>
@@ -39,10 +50,20 @@
     [Parameter]
     public RenderFragment? BottomNav { get; set; }
 
+    // A desktop companion column beside the page, in its own panel.
+    [Parameter]
+    public RenderFragment? Rail { get; set; }
+
+    [Parameter]
+    public bool RailOpen { get; set; } = true;
+
     // A page that sizes itself to the viewport (a map) gets the ground with no
     // panel around it, and only the floating bar over it.
     [Parameter]
     public bool Bleed { get; set; }
 
-    private string ShellClass => Bleed ? "ui-shell is-bleed" : "ui-shell";
+    private string ShellClass =>
+        "ui-shell" + (Bleed ? " is-bleed" : "") + (Rail is not null && RailOpen ? " has-rail-open" : "");
+
+    private string RailClass => RailOpen ? "ui-rail-panel" : "ui-rail-panel is-collapsed";
 }

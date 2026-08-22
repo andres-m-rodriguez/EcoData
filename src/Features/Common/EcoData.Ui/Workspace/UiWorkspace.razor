@@ -9,10 +9,13 @@
     {
         <header class="ui-workspace-head">@Header</header>
     }
-    <div class="ui-workspace-body">
-        <MudHidden Breakpoint="Breakpoint.SmAndDown">
-            <UiRail Links="Links" ActiveKey="@ActiveKey" Label="@RailLabel" Footer="RailFooter" />
-        </MudHidden>
+    <div class="@(RailInShell ? "ui-workspace-body is-rail-in-shell" : "ui-workspace-body")">
+        @if (!RailInShell)
+        {
+            <MudHidden Breakpoint="Breakpoint.SmAndDown">
+                <UiRail Links="Links" ActiveKey="@ActiveKey" Label="@RailLabel" Footer="RailFooter" />
+            </MudHidden>
+        }
         <div class="ui-workspace-content">
             <MudHidden Breakpoint="Breakpoint.MdAndUp">
                 <UiChipStrip Links="Links" ActiveKey="@ActiveKey" Label="@RailLabel" />
@@ -39,6 +42,11 @@
 
     [Parameter]
     public RenderFragment? RailFooter { get; set; }
+
+    // When the shell already shows this workspace's rail as its side panel,
+    // the page keeps only the phone strip.
+    [Parameter]
+    public bool RailInShell { get; set; }
 
     [Parameter]
     public RenderFragment? ChildContent { get; set; }

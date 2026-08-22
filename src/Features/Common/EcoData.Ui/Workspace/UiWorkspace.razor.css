@@ -36,3 +36,8 @@
         padding: 16px 14px 24px;
     }
 }
+
+/* The shell is showing the rail as its side panel; the page is one column. */
+.ui-workspace-body.is-rail-in-shell {
+    grid-template-columns: minmax(0, 1fr);
+}

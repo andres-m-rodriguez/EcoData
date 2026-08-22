@@ -1,0 +1,83 @@
+.rail {
+    display: flex;
+    flex-direction: column;
+    min-height: 100%;
+}
+
+.rail--loading {
+    gap: 8px;
+    padding: 18px 16px;
+}
+
+.rail-identity {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px 16px 14px;
+    border-bottom: 1px solid var(--ui-line);
+    text-decoration: none;
+    color: inherit;
+}
+
+.rail-identity:hover .rail-name {
+    color: var(--ui-primary);
+}
+
+.rail-avatar {
+    flex: none;
+    width: 40px;
+    height: 40px;
+    border-radius: 11px;
+    display: grid;
+    place-items: center;
+    background: linear-gradient(135deg, var(--ui-primary) 0%, var(--ui-primary-500) 100%);
+    color: #ffffff;
+    font: 700 15px/1 var(--ui-font-serif);
+    letter-spacing: var(--ui-tracking-tight);
+    object-fit: cover;
+}
+
+.rail-text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.rail-name {
+    font: 600 15px/1.2 var(--ui-font-serif);
+    letter-spacing: var(--ui-tracking-tight);
+    color: var(--ui-fg);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.rail-role {
+    font: 500 11px/1.3 var(--ui-font-sans);
+    color: var(--ui-fg-3);
+}
+
+/* The rail component paints its own alt ground and right border for the
+   in-page case; inside a floating panel it is the panel. */
+.rail ::deep .ui-rail {
+    background: transparent;
+    border-right: 0;
+    flex: 1 1 auto;
+}
+
+.rail-leave {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 12px;
+    border-radius: 10px;
+    color: var(--ui-fg-3);
+    font: 500 14px/1.3 var(--ui-font-sans);
+    text-decoration: none;
+}
+
+.rail-leave:hover {
+    background: var(--ui-primary-50);
+    color: var(--ui-primary);
+}

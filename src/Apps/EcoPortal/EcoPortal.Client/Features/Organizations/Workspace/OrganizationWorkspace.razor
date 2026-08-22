@@ -40,7 +40,9 @@ else
 {
     var org = _context.Organization;
     <CascadingValue Value="_context" IsFixed="true">
-        <UiWorkspace Links="OrganizationSections.Links(_context, _counts)" ActiveKey="@OrganizationSections.Key(Section)" RailLabel="Workspace">
+        @* The shell shows the rail as its side panel on desktop (OrganizationRail);
+           the page keeps the phone strip. *@
+        <UiWorkspace Links="OrganizationSections.Links(_context, _counts)" ActiveKey="@OrganizationSections.Key(Section)" RailLabel="Workspace" RailInShell="true">
             <Header>
                 <div class="ws-head">
                     <div class="ws-crumb">

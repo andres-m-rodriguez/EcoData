@@ -1,6 +1,7 @@
 @inherits StatefulLayoutComponent
 @using EcoPortal.Client.Components
 @using EcoPortal.Client.Components.Shell
+@using EcoPortal.Client.Features.Organizations.Workspace
 @using EcoPortal.Client.Pages
 @using EcoPortal.Client.Services
 @using EcoPortal.Client.Themes
@@ -15,13 +16,18 @@
 <MudDialogProvider />
 <MudSnackbarProvider />
 
-<UiShell Bleed="IsMapPage">
+<UiShell Bleed="IsMapPage" RailOpen="_railOpen">
     <AppBar>
         <MudHidden Breakpoint="Breakpoint.MdAndUp">
             <UiMobileTitle BrandText="Ecoportal" IsRoot="IsHomePage" />
         </MudHidden>
 
         <MudHidden Breakpoint="Breakpoint.SmAndDown">
+            @if (OrganizationId is not null)
+            {
+                <UiPanelToggle Open="_railOpen" OpenChanged="@(open => _railOpen = open)"
+                               CollapseLabel="Hide the workspace panel" ExpandLabel="Show the workspace panel" />
+            }
             <UiBrand Text="Ecoportal" Title="@DesktopTitle" />
             <UiNav Links="NavLinks" />
         </MudHidden>
@@ -58,6 +64,13 @@
             }
         </MudHidden>
     </AppBar>
+
+    <Rail>
+        @if (OrganizationId is { } organizationId)
+        {
+            <OrganizationRail OrganizationId="organizationId" />
+        }
+    </Rail>
 
     <ChildContent>
         <MudHidden Breakpoint="Breakpoint.SmAndDown">
@@ -129,6 +142,7 @@
         ("/organizations/requests", "Access Requests", Icons.Material.Outlined.HowToReg),
     ];
 
+    private bool _railOpen = true;
     private string _pageTransitionClass = "";
     private string _navigationKey = Guid.NewGuid().ToString();
     private string _lastUri = "";
@@ -137,19 +151,24 @@
 
     private bool IsHomePage => Tabs.CurrentTab == NavigationTab.Home;
 
+    // /organizations/{id}/... — the id is the second path segment.
+    private Guid? OrganizationId =>
+        Path.Split('/', StringSplitOptions.RemoveEmptyEntries) is ["organizations", var id, ..] && Guid.TryParse(id, out var parsed)
+            ? parsed
+            : null;
+
     // The organizations sub-nav belongs to the area, not to a workspace inside it.
     private bool IsOrganizationsArea =>
-        Path.StartsWith("/organizations", StringComparison.OrdinalIgnoreCase) && !IsInsideOrganization;
-
-    private bool IsInsideOrganization =>
-        Path.Split('/', StringSplitOptions.RemoveEmptyEntries) is [_, var id, ..] && Guid.TryParse(id, out _);
+        Path.StartsWith("/organizations", StringComparison.OrdinalIgnoreCase) && OrganizationId is null;
 
     private bool IsMapPage => Path.EndsWith("/map", StringComparison.OrdinalIgnoreCase);
 
-    // Pages that draw their own chrome get @Body with no container.
+    // Pages that draw their own chrome get @Body with no container. A workspace
+    // is one: it fills the panel beside the rail.
     private bool IsFullBleedPage =>
         IsHomePage
         || IsMapPage
+        || OrganizationId is not null
         || Path.StartsWith("/data", StringComparison.OrdinalIgnoreCase)
         || Path.Equals("/organizations/discover", StringComparison.OrdinalIgnoreCase)
         || Path.Equals("/sensor-dashboard", StringComparison.OrdinalIgnoreCase);
