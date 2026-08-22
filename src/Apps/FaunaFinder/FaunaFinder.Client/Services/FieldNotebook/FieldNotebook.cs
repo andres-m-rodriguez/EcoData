@@ -1,4 +1,5 @@
 using System.Text.Json;
+using EcoData.Ui.Interop;
 using Microsoft.JSInterop;
 
 namespace FaunaFinder.Client.Services.FieldNotebook;
@@ -18,7 +19,7 @@ namespace FaunaFinder.Client.Services.FieldNotebook;
 /// public method absorbs that and reports empty, so a notebook that cannot
 /// persist costs the reader a rail, not a page.</para>
 /// </summary>
-public sealed class FieldNotebook(IJSRuntime js) : IFieldNotebook
+public sealed class FieldNotebook(IJavascriptSafeInterop js) : IFieldNotebook
 {
     private const string ModulePath = "./js/fauna-notebook.js";
     private const string SavedKey = "faunafinder-notebook-saved";
@@ -153,17 +154,16 @@ public sealed class FieldNotebook(IJSRuntime js) : IFieldNotebook
             return [];
         }
 
+        // Taken as a raw JsonElement so the interop layer can't fail on a shape
+        // it doesn't recognise — the deserialize below is ours to guard.
+        var read = await js.InvokeAsync<JsonElement>(module, "read", ct, key);
+        if (!read.TryPickT0(out var payload, out _) || payload.ValueKind != JsonValueKind.Array)
+        {
+            return [];
+        }
+
         try
         {
-            // Taken as a raw JsonElement so the interop layer can't fail on a
-            // shape it doesn't recognise — the deserialize below is ours to
-            // guard.
-            var payload = await module.InvokeAsync<JsonElement>("read", ct, [key]);
-            if (payload.ValueKind != JsonValueKind.Array)
-            {
-                return [];
-            }
-
             var stored = JsonSerializer.Deserialize<List<NotebookEntry?>>(payload, JsonOptions);
 
             // Nulls only turn up in a blob nobody sane wrote, but they'd fault
@@ -177,14 +177,6 @@ public sealed class FieldNotebook(IJSRuntime js) : IFieldNotebook
             // next write replaces the blob with the current shape.
             return [];
         }
-        catch (JSException)
-        {
-            return [];
-        }
-        catch (OperationCanceledException)
-        {
-            return [];
-        }
     }
 
     /// <summary>Returns whether the list actually reached storage.</summary>
@@ -196,20 +188,10 @@ public sealed class FieldNotebook(IJSRuntime js) : IFieldNotebook
             return false;
         }
 
-        try
-        {
-            var json = JsonSerializer.Serialize(entries, JsonOptions);
-            await module.InvokeVoidAsync("write", ct, [key, json]);
-            return true;
-        }
-        catch (JSException)
-        {
-            return false;
-        }
-        catch (OperationCanceledException)
-        {
-            return false;
-        }
+        var json = JsonSerializer.Serialize(entries, JsonOptions);
+        var written = await js.InvokeVoidAsync(module, "write", ct, key, json);
+
+        return written.IsT0;
     }
 
     private async Task<IJSObjectReference?> GetModuleAsync(CancellationToken ct)
@@ -224,26 +206,18 @@ public sealed class FieldNotebook(IJSRuntime js) : IFieldNotebook
             return null;
         }
 
-        try
+        var imported = await js.ImportAsync(ModulePath, ct);
+        if (imported.TryPickT0(out var module, out var failure))
         {
-            _module = await js.InvokeAsync<IJSObjectReference>("import", ct, [ModulePath]);
-            return _module;
+            _module = module;
+            return module;
         }
-        catch (JSException)
-        {
-            _moduleUnavailable = true;
-            return null;
-        }
-        catch (InvalidOperationException)
-        {
-            // Interop isn't callable yet (a component asking too early in its
-            // lifecycle). Not a permanent condition — leave the flag alone so
-            // the next call retries.
-            return null;
-        }
-        catch (OperationCanceledException)
-        {
-            return null;
-        }
+
+        // A missing script is permanent; interop not being callable yet (a
+        // component asking too early) or a cancelled call is not, so the next
+        // call retries those.
+        _moduleUnavailable = failure.Kind == JsFailureKind.ScriptError;
+
+        return null;
     }
 }

@@ -1,0 +1,6 @@
+.ui-search-note {
+    margin: 0;
+    padding: 14px 12px;
+    font: 400 0.875rem/1.5 var(--ui-font-sans);
+    color: var(--ui-fg-4);
+}

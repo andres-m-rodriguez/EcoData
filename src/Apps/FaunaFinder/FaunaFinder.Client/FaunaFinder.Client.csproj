@@ -16,6 +16,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\..\Features\Common\EcoData.NativeUi\EcoData.NativeUi.csproj" />
+    <ProjectReference Include="..\..\..\Features\Common\EcoData.Ui\EcoData.Ui.csproj" />
     <ProjectReference Include="..\..\..\Features\Common\EcoData.Spa.Blazor\EcoData.Spa.Blazor.csproj" />
     <ProjectReference Include="..\..\..\Features\Common\EcoData.Spa.Map\EcoData.Spa.Map.csproj" />
     <ProjectReference Include="..\..\..\Features\Wildlife\EcoData.Wildlife.Contracts\EcoData.Wildlife.Contracts.csproj" />

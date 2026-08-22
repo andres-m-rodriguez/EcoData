@@ -1,0 +1,19 @@
+@namespace EcoData.Ui.Shell.Navbar
+@inherits StatefulComponent
+
+<nav class="@BarClass" aria-hidden="@(_hidden ? "true" : "false")">
+    <MudStack Row="true" Justify="Justify.SpaceAround" AlignItems="AlignItems.Center" Class="ui-bottom-nav-row">
+        @foreach (var item in Items)
+        {
+            var isActive = item.Key == ActiveKey;
+            <MudButton Variant="Variant.Text" Color="@(isActive ? Color.Primary : Color.Default)"
+                       Class="@(isActive ? "ui-bottom-nav-item is-active" : "ui-bottom-nav-item")"
+                       OnClick="@(() => OnSelect.InvokeAsync(item.Key))">
+                <MudStack AlignItems="AlignItems.Center" Spacing="0">
+                    <MudIcon Icon="@item.Icon" Size="Size.Small" />
+                    <MudText Typo="Typo.caption">@item.Label</MudText>
+                </MudStack>
+            </MudButton>
+        }
+    </MudStack>
+</nav>

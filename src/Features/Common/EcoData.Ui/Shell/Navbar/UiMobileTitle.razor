@@ -1,0 +1,34 @@
+@namespace EcoData.Ui.Shell.Navbar
+@inherits StatefulComponent
+@inject INavigationManager Navigation
+@inject INavbarManager Navbar
+
+<div class="ui-mobile-title">
+    @if (IsRoot)
+    {
+        <a href="@BrandHref" class="ui-mobile-brand">@BrandText</a>
+    }
+    else
+    {
+        @if (Navigation.State.CanGoBack)
+        {
+            <MudIconButton Icon="@Icons.Material.Filled.ArrowBack" Class="ui-mobile-back" aria-label="Back"
+                           OnClick="@(() => Navigation.GoBackAsync())" />
+        }
+        <span class="ui-mobile-page">@Navbar.State.Title</span>
+    }
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public required string BrandText { get; set; }
+    [Parameter]
+    public string BrandHref { get; set; } = "/";
+    [Parameter]
+    public bool IsRoot { get; set; }
+
+    [Event]
+    private void OnNavigationChanged(NavigationChanged _) { }
+    [Event]
+    private void OnNavbarChanged(NavbarChanged _) { }
+}

@@ -1,0 +1,22 @@
+@namespace EcoData.Ui.Shell.Navbar
+@inherits StatefulComponent
+@inject INavigationManager Navigation
+
+@* Desktop nav — uppercase tracked links, the active one a filled pill. *@
+
+<nav class="ui-nav">
+    @foreach (var link in Links)
+    {
+        <a href="@link.Href" class="@(link.IsActive(Navigation.State.Path) ? "ui-nav-link is-active" : "ui-nav-link")">
+            @link.Label
+        </a>
+    }
+</nav>
+
+@code {
+    [Parameter, EditorRequired]
+    public required IReadOnlyList<UiNavLink> Links { get; set; }
+
+    [Event]
+    private void OnNavigationChanged(NavigationChanged _) { }
+}

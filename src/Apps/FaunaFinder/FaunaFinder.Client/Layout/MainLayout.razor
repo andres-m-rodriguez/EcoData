@@ -2,7 +2,7 @@
 @inherits EcoDataLayout
 @inject INavigationManager Navigation
 @inject INavbarManager Navbar
-@inject IJSRuntime JS
+@inject IJavascriptSafeInterop JS
 
 @* IsDarkMode carries the same state the data-theme attribute does, so the
    MudBlazor surfaces the token sheet can't reach — dialogs, menus, snackbars,
@@ -242,20 +242,21 @@
             return;
         }
 
-        try
+        // Theming is an enhancement, not a dependency: if the module can't
+        // load, the shell stays on whatever the stylesheet resolved to and
+        // the toggle simply does nothing.
+        var imported = await JS.ImportAsync("./js/fauna-theme.js");
+        if (!imported.TryPickT0(out var module, out _))
         {
-            _themeModule = await JS.InvokeAsync<IJSObjectReference>("import", "./js/fauna-theme.js");
-            var theme = await _themeModule.InvokeAsync<string>("getTheme");
-            _isDarkMode = string.Equals(theme, "dark", StringComparison.OrdinalIgnoreCase);
-            StateHasChanged();
+            return;
         }
-        catch (JSException)
-        {
-            // Theming is an enhancement, not a dependency: if the module can't
-            // load, the shell stays on whatever the stylesheet resolved to and
-            // the toggle simply does nothing.
-            _themeModule = null;
-        }
+
+        _themeModule = module;
+
+        var theme = await JS.InvokeAsync<string>(module, "getTheme");
+        _isDarkMode = theme.TryPickT0(out var name, out _)
+            && string.Equals(name, "dark", StringComparison.OrdinalIgnoreCase);
+        StateHasChanged();
     }
 
     private async Task ToggleThemeAsync()
@@ -267,14 +268,11 @@
 
         var next = _isDarkMode ? "light" : "dark";
 
-        try
+        // The stamp never landed — leave MudBlazor on the palette the page
+        // is still showing rather than splitting the two.
+        var stamped = await JS.InvokeVoidAsync(_themeModule, "setTheme", next);
+        if (!stamped.IsT0)
         {
-            await _themeModule.InvokeVoidAsync("setTheme", next);
-        }
-        catch (JSException)
-        {
-            // The stamp never landed — leave MudBlazor on the palette the
-            // page is still showing rather than splitting the two.
             return;
         }
 

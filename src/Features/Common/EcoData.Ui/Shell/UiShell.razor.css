@@ -1,0 +1,130 @@
+/* The app frame. MudLayout / MudAppBar / MudMainContent are components, so
+   Blazor never stamps this file's scope attribute on their markup; .ui-shell is
+   the plain wrapper that does, and every ::deep rule resolves through it. */
+
+.ui-shell {
+    position: relative;
+    min-height: 100vh;
+    background: var(--ui-bg);
+
+    /* Everything MudBlazor positions off the app bar has to clear a floating
+       panel, not a flush-to-top bar: gutter + bar + gutter. */
+    --mud-appbar-height: calc(var(--ui-shell-topbar) + var(--ui-shell-gutter) * 2);
+}
+
+/* --- App bar panel --------------------------------------------------- */
+::deep .ui-appbar {
+    position: fixed;
+    top: var(--ui-shell-gutter);
+    right: var(--ui-shell-gutter);
+    left: var(--ui-shell-gutter);
+    width: auto;
+    height: var(--ui-shell-topbar);
+    min-height: var(--ui-shell-topbar);
+    color: var(--ui-fg);
+    background: color-mix(in srgb, var(--ui-surface) 90%, transparent);
+    border: 1px solid var(--ui-line);
+    border-radius: var(--ui-shell-radius);
+    box-shadow: var(--ui-shell-shadow);
+    backdrop-filter: blur(14px) saturate(1.3);
+    -webkit-backdrop-filter: blur(14px) saturate(1.3);
+}
+
+::deep .ui-appbar > .mud-toolbar {
+    height: var(--ui-shell-topbar);
+    min-height: var(--ui-shell-topbar);
+    padding-left: 16px;
+    padding-right: 12px;
+    border-radius: inherit;
+}
+
+/* On a phone the title is the only thing that truncates, so it gets the slack. */
+@media (max-width: 959.98px) {
+    ::deep .ui-appbar > .mud-toolbar {
+        padding-left: 8px;
+        padding-right: 4px;
+    }
+
+    ::deep .ui-appbar .mud-spacer {
+        flex-grow: 0;
+    }
+}
+
+/* Auto-hide — phones only. nav-autohide.js stamps the attribute on the root
+   while the reader is heading down the page; the bottom nav reads the same
+   one, so both bars clear out together. */
+@media (max-width: 959.98px) {
+    ::deep .ui-appbar {
+        transition: transform var(--ui-t-slow) var(--ui-ease),
+                    opacity var(--ui-t-base) var(--ui-ease);
+        will-change: transform;
+    }
+
+    :root[data-nav-autohide="hidden"] .ui-shell ::deep .ui-appbar {
+        transform: translate3d(0, calc(-100% - var(--ui-shell-gutter) - env(safe-area-inset-top, 0px)), 0);
+        opacity: 0;
+        pointer-events: none;
+    }
+}
+
+/* --- Ground + panel below the app bar -------------------------------- */
+::deep .ui-main {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    background: transparent;
+    padding-top: calc(var(--ui-shell-topbar) + var(--ui-shell-gutter) * 2);
+    padding-bottom: var(--ui-shell-gutter);
+}
+
+.ui-shell-body {
+    flex: 1 1 auto;
+    display: flex;
+    align-items: flex-start;
+    padding: 0 var(--ui-shell-gutter);
+    min-width: 0;
+}
+
+.ui-main-panel {
+    flex: 1 1 auto;
+    align-self: stretch;
+    min-width: 0;
+    /* clip, not hidden: rounds off content at the corners without turning the
+       panel into a scrollport, which would break sticky headers. */
+    overflow: clip;
+    background: var(--ui-surface);
+    border: 1px solid var(--ui-line);
+    border-radius: var(--ui-shell-radius);
+    box-shadow: var(--ui-shell-shadow);
+}
+
+/* Bleed: the page takes the whole ground, with only the floating bar over it. */
+.ui-shell.is-bleed ::deep .ui-main {
+    padding: 0;
+    overflow: hidden;
+}
+
+.ui-shell.is-bleed .ui-shell-body {
+    padding: 0;
+}
+
+.ui-shell.is-bleed .ui-main-panel {
+    overflow: visible;
+    background: transparent;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+}
+
+/* Keep content clear of the floating bottom pill. */
+@media (max-width: 959.95px) {
+    ::deep .ui-main {
+        padding-bottom: calc(var(--ui-bottom-nav-height) + var(--ui-shell-gutter) * 2 + env(safe-area-inset-bottom, 0px));
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    ::deep .ui-appbar {
+        transition: none;
+    }
+}

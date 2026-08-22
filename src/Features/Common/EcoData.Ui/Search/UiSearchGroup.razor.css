@@ -1,0 +1,8 @@
+.ui-search-group {
+    margin: 0;
+    padding: 10px 10px 6px;
+    font: 700 10px/1 var(--ui-font-sans);
+    letter-spacing: var(--ui-tracking-eyebrow);
+    text-transform: uppercase;
+    color: var(--ui-fg-4);
+}

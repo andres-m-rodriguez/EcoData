@@ -1,8 +1,8 @@
-using Microsoft.JSInterop;
+using EcoData.Ui.Interop;
 
 namespace EcoPortal.Client.Services.Charts;
 
-public sealed class ChartService(IJSRuntime js) : IChartService
+public sealed class ChartService(IJavascriptSafeInterop js) : IChartService
 {
     public async ValueTask<IChartInstance> CreateTimeSeriesAsync(string elementId, TimeSeriesChartConfig config)
     {
@@ -23,7 +23,7 @@ public sealed class ChartService(IJSRuntime js) : IChartService
     }
 }
 
-internal sealed class ChartInstance(IJSRuntime js, string elementId) : IChartInstance
+internal sealed class ChartInstance(IJavascriptSafeInterop js, string elementId) : IChartInstance
 {
     private bool _disposed;
 
@@ -52,13 +52,6 @@ internal sealed class ChartInstance(IJSRuntime js, string elementId) : IChartIns
         if (_disposed) return;
         _disposed = true;
 
-        try
-        {
-            await js.InvokeVoidAsync("chartService.dispose", ElementId);
-        }
-        catch (JSDisconnectedException)
-        {
-            // app shutdown
-        }
+        await js.InvokeVoidAsync("chartService.dispose", ElementId);
     }
 }

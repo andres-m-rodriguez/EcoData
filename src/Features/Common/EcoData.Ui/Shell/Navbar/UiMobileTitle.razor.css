@@ -1,0 +1,43 @@
+.ui-mobile-title {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    /* Basis auto, not `flex: 1`: the slot only gives ground when it has to,
+       instead of splitting leftover space with the toolbar's spacer. */
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+::deep .ui-mobile-back {
+    color: var(--ui-fg) !important;
+}
+
+::deep .ui-mobile-back .mud-icon-root {
+    color: inherit !important;
+}
+
+::deep .ui-mobile-back:hover {
+    background-color: var(--ui-bg-alt);
+}
+
+.ui-mobile-brand {
+    font-family: var(--ui-font-serif);
+    font-weight: 700;
+    font-size: 1.375rem;
+    color: var(--ui-primary);
+    letter-spacing: var(--ui-tracking-tight);
+    text-decoration: none;
+}
+
+.ui-mobile-page {
+    font-family: var(--ui-font-serif);
+    font-weight: 600;
+    font-size: 1.125rem;
+    color: var(--ui-fg);
+    letter-spacing: var(--ui-tracking-tight);
+    padding-right: 0.09em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-width: 0;
+}
