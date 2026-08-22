@@ -22,16 +22,42 @@ public interface IJavascriptSafeInterop
         params object?[] args
     );
 
+    ValueTask<OneOf<Success, JsFailure>> InvokeVoidAsync(
+        IJSObjectReference module,
+        string identifier,
+        CancellationToken cancellationToken,
+        params object?[] args
+    );
+
     ValueTask<OneOf<TResult, JsFailure>> InvokeAsync<TResult>(
         IJSObjectReference module,
         string identifier,
         params object?[] args
     );
 
+    ValueTask<OneOf<TResult, JsFailure>> InvokeAsync<TResult>(
+        IJSObjectReference module,
+        string identifier,
+        CancellationToken cancellationToken,
+        params object?[] args
+    );
+
     // Global (window-level) functions, for scripts that are not modules.
     ValueTask<OneOf<Success, JsFailure>> InvokeVoidAsync(string identifier, params object?[] args);
 
+    ValueTask<OneOf<Success, JsFailure>> InvokeVoidAsync(
+        string identifier,
+        CancellationToken cancellationToken,
+        params object?[] args
+    );
+
     ValueTask<OneOf<TResult, JsFailure>> InvokeAsync<TResult>(string identifier, params object?[] args);
+
+    ValueTask<OneOf<TResult, JsFailure>> InvokeAsync<TResult>(
+        string identifier,
+        CancellationToken cancellationToken,
+        params object?[] args
+    );
 
     // Releases a module reference. Failing to release is never worth reporting
     // beyond the result: the browser is usually already gone when it fails.

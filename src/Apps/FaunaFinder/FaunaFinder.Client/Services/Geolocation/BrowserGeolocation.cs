@@ -1,4 +1,4 @@
-using Microsoft.JSInterop;
+using EcoData.Ui.Interop;
 
 namespace FaunaFinder.Client.Services.Geolocation;
 
@@ -30,40 +30,42 @@ public static class BrowserGeolocation
 {
     private const string ModulePath = "./js/fauna-geo.js";
 
+    private static readonly GeoPosition Unavailable = new(GeoStatus.Unavailable, 0, 0);
+
     /// <summary>
     /// Asks the browser where it is. Never throws: an interop failure is
     /// reported as <see cref="GeoStatus.Unavailable"/>, the same as the
     /// browser failing to get a fix.
     /// </summary>
     public static async Task<GeoPosition> GetPositionAsync(
-        IJSRuntime js,
+        IJavascriptSafeInterop js,
         int timeoutMs = 10000,
         CancellationToken ct = default
     )
     {
-        try
+        var imported = await js.ImportAsync(ModulePath, ct);
+        if (!imported.TryPickT0(out var module, out _))
         {
-            await using var module = await js.InvokeAsync<IJSObjectReference>("import", ct, ModulePath);
-            var raw = await module.InvokeAsync<RawPosition>("getPosition", ct, timeoutMs);
+            return Unavailable;
+        }
 
-            var status = raw.Status switch
-            {
-                "ok" => GeoStatus.Ok,
-                "denied" => GeoStatus.Denied,
-                "unsupported" => GeoStatus.Unsupported,
-                _ => GeoStatus.Unavailable,
-            };
+        var position = await js.InvokeAsync<RawPosition>(module, "getPosition", ct, timeoutMs);
+        await js.DisposeAsync(module);
 
-            return new GeoPosition(status, raw.Latitude, raw.Longitude);
-        }
-        catch (JSException)
+        if (!position.TryPickT0(out var raw, out _))
         {
-            return new GeoPosition(GeoStatus.Unavailable, 0, 0);
+            return Unavailable;
         }
-        catch (OperationCanceledException)
+
+        var status = raw.Status switch
         {
-            return new GeoPosition(GeoStatus.Unavailable, 0, 0);
-        }
+            "ok" => GeoStatus.Ok,
+            "denied" => GeoStatus.Denied,
+            "unsupported" => GeoStatus.Unsupported,
+            _ => GeoStatus.Unavailable,
+        };
+
+        return new GeoPosition(status, raw.Latitude, raw.Longitude);
     }
 
     // Mirrors the module's payload; the JS side never rejects, so status is

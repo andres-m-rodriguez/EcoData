@@ -1,4 +1,4 @@
-@inject IJSRuntime JS
+@inject IJavascriptSafeInterop JS
 @implements IAsyncDisposable
 
 <div class="search-header-wrapper @(_isSticky ? "is-sticky" : "")" @ref="_headerRef">
@@ -54,16 +54,22 @@
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (firstRender && EnableSticky)
+        if (!firstRender || !EnableSticky)
         {
-            _dotNetRef = DotNetObjectReference.Create(this);
-            _jsModule = await JS.InvokeAsync<IJSObjectReference>("import", "./js/stickySearch.js");
-
-            // Check if disposed during the await
-            if (_disposed) return;
-
-            await _jsModule.InvokeVoidAsync("initStickySearch", _headerRef, _dotNetRef);
+            return;
         }
+
+        _dotNetRef = DotNetObjectReference.Create(this);
+
+        // Stickiness is an enhancement: without the module the header just scrolls.
+        var imported = await JS.ImportAsync("./js/stickySearch.js");
+        if (_disposed || !imported.TryPickT0(out var module, out _))
+        {
+            return;
+        }
+
+        _jsModule = module;
+        await JS.InvokeVoidAsync(module, "initStickySearch", _headerRef, _dotNetRef);
     }
 
     [JSInvokable]
@@ -82,13 +88,10 @@
 
         if (_jsModule is not null)
         {
-            try
-            {
-                await _jsModule.InvokeVoidAsync("destroyStickySearch");
-                await _jsModule.DisposeAsync();
-            }
-            catch (JSDisconnectedException) { }
+            await JS.InvokeVoidAsync(_jsModule, "destroyStickySearch");
+            await JS.DisposeAsync(_jsModule);
         }
+
         _dotNetRef?.Dispose();
     }
 }

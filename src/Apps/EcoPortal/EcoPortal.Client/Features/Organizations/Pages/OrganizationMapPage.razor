@@ -5,7 +5,7 @@
 @using EcoData.Sensors.Application.Client
 @using EcoPortal.Client.Services
 @implements IAsyncDisposable
-@inject IJSRuntime JS
+@inject IJavascriptSafeInterop JS
 @inject ILocationHttpClient LocationClient
 @inject ISensorHttpClient SensorClient
 @inject INavigationManager Navigation
@@ -163,7 +163,7 @@
             InvokeAsync(StateHasChanged);
         });
 
-        _ = JS.InvokeVoidAsync("orgSensorMap.clearMunicipalitySelection", _elementId);
+        _ = JS.InvokeVoidAsync("orgSensorMap.clearMunicipalitySelection", _elementId).AsTask();
     }
 
     private string GetSensorCountText()
@@ -200,14 +200,7 @@
 
         if (_mapInitialized)
         {
-            try
-            {
-                await JS.InvokeVoidAsync("orgSensorMap.dispose", _elementId);
-            }
-            catch
-            {
-                // Ignore disposal errors
-            }
+            await JS.InvokeVoidAsync("orgSensorMap.dispose", _elementId);
         }
     }
 }

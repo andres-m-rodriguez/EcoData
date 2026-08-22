@@ -1,6 +1,6 @@
 @namespace EcoPortal.Client.Components.Maps
 @using Microsoft.JSInterop
-@inject IJSRuntime Js
+@inject IJavascriptSafeInterop Js
 @implements IAsyncDisposable
 
 <div id="@_elementId" class="map-host"></div>
@@ -31,14 +31,7 @@
     public async ValueTask DisposeAsync()
     {
         if (!_initialized) return;
-        try
-        {
-            await Js.InvokeVoidAsync("statusMap.dispose", _elementId);
-        }
-        catch (JSDisconnectedException)
-        {
-            // app shutdown
-        }
+        await Js.InvokeVoidAsync("statusMap.dispose", _elementId);
     }
 
     public sealed record MapSensor(

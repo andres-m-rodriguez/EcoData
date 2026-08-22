@@ -1,6 +1,7 @@
 using EcoData.Common.i18n;
 using EcoData.Locations.Application.Client;
 using EcoData.Spa.Navigation;
+using EcoData.Ui;
 using EcoData.Wildlife.Application.Client;
 using FaunaFinder.Client.Localization;
 using FaunaFinder.Client.Services.FieldNotebook;
@@ -18,6 +19,7 @@ builder.Services.AddLocationsClient(baseAddress);
 builder.Services.AddWildlifeClient(baseAddress);
 
 builder.Services.AddSpaNavigation();
+builder.Services.AddEcoDataUi();
 builder.Services.AddMudServices();
 
 // The reader's browser-local state. Singleton, not scoped: one browser, and the

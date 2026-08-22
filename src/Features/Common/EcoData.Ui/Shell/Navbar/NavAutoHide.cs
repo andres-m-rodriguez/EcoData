@@ -3,10 +3,6 @@ using Microsoft.JSInterop;
 
 namespace EcoData.Ui.Shell.Navbar;
 
-// The scroll watcher behind the mobile chrome: nav-autohide.js stamps
-// data-nav-autohide on the root element while the reader heads down the page,
-// and the app bar and bottom nav both read it. One instance per bar that
-// renders on small screens, so the watcher exists exactly when the bars do.
 public sealed class NavAutoHide(IJavascriptSafeInterop js) : IAsyncDisposable
 {
     private const string ModulePath = "./_content/EcoData.Ui/js/nav-autohide.js";

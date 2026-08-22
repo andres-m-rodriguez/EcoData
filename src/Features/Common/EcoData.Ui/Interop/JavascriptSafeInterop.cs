@@ -17,17 +17,43 @@ public sealed class JavascriptSafeInterop(IJSRuntime js) : IJavascriptSafeIntero
         params object?[] args
     ) => GuardVoidAsync(async () => await module.InvokeVoidAsync(identifier, args));
 
+    public ValueTask<OneOf<Success, JsFailure>> InvokeVoidAsync(
+        IJSObjectReference module,
+        string identifier,
+        CancellationToken cancellationToken,
+        params object?[] args
+    ) => GuardVoidAsync(async () => await module.InvokeVoidAsync(identifier, cancellationToken, args));
+
     public ValueTask<OneOf<TResult, JsFailure>> InvokeAsync<TResult>(
         IJSObjectReference module,
         string identifier,
         params object?[] args
     ) => GuardAsync(async () => await module.InvokeAsync<TResult>(identifier, args));
 
+    public ValueTask<OneOf<TResult, JsFailure>> InvokeAsync<TResult>(
+        IJSObjectReference module,
+        string identifier,
+        CancellationToken cancellationToken,
+        params object?[] args
+    ) => GuardAsync(async () => await module.InvokeAsync<TResult>(identifier, cancellationToken, args));
+
     public ValueTask<OneOf<Success, JsFailure>> InvokeVoidAsync(string identifier, params object?[] args) =>
         GuardVoidAsync(async () => await js.InvokeVoidAsync(identifier, args));
 
+    public ValueTask<OneOf<Success, JsFailure>> InvokeVoidAsync(
+        string identifier,
+        CancellationToken cancellationToken,
+        params object?[] args
+    ) => GuardVoidAsync(async () => await js.InvokeVoidAsync(identifier, cancellationToken, args));
+
     public ValueTask<OneOf<TResult, JsFailure>> InvokeAsync<TResult>(string identifier, params object?[] args) =>
         GuardAsync(async () => await js.InvokeAsync<TResult>(identifier, args));
+
+    public ValueTask<OneOf<TResult, JsFailure>> InvokeAsync<TResult>(
+        string identifier,
+        CancellationToken cancellationToken,
+        params object?[] args
+    ) => GuardAsync(async () => await js.InvokeAsync<TResult>(identifier, cancellationToken, args));
 
     public ValueTask<OneOf<Success, JsFailure>> DisposeAsync(IJSObjectReference module) =>
         GuardVoidAsync(async () => await module.DisposeAsync());
@@ -56,6 +82,9 @@ public sealed class JavascriptSafeInterop(IJSRuntime js) : IJavascriptSafeIntero
             return failure;
         }
     }
+
+    // Only what JS interop itself can throw is turned into a result. Anything
+    // else is a bug in the caller and keeps propagating.
     private static JsFailure? Classify(Exception e) => e switch
     {
         JSDisconnectedException => new JsFailure(JsFailureKind.Disconnected, e.Message),

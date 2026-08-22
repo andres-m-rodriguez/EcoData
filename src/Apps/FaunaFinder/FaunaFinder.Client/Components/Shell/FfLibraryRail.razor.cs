@@ -5,7 +5,7 @@ using FaunaFinder.Client.Localization;
 using FaunaFinder.Client.Services.FieldNotebook;
 using FaunaFinder.Client.Services.Geolocation;
 using Microsoft.AspNetCore.Components;
-using Microsoft.JSInterop;
+using EcoData.Ui.Interop;
 using Tempest;
 
 namespace FaunaFinder.Client.Components.Shell;
@@ -33,7 +33,7 @@ public partial class FfLibraryRail : EcoDataComponent
     public LocaleContext Locale { get; set; } = LocaleContext.English;
 
     [Inject]
-    private IJSRuntime JS { get; set; } = default!;
+    private IJavascriptSafeInterop JS { get; set; } = default!;
 
     /// <summary>Which list the chips are showing. Purely local — switching never refetches.</summary>
     private RailTab _tab = RailTab.Saved;

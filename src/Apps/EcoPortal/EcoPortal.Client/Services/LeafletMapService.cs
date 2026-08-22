@@ -1,8 +1,9 @@
+using EcoData.Ui.Interop;
 using Microsoft.JSInterop;
 
 namespace EcoPortal.Client.Services;
 
-public sealed class LeafletMapService(IJSRuntime js) : ILeafletMapService
+public sealed class LeafletMapService(IJavascriptSafeInterop js) : ILeafletMapService
 {
     public async ValueTask<ILeafletMapInstance> CreateAsync(
         string elementId,
@@ -17,14 +18,14 @@ public sealed class LeafletMapService(IJSRuntime js) : ILeafletMapService
 
 public sealed class LeafletMapInstance : ILeafletMapInstance
 {
-    private readonly IJSRuntime _js;
+    private readonly IJavascriptSafeInterop _js;
     private readonly DotNetObjectReference<LeafletMapInstance> _dotNetRef;
     private Func<MapClickEventArgs, Task>? _clickHandler;
     private bool _disposed;
 
     public string ElementId { get; }
 
-    public LeafletMapInstance(IJSRuntime js, string elementId)
+    public LeafletMapInstance(IJavascriptSafeInterop js, string elementId)
     {
         _js = js;
         ElementId = elementId;
@@ -49,13 +50,7 @@ public sealed class LeafletMapInstance : ILeafletMapInstance
     {
         if (_disposed)
             return;
-        await _js.InvokeVoidAsync(
-            "leafletMapService.setView",
-            ElementId,
-            latitude,
-            longitude,
-            zoom
-        );
+        await _js.InvokeVoidAsync("leafletMapService.setView", ElementId, latitude, longitude, zoom);
     }
 
     public async ValueTask SetMarkerAsync(double latitude, double longitude)
@@ -84,18 +79,12 @@ public sealed class LeafletMapInstance : ILeafletMapInstance
         if (_disposed)
             return new GeolocationResult(false, Error: "Map disposed");
 
-        try
-        {
-            var result = await _js.InvokeAsync<GeolocationResult>(
-                "leafletMapService.getCurrentLocation",
-                ElementId
-            );
-            return result;
-        }
-        catch (Exception ex)
-        {
-            return new GeolocationResult(false, Error: ex.Message);
-        }
+        var located = await _js.InvokeAsync<GeolocationResult>("leafletMapService.getCurrentLocation", ElementId);
+
+        return located.Match(
+            result => result,
+            failure => new GeolocationResult(false, Error: failure.Message)
+        );
     }
 
     public void OnClick(Func<MapClickEventArgs, Task> handler)
@@ -118,15 +107,7 @@ public sealed class LeafletMapInstance : ILeafletMapInstance
             return;
         _disposed = true;
 
-        try
-        {
-            await _js.InvokeVoidAsync("leafletMapService.dispose", ElementId);
-        }
-        catch (JSDisconnectedException)
-        {
-            // Ignore during app shutdown
-        }
-
+        await _js.InvokeVoidAsync("leafletMapService.dispose", ElementId);
         _dotNetRef.Dispose();
     }
 }
