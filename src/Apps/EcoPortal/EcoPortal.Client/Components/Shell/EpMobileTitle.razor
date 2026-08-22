@@ -1,0 +1,30 @@
+@namespace EcoPortal.Client.Components.Shell
+@using EcoPortal.Client.Services
+@inherits StatefulComponent
+@inject ITabNavigationService Tabs
+@inject INavbarManager Navbar
+
+@* The mobile app bar's lead slot: the wordmark on the home tab, otherwise a
+   back button and the page title. *@
+
+<div class="ep-mobile-title">
+    @if (Tabs.CurrentTab == NavigationTab.Home)
+    {
+        <span class="logo-text">Ecoportal</span>
+    }
+    else
+    {
+        <NuiNativeNavbar ShowBackButton="true" ShowTitle="false" ShowActions="false" />
+        <span class="page-title">@Navbar.State.Title</span>
+    }
+</div>
+
+@code {
+    // The slot renders straight off the two managers' State, so subscribing is
+    // the whole job — the handlers have nothing to add.
+    [Event]
+    private void OnNavigationChanged(NavigationChanged _) { }
+
+    [Event]
+    private void OnNavbarChanged(NavbarChanged _) { }
+}
