@@ -16,7 +16,7 @@
 <MudDialogProvider />
 <MudSnackbarProvider />
 
-<UiShell RailOpen="_railOpen">
+<UiShell RailOpen="_railOpen" Rail="RailContent">
     <AppBar>
         <MudHidden Breakpoint="Breakpoint.MdAndUp">
             <UiMobileTitle BrandText="Ecoportal" IsRoot="IsHomePage" />
@@ -64,13 +64,6 @@
             }
         </MudHidden>
     </AppBar>
-
-    <Rail>
-        @if (OrganizationId is { } organizationId)
-        {
-            <OrganizationRail OrganizationId="organizationId" />
-        }
-    </Rail>
 
     <ChildContent>
         @if (IsFullBleedPage)
@@ -133,6 +126,12 @@
     private Guid? OrganizationId =>
         Path.Split('/', StringSplitOptions.RemoveEmptyEntries) is ["organizations", var id, ..] && Guid.TryParse(id, out var parsed)
             ? parsed
+            : null;
+
+    // Null outside a workspace, so the shell reserves no rail column there.
+    private RenderFragment? RailContent =>
+        OrganizationId is { } organizationId
+            ? @<OrganizationRail OrganizationId="organizationId" />
             : null;
 
     // Pages that draw their own chrome get @Body with no container. A workspace
