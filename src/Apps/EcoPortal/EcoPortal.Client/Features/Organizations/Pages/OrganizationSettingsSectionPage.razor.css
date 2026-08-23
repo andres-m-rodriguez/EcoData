@@ -1,0 +1,18 @@
+.settings-back {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 12px;
+    color: var(--ui-primary-500);
+    font: 500 12px/1 var(--ui-font-sans);
+    text-decoration: none;
+}
+
+.settings-back:hover {
+    color: var(--ui-primary);
+}
+
+::deep .settings-card {
+    max-width: 760px;
+    border: 1px solid var(--ui-line);
+}

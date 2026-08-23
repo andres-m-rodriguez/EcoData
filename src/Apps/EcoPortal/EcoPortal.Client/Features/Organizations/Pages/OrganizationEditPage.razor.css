@@ -1,26 +1,6 @@
-.settings-danger {
+.settings-hub {
     display: flex;
-    align-items: center;
-    justify-content: space-between;
+    flex-direction: column;
     gap: 12px;
-    flex-wrap: wrap;
-    margin-top: 28px;
-    padding: 16px;
-    border: 1px solid #fecaca;
-    border-radius: 12px;
-    background: #fff7f7;
-}
-
-.settings-danger h3 {
-    margin: 0;
-    font: 600 1rem/1.2 var(--ui-font-serif);
-    letter-spacing: var(--ui-tracking-tight);
-    color: var(--ui-bad);
-}
-
-.settings-danger p {
-    margin: 4px 0 0;
-    color: var(--ui-fg-3);
-    font: 400 13px/1.5 var(--ui-font-sans);
-    max-width: 60ch;
+    max-width: 760px;
 }

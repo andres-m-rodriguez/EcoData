@@ -1,0 +1,26 @@
+@namespace EcoData.Ui.Settings
+
+@* The irreversible action at the bottom of a settings hub, set apart so it
+   is never mistaken for the rest. *@
+
+<section class="ui-danger">
+    <div class="ui-danger-text">
+        <h3 class="ui-danger-title">@Title</h3>
+        @if (Description is not null)
+        {
+            <p class="ui-danger-desc">@Description</p>
+        }
+    </div>
+    <div class="ui-danger-action">@ChildContent</div>
+</section>
+
+@code {
+    [Parameter, EditorRequired]
+    public required string Title { get; set; }
+
+    [Parameter]
+    public string? Description { get; set; }
+
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+}

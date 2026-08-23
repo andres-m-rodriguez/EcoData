@@ -3,121 +3,47 @@
 @using EcoData.Organization.Contracts
 @using EcoPortal.Client.Authorization
 @attribute [OrganizationPermission(Permissions.Organization.Update)]
-@using EcoData.Organization.Contracts.Dtos
 @using EcoData.Organization.Application.Client
 @using EcoPortal.Client.Components
-@using EcoPortal.Client.Features.Organizations.Components
 @using EcoPortal.Client.Features.Organizations.Workspace
-@inherits StatefulComponent
 @inject IOrganizationHttpClient OrganizationClient
 @inject INavigationManager Navigation
 @inject IDialogService DialogService
 @inject ISnackbar Snackbar
 @inject OrganizationWorkspaceState State
 
+@* The settings hub: one card per group of fields, each its own page, and the
+   one irreversible action set apart at the bottom. *@
+
 <OrganizationWorkspace OrganizationId="Id" Section="OrganizationSection.Settings">
-    <UiSectionHead Title="Settings" Eyebrow="Organization" Subtitle="The profile people see, and the colours the organization goes by." />
+    <UiSectionHead Title="Settings" Eyebrow="Organization" />
 
-    @{ Prime(context.Organization); }
+    <div class="settings-hub">
+        <UiSettingsLink Href="@($"{SettingsPath}/profile")" Icon="@Icons.Material.Outlined.Badge" Title="Profile"
+                        Description="Name, tagline, type, about, website and location — what people see." />
+        <UiSettingsLink Href="@($"{SettingsPath}/branding")" Icon="@Icons.Material.Outlined.Palette" Title="Branding"
+                        Description="Profile and card pictures, primary and accent colours." />
+        <UiSettingsLink Href="@($"{SettingsPath}/details")" Icon="@Icons.Material.Outlined.Description" Title="Details"
+                        Description="Contact email, founded year, legal status and tax ID." />
 
-    <MudPaper Elevation="0" Class="pa-6 rounded-lg">
-        <OrganizationForm Model="_model" SubmitButtonText="Save changes" ErrorMessage="@_errorMessage"
-                          IsLoading="SaveState.IsLoading" OnSubmit="HandleSubmit" OnCancel="NavigateToOverview" />
-    </MudPaper>
-
-    @if (context.Can(Permissions.Organization.Delete))
-    {
-        <div class="settings-danger">
-            <div>
-                <h3>Delete organization</h3>
-                <p>Removes the organization, its roles and memberships. Sensors must be deleted or reassigned first.</p>
-            </div>
-            <MudButton Variant="Variant.Outlined" Color="Color.Error" StartIcon="@Icons.Material.Outlined.Delete"
-                       OnClick="@(() => ConfirmDelete(context.Organization.Name))">
-                Delete…
-            </MudButton>
-        </div>
-    }
+        @if (context.Can(Permissions.Organization.Delete))
+        {
+            <UiDangerZone Title="Delete organization"
+                          Description="Removes the organization, its roles and memberships. Sensors must be deleted or reassigned first.">
+                <MudButton Variant="Variant.Outlined" Color="Color.Error" StartIcon="@Icons.Material.Outlined.Delete"
+                           OnClick="@(() => ConfirmDelete(context.Organization.Name))">
+                    Delete…
+                </MudButton>
+            </UiDangerZone>
+        }
+    </div>
 </OrganizationWorkspace>
 
 @code {
     [Parameter]
     public Guid Id { get; set; }
 
-    private readonly OrganizationForm.OrganizationFormModel _model = new();
-    private Guid _primedFor;
-    private string? _errorMessage;
-
-    // The form starts from the organization the workspace already loaded; no
-    // second fetch. Primed once per organization so typing is never overwritten.
-    private void Prime(OrganizationDtoForDetail organization)
-    {
-        if (_primedFor == organization.Id)
-        {
-            return;
-        }
-
-        _primedFor = organization.Id;
-        _model.Name = organization.Name;
-        _model.Slug = organization.Slug;
-        _model.Tagline = organization.Tagline;
-        _model.ProfilePictureUrl = organization.ProfilePictureUrl;
-        _model.CardPictureUrl = organization.CardPictureUrl;
-        _model.AboutUs = organization.AboutUs;
-        _model.WebsiteUrl = organization.WebsiteUrl;
-        _model.Location = organization.Location;
-        _model.FoundedYear = organization.FoundedYear;
-        _model.LegalStatus = organization.LegalStatus;
-        _model.TaxId = organization.TaxId;
-        _model.PrimaryColor = organization.PrimaryColor;
-        _model.AccentColor = organization.AccentColor;
-        _model.ContactEmail = organization.ContactEmail;
-        _model.Type = organization.Type;
-    }
-
-    private async Task HandleSubmit(OrganizationForm.OrganizationFormModel model) => await SaveState.Execute();
-
-    [Command]
-    private async Task Save()
-    {
-        _errorMessage = null;
-
-        if (string.IsNullOrWhiteSpace(_model.Name))
-        {
-            _errorMessage = "Name is required";
-            return;
-        }
-
-        var dto = new OrganizationDtoForUpdate(
-            Name: _model.Name,
-            Slug: _model.Slug,
-            Tagline: _model.Tagline,
-            ProfilePictureUrl: _model.ProfilePictureUrl,
-            CardPictureUrl: _model.CardPictureUrl,
-            AboutUs: _model.AboutUs,
-            WebsiteUrl: _model.WebsiteUrl,
-            Location: _model.Location,
-            FoundedYear: _model.FoundedYear,
-            LegalStatus: _model.LegalStatus,
-            TaxId: _model.TaxId,
-            PrimaryColor: _model.PrimaryColor,
-            AccentColor: _model.AccentColor,
-            ContactEmail: _model.ContactEmail,
-            Type: _model.Type
-        );
-
-        var result = await OrganizationClient.UpdateAsync(Id, dto);
-
-        if (!result.TryPickT0(out _, out var error))
-        {
-            _errorMessage = error.Message ?? "Failed to update organization";
-            return;
-        }
-
-        Snackbar.Add("Saved", Severity.Success);
-        State.Invalidate(Id);
-        Navigation.NavigateTo(OrganizationSections.Path(Id, OrganizationSection.Overview));
-    }
+    private string SettingsPath => OrganizationSections.Path(Id, OrganizationSection.Settings);
 
     private async Task ConfirmDelete(string name)
     {
@@ -146,7 +72,4 @@
             error => Snackbar.Add(error.Message ?? "Failed to delete organization", Severity.Error)
         );
     }
-
-    private void NavigateToOverview() =>
-        Navigation.NavigateTo(OrganizationSections.Path(Id, OrganizationSection.Overview));
 }

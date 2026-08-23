@@ -1,0 +1,27 @@
+@namespace EcoData.Ui.Settings
+
+@* One entry of a settings hub: an icon, what it is, one line on what it
+   covers, and a chevron — the whole card is the link. *@
+
+<a class="ui-settings-link" href="@Href">
+    <MudIcon Icon="@Icon" Class="ui-settings-icon" />
+    <span class="ui-settings-text">
+        <span class="ui-settings-title">@Title</span>
+        <span class="ui-settings-desc">@Description</span>
+    </span>
+    <MudIcon Icon="@Icons.Material.Filled.ChevronRight" Size="Size.Small" Class="ui-settings-chevron" />
+</a>
+
+@code {
+    [Parameter, EditorRequired]
+    public required string Href { get; set; }
+
+    [Parameter, EditorRequired]
+    public required string Icon { get; set; }
+
+    [Parameter, EditorRequired]
+    public required string Title { get; set; }
+
+    [Parameter]
+    public string? Description { get; set; }
+}

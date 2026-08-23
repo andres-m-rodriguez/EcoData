@@ -1,0 +1,108 @@
+@page "/organizations/{Id:guid}/settings/{SectionName}"
+@using EcoData.Organization.Contracts
+@using EcoPortal.Client.Authorization
+@attribute [OrganizationPermission(Permissions.Organization.Update)]
+@using EcoData.Organization.Contracts.Dtos
+@using EcoData.Organization.Application.Client
+@using EcoPortal.Client.Features.Organizations.Components
+@using EcoPortal.Client.Features.Organizations.Workspace
+@using static EcoPortal.Client.Features.Organizations.Components.OrganizationForm
+@inherits StatefulComponent
+@inject IOrganizationHttpClient OrganizationClient
+@inject INavigationManager Navigation
+@inject ISnackbar Snackbar
+@inject OrganizationWorkspaceState State
+
+@* One group of the organization's fields. The route names the group; the
+   form primes from the organization the workspace already holds and saves
+   the whole record back, since the update endpoint takes all of it. *@
+
+<OrganizationWorkspace OrganizationId="Id" Section="OrganizationSection.Settings">
+    @{ Prime(context.Organization); }
+
+    <a class="settings-back" href="@SettingsPath">
+        <MudIcon Icon="@Icons.Material.Filled.ArrowBack" Size="Size.Small" />
+        <span>Settings</span>
+    </a>
+
+    <UiSectionHead Title="@Title" Eyebrow="Organization" Subtitle="@Subtitle" />
+
+    <MudPaper Elevation="0" Class="pa-6 rounded-lg settings-card">
+        <OrganizationForm Model="_model" Section="Section" SubmitButtonText="Save changes" ErrorMessage="@_errorMessage"
+                          IsLoading="SaveState.IsLoading" OnSubmit="HandleSubmit" OnCancel="NavigateToHub" />
+    </MudPaper>
+</OrganizationWorkspace>
+
+@code {
+    [Parameter]
+    public Guid Id { get; set; }
+
+    [Parameter]
+    public string SectionName { get; set; } = string.Empty;
+
+    private readonly OrganizationFormModel _model = new();
+    private Guid _primedFor;
+    private string? _errorMessage;
+
+    private string SettingsPath => OrganizationSections.Path(Id, OrganizationSection.Settings);
+
+    private OrganizationFormSection Section => SectionName.ToLowerInvariant() switch
+    {
+        "branding" => OrganizationFormSection.Branding,
+        "details" => OrganizationFormSection.Details,
+        _ => OrganizationFormSection.Profile,
+    };
+
+    private string Title => Section switch
+    {
+        OrganizationFormSection.Branding => "Branding",
+        OrganizationFormSection.Details => "Details",
+        _ => "Profile",
+    };
+
+    private string Subtitle => Section switch
+    {
+        OrganizationFormSection.Branding => "Pictures and colours the organization goes by.",
+        OrganizationFormSection.Details => "Contact and legal details shown on the profile.",
+        _ => "What people see when they find the organization.",
+    };
+
+    private void Prime(OrganizationDtoForDetail organization)
+    {
+        if (_primedFor == organization.Id)
+        {
+            return;
+        }
+
+        _primedFor = organization.Id;
+        _model.Load(organization);
+    }
+
+    private async Task HandleSubmit(OrganizationFormModel model) => await SaveState.Execute();
+
+    [Command]
+    private async Task Save()
+    {
+        _errorMessage = null;
+
+        if (string.IsNullOrWhiteSpace(_model.Name))
+        {
+            _errorMessage = "Name is required";
+            return;
+        }
+
+        var result = await OrganizationClient.UpdateAsync(Id, _model.ToUpdate());
+
+        if (!result.TryPickT0(out _, out var error))
+        {
+            _errorMessage = error.Message ?? "Failed to update organization";
+            return;
+        }
+
+        Snackbar.Add("Saved", Severity.Success);
+        State.Invalidate(Id);
+        Navigation.NavigateTo(SettingsPath);
+    }
+
+    private void NavigateToHub() => Navigation.NavigateTo(SettingsPath);
+}
