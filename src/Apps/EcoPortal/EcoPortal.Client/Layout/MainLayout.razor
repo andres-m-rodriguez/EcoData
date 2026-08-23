@@ -73,21 +73,6 @@
     </Rail>
 
     <ChildContent>
-        <MudHidden Breakpoint="Breakpoint.SmAndDown">
-            @if (AuthState.IsAuthenticated && IsOrganizationsArea)
-            {
-                <nav class="ep-subnav">
-                    @foreach (var (href, label, icon) in OrganizationLinks)
-                    {
-                        <a href="@href" class="@SubnavLinkClass(href)">
-                            <MudIcon Icon="@icon" Size="Size.Small" />
-                            <span>@label</span>
-                        </a>
-                    }
-                </nav>
-            }
-        </MudHidden>
-
         @if (IsFullBleedPage)
         {
             <div class="@_pageTransitionClass" @key="_navigationKey">
@@ -135,13 +120,6 @@
         new(nameof(NavigationTab.Account), Icons.Material.Filled.Person, "Account"),
     ];
 
-    private static readonly (string Href, string Label, string Icon)[] OrganizationLinks =
-    [
-        ("/organizations/discover", "Discover", Icons.Material.Outlined.Explore),
-        ("/organizations/my", "My Organizations", Icons.Material.Outlined.Business),
-        ("/organizations/requests", "Access Requests", Icons.Material.Outlined.HowToReg),
-    ];
-
     private bool _railOpen = true;
     private string _pageTransitionClass = "";
     private string _navigationKey = Guid.NewGuid().ToString();
@@ -157,9 +135,6 @@
             ? parsed
             : null;
 
-    // The organizations sub-nav belongs to the area, not to a workspace inside it.
-    private bool IsOrganizationsArea =>
-        Path.StartsWith("/organizations", StringComparison.OrdinalIgnoreCase) && OrganizationId is null;
     // Pages that draw their own chrome get @Body with no container. A workspace
     // is one: it fills the panel beside the rail.
     private bool IsFullBleedPage =>
@@ -232,7 +207,4 @@
             Tabs.NavigateToTab(tab);
         }
     }
-
-    private string SubnavLinkClass(string href) =>
-        Path.Equals(href, StringComparison.OrdinalIgnoreCase) ? "ep-subnav-link is-active" : "ep-subnav-link";
 }

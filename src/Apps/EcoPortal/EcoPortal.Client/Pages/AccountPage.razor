@@ -58,42 +58,19 @@
                             </div>
                         </MudPaper>
 
-                        <MudPaper Elevation="0" Class="quick-links-card">
-                            <div class="section-heading">
-                                <MudText Typo="Typo.h6">Quick Links</MudText>
-                            </div>
-                            <MudList T="string" Class="py-0">
-                                <MudListItem Href="/getting-started" Class="quick-link-item">
-                                    <div class="quick-link">
-                                        <MudIcon Icon="@Icons.Material.Outlined.HelpOutline" Class="quick-link-icon" />
-                                        <div class="quick-link-text">
-                                            <span class="quick-link-title">Getting Started</span>
-                                            <span class="quick-link-subtitle">Learn how to use EcoData</span>
-                                        </div>
-                                    </div>
-                                </MudListItem>
-                                <MudDivider />
-                                <MudListItem Href="/organizations/my" Class="quick-link-item">
-                                    <div class="quick-link">
-                                        <MudIcon Icon="@Icons.Material.Outlined.Business" Class="quick-link-icon" />
-                                        <div class="quick-link-text">
-                                            <span class="quick-link-title">My Organizations</span>
-                                            <span class="quick-link-subtitle">View memberships</span>
-                                        </div>
-                                    </div>
-                                </MudListItem>
-                                <MudDivider />
-                                <MudListItem Href="/notifications/history" Class="quick-link-item">
-                                    <div class="quick-link">
-                                        <MudIcon Icon="@Icons.Material.Outlined.NotificationsNone" Class="quick-link-icon" />
-                                        <div class="quick-link-text">
-                                            <span class="quick-link-title">Notifications</span>
-                                            <span class="quick-link-subtitle">Recent alerts &amp; history</span>
-                                        </div>
-                                    </div>
-                                </MudListItem>
-                            </MudList>
-                        </MudPaper>
+                        @* Your links, settings-hub style: each card is the link. *@
+                        <div class="account-links">
+                            <UiSettingsLink Href="/organizations/my" Icon="@Icons.Material.Outlined.Business" Title="My Organizations"
+                                            Description="The organizations you belong to." />
+                            <UiSettingsLink Href="/organizations/requests" Icon="@Icons.Material.Outlined.HowToReg" Title="Access Requests"
+                                            Description="Your pending requests to join organizations." />
+                            <UiSettingsLink Href="/organizations/discover" Icon="@Icons.Material.Outlined.Explore" Title="Discover"
+                                            Description="Browse the organizations on the network." />
+                            <UiSettingsLink Href="/notifications/history" Icon="@Icons.Material.Outlined.NotificationsNone" Title="Notifications"
+                                            Description="Recent alerts and history." />
+                            <UiSettingsLink Href="/getting-started" Icon="@Icons.Material.Outlined.HelpOutline" Title="Getting Started"
+                                            Description="Learn how to use EcoData." />
+                        </div>
                     </MudStack>
                 </MudItem>
 
