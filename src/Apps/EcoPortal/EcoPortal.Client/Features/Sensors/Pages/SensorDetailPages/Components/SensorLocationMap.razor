@@ -1,18 +1,28 @@
-@using EcoPortal.Client.Components
+@using EcoData.Ui.Interop
+@implements IAsyncDisposable
+@inject IJavascriptSafeInterop JS
 
-<div class="sensor-location-map">
-    <LeafletMap Latitude="@((double)Latitude)"
-                Longitude="@((double)Longitude)"
-                Zoom="13"
-                ShowMarker="true"
-                DisableInteraction="true"
-                Class="sensor-map" />
-</div>
+<div id="@_elementId" class="sensor-location-map"></div>
 
 @code {
+    private readonly string _elementId = $"sensor-location-map-{Guid.NewGuid():N}";
+
     [Parameter, EditorRequired]
     public decimal Latitude { get; set; }
 
     [Parameter, EditorRequired]
     public decimal Longitude { get; set; }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await JS.InvokeVoidAsync("sensorLocationMap.init", _elementId, (double)Latitude, (double)Longitude);
+        }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        await JS.InvokeVoidAsync("sensorLocationMap.dispose", _elementId);
+    }
 }

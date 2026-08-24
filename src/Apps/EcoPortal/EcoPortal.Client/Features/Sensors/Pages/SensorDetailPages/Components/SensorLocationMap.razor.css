@@ -1,11 +1,18 @@
 .sensor-location-map {
     width: 100%;
-    border-radius: 0.5rem;
-    overflow: hidden;
-}
-
-::deep .sensor-map {
     height: 180px;
     min-height: 180px;
     border-radius: 0.5rem;
+    overflow: hidden;
+    /* Keeps Leaflet's internal stacking below MudBlazor overlays. */
+    z-index: 1;
+}
+
+::deep .leaflet-control-attribution {
+    background-color: var(--mud-palette-surface) !important;
+    color: var(--mud-palette-text-primary) !important;
+}
+
+::deep .leaflet-control-attribution a {
+    color: var(--mud-palette-primary) !important;
 }

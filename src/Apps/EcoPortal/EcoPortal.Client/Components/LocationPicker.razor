@@ -1,8 +1,9 @@
 @inherits StatefulComponent
 @using EcoData.Locations.Contracts.Dtos
+@using EcoData.Ui.Interop
 @using EcoPortal.Client.Services
-@implements IAsyncDisposable
 @inject ILocationHttpClient LocationClient
+@inject IJavascriptSafeInterop JS
 @inject ISnackbar Snackbar
 
 <MudStack Spacing="3">
@@ -46,12 +47,6 @@
         </MudButton>
     </MudStack>
 
-    <LeafletMap @ref="_map"
-                Latitude="(double?)InitialLatitude"
-                Longitude="(double?)InitialLongitude"
-                ShowMarker="InitialLatitude != 0 && InitialLongitude != 0"
-                OnMapClick="OnMapClicked" />
-
     @if (!string.IsNullOrEmpty(_geolocationError))
     {
         <MudAlert Severity="Severity.Error" Variant="Variant.Outlined" Dense="true"
@@ -86,8 +81,6 @@
 </MudStack>
 
 @code {
-    private LeafletMap? _map;
-
     [Reactive] private decimal _latitude;
     [Reactive] private decimal _longitude;
     [Reactive] private string? _geolocationError;
@@ -120,10 +113,13 @@
     [Command]
     private async Task GetCurrentLocation()
     {
-        if (_map is null) return;
-
         GeolocationErrorState.Value = null;
-        var result = await _map.GetCurrentLocationAsync();
+        var interop = await JS.InvokeAsync<GeolocationResult>("epGeolocation.getCurrentPosition");
+        if (!interop.TryPickT0(out var result, out _))
+        {
+            GeolocationErrorState.Value = "Unable to get current location";
+            return;
+        }
 
         if (result.Success && result.Latitude.HasValue && result.Longitude.HasValue)
         {
@@ -168,15 +164,6 @@
         ));
     }
 
-    private async Task OnMapClicked(MapClickEventArgs args)
-    {
-        LatitudeState.Value = (decimal)args.Latitude;
-        LongitudeState.Value = (decimal)args.Longitude;
-        GeolocationErrorState.Value = null;
-
-        await ValidateLocationState.Execute();
-    }
-
     private async Task OnLatitudeChanged(decimal value)
     {
         LatitudeState.Value = value;
@@ -194,24 +181,18 @@
         if (_latitude < -90 || _latitude > 90 || _longitude < -180 || _longitude > 180)
             return;
 
-        if (_latitude != 0 && _longitude != 0 && _map is not null)
+        if (_latitude != 0 && _longitude != 0)
         {
-            await _map.SetMarkerAsync((double)_latitude, (double)_longitude);
             await ValidateLocationState.Execute();
         }
     }
 
-    public async ValueTask DisposeAsync()
-    {
-        // Blazor prefers async disposal when both are present; run the Tempest
-        // base cleanup here so bus subscriptions still unhook.
-        Dispose();
-
-        if (_map is not null)
-        {
-            await _map.DisposeAsync();
-        }
-    }
+    private sealed record GeolocationResult(
+        bool Success,
+        double? Latitude = null,
+        double? Longitude = null,
+        string? Error = null
+    );
 
     public sealed record LocationSelectedEventArgs(
         decimal Latitude,

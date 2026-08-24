@@ -7,7 +7,6 @@
 @using EcoData.Locations.Application.Client
 @using EcoData.Locations.Contracts.Dtos
 @using EcoPortal.Client.Components.Charts
-@using EcoPortal.Client.Components.Maps
 @using EcoPortal.Client.Services.Charts
 @inherits StatefulComponent
 @inject INavbarManager Navbar
@@ -176,34 +175,6 @@
                     <div class="card">
                         <div class="card-h">
                             <div class="card-h-l">
-                                <div class="card-eyebrow">Sensor map · current state</div>
-                                <h3 class="card-title">@(LoadMarkersState.Result?.Count.ToString("N0") ?? "—") stations across the island
-                                </h3>
-                                <div class="card-meta">Color = current flow status · click a marker for details</div>
-                            </div>
-                            <div class="map-legend-inline">
-                                <span class="map-legend-dot normal">Normal</span>
-                                <span class="map-legend-dot elevated">Elevated</span>
-                                <span class="map-legend-dot high">High</span>
-                                <span class="map-legend-dot low">Low</span>
-                                <span class="map-legend-dot offline">Offline</span>
-                            </div>
-                        </div>
-                        <div class="map-wrap">
-                            @if (LoadMarkersState.Result is { Count: > 0 })
-                            {
-                                <StatusSensorMap Sensors="@_mapSensors" />
-                            }
-                            else
-                            {
-                                <div class="chart-placeholder tall">@(LoadMarkersState.IsLoading ? "Loading map…" : "No stations available.")</div>
-                            }
-                        </div>
-                    </div>
-
-                    <div class="card">
-                        <div class="card-h">
-                            <div class="card-h-l">
                                 <div class="card-eyebrow">All stations · ranked by current flow</div>
                                 <h3 class="card-title">Watersheds</h3>
                                 <div class="card-meta">@(LoadMarkersState.Result?.Count.ToString() ?? "—") stations · click any row to
@@ -269,7 +240,6 @@
     private IReadOnlyList<TimeSeries> _featuredSeries = [];
     private static readonly IReadOnlyList<string> _featuredColors = ["#0284c7", "#d97706"];
 
-    private IReadOnlyList<StatusSensorMap.MapSensor> _mapSensors = [];
     private Dictionary<Guid, string> _municipalityNames = new();
 
     protected override void OnInitialized()
@@ -311,7 +281,6 @@
         }
 
         await EnrichMunicipalitiesAsync(collected, ct);
-        BuildMapSensors(collected);
 
         return collected;
     }
@@ -334,21 +303,6 @@
                     : error.Message ?? "Couldn't load municipality names.",
                 Severity.Error);
         }
-    }
-
-    private void BuildMapSensors(IReadOnlyList<SurfaceWaterStationMarkerDto> markers)
-    {
-        _mapSensors = markers
-            .Select(m => new StatusSensorMap.MapSensor(
-                Name: m.Name,
-                ExternalId: m.ExternalId,
-                Latitude: m.Latitude,
-                Longitude: m.Longitude,
-                Status: m.Status,
-                LatestStreamflow: m.LatestStreamflowCfs,
-                LatestGageHeight: m.LatestGageHeightFt
-            ))
-            .ToList();
     }
 
     [Command]

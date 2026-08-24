@@ -37,7 +37,6 @@ builder.Services.AddHttpClient<IDataSourceHttpClient, DataSourceHttpClient>(clie
 
 builder.Services.AddMemoryCache();
 builder.Services.AddSingleton<IOrganizationCacheService, OrganizationCacheService>();
-builder.Services.AddScoped<ILeafletMapService, LeafletMapService>();
 builder.Services.AddScoped<IChartService, ChartService>();
 
 // Navigation services
