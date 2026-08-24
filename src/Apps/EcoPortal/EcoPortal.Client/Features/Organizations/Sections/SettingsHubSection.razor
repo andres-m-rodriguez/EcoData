@@ -1,0 +1,71 @@
+@using EcoData.Organization.Contracts
+@using EcoData.Organization.Application.Client
+@using EcoPortal.Client.Components
+@using EcoPortal.Client.Features.Organizations.Workspace
+@inject IOrganizationHttpClient OrganizationClient
+@inject INavigationManager Navigation
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+@inject OrganizationWorkspaceState State
+
+@* The settings hub: one card per group of fields, each its own page, and the
+   one irreversible action set apart at the bottom. *@
+
+<UiSectionHead Title="Settings" Eyebrow="Organization" />
+
+<div class="settings-hub">
+    <UiSettingsLink Href="@($"{SettingsPath}/profile")" Icon="@Icons.Material.Outlined.Badge" Title="Profile"
+                    Description="Name, tagline, type, about, website and location — what people see." />
+    <UiSettingsLink Href="@($"{SettingsPath}/branding")" Icon="@Icons.Material.Outlined.Palette" Title="Branding"
+                    Description="Profile and card pictures, primary and accent colours." />
+    <UiSettingsLink Href="@($"{SettingsPath}/details")" Icon="@Icons.Material.Outlined.Description" Title="Details"
+                    Description="Contact email, founded year, legal status and tax ID." />
+
+    @if (Context.Can(Permissions.Organization.Delete))
+    {
+        <UiDangerZone Title="Delete organization"
+                      Description="Removes the organization, its roles and memberships. Sensors must be deleted or reassigned first.">
+            <MudButton Variant="Variant.Outlined" Color="Color.Error" StartIcon="@Icons.Material.Outlined.Delete"
+                       OnClick="@(() => ConfirmDelete(Context.Organization.Name))">
+                Delete…
+            </MudButton>
+        </UiDangerZone>
+    }
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public required OrganizationContext Context { get; set; }
+
+    private Guid Id => Context.Organization.Id;
+
+    private string SettingsPath => OrganizationSections.Path(Id, OrganizationSection.Settings);
+
+    private async Task ConfirmDelete(string name)
+    {
+        var parameters = new DialogParameters<ConfirmDialog>
+        {
+            { x => x.ContentText, $"Delete \"{name}\"? This cannot be undone." },
+            { x => x.ButtonText, "Delete" },
+            { x => x.Color, Color.Error }
+        };
+        var dialog = await DialogService.ShowAsync<ConfirmDialog>("Delete organization", parameters);
+        var dialogResult = await dialog.Result;
+
+        if (dialogResult is not { Canceled: false })
+        {
+            return;
+        }
+
+        var result = await OrganizationClient.DeleteAsync(Id);
+        result.Switch(
+            _ =>
+            {
+                Snackbar.Add("Organization deleted", Severity.Success);
+                State.Invalidate(Id);
+                Navigation.NavigateTo("/organizations/my");
+            },
+            error => Snackbar.Add(error.Message ?? "Failed to delete organization", Severity.Error)
+        );
+    }
+}

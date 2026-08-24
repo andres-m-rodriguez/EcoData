@@ -1,0 +1,106 @@
+@namespace EcoPortal.Client.Features.Organizations.Workspace
+@inherits StatefulComponent
+@inject OrganizationWorkspaceState State
+
+@* The shell's side panel while inside an organization: who you are in, the
+   sections you can reach, and the way out. It reads the same cached context
+   the page does, so opening it costs nothing. *@
+
+@if (_context is { } context)
+{
+    var org = context.Organization;
+    <div class="rail">
+        <a class="rail-identity" href="@OrganizationSections.Path(org.Id, OrganizationSection.Overview)">
+            @if (!string.IsNullOrWhiteSpace(org.ProfilePictureUrl))
+            {
+                <img class="rail-avatar rail-avatar--photo" src="@org.ProfilePictureUrl" alt="" />
+            }
+            else
+            {
+                <span class="rail-avatar">@Initials(org.Name)</span>
+            }
+            <span class="rail-text">
+                <span class="rail-name">@org.Name</span>
+                <span class="rail-role">You · @(context.RoleName ?? "Global admin")</span>
+            </span>
+        </a>
+
+        <UiRail Links="OrganizationSections.Links(context, _counts)" ActiveKey="@ActiveKey" Label="Workspace">
+            <Footer>
+                <a href="/organizations/my" class="rail-leave">
+                    <MudIcon Icon="@Icons.Material.Filled.ArrowBack" Size="Size.Small" />
+                    <span>All organizations</span>
+                </a>
+            </Footer>
+        </UiRail>
+    </div>
+}
+else
+{
+    <div class="rail rail--loading">
+        <MudSkeleton Width="70%" Height="20px" />
+        <MudSkeleton Width="50%" Height="14px" />
+        <MudSkeleton Width="100%" Height="36px" Class="mt-4" />
+        <MudSkeleton Width="100%" Height="36px" />
+        <MudSkeleton Width="100%" Height="36px" />
+    </div>
+}
+
+@code {
+    [Parameter, EditorRequired]
+    public Guid OrganizationId { get; set; }
+
+    // The active section's key, from the layout's route values.
+    [Parameter, EditorRequired]
+    public required string ActiveKey { get; set; }
+
+    private OrganizationContext? _context;
+    private OrganizationCounts? _counts;
+    private Guid _loadedFor;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (_loadedFor == OrganizationId)
+        {
+            return;
+        }
+
+        _loadedFor = OrganizationId;
+        _context = null;
+        _counts = null;
+        await LoadState.Execute();
+    }
+
+    [Command]
+    private async Task Load(CancellationToken ct)
+    {
+        _context = await State.GetAsync(OrganizationId, ct);
+
+        if (_context is { IsMember: true })
+        {
+            _counts = await State.GetCountsAsync(_context, ct);
+        }
+    }
+
+    // Counts move when a section approves, removes or registers something;
+    // the page drops the cache and the next navigation refreshes the panel.
+    [Event]
+    private async Task OnNavigationChanged(NavigationChanged _)
+    {
+        if (_context is { IsMember: true } context)
+        {
+            _counts = await State.GetCountsAsync(context);
+        }
+    }
+
+    private static string Initials(string name)
+    {
+        var parts = name.Split([' ', '—', '-'], StringSplitOptions.RemoveEmptyEntries);
+        return parts.Length switch
+        {
+            0 => "?",
+            1 => parts[0][..Math.Min(2, parts[0].Length)].ToUpperInvariant(),
+            _ => string.Concat(parts[0][0], parts[1][0]).ToUpperInvariant(),
+        };
+    }
+}

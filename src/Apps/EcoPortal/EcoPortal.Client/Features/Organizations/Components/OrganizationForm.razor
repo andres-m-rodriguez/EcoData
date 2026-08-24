@@ -1,6 +1,9 @@
 @using System.ComponentModel.DataAnnotations
 @using EcoData.Organization.Contracts
 
+@* The organization's fields. Section picks which group renders: the create
+   page shows everything, the settings pages one group each. *@
+
 <MudStack Spacing="3">
     @if (!string.IsNullOrEmpty(ErrorMessage))
     {
@@ -9,149 +12,164 @@
         </MudAlert>
     }
 
-    <MudText Typo="Typo.subtitle1">Identity</MudText>
-
-    <MudTextField @bind-Value="Model.Name"
-                  Label="Name"
-                  Required="true"
-                  RequiredError="Name is required"
-                  MaxLength="200"
-                  Counter="200"
-                  Immediate="true"
-                  Disabled="IsLoading" />
-
-    <MudTextField @bind-Value="Model.Slug"
-                  Label="Slug"
-                  Placeholder="my-organization"
-                  MaxLength="80"
-                  HelperText="URL-friendly identifier. Leave blank to derive from Name."
-                  Disabled="IsLoading" />
-
-    <MudTextField @bind-Value="Model.Tagline"
-                  Label="Tagline"
-                  MaxLength="280"
-                  Counter="280"
-                  HelperText="Short editorial line shown on the organization page"
-                  Disabled="IsLoading" />
-
-    <MudSelect T="OrganizationType?"
-               @bind-Value="Model.Type"
-               Label="Organization Type"
-               Clearable="true"
-               HelperText="Used for filtering on the Discover page"
-               Disabled="IsLoading">
-        @foreach (var type in OrganizationTypeOptions)
+    @if (Shows(OrganizationFormSection.Profile))
+    {
+        if (Section == OrganizationFormSection.All)
         {
-            <MudSelectItem T="OrganizationType?" Value="@type">@FormatType(type)</MudSelectItem>
+            <MudText Typo="Typo.subtitle1">Identity</MudText>
         }
-    </MudSelect>
 
-    <MudDivider Class="my-2" />
-    <MudText Typo="Typo.subtitle1">Branding</MudText>
+        <MudTextField @bind-Value="Model.Name"
+                      Label="Name"
+                      Required="true"
+                      RequiredError="Name is required"
+                      MaxLength="200"
+                      Counter="200"
+                      Immediate="true"
+                      Disabled="IsLoading" />
 
-    <MudTextField @bind-Value="Model.ProfilePictureUrl"
-                  Label="Profile Picture URL"
-                  Placeholder="https://example.com/logo.png"
-                  MaxLength="500"
-                  HelperText="URL to the organization's logo or profile picture"
-                  Disabled="IsLoading" />
+        <MudTextField @bind-Value="Model.Slug"
+                      Label="Slug"
+                      Placeholder="my-organization"
+                      MaxLength="80"
+                      HelperText="URL-friendly identifier. Leave blank to derive from Name."
+                      Disabled="IsLoading" />
 
-    @if (!string.IsNullOrWhiteSpace(Model.ProfilePictureUrl))
-    {
-        <MudStack Row="true" AlignItems="AlignItems.Center">
-            <MudText Typo="Typo.body2" Color="Color.Secondary">Preview:</MudText>
-            <MudAvatar Size="Size.Large">
-                <MudImage Src="@Model.ProfilePictureUrl" Alt="Preview" />
-            </MudAvatar>
-        </MudStack>
+        <MudTextField @bind-Value="Model.Tagline"
+                      Label="Tagline"
+                      MaxLength="280"
+                      Counter="280"
+                      HelperText="Short editorial line shown on the organization page"
+                      Disabled="IsLoading" />
+
+        <MudSelect T="OrganizationType?"
+                   @bind-Value="Model.Type"
+                   Label="Organization Type"
+                   Clearable="true"
+                   HelperText="Used for filtering on the Discover page"
+                   Disabled="IsLoading">
+            @foreach (var type in OrganizationTypeOptions)
+            {
+                <MudSelectItem T="OrganizationType?" Value="@type">@FormatType(type)</MudSelectItem>
+            }
+        </MudSelect>
+
+        <MudTextField @bind-Value="Model.AboutUs"
+                      Label="About Us"
+                      Lines="5"
+                      MaxLength="2000"
+                      Counter="2000"
+                      HelperText="Description of the organization"
+                      Disabled="IsLoading" />
+
+        <MudTextField @bind-Value="Model.WebsiteUrl"
+                      Label="Website URL"
+                      Placeholder="https://example.com"
+                      MaxLength="500"
+                      HelperText="Organization's website"
+                      Disabled="IsLoading" />
+
+        <MudTextField @bind-Value="Model.Location"
+                      Label="Location"
+                      Placeholder="El Yunque, PR"
+                      MaxLength="200"
+                      Disabled="IsLoading" />
     }
 
-    <MudTextField @bind-Value="Model.CardPictureUrl"
-                  Label="Card Picture URL"
-                  Placeholder="https://example.com/banner.png"
-                  MaxLength="500"
-                  HelperText="Banner image displayed on organization cards"
-                  Disabled="IsLoading" />
-
-    @if (!string.IsNullOrWhiteSpace(Model.CardPictureUrl))
+    @if (Shows(OrganizationFormSection.Branding))
     {
-        <MudStack>
-            <MudText Typo="Typo.body2" Color="Color.Secondary">Card Preview:</MudText>
-            <MudImage Src="@Model.CardPictureUrl" Alt="Card Preview" Class="card-preview" />
-        </MudStack>
+        if (Section == OrganizationFormSection.All)
+        {
+            <MudDivider Class="my-2" />
+            <MudText Typo="Typo.subtitle1">Branding</MudText>
+        }
+
+        <MudTextField @bind-Value="Model.ProfilePictureUrl"
+                      Label="Profile Picture URL"
+                      Placeholder="https://example.com/logo.png"
+                      MaxLength="500"
+                      HelperText="URL to the organization's logo or profile picture"
+                      Disabled="IsLoading" />
+
+        @if (!string.IsNullOrWhiteSpace(Model.ProfilePictureUrl))
+        {
+            <MudStack Row="true" AlignItems="AlignItems.Center">
+                <MudText Typo="Typo.body2" Color="Color.Secondary">Preview:</MudText>
+                <MudAvatar Size="Size.Large">
+                    <MudImage Src="@Model.ProfilePictureUrl" Alt="Preview" />
+                </MudAvatar>
+            </MudStack>
+        }
+
+        <MudTextField @bind-Value="Model.CardPictureUrl"
+                      Label="Card Picture URL"
+                      Placeholder="https://example.com/banner.png"
+                      MaxLength="500"
+                      HelperText="Banner image displayed on organization cards"
+                      Disabled="IsLoading" />
+
+        @if (!string.IsNullOrWhiteSpace(Model.CardPictureUrl))
+        {
+            <MudStack>
+                <MudText Typo="Typo.body2" Color="Color.Secondary">Card Preview:</MudText>
+                <MudImage Src="@Model.CardPictureUrl" Alt="Card Preview" Class="card-preview" />
+            </MudStack>
+        }
+
+        <MudTextField @bind-Value="Model.PrimaryColor"
+                      Label="Primary Color"
+                      InputType="InputType.Color"
+                      Class="color-field"
+                      HelperText="Used for organization-themed UI accents"
+                      Disabled="IsLoading" />
+
+        <MudTextField @bind-Value="Model.AccentColor"
+                      Label="Accent Color"
+                      InputType="InputType.Color"
+                      Class="color-field"
+                      HelperText="Highlights and call-to-action color"
+                      Disabled="IsLoading" />
     }
 
-    <MudTextField @bind-Value="Model.PrimaryColor"
-                  Label="Primary Color"
-                  InputType="InputType.Color"
-                  Class="color-field"
-                  HelperText="Used for organization-themed UI accents"
-                  Disabled="IsLoading" />
+    @if (Shows(OrganizationFormSection.Details))
+    {
+        if (Section == OrganizationFormSection.All)
+        {
+            <MudDivider Class="my-2" />
+            <MudText Typo="Typo.subtitle1">Details</MudText>
+        }
 
-    <MudTextField @bind-Value="Model.AccentColor"
-                  Label="Accent Color"
-                  InputType="InputType.Color"
-                  Class="color-field"
-                  HelperText="Highlights and call-to-action color"
-                  Disabled="IsLoading" />
+        <MudTextField @bind-Value="Model.ContactEmail"
+                      Label="Contact Email"
+                      Placeholder="hello@example.org"
+                      MaxLength="256"
+                      InputType="InputType.Email"
+                      HelperText="Public address for collaboration requests"
+                      Disabled="IsLoading" />
 
-    <MudDivider Class="my-2" />
-    <MudText Typo="Typo.subtitle1">About</MudText>
-
-    <MudTextField @bind-Value="Model.AboutUs"
-                  Label="About Us"
-                  Lines="5"
-                  MaxLength="2000"
-                  Counter="2000"
-                  HelperText="Description of the organization"
-                  Disabled="IsLoading" />
-
-    <MudTextField @bind-Value="Model.WebsiteUrl"
-                  Label="Website URL"
-                  Placeholder="https://example.com"
-                  MaxLength="500"
-                  HelperText="Organization's website"
-                  Disabled="IsLoading" />
-
-    <MudTextField @bind-Value="Model.ContactEmail"
-                  Label="Contact Email"
-                  Placeholder="hello@example.org"
-                  MaxLength="256"
-                  InputType="InputType.Email"
-                  HelperText="Public address for collaboration requests"
-                  Disabled="IsLoading" />
-
-    <MudTextField @bind-Value="Model.Location"
-                  Label="Location"
-                  Placeholder="El Yunque, PR"
-                  MaxLength="200"
-                  Disabled="IsLoading" />
-
-    <MudDivider Class="my-2" />
-    <MudText Typo="Typo.subtitle1">Legal</MudText>
-
-    <MudGrid Spacing="2">
-        <MudItem xs="12" sm="4">
-            <MudNumericField @bind-Value="Model.FoundedYear"
-                             Label="Founded Year"
-                             Min="1800"
-                             Max="2100"
-                             Disabled="IsLoading" />
-        </MudItem>
-        <MudItem xs="12" sm="4">
-            <MudTextField @bind-Value="Model.LegalStatus"
-                          Label="Legal Status"
-                          Placeholder="501(c)(3)"
-                          MaxLength="80"
-                          Disabled="IsLoading" />
-        </MudItem>
-        <MudItem xs="12" sm="4">
-            <MudTextField @bind-Value="Model.TaxId"
-                          Label="Tax ID"
-                          MaxLength="40"
-                          Disabled="IsLoading" />
-        </MudItem>
-    </MudGrid>
+        <MudGrid Spacing="2">
+            <MudItem xs="12" sm="4">
+                <MudNumericField @bind-Value="Model.FoundedYear"
+                                 Label="Founded Year"
+                                 Min="1800"
+                                 Max="2100"
+                                 Disabled="IsLoading" />
+            </MudItem>
+            <MudItem xs="12" sm="4">
+                <MudTextField @bind-Value="Model.LegalStatus"
+                              Label="Legal Status"
+                              Placeholder="501(c)(3)"
+                              MaxLength="80"
+                              Disabled="IsLoading" />
+            </MudItem>
+            <MudItem xs="12" sm="4">
+                <MudTextField @bind-Value="Model.TaxId"
+                              Label="Tax ID"
+                              MaxLength="40"
+                              Disabled="IsLoading" />
+            </MudItem>
+        </MudGrid>
+    }
 
     <MudStack Row="true" Justify="Justify.FlexEnd" Spacing="2" Class="mt-4">
         <MudButton Variant="Variant.Text"
@@ -178,6 +196,9 @@
     public OrganizationFormModel Model { get; set; } = new();
 
     [Parameter]
+    public OrganizationFormSection Section { get; set; } = OrganizationFormSection.All;
+
+    [Parameter]
     public string SubmitButtonText { get; set; } = "Save";
 
     [Parameter]
@@ -192,6 +213,9 @@
     [Parameter]
     public EventCallback OnCancel { get; set; }
 
+    private bool Shows(OrganizationFormSection section) =>
+        Section == OrganizationFormSection.All || Section == section;
+
     private async Task HandleSubmit()
     {
         if (string.IsNullOrWhiteSpace(Model.Name))
@@ -203,6 +227,14 @@
     private async Task HandleCancel()
     {
         await OnCancel.InvokeAsync();
+    }
+
+    public enum OrganizationFormSection
+    {
+        All,
+        Profile,
+        Branding,
+        Details,
     }
 
     public class OrganizationFormModel
@@ -252,6 +284,45 @@
         public string? ContactEmail { get; set; }
 
         public OrganizationType? Type { get; set; }
+
+        // Every field, so a section page can prime from the organization and
+        // submit the whole thing — the update endpoint takes all of it.
+        public void Load(EcoData.Organization.Contracts.Dtos.OrganizationDtoForDetail organization)
+        {
+            Name = organization.Name;
+            Slug = organization.Slug;
+            Tagline = organization.Tagline;
+            ProfilePictureUrl = organization.ProfilePictureUrl;
+            CardPictureUrl = organization.CardPictureUrl;
+            AboutUs = organization.AboutUs;
+            WebsiteUrl = organization.WebsiteUrl;
+            Location = organization.Location;
+            FoundedYear = organization.FoundedYear;
+            LegalStatus = organization.LegalStatus;
+            TaxId = organization.TaxId;
+            PrimaryColor = organization.PrimaryColor;
+            AccentColor = organization.AccentColor;
+            ContactEmail = organization.ContactEmail;
+            Type = organization.Type;
+        }
+
+        public EcoData.Organization.Contracts.Dtos.OrganizationDtoForUpdate ToUpdate() => new(
+            Name: Name,
+            Slug: Slug,
+            Tagline: Tagline,
+            ProfilePictureUrl: ProfilePictureUrl,
+            CardPictureUrl: CardPictureUrl,
+            AboutUs: AboutUs,
+            WebsiteUrl: WebsiteUrl,
+            Location: Location,
+            FoundedYear: FoundedYear,
+            LegalStatus: LegalStatus,
+            TaxId: TaxId,
+            PrimaryColor: PrimaryColor,
+            AccentColor: AccentColor,
+            ContactEmail: ContactEmail,
+            Type: Type
+        );
     }
 
     private static readonly OrganizationType?[] OrganizationTypeOptions =

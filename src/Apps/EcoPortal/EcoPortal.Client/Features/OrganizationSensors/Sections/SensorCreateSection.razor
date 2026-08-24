@@ -1,0 +1,106 @@
+@using EcoData.Sensors.Contracts
+@using EcoData.Sensors.Contracts.Dtos
+@using EcoData.Sensors.Contracts.Requests
+@using EcoData.Sensors.Application.Client
+@using EcoPortal.Client.Features.Organizations.Workspace
+@using EcoPortal.Client.Features.OrganizationSensors.Dialogs
+@using EcoPortal.Client.Features.Sensors.Components
+@using static EcoPortal.Client.Features.Sensors.Components.SensorForm
+@inherits StatefulComponent
+@inject ISensorHttpClient SensorClient
+@inject INavigationManager Navigation
+@inject IDialogService DialogService
+@inject OrganizationWorkspaceState State
+
+<UiSectionHead Title="Add sensor" Eyebrow="Stations"
+               Subtitle="@($"Registering a sensor for {Context.Organization.Name}. You get its access token once, when it is created.")" />
+
+<SensorForm Model="_formModel"
+            SubmitButtonText="Create Sensor"
+            ErrorMessage="@_errorMessage"
+            IsLoading="CreateState.IsLoading"
+            HideExternalId="false"
+            ShowReportingInterval="true"
+            OnSubmit="@(_ => OnFormSubmit(Context.Organization.Name))"
+            OnCancel="NavigateToSensors" />
+
+@code {
+    [Parameter, EditorRequired]
+    public required OrganizationContext Context { get; set; }
+
+    private Guid OrganizationId => Context.Organization.Id;
+
+    private readonly SensorFormModel _formModel = new();
+    private string? _errorMessage;
+    private string _organizationName = string.Empty;
+
+    private async Task OnFormSubmit(string organizationName)
+    {
+        _organizationName = organizationName;
+        await CreateState.Execute();
+    }
+
+    [Command]
+    private async Task Create()
+    {
+        _errorMessage = null;
+
+        var request = new RegisterSensorRequest(
+            OrganizationId,
+            _organizationName,
+            _formModel.Name.Trim(),
+            _formModel.ExternalId.Trim(),
+            _formModel.Latitude,
+            _formModel.Longitude,
+            _formModel.MunicipalityId,
+            ExpectedIntervalSeconds: _formModel.ExpectedIntervalSeconds
+        );
+
+        var result = await SensorClient.RegisterAsync(request);
+
+        await result.Match(
+            async credentials =>
+            {
+                await ShowCredentialsDialog(credentials);
+                // The rail count is stale now.
+                State.Invalidate(OrganizationId);
+                Navigation.NavigateTo(OrganizationSections.Path(OrganizationId, OrganizationSection.Sensors));
+            },
+            validationFailed =>
+            {
+                _errorMessage = string.Join(" ", validationFailed.AllMessages);
+                return Task.CompletedTask;
+            },
+            requestFailed =>
+            {
+                _errorMessage = requestFailed.Message ?? "Failed to register sensor";
+                return Task.CompletedTask;
+            }
+        );
+    }
+
+    private async Task ShowCredentialsDialog(SensorDtoForRegistered credentials)
+    {
+        var parameters = new DialogParameters<SensorCredentialsDialog>
+        {
+            { x => x.SensorId, credentials.SensorId },
+            { x => x.AccessToken, credentials.AccessToken },
+            { x => x.ExpiresAt, credentials.ExpiresAt },
+            { x => x.SensorName, _formModel.Name }
+        };
+
+        var options = new DialogOptions
+        {
+            CloseButton = false,
+            BackdropClick = false,
+            MaxWidth = MaxWidth.Small,
+            FullWidth = true
+        };
+
+        var dialog = await DialogService.ShowAsync<SensorCredentialsDialog>("Sensor Registered", parameters, options);
+        await dialog.Result;
+    }
+
+    private void NavigateToSensors() =>
+        Navigation.NavigateTo(OrganizationSections.Path(OrganizationId, OrganizationSection.Sensors));
+}

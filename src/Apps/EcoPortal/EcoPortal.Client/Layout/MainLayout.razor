@@ -1,133 +1,30 @@
 @inherits StatefulLayoutComponent
-@using EcoPortal.Client.Components
-@using EcoPortal.Client.Components.Shell
-@using EcoPortal.Client.Pages
 @using EcoPortal.Client.Services
-@using EcoPortal.Client.Themes
-@inject AuthStateService AuthState
 @inject INavigationManager Navigation
-@inject INavbarManager Navbar
 @inject ITabNavigationService Tabs
-@inject NotificationService NotificationService
 
-<MudThemeProvider Theme="AppThemes.Azure" />
-<MudPopoverProvider />
-<MudDialogProvider />
-<MudSnackbarProvider />
-
-<UiShell Bleed="IsMapPage">
-    <AppBar>
-        <MudHidden Breakpoint="Breakpoint.MdAndUp">
-            <UiMobileTitle BrandText="Ecoportal" IsRoot="IsHomePage" />
-        </MudHidden>
-
-        <MudHidden Breakpoint="Breakpoint.SmAndDown">
-            <UiBrand Text="Ecoportal" Title="@DesktopTitle" />
-            <UiNav Links="NavLinks" />
-        </MudHidden>
-
-        <MudSpacer />
-
-        <MudHidden Breakpoint="Breakpoint.SmAndDown">
-            <EpSearch />
-        </MudHidden>
-
-        @if (AuthState.IsAuthenticated)
-        {
-            <NotificationBell />
-        }
-
-        <MudHidden Breakpoint="Breakpoint.MdAndUp">
-            @if (!IsHomePage)
-            {
-                <UiPageActions />
-            }
-        </MudHidden>
-
-        <MudHidden Breakpoint="Breakpoint.SmAndDown">
-            @if (AuthState.IsAuthenticated)
-            {
-                <a href="/account" class="ep-user-pill">
-                    <span class="ep-user-initial">@UserInitial</span>
-                    <span class="ep-user-name">@AuthState.CurrentUser?.DisplayName</span>
-                </a>
-            }
-            else
-            {
-                <a href="/login" class="ep-signin">Sign in</a>
-            }
-        </MudHidden>
-    </AppBar>
-
-    <ChildContent>
-        <MudHidden Breakpoint="Breakpoint.SmAndDown">
-            @if (AuthState.IsAuthenticated && IsOrganizationsArea)
-            {
-                <nav class="ep-subnav">
-                    @foreach (var (href, label, icon) in OrganizationLinks)
-                    {
-                        <a href="@href" class="@SubnavLinkClass(href)">
-                            <MudIcon Icon="@icon" Size="Size.Small" />
-                            <span>@label</span>
-                        </a>
-                    }
-                </nav>
-            }
-        </MudHidden>
-
-        @if (IsFullBleedPage)
-        {
+<EpShell>
+    @if (IsFullBleedPage)
+    {
+        <div class="@_pageTransitionClass" @key="_navigationKey">
+            @Body
+        </div>
+    }
+    else
+    {
+        <MudContainer MaxWidth="MaxWidth.Large" Class="py-6 px-4">
             <div class="@_pageTransitionClass" @key="_navigationKey">
                 @Body
             </div>
-        }
-        else
-        {
-            <MudContainer MaxWidth="MaxWidth.Large" Class="py-6 px-4">
-                <div class="@_pageTransitionClass" @key="_navigationKey">
-                    @Body
-                </div>
-            </MudContainer>
-        }
-    </ChildContent>
-
-    <BottomNav>
-        <UiBottomNav Items="BottomTabs" ActiveKey="@Tabs.CurrentTab.ToString()" OnSelect="SelectTab" />
-    </BottomNav>
-</UiShell>
+        </MudContainer>
+    }
+</EpShell>
 
 @code {
     /// <summary>The signed-in user changed (login, logout, profile update).
     /// Published by <see cref="AuthStateService"/>; anyone showing auth-derived
     /// chrome reacts through this record.</summary>
     public sealed record AuthChanged;
-
-    private static readonly UiNavLink[] NavLinks =
-    [
-        new(HomePage.Path, "Home"),
-        new(DataHubPage.Path, "Data"),
-        new(SensorsPage.Path, "Sensors"),
-        new(HealthAlertsPage.Path, "Alerts"),
-        new("/organizations/discover", "Organizations", Match: "/organizations"),
-        new(GettingStartedPage.Path, "Getting Started"),
-        new(ContactPage.Path, "Contact"),
-    ];
-
-    private static readonly UiBottomNavItem[] BottomTabs =
-    [
-        new(nameof(NavigationTab.Home), Icons.Material.Filled.Home, "Home"),
-        new(nameof(NavigationTab.Data), Icons.Material.Filled.QueryStats, "Data"),
-        new(nameof(NavigationTab.Monitor), Icons.Material.Filled.Sensors, "Monitor"),
-        new(nameof(NavigationTab.Orgs), Icons.Material.Filled.Groups, "Orgs"),
-        new(nameof(NavigationTab.Account), Icons.Material.Filled.Person, "Account"),
-    ];
-
-    private static readonly (string Href, string Label, string Icon)[] OrganizationLinks =
-    [
-        ("/organizations/discover", "Discover", Icons.Material.Outlined.Explore),
-        ("/organizations/my", "My Organizations", Icons.Material.Outlined.Business),
-        ("/organizations/requests", "Access Requests", Icons.Material.Outlined.HowToReg),
-    ];
 
     private string _pageTransitionClass = "";
     private string _navigationKey = Guid.NewGuid().ToString();
@@ -137,53 +34,13 @@
 
     private bool IsHomePage => Tabs.CurrentTab == NavigationTab.Home;
 
-    private bool IsOrganizationsArea =>
-        Path.StartsWith("/organizations", StringComparison.OrdinalIgnoreCase);
-
-    private bool IsMapPage => Path.EndsWith("/map", StringComparison.OrdinalIgnoreCase);
-
-    // Pages that draw their own chrome get @Body with no container.
+    // Pages that draw their own chrome get @Body with no container. The
+    // organization workspace has its own layout and never renders here.
     private bool IsFullBleedPage =>
         IsHomePage
-        || IsMapPage
         || Path.StartsWith("/data", StringComparison.OrdinalIgnoreCase)
         || Path.Equals("/organizations/discover", StringComparison.OrdinalIgnoreCase)
         || Path.Equals("/sensor-dashboard", StringComparison.OrdinalIgnoreCase);
-
-    // Top-level pages carry their own heading or rely on the active pill; the
-    // title beside the wordmark is for pages one level in.
-    private string? DesktopTitle =>
-        IsHomePage || NavLinks.Any(l => Path.Equals(l.Href, StringComparison.OrdinalIgnoreCase))
-            ? null
-            : Navbar.State.Title;
-
-    private string UserInitial
-    {
-        get
-        {
-            var name = AuthState.CurrentUser?.DisplayName;
-            return string.IsNullOrEmpty(name) ? "?" : name[..1].ToUpperInvariant();
-        }
-    }
-
-    protected override async Task OnInitializedAsync()
-    {
-        await AuthState.InitializeAsync();
-
-        if (AuthState.IsAuthenticated)
-        {
-            await NotificationService.InitializeAsync();
-        }
-    }
-
-    [Event]
-    private async Task OnAuthChanged(AuthChanged _)
-    {
-        if (AuthState.IsAuthenticated)
-        {
-            await NotificationService.InitializeAsync();
-        }
-    }
 
     [Event]
     private void OnNavigationChanged(NavigationChanged e)
@@ -202,18 +59,4 @@
         };
         _navigationKey = Guid.NewGuid().ToString();
     }
-
-    [Event]
-    private void OnNavbarChanged(NavbarChanged _) { }
-
-    private void SelectTab(string key)
-    {
-        if (Enum.TryParse<NavigationTab>(key, out var tab))
-        {
-            Tabs.NavigateToTab(tab);
-        }
-    }
-
-    private string SubnavLinkClass(string href) =>
-        Path.Equals(href, StringComparison.OrdinalIgnoreCase) ? "ep-subnav-link is-active" : "ep-subnav-link";
 }

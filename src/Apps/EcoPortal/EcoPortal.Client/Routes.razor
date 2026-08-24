@@ -5,13 +5,16 @@
 
 <Router AppAssembly="typeof(Routes).Assembly" NotFoundPage="typeof(Pages.NotFoundPage)">
     <Found Context="routeData">
+        @* Cascaded so layouts can read the values the router already parsed
+           (OrganizationLayout takes the workspace id from here). *@
+        <CascadingValue Value="routeData" IsFixed="false">
         <AuthorizeRouteView RouteData="routeData" DefaultLayout="typeof(MainLayout)">
             <NotAuthorized>
                 @* Only a missing sign-in is fixed by logging in. A signed-in user who lacks a
                    permission is told so in place, on the URL they asked for. *@
                 @if (context.User.Identity?.IsAuthenticated == true)
                 {
-                    <AccessDenied OrganizationId="OrganizationIdOf(routeData)" />
+                    <AccessDenied />
                 }
                 else
                 {
@@ -23,17 +26,7 @@
                 <MudProgressLinear Color="Color.Primary" Indeterminate="true" />
             </Authorizing>
         </AuthorizeRouteView>
+        </CascadingValue>
         <FocusOnNavigate RouteData="routeData" Selector="h1" />
     </Found>
 </Router>
-
-@code {
-    // Organization pages declare {OrganizationId:guid}; the router has already parsed it.
-    private static Guid? OrganizationIdOf(RouteData routeData) =>
-        routeData.RouteValues.TryGetValue("OrganizationId", out var value) switch
-        {
-            true when value is Guid id => id,
-            true when value is string text && Guid.TryParse(text, out var parsed) => parsed,
-            _ => null,
-        };
-}

@@ -1,0 +1,165 @@
+@using EcoPortal.Client.Components
+@using EcoPortal.Client.Components.Shell
+@using EcoPortal.Client.Pages
+@using EcoPortal.Client.Services
+@using EcoPortal.Client.Themes
+@inherits StatefulComponent
+@inject AuthStateService AuthState
+@inject INavigationManager Navigation
+@inject INavbarManager Navbar
+@inject ITabNavigationService Tabs
+@inject NotificationService NotificationService
+
+@* The chrome every layout shares: the providers, the floating app bar and the
+   phone's bottom nav. A layout hands it the page — and a rail, when it has one. *@
+
+<MudThemeProvider Theme="AppThemes.Azure" />
+<MudPopoverProvider />
+<MudDialogProvider />
+<MudSnackbarProvider />
+
+<UiShell RailOpen="_railOpen" Rail="Rail">
+    <AppBar>
+        <MudHidden Breakpoint="Breakpoint.MdAndUp">
+            <UiMobileTitle BrandText="Ecoportal" IsRoot="IsHomePage" />
+        </MudHidden>
+
+        <MudHidden Breakpoint="Breakpoint.SmAndDown">
+            @if (Rail is not null)
+            {
+                <UiPanelToggle Open="_railOpen" OpenChanged="@(open => _railOpen = open)"
+                               CollapseLabel="Hide the workspace panel" ExpandLabel="Show the workspace panel" />
+            }
+            <UiBrand Text="Ecoportal" Title="@DesktopTitle" />
+            <UiNav Links="NavLinks" />
+        </MudHidden>
+
+        <MudSpacer />
+
+        <MudHidden Breakpoint="Breakpoint.SmAndDown">
+            <EpSearch />
+        </MudHidden>
+
+        @if (AuthState.IsAuthenticated)
+        {
+            <NotificationBell />
+        }
+
+        <MudHidden Breakpoint="Breakpoint.MdAndUp">
+            @if (!IsHomePage)
+            {
+                <UiPageActions />
+            }
+        </MudHidden>
+
+        <MudHidden Breakpoint="Breakpoint.SmAndDown">
+            @if (AuthState.IsAuthenticated)
+            {
+                <a href="/account" class="ep-user-pill">
+                    <span class="ep-user-initial">@UserInitial</span>
+                    <span class="ep-user-name">@AuthState.CurrentUser?.DisplayName</span>
+                </a>
+            }
+            else
+            {
+                <a href="/login" class="ep-signin">Sign in</a>
+            }
+        </MudHidden>
+    </AppBar>
+
+    <ChildContent>
+        @ChildContent
+    </ChildContent>
+
+    <BottomNav>
+        <UiBottomNav Items="BottomTabs" ActiveKey="@Tabs.CurrentTab.ToString()" OnSelect="SelectTab" />
+    </BottomNav>
+</UiShell>
+
+@code {
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+
+    // The workspace side panel, when the hosting layout has one. The panel
+    // toggle only appears alongside it.
+    [Parameter]
+    public RenderFragment? Rail { get; set; }
+
+    private static readonly UiNavLink[] NavLinks =
+    [
+        new(HomePage.Path, "Home"),
+        new(DataHubPage.Path, "Data"),
+        new(SensorsPage.Path, "Sensors"),
+        new(HealthAlertsPage.Path, "Alerts"),
+        new("/organizations/discover", "Organizations", Match: "/organizations"),
+        new(GettingStartedPage.Path, "Getting Started"),
+        new(ContactPage.Path, "Contact"),
+    ];
+
+    private static readonly UiBottomNavItem[] BottomTabs =
+    [
+        new(nameof(NavigationTab.Home), Icons.Material.Filled.Home, "Home"),
+        new(nameof(NavigationTab.Data), Icons.Material.Filled.QueryStats, "Data"),
+        new(nameof(NavigationTab.Monitor), Icons.Material.Filled.Sensors, "Monitor"),
+        new(nameof(NavigationTab.Orgs), Icons.Material.Filled.Groups, "Orgs"),
+        new(nameof(NavigationTab.Account), Icons.Material.Filled.Person, "Account"),
+    ];
+
+    private bool _railOpen = true;
+
+    private string Path => Navigation.State.Path;
+
+    private bool IsHomePage => Tabs.CurrentTab == NavigationTab.Home;
+
+    // Top-level pages carry their own heading or rely on the active pill; the
+    // title beside the wordmark is for pages one level in.
+    private string? DesktopTitle =>
+        IsHomePage || NavLinks.Any(l => Path.Equals(l.Href, StringComparison.OrdinalIgnoreCase))
+            ? null
+            : Navbar.State.Title;
+
+    private string UserInitial
+    {
+        get
+        {
+            var name = AuthState.CurrentUser?.DisplayName;
+            return string.IsNullOrEmpty(name) ? "?" : name[..1].ToUpperInvariant();
+        }
+    }
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        // MainLayout owns AuthChanged; cross-class consumers use the base's
+        // auto-disposed subscription.
+        SubscribeEvent<MainLayout.AuthChanged>(_ => DispatchEvent(InitializeNotificationsAsync));
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await AuthState.InitializeAsync();
+        await InitializeNotificationsAsync();
+    }
+
+    private async Task InitializeNotificationsAsync()
+    {
+        if (AuthState.IsAuthenticated)
+        {
+            await NotificationService.InitializeAsync();
+        }
+    }
+
+    [Event]
+    private void OnNavigationChanged(NavigationChanged _) { }
+
+    [Event]
+    private void OnNavbarChanged(NavbarChanged _) { }
+
+    private void SelectTab(string key)
+    {
+        if (Enum.TryParse<NavigationTab>(key, out var tab))
+        {
+            Tabs.NavigateToTab(tab);
+        }
+    }
+}

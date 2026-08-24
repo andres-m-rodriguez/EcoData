@@ -144,54 +144,12 @@
 }
 
 /* ==========================================================================
-   Quick Links Card
+   Your links — a stack of settings-hub cards
    ========================================================================== */
-::deep .quick-links-card {
-    background: var(--mud-palette-surface) !important;
-    border: 1px solid var(--mud-palette-lines-default) !important;
-    border-radius: 12px !important;
-    overflow: hidden;
-}
-
-.section-heading {
-    padding: 1rem 1.25rem 0.5rem;
-}
-
-::deep .section-heading .mud-typography-h6 {
-    font-family: 'Newsreader', serif;
-    font-weight: 600;
-    color: var(--mud-palette-primary);
-}
-
-::deep .quick-link-item {
-    padding: 0.5rem 0.75rem;
-}
-
-.quick-link {
-    display: flex;
-    align-items: center;
-    gap: 0.85rem;
-}
-
-::deep .quick-link-icon {
-    color: var(--mud-palette-primary) !important;
-}
-
-.quick-link-text {
+.account-links {
     display: flex;
     flex-direction: column;
-    gap: 0.1rem;
-}
-
-.quick-link-title {
-    font-size: 0.95rem;
-    font-weight: 600;
-    color: var(--mud-palette-text-primary);
-}
-
-.quick-link-subtitle {
-    font-size: 0.75rem;
-    color: var(--mud-palette-text-secondary);
+    gap: 12px;
 }
 
 /* ==========================================================================

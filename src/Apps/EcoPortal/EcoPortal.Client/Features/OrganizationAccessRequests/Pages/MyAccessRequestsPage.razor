@@ -15,7 +15,7 @@
 
 <PageTitle>My Access Requests - EcoData</PageTitle>
 
-<NuiPageLayout Label="Organizations" Title="My Requests"
+<NuiPageLayout Label="Organizations" Title="My Requests" ParentPath="/account"
                  Actions="@([new("Request", OnRequestAction)])">
         <SearchHeader @bind-Value="SearchTextState.Value" Placeholder="Search requests..." />
 

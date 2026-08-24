@@ -1,0 +1,203 @@
+@using EcoData.Organization.Contracts
+@using EcoData.Organization.Contracts.Dtos
+@using EcoData.Organization.Contracts.Parameters
+@using EcoData.Organization.Application.Client
+@using EcoPortal.Client.Components
+@using EcoPortal.Client.Features.Organizations.Workspace
+@using EcoPortal.Client.Features.OrganizationMembers.Components
+@using EcoPortal.Client.Features.OrganizationMembers.Dialogs
+@using EcoData.Common.Pagination.Blazor
+@inherits StatefulComponent
+@inject IOrganizationMemberHttpClient MemberClient
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+@inject OrganizationWorkspaceState State
+
+@* /team is the members list on desktop and the drill-in list on a phone;
+   /team/members is the members list on both. *@
+
+@if (IsRoot)
+{
+    <MudHidden Breakpoint="Breakpoint.MdAndUp">
+        <UiSectionHead Title="Team" Eyebrow="People" />
+        <UiDrillList Items="DrillItems" />
+    </MudHidden>
+}
+
+<div class="@(IsRoot ? "team-members team-members--desktop-only" : "team-members")">
+    @if (!IsRoot)
+    {
+        <TeamNav Context="Context" Active="@TeamNav.Members" />
+    }
+    else
+    {
+        <MudHidden Breakpoint="Breakpoint.SmAndDown">
+            <TeamNav Context="Context" Active="@TeamNav.Members" />
+        </MudHidden>
+    }
+
+    <UiSectionHead Title="Members" Eyebrow="People" Subtitle="Who is in the organization and the role each holds." />
+
+    <SearchHeader @bind-Value="SearchTextState.Value" Placeholder="Search members..." EnableSticky="false" />
+
+    <MudPaper Elevation="0" Class="rounded-lg mt-3">
+        <EcoDataVirtualizedList @ref="_virtualizedList" TItem="OrganizationMemberDto"
+                                TParams="OrganizationMemberParameters" ItemsProvider="GetItemsAsync" ParametersBuilder="BuildParameters"
+                                CursorSelector="m => m.Id" ItemSize="65" OverscanCount="3">
+            <LoadingTemplate>
+                @for (var i = 0; i < 5; i++)
+                {
+                    <MudPaper Elevation="0" Class="pa-3 border-b">
+                        <MudStack Row AlignItems="AlignItems.Center" Spacing="3">
+                            <MudSkeleton SkeletonType="SkeletonType.Circle" Width="40px" Height="40px" />
+                            <MudStack Spacing="1">
+                                <MudSkeleton Width="150px" Height="16px" />
+                                <MudSkeleton Width="200px" Height="12px" />
+                            </MudStack>
+                        </MudStack>
+                    </MudPaper>
+                }
+            </LoadingTemplate>
+            <EmptyTemplate>
+                @if (HasActiveFilters)
+                {
+                    <MudStack AlignItems="AlignItems.Center" Class="pa-8">
+                        <MudIcon Icon="@Icons.Material.Filled.SearchOff" Size="Size.Large" Color="Color.Secondary" />
+                        <MudText Typo="Typo.h6" Color="Color.Secondary" Class="mt-2">No members found</MudText>
+                        <MudButton Variant="Variant.Outlined" Color="Color.Primary"
+                                   StartIcon="@Icons.Material.Filled.FilterAltOff" OnClick="ClearFilters" Class="mt-3">
+                            Clear search
+                        </MudButton>
+                    </MudStack>
+                }
+                else
+                {
+                    <MudStack AlignItems="AlignItems.Center" Class="pa-8">
+                        <MudIcon Icon="@Icons.Material.Filled.Group" Size="Size.Large" Color="Color.Secondary" />
+                        <MudText Typo="Typo.h6" Color="Color.Secondary" Class="mt-2">No members yet</MudText>
+                        <MudText Typo="Typo.body2" Color="Color.Secondary">
+                            Approve access requests to add members to this organization.
+                        </MudText>
+                        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Inbox"
+                                   Href="@TeamNav.Href(OrganizationId, TeamNav.Requests)" Class="mt-3">
+                            View requests
+                        </MudButton>
+                    </MudStack>
+                }
+            </EmptyTemplate>
+            <ItemTemplate Context="member">
+                <MemberListItem Member="member" ShowActions="true" OnChangeRole="OpenChangeRoleDialog"
+                                OnRemove="ConfirmRemoveMember" />
+            </ItemTemplate>
+            <PlaceholderTemplate>
+                <MudPaper Elevation="0" Class="pa-3 border-b">
+                    <MudStack Row AlignItems="AlignItems.Center" Spacing="3">
+                        <MudSkeleton SkeletonType="SkeletonType.Circle" Width="40px" Height="40px" />
+                        <MudStack Spacing="1">
+                            <MudSkeleton Width="150px" Height="16px" />
+                            <MudSkeleton Width="200px" Height="12px" />
+                        </MudStack>
+                    </MudStack>
+                </MudPaper>
+            </PlaceholderTemplate>
+        </EcoDataVirtualizedList>
+    </MudPaper>
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public required OrganizationContext Context { get; set; }
+
+    // /team and legacy /members are the root (the drill list on a phone);
+    // /team/members is the explicit list.
+    [Parameter]
+    public bool IsRoot { get; set; }
+
+    private Guid OrganizationId => Context.Organization.Id;
+
+    private EcoDataVirtualizedList<OrganizationMemberDto, OrganizationMemberParameters>? _virtualizedList;
+
+    [Reactive]
+    private string? _searchText;
+
+    private bool HasActiveFilters => !string.IsNullOrWhiteSpace(_searchText);
+
+    private IReadOnlyList<UiDrillItem> DrillItems =>
+    [
+        new("Members", "Who is in the organization and their roles", TeamNav.Href(OrganizationId, TeamNav.Members) + "/members"),
+        new("Requests", "People asking to join, with the role they want", TeamNav.Href(OrganizationId, TeamNav.Requests), Hot: true),
+        new("Blocked", "Accounts that cannot request access", TeamNav.Href(OrganizationId, TeamNav.Blocked)),
+        new("Roles", "What each role can do", TeamNav.Href(OrganizationId, TeamNav.Roles)),
+    ];
+
+    [OnChanged]
+    private void OnSearchTextChanged(string? value) => _virtualizedList?.Refresh();
+
+    private OrganizationMemberParameters BuildParameters(Guid? cursor) => new(
+        PageSize: 50,
+        Cursor: cursor,
+        Search: string.IsNullOrWhiteSpace(_searchText) ? null : _searchText
+    );
+
+    private IAsyncEnumerable<OrganizationMemberDto> GetItemsAsync(OrganizationMemberParameters parameters, CancellationToken ct) =>
+        MemberClient.GetAllAsync(OrganizationId, parameters, ct);
+
+    private void ClearFilters() => SearchTextState.Value = null;
+
+    private async Task OpenChangeRoleDialog(OrganizationMemberDto member)
+    {
+        var parameters = new DialogParameters<ChangeRoleDialog>
+        {
+            { x => x.MemberName, member.DisplayName },
+            { x => x.OrganizationId, OrganizationId },
+            { x => x.CurrentRole, member.RoleName }
+        };
+        var options = new DialogOptions { CloseOnEscapeKey = true, MaxWidth = MaxWidth.Small, FullWidth = true };
+        var dialog = await DialogService.ShowAsync<ChangeRoleDialog>("Change Role", parameters, options);
+        var result = await dialog.Result;
+
+        if (result is not { Canceled: false, Data: UpdateMemberRoleRequest request })
+        {
+            return;
+        }
+
+        var updateResult = await MemberClient.UpdateAsync(OrganizationId, member.UserId, request);
+        updateResult.Switch(
+            _ =>
+            {
+                Snackbar.Add($"{member.DisplayName} is now {request.Role}", Severity.Success);
+                _virtualizedList?.Refresh();
+            },
+            error => Snackbar.Add(error.Message ?? "Failed to update role", Severity.Error)
+        );
+    }
+
+    private async Task ConfirmRemoveMember(OrganizationMemberDto member)
+    {
+        var parameters = new DialogParameters<ConfirmDialog>
+        {
+            { x => x.ContentText, $"Remove {member.DisplayName} from this organization? They can request access again." },
+            { x => x.ButtonText, "Remove" },
+            { x => x.Color, Color.Error }
+        };
+        var options = new DialogOptions { CloseOnEscapeKey = true, MaxWidth = MaxWidth.ExtraSmall };
+        var dialog = await DialogService.ShowAsync<ConfirmDialog>("Remove Member", parameters, options);
+        var result = await dialog.Result;
+
+        if (result is not { Canceled: false })
+        {
+            return;
+        }
+
+        var deleteResult = await MemberClient.DeleteAsync(OrganizationId, member.UserId);
+        deleteResult.Switch(
+            _ =>
+            {
+                Snackbar.Add("Member removed", Severity.Success);
+                State.Invalidate(OrganizationId);
+                _virtualizedList?.Refresh();
+            },
+            error => Snackbar.Add(error.Message ?? "Failed to remove member", Severity.Error)
+        );
+    }
+}

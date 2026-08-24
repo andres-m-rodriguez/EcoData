@@ -1,0 +1,50 @@
+.ui-strip {
+    display: flex;
+    gap: 6px;
+    padding: 10px 14px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    background: var(--ui-surface);
+    border-bottom: 1px solid var(--ui-line);
+}
+
+.ui-strip::-webkit-scrollbar {
+    display: none;
+}
+
+.ui-strip-chip {
+    flex: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 12px;
+    border-radius: 999px;
+    border: 1px solid var(--ui-line);
+    background: var(--ui-surface);
+    color: var(--ui-fg-3);
+    font: 500 12px/1 var(--ui-font-sans);
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.ui-strip-chip.is-active {
+    background: var(--ui-primary);
+    border-color: var(--ui-primary);
+    color: var(--ui-surface);
+}
+
+.ui-strip-chip:focus-visible {
+    outline: 2px solid var(--ui-primary);
+    outline-offset: 2px;
+}
+
+.ui-strip-badge {
+    min-width: 18px;
+    height: 18px;
+    padding: 0 5px;
+    border-radius: 999px;
+    background: var(--ui-warn, #d97706);
+    color: #ffffff;
+    font: 700 10px/18px var(--ui-font-sans);
+    text-align: center;
+}

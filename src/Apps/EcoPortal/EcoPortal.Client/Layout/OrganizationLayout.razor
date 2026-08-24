@@ -1,0 +1,34 @@
+@inherits LayoutComponentBase
+@using EcoPortal.Client.Features.Organizations.Workspace
+
+@* The organization workspace's chrome: the shared shell with the rail as its
+   side panel. The router already parsed {Id:guid} and {Section}; they arrive
+   through the cascaded RouteData, never from the URL string. *@
+
+<EpShell Rail="RailContent">
+    @Body
+</EpShell>
+
+@code {
+    [CascadingParameter]
+    public RouteData? RouteData { get; set; }
+
+    private Guid? OrganizationId =>
+        RouteData?.RouteValues.TryGetValue("Id", out var value) == true
+            ? value switch
+            {
+                Guid id => id,
+                string text when Guid.TryParse(text, out var parsed) => parsed,
+                _ => null,
+            }
+            : null;
+
+    private string ActiveKey =>
+        OrganizationSections.Key(
+            OrganizationSections.FromSegment(RouteData?.RouteValues.GetValueOrDefault("Section") as string));
+
+    private RenderFragment? RailContent =>
+        OrganizationId is { } organizationId
+            ? @<OrganizationRail OrganizationId="organizationId" ActiveKey="@ActiveKey" />
+            : null;
+}

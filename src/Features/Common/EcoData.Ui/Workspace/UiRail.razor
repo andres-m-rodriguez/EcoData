@@ -1,0 +1,44 @@
+@namespace EcoData.Ui.Workspace
+
+@* Desktop section rail. The active row is a filled pill; counts sit quietly at
+   the end, badges shout. *@
+
+<nav class="ui-rail" aria-label="@Label">
+    @if (Label is not null)
+    {
+        <div class="ui-rail-label">@Label</div>
+    }
+    @foreach (var link in Links)
+    {
+        <a href="@link.Href" class="@(link.Key == ActiveKey ? "ui-rail-link is-active" : "ui-rail-link")">
+            <MudIcon Icon="@link.Icon" Size="Size.Small" />
+            <span class="ui-rail-text">@link.Label</span>
+            @if (link.Badge > 0)
+            {
+                <span class="ui-rail-badge">@link.Badge</span>
+            }
+            else if (link.Count is not null)
+            {
+                <span class="ui-rail-count">@link.Count</span>
+            }
+        </a>
+    }
+    @if (Footer is not null)
+    {
+        <div class="ui-rail-footer">@Footer</div>
+    }
+</nav>
+
+@code {
+    [Parameter, EditorRequired]
+    public required IReadOnlyList<UiRailLink> Links { get; set; }
+
+    [Parameter]
+    public string? ActiveKey { get; set; }
+
+    [Parameter]
+    public string? Label { get; set; }
+
+    [Parameter]
+    public RenderFragment? Footer { get; set; }
+}

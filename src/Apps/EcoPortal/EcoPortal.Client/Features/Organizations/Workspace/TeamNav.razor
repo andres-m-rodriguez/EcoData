@@ -1,0 +1,51 @@
+@namespace EcoPortal.Client.Features.Organizations.Workspace
+@inject OrganizationWorkspaceState State
+
+@* The four areas of Team. Desktop: a segmented control above the content.
+   Phone: a "← Team" link back to the drill list, so nothing nests under the
+   section strip. *@
+
+<MudHidden Breakpoint="Breakpoint.SmAndDown">
+    <div class="team-nav">
+        <UiSegments Segments="Segments" ActiveKey="@Active" Label="Team areas" />
+    </div>
+</MudHidden>
+<MudHidden Breakpoint="Breakpoint.MdAndUp">
+    <a class="team-back" href="@OrganizationSections.Path(Context.Organization.Id, OrganizationSection.Team)">
+        <MudIcon Icon="@Icons.Material.Filled.ArrowBack" Size="Size.Small" />
+        <span>Team</span>
+    </a>
+</MudHidden>
+
+@code {
+    public const string Members = "members";
+    public const string Requests = "requests";
+    public const string Blocked = "blocked";
+    public const string Roles = "roles";
+
+    [Parameter, EditorRequired]
+    public required OrganizationContext Context { get; set; }
+
+    [Parameter, EditorRequired]
+    public required string Active { get; set; }
+
+    private OrganizationCounts? _counts;
+
+    private IReadOnlyList<UiSegment> Segments =>
+    [
+        new(Members, "Members", Href(Context.Organization.Id, Members), _counts?.Members),
+        new(Requests, "Requests", Href(Context.Organization.Id, Requests), _counts?.PendingRequests, Hot: true),
+        new(Blocked, "Blocked", Href(Context.Organization.Id, Blocked)),
+        new(Roles, "Roles", Href(Context.Organization.Id, Roles)),
+    ];
+
+    protected override async Task OnParametersSetAsync()
+    {
+        _counts = await State.GetCountsAsync(Context);
+    }
+
+    public static string Href(Guid organizationId, string area) =>
+        area == Members
+            ? OrganizationSections.Path(organizationId, OrganizationSection.Team)
+            : $"{OrganizationSections.Path(organizationId, OrganizationSection.Team)}/{area}";
+}

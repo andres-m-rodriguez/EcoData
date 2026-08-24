@@ -1,0 +1,28 @@
+@namespace EcoData.Ui.Workspace
+
+@* A phone's answer to a segmented control: a list of areas you drill into,
+   each with a one-line description, so nothing nests under the section strip. *@
+
+<ul class="ui-drill">
+    @foreach (var item in Items)
+    {
+        <li>
+            <a href="@item.Href" class="ui-drill-row">
+                <span class="ui-drill-text">
+                    <span class="ui-drill-label">@item.Label</span>
+                    <span class="ui-drill-sub">@item.Description</span>
+                </span>
+                @if (item.Count is { } count)
+                {
+                    <span class="@(item.Hot && count > 0 ? "ui-drill-count is-hot" : "ui-drill-count")">@count</span>
+                }
+                <MudIcon Icon="@Icons.Material.Filled.ChevronRight" Size="Size.Small" Class="ui-drill-chevron" />
+            </a>
+        </li>
+    }
+</ul>
+
+@code {
+    [Parameter, EditorRequired]
+    public required IReadOnlyList<UiDrillItem> Items { get; set; }
+}

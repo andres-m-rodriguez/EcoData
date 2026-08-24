@@ -1,0 +1,43 @@
+.ui-workspace {
+    display: flex;
+    flex-direction: column;
+    min-height: 100%;
+}
+
+.ui-workspace-head {
+    border-bottom: 1px solid var(--ui-line);
+}
+
+.ui-workspace-body {
+    display: grid;
+    grid-template-columns: 232px minmax(0, 1fr);
+    flex: 1 1 auto;
+    min-height: 560px;
+}
+
+.ui-workspace-content {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.ui-workspace-page {
+    padding: 22px 24px 32px;
+    min-width: 0;
+}
+
+@media (max-width: 959.95px) {
+    .ui-workspace-body {
+        grid-template-columns: minmax(0, 1fr);
+        min-height: 0;
+    }
+
+    .ui-workspace-page {
+        padding: 16px 14px 24px;
+    }
+}
+
+/* The shell is showing the rail as its side panel; the page is one column. */
+.ui-workspace-body.is-rail-in-shell {
+    grid-template-columns: minmax(0, 1fr);
+}

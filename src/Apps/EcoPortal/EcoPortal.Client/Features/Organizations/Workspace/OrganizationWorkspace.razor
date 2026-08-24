@@ -1,0 +1,166 @@
+@namespace EcoPortal.Client.Features.Organizations.Workspace
+@using EcoData.Organization.Contracts
+@using EcoPortal.Client.Services
+@inherits StatefulComponent
+@inject OrganizationWorkspaceState State
+@inject INavbarManager Navbar
+@inject INavigationManager Navigation
+@inject AuthStateService AuthState
+
+@* The frame every organization page renders inside. Pages hand it the id they
+   already parsed from their route; it loads the organization, the caller's
+   grants and the rail counts once per session and cascades the context down.
+   A visitor on the overview gets the public profile instead of a workspace. *@
+
+<PageTitle>@(_context?.Organization.Name ?? "Organization") - EcoData</PageTitle>
+
+@if (LoadState.IsLoading && _context is null)
+{
+    <div class="ws-skeleton">
+        <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="96px" Class="mb-4" />
+        <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="420px" />
+    </div>
+}
+else if (_context is null)
+{
+    <div class="ws-missing">
+        <MudIcon Icon="@Icons.Material.Filled.DomainDisabled" Size="Size.Large" Color="Color.Error" />
+        <h2>Organization not found</h2>
+        <p>It may have been deleted, or the link is wrong.</p>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" Href="/organizations/discover">Browse organizations</MudButton>
+    </div>
+}
+else if (Section == OrganizationSection.Overview && !_context.IsMember)
+{
+    <CascadingValue Value="_context" IsFixed="true">
+        <OrganizationProfile Context="_context" />
+    </CascadingValue>
+}
+else
+{
+    var org = _context.Organization;
+    <CascadingValue Value="_context" IsFixed="true">
+        @* The shell shows the rail as its side panel on desktop (OrganizationRail);
+           the page keeps the phone strip. *@
+        <UiWorkspace Links="OrganizationSections.Links(_context, _counts)" ActiveKey="@OrganizationSections.Key(Section)" RailLabel="Workspace" RailInShell="true">
+            <Header>
+                <div class="ws-head">
+                    <div class="ws-crumb">
+                        <a href="/organizations/my">Organizations</a><span>›</span><span>@org.Name</span>
+                    </div>
+                    @if (!string.IsNullOrWhiteSpace(org.ProfilePictureUrl))
+                    {
+                        <img class="ws-avatar ws-avatar--photo" src="@org.ProfilePictureUrl" alt="" />
+                    }
+                    else
+                    {
+                        <div class="ws-avatar">@Initials(org.Name)</div>
+                    }
+                    <div class="ws-identity">
+                        <h1 class="ws-name">@org.Name</h1>
+                        <div class="ws-sub">
+                            @if (!string.IsNullOrWhiteSpace(org.Tagline))
+                            {
+                                <span>@org.Tagline</span>
+                            }
+                            <span class="ws-chip ws-chip--role">You · @(_context.RoleName ?? "Global admin")</span>
+                            @if (org.Type is { } type)
+                            {
+                                <span class="ws-chip">@type</span>
+                            }
+                            @if (!string.IsNullOrWhiteSpace(org.Location))
+                            {
+                                <span class="ws-chip">@org.Location</span>
+                            }
+                        </div>
+                    </div>
+                    <div class="ws-actions">
+                        @if (!string.IsNullOrWhiteSpace(org.WebsiteUrl))
+                        {
+                            <MudButton Variant="Variant.Outlined" Size="Size.Small" Href="@org.WebsiteUrl" Target="_blank"
+                                       StartIcon="@Icons.Material.Outlined.Link">@Host(org.WebsiteUrl)</MudButton>
+                        }
+                    </div>
+                </div>
+            </Header>
+            <RailFooter>
+                <a href="/organizations/my" class="ws-leave">
+                    <MudIcon Icon="@Icons.Material.Filled.ArrowBack" Size="Size.Small" />
+                    <span>All organizations</span>
+                </a>
+            </RailFooter>
+            <ChildContent>
+                @ChildContent?.Invoke(_context)
+            </ChildContent>
+        </UiWorkspace>
+    </CascadingValue>
+}
+
+@code {
+    [Parameter, EditorRequired]
+    public Guid OrganizationId { get; set; }
+
+    [Parameter]
+    public OrganizationSection Section { get; set; } = OrganizationSection.Overview;
+
+    // The page's content, handed the loaded context so it can ask Can(...)
+    // without re-fetching anything.
+    [Parameter]
+    public RenderFragment<OrganizationContext>? ChildContent { get; set; }
+
+    private OrganizationContext? _context;
+    private OrganizationCounts? _counts;
+    private Guid _loadedFor;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (_loadedFor == OrganizationId)
+        {
+            return;
+        }
+
+        _loadedFor = OrganizationId;
+        _context = null;
+        _counts = null;
+        await LoadState.Execute();
+    }
+
+    [Command]
+    private async Task Load(CancellationToken ct)
+    {
+        if (!AuthState.IsInitialized)
+        {
+            await AuthState.InitializeAsync();
+        }
+
+        _context = await State.GetAsync(OrganizationId, ct);
+        if (_context is null)
+        {
+            return;
+        }
+
+        // The back arrow on a phone leaves for the list, not browser history:
+        // a deep link into an organization has nothing to go back to.
+        Navbar.SetTitle(_context.Organization.Name);
+        Navigation.SetParentPath("/organizations/my");
+
+        if (_context.IsMember)
+        {
+            _counts = await State.GetCountsAsync(_context, ct);
+        }
+    }
+
+    private static string Initials(string name)
+    {
+        var parts = name.Split([' ', '—', '-'], StringSplitOptions.RemoveEmptyEntries);
+        return parts.Length switch
+        {
+            0 => "?",
+            1 => parts[0][..Math.Min(2, parts[0].Length)].ToUpperInvariant(),
+            _ => string.Concat(parts[0][0], parts[1][0]).ToUpperInvariant(),
+        };
+    }
+
+    private static string Host(string url) =>
+        Uri.TryCreate(url, UriKind.Absolute, out var uri) ? uri.Host : url;
+}

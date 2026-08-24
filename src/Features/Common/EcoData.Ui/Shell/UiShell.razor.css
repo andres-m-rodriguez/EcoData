@@ -128,3 +128,47 @@
         transition: none;
     }
 }
+
+/* --- Side panel — its own panel, parked under the app bar while the page
+   scrolls past it. Collapsed it keeps its subtree and gives up its column. --- */
+.ui-rail-panel {
+    flex: 0 0 var(--ui-rail-width);
+    width: var(--ui-rail-width);
+    position: sticky;
+    top: calc(var(--ui-shell-topbar) + var(--ui-shell-gutter) * 2);
+    max-height: calc(100vh - var(--ui-shell-topbar) - var(--ui-shell-gutter) * 3);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    margin-right: var(--ui-shell-gutter);
+    background: var(--ui-surface);
+    border: 1px solid var(--ui-line);
+    border-radius: var(--ui-shell-radius);
+    box-shadow: var(--ui-shell-shadow);
+    transition: flex-basis var(--ui-t-slow) var(--ui-ease),
+                width var(--ui-t-slow) var(--ui-ease),
+                margin-right var(--ui-t-slow) var(--ui-ease),
+                opacity var(--ui-t-base) var(--ui-ease);
+}
+
+.ui-rail-panel.is-collapsed {
+    flex-basis: 0;
+    width: 0;
+    margin-right: 0;
+    opacity: 0;
+    border-width: 0;
+    box-shadow: none;
+    overflow: hidden;
+    pointer-events: none;
+}
+
+/* On the bleed ground the body's padding is zeroed so the page can run to the
+   edges; give the panel its gutter back on that page only. */
+.ui-shell.is-bleed .ui-rail-panel {
+    margin: var(--ui-shell-gutter) 0 var(--ui-shell-gutter) var(--ui-shell-gutter);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .ui-rail-panel {
+        transition: none;
+    }
+}
