@@ -9,6 +9,16 @@ await auth.HasAsync(WildlifePermissions.VerifyOccurrence, occurrence.Organizatio
 await auth.HasAsync(OrganizationPermissions.Create, ct);
 ```
 
+UI that renders many checks synchronously loads a snapshot once instead of asking
+one question at a time — every grant the caller holds in the organization, plus
+`IsGlobalAdmin`:
+
+```csharp
+var grants = await auth.GrantsAsync(organizationId, ct);
+```
+
+A snapshot shapes UI only; the endpoint's `HasAsync` remains the enforcement.
+
 ## 1. Declare the keys — `<Feature>.Contracts`
 
 Raw strings, zero dependencies — this is what the wire and the membership storage speak.

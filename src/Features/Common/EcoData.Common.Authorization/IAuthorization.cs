@@ -12,4 +12,9 @@ public interface IAuthorization
         IGlobalPermission permission,
         CancellationToken cancellationToken = default
     );
+
+    Task<OrganizationGrants> GrantsAsync(
+        Guid organizationId,
+        CancellationToken cancellationToken = default
+    );
 }

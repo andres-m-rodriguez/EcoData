@@ -58,7 +58,7 @@ public static class OrganizationEndpoints
                 }
             )
             .WithName("GetMyOrganizations")
-            .RequireAuthorization();
+            .AllowAnonymous();
 
         group
             .MapGet(

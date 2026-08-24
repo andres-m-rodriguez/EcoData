@@ -1,8 +1,10 @@
+using EcoData.Common.Authorization;
 using EcoData.Organization.Application.Client;
 using EcoData.Organization.Contracts;
 using EcoData.Organization.Contracts.Parameters;
 using EcoData.Sensors.Application.Client;
 using EcoData.Sensors.Contracts.Parameters;
+using EcoPortal.Client.Services;
 
 namespace EcoPortal.Client.Features.Organizations.Workspace;
 
@@ -11,10 +13,11 @@ namespace EcoPortal.Client.Features.Organizations.Workspace;
 // between sections costs nothing; an auth change or a save drops the cache.
 public sealed class OrganizationWorkspaceState(
     IOrganizationHttpClient organizationClient,
-    IPermissionHttpClient permissionClient,
+    IAuthorization authorization,
     IOrganizationMemberHttpClient memberClient,
     IOrganizationAccessRequestHttpClient accessRequestClient,
-    ISensorHttpClient sensorClient
+    ISensorHttpClient sensorClient,
+    AuthStateService authState
 )
 {
     private const int PendingRequestsCap = 20;
@@ -67,34 +70,43 @@ public sealed class OrganizationWorkspaceState(
         _counts.Clear();
     }
 
-    // The shared fetches never carry a caller's token: a section cancelling its
-    // own load must not fault the task cached for the next one.
+    // The shared fetch never carries a caller's token: a section cancelling its
+    // own load must not fault the task cached for the next one. A faulted load is
+    // dropped from the cache so the next visit retries instead of awaiting the
+    // same dead task.
     private async Task<OrganizationContext?> LoadContextAsync(Guid organizationId)
     {
-        var organization = await organizationClient.GetByIdAsync(organizationId);
-        if (!organization.TryPickT0(out var dto, out _))
+        try
+        {
+            var organization = await organizationClient.GetByIdAsync(organizationId);
+            if (!organization.TryPickT0(out var dto, out _))
+            {
+                _contexts.Remove(organizationId);
+                return null;
+            }
+
+            var grants = await authorization.GrantsAsync(organizationId);
+
+            string? roleName = null;
+            if (authState.IsAuthenticated)
+            {
+                await foreach (var mine in organizationClient.GetMyOrganizationsAsync())
+                {
+                    if (mine.Id == organizationId)
+                    {
+                        roleName = mine.RoleName;
+                        break;
+                    }
+                }
+            }
+
+            return new OrganizationContext(dto, grants.Permissions, grants.IsGlobalAdmin, roleName);
+        }
+        catch
         {
             _contexts.Remove(organizationId);
-            return null;
+            throw;
         }
-
-        var permissions = await permissionClient.GetMyPermissionsAsync(organizationId);
-        var grants = permissions.Match(
-            p => (Permissions: (IReadOnlySet<string>)p.Permissions.ToHashSet(StringComparer.Ordinal), p.IsGlobalAdmin),
-            _ => (Permissions: (IReadOnlySet<string>)new HashSet<string>(), IsGlobalAdmin: false)
-        );
-
-        string? roleName = null;
-        await foreach (var mine in organizationClient.GetMyOrganizationsAsync())
-        {
-            if (mine.Id == organizationId)
-            {
-                roleName = mine.RoleName;
-                break;
-            }
-        }
-
-        return new OrganizationContext(dto, grants.Permissions, grants.IsGlobalAdmin, roleName);
     }
 
     private async Task<OrganizationCounts> LoadCountsAsync(OrganizationContext context)

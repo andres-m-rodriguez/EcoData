@@ -35,4 +35,31 @@ public sealed class OrganizationPermissionSource(
             cancellationToken
         );
     }
+
+    public async Task<OrganizationGrants> GrantsAsync(
+        Guid organizationId,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var user = httpContextAccessor.HttpContext?.User;
+
+        if (user is null)
+            return OrganizationGrants.None;
+
+        var token = new RequestClaimToken(user);
+
+        if (!token.IsAuthenticated)
+            return OrganizationGrants.None;
+
+        var mine = await permissions.GetPermissionsAsync(
+            token.UserId.Value,
+            organizationId,
+            cancellationToken
+        );
+
+        return new OrganizationGrants(
+            mine.Permissions.ToHashSet(StringComparer.Ordinal),
+            mine.IsGlobalAdmin
+        );
+    }
 }
