@@ -186,6 +186,7 @@
                         <MudText Typo="Typo.subtitle2" Class="font-weight-bold">Location</MudText>
                     </MudStack>
                     <MudStack Spacing="1">
+                        <SensorLocationMap Latitude="Sensor.Latitude" Longitude="Sensor.Longitude" />
                         @if (LoadLocationState.IsLoading)
                         {
                             <MudStack AlignItems="AlignItems.Center">
