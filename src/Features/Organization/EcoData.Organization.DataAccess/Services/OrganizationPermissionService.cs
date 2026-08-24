@@ -1,5 +1,6 @@
 using EcoData.Identity.Application.Server.Services;
 using EcoData.Organization.Application.Server.Services;
+using EcoData.Organization.Contracts.Dtos;
 using EcoData.Organization.DataAccess.Interfaces;
 
 namespace EcoData.Organization.DataAccess.Services;
@@ -34,5 +35,30 @@ public sealed class OrganizationPermissionService(
         }
 
         return membership.Permissions.Contains(permission);
+    }
+
+    public async Task<UserPermissionsDto> GetPermissionsAsync(
+        Guid userId,
+        Guid organizationId,
+        CancellationToken cancellationToken = default
+    )
+    {
+        // GlobalAdmin has all permissions
+        if (await userLookupService.IsGlobalAdminAsync(userId, cancellationToken))
+        {
+            return new UserPermissionsDto(organizationId, [], IsGlobalAdmin: true);
+        }
+
+        var membership = await membershipRepository.GetAsync(
+            userId,
+            organizationId,
+            cancellationToken
+        );
+
+        return new UserPermissionsDto(
+            organizationId,
+            membership?.Permissions ?? [],
+            IsGlobalAdmin: false
+        );
     }
 }

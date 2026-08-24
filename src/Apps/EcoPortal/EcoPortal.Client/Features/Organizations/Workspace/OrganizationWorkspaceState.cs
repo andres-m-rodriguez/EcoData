@@ -1,3 +1,4 @@
+using EcoData.Common.Authorization;
 using EcoData.Organization.Application.Client;
 using EcoData.Organization.Contracts;
 using EcoData.Organization.Contracts.Parameters;
@@ -12,7 +13,7 @@ namespace EcoPortal.Client.Features.Organizations.Workspace;
 // between sections costs nothing; an auth change or a save drops the cache.
 public sealed class OrganizationWorkspaceState(
     IOrganizationHttpClient organizationClient,
-    IPermissionHttpClient permissionClient,
+    IAuthorization authorization,
     IOrganizationMemberHttpClient memberClient,
     IOrganizationAccessRequestHttpClient accessRequestClient,
     ISensorHttpClient sensorClient,
@@ -36,21 +37,6 @@ public sealed class OrganizationWorkspaceState(
         _contexts[organizationId] = task;
 
         return task.WaitAsync(cancellationToken);
-    }
-
-    // A faulted load must not stick: the next visit retries instead of awaiting
-    // the same dead task until something calls Invalidate.
-    private async Task<OrganizationContext?> LoadContextAsync(Guid organizationId)
-    {
-        try
-        {
-            return await LoadContextCoreAsync(organizationId);
-        }
-        catch
-        {
-            _contexts.Remove(organizationId);
-            throw;
-        }
     }
 
     public Task<OrganizationCounts> GetCountsAsync(
@@ -84,37 +70,43 @@ public sealed class OrganizationWorkspaceState(
         _counts.Clear();
     }
 
-    // The shared fetches never carry a caller's token: a section cancelling its
-    // own load must not fault the task cached for the next one.
-    private async Task<OrganizationContext?> LoadContextCoreAsync(Guid organizationId)
+    // The shared fetch never carries a caller's token: a section cancelling its
+    // own load must not fault the task cached for the next one. A faulted load is
+    // dropped from the cache so the next visit retries instead of awaiting the
+    // same dead task.
+    private async Task<OrganizationContext?> LoadContextAsync(Guid organizationId)
     {
-        var organization = await organizationClient.GetByIdAsync(organizationId);
-        if (!organization.TryPickT0(out var dto, out _))
+        try
         {
-            _contexts.Remove(organizationId);
-            return null;
-        }
-
-        var permissions = await permissionClient.GetMyPermissionsAsync(organizationId);
-        var grants = permissions.Match(
-            p => (Permissions: (IReadOnlySet<string>)p.Permissions.ToHashSet(StringComparer.Ordinal), p.IsGlobalAdmin),
-            _ => (Permissions: (IReadOnlySet<string>)new HashSet<string>(), IsGlobalAdmin: false)
-        );
-
-        string? roleName = null;
-        if (authState.IsAuthenticated)
-        {
-            await foreach (var mine in organizationClient.GetMyOrganizationsAsync())
+            var organization = await organizationClient.GetByIdAsync(organizationId);
+            if (!organization.TryPickT0(out var dto, out _))
             {
-                if (mine.Id == organizationId)
+                _contexts.Remove(organizationId);
+                return null;
+            }
+
+            var grants = await authorization.GrantsAsync(organizationId);
+
+            string? roleName = null;
+            if (authState.IsAuthenticated)
+            {
+                await foreach (var mine in organizationClient.GetMyOrganizationsAsync())
                 {
-                    roleName = mine.RoleName;
-                    break;
+                    if (mine.Id == organizationId)
+                    {
+                        roleName = mine.RoleName;
+                        break;
+                    }
                 }
             }
-        }
 
-        return new OrganizationContext(dto, grants.Permissions, grants.IsGlobalAdmin, roleName);
+            return new OrganizationContext(dto, grants.Permissions, grants.IsGlobalAdmin, roleName);
+        }
+        catch
+        {
+            _contexts.Remove(organizationId);
+            throw;
+        }
     }
 
     private async Task<OrganizationCounts> LoadCountsAsync(OrganizationContext context)

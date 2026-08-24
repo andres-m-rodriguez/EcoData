@@ -17,25 +17,37 @@ public sealed class OrganizationPermissionHttpSource(IPermissionHttpClient permi
         // The fetch is shared by every caller asking about this organization, so it never
         // carries one caller's token: a component cancelling its own check (Tempest's
         // latest-wins re-execute) must not fault the task cached for everyone else.
-        var permissions = await GetPermissionsAsync(organizationId).WaitAsync(cancellationToken);
+        if (!_cache.TryGetValue(organizationId, out var task))
+        {
+            task = FetchPermissionsAsync(organizationId);
+            _cache[organizationId] = task;
+        }
+
+        var permissions = await task.WaitAsync(cancellationToken);
 
         if (permissions.IsGlobalAdmin)
             return true;
 
-
         return permissions.Permissions.Contains(permission.Key);
     }
 
-    private Task<UserPermissionsDto> GetPermissionsAsync(Guid organizationId)
+    public async Task<OrganizationGrants> GrantsAsync(
+        Guid organizationId,
+        CancellationToken cancellationToken = default
+    )
     {
-        if (_cache.TryGetValue(organizationId, out var cachedTask))
-            return cachedTask;
+        if (!_cache.TryGetValue(organizationId, out var task))
+        {
+            task = FetchPermissionsAsync(organizationId);
+            _cache[organizationId] = task;
+        }
 
+        var permissions = await task.WaitAsync(cancellationToken);
 
-        var task = FetchPermissionsAsync(organizationId);
-        _cache[organizationId] = task;
-
-        return task;
+        return new OrganizationGrants(
+            permissions.Permissions.ToHashSet(StringComparer.Ordinal),
+            permissions.IsGlobalAdmin
+        );
     }
 
     private async Task<UserPermissionsDto> FetchPermissionsAsync(Guid organizationId)

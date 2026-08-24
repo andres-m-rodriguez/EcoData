@@ -31,6 +31,17 @@ public sealed class Authorization(
         return globalSource.HasAsync(permission, cancellationToken);
     }
 
+    public Task<OrganizationGrants> GrantsAsync(
+        Guid organizationId,
+        CancellationToken cancellationToken = default
+    )
+    {
+        if (organizationSource is null)
+            throw MissingSource(nameof(IOrganizationPermissionSource), "organization grants");
+
+        return organizationSource.GrantsAsync(organizationId, cancellationToken);
+    }
+
     private static InvalidOperationException MissingSource(string source, string key) =>
         new(
             $"No {source} is registered, so '{key}' cannot be answered. "

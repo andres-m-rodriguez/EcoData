@@ -9,4 +9,9 @@ public interface IOrganizationPermissionSource
         Guid organizationId,
         CancellationToken cancellationToken = default
     );
+
+    Task<OrganizationGrants> GrantsAsync(
+        Guid organizationId,
+        CancellationToken cancellationToken = default
+    );
 }
