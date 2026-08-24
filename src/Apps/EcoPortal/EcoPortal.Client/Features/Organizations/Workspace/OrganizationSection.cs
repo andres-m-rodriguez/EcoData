@@ -9,12 +9,11 @@ public enum OrganizationSection
 {
     Overview,
     Sensors,
-    Map,
     Team,
     Settings,
 }
 
-// The five places inside an organization, in rail order. A section that needs
+// The four places inside an organization, in rail order. A section that needs
 // a permission the caller lacks is left out of the nav rather than shown and
 // refused; the page behind it still carries its own [OrganizationPermission].
 public static class OrganizationSections
@@ -23,7 +22,6 @@ public static class OrganizationSections
     {
         OrganizationSection.Overview => $"/organizations/{organizationId}",
         OrganizationSection.Sensors => $"/organizations/{organizationId}/sensors",
-        OrganizationSection.Map => $"/organizations/{organizationId}/map",
         OrganizationSection.Team => $"/organizations/{organizationId}/team",
         OrganizationSection.Settings => $"/organizations/{organizationId}/settings",
         _ => $"/organizations/{organizationId}",
@@ -35,7 +33,6 @@ public static class OrganizationSections
     public static OrganizationSection FromSegment(string? segment) => segment?.ToLowerInvariant() switch
     {
         "sensors" => OrganizationSection.Sensors,
-        "map" => OrganizationSection.Map,
         "team" or "members" or "requests" or "blocked-users" or "roles" => OrganizationSection.Team,
         "settings" or "edit" => OrganizationSection.Settings,
         _ => OrganizationSection.Overview,
@@ -52,7 +49,6 @@ public static class OrganizationSections
         if (context.Can(SensorPermissions.Sensor.Read))
         {
             links.Add(new(Key(OrganizationSection.Sensors), "Sensors", Path(id, OrganizationSection.Sensors), Icons.Material.Outlined.Sensors, Count: counts?.Sensors?.ToString()));
-            links.Add(new(Key(OrganizationSection.Map), "Map", Path(id, OrganizationSection.Map), Icons.Material.Outlined.Map));
         }
 
         if (context.Can(OrganizationPermissions.Organization.ManageMembers))

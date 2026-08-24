@@ -80,11 +80,6 @@ else
                             <MudButton Variant="Variant.Outlined" Size="Size.Small" Href="@org.WebsiteUrl" Target="_blank"
                                        StartIcon="@Icons.Material.Outlined.Link">@Host(org.WebsiteUrl)</MudButton>
                         }
-                        @if (_context.Can(Permissions.Organization.Update) && Section != OrganizationSection.Settings)
-                        {
-                            <MudButton Variant="Variant.Outlined" Size="Size.Small" StartIcon="@Icons.Material.Outlined.Edit"
-                                       Href="@OrganizationSections.Path(org.Id, OrganizationSection.Settings)">Edit</MudButton>
-                        }
                     </div>
                 </div>
             </Header>

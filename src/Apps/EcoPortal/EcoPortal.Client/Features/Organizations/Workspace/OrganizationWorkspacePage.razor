@@ -14,11 +14,6 @@
 @inject AuthStateService AuthState
 @inject INavigationManager Navigation
 
-@* The one routable page of the workspace. Every section is the same component
-   with different route values, so moving between sections only swaps the
-   content under the frame — the header, rail and chip strip stay put. The
-   loaded context carries the caller's grants, so sections gate on it instead
-   of route policies. *@
 
 <OrganizationWorkspace OrganizationId="Id" Section="CurrentSection">
     @if (RequiredPermission is { } permission && !context.Can(permission))
@@ -37,9 +32,6 @@
                 break;
             case ("sensors", "create"):
                 <SensorCreateSection Context="context" />
-                break;
-            case ("map", _):
-                <MapSection Context="context" />
                 break;
             case ("team", null) or ("members", null):
                 <MembersSection Context="context" IsRoot="true" />
@@ -86,7 +78,7 @@
     {
         (null, _) => null,
         ("sensors", "create") => SensorPermissions.Sensor.Create,
-        ("sensors", _) or ("map", _) => SensorPermissions.Sensor.Read,
+        ("sensors", _) => SensorPermissions.Sensor.Read,
         ("team", _) or ("members", _) or ("requests", _) or ("blocked-users", _) or ("roles", _) =>
             OrganizationPermissions.Organization.ManageMembers,
         ("settings", _) or ("edit", _) => OrganizationPermissions.Organization.Update,
@@ -97,7 +89,6 @@
     {
         (null, _) => true,
         ("sensors", null or "create") => true,
-        ("map", null) => true,
         ("team", null or "members" or "requests" or "blocked" or "roles") => true,
         ("members" or "requests" or "blocked-users" or "roles" or "edit", null) => true,
         ("settings", _) => true,
