@@ -21,9 +21,8 @@
 </EpShell>
 
 @code {
-    /// <summary>The signed-in user changed (login, logout, profile update).
-    /// Published by <see cref="AuthStateService"/>; anyone showing auth-derived
-    /// chrome reacts through this record.</summary>
+    // The signed-in user changed (login, logout, profile update). Published by
+    // AuthStateService; anyone showing auth-derived chrome reacts through this record.
     public sealed record AuthChanged;
 
     private string _pageTransitionClass = "";

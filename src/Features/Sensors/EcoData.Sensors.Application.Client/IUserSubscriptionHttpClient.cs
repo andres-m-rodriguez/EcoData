@@ -10,9 +10,7 @@ public interface IUserSubscriptionHttpClient
         CancellationToken cancellationToken = default
     );
 
-    /// <summary>
-    /// A 404 RequestFailed means the user is not subscribed to the sensor.
-    /// </summary>
+    // A 404 RequestFailed means the user is not subscribed to the sensor.
     Task<OneOf<UserSensorSubscriptionDto, RequestFailed>> GetSubscriptionAsync(
         Guid sensorId,
         CancellationToken cancellationToken = default

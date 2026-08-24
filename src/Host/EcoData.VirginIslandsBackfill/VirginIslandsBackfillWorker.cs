@@ -10,26 +10,6 @@ using NetTopologySuite.IO;
 
 namespace EcoData.VirginIslandsBackfill;
 
-/// <summary>
-/// One-shot job that adds the U.S. Virgin Islands as a second jurisdiction and attaches the
-/// USVI occurrences of species that already exist in the catalogue.
-/// </summary>
-/// <remarks>
-/// The catalogue is the FWS Caribbean Ecological Services Field Office listed-species list,
-/// whose jurisdiction is Puerto Rico <em>and</em> the U.S. Virgin Islands. Several records —
-/// Ameiva polops, Agave eggersiana, Solanum conocarpum — are St. Croix or St. John taxa that
-/// do not occur in Puerto Rico at all, so they had nowhere to be attributed and reported zero
-/// municipios.
-///
-/// This is a separate job rather than a step in the seeder because the seeder's location
-/// seeding returns early once Puerto Rico exists, so an existing database would never reach
-/// it. It also runs no migrations — the seeder owns those.
-///
-/// Safe to run repeatedly, and self-correcting rather than merely idempotent: both steps
-/// compare what is stored against what the data files ship and write only the difference. A
-/// re-run with unchanged data touches nothing; a re-run after the data is corrected brings
-/// the database up to date instead of skipping it.
-/// </remarks>
 public sealed class VirginIslandsBackfillWorker(
     IServiceProvider serviceProvider,
     IHostApplicationLifetime lifetime,
@@ -40,12 +20,8 @@ public sealed class VirginIslandsBackfillWorker(
     private const string StateCode = "VI";
     private const string StateName = "U.S. Virgin Islands";
 
-    /// <summary>
-    /// Stamped onto every occurrence this job creates. The USVI records are GBIF point
-    /// records, whereas the Puerto Rico data is generalized occurrence polygons from the
-    /// Natural Heritage element-occurrence layer. Keeping the provenance on the row is what
-    /// makes the two separable, and is what the per-species skip check reads.
-    /// </summary>
+    // Stamped onto every occurrence this job creates; the per-species skip check
+    // reads it to tell these GBIF point records apart from the Puerto Rico data.
     private const string DescriptionPrefix = "GBIF occurrence ";
 
     private static readonly JsonSerializerOptions JsonOptions = new()
@@ -175,11 +151,6 @@ public sealed class VirginIslandsBackfillWorker(
         logger.LogInformation("Seeded {Count} U.S. Virgin Islands islands.", islands.Count);
     }
 
-    /// <summary>
-    /// Brings already-seeded islands up to the geometry currently shipped in the data file.
-    /// Only writes rows whose boundary actually differs, so a re-run with unchanged data is
-    /// a no-op rather than a pointless update.
-    /// </summary>
     private async Task RefreshIslandBoundariesAsync(
         LocationsDbContext context,
         string geoJsonContent,
@@ -312,7 +283,6 @@ public sealed class VirginIslandsBackfillWorker(
                 .Locations.Select(l => $"{DescriptionPrefix}{l.GbifId}")
                 .ToHashSet(StringComparer.Ordinal);
 
-            // Already carrying exactly this set: nothing to do.
             if (existing.Count > 0 && existing.Select(l => l.Description!).ToHashSet(StringComparer.Ordinal).SetEquals(expected))
                 continue;
 

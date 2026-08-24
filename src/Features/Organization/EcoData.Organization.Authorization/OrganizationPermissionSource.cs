@@ -5,8 +5,6 @@ using Microsoft.AspNetCore.Http;
 
 namespace EcoData.Organization.Authorization;
 
-// The server half of organization authorization — answers from membership storage for the
-// caller of the current request. GlobalAdmin short-circuits inside the permission service.
 public sealed class OrganizationPermissionSource(
     IHttpContextAccessor httpContextAccessor,
     IOrganizationPermissionService permissions

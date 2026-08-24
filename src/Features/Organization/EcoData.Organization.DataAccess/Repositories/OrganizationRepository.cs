@@ -202,7 +202,6 @@ public sealed class OrganizationRepository(IDbContextFactory<OrganizationDbConte
 
         context.Organizations.Add(entity);
 
-        // Seed default roles for the organization
         var defaultRoles = new[]
         {
             new OrganizationRole

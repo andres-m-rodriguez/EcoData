@@ -6,25 +6,16 @@ using ModelContextProtocol.Server;
 
 namespace EcoData.Wildlife.Mcp.Tools;
 
-/// <summary>
-/// The species half of the wildlife connector.
-///
-/// <para>Tools take their repository through the method signature rather than a
-/// constructor: the server resolves each argument from the request scope, which
-/// is the same scope the HTTP endpoints get, so a tool call reads the database
-/// exactly as a page request would.</para>
-/// </summary>
 // Sealed rather than static: WithTools<T> takes the type as a generic argument,
 // and a static type can't be one. The tools themselves are all static methods,
 // so nothing is ever constructed.
 [McpServerToolType]
 public sealed class SpeciesTools
 {
-    /// <summary>Bounds on how much catalogue one call can pull back.</summary>
     private const int MaxResults = 50;
     private const int DefaultResults = 20;
 
-    /// <summary>The covered islands are small; a radius past this stops meaning "near".</summary>
+    // The covered islands are small; a radius past this stops meaning "near".
     private const double MaxRadiusMeters = 50_000;
 
     [McpServerTool(Name = "search_species")]
@@ -94,8 +85,6 @@ public sealed class SpeciesTools
         var species = await repository.GetByIdAsync(id, cancellationToken);
         if (species is null)
         {
-            // Null reads as "no such species" on the wire; throwing would report
-            // a tool failure for what is an ordinary answer.
             return null;
         }
 
@@ -258,17 +247,13 @@ public sealed class SpeciesTools
             species.LastObservedAtUtc
         );
 
-    /// <summary>
-    /// A status the model spelled itself, so an unparseable one is treated as no
-    /// filter rather than an error — a search that quietly ignores a bad code
-    /// still answers, and the codes are named in the tool description.
-    /// </summary>
+    // A status the model spelled itself, so an unparseable one is treated as no
+    // filter rather than an error.
     private static IucnStatus[]? ParseIucnStatus(string? status) =>
         Enum.TryParse<IucnStatus>(status, ignoreCase: true, out var parsed)
             ? [parsed]
             : null;
 
-    /// <inheritdoc cref="ParseIucnStatus" />
     private static EndemicStatus[]? ParseEndemicStatus(string? status) =>
         Enum.TryParse<EndemicStatus>(status, ignoreCase: true, out var parsed)
             ? [parsed]

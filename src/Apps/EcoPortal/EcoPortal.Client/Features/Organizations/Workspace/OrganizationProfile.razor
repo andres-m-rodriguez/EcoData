@@ -8,9 +8,6 @@
 @inject INavigationManager Navigation
 @inject IDialogService DialogService
 
-@* What a visitor sees: who the organization is and how to join it. Members
-   get the workspace instead. *@
-
 <section class="profile-hero">
     @if (!string.IsNullOrWhiteSpace(Context.Organization.ProfilePictureUrl))
     {

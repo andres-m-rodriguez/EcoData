@@ -132,7 +132,6 @@ public sealed class SpeciesRepository(
             }
         }
 
-        // One row per species: the occurrence closest to the search point.
         return results
             .GroupBy(r => r.Id)
             .Select(g => g.OrderBy(r => r.DistanceMeters).First())
@@ -235,7 +234,6 @@ public sealed class SpeciesRepository(
             }
         }
 
-        // One row per species: the occurrence closest to the polygon centroid.
         return results
             .GroupBy(r => r.Id)
             .Select(g => g.OrderBy(r => r.DistanceMeters).First())
@@ -731,8 +729,7 @@ public sealed class SpeciesRepository(
     {
         await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
 
-        // Prefer species with a photo, then randomise. IsFeatured stays as a
-        // curatorial pin mechanism (empty flag = random, pinned rows surface first).
+        // IsFeatured is a curatorial pin: pinned rows surface first, an empty flag falls back to random.
         return await context
             .Species.OrderByDescending(s => s.IsFeatured)
             .ThenByDescending(s => s.ProfileImageData != null)

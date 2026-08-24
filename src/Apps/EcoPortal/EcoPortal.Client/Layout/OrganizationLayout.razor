@@ -1,10 +1,6 @@
 @inherits LayoutComponentBase
 @using EcoPortal.Client.Features.Organizations.Workspace
 
-@* The organization workspace's chrome: the shared shell with the rail as its
-   side panel. The router already parsed {Id:guid} and {Section}; they arrive
-   through the cascaded RouteData, never from the URL string. *@
-
 <EpShell Rail="RailContent">
     @Body
 </EpShell>

@@ -106,7 +106,7 @@ public static class UserSubscriptionEndpoints
                         );
                     }
 
-                    // Check if user has access to the organization (using read permission to verify membership)
+                    // Read permission doubles as the org-membership check for subscribing.
                     var hasAccess = await permissionService.HasPermissionAsync(
                         token.UserId.Value,
                         sensor.OrganizationId,
@@ -119,7 +119,6 @@ public static class UserSubscriptionEndpoints
                         return TypedResults.Forbid();
                     }
 
-                    // Check if sensor has health monitoring enabled
                     var healthConfig = await healthRepository.GetConfigByIdAsync(sensorId, ct);
                     if (healthConfig is null || !healthConfig.IsMonitoringEnabled)
                     {
@@ -129,7 +128,6 @@ public static class UserSubscriptionEndpoints
                         );
                     }
 
-                    // Check if already subscribed
                     var existing = await subscriptionRepository.ExistsAsync(
                         token.UserId.Value,
                         sensorId,

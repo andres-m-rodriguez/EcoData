@@ -4,9 +4,6 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace EcoData.Wildlife.Database.Models;
 
-/// <summary>
-/// Links NRCS practices to FWS actions for specific species, with justification.
-/// </summary>
 public sealed class FwsLink
 {
     public required Guid Id { get; set; }

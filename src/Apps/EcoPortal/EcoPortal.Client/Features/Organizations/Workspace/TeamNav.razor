@@ -1,10 +1,6 @@
 @namespace EcoPortal.Client.Features.Organizations.Workspace
 @inject OrganizationWorkspaceState State
 
-@* The four areas of Team. Desktop: a segmented control above the content.
-   Phone: a "← Team" link back to the drill list, so nothing nests under the
-   section strip. *@
-
 <MudHidden Breakpoint="Breakpoint.SmAndDown">
     <div class="team-nav">
         <UiSegments Segments="Segments" ActiveKey="@Active" Label="Team areas" />

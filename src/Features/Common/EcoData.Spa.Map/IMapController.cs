@@ -7,8 +7,6 @@ namespace EcoData.Spa.Map;
 /// <typeparam name="TMarker">The type of marker data.</typeparam>
 public interface IMapController<TMarker>
 {
-    // ===== Properties =====
-
     /// <summary>
     /// Current markers on the map.
     /// </summary>
@@ -23,8 +21,6 @@ public interface IMapController<TMarker>
     /// Current zoom level.
     /// </summary>
     int Zoom { get; }
-
-    // ===== Marker Methods =====
 
     /// <summary>
     /// Set all markers.
@@ -56,8 +52,6 @@ public interface IMapController<TMarker>
     /// </summary>
     int IndexOf(TMarker marker);
 
-    // ===== GeoJSON Methods =====
-
     /// <summary>
     /// Add a GeoJSON layer to the map.
     /// </summary>
@@ -73,8 +67,6 @@ public interface IMapController<TMarker>
     /// </summary>
     void ClearGeoJson();
 
-    // ===== View Methods =====
-
     /// <summary>
     /// Set the map view (center and zoom).
     /// </summary>
@@ -89,8 +81,6 @@ public interface IMapController<TMarker>
     /// Fit the map to specific bounds.
     /// </summary>
     void FitToBounds(MapBounds bounds);
-
-    // ===== Circle Methods =====
 
     /// <summary>
     /// Current circles on the map.
@@ -117,8 +107,6 @@ public interface IMapController<TMarker>
     /// </summary>
     void FocusAllCircles();
 
-    // ===== Search Radius Methods =====
-
     /// <summary>
     /// Show the user-location dot and a dashed search-radius circle, and fly to it.
     /// </summary>
@@ -128,8 +116,6 @@ public interface IMapController<TMarker>
     /// Remove the search-radius overlay.
     /// </summary>
     void ClearSearchRadius();
-
-    // ===== Polygon Draw Methods =====
 
     /// <summary>
     /// Enter polygon draw mode. Vertices are added by clicking; the shape completes on
@@ -152,8 +138,6 @@ public interface IMapController<TMarker>
     /// </summary>
     void ClearDrawnPolygon();
 
-    // ===== Heatmap Methods =====
-
     /// <summary>
     /// Show (or refresh) the heatmap layer with the given points.
     /// </summary>
@@ -169,15 +153,11 @@ public interface IMapController<TMarker>
     /// </summary>
     void HideHeatmap();
 
-    // ===== Geolocation =====
-
     /// <summary>
     /// Ask the browser for the user's current position. Returns null when no map
     /// component is attached yet.
     /// </summary>
     Task<MapGeolocationResult?> GetCurrentPositionAsync();
-
-    // ===== Events (internal, raised by component) =====
 
     /// <summary>
     /// Fired when markers change.
@@ -254,8 +234,6 @@ public interface IMapController<TMarker>
     /// Fired when the heatmap state changes.
     /// </summary>
     event Action? OnHeatmapChanged;
-
-    // ===== Internal methods for component to raise events =====
 
     /// <summary>
     /// Called by the component when a marker is clicked.

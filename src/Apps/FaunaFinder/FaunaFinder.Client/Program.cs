@@ -22,11 +22,8 @@ builder.Services.AddSpaNavigation();
 builder.Services.AddEcoDataUi();
 builder.Services.AddMudServices();
 
-// The reader's browser-local state. Singleton, not scoped: one browser, and the
-// library rail has to see writes made by a page.
 builder.Services.AddSingleton<IFieldNotebook, FieldNotebook>();
 
-// Localization — single Localizer instance fed from FaunaFinderStrings.
 builder.Services.AddSingleton<ILocalizer>(_ => new Localizer(
     FaunaFinderStrings.Languages,
     FaunaFinderStrings.Translations));

@@ -2,13 +2,6 @@ using System.Collections.Frozen;
 
 namespace FaunaFinder.Client.Components.Species;
 
-/// <summary>
-/// Maps taxon codes to Font Awesome 6 free class names + translation keys.
-/// Material Icons lacks proper taxonomic iconography (no bird/frog/dragon),
-/// so we fall through to FA for the taxon badges. Labels are indirected
-/// through ILocalizer keys (<see cref="GetLabelKey"/>) so call-sites can
-/// translate them at render time.
-/// </summary>
 public static class TaxonIcons
 {
     private static readonly FrozenDictionary<string, string> Map =
@@ -45,10 +38,6 @@ public static class TaxonIcons
             ? icon
             : "fa-solid fa-paw";
 
-    /// <summary>
-    /// Returns the translation key for the taxon label (e.g. <c>"Species_Taxa_Bird"</c>).
-    /// Resolve via <c>ILocalizer</c> at the call site.
-    /// </summary>
     public static string GetLabelKey(string? code) =>
         code is not null && LabelKeys.TryGetValue(code, out var key)
             ? key

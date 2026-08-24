@@ -19,8 +19,6 @@ public partial class MainLayout : EcoDataLayout
     [Event]
     private void OnNavbarChanged(NavbarChanged _) { }
 
-    // Locale is cascaded to the tree, so it is the one thing a language flip
-    // has to restate before the re-render the base already schedules.
     protected override void OnLanguageChanged() =>
         _locale = L.CurrentLanguage == "es" ? LocaleContext.Spanish : LocaleContext.English;
 }

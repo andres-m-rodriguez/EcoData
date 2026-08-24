@@ -16,7 +16,6 @@
 
     <DialogContent>
         <div class="ff-modal-body">
-            @* Taxonomic group *@
             <section class="ff-modal-section">
                 <div class="ff-modal-section-title">
                     <span>@L["Species_Filter_Section_Taxa"]</span>
@@ -39,7 +38,6 @@
                 </div>
             </section>
 
-            @* Conservation status *@
             <section class="ff-modal-section">
                 <div class="ff-modal-section-title">
                     <span>@L["Species_Filter_Section_Status"]</span>
@@ -60,7 +58,6 @@
                 </div>
             </section>
 
-            @* Qualifiers *@
             <section class="ff-modal-section">
                 <div class="ff-modal-section-title">
                     <span>@L["Species_Filter_Section_Qualifiers"]</span>
@@ -88,7 +85,6 @@
                 </div>
             </section>
 
-            @* Range *@
             <section class="ff-modal-section">
                 <div class="ff-modal-section-title">
                     <span>@L["Species_Filter_Section_MinMunicipios"]</span>
@@ -121,11 +117,6 @@
     [Parameter] public SpeciesFilterResult Initial { get; set; } = SpeciesFilterResult.Empty;
     [Parameter] public SpeciesFacetsDto? Facets { get; set; }
 
-    /// <summary>
-    /// Unfiltered taxon counts (total species per category). Preferred over
-    /// <see cref="Facets"/>.Taxa for the chip badges because those reflect the
-    /// current filter and collapse to zero when the user hasn't selected a taxon.
-    /// </summary>
     [Parameter] public IReadOnlyList<TaxonFacetDto>? TaxaCounts { get; set; }
 
     private static readonly IucnStatus[] StatusOptions =

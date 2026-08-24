@@ -63,7 +63,6 @@
         else
         {
             <MudStack Spacing="4">
-                @* Sensor Details Card *@
                 <MudPaper Elevation="0" Class="pa-6 rounded-lg border-solid border mud-border-lines-default">
                     <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Class="mb-4">
                         <MudStack Row="true" Spacing="2" AlignItems="AlignItems.Center">
@@ -124,7 +123,6 @@
                     </MudGrid>
                 </MudPaper>
 
-                @* Health Monitoring Configuration Card *@
                 <MudPaper Elevation="0" Class="pa-6 rounded-lg border-solid border mud-border-lines-default">
                     <MudStack Row="true" Spacing="2" AlignItems="AlignItems.Center" Class="mb-4">
                         <MudIcon Icon="@Icons.Material.Filled.MonitorHeart" Color="Color.Primary" />
@@ -207,7 +205,6 @@
                     }
                 </MudPaper>
 
-                @* Health Status Card (if monitoring is enabled) *@
                 @if (_healthStatus is not null)
                 {
                     <MudPaper Elevation="0" Class="pa-6 rounded-lg border-solid border mud-border-lines-default">
@@ -263,7 +260,6 @@
     private string? _loadError;
     private bool _hasPermission;
 
-    // Form fields
     private int _expectedIntervalSeconds = 300;
     private int _staleThresholdSeconds = 600;
     private int _unhealthyThresholdSeconds = 1800;
@@ -290,7 +286,6 @@
 
         _sensor = sensor;
 
-        // Check permission
         if (!AuthState.IsInitialized)
         {
             await AuthState.InitializeAsync();
@@ -316,7 +311,6 @@
             _municipality = municipality;
         }
 
-        // Load health config
         var configResult = await HealthClient.GetSensorHealthConfigAsync(SensorId);
         configResult.Switch(
             config =>
@@ -342,7 +336,6 @@
             }
         );
 
-        // Load health status
         var statusResult = await HealthClient.GetSensorHealthAsync(SensorId);
         statusResult.Switch(
             status => _healthStatus = status,
@@ -364,7 +357,6 @@
 
     private async Task EnableHealthMonitoring()
     {
-        // Set default values and save
         _expectedIntervalSeconds = 300;
         _staleThresholdSeconds = 600;
         _unhealthyThresholdSeconds = 1800;

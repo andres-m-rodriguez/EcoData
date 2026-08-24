@@ -2,10 +2,6 @@
 @inherits StatefulComponent
 @inject OrganizationWorkspaceState State
 
-@* The shell's side panel while inside an organization: who you are in, the
-   sections you can reach, and the way out. It reads the same cached context
-   the page does, so opening it costs nothing. *@
-
 @if (_context is { } context)
 {
     var org = context.Organization;
@@ -50,7 +46,6 @@ else
     [Parameter, EditorRequired]
     public Guid OrganizationId { get; set; }
 
-    // The active section's key, from the layout's route values.
     [Parameter, EditorRequired]
     public required string ActiveKey { get; set; }
 

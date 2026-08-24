@@ -26,10 +26,8 @@ public sealed class OrganizationMember
             builder.Property(static e => e.RoleId).IsRequired();
             builder.Property(static e => e.CreatedAt).IsRequired();
 
-            // Unique constraint: user can only be in an organization once
             builder.HasIndex(static e => new { e.UserId, e.OrganizationId }).IsUnique();
 
-            // Index for querying by user
             builder.HasIndex(static e => e.UserId);
 
             builder

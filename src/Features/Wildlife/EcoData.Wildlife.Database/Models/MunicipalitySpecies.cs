@@ -3,10 +3,6 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace EcoData.Wildlife.Database.Models;
 
-/// <summary>
-/// Junction table linking species to municipalities where they are found.
-/// MunicipalityId references EcoData.Locations.Municipality (cross-module reference by ID only).
-/// </summary>
 public sealed class MunicipalitySpecies
 {
     public required Guid Id { get; set; }
@@ -29,8 +25,6 @@ public sealed class MunicipalitySpecies
                 .WithMany(static s => s.MunicipalitySpecies)
                 .HasForeignKey(static e => e.SpeciesId)
                 .OnDelete(DeleteBehavior.Cascade);
-
-            // Note: No navigation property to Municipality - cross-module reference by ID only
 
             builder
                 .HasIndex(static e => new { e.MunicipalityId, e.SpeciesId })

@@ -35,8 +35,6 @@
         }
         else if (LoadDetailState.Result is { } detail)
         {
-            @* The hero owns the visible heading and is not ours to change, so the
-               star rides in its top-right gutter rather than in the heading row. *@
             <div class="ff-hero-slot">
                 <SpeciesHero Species="detail" />
 
@@ -150,8 +148,6 @@ else
 
     private Guid? _loadedDetailId;
 
-    // The visit is filed once per species, not once per detail load — the id
-    // sticks around so a re-run of the notebook command can't double-file it.
     private Guid? _recordedVisitId;
     private bool _isSaved;
 
@@ -286,8 +282,6 @@ else
         return [];
     }
 
-    // Notebook chrome: reads the pin state and files the visit. It runs beside
-    // the detail rather than in front of it — nothing rendered waits on it.
     [Command]
     private async Task SyncNotebook(CancellationToken ct)
     {
@@ -311,8 +305,6 @@ else
         ? Icons.Material.Filled.Star
         : Icons.Material.Outlined.StarBorder;
 
-    // The labels are a snapshot, so they are resolved in the reader's current
-    // language at the moment the entry is written.
     private NotebookEntry ToNotebookEntry(SpeciesDtoForDetail detail) => new(
         NotebookEntryKind.Species,
         detail.Id,
@@ -387,7 +379,6 @@ else
 
     private void OnLanguageChanged()
     {
-        // Nav title needs refreshing since we seeded it from L in OnInitialized.
         Navbar.SetTitle(Id is null ? L["Nav_Species"] : Navbar.State.Title ?? L["Nav_Species"]);
         InvokeAsync(StateHasChanged);
     }

@@ -60,8 +60,6 @@
         // Spa.Map has no default location, so place the map before the first render.
         _controller.SetView(MapRegions.Default.Center, 9);
 
-        // A picker rather than a travel view: every region is selectable at once, so
-        // both layers go on and the handlers accept whichever was clicked.
         foreach (var region in MapRegions.All)
         {
             _controller.AddGeoJson(MunicipalityBoundaries.ForRegion(

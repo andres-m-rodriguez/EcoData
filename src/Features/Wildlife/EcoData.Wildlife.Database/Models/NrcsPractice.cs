@@ -4,9 +4,6 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace EcoData.Wildlife.Database.Models;
 
-/// <summary>
-/// Represents an NRCS (Natural Resources Conservation Service) conservation practice.
-/// </summary>
 public sealed class NrcsPractice
 {
     public required Guid Id { get; set; }

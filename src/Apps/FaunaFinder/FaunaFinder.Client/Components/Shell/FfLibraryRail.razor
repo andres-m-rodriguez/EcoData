@@ -5,14 +5,6 @@
 @inject ISpeciesHttpClient SpeciesClient
 @inject IFieldNotebook Notebook
 
-@* The persistent field notebook. Takes no parameters — the layout renders it
-   bare. It holds the reader's own state rather than a second copy of the
-   shelves: what they starred, and what is near them.
-
-   Saved reads local storage on mount and re-reads whenever anything mutates
-   the notebook. Nearby stays cold: it asks the browser for a position only
-   after the reader presses the button. *@
-
 <aside class="ff-rail">
     <h2 class="ff-rail-heading">@L["Rail_Heading"]</h2>
 
@@ -32,7 +24,6 @@
     </div>
 
     <div class="ff-rail-list">
-        @* A null command result is the loading sentinel — no flag is kept for it. *@
         @if (ActiveListPending)
         {
             @for (var i = 0; i < SkeletonRowCount; i++)
@@ -53,8 +44,6 @@
                 @foreach (var entry in saved)
                 {
                     <a class="ff-rail-item" href="@EntryHref(entry)" @key="entry.Id">
-                        @* A photograph when the record carries one; the duotone
-                           glyph tile is the fallback, not the default. *@
                         @if (entry.HasImage)
                         {
                             <img class="ff-rail-art ff-rail-art--photo"
@@ -89,7 +78,6 @@
         }
         else if (_nearby == NearbyState.Idle)
         {
-            @* Opt-in: nothing is asked of the browser until this is pressed. *@
             <button type="button" class="ff-rail-prompt" @onclick="RequestNearbyAsync">
                 <i class="fa-solid fa-location-crosshairs" aria-hidden="true"></i>
                 @L["Rail_Nearby_Prompt"]
@@ -109,7 +97,6 @@
         }
         else if (_nearby == NearbyState.Unsupported)
         {
-            @* No retry offered — the browser won't answer differently next time. *@
             <p class="ff-rail-empty">@L["Rail_Nearby_Unsupported"]</p>
         }
         else if (LoadNearbyState.Result is { Count: > 0 } nearby)
@@ -117,7 +104,6 @@
             <p class="ff-rail-note">@L["Rail_Nearby_Origin", NearbyRadiusKm]</p>
             @foreach (var species in nearby)
             {
-                @* Names resolve through the cascading locale, same as the map panels. *@
                 var nearbyName = Locale.Resolve(species.CommonName, fallback: species.ScientificName);
                 <a class="ff-rail-item" href="@SpeciesHref(species.Id)" @key="species.Id">
                     <span class="ff-rail-art ff-rail-art--species">
@@ -132,7 +118,6 @@
         }
         else
         {
-            @* Failed and empty read the same here: the rail never shouts. *@
             <p class="ff-rail-empty">@L["Rail_Nearby_Empty", NearbyRadiusKm]</p>
         }
     </div>

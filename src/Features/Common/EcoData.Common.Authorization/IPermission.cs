@@ -9,7 +9,6 @@ public interface IOrganizationPermission : IPermission;
 
 public interface IGlobalPermission : IPermission;
 
-// Carriers, so declaring a permission is one line rather than a class per key.
 public sealed record OrgPermission(string Key) : IOrganizationPermission;
 
 public sealed record GlobalPermission(string Key) : IGlobalPermission;

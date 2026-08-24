@@ -15,25 +15,9 @@ public sealed class Species
     public required string? ImageSourceUrl { get; set; }
     public required bool IsFauna { get; set; }
 
-    /// <summary>
-    /// NatureServe Element Code - standardized species identifier (e.g., "ABNKC12024")
-    /// </summary>
     public required string ElCode { get; set; }
-
-    /// <summary>
-    /// Global Conservation Rank (e.g., "G1" = critically imperiled, "G5" = secure)
-    /// </summary>
     public required string GRank { get; set; }
-
-    /// <summary>
-    /// Subnational (State/Territory) Conservation Rank (e.g., "S1" = critically imperiled)
-    /// </summary>
     public required string SRank { get; set; }
-
-    /// <summary>
-    /// Origin relative to Puerto Rico. <see cref="EndemicStatus.Unknown"/> means
-    /// no assessment has been recorded.
-    /// </summary>
     public required EndemicStatus EndemicStatus { get; set; }
     public required IucnStatus? IucnStatus { get; set; }
     public required bool IsFeatured { get; set; }

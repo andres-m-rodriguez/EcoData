@@ -19,7 +19,6 @@ public static class SensorReadingsRateLimiterExtensions
         {
             options.AddPolicy(SensorReadingsRateLimiterPolicy, context =>
             {
-                // Partition by sensor ID from the route
                 var sensorId = context.Request.RouteValues["sensorId"]?.ToString() ?? "unknown";
 
                 return RateLimitPartition.GetFixedWindowLimiter(

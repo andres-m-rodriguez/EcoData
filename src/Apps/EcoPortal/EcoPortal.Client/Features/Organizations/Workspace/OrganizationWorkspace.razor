@@ -7,11 +7,6 @@
 @inject INavigationManager Navigation
 @inject AuthStateService AuthState
 
-@* The frame every organization page renders inside. Pages hand it the id they
-   already parsed from their route; it loads the organization, the caller's
-   grants and the rail counts once per session and cascades the context down.
-   A visitor on the overview gets the public profile instead of a workspace. *@
-
 <PageTitle>@(_context?.Organization.Name ?? "Organization") - EcoData</PageTitle>
 
 @if (LoadState.IsLoading && _context is null)
@@ -41,8 +36,6 @@ else
 {
     var org = _context.Organization;
     <CascadingValue Value="_context" IsFixed="true">
-        @* The shell shows the rail as its side panel on desktop (OrganizationRail);
-           the page keeps the phone strip. *@
         <UiWorkspace Links="OrganizationSections.Links(_context, _counts)" ActiveKey="@OrganizationSections.Key(Section)"
                      RailLabel="Workspace" RailInShell="true">
             <Header>

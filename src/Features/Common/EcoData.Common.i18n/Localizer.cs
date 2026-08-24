@@ -77,7 +77,6 @@ public sealed class Localizer : ILocalizer
             return value;
         }
 
-        // Fall back to the default language before surfacing the raw key.
         if (!string.Equals(CurrentLanguage, _defaultLanguage, StringComparison.OrdinalIgnoreCase)
             && _byLanguage.TryGetValue(_defaultLanguage, out var defaultBucket)
             && defaultBucket.TryGetValue(key, out var defaultValue))

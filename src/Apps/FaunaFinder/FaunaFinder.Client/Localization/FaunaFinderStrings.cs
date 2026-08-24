@@ -2,15 +2,6 @@ using EcoData.Common.i18n;
 
 namespace FaunaFinder.Client.Localization;
 
-/// <summary>
-/// All user-visible UI strings for FaunaFinder, in both English and Spanish.
-/// Feed into <see cref="Localizer"/> at DI registration.
-///
-/// <para>Key convention: <c>Feature_Section_Purpose</c> — e.g. <c>Species_Hero_Lede</c>,
-/// <c>Muni_Stats_EndemicHotspots_Label</c>. Keep keys stable; translate values.</para>
-///
-/// <para>Brand names (FaunaFinder, Puerto Rico) stay as literals in markup.</para>
-/// </summary>
 public static class FaunaFinderStrings
 {
     public static IReadOnlyList<ILanguage> Languages { get; } =
@@ -36,12 +27,8 @@ public static class FaunaFinderStrings
         }
     }
 
-    // -------------------------------------------------------------------
-    // English
-    // -------------------------------------------------------------------
     private static readonly Dictionary<string, string> En = new(StringComparer.Ordinal)
     {
-        // Common / shared
         ["Common_Loading"] = "Loading…",
         ["Common_Cancel"] = "Cancel",
         ["Common_Apply"] = "Apply",
@@ -57,7 +44,6 @@ public static class FaunaFinderStrings
         ["Common_SearchOff"] = "No results",
         ["Common_Verified"] = "Verified",
 
-        // Layout / navigation
         ["Nav_Map"] = "Map",
         ["Nav_Browse"] = "Browse",
         ["Nav_Species"] = "Species",
@@ -66,8 +52,6 @@ public static class FaunaFinderStrings
         ["Nav_Practices"] = "Practices",
         ["Nav_Actions"] = "Actions",
 
-
-        // App shell — the library rail
         ["Rail_Heading"] = "Field notebook",
         ["Rail_Tab_Municipios"] = "Municipios",
         ["Rail_Tab_Taxa"] = "Taxa",
@@ -79,7 +63,6 @@ public static class FaunaFinderStrings
         ["Shell_Search_Empty"] = "Nothing found for “{0}”.",
         ["Shell_Search_Clear"] = "Clear search",
 
-        // Browse — the hub the mobile bar folds three sections into
         ["Browse_PageTitle"] = "Browse",
         ["Browse_Eyebrow"] = "Reference · Puerto Rico",
         ["Browse_Heading"] = "The catalogue behind the map.",
@@ -91,7 +74,6 @@ public static class FaunaFinderStrings
         ["Theme_ToDark"] = "Switch to dark",
         ["Theme_ToLight"] = "Switch to paper",
 
-        // Field notebook — the reader's own state
         ["Rail_Tab_Saved"] = "Saved",
         ["Rail_Tab_Nearby"] = "Near me",
         ["Rail_Saved_Empty"] = "Star a species or municipio to keep it here.",
@@ -111,11 +93,9 @@ public static class FaunaFinderStrings
         ["Time_HoursAgo"] = "{0} h ago",
         ["Time_DaysAgo"] = "{0} d ago",
 
-        // Hero (shared eyebrow)
         ["Hero_Eyebrow"] = "Volume 03 · Living Atlas",
         ["Hero_LastSync"] = "Last sync · {0}",
 
-        // Species page — hero
         ["Species_PageTitle"] = "FaunaFinder — Species",
         ["Species_Hero_HeadingLead"] = "Species of",
         ["Species_Hero_HeadingTail"] = ", catalogued and observed.",
@@ -124,7 +104,6 @@ public static class FaunaFinderStrings
         ["Species_Hero_UpdatedDaily"] = "Updated daily",
         ["Species_Hero_RecordsPending"] = "— records · — municipios",
 
-        // Species page — stats row
         ["Species_Stats_Total_Label"] = "Total species",
         ["Species_Stats_Total_Sub_Delta"] = "{0} this quarter",
         ["Species_Stats_Total_Sub_None"] = "—",
@@ -135,11 +114,9 @@ public static class FaunaFinderStrings
         ["Species_Stats_Municipios_Label"] = "Municipios covered",
         ["Species_Stats_Municipios_Sub"] = "{0}% island coverage",
 
-        // Species page — featured row
         ["Species_Featured_Heading"] = "Featured this week",
         ["Species_Featured_Meta"] = "Curated · updated Mondays",
 
-        // Species page — toolbar
         ["Species_Toolbar_Heading"] = "Find what you're looking for",
         ["Species_Toolbar_RecordsMeta"] = "{0} records · {1} municipios",
         ["Species_Toolbar_RecordsMeta_Loading"] = "Loading catalogue…",
@@ -151,7 +128,6 @@ public static class FaunaFinderStrings
         ["Species_Toolbar_Sort_Recent"] = "Recently observed",
         ["Species_Toolbar_Sort_MostWidespread"] = "Most widespread",
 
-        // Species page — active-filter chips
         ["Species_Chip_Taxon"] = "Taxon: {0}",
         ["Species_Chip_Status"] = "Status: {0}",
         ["Species_Chip_Endemic"] = "Endemic only",
@@ -159,7 +135,6 @@ public static class FaunaFinderStrings
         ["Species_Chip_HasPhoto"] = "Has photo",
         ["Species_Chip_MinMunicipios"] = "≥ {0} municipios",
 
-        // Species page — filter dialog
         ["Species_Filter_Heading"] = "Refine the catalogue",
         ["Species_Filter_TotalRecords"] = "{0} records",
         ["Species_Filter_Section_Taxa"] = "Taxonomic group",
@@ -175,7 +150,6 @@ public static class FaunaFinderStrings
         ["Species_Filter_MinMunicipios_Ubiquitous"] = "78 (ubiquitous)",
         ["Species_Filter_Reset"] = "Reset all filters",
 
-        // Species page — taxa labels (chip + filter grid)
         ["Species_Taxa_Bird"] = "Bird",
         ["Species_Taxa_Plant"] = "Plant",
         ["Species_Taxa_Reptile"] = "Reptile",
@@ -185,7 +159,6 @@ public static class FaunaFinderStrings
         ["Species_Taxa_Invert"] = "Invertebrate",
         ["Species_Taxa_Fungi"] = "Fungus",
 
-        // IUCN conservation status labels (full text — short codes stay as-is)
         ["Species_Iucn_LC"] = "Least Concern",
         ["Species_Iucn_NT"] = "Near Threatened",
         ["Species_Iucn_VU"] = "Vulnerable",
@@ -194,7 +167,6 @@ public static class FaunaFinderStrings
         ["Species_Iucn_DD"] = "Data Deficient",
         ["Species_Iucn_EX"] = "Extinct",
 
-        // Species card / grid
         ["Species_Card_Municipios"] = "{0} municipios",
         ["Species_Card_EndemicBadge"] = "Endemic PR",
         ["Species_Grid_LoadingMore"] = "Loading more records…",
@@ -203,14 +175,12 @@ public static class FaunaFinderStrings
         ["Species_Grid_Empty_Title"] = "No species match",
         ["Species_Grid_Empty_Description"] = "Try adjusting your filters or search terms.",
 
-        // Species card — relative time
         ["Time_MinutesAgo"] = "{0}m ago",
         ["Time_HoursAgo"] = "{0}h ago",
         ["Time_DaysAgo"] = "{0}d ago",
         ["Time_MonthsAgo"] = "{0}mo ago",
         ["Time_YearsAgo"] = "{0}y ago",
 
-        // Species detail
         ["SpeciesDetail_Rank_Global"] = "Global: {0}",
         ["SpeciesDetail_Rank_State"] = "State: {0}",
         ["SpeciesDetail_Kingdom_Fauna"] = "Fauna",
@@ -223,7 +193,6 @@ public static class FaunaFinderStrings
         ["SpeciesDetail_NotFound_Title"] = "Species not found",
         ["SpeciesDetail_NotFound_Description"] = "The species you're looking for doesn't exist or has been removed.",
 
-        // Municipalities page — hero
         ["Muni_PageTitle"] = "FaunaFinder — Municipios",
         ["Muni_Hero_HeadingLead"] = "Municipios of",
         ["Muni_Hero_HeadingTail"] = ", mapped and observed.",
@@ -232,7 +201,6 @@ public static class FaunaFinderStrings
         ["Muni_Hero_RecordsPending"] = "— municipios · — records",
         ["Muni_Hero_Hint"] = "Tap a pin or row to drill in",
 
-        // Municipalities page — stats row
         ["Muni_Stats_Total_Label"] = "Total municipios",
         ["Muni_Stats_Total_Unit"] = "/ {0} tracked",
         ["Muni_Stats_Total_Sub"] = "100% island coverage",
@@ -243,11 +211,9 @@ public static class FaunaFinderStrings
         ["Muni_Stats_Hotspots_Label"] = "Endemic hotspots",
         ["Muni_Stats_Hotspots_Sub"] = "≥ 10 endemic species present",
 
-        // Municipalities — tab pill
         ["Muni_Tab_Map"] = "Map",
         ["Muni_Tab_List"] = "List",
 
-        // Municipalities — list
         ["Muni_List_SearchPlaceholder"] = "Search municipios by name…",
         ["Muni_List_VisibleAll"] = "{0} municipios",
         ["Muni_List_VisibleFiltered"] = "{0} of {1}",
@@ -259,7 +225,6 @@ public static class FaunaFinderStrings
         ["Muni_List_Foot_Loading"] = "loading municipios",
         ["Muni_List_Foot_Total"] = "{0} municipios tracked",
 
-        // Municipalities — map legend + detail card
         ["Muni_Map_Legend_Title"] = "Municipios",
         ["Muni_Map_Legend_Selected"] = "Selected",
         ["Muni_Map_Legend_Boundary"] = "Boundary",
@@ -269,7 +234,6 @@ public static class FaunaFinderStrings
         ["Muni_DetailCard_CountPending"] = "Species count pending",
         ["Muni_Card_SpeciesCount"] = "{0} species",
 
-        // Municipalities — detail route
         ["MuniDetail_Subline"] = "{0} · FIPS {1}",
         ["MuniDetail_Centroid"] = "Centroid · {0}″N {1}″W",
         ["MuniDetail_Species_Heading"] = "Species",
@@ -278,7 +242,6 @@ public static class FaunaFinderStrings
         ["MuniDetail_NotFound_Title"] = "Municipio not found",
         ["MuniDetail_NotFound_Description"] = "The municipio you're looking for doesn't exist or has been removed.",
 
-        // Categories page
         ["Categories_PageTitle"] = "Categories",
         ["Categories_Empty_Title"] = "No categories",
         ["Categories_Empty_Description"] = "No species categories have been created yet.",
@@ -286,7 +249,6 @@ public static class FaunaFinderStrings
         ["CategoryDetail_Empty_Title"] = "No species",
         ["CategoryDetail_Empty_Description"] = "No species have been categorized here yet.",
 
-        // Practices page (NRCS conservation practices)
         ["Practices_PageTitle"] = "Practices",
         ["Practices_Hero_HeadingLead"] = "Conservation work in",
         ["Practices_Hero_HeadingTail"] = ", practice by practice.",
@@ -307,7 +269,6 @@ public static class FaunaFinderStrings
         ["PracticeDetail_Empty_Title"] = "No species",
         ["PracticeDetail_Empty_Description"] = "No species are linked to this conservation practice yet.",
 
-        // Actions page (FWS conservation actions)
         ["Actions_PageTitle"] = "Actions",
         ["Actions_Hero_HeadingLead"] = "What recovery asks of",
         ["Actions_Hero_HeadingTail"] = ", action by action.",
@@ -328,7 +289,6 @@ public static class FaunaFinderStrings
         ["ActionDetail_Empty_Title"] = "No species",
         ["ActionDetail_Empty_Description"] = "No species are linked to this conservation action yet.",
 
-        // Home (map page)
         ["Home_SidebarEmpty"] = "Tap a municipio to see its species",
         ["Map_Panel_Eyebrow"] = "Municipio",
         ["Map_Panel_NoSpecies_Title"] = "No species recorded",
@@ -374,12 +334,8 @@ public static class FaunaFinderStrings
         ["Map_Filter_Showing"] = "Showing {0} of {1} species",
     };
 
-    // -------------------------------------------------------------------
-    // Spanish
-    // -------------------------------------------------------------------
     private static readonly Dictionary<string, string> Es = new(StringComparer.Ordinal)
     {
-        // Common / shared
         ["Common_Loading"] = "Cargando…",
         ["Common_Cancel"] = "Cancelar",
         ["Common_Apply"] = "Aplicar",
@@ -395,7 +351,6 @@ public static class FaunaFinderStrings
         ["Common_SearchOff"] = "Sin resultados",
         ["Common_Verified"] = "Verificado",
 
-        // Layout / navigation
         ["Nav_Map"] = "Mapa",
         ["Nav_Browse"] = "Explorar",
         ["Nav_Species"] = "Especies",
@@ -404,8 +359,6 @@ public static class FaunaFinderStrings
         ["Nav_Practices"] = "Prácticas",
         ["Nav_Actions"] = "Acciones",
 
-
-        // Estructura — la libreta lateral
         ["Rail_Heading"] = "Libreta de campo",
         ["Rail_Tab_Municipios"] = "Municipios",
         ["Rail_Tab_Taxa"] = "Taxones",
@@ -417,7 +370,6 @@ public static class FaunaFinderStrings
         ["Shell_Search_Empty"] = "No se encontró nada para «{0}».",
         ["Shell_Search_Clear"] = "Borrar la búsqueda",
 
-        // Explorar — el centro donde la barra móvil agrupa tres secciones
         ["Browse_PageTitle"] = "Explorar",
         ["Browse_Eyebrow"] = "Referencia · Puerto Rico",
         ["Browse_Heading"] = "El catálogo detrás del mapa.",
@@ -429,7 +381,6 @@ public static class FaunaFinderStrings
         ["Theme_ToDark"] = "Cambiar a oscuro",
         ["Theme_ToLight"] = "Cambiar a claro",
 
-        // Libreta de campo — lo que guarda el lector
         ["Rail_Tab_Saved"] = "Guardadas",
         ["Rail_Tab_Nearby"] = "Cerca de mí",
         ["Rail_Saved_Empty"] = "Marca una especie o municipio para guardarlo aquí.",
@@ -449,11 +400,9 @@ public static class FaunaFinderStrings
         ["Time_HoursAgo"] = "hace {0} h",
         ["Time_DaysAgo"] = "hace {0} d",
 
-        // Hero
         ["Hero_Eyebrow"] = "Volumen 03 · Atlas Viviente",
         ["Hero_LastSync"] = "Última sincronización · {0}",
 
-        // Species page — hero
         ["Species_PageTitle"] = "FaunaFinder — Especies",
         ["Species_Hero_HeadingLead"] = "Especies de",
         ["Species_Hero_HeadingTail"] = ", catalogadas y observadas.",
@@ -462,7 +411,6 @@ public static class FaunaFinderStrings
         ["Species_Hero_UpdatedDaily"] = "Actualizado a diario",
         ["Species_Hero_RecordsPending"] = "— registros · — municipios",
 
-        // Species page — stats row
         ["Species_Stats_Total_Label"] = "Total de especies",
         ["Species_Stats_Total_Sub_Delta"] = "{0} este trimestre",
         ["Species_Stats_Total_Sub_None"] = "—",
@@ -473,11 +421,9 @@ public static class FaunaFinderStrings
         ["Species_Stats_Municipios_Label"] = "Municipios cubiertos",
         ["Species_Stats_Municipios_Sub"] = "{0}% de la isla cubierta",
 
-        // Species page — featured row
         ["Species_Featured_Heading"] = "Destacadas esta semana",
         ["Species_Featured_Meta"] = "Curado · actualizado los lunes",
 
-        // Species page — toolbar
         ["Species_Toolbar_Heading"] = "Encuentra lo que buscas",
         ["Species_Toolbar_RecordsMeta"] = "{0} registros · {1} municipios",
         ["Species_Toolbar_RecordsMeta_Loading"] = "Cargando catálogo…",
@@ -489,7 +435,6 @@ public static class FaunaFinderStrings
         ["Species_Toolbar_Sort_Recent"] = "Observadas recientemente",
         ["Species_Toolbar_Sort_MostWidespread"] = "Más extendidas",
 
-        // Species page — active-filter chips
         ["Species_Chip_Taxon"] = "Taxón: {0}",
         ["Species_Chip_Status"] = "Estado: {0}",
         ["Species_Chip_Endemic"] = "Solo endémicas",
@@ -497,7 +442,6 @@ public static class FaunaFinderStrings
         ["Species_Chip_HasPhoto"] = "Con foto",
         ["Species_Chip_MinMunicipios"] = "≥ {0} municipios",
 
-        // Species page — filter dialog
         ["Species_Filter_Heading"] = "Refinar el catálogo",
         ["Species_Filter_TotalRecords"] = "{0} registros",
         ["Species_Filter_Section_Taxa"] = "Grupo taxonómico",
@@ -513,7 +457,6 @@ public static class FaunaFinderStrings
         ["Species_Filter_MinMunicipios_Ubiquitous"] = "78 (ubicuas)",
         ["Species_Filter_Reset"] = "Restablecer filtros",
 
-        // Species page — taxa labels
         ["Species_Taxa_Bird"] = "Ave",
         ["Species_Taxa_Plant"] = "Planta",
         ["Species_Taxa_Reptile"] = "Reptil",
@@ -523,7 +466,6 @@ public static class FaunaFinderStrings
         ["Species_Taxa_Invert"] = "Invertebrado",
         ["Species_Taxa_Fungi"] = "Hongo",
 
-        // IUCN conservation status labels
         ["Species_Iucn_LC"] = "Preocupación menor",
         ["Species_Iucn_NT"] = "Casi amenazada",
         ["Species_Iucn_VU"] = "Vulnerable",
@@ -532,7 +474,6 @@ public static class FaunaFinderStrings
         ["Species_Iucn_DD"] = "Datos insuficientes",
         ["Species_Iucn_EX"] = "Extinta",
 
-        // Species card / grid
         ["Species_Card_Municipios"] = "{0} municipios",
         ["Species_Card_EndemicBadge"] = "Endémica PR",
         ["Species_Grid_LoadingMore"] = "Cargando más registros…",
@@ -541,14 +482,12 @@ public static class FaunaFinderStrings
         ["Species_Grid_Empty_Title"] = "Sin coincidencias",
         ["Species_Grid_Empty_Description"] = "Ajusta los filtros o los términos de búsqueda.",
 
-        // Relative time
         ["Time_MinutesAgo"] = "hace {0} min",
         ["Time_HoursAgo"] = "hace {0} h",
         ["Time_DaysAgo"] = "hace {0} d",
         ["Time_MonthsAgo"] = "hace {0} meses",
         ["Time_YearsAgo"] = "hace {0} años",
 
-        // Species detail
         ["SpeciesDetail_Rank_Global"] = "Global: {0}",
         ["SpeciesDetail_Rank_State"] = "Estatal: {0}",
         ["SpeciesDetail_Kingdom_Fauna"] = "Fauna",
@@ -561,7 +500,6 @@ public static class FaunaFinderStrings
         ["SpeciesDetail_NotFound_Title"] = "Especie no encontrada",
         ["SpeciesDetail_NotFound_Description"] = "La especie que buscas no existe o fue eliminada.",
 
-        // Municipalities page — hero
         ["Muni_PageTitle"] = "FaunaFinder — Municipios",
         ["Muni_Hero_HeadingLead"] = "Municipios de",
         ["Muni_Hero_HeadingTail"] = ", en el mapa y observados.",
@@ -570,7 +508,6 @@ public static class FaunaFinderStrings
         ["Muni_Hero_RecordsPending"] = "— municipios · — registros",
         ["Muni_Hero_Hint"] = "Toca un pin o una fila para profundizar",
 
-        // Municipalities page — stats row
         ["Muni_Stats_Total_Label"] = "Total de municipios",
         ["Muni_Stats_Total_Unit"] = "/ {0} rastreados",
         ["Muni_Stats_Total_Sub"] = "100% de la isla",
@@ -581,11 +518,9 @@ public static class FaunaFinderStrings
         ["Muni_Stats_Hotspots_Label"] = "Focos endémicos",
         ["Muni_Stats_Hotspots_Sub"] = "≥ 10 especies endémicas presentes",
 
-        // Municipalities — tab pill
         ["Muni_Tab_Map"] = "Mapa",
         ["Muni_Tab_List"] = "Lista",
 
-        // Municipalities — list
         ["Muni_List_SearchPlaceholder"] = "Busca municipios por nombre…",
         ["Muni_List_VisibleAll"] = "{0} municipios",
         ["Muni_List_VisibleFiltered"] = "{0} de {1}",
@@ -597,7 +532,6 @@ public static class FaunaFinderStrings
         ["Muni_List_Foot_Loading"] = "cargando municipios",
         ["Muni_List_Foot_Total"] = "{0} municipios rastreados",
 
-        // Municipalities — map legend + detail card
         ["Muni_Map_Legend_Title"] = "Municipios",
         ["Muni_Map_Legend_Selected"] = "Seleccionado",
         ["Muni_Map_Legend_Boundary"] = "Límite",
@@ -607,7 +541,6 @@ public static class FaunaFinderStrings
         ["Muni_DetailCard_CountPending"] = "Conteo pendiente",
         ["Muni_Card_SpeciesCount"] = "{0} especies",
 
-        // Municipalities — detail route
         ["MuniDetail_Subline"] = "{0} · FIPS {1}",
         ["MuniDetail_Centroid"] = "Centroide · {0}″N {1}″O",
         ["MuniDetail_Species_Heading"] = "Especies",
@@ -616,7 +549,6 @@ public static class FaunaFinderStrings
         ["MuniDetail_NotFound_Title"] = "Municipio no encontrado",
         ["MuniDetail_NotFound_Description"] = "El municipio que buscas no existe o fue eliminado.",
 
-        // Categories page
         ["Categories_PageTitle"] = "Categorías",
         ["Categories_Empty_Title"] = "Sin categorías",
         ["Categories_Empty_Description"] = "Aún no se han creado categorías de especies.",
@@ -624,7 +556,6 @@ public static class FaunaFinderStrings
         ["CategoryDetail_Empty_Title"] = "Sin especies",
         ["CategoryDetail_Empty_Description"] = "Aún no se ha categorizado ninguna especie aquí.",
 
-        // Practices page (NRCS conservation practices)
         ["Practices_PageTitle"] = "Prácticas",
         ["Practices_Hero_HeadingLead"] = "Conservación en",
         ["Practices_Hero_HeadingTail"] = ", práctica por práctica.",
@@ -645,7 +576,6 @@ public static class FaunaFinderStrings
         ["PracticeDetail_Empty_Title"] = "Sin especies",
         ["PracticeDetail_Empty_Description"] = "Aún no hay especies vinculadas a esta práctica de conservación.",
 
-        // Actions page (FWS conservation actions)
         ["Actions_PageTitle"] = "Acciones",
         ["Actions_Hero_HeadingLead"] = "Lo que la recuperación le pide a",
         ["Actions_Hero_HeadingTail"] = ", acción por acción.",
@@ -666,7 +596,6 @@ public static class FaunaFinderStrings
         ["ActionDetail_Empty_Title"] = "Sin especies",
         ["ActionDetail_Empty_Description"] = "Aún no hay especies vinculadas a esta acción de conservación.",
 
-        // Home (map page)
         ["Home_SidebarEmpty"] = "Toca un municipio para ver sus especies",
         ["Map_Panel_Eyebrow"] = "Municipio",
         ["Map_Panel_NoSpecies_Title"] = "Sin especies registradas",

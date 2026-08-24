@@ -1,9 +1,6 @@
 @using System.ComponentModel.DataAnnotations
 @using EcoData.Organization.Contracts
 
-@* The organization's fields. Section picks which group renders: the create
-   page shows everything, the settings pages one group each. *@
-
 <MudStack Spacing="3">
     @if (!string.IsNullOrEmpty(ErrorMessage))
     {

@@ -4,9 +4,6 @@ public static class HexColor
 {
     public const int StorageLength = 7;
 
-    // Stores brand colors as 7-char "#rrggbb". Accepts inputs with or without
-    // the leading hash; rejects anything else by returning null. Keeps malformed
-    // input out of CSS where it would silently break the org-themed page.
     public static string? Normalize(string? value)
     {
         if (string.IsNullOrWhiteSpace(value)) return null;

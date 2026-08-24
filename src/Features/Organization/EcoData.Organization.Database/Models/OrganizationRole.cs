@@ -24,7 +24,6 @@ public sealed class OrganizationRole
             builder.Property(static e => e.Name).HasMaxLength(100).IsRequired();
             builder.Property(static e => e.CreatedAt).IsRequired();
 
-            // Unique constraint: role name per org
             builder.HasIndex(static e => new { e.OrganizationId, e.Name }).IsUnique();
 
             builder

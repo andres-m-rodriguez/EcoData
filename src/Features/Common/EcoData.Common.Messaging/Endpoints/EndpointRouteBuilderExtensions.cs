@@ -121,7 +121,6 @@ public static class EndpointRouteBuilderExtensions
                 }
                 catch
                 {
-                    // Handler failed
                 }
             }
         });

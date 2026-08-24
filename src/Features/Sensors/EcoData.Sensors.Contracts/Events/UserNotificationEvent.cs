@@ -1,8 +1,5 @@
 namespace EcoData.Sensors.Contracts.Events;
 
-/// <summary>
-/// Event published when a user notification is created.
-/// </summary>
 public sealed record UserNotificationEvent(
     Guid Id,
     Guid UserId,
@@ -15,6 +12,6 @@ public sealed record UserNotificationEvent(
     DateTimeOffset CreatedAt
 )
 {
-    /// <summary>Service Bus subscription name. Must match <c>typeof(UserNotificationEvent).Name.ToLowerInvariant()</c>.</summary>
+    // Service Bus subscription name. Must match typeof(UserNotificationEvent).Name.ToLowerInvariant().
     public const string SubscriptionName = "usernotificationevent";
 }

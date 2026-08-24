@@ -5,11 +5,9 @@ using Tempest;
 
 namespace EcoPortal.Client.Services;
 
-/// <summary>
-/// Bridges <see cref="AuthStateService"/> into Blazor's authentication system. Not a
-/// Tempest component, so it can't use [Event]; it subscribes to the bus directly and
-/// disposes the subscription with the scope.
-/// </summary>
+// Bridges AuthStateService into Blazor's authentication system. Not a Tempest
+// component, so it can't use [Event]; it subscribes to the bus directly and
+// disposes the subscription with the scope.
 public sealed class EcoPortalAuthStateProvider : AuthenticationStateProvider, IDisposable
 {
     private readonly AuthStateService _authStateService;

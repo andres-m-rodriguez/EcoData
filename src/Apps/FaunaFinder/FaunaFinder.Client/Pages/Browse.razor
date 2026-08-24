@@ -8,9 +8,6 @@
 
 <PageTitle>FaunaFinder — @L["Browse_PageTitle"]</PageTitle>
 
-@* The three reference sections collapse behind one bottom-bar tab; this hub
-   is where that tab lands, so it has to be worth the extra hop — each card
-   carries the section's live tally, not just its name. *@
 <div class="ff-page bh-page">
 
     <section class="bh-hero">
@@ -55,8 +52,6 @@
 </div>
 
 @code {
-    // A null result is both "still loading" and "the fetch failed" — either way
-    // the card shows the pending dash and the hub keeps rendering.
     private string CategoriesCountText => LoadCategoryCountState.Result is { } count
         ? count.ToString()
         : L["Browse_Count_Pending"];

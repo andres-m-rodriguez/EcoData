@@ -15,26 +15,13 @@ namespace FaunaFinder.Client.Components.Shell;
 // the C# symbol frontend can.
 public partial class FfBottomNav : EcoDataComponent
 {
-    /// <summary>
-    /// Get the tab bar out of the way — published by a screen that needs the
-    /// bottom of the viewport, such as the map's municipality sheet.
-    ///
-    /// <para>Nested here on purpose: <c>[Event]</c> only binds to a record
-    /// declared on the handling component. Publishers elsewhere say
-    /// <c>Bus.Publish&lt;FfBottomNav.Hidden&gt;()</c>.</para>
-    /// </summary>
     public sealed record Hidden;
 
-    /// <summary>Give the tab bar back.</summary>
     public sealed record Shown;
 
     private bool _hidden;
     private NavigationTab _currentTab = NavigationTab.Map;
 
-    // The scroll watcher for the mobile chrome — this bar and the app bar both.
-    // It lives on this component rather than the layout because this one
-    // renders on small screens only, so the watcher exists exactly when the
-    // bars it drives do. Transient, so the bar owns its own.
     [Inject]
     private NavAutoHide AutoHide { get; set; } = default!;
 
@@ -80,7 +67,6 @@ public partial class FfBottomNav : EcoDataComponent
             var p when p.StartsWith("/map", StringComparison.OrdinalIgnoreCase) => NavigationTab.Map,
             var p when p.StartsWith("/species", StringComparison.OrdinalIgnoreCase) => NavigationTab.Species,
             var p when p.StartsWith("/municipalities", StringComparison.OrdinalIgnoreCase) => NavigationTab.Municipalities,
-            // Every reference section lights the one Browse tab.
             var p when p.StartsWith("/browse", StringComparison.OrdinalIgnoreCase) => NavigationTab.Browse,
             var p when p.StartsWith("/categories", StringComparison.OrdinalIgnoreCase) => NavigationTab.Browse,
             var p when p.StartsWith("/practices", StringComparison.OrdinalIgnoreCase) => NavigationTab.Browse,

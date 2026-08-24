@@ -13,7 +13,6 @@
 
 @if (Id is not null)
 {
-    @* Category Detail - Show species in this category *@
     <NuiPageLayout Title="@_categoryName" ParentPath="/categories">
         @if (LoadSpeciesCountState.Result is { } speciesCount and > 0)
         {
@@ -60,7 +59,6 @@
 }
 else
 {
-    @* Categories List *@
     <NuiPageLayout Title="Categories">
         @if (_categoriesLoadError is not null)
         {
@@ -168,7 +166,6 @@ else
         CancellationToken ct
     ) => SpeciesHttpClient.GetSpeciesAsync(parameters, ct);
 
-    // The list pages through species itself; this is only the heading tally.
     [Command]
     private async Task<int?> LoadSpeciesCount(CancellationToken ct)
     {

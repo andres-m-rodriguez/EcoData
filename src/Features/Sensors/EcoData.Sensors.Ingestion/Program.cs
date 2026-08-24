@@ -8,7 +8,6 @@ using EcoData.Sensors.Database.Extensions;
 using EcoData.Sensors.Ingestion.Services;
 using EcoData.Sensors.Ingestion.Workers;
 
-
 var builder = Host.CreateApplicationBuilder(args);
 
 builder.AddServiceDefaults();

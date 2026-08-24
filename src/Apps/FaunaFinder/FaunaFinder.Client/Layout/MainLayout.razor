@@ -4,31 +4,19 @@
 @inject INavbarManager Navbar
 @inject IJavascriptSafeInterop JS
 
-@* IsDarkMode carries the same state the data-theme attribute does, so the
-   MudBlazor surfaces the token sheet can't reach — dialogs, menus, snackbars,
-   skeletons, alerts — flip with the rest of the shell. FaunaFinderTheme
-   already ships the PaletteDark this activates. *@
 <MudThemeProvider Theme="FaunaFinderTheme.Default" IsDarkMode="_isDarkMode" />
 <MudPopoverProvider />
 <MudDialogProvider />
 <MudSnackbarProvider />
 
 <CascadingValue Value="_locale" IsFixed="false">
-    @* .ff-shell is the cream ground every panel floats in. It is also the only
-       plain element wrapping MudLayout/MudAppBar/MudMainContent, so it is what
-       carries Blazor's scope attribute — every ::deep rule in the companion
-       stylesheet resolves through it. *@
     <div class="@ShellClass">
         <MudLayout>
             <MudAppBar Elevation="0" Fixed="true" Class="ff-appbar">
-                @* Mobile lead slot. It owns the Avatar event, so a detail page
-                   can put a portrait beside its title without the layout
-                   knowing which pages have one. *@
                 <MudHidden Breakpoint="Breakpoint.MdAndUp">
                     <FfMobileTitle />
                 </MudHidden>
 
-                @* Desktop: notebook toggle + Logo + Page Title *@
                 <MudHidden Breakpoint="Breakpoint.SmAndDown">
                     <div class="d-flex align-center">
                         @if (ShowLibraryRail)
@@ -53,7 +41,6 @@
                     </div>
                 </MudHidden>
 
-                @* Desktop: Navigation links *@
                 <MudHidden Breakpoint="Breakpoint.SmAndDown">
                     <nav class="ff-nav ml-6">
                         <a href="/" class="@GetNavLinkClass("/", exact: true)">@L["Nav_Map"]</a>
@@ -67,15 +54,10 @@
 
                 <MudSpacer />
 
-                @* Desktop: combined species + municipio search. Desktop only —
-                   the mobile bar has no room for it yet. *@
                 <MudHidden Breakpoint="Breakpoint.SmAndDown">
                     <FfSearch />
                 </MudHidden>
 
-                @* Light/dark switch. The click stamps data-theme on the root
-                   element, which is what the token sheet keys off; _isDarkMode
-                   keeps MudBlazor's own palette in step. *@
                 <MudTooltip Text="@ThemeToggleLabel">
                     <MudIconButton Icon="@ThemeToggleIcon"
                                    Class="ff-theme-toggle"
@@ -112,7 +94,6 @@
                     }
                 </MudMenu>
 
-                @* Mobile: Action button(s) at far right *@
                 <MudHidden Breakpoint="Breakpoint.MdAndUp">
                     @if (!IsRootPage)
                     {
@@ -123,9 +104,6 @@
 
             <MudMainContent Class="main-content">
                 <div class="ff-shell-body">
-                    @* Field notebook — desktop only, on every page including the
-                       map. Collapsing hides the panel with a class rather than
-                       dropping it from the tree, so it keeps what it fetched. *@
                     @if (ShowLibraryRail)
                     {
                         <MudHidden Breakpoint="Breakpoint.SmAndDown">
@@ -151,9 +129,6 @@
             </MudMainContent>
         </MudLayout>
 
-        @* Mobile tab bar. It owns its own Hidden/Shown events so a screen
-           that needs the bottom of the viewport can get it out of the way
-           without the layout knowing anything about that screen. *@
         <MudHidden Breakpoint="Breakpoint.MdAndUp">
             <FfBottomNav />
         </MudHidden>
@@ -161,25 +136,16 @@
 </CascadingValue>
 
 @code {
-
-
     private LocaleContext _locale = LocaleContext.English;
 
     private bool _railOpen = true;
     private bool _railHovered;
 
-    // Starts false so the first render matches the paper palette the boot
-    // script leaves in place for anyone without a stored choice; the real
-    // effective theme — stored value, else the OS — arrives from JS on first
-    // render below.
     private bool _isDarkMode;
     private IJSObjectReference? _themeModule;
 
-    // Root ("/") only — decides logo vs. back button in the mobile app bar.
     private bool IsRootPage => Navigation.State.Path == "/" || Navigation.State.Path == "";
 
-    // The map is the landing page. It keeps /map as an alias so older links
-    // still resolve, so this can't just test for root.
     private bool IsMapPage =>
         IsRootPage || Navigation.State.Path.StartsWith("/map", StringComparison.OrdinalIgnoreCase);
 
@@ -191,19 +157,13 @@
         string.Equals(Navigation.State.Path, "/practices", StringComparison.OrdinalIgnoreCase) ||
         string.Equals(Navigation.State.Path, "/actions", StringComparison.OrdinalIgnoreCase);
 
-    // Pages that draw their own chrome: the full-screen map and the top-level
-    // list pages. They get @Body with no MudContainer.
     private bool IsFullBleedPage => IsMapPage || IsEditorialListPage;
 
-    // Hide the divider+title on top-level pages. Each either renders its own
-    // root heading or relies on the active nav pill for context.
     private bool ShowTitleDivider =>
         !IsMapPage && !IsEditorialListPage && Navbar.State.Title is not null;
 
     private string RailPanelClass => _railOpen ? "ff-rail-panel" : "ff-rail-panel is-collapsed";
 
-    // At rest the toggle is a plain panel; hovering swaps in the chevron that
-    // shows which way it will move. Same three-glyph trick Harmony uses.
     private string NotebookToggleIcon => !_railHovered
         ? FaunaFinderIcons.NotebookPanel
         : _railOpen ? FaunaFinderIcons.NotebookCollapse : FaunaFinderIcons.NotebookExpand;
@@ -212,17 +172,12 @@
 
     private void ToggleRail() => _railOpen = !_railOpen;
 
-    // Sun when we're dark (click goes to light), moon when we're light.
     private string ThemeToggleIcon => _isDarkMode
         ? Icons.Material.Filled.LightMode
         : Icons.Material.Filled.DarkMode;
 
     private string ThemeToggleLabel => _isDarkMode ? L["Theme_ToLight"] : L["Theme_ToDark"];
 
-    // The rail is a desktop companion column. The map is the one page that
-    // wants the whole ground, so it never gets one.
-    // The notebook rides every page, the map included — it pins itself to the
-    // viewport rather than flexing, so the shell hands it an offset instead.
     private bool ShowLibraryRail => true;
 
     private string ShellClass => _railOpen ? "ff-shell has-rail-open" : "ff-shell";
@@ -233,8 +188,6 @@
         _locale = L.CurrentLanguage == "es" ? LocaleContext.Spanish : LocaleContext.English;
     }
 
-    // This is a WebAssembly client, so the module import is async and can only
-    // run once there's a document to talk to — never from OnInitialized.
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (!firstRender)
@@ -242,9 +195,6 @@
             return;
         }
 
-        // Theming is an enhancement, not a dependency: if the module can't
-        // load, the shell stays on whatever the stylesheet resolved to and
-        // the toggle simply does nothing.
         var imported = await JS.ImportAsync("./js/fauna-theme.js");
         if (!imported.TryPickT0(out var module, out _))
         {
@@ -268,8 +218,6 @@
 
         var next = _isDarkMode ? "light" : "dark";
 
-        // The stamp never landed — leave MudBlazor on the palette the page
-        // is still showing rather than splitting the two.
         var stamped = await JS.InvokeVoidAsync(_themeModule, "setTheme", next);
         if (!stamped.IsT0)
         {
@@ -278,7 +226,6 @@
 
         _isDarkMode = next == "dark";
     }
-
 
     private string GetNavLinkClass(string path, bool exact = false)
     {
@@ -290,10 +237,5 @@
         return isActive ? "ff-nav-link is-active" : "ff-nav-link";
     }
 
-
-    // The active tab reads as a filled pine chip, which MudBlazor's Color
-    // parameter can't express on a text button — the class carries the fill.
-
     private void SetLocale(string code) => L.SetLanguage(code);
-
 }

@@ -4,11 +4,6 @@ using ModelContextProtocol.Server;
 
 namespace EcoData.Wildlife.Mcp.Tools;
 
-/// <summary>
-/// The conservation half of the connector: the NRCS practices landowners can
-/// carry out, and the Fish &amp; Wildlife Service recovery actions those
-/// practices deliver.
-/// </summary>
 // Sealed rather than static, for the same reason as SpeciesTools.
 [McpServerToolType]
 public sealed class ConservationTools

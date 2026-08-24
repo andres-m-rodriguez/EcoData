@@ -268,14 +268,12 @@ public sealed class SensorHealthMonitorWorker(
             alert.Message
         );
 
-        // Publish to sensor-specific topic for subscribers interested in a specific sensor
         await messageBus.PublishEventAsync(
             alertEvent,
             alert.SensorId.ToString(),
             cancellationToken: cancellationToken
         );
 
-        // Publish to global topic for subscribers interested in all alerts
         await messageBus.PublishEventAsync(
             alertEvent,
             MessageTopics.AllHealthAlerts,

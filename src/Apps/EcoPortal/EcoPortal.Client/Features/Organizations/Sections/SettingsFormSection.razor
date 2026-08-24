@@ -9,10 +9,6 @@
 @inject ISnackbar Snackbar
 @inject OrganizationWorkspaceState State
 
-@* One group of the organization's fields. The route names the group; the
-   form primes from the organization the workspace already holds and saves
-   the whole record back, since the update endpoint takes all of it. *@
-
 @{ Prime(Context.Organization); }
 
 <a class="settings-back" href="@SettingsPath">

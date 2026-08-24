@@ -14,7 +14,6 @@
 
 @if (Code is not null)
 {
-    @* Action detail — the NRCS practices that carry this action, and the species behind them *@
     <NuiPageLayout Title="@ActionTitle" ParentPath="/actions">
         @if (_actionsLoadError is not null)
         {
@@ -52,8 +51,6 @@
                 }
                 else if (LoadPracticesState.Result is null || LoadPracticesState.IsLoading)
                 {
-                    @* Also while loading: the component is reused across /actions/{code},
-                       so a stale result would belong to the previous action. *@
                     @for (int i = 0; i < 4; i++)
                     {
                         <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="64px" Class="mb-2 rounded" />
@@ -131,9 +128,7 @@
 }
 else
 {
-    @* Actions list *@
     <div class="ff-page aa-page">
-        @* A failed load returns an empty list, which would read as a real zero. *@
         <ActionEditorialHero ActionCount="@(_actionsLoadError is null ? LoadActionsState.Result?.Count : null)" />
 
         @if (_actionsLoadError is not null)
@@ -201,8 +196,6 @@ else
             : (LoadActionsState.Result ?? []).FirstOrDefault(
                 a => string.Equals(a.Code, Code, StringComparison.OrdinalIgnoreCase));
 
-    // Falls back to the raw code so the navbar has a title while the list loads
-    // or when the route was opened directly.
     private string? ActionTitle =>
         SelectedAction is { } action ? $"{action.Code} — {Locale.Resolve(action.Name, action.Code)}" : Code;
 
@@ -221,8 +214,6 @@ else
 
     protected override async Task OnParametersSetAsync()
     {
-        // Both routes need the action list: the detail resolves its heading
-        // from it, since the route carries only the code.
         if (LoadActionsState.Result is null && !LoadActionsState.IsLoading)
         {
             await LoadActionsState.TryExecute();
@@ -285,7 +276,6 @@ else
         CancellationToken ct
     ) => SpeciesHttpClient.GetSpeciesAsync(parameters, ct);
 
-    // The list pages through species itself; this is only the heading tally.
     [Command]
     private async Task<int?> LoadSpeciesCount(CancellationToken ct)
     {

@@ -62,7 +62,6 @@
     [Parameter] public Guid? CategoryId { get; set; }
     [Parameter] public EventCallback<SpeciesDtoForList> OnSpeciesClick { get; set; }
 
-    // Localization keys, so a host page can keep its own empty-state copy.
     [Parameter] public string EmptyTitleKey { get; set; } = "Species_Grid_Empty_Title";
     [Parameter] public string EmptyDescriptionKey { get; set; } = "Species_Grid_Empty_Description";
 
@@ -104,11 +103,6 @@
         });
     }
 
-    /// <summary>
-    /// Row height tracks column count because cards are 4:3 — fewer columns
-    /// means wider, therefore taller cards. Values approximate measured
-    /// heights; off-by-20px is fine for Virtualize.
-    /// </summary>
     private void ApplyBreakpoint(Breakpoint breakpoint)
     {
         (_columns, _rowHeight) = breakpoint switch

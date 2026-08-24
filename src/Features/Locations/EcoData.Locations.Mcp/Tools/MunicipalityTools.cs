@@ -5,22 +5,12 @@ using ModelContextProtocol.Server;
 
 namespace EcoData.Locations.Mcp.Tools;
 
-/// <summary>
-/// The places half of the connector: the 78 Puerto Rico municipios and the 3 U.S.
-/// Virgin Islands, which are what the wildlife records are filed against.
-///
-/// <para>Sealed rather than static so the type can be a generic argument to
-/// <c>WithTools</c>; every tool is a static method and nothing is
-/// constructed.</para>
-/// </summary>
+// Sealed rather than static: WithTools<T> takes the type as a generic argument,
+// and a static type can't be one.
 [McpServerToolType]
 public sealed class MunicipalityTools
 {
-    /// <summary>
-    /// 78 Puerto Rico municipios plus 3 U.S. Virgin Islands, so the default returns
-    /// all of them — the whole list is small enough to be worth having in one call,
-    /// and a model that has it can resolve a name to an id without asking again.
-    /// </summary>
+    // 78 Puerto Rico municipios plus 3 U.S. Virgin Islands: the default returns all of them.
     private const int DefaultResults = 81;
 
     private const int MaxResults = 100;
@@ -77,8 +67,6 @@ public sealed class MunicipalityTools
     {
         var municipality = await repository.GetByIdAsync(id, cancellationToken);
 
-        // Null reads as "no such municipio"; throwing would report a tool
-        // failure for what is an ordinary answer.
         return municipality is null ? null : ToDetail(municipality);
     }
 
@@ -96,9 +84,6 @@ public sealed class MunicipalityTools
         [Description("Longitude in decimal degrees.")] double longitude
     )
     {
-        // The boundary test is done in the database against the stored polygon,
-        // so this is a real point-in-polygon lookup rather than a nearest-
-        // centroid guess.
         var municipality = await repository.GetByPointAsync(
             (decimal)latitude,
             (decimal)longitude,

@@ -17,7 +17,6 @@ public sealed class OrganizationPermissionService(
         CancellationToken cancellationToken = default
     )
     {
-        // GlobalAdmin has all permissions
         if (await userLookupService.IsGlobalAdminAsync(userId, cancellationToken))
         {
             return true;
@@ -43,7 +42,6 @@ public sealed class OrganizationPermissionService(
         CancellationToken cancellationToken = default
     )
     {
-        // GlobalAdmin has all permissions
         if (await userLookupService.IsGlobalAdminAsync(userId, cancellationToken))
         {
             return new UserPermissionsDto(organizationId, [], IsGlobalAdmin: true);

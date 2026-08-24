@@ -280,7 +280,6 @@ public sealed class DatabaseSeederWorker(
     {
         var context = services.GetRequiredService<OrganizationDbContext>();
 
-        // Get all organizations that don't have a Contributor role
         var organizationsWithoutContributor = await context
             .Organizations.Where(o =>
                 !context.OrganizationRoles.Any(r =>
@@ -396,12 +395,6 @@ public sealed class DatabaseSeederWorker(
         logger.LogInformation("Species categories seeded.");
     }
 
-    /// <summary>
-    /// Folds pre-taxonomy category rows into their canonical code. Databases
-    /// seeded before the 8-code taxonomy still carry "amphibian" alongside
-    /// "amphib" (and "invertebrate", "fern"), which renders the same filter
-    /// chip twice. Links move to the canonical row before the old one goes.
-    /// </summary>
     private async Task RetireLegacyCategoriesAsync(
         WildlifeDbContext context,
         HashSet<string> canonicalCodes,
@@ -570,7 +563,6 @@ public sealed class DatabaseSeederWorker(
             stoppingToken
         );
 
-        // Map GeoJsonId to Municipality Guid from Locations database
         var municipalities = await locationsContext.Municipalities.ToDictionaryAsync(
             m => m.GeoJsonId,
             m => m.Id,
@@ -592,7 +584,6 @@ public sealed class DatabaseSeederWorker(
                 species.IsFauna = dto.IsFauna;
                 species.CommonName = BuildCommonName(dto);
 
-                // Update image if we have one and the existing doesn't
                 if (species.ProfileImageData is null && !string.IsNullOrEmpty(dto.ImageBase64))
                 {
                     species.ProfileImageData = Convert.FromBase64String(dto.ImageBase64);
@@ -643,7 +634,6 @@ public sealed class DatabaseSeederWorker(
                 seededCount++;
             }
 
-            // Link to municipalities
             if (dto.MunicipalityGeoJsonIds is { Count: > 0 })
             {
                 var existingLinks = await context
@@ -670,7 +660,6 @@ public sealed class DatabaseSeederWorker(
                 }
             }
 
-            // Occurrence locations (seeded once; existing rows are left untouched)
             if (dto.Locations is { Count: > 0 })
             {
                 var hasLocations = await context.SpeciesLocations.AnyAsync(
@@ -697,7 +686,6 @@ public sealed class DatabaseSeederWorker(
                 }
             }
 
-            // Link to categories
             if (dto.CategoryCodes is { Count: > 0 })
             {
                 var existingCategoryLinks = await context
@@ -764,7 +752,6 @@ public sealed class DatabaseSeederWorker(
             return;
         }
 
-        // Pick the 3 most threatened species with images — they make the best editorial picks.
         var picks = await context
             .Species.Where(s => !s.IsFeatured)
             .OrderBy(s => s.IucnStatus == IucnStatus.CR ? 0
@@ -790,12 +777,6 @@ public sealed class DatabaseSeederWorker(
         }
     }
 
-    /// <summary>
-    /// Common name for a species, omitting locales the source leaves blank.
-    /// The matching matrix marks 27 species as having no common name at all;
-    /// storing an empty entry would make callers resolve to null instead of
-    /// falling back to the scientific name.
-    /// </summary>
     private static List<LocaleValue> BuildCommonName(SpeciesDto dto)
     {
         var values = new List<LocaleValue>();
@@ -921,11 +902,6 @@ public sealed class DatabaseSeederWorker(
         logger.LogInformation("FWS links seeded: {Count}", seededCount);
     }
 
-    /// <summary>
-    /// Deletes practice/action/species links the source file no longer sanctions.
-    /// The matching matrix is authoritative, so links dropped from it — or whose
-    /// species, practice or action disappeared — must not survive a reseed.
-    /// </summary>
     private async Task RemoveUnsanctionedFwsLinksAsync(
         WildlifeDbContext context,
         List<FwsLinkDto> links,
