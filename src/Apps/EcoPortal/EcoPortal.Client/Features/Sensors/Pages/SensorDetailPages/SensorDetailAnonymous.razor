@@ -6,7 +6,7 @@
 
 <MudPaper Elevation="1" Class="pa-4 mb-4">
     <MudGrid Spacing="4">
-        <MudItem xs="12" md="7">
+        <MudItem xs="12">
             <MudStack Spacing="2">
                 <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
                     <MudText Typo="Typo.h5">@Sensor.Name</MudText>
@@ -31,9 +31,6 @@
                     </MudStack>
                 </MudStack>
             </MudStack>
-        </MudItem>
-        <MudItem xs="12" md="5">
-            <SensorLocationMap Latitude="Sensor.Latitude" Longitude="Sensor.Longitude" />
         </MudItem>
     </MudGrid>
 </MudPaper>

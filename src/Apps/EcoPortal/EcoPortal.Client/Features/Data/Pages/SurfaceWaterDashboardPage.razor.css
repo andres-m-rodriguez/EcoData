@@ -296,54 +296,6 @@
         background: #d97706;
     }
 
-/* ===== Map ===== */
-.map-wrap {
-    height: 380px;
-    overflow: hidden;
-}
-
-.map-legend-inline {
-    display: flex;
-    gap: 14px;
-    font-family: var(--eco-font-mono);
-    font-size: 10.5px;
-    color: var(--eco-fg-3);
-    align-items: center;
-}
-
-.map-legend-dot {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-}
-
-    .map-legend-dot::before {
-        content: '';
-        width: 8px;
-        height: 8px;
-        border-radius: 50%;
-    }
-
-    .map-legend-dot.normal::before {
-        background: #16a34a;
-    }
-
-    .map-legend-dot.elevated::before {
-        background: #d97706;
-    }
-
-    .map-legend-dot.high::before {
-        background: #dc2626;
-    }
-
-    .map-legend-dot.low::before {
-        background: #78716c;
-    }
-
-    .map-legend-dot.offline::before {
-        background: #9ca3af;
-    }
-
 /* ===== Watershed list (virtualized) ===== */
 .ws-list-head,
 .ws-row {
@@ -586,17 +538,8 @@
         font-size: 16px;
     }
 
-    .map-legend-inline {
-        flex-wrap: wrap;
-        row-gap: 6px;
-    }
-
     .chart-panel {
         padding: 14px 16px 18px;
-    }
-
-    .map-wrap {
-        height: 320px;
     }
 
     .ws-list-scroll {
