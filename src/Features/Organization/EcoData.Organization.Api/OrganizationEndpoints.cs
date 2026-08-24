@@ -49,8 +49,9 @@ public static class OrganizationEndpoints
                 "/my",
                 (ClaimsPrincipal user, IOrganizationRepository repository, CancellationToken ct) =>
                 {
-                    // Deliberate: a streamed IAsyncEnumerable has no error channel, so an
-                    // unauthenticated caller gets an empty stream rather than a status code.
+                    // A streamed IAsyncEnumerable has no error channel, so a principal the
+                    // policy passed but whose claims lack a usable user id gets an empty
+                    // stream rather than an exception. Callers guard on auth before calling.
                     var token = new RequestClaimToken(user);
                     return token.IsAuthenticated
                         ? repository.GetMyOrganizationsAsync(token.UserId!.Value, ct)
@@ -58,7 +59,7 @@ public static class OrganizationEndpoints
                 }
             )
             .WithName("GetMyOrganizations")
-            .AllowAnonymous();
+            .RequireAuthorization();
 
         group
             .MapGet(
