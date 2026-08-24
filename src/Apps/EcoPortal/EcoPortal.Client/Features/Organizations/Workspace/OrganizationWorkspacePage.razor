@@ -104,7 +104,8 @@
 
         if (!IsKnownSection)
         {
-            Navigation.NavigateTo(OrganizationSections.Path(Id, OrganizationSection.Overview), replace: true);
+            var orgPath = OrganizationSections.Path(Id, OrganizationSection.Overview);
+            Navigation.NavigateTo(orgPath, replace: true);
             return;
         }
 
