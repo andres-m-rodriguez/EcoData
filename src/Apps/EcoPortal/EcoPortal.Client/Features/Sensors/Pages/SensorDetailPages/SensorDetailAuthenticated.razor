@@ -15,7 +15,6 @@
 @inject INavigationManager Navigation
 @inject ISnackbar Snackbar
 
-@* Header Card *@
 <MudPaper Elevation="0" Class="pa-5 pa-md-8 mb-4 rounded-lg border-solid border mud-border-lines-default">
     <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Start">
         <MudStack Row="true" Spacing="3" AlignItems="AlignItems.Start">
@@ -79,7 +78,6 @@
             </MudStack>
         </MudPaper>
 
-        @* Live Readings Cards *@
         <MudPaper Elevation="0" Class="pa-4 mb-4 rounded-lg border-solid border mud-border-lines-default">
             <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Class="mb-3">
                 <MudStack Row="true" Spacing="2" AlignItems="AlignItems.Center">
@@ -166,9 +164,7 @@
             }
         </MudPaper>
 
-        @* Two Column Layout - Readings + Info Cards *@
         <div class="sensor-detail-grid mb-4">
-            @* Left: Readings Preview *@
             <MudPaper Elevation="0" Class="pa-4 rounded-lg readings-card border-solid border mud-border-lines-default">
                 <MudStack Row="true" Spacing="2" AlignItems="AlignItems.Center" Class="mb-3">
                     <MudIcon Icon="@Icons.Material.Filled.History" Color="Color.Primary" Size="Size.Small" />
@@ -177,9 +173,7 @@
                 <SensorReadingsPreview @ref="_readingsPreview" SensorId="Sensor.Id" />
             </MudPaper>
 
-            @* Right: Location + Sensor Info (stacked to match readings height) *@
             <div class="info-cards-stack">
-                @* Location Card *@
                 <MudPaper Elevation="0" Class="pa-4 rounded-lg flex-1 border-solid border mud-border-lines-default">
                     <MudStack Row="true" Spacing="2" AlignItems="AlignItems.Center" Class="mb-2">
                         <MudIcon Icon="@Icons.Material.Filled.LocationOn" Color="Color.Primary" Size="Size.Small" />
@@ -202,7 +196,6 @@
                     </MudStack>
                 </MudPaper>
 
-                @* Sensor Information Card *@
                 <MudPaper Elevation="0" Class="pa-4 rounded-lg flex-1 border-solid border mud-border-lines-default">
                     <MudStack Row="true" Spacing="2" AlignItems="AlignItems.Center" Class="mb-2">
                         <MudIcon Icon="@Icons.Material.Filled.Memory" Color="Color.Primary" Size="Size.Small" />
@@ -235,7 +228,6 @@
             </div>
         </div>
 
-        @* Quick Actions Row *@
         <MudPaper Elevation="0" Class="pa-4 rounded-lg border-solid border mud-border-lines-default">
             <MudStack Row="true" Spacing="2" AlignItems="AlignItems.Center" Class="mb-3">
                 <MudIcon Icon="@Icons.Material.Filled.Bolt" Color="Color.Primary" Size="Size.Small" />

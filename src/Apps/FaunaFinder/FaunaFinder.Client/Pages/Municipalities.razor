@@ -145,8 +145,6 @@ else
 
     private Guid? _loadedDetailId;
 
-    // The visit is filed once per municipality, not once per detail load — the
-    // id sticks around so a re-run of the notebook command can't double-file it.
     private Guid? _recordedVisitId;
     private bool _isSaved;
 
@@ -206,7 +204,6 @@ else
     {
         _municipalitiesLoadError = null;
 
-        // Run the list stream + count fetch in parallel.
         var countsTask = SpeciesClient.GetCountsByMunicipalityAsync(ct);
 
         var collected = new List<MunicipalityDtoForList>();
@@ -263,7 +260,6 @@ else
         return null;
     }
 
-    // The grid pages through species itself; this is only the heading tally.
     [Command]
     private async Task<int?> LoadDetailSpeciesCount(CancellationToken ct)
     {
@@ -274,8 +270,6 @@ else
         return result.TryPickT0(out var count, out _) ? count : null;
     }
 
-    // Notebook chrome: reads the pin state and files the visit. It runs beside
-    // the detail rather than in front of it — nothing rendered waits on it.
     [Command]
     private async Task SyncNotebook(CancellationToken ct)
     {

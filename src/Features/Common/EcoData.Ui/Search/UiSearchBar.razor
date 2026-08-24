@@ -40,13 +40,9 @@
     public int DebounceInterval { get; set; } = 300;
     [Parameter]
     public RenderFragment? ChildContent { get; set; }
-
     private bool _open;
-
     private bool HasQuery => (Query?.Trim().Length ?? 0) >= MinQueryLength;
-
     private bool IsPanelOpen => _open && HasQuery;
-
     protected override void OnInitialized()
     {
         Navigation.LocationChanged += HandleLocationChanged;

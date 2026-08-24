@@ -107,7 +107,6 @@ public sealed class NotificationRoutingService(
                 notification.CreatedAt
             );
 
-            // Find the userId for this notification
             var userId = subscribedUserIds[createdNotifications.ToList().IndexOf(notification)];
 
             var correctedEvent = new UserNotificationEvent(

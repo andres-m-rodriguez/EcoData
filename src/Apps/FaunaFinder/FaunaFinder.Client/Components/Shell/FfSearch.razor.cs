@@ -18,13 +18,10 @@ namespace FaunaFinder.Client.Components.Shell;
 // frontend can.
 public partial class FfSearch : EcoDataComponent
 {
-    /// <summary>Below this, nothing is shown and no request is made.</summary>
     private const int MinQueryLength = 2;
 
-    /// <summary>How many rows each group contributes to the dropdown.</summary>
     private const int ResultsPerGroup = 5;
 
-    /// <summary>Puerto Rico is the only state FaunaFinder covers.</summary>
     private const string StateCode = "PR";
 
     // Keys held as consts so they can appear in Razor attribute forms
@@ -33,22 +30,17 @@ public partial class FfSearch : EcoDataComponent
     private const string SearchPlaceholderKey = "Shell_Search";
     private const string ClearLabelKey = "Shell_Search_Clear";
 
-    /// <summary>Species names are stored per-locale; resolving needs the shell's context.</summary>
     [CascadingParameter]
     public LocaleContext Locale { get; set; } = LocaleContext.English;
 
-    /// <summary>What the reader has typed. The debounce lives on the text field.</summary>
     private string? _query;
 
-    /// <summary>Whether the dropdown is showing. Escape, an outside click and a
-    /// result click all put this back to false without touching the query.</summary>
     private bool _open;
 
     private string Query => _query?.Trim() ?? string.Empty;
 
     private bool HasText => !string.IsNullOrWhiteSpace(_query);
 
-    /// <summary>Two or more non-whitespace characters is the floor for a request.</summary>
     private bool HasQuery => Query.Length >= MinQueryLength;
 
     private bool IsPanelOpen => _open && HasQuery;
@@ -60,18 +52,9 @@ public partial class FfSearch : EcoDataComponent
     private bool HasAnyRow =>
         SpeciesResults is { Count: > 0 } || MunicipalityResults is { Count: > 0 };
 
-    /// <summary>
-    /// A null command result is the loading sentinel; nothing else tracks it.
-    /// The two fetches land independently, so the panel only says "searching"
-    /// while one is still outstanding <em>and</em> there is nothing to show yet —
-    /// a re-query keeps the previous rows up rather than flickering through an
-    /// empty frame.
-    /// </summary>
     private bool IsPending =>
         (SpeciesResults is null || MunicipalityResults is null) && !HasAnyRow;
 
-    /// <summary>Both groups answered, neither had anything. A failed fetch lands
-    /// here too — it returns an empty list rather than an error.</summary>
     private bool ShowEmpty =>
         SpeciesResults is not null && MunicipalityResults is not null && !HasAnyRow;
 
@@ -87,8 +70,6 @@ public partial class FfSearch : EcoDataComponent
         base.Dispose();
     }
 
-    /// <summary>Leaving the page drops the query outright — the bar goes back to
-    /// its resting capsule rather than following the reader around.</summary>
     private void HandleLocationChanged(object? sender, LocationChangedEventArgs e)
     {
         if (!HasText && !_open)
@@ -106,7 +87,6 @@ public partial class FfSearch : EcoDataComponent
 
         if (!HasQuery)
         {
-            // Under the floor: nothing shown, nothing asked of the server.
             _open = false;
             return;
         }
@@ -119,8 +99,6 @@ public partial class FfSearch : EcoDataComponent
         );
     }
 
-    // Focusing a pill that already holds a query brings its results back rather
-    // than making the reader retype to reopen the panel.
     private void HandleFocusIn()
     {
         if (HasQuery)
@@ -149,7 +127,6 @@ public partial class FfSearch : EcoDataComponent
 
     private static string MunicipalityHref(Guid id) => $"/municipalities/{id}";
 
-    /// <summary>Same profile-image route the species cards use.</summary>
     private static string SpeciesImageSrc(Guid id) => $"/wildlife/species/{id}/image";
 
     // Query-driven, so neither command runs on load. The list streams carry no

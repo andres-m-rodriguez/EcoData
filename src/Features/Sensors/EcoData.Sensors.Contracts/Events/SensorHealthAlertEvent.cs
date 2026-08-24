@@ -1,8 +1,5 @@
 namespace EcoData.Sensors.Contracts.Events;
 
-/// <summary>
-/// Event published when a sensor health alert is triggered.
-/// </summary>
 public sealed record SensorHealthAlertEvent(
     Guid Id,
     Guid SensorId,
@@ -13,6 +10,6 @@ public sealed record SensorHealthAlertEvent(
     string Message
 )
 {
-    /// <summary>Service Bus subscription name. Must match <c>typeof(SensorHealthAlertEvent).Name.ToLowerInvariant()</c>.</summary>
+    // Service Bus subscription name. Must match typeof(SensorHealthAlertEvent).Name.ToLowerInvariant().
     public const string SubscriptionName = "sensorhealthalertevent";
 }

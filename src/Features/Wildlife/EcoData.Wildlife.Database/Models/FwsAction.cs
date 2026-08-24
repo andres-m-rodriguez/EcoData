@@ -4,9 +4,6 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace EcoData.Wildlife.Database.Models;
 
-/// <summary>
-/// Represents a Fish and Wildlife Service action for species conservation.
-/// </summary>
 public sealed class FwsAction
 {
     public required Guid Id { get; set; }

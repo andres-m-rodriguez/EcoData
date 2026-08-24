@@ -32,7 +32,6 @@ internal sealed class SpaNavigationManager : INavigationManager, IDisposable
         _bus = bus;
         _nav.LocationChanged += OnLocationChanged;
 
-        // Initialize depth - deep links start at depth 1
         var currentPath = GetPathFromUri(_nav.Uri);
         _depth = IsRootPath(currentPath) ? 0 : 1;
     }
@@ -45,7 +44,7 @@ internal sealed class SpaNavigationManager : INavigationManager, IDisposable
 
     public void NavigateTo(string uri, bool replace = false)
     {
-        _parentPath = null; // Clear - will be set by page if needed
+        _parentPath = null;
         _nav.NavigateTo(uri, replace: replace);
     }
 
@@ -58,11 +57,9 @@ internal sealed class SpaNavigationManager : INavigationManager, IDisposable
         }
         else if (_parentPath is not null)
         {
-            // Deep link - go to logical parent
             _isNavigatingBack = true;
             _nav.NavigateTo(_parentPath);
         }
-        // At root with no parent - do nothing
     }
 
     public void SetParentPath(string? parentPath)
@@ -87,18 +84,16 @@ internal sealed class SpaNavigationManager : INavigationManager, IDisposable
         }
         else if (!isRoot)
         {
-            // Forward navigation
             _depth++;
             _direction = NavigationDirection.Forward;
         }
         else
         {
-            // Navigated to a root path (not back) - reset depth
             _depth = 0;
             _direction = NavigationDirection.Forward;
         }
 
-        _parentPath = null; // Will be set by new page if needed
+        _parentPath = null;
         Notify();
     }
 
@@ -106,8 +101,6 @@ internal sealed class SpaNavigationManager : INavigationManager, IDisposable
 
     private static bool IsRootPath(string path)
     {
-        // A path is considered a "root" if it has no segments or just one segment
-        // e.g., "/" or "/monitor" but not "/sensors/123"
         var trimmed = path.TrimStart('/');
         return string.IsNullOrEmpty(trimmed) || !trimmed.Contains('/');
     }

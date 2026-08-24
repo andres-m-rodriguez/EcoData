@@ -34,7 +34,6 @@ public static class SensorJwtAuthentication
                 ),
                 ValidateLifetime = true,
                 ClockSkew = TimeSpan.FromMinutes(5),
-                // Require the token_type claim to be "sensor"
                 RoleClaimType = "token_type"
             };
 

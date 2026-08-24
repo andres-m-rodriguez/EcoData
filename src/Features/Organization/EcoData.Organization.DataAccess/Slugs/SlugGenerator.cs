@@ -8,9 +8,6 @@ public static partial class SlugGenerator
 {
     public const int MaxLength = 80;
 
-    // Strips diacritics (é → e), lowercases, collapses any run of
-    // non-alphanumeric characters into a single hyphen, trims leading/trailing
-    // hyphens, and truncates to MaxLength so it always fits the column.
     public static string FromName(string name)
     {
         if (string.IsNullOrWhiteSpace(name))

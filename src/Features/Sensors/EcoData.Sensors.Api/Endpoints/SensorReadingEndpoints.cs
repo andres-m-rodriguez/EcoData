@@ -112,7 +112,6 @@ public static class SensorReadingEndpoints
                         var maxRecordedAt = validReadings.Max(r => r.RecordedAt);
                         await healthRepository.RecordReadingAsync(sensorId, maxRecordedAt, ct);
 
-                        // Publish readings to SSE subscribers
                         var topic = sensorId.ToString();
                         foreach (var reading in validReadings)
                         {

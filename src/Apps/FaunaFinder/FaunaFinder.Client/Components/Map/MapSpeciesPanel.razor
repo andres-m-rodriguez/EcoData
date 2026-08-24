@@ -112,7 +112,7 @@
 @code {
     private const int PageSize = 30;
 
-    /// <summary>Measured height of a single .msp-row, used for Virtualize's scroll math.</summary>
+    // Measured height of a single .msp-row, used for Virtualize's scroll math.
     private const float RowHeight = 62;
 
     [Parameter] public string? Title { get; set; }
@@ -125,10 +125,8 @@
     [Parameter] public EventCallback OnFilterClick { get; set; }
     [Parameter] public int ActiveFilterCount { get; set; }
 
-    /// <summary>Species in this municipality before conservation filtering.</summary>
     [Parameter] public int? TotalCount { get; set; }
 
-    /// <summary>Species left after conservation filtering; equals <see cref="TotalCount"/> when nothing is filtered.</summary>
     [Parameter] public int? FilteredCount { get; set; }
 
     [CascadingParameter] public LocaleContext Locale { get; set; } = LocaleContext.English;

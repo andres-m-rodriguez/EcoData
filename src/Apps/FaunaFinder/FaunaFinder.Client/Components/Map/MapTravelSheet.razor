@@ -38,8 +38,6 @@
 
     private async Task HandleSelect(MapRegion region)
     {
-        // Selecting the region already shown should still close; re-travelling would
-        // refetch the layer and yank the view back for no reason.
         if (region.Code == Current.Code)
         {
             await OnClose.InvokeAsync();

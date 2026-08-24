@@ -1,13 +1,11 @@
 @using BlazorStaticNavigation
 
 <MudStack Spacing="4" Class="pa-2">
-    @* Overview *@
     <MudText Typo="Typo.body1">
         Welcome! As a student, you'll join your school's organization, register your sensors,
         and start collecting environmental data. Here's how to get started:
     </MudText>
 
-    @* Step 1 *@
     <MudStack Spacing="2">
         <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
             <MudAvatar Size="Size.Small" Color="Color.Primary">1</MudAvatar>
@@ -19,7 +17,6 @@
         </MudText>
     </MudStack>
 
-    @* Step 2 *@
     <MudStack Spacing="2">
         <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
             <MudAvatar Size="Size.Small" Color="Color.Primary">2</MudAvatar>
@@ -34,7 +31,6 @@
         </MudAlert>
     </MudStack>
 
-    @* Step 3 *@
     <MudStack Spacing="2">
         <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
             <MudAvatar Size="Size.Small" Color="Color.Primary">3</MudAvatar>
@@ -66,7 +62,6 @@
         </MudSimpleTable>
     </MudStack>
 
-    @* Step 4 - Critical *@
     <MudStack Spacing="2">
         <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
             <MudAvatar Size="Size.Small" Color="Color.Primary">4</MudAvatar>
@@ -79,7 +74,6 @@
         </MudAlert>
     </MudStack>
 
-    @* Step 5 *@
     <MudStack Spacing="2">
         <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
             <MudAvatar Size="Size.Small" Color="Color.Primary">5</MudAvatar>
@@ -99,7 +93,6 @@ const char* API_URL = "https://your-server/api/sensors/";
         </MudPaper>
     </MudStack>
 
-    @* Step 6 *@
     <MudStack Spacing="2">
         <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
             <MudAvatar Size="Size.Small" Color="Color.Primary">6</MudAvatar>
@@ -111,7 +104,6 @@ const char* API_URL = "https://your-server/api/sensors/";
         </MudText>
     </MudStack>
 
-    @* Health Status Info *@
     <MudDivider Class="my-2" />
     <MudText Typo="Typo.subtitle1"><strong>Understanding Sensor Health</strong></MudText>
     <MudStack Row="true" Spacing="2" Class="flex-wrap">
@@ -127,7 +119,6 @@ const char* API_URL = "https://your-server/api/sensors/";
         <MudText Typo="Typo.body2">Likely offline - investigate device</MudText>
     </MudStack>
 
-    @* Troubleshooting *@
     <MudDivider Class="my-2" />
     <MudText Typo="Typo.subtitle1"><strong>Common Issues</strong></MudText>
     <MudSimpleTable Dense="true" Hover="true">

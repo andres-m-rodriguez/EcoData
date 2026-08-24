@@ -14,7 +14,6 @@
 
 @if (Code is not null)
 {
-    @* Practice detail — the FWS actions this practice carries, and the species behind them *@
     <NuiPageLayout Title="@PracticeTitle" ParentPath="/practices">
         @if (_practicesLoadError is not null)
         {
@@ -52,8 +51,6 @@
                 }
                 else if (LoadActionsState.Result is null || LoadActionsState.IsLoading)
                 {
-                    @* Also while loading: the component is reused across /practices/{code},
-                       so a stale result would belong to the previous practice. *@
                     @for (int i = 0; i < 4; i++)
                     {
                         <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="64px" Class="mb-2 rounded" />
@@ -131,9 +128,7 @@
 }
 else
 {
-    @* Practices list *@
     <div class="ff-page pp-page">
-        @* A failed load returns an empty list, which would read as a real zero. *@
         <PracticeEditorialHero PracticeCount="@(_practicesLoadError is null ? LoadPracticesState.Result?.Count : null)" />
 
         @if (_practicesLoadError is not null)
@@ -201,8 +196,6 @@ else
             : (LoadPracticesState.Result ?? []).FirstOrDefault(
                 p => string.Equals(p.Code, Code, StringComparison.OrdinalIgnoreCase));
 
-    // Falls back to the raw code so the navbar has a title while the list loads
-    // or when the route was opened directly.
     private string? PracticeTitle =>
         SelectedPractice is { } practice ? $"{practice.Code} — {Locale.Resolve(practice.Name, practice.Code)}" : Code;
 
@@ -221,8 +214,6 @@ else
 
     protected override async Task OnParametersSetAsync()
     {
-        // Both routes need the practice list: the detail resolves its heading
-        // from it, since the route carries only the code.
         if (LoadPracticesState.Result is null && !LoadPracticesState.IsLoading)
         {
             await LoadPracticesState.TryExecute();
@@ -285,7 +276,6 @@ else
         CancellationToken ct
     ) => SpeciesHttpClient.GetSpeciesAsync(parameters, ct);
 
-    // The list pages through species itself; this is only the heading tally.
     [Command]
     private async Task<int?> LoadSpeciesCount(CancellationToken ct)
     {

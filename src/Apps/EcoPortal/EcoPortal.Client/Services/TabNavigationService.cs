@@ -2,9 +2,6 @@ using EcoData.Spa.Navigation;
 
 namespace EcoPortal.Client.Services;
 
-/// <summary>
-/// App-specific tab navigation enum.
-/// </summary>
 public enum NavigationTab
 {
     Home,
@@ -14,25 +11,13 @@ public enum NavigationTab
     Account
 }
 
-/// <summary>
-/// Service for tab-based navigation in the EcoPortal app.
-/// </summary>
 public interface ITabNavigationService
 {
-    /// <summary>
-    /// Gets the currently active tab based on the current path.
-    /// </summary>
     NavigationTab CurrentTab { get; }
 
-    /// <summary>
-    /// Navigates to the root page of the specified tab.
-    /// </summary>
     void NavigateToTab(NavigationTab tab);
 }
 
-/// <summary>
-/// Implementation of <see cref="ITabNavigationService"/> that uses the native navigation manager.
-/// </summary>
 public sealed class TabNavigationService : ITabNavigationService
 {
     private readonly INavigationManager _nav;

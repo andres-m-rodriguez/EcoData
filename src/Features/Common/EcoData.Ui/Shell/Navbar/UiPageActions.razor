@@ -2,9 +2,6 @@
 @inherits StatefulComponent
 @inject INavbarManager Navbar
 
-@* The current page's actions, as published through INavbarManager: one action
-   is a button, more fold into a menu. *@
-
 @if (Navbar.State.Actions.Count == 1)
 {
     <MudButton Variant="Variant.Filled"

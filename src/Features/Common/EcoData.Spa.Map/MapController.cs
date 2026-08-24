@@ -28,7 +28,6 @@ public class MapController<TMarker> : IMapController<TMarker>
     /// </summary>
     internal Func<Task<MapGeolocationResult?>>? GeolocationProvider { get; set; }
 
-    // ===== Events =====
     public event Action? OnMarkersChanged;
     public event Action? OnViewChanged;
     public event Action? OnGeoJsonChanged;
@@ -45,13 +44,9 @@ public class MapController<TMarker> : IMapController<TMarker>
     public event Action? OnPolygonDrawCancelled;
     public event Action? OnHeatmapChanged;
 
-    // ===== Circle State =====
-
     internal IReadOnlyList<MapHeatPoint> HeatPoints { get; private set; } = [];
     internal MapHeatmapFilter HeatmapFilter { get; private set; } = MapHeatmapFilter.All;
     internal bool HeatmapVisible { get; private set; }
-
-    // ===== Marker Methods =====
 
     public void SetMarkers(IEnumerable<TMarker> markers)
     {
@@ -94,8 +89,6 @@ public class MapController<TMarker> : IMapController<TMarker>
 
     public int IndexOf(TMarker marker) => _markers.IndexOf(marker);
 
-    // ===== GeoJSON Methods =====
-
     public void AddGeoJson(MapGeoJson geoJson)
     {
         _geoJsonLayers[geoJson.Id] = geoJson;
@@ -120,8 +113,6 @@ public class MapController<TMarker> : IMapController<TMarker>
 
     internal IEnumerable<MapGeoJson> GetGeoJsonLayers() => _geoJsonLayers.Values;
 
-    // ===== View Methods =====
-
     public void SetView(MapCoordinate center, int zoom)
     {
         Center = center;
@@ -138,8 +129,6 @@ public class MapController<TMarker> : IMapController<TMarker>
     {
         OnViewChanged?.Invoke();
     }
-
-    // ===== Circle Methods =====
 
     public void SetCircles(IEnumerable<MapCircle> circles)
     {
@@ -164,8 +153,6 @@ public class MapController<TMarker> : IMapController<TMarker>
         OnCircleFocusRequested?.Invoke(null);
     }
 
-    // ===== Search Radius Methods =====
-
     public void ShowSearchRadius(MapCoordinate center, double radiusMeters)
     {
         OnSearchRadiusChanged?.Invoke((center, radiusMeters));
@@ -175,8 +162,6 @@ public class MapController<TMarker> : IMapController<TMarker>
     {
         OnSearchRadiusChanged?.Invoke(null);
     }
-
-    // ===== Polygon Draw Methods =====
 
     public void EnablePolygonDraw()
     {
@@ -197,8 +182,6 @@ public class MapController<TMarker> : IMapController<TMarker>
     {
         OnPolygonDrawActionRequested?.Invoke(MapPolygonDrawAction.ClearDrawn);
     }
-
-    // ===== Heatmap Methods =====
 
     public void ShowHeatmap(IReadOnlyList<MapHeatPoint> points, MapHeatmapFilter filter = MapHeatmapFilter.All)
     {
@@ -221,14 +204,10 @@ public class MapController<TMarker> : IMapController<TMarker>
         OnHeatmapChanged?.Invoke();
     }
 
-    // ===== Geolocation =====
-
     public async Task<MapGeolocationResult?> GetCurrentPositionAsync()
     {
         return GeolocationProvider is null ? null : await GeolocationProvider();
     }
-
-    // ===== Event Raising (called by component) =====
 
     public void RaiseMarkerClicked(int index)
     {

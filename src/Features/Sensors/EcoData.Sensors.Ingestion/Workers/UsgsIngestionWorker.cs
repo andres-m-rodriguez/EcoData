@@ -187,7 +187,6 @@ public sealed class UsgsIngestionWorker(
                         new IngestionLogDtoForCreate(dataSource.Id, readingsToAdd.Count, maxRecordedAt),
                         stoppingToken);
 
-                    // Update health status for sensors that received readings
                     var sensorLastReadings = readingsToAdd
                         .GroupBy(r => r.SensorId)
                         .ToDictionary(g => g.Key, g => g.Max(r => r.RecordedAt));

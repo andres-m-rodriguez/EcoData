@@ -1,11 +1,8 @@
-
-
 using EcoData.Common.Authorization;
 using EcoData.Organization.Contracts;
 
 namespace EcoData.Organization.Application.Client;
 
-// The type picks the scope. Call sites reference these fields; nobody types a key twice.
 public static class OrganizationPermissions
 {
     public static readonly OrgPermission UpdateOrganization = new(Permissions.Organization.Update);

@@ -18,37 +18,26 @@ public partial class FfLibraryRail : EcoDataComponent
 {
     private const int SkeletonRowCount = 6;
 
-    /// <summary>How far "near me" reaches. Kept in metres for the API and in
-    /// kilometres for the copy, which reads in kilometres on both languages.</summary>
     private const double NearbyRadiusMeters = 5000;
 
     private const double NearbyRadiusKm = NearbyRadiusMeters / 1000;
 
-    /// <summary>The error codes a browser geolocation lookup can report.</summary>
     private const string GeolocationDenied = "denied";
     private const string GeolocationUnsupported = "unsupported";
 
-    /// <summary>Species names are stored per-locale; resolving needs the shell's context.</summary>
     [CascadingParameter]
     public LocaleContext Locale { get; set; } = LocaleContext.English;
 
     [Inject]
     private IJavascriptSafeInterop JS { get; set; } = default!;
 
-    /// <summary>Which list the chips are showing. Purely local — switching never refetches.</summary>
     private RailTab _tab = RailTab.Saved;
 
-    /// <summary>Where the nearby lookup stands. Starts cold and only ever moves on a click.</summary>
     private NearbyState _nearby = NearbyState.Idle;
 
     private double _originLatitude;
     private double _originLongitude;
 
-    /// <summary>
-    /// A null command result is the loading sentinel; nothing else tracks it.
-    /// Nearby is only ever pending once a position has actually been resolved —
-    /// before that the tab is showing its prompt or an explanation instead.
-    /// </summary>
     private bool ActiveListPending => _tab switch
     {
         RailTab.Saved => LoadSavedState.Result is null,
@@ -67,8 +56,6 @@ public partial class FfLibraryRail : EcoDataComponent
         base.Dispose();
     }
 
-    // Changed is raised from whatever page starred or opened something, off this
-    // component's synchronization context, so hop back before touching state.
     private void HandleNotebookChanged() => _ = InvokeAsync(RefreshNotebookAsync);
 
     private async Task RefreshNotebookAsync()
@@ -88,7 +75,6 @@ public partial class FfLibraryRail : EcoDataComponent
 
     private static string SpeciesHref(Guid id) => $"/species/{id}";
 
-    /// <summary>Same profile-image route the species cards use.</summary>
     private static string SpeciesImageSrc(Guid id) => $"/wildlife/species/{id}/image";
 
     private static string EntryHref(NotebookEntry entry) => entry.Kind switch
@@ -133,20 +119,6 @@ public partial class FfLibraryRail : EcoDataComponent
         await LoadNearbyState.TryExecute();
     }
 
-    /// <summary>
-    /// Asks the browser where the reader is.
-    ///
-    /// <para>The only geolocation call in the codebase today is welded to
-    /// <c>SpaMap</c>'s ES module, and the rail must not render a hidden map to
-    /// borrow it. Until FaunaFinder's own module exports the lookup this reports
-    /// "unsupported", so the tab says so plainly instead of pretending to
-    /// search. Swapping in the interop call is the only change the path needs —
-    /// everything downstream of it is already wired.</para>
-    /// </summary>
-    // The map gets its location through IMapController, which only exists
-    // inside SpaMap — borrowing it here would mean rendering a hidden map.
-    // BrowserGeolocation is the same capability without the component, and
-    // it never throws: a failed import reports as Unavailable.
     private async Task<GeolocationOutcome> ResolvePositionAsync()
     {
         var position = await BrowserGeolocation.GetPositionAsync(JS);
@@ -163,7 +135,6 @@ public partial class FfLibraryRail : EcoDataComponent
     private async Task<IReadOnlyList<NotebookEntry>?> LoadSaved(CancellationToken ct) =>
         await Notebook.GetSavedAsync(ct);
 
-    // User-triggered: runs only once RequestNearbyAsync has an origin to search from.
     [Command]
     private async Task<IReadOnlyList<SpeciesNearbyDto>?> LoadNearby(CancellationToken ct)
     {
@@ -175,8 +146,6 @@ public partial class FfLibraryRail : EcoDataComponent
 
         if (!result.TryPickT0(out var nearby, out _))
         {
-            // The rail is secondary chrome, so a failure degrades to the same
-            // quiet empty line an empty radius gets.
             return [];
         }
 
@@ -191,20 +160,13 @@ public partial class FfLibraryRail : EcoDataComponent
 
     private enum NearbyState
     {
-        /// <summary>Nothing asked of the browser yet — the tab shows its prompt.</summary>
         Idle,
         Locating,
         Denied,
         Unsupported,
-
-        /// <summary>A position is in hand; the species list is the loading sentinel from here.</summary>
         Ready
     }
 
-    /// <summary>
-    /// What a geolocation lookup answers: a position, or one of the error codes
-    /// above. Mirrors the shape <c>spamap.js</c>'s <c>getCurrentPosition</c> returns.
-    /// </summary>
     private readonly record struct GeolocationOutcome(
         double Latitude,
         double Longitude,

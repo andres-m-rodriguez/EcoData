@@ -39,7 +39,6 @@ builder.Services.AddMemoryCache();
 builder.Services.AddSingleton<IOrganizationCacheService, OrganizationCacheService>();
 builder.Services.AddScoped<IChartService, ChartService>();
 
-// Navigation services
 builder.Services.AddSpaNavigation();
 builder.Services.AddEcoDataUi();
 builder.Services.AddScoped<ITabNavigationService, TabNavigationService>();
@@ -49,7 +48,6 @@ builder.Services.AddScoped<AuthenticationStateProvider, EcoPortalAuthStateProvid
 builder.Services.AddScoped<NotificationService>();
 builder.Services.AddScoped<OrganizationWorkspaceState>();
 
-// Same AddPermissions the server calls; only the source registration differs.
 builder.Services.AddPermissions();
 builder.Services.AddOrganizationPermissionHttpSource();
 
@@ -59,7 +57,6 @@ builder.Services.AddMudServices();
 
 var host = builder.Build();
 
-// Cached grants belong to one user, so an auth change drops them.
 var bus = host.Services.GetRequiredService<IEventBus>();
 var permissionSource = host.Services.GetRequiredService<OrganizationPermissionHttpSource>();
 var workspaceState = host.Services.GetRequiredService<OrganizationWorkspaceState>();

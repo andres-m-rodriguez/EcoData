@@ -17,7 +17,6 @@ public sealed class IdentityDbContext(DbContextOptions<IdentityDbContext> option
         builder.ApplyConfiguration(new User.EntityConfiguration());
         builder.ApplyConfiguration(new SensorCredential.EntityConfiguration());
 
-        // Configure ASP.NET Identity tables with snake_case names
         builder.Entity<IdentityRole<Guid>>(entity =>
         {
             entity.ToTable("roles");

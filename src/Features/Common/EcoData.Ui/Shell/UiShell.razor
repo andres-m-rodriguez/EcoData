@@ -1,12 +1,5 @@
 @namespace EcoData.Ui.Shell
 
-@* The app frame: a ground the app bar, an optional side panel and the page
-   float in as panels.
-
-   .ui-shell is the only plain element wrapping MudLayout/MudAppBar/
-   MudMainContent, so it carries Blazor's scope attribute and every ::deep rule
-   in the stylesheet resolves through it. *@
-
 <div class="@ShellClass">
     <MudLayout>
         <MudAppBar Elevation="0" Fixed="true" Class="ui-appbar">
@@ -17,8 +10,6 @@
             <div class="ui-shell-body">
                 @if (Rail is not null)
                 {
-                    @* Collapsing hides the panel with a class rather than dropping
-                       it from the tree, so it keeps whatever it has loaded. *@
                     <MudHidden Breakpoint="Breakpoint.SmAndDown">
                         <aside class="@RailClass" aria-hidden="@(RailOpen ? "false" : "true")">
                             @Rail

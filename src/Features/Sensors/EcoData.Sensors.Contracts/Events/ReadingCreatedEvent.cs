@@ -1,8 +1,5 @@
 namespace EcoData.Sensors.Contracts.Events;
 
-/// <summary>
-/// Event published when a new sensor reading is created.
-/// </summary>
 public sealed record ReadingCreatedEvent(
     Guid SensorId,
     string Parameter,
@@ -12,6 +9,6 @@ public sealed record ReadingCreatedEvent(
     DateTimeOffset RecordedAt
 )
 {
-    /// <summary>Service Bus subscription name. Must match <c>typeof(ReadingCreatedEvent).Name.ToLowerInvariant()</c>.</summary>
+    // Service Bus subscription name. Must match typeof(ReadingCreatedEvent).Name.ToLowerInvariant().
     public const string SubscriptionName = "readingcreatedevent";
 }

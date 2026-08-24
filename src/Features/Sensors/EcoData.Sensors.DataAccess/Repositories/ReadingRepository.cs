@@ -202,7 +202,6 @@ public sealed class ReadingRepository(IDbContextFactory<SensorsDbContext> contex
             query = query.Where(r => r.Parameter == parameters.Parameter);
         }
 
-        // Get aggregates per parameter
         var aggregates = await query
             .GroupBy(r => r.Parameter)
             .Select(g => new
@@ -216,7 +215,6 @@ public sealed class ReadingRepository(IDbContextFactory<SensorsDbContext> contex
             })
             .ToListAsync(cancellationToken);
 
-        // Get latest and second-latest readings per parameter
         var latestReadings = await query
             .GroupBy(r => r.Parameter)
             .Select(g => new

@@ -3,7 +3,6 @@
 @inject INavbarManager Navbar
 @inject INavigationManager Navigation
 
-@* Back button *@
 @if (ShowBackButton && Navigation.State.CanGoBack)
 {
     <MudIconButton Icon="@Icons.Material.Filled.ArrowBack"
@@ -11,7 +10,6 @@
                    OnClick="GoBackAsync" />
 }
 
-@* Title *@
 @if (ShowTitle && Navbar.State.Title is not null)
 {
     <span class="nui-navbar-title @TitleClass">
@@ -19,7 +17,6 @@
     </span>
 }
 
-@* Actions *@
 @if (ShowActions && Navbar.State.Actions.Count > 0)
 {
     @if (Navbar.State.Actions.Count == 1)

@@ -29,7 +29,6 @@ public static class ZigHostingExtensions
         string? zigPath = null
     )
     {
-        // Register build event handler once
         if (!_buildEventRegistered)
         {
             RegisterZigBuildEvent(builder);
@@ -228,7 +227,6 @@ public static class ZigHostingExtensions
         builder.Resource.HttpPort = targetPort;
         builder.Resource.HttpEndpointName = endpointName;
 
-        // For non-container resources, only specify targetPort and let Aspire assign the external port
         return builder.WithHttpEndpoint(
             targetPort: targetPort,
             name: endpointName,
@@ -250,7 +248,6 @@ public static class ZigHostingExtensions
     {
         return builder.WithArgs(context =>
         {
-            // Add separator for app arguments
             if (args.Length > 0)
             {
                 context.Args.Add("--");

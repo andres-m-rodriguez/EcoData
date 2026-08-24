@@ -24,7 +24,6 @@
 </MudPopover>
 
 @code {
-    /// <summary>Published by NotificationService whenever the unread count changes; the badge re-renders.</summary>
     public sealed record UnreadCountChanged(int Count);
 
     private bool _isPanelOpen;

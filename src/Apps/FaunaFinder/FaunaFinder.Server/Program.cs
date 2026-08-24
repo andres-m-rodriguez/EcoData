@@ -1,4 +1,3 @@
-// FaunaFinder Blazor host — Aspire-orchestrated container app.
 using EcoData.Locations.Api;
 using EcoData.Locations.DataAccess.Extensions;
 using EcoData.Locations.Database.Extensions;

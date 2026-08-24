@@ -21,8 +21,6 @@ public static class LoginRateLimiterExtensions
             {
                 var ipAddress = context.Connection.RemoteIpAddress?.ToString() ?? "unknown";
 
-                // Try to get email from the request body
-                // For login requests, we partition by IP + email combination
                 var partitionKey = ipAddress;
 
                 return RateLimitPartition.GetSlidingWindowLimiter(

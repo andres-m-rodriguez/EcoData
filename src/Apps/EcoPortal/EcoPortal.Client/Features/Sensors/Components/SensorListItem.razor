@@ -1,7 +1,6 @@
 @using EcoData.Sensors.Contracts.Dtos
 
 <div class="sensor-item" @onclick="HandleClick">
-    @* Desktop layout *@
     <MudHidden Breakpoint="Breakpoint.SmAndDown">
         <div class="sensor-item-main">
             <div class="sensor-icon">
@@ -36,7 +35,6 @@
         </div>
     </MudHidden>
 
-    @* Mobile layout - compact single row *@
     <MudHidden Breakpoint="Breakpoint.MdAndUp">
         <span class="sensor-name-mobile">@Sensor.Name</span>
         <div class="sensor-item-actions-mobile">

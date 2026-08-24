@@ -10,11 +10,8 @@
 @inject ISensorHttpClient SensorClient
 @inject IOrganizationHttpClient OrganizationClient
 
-@* Sensors and organizations in one dropdown. The bar is the library's; this
-   only decides what a query means. A transport failure reads exactly like a
-   genuine no-match. *@
-
-<UiSearchBar @ref="_bar" Query="@_query" QueryChanged="HandleQueryChanged" Placeholder="Search sensors and organizations">
+<UiSearchBar @ref="_bar" Query="@_query" QueryChanged="HandleQueryChanged"
+             Placeholder="Search sensors and organizations">
     @if (IsPending)
     {
         <UiSearchNote>Searching…</UiSearchNote>
@@ -30,11 +27,8 @@
             <UiSearchGroup Title="Sensors">
                 @foreach (var sensor in sensors)
                 {
-                    <UiSearchItem @key="sensor.Id"
-                                  Href="@($"/sensor/{sensor.Id}")"
-                                  Name="@sensor.Name"
-                                  Meta="@(sensor.DataSourceName ?? sensor.ExternalId)"
-                                  OnClick="Close">
+                    <UiSearchItem @key="sensor.Id" Href="@($"/sensor/{sensor.Id}")" Name="@sensor.Name"
+                                  Meta="@(sensor.DataSourceName ?? sensor.ExternalId)" OnClick="Close">
                         <Art>
                             <span class="ep-search-tile ep-search-tile--sensor">
                                 <MudIcon Icon="@Icons.Material.Filled.Sensors" />
@@ -50,11 +44,8 @@
             <UiSearchGroup Title="Organizations">
                 @foreach (var organization in organizations)
                 {
-                    <UiSearchItem @key="organization.Id"
-                                  Href="@($"/organizations/{organization.Id}")"
-                                  Name="@organization.Name"
-                                  Meta="@organization.Location"
-                                  OnClick="Close">
+                    <UiSearchItem @key="organization.Id" Href="@($"/organizations/{organization.Id}")" Name="@organization.Name"
+                                  Meta="@organization.Location" OnClick="Close">
                         <Art>
                             @if (organization.ProfilePictureUrl is { Length: > 0 } picture)
                             {
@@ -77,25 +68,15 @@
 @code {
     private const int MinQueryLength = 2;
     private const int ResultsPerGroup = 5;
-
     private UiSearchBar? _bar;
     private string? _query;
-
     private string Query => _query?.Trim() ?? string.Empty;
     private bool HasQuery => Query.Length >= MinQueryLength;
-
     private IReadOnlyList<SensorDtoForList>? SensorResults => SearchSensorsState.Result;
     private IReadOnlyList<OrganizationDtoForList>? OrganizationResults => SearchOrganizationsState.Result;
-
     private bool HasAnyRow => SensorResults is { Count: > 0 } || OrganizationResults is { Count: > 0 };
-
-    // A null command result is the loading sentinel. The two fetches land
-    // independently, so the panel only says "searching" while one is still
-    // outstanding and there is nothing to show yet.
     private bool IsPending => (SensorResults is null || OrganizationResults is null) && !HasAnyRow;
-
     private bool ShowEmpty => SensorResults is not null && OrganizationResults is not null && !HasAnyRow;
-
     private async Task HandleQueryChanged(string? value)
     {
         _query = value;

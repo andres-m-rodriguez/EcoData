@@ -11,7 +11,6 @@
 {
     <div class="account-page page-enter">
         <MudContainer MaxWidth="MaxWidth.Large" Class="py-6">
-            @* Editorial header *@
             <header class="account-header">
                 <span class="account-eyebrow">Your Account</span>
                 <h1 class="account-title">Profile &amp; <em>settings</em></h1>
@@ -22,7 +21,6 @@
             </header>
 
             <MudGrid Spacing="4">
-                @* Left sidebar: profile + quick links *@
                 <MudItem xs="12" md="4">
                     <MudStack Spacing="4">
                         <MudPaper Elevation="0" Class="profile-card pa-5">
@@ -58,7 +56,6 @@
                             </div>
                         </MudPaper>
 
-                        @* Your links, settings-hub style: each card is the link. *@
                         <div class="account-links">
                             <UiSettingsLink Href="/organizations/my" Icon="@Icons.Material.Outlined.Business" Title="My Organizations"
                                             Description="The organizations you belong to." />
@@ -74,13 +71,11 @@
                     </MudStack>
                 </MudItem>
 
-                @* Right main column *@
                 <MudItem xs="12" md="8">
                     <MudStack Spacing="4">
                         <AccountSettingsSection />
                         <SubscribedSensorsSection OnCountChanged="OnSensorCountChanged" />
 
-                        @* Sign out panel *@
                         <MudPaper Elevation="0" Class="signout-card pa-4">
                             <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Spacing="3">
                                 <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="3">

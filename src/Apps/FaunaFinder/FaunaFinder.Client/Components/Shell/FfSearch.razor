@@ -6,22 +6,10 @@
 @inject IMunicipalityHttpClient MunicipalityClient
 @inject NavigationManager Navigation
 
-@* The app bar's search. Takes no parameters — the layout renders it bare, the
-   same way it renders the notebook rail.
-
-   Two independent fetches (species, municipios) feed one dropdown. Neither is
-   a [RunOnLoad]: nothing is asked of the server until the reader has typed two
-   characters, and a null command result is the only loading sentinel kept.
-
-   Search is chrome. A transport failure returns an empty list rather than an
-   alert, so a dead network reads exactly like a genuine no-match. *@
-
 <div class="ff-search" @onkeydown="HandleKeyDown" @onfocusin="HandleFocusIn">
-    @* The resting capsule, carried over from the layout's placeholder pill. *@
     <div class="ff-search-pill">
         <MudIcon Icon="@Icons.Material.Filled.Search" Class="ff-search-glyph" />
 
-        @* Immediate + a 300ms debounce is the house convention — see NuiSearchBar. *@
         <MudTextField T="string"
                       Value="@_query"
                       ValueChanged="HandleQueryChanged"
@@ -53,7 +41,6 @@
             }
             else if (ShowEmpty)
             {
-                @* Failed and empty read the same — the bar never shouts. *@
                 <p class="ff-search-note">@L["Shell_Search_Empty", Query]</p>
             }
             else
@@ -63,8 +50,6 @@
                     <p class="ff-search-group">@L["Nav_Species"]</p>
                     @foreach (var match in species)
                     {
-                        @* Names are stored per-locale; resolving goes through the
-                           shell's cascading context, same as the rail. *@
                         var commonName = Locale.Resolve(match.CommonName, fallback: match.ScientificName);
                         <a class="ff-search-item"
                            href="@SpeciesHref(match.Id)"
@@ -113,7 +98,5 @@
         </div>
     }
 
-    @* Outside-click catcher, the way the sibling Harmony app does it. Sits
-       under the panel and over everything else this component draws. *@
     <MudOverlay Visible="@IsPanelOpen" OnClick="Close" />
 </div>

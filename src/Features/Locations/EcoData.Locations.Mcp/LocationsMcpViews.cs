@@ -1,9 +1,7 @@
 namespace EcoData.Locations.Mcp;
 
-// What the location tools hand back, deliberately narrower than the DTOs the
-// web app reads. The boundary polygon in particular never crosses this line:
-// it is thousands of coordinates, useful to a map and useless in a context
-// window.
+// The boundary polygon never crosses this line: it is thousands of
+// coordinates, useful to a map and useless in a context window.
 
 public sealed record MunicipalitySummary(
     Guid Id,

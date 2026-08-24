@@ -224,7 +224,6 @@ public static class UserAuthEndpoints
             .WithName("ChangePassword")
             .RequireAuthorization();
 
-        // Admin endpoints
         group
             .MapGet(
                 "/users",

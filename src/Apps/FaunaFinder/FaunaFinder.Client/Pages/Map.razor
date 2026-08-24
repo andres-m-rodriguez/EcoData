@@ -29,7 +29,6 @@
                 Height="100%"
                 Width="100%" />
 
-        @* Action FABs — hidden while a panel, draw mode, or the navigator is active *@
         @if (ShowActionButtons)
         {
             <div class="map-fabs">
@@ -66,7 +65,6 @@
             </div>
         }
 
-        @* Polygon draw instructions *@
         @if (_isDrawing)
         {
             <div class="draw-banner">
@@ -81,7 +79,6 @@
             </div>
         }
 
-        @* Heatmap fauna/flora filter *@
         @if (_heatmapVisible)
         {
             <div class="heatmap-card">
@@ -101,7 +98,6 @@
             </div>
         }
 
-        @* Conservation practice filter for the municipality panel *@
         <MapConservationFilterDialog @bind-Visible="_filterDialogVisible"
                                      AvailableNrcsPractices="@AvailableNrcsPractices"
                                      AvailableFwsActions="@AvailableFwsActions"
@@ -111,7 +107,6 @@
                                      OnToggleFwsAction="ToggleFwsAction"
                                      OnClearFilters="ClearConservationFiltersAndReload" />
 
-        @* Species location navigator *@
         @if (_viewingSpecies is not null)
         {
             <MapLocationNavigator Species="_viewingSpecies"
@@ -122,7 +117,6 @@
                                   OnFocusCurrent="FocusCurrentLocation" />
         }
 
-        @* Region travel *@
         @if (_travelSheetOpen)
         {
             <MapTravelSheet Current="_region"
@@ -131,7 +125,6 @@
         }
     </div>
 
-    @* Desktop Sidebar *@
     <MudHidden Breakpoint="Breakpoint.SmAndDown">
         @if (PanelVisible)
         {
@@ -164,7 +157,6 @@
         }
     </MudHidden>
 
-    @* Mobile Bottom Sheet *@
     <MudHidden Breakpoint="Breakpoint.MdAndUp">
         @if (PanelVisible)
         {
@@ -206,7 +198,6 @@
     private static readonly string[] CirclePalette =
         ["#10b981", "#3b82f6", "#f59e0b", "#8b5cf6", "#ef4444", "#06b6d4", "#ec4899", "#84cc16"];
 
-    /// <summary>Fits Puerto Rico; travel refits to the destination's bounds instead.</summary>
     private const int InitialZoom = 9;
 
     private MapController<MunicipalityMarker> _mapController = new();
@@ -215,7 +206,6 @@
     private bool _sidebarOpen;
     private bool _sheetOpen;
 
-    /// <summary>One frame — long enough for the closed panel to be painted.</summary>
     private const int PanelRevealFrameMs = 16;
     private SelectedMunicipality? _selectedMunicipality;
 
@@ -258,13 +248,9 @@
         _mapController.OnPolygonDrawn += OnPolygonDrawn;
         _mapController.OnPolygonDrawCancelled += OnPolygonDrawCancelled;
 
-        // Boundaries are fetched JS-side (localStorage-cached), so the map
-        // renders immediately instead of waiting on the payload.
         _mapController.SetView(_region.Center, InitialZoom);
         _mapController.AddGeoJson(MunicipalityBoundaries.ForRegion(_region));
     }
-
-    // ===== Region travel =====
 
     private void OpenTravelSheet()
     {
@@ -278,17 +264,12 @@
         StateHasChanged();
     }
 
-    /// <summary>
-    /// Puerto Rico and the U.S. Virgin Islands are ~150 km apart, so this replaces the
-    /// boundary layer rather than adding to it and refits the view to the new region.
-    /// </summary>
     private void TravelTo(MapRegion region)
     {
         _travelSheetOpen = false;
         var leaving = _region;
         _region = region;
 
-        // Anything anchored to the region we are leaving would otherwise linger offscreen.
         _sidebarOpen = false;
         _sheetOpen = false;
         _selectedMunicipality = null;
@@ -311,8 +292,6 @@
         _mapLoadError = success ? null : "Something went wrong while loading the map.";
         InvokeAsync(StateHasChanged);
     }
-
-    // ===== Municipality selection =====
 
     private async void OnGeoJsonClicked(string layerId, string? properties)
     {
@@ -359,11 +338,6 @@
         await LoadSpeciesCountsState.TryExecute();
     }
 
-    /// <summary>
-    /// The panel pages through species itself; these are the tallies behind its
-    /// "showing X of Y" line. The filtered count is a second round trip, so it
-    /// only runs while a conservation filter is actually on.
-    /// </summary>
     [Command]
     private async Task<SpeciesCounts?> LoadSpeciesCounts(CancellationToken ct)
     {
@@ -401,8 +375,6 @@
 
     private sealed record SelectedMunicipality(Guid Id, string Name);
 
-    // ===== Conservation practice filter (municipality panel) =====
-
     private bool _filterDialogVisible;
     private readonly HashSet<string> _selectedNrcsPractices = [];
     private readonly HashSet<string> _selectedFwsActions = [];
@@ -411,7 +383,6 @@
     private async Task<IReadOnlyList<SpeciesConservationCodesDto>?> LoadConservationCodes(CancellationToken ct)
     {
         var result = await ConservationLinkHttpClient.GetCodesByMunicipalityAsync(_selectedMunicipality!.Id, ct);
-        // Filter options are a background enhancement; a failure just leaves them empty.
         return result.TryPickT0(out var codes, out _) ? codes : [];
     }
 
@@ -472,8 +443,6 @@
         await LoadSpeciesCountsState.TryExecute();
     }
 
-    // ===== Species near me =====
-
     private async Task StartNearMeSearch()
     {
         _isLocating = true;
@@ -518,8 +487,6 @@
         _ => "Map_Geolocation_Unavailable",
     };
 
-    // ===== Draw polygon area =====
-
     private void StartDrawArea()
     {
         _selectedMunicipality = null;
@@ -563,8 +530,6 @@
             StateHasChanged();
         });
     }
-
-    // ===== Shared area search =====
 
     [Command]
     private async Task<IReadOnlyList<SpeciesNearbyDto>?> SearchArea(CancellationToken ct)
@@ -627,7 +592,6 @@
 
     private async Task FocusNearbySpeciesFromSheet(int index)
     {
-        // Collapse the sheet first so the focused circle isn't hidden behind it.
         _sheetOpen = false;
         StateHasChanged();
         await Task.Delay(300);
@@ -658,8 +622,6 @@
         NearMe,
         DrawnArea,
     }
-
-    // ===== Heatmap =====
 
     [Command]
     private async Task<IReadOnlyList<HeatmapPointDto>?> LoadHeatmap(CancellationToken ct)
@@ -697,8 +659,6 @@
         _heatmapFilter = filter;
         _mapController.SetHeatmapFilter(filter);
     }
-
-    // ===== Species location viewing =====
 
     [Command]
     private async Task<SpeciesDtoForDetail?> LoadSpeciesLocations(CancellationToken ct)
@@ -766,8 +726,6 @@
         _mapController.ClearCircles();
     }
 
-    // ===== Panel closing =====
-
     private void CloseSidebar()
     {
         _sidebarOpen = false;
@@ -789,14 +747,6 @@
     private void OnSpeciesClicked(SpeciesDtoForList species) =>
         NavigationManager.NavigateTo($"/species/{species.Id}");
 
-    /// <summary>
-    /// Brings the panel in with its transition intact.
-    ///
-    /// <para>Both panels are gated on <see cref="PanelVisible"/>, so setting
-    /// the content and the open flag in the same render mounts the element
-    /// already open — the browser has no earlier state to animate from and it
-    /// just appears. This paints the closed state first, then opens.</para>
-    /// </summary>
     private async Task RevealPanelAsync()
     {
         _sidebarOpen = false;
@@ -812,17 +762,6 @@
         StateHasChanged();
     }
 
-    // ===== Mobile tab bar =====
-
-    /// <summary>
-    /// The sheet occupies the bottom of the viewport, which is exactly where
-    /// the tab bar lives, so the bar steps aside while a panel is up.
-    ///
-    /// <para>Driven from <c>OnAfterRender</c> rather than from each of the
-    /// half-dozen places the sheet opens or closes: the guard makes it
-    /// idempotent, so one call site can't be forgotten and leave the bar
-    /// stranded off-screen.</para>
-    /// </summary>
     private bool _bottomNavHidden;
 
     protected override void OnAfterRender(bool firstRender) => SyncBottomNav(_sheetOpen && PanelVisible);

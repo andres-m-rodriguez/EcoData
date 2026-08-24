@@ -5,13 +5,9 @@
 
 <Router AppAssembly="typeof(Routes).Assembly" NotFoundPage="typeof(Pages.NotFoundPage)">
     <Found Context="routeData">
-        @* Cascaded so layouts can read the values the router already parsed
-           (OrganizationLayout takes the workspace id from here). *@
         <CascadingValue Value="routeData" IsFixed="false">
         <AuthorizeRouteView RouteData="routeData" DefaultLayout="typeof(MainLayout)">
             <NotAuthorized>
-                @* Only a missing sign-in is fixed by logging in. A signed-in user who lacks a
-                   permission is told so in place, on the URL they asked for. *@
                 @if (context.User.Identity?.IsAuthenticated == true)
                 {
                     <AccessDenied />

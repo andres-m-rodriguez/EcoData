@@ -28,10 +28,8 @@ public sealed class OrganizationBlockedUser
             builder.Property(static e => e.Reason).HasMaxLength(500);
             builder.Property(static e => e.BlockedAt).IsRequired();
 
-            // A user can only be blocked once per organization
             builder.HasIndex(static e => new { e.OrganizationId, e.UserId }).IsUnique();
 
-            // Index for checking if user is blocked
             builder.HasIndex(static e => e.UserId);
 
             builder
