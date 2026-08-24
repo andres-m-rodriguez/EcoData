@@ -24,7 +24,7 @@ public sealed class ConservationTools
         CancellationToken cancellationToken
     )
     {
-        var practices = await repository.GetAllAsync(cancellationToken);
+        var practices = await repository.GetAsync(cancellationToken);
 
         return practices
             .Select(practice => new ConservationPractice(
@@ -45,7 +45,7 @@ public sealed class ConservationTools
         CancellationToken cancellationToken
     )
     {
-        var actions = await repository.GetAllAsync(cancellationToken);
+        var actions = await repository.GetAsync(cancellationToken);
 
         return actions
             .Select(action => new RecoveryAction(

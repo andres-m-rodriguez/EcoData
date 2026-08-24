@@ -4,5 +4,5 @@ namespace EcoData.Wildlife.DataAccess.Interfaces;
 
 public interface IFwsActionRepository
 {
-    Task<IReadOnlyList<FwsActionDtoForList>> GetAllAsync(CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<FwsActionDtoForList>> GetAsync(CancellationToken cancellationToken = default);
 }

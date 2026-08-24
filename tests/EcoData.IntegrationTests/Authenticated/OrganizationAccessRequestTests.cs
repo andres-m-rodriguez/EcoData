@@ -26,7 +26,7 @@ public sealed class OrganizationAccessRequestTests(EcoDataTestFixture fixture)
     {
         var orgId = await CreateOrganizationAsync();
 
-        var roles = await RoleHttpClient.GetAllAsync(orgId);
+        var roles = await RoleHttpClient.GetAsync(orgId);
 
         roles.IsT0.Should().BeTrue("Listing roles should succeed");
         roles

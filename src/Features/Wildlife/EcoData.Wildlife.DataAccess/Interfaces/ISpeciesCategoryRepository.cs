@@ -4,7 +4,7 @@ namespace EcoData.Wildlife.DataAccess.Interfaces;
 
 public interface ISpeciesCategoryRepository
 {
-    Task<IReadOnlyList<SpeciesCategoryDtoForList>> GetAllAsync(CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<SpeciesCategoryDtoForList>> GetAsync(CancellationToken cancellationToken = default);
 
     Task<SpeciesCategoryDtoForDetail?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
 

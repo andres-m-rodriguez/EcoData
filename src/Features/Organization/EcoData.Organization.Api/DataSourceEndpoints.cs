@@ -15,7 +15,7 @@ public static class DataSourceEndpoints
             .MapGet(
                 "/",
                 (IDataSourceRepository repository, CancellationToken ct) =>
-                    repository.GetAllAsync(ct)
+                    repository.GetAsync(ct)
             )
             .WithName("GetDataSources");
 

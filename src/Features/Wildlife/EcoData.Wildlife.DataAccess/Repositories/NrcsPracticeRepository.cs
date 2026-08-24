@@ -8,7 +8,7 @@ namespace EcoData.Wildlife.DataAccess.Repositories;
 public sealed class NrcsPracticeRepository(IDbContextFactory<WildlifeDbContext> contextFactory)
     : INrcsPracticeRepository
 {
-    public async Task<IReadOnlyList<NrcsPracticeDtoForList>> GetAllAsync(
+    public async Task<IReadOnlyList<NrcsPracticeDtoForList>> GetAsync(
         CancellationToken cancellationToken = default
     )
     {

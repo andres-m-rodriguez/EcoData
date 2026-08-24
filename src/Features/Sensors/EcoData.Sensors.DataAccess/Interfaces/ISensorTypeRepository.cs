@@ -4,7 +4,7 @@ namespace EcoData.Sensors.DataAccess.Interfaces;
 
 public interface ISensorTypeRepository
 {
-    Task<IReadOnlyList<SensorTypeDtoForList>> GetAllAsync(
+    Task<IReadOnlyList<SensorTypeDtoForList>> GetAsync(
         CancellationToken cancellationToken = default
     );
 
@@ -21,7 +21,7 @@ public interface ISensorTypeRepository
 
 public interface IParameterRepository
 {
-    Task<IReadOnlyList<ParameterDtoForList>> GetAllAsync(
+    Task<IReadOnlyList<ParameterDtoForList>> GetAsync(
         CancellationToken cancellationToken = default
     );
 

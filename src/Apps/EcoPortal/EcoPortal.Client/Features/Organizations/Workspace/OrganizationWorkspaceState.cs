@@ -25,7 +25,6 @@ public sealed class OrganizationWorkspaceState(
     private readonly Dictionary<Guid, Task<OrganizationContext?>> _contexts = [];
     private readonly Dictionary<Guid, Task<OrganizationCounts>> _counts = [];
 
-    // Null means the organization does not exist (or could not be reached).
     public Task<OrganizationContext?> GetAsync(Guid organizationId, CancellationToken cancellationToken = default)
     {
         if (_contexts.TryGetValue(organizationId, out var cached))
@@ -70,10 +69,6 @@ public sealed class OrganizationWorkspaceState(
         _counts.Clear();
     }
 
-    // The shared fetch never carries a caller's token: a section cancelling its
-    // own load must not fault the task cached for the next one. A faulted load is
-    // dropped from the cache so the next visit retries instead of awaiting the
-    // same dead task.
     private async Task<OrganizationContext?> LoadContextAsync(Guid organizationId)
     {
         try
@@ -122,7 +117,7 @@ public sealed class OrganizationWorkspaceState(
         if (context.Can(Permissions.Organization.ManageMembers))
         {
             memberCount = 0;
-            await foreach (var _ in memberClient.GetAllAsync(id, new OrganizationMemberParameters(PageSize: 200)))
+            await foreach (var _ in memberClient.GetAsync(id, new OrganizationMemberParameters(PageSize: 200)))
             {
                 memberCount++;
             }

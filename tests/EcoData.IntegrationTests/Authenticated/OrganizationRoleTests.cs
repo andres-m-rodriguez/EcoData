@@ -39,7 +39,7 @@ public sealed class OrganizationRoleTests(EcoDataTestFixture fixture) : Authenti
             .Equal(SensorPermissions.Sensor.Read, SensorPermissions.Sensor.Update);
         created.AsT0.MemberCount.Should().Be(0);
 
-        var roles = await RoleHttpClient.GetAllAsync(orgId);
+        var roles = await RoleHttpClient.GetAsync(orgId);
         roles.IsT0.Should().BeTrue();
         roles.AsT0.Should().ContainSingle(r => r.Name == "Field Technician");
     }
@@ -97,7 +97,7 @@ public sealed class OrganizationRoleTests(EcoDataTestFixture fixture) : Authenti
 
         deleted.IsT0.Should().BeTrue("Deleting an unused role should succeed");
 
-        var roles = await RoleHttpClient.GetAllAsync(orgId);
+        var roles = await RoleHttpClient.GetAsync(orgId);
         roles.AsT0.Should().NotContain(r => r.Id == viewer.Id);
     }
 
@@ -124,13 +124,13 @@ public sealed class OrganizationRoleTests(EcoDataTestFixture fixture) : Authenti
         deleted.IsT1.Should().BeTrue("A role with members should not be deletable");
         deleted.AsT1.StatusCode.Should().Be(409);
 
-        var roles = await RoleHttpClient.GetAllAsync(orgId);
+        var roles = await RoleHttpClient.GetAsync(orgId);
         roles.AsT0.Should().ContainSingle(r => r.Id == contributor.Id && r.MemberCount == 1);
     }
 
     private async Task<OrganizationRoleDto> RoleByNameAsync(Guid orgId, string name)
     {
-        var roles = await RoleHttpClient.GetAllAsync(orgId);
+        var roles = await RoleHttpClient.GetAsync(orgId);
         roles.IsT0.Should().BeTrue("Listing roles should succeed");
 
         return roles.AsT0.Single(r => r.Name == name);

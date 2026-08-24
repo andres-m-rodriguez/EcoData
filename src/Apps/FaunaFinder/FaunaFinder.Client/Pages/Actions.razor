@@ -246,7 +246,7 @@ else
     [Command]
     private async Task<IReadOnlyList<FwsActionDtoForList>?> LoadActions(CancellationToken ct)
     {
-        var result = await ActionClient.GetAllAsync(ct);
+        var result = await ActionClient.GetAsync(ct);
         if (result.TryPickT0(out var actions, out var error))
         {
             _actionsLoadError = null;

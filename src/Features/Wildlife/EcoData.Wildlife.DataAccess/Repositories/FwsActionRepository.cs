@@ -8,7 +8,7 @@ namespace EcoData.Wildlife.DataAccess.Repositories;
 public sealed class FwsActionRepository(IDbContextFactory<WildlifeDbContext> contextFactory)
     : IFwsActionRepository
 {
-    public async Task<IReadOnlyList<FwsActionDtoForList>> GetAllAsync(
+    public async Task<IReadOnlyList<FwsActionDtoForList>> GetAsync(
         CancellationToken cancellationToken = default
     )
     {

@@ -7,7 +7,7 @@ namespace EcoData.Wildlife.Application.Client;
 
 public sealed class NrcsPracticeHttpClient(HttpClient httpClient) : INrcsPracticeHttpClient
 {
-    public async Task<OneOf<IReadOnlyList<NrcsPracticeDtoForList>, RequestFailed>> GetAllAsync(
+    public async Task<OneOf<IReadOnlyList<NrcsPracticeDtoForList>, RequestFailed>> GetAsync(
         CancellationToken ct = default)
     {
         try

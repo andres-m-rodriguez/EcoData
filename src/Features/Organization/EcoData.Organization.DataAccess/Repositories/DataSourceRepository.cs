@@ -37,7 +37,7 @@ public sealed class DataSourceRepository(IDbContextFactory<OrganizationDbContext
             .FirstOrDefaultAsync(cancellationToken);
     }
 
-    public async Task<IReadOnlyList<DataSourceDtoForList>> GetAllAsync(CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyList<DataSourceDtoForList>> GetAsync(CancellationToken cancellationToken = default)
     {
         await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
         return await context.DataSources

@@ -17,7 +17,7 @@ public static class ReferenceDataEndpoints
             .MapGet(
                 "/",
                 (ISensorTypeRepository repository, CancellationToken ct) =>
-                    repository.GetAllAsync(ct)
+                    repository.GetAsync(ct)
             )
             .WithName("GetSensorTypes");
 
@@ -47,7 +47,7 @@ public static class ReferenceDataEndpoints
                 {
                     var parameters = sensorTypeId.HasValue
                         ? await repository.GetBySensorTypeAsync(sensorTypeId.Value, ct)
-                        : await repository.GetAllAsync(ct);
+                        : await repository.GetAsync(ct);
                     return TypedResults.Ok(parameters);
                 }
             )
