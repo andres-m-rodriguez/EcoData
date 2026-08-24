@@ -3,6 +3,7 @@ using EcoData.Organization.Contracts;
 using EcoData.Organization.Contracts.Parameters;
 using EcoData.Sensors.Application.Client;
 using EcoData.Sensors.Contracts.Parameters;
+using EcoPortal.Client.Services;
 
 namespace EcoPortal.Client.Features.Organizations.Workspace;
 
@@ -14,7 +15,8 @@ public sealed class OrganizationWorkspaceState(
     IPermissionHttpClient permissionClient,
     IOrganizationMemberHttpClient memberClient,
     IOrganizationAccessRequestHttpClient accessRequestClient,
-    ISensorHttpClient sensorClient
+    ISensorHttpClient sensorClient,
+    AuthStateService authState
 )
 {
     private const int PendingRequestsCap = 20;
@@ -34,6 +36,21 @@ public sealed class OrganizationWorkspaceState(
         _contexts[organizationId] = task;
 
         return task.WaitAsync(cancellationToken);
+    }
+
+    // A faulted load must not stick: the next visit retries instead of awaiting
+    // the same dead task until something calls Invalidate.
+    private async Task<OrganizationContext?> LoadContextAsync(Guid organizationId)
+    {
+        try
+        {
+            return await LoadContextCoreAsync(organizationId);
+        }
+        catch
+        {
+            _contexts.Remove(organizationId);
+            throw;
+        }
     }
 
     public Task<OrganizationCounts> GetCountsAsync(
@@ -69,7 +86,7 @@ public sealed class OrganizationWorkspaceState(
 
     // The shared fetches never carry a caller's token: a section cancelling its
     // own load must not fault the task cached for the next one.
-    private async Task<OrganizationContext?> LoadContextAsync(Guid organizationId)
+    private async Task<OrganizationContext?> LoadContextCoreAsync(Guid organizationId)
     {
         var organization = await organizationClient.GetByIdAsync(organizationId);
         if (!organization.TryPickT0(out var dto, out _))
@@ -85,12 +102,15 @@ public sealed class OrganizationWorkspaceState(
         );
 
         string? roleName = null;
-        await foreach (var mine in organizationClient.GetMyOrganizationsAsync())
+        if (authState.IsAuthenticated)
         {
-            if (mine.Id == organizationId)
+            await foreach (var mine in organizationClient.GetMyOrganizationsAsync())
             {
-                roleName = mine.RoleName;
-                break;
+                if (mine.Id == organizationId)
+                {
+                    roleName = mine.RoleName;
+                    break;
+                }
             }
         }
 
