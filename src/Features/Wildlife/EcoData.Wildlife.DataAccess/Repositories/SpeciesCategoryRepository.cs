@@ -8,7 +8,7 @@ namespace EcoData.Wildlife.DataAccess.Repositories;
 public sealed class SpeciesCategoryRepository(IDbContextFactory<WildlifeDbContext> contextFactory)
     : ISpeciesCategoryRepository
 {
-    public async Task<IReadOnlyList<SpeciesCategoryDtoForList>> GetAllAsync(
+    public async Task<IReadOnlyList<SpeciesCategoryDtoForList>> GetListAsync(
         CancellationToken cancellationToken = default
     )
     {

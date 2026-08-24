@@ -6,5 +6,5 @@ namespace EcoData.Wildlife.Application.Client;
 
 public interface INrcsPracticeHttpClient
 {
-    Task<OneOf<IReadOnlyList<NrcsPracticeDtoForList>, RequestFailed>> GetAllAsync(CancellationToken ct = default);
+    Task<OneOf<IReadOnlyList<NrcsPracticeDtoForList>, RequestFailed>> GetListAsync(CancellationToken ct = default);
 }

@@ -6,5 +6,5 @@ namespace EcoData.Wildlife.Application.Client;
 
 public interface IFwsActionHttpClient
 {
-    Task<OneOf<IReadOnlyList<FwsActionDtoForList>, RequestFailed>> GetAllAsync(CancellationToken ct = default);
+    Task<OneOf<IReadOnlyList<FwsActionDtoForList>, RequestFailed>> GetListAsync(CancellationToken ct = default);
 }

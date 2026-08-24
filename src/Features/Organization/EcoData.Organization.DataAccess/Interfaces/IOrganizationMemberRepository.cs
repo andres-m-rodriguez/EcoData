@@ -5,7 +5,7 @@ namespace EcoData.Organization.DataAccess.Interfaces;
 
 public interface IOrganizationMemberRepository
 {
-    IAsyncEnumerable<OrganizationMemberDto> GetAllAsync(
+    IAsyncEnumerable<OrganizationMemberDto> GetListAsync(
         Guid organizationId,
         OrganizationMemberParameters parameters,
         CancellationToken cancellationToken = default

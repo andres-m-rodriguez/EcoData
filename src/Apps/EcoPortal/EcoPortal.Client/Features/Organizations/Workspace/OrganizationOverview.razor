@@ -6,14 +6,13 @@
 @inject OrganizationWorkspaceState State
 @inject INavigationManager Navigation
 
-@* A member's landing: the numbers that matter today, what's online, and the
-   organization's own words. *@
 
 <UiSectionHead Title="Overview" Eyebrow="Today">
     <Actions>
         @if (Context.Can(SensorPermissions.Sensor.Create))
         {
-            <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small" StartIcon="@Icons.Material.Filled.Add"
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small"
+                       StartIcon="@Icons.Material.Filled.Add"
                        Href="@($"{OrganizationSections.Path(Context.Organization.Id, OrganizationSection.Sensors)}/create")">
                 Add sensor
             </MudButton>
@@ -65,7 +64,9 @@
     @if (!string.IsNullOrWhiteSpace(Context.Organization.AboutUs))
     {
         <section class="ov-card">
-            <div class="ov-card-head"><h3>About</h3></div>
+            <div class="ov-card-head">
+                <h3>About</h3>
+            </div>
             <p class="ov-about">@Context.Organization.AboutUs</p>
         </section>
     }
@@ -74,9 +75,7 @@
 @code {
     [Parameter, EditorRequired]
     public required OrganizationContext Context { get; set; }
-
     private OrganizationCounts? _counts;
-
     protected override async Task OnParametersSetAsync()
     {
         _counts = await State.GetCountsAsync(Context);

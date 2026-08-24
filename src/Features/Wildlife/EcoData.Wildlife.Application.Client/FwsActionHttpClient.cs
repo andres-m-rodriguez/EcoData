@@ -7,7 +7,7 @@ namespace EcoData.Wildlife.Application.Client;
 
 public sealed class FwsActionHttpClient(HttpClient httpClient) : IFwsActionHttpClient
 {
-    public async Task<OneOf<IReadOnlyList<FwsActionDtoForList>, RequestFailed>> GetAllAsync(
+    public async Task<OneOf<IReadOnlyList<FwsActionDtoForList>, RequestFailed>> GetListAsync(
         CancellationToken ct = default)
     {
         try

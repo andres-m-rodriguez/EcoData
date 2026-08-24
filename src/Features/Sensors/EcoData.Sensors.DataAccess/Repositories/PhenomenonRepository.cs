@@ -9,7 +9,7 @@ namespace EcoData.Sensors.DataAccess.Repositories;
 public sealed class PhenomenonRepository(IDbContextFactory<SensorsDbContext> contextFactory)
     : IPhenomenonRepository
 {
-    public async IAsyncEnumerable<PhenomenonDtoForList> GetAllAsync(
+    public async IAsyncEnumerable<PhenomenonDtoForList> GetListAsync(
         [EnumeratorCancellation] CancellationToken cancellationToken = default
     )
     {

@@ -7,7 +7,7 @@ namespace EcoData.Wildlife.Application.Client;
 
 public sealed class SpeciesCategoryHttpClient(HttpClient httpClient) : ISpeciesCategoryHttpClient
 {
-    public async Task<OneOf<IReadOnlyList<SpeciesCategoryDtoForList>, RequestFailed>> GetAllAsync(
+    public async Task<OneOf<IReadOnlyList<SpeciesCategoryDtoForList>, RequestFailed>> GetListAsync(
         CancellationToken ct = default)
     {
         try

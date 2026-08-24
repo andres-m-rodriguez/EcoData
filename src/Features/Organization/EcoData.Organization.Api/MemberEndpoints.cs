@@ -28,7 +28,7 @@ public static class MemberEndpoints
                     [AsParameters] OrganizationMemberParameters parameters,
                     IOrganizationMemberRepository repository,
                     CancellationToken ct
-                ) => repository.GetAllAsync(organizationId, parameters, ct)
+                ) => repository.GetListAsync(organizationId, parameters, ct)
             )
             .WithName("GetOrganizationMembers")
             .AllowAnonymous();

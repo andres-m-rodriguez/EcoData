@@ -14,9 +14,6 @@ public sealed class OrganizationPermissionHttpSource(IPermissionHttpClient permi
         CancellationToken cancellationToken = default
     )
     {
-        // The fetch is shared by every caller asking about this organization, so it never
-        // carries one caller's token: a component cancelling its own check (Tempest's
-        // latest-wins re-execute) must not fault the task cached for everyone else.
         if (!_cache.TryGetValue(organizationId, out var task))
         {
             task = FetchPermissionsAsync(organizationId);

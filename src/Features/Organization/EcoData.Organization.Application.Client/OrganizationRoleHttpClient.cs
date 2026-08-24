@@ -9,7 +9,7 @@ namespace EcoData.Organization.Application.Client;
 
 public sealed class OrganizationRoleHttpClient(HttpClient httpClient) : IOrganizationRoleHttpClient
 {
-    public async Task<OneOf<IReadOnlyList<OrganizationRoleDto>, RequestFailed>> GetAllAsync(
+    public async Task<OneOf<IReadOnlyList<OrganizationRoleDto>, RequestFailed>> GetListAsync(
         Guid organizationId,
         CancellationToken cancellationToken = default
     )

@@ -27,7 +27,8 @@ else if (_context is null)
         <MudIcon Icon="@Icons.Material.Filled.DomainDisabled" Size="Size.Large" Color="Color.Error" />
         <h2>Organization not found</h2>
         <p>It may have been deleted, or the link is wrong.</p>
-        <MudButton Variant="Variant.Filled" Color="Color.Primary" Href="/organizations/discover">Browse organizations</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" Href="/organizations/discover">Browse organizations
+        </MudButton>
     </div>
 }
 else if (Section == OrganizationSection.Overview && !_context.IsMember)
@@ -42,7 +43,8 @@ else
     <CascadingValue Value="_context" IsFixed="true">
         @* The shell shows the rail as its side panel on desktop (OrganizationRail);
            the page keeps the phone strip. *@
-        <UiWorkspace Links="OrganizationSections.Links(_context, _counts)" ActiveKey="@OrganizationSections.Key(Section)" RailLabel="Workspace" RailInShell="true">
+        <UiWorkspace Links="OrganizationSections.Links(_context, _counts)" ActiveKey="@OrganizationSections.Key(Section)"
+                     RailLabel="Workspace" RailInShell="true">
             <Header>
                 <div class="ws-head">
                     <div class="ws-crumb">
@@ -102,9 +104,6 @@ else
 
     [Parameter]
     public OrganizationSection Section { get; set; } = OrganizationSection.Overview;
-
-    // The page's content, handed the loaded context so it can ask Can(...)
-    // without re-fetching anything.
     [Parameter]
     public RenderFragment<OrganizationContext>? ChildContent { get; set; }
 
@@ -139,8 +138,6 @@ else
             return;
         }
 
-        // The back arrow on a phone leaves for the list, not browser history:
-        // a deep link into an organization has nothing to go back to.
         Navbar.SetTitle(_context.Organization.Name);
         Navigation.SetParentPath("/organizations/my");
 

@@ -4,7 +4,7 @@ namespace EcoData.Sensors.DataAccess.Interfaces;
 
 public interface IPhenomenonRepository
 {
-    IAsyncEnumerable<PhenomenonDtoForList> GetAllAsync(
+    IAsyncEnumerable<PhenomenonDtoForList> GetListAsync(
         CancellationToken cancellationToken = default
     );
 

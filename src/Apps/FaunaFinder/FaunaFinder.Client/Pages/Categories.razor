@@ -148,7 +148,7 @@ else
     [Command]
     private async Task<IReadOnlyList<SpeciesCategoryDtoForList>?> LoadCategories(CancellationToken ct)
     {
-        var result = await CategoryHttpClient.GetAllAsync(ct);
+        var result = await CategoryHttpClient.GetListAsync(ct);
         if (result.TryPickT0(out var categories, out var error))
         {
             _categoriesLoadError = null;

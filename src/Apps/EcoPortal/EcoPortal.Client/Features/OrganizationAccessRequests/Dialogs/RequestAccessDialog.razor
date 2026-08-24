@@ -113,7 +113,7 @@
             return;
         }
 
-        var result = await RoleClient.GetAllAsync(organization.Id);
+        var result = await RoleClient.GetListAsync(organization.Id);
 
         result.Switch(
             roles =>

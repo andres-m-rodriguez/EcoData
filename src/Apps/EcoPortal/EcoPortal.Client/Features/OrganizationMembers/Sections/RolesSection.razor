@@ -100,7 +100,7 @@ else
     {
         _loadError = null;
 
-        var result = await RoleClient.GetAllAsync(OrganizationId, ct);
+        var result = await RoleClient.GetListAsync(OrganizationId, ct);
         if (!result.TryPickT0(out var roles, out var failure))
         {
             _loadError = failure.Message ?? "Couldn't load roles.";

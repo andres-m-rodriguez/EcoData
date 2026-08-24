@@ -18,7 +18,7 @@ public static class PhenomenonEndpoints
                 "/",
                 (string? capability, IPhenomenonRepository repository, CancellationToken ct) =>
                     string.IsNullOrWhiteSpace(capability)
-                        ? repository.GetAllAsync(ct)
+                        ? repository.GetListAsync(ct)
                         : repository.GetByCapabilityAsync(capability, ct)
             )
             .WithName("GetPhenomena");

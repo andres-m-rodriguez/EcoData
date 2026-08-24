@@ -13,9 +13,6 @@ public enum OrganizationSection
     Settings,
 }
 
-// The four places inside an organization, in rail order. A section that needs
-// a permission the caller lacks is left out of the nav rather than shown and
-// refused; the page behind it still carries its own [OrganizationPermission].
 public static class OrganizationSections
 {
     public static string Path(Guid organizationId, OrganizationSection section) => section switch

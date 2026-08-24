@@ -21,7 +21,7 @@ public static class SpeciesCategoryEndpoints
                     CancellationToken ct
                 ) =>
                 {
-                    var categories = await repository.GetAllAsync(ct);
+                    var categories = await repository.GetListAsync(ct);
                     return TypedResults.Ok(categories);
                 }
             )
