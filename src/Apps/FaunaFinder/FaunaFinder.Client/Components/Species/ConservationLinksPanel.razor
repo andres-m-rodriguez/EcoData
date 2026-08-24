@@ -182,7 +182,7 @@
     [Command, RunOnLoad]
     private async Task<IReadOnlyList<FwsActionDtoForList>?> LoadFwsActions(CancellationToken ct)
     {
-        var result = await FwsClient.GetAsync(ct);
+        var result = await FwsClient.GetListAsync(ct);
         if (result.TryPickT0(out var actions, out var error))
         {
             _fwsLoadError = null;
@@ -197,7 +197,7 @@
     [Command, RunOnLoad]
     private async Task<IReadOnlyList<NrcsPracticeDtoForList>?> LoadNrcsPractices(CancellationToken ct)
     {
-        var result = await NrcsClient.GetAsync(ct);
+        var result = await NrcsClient.GetListAsync(ct);
         if (result.TryPickT0(out var practices, out var error))
         {
             _nrcsLoadError = null;

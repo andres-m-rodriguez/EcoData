@@ -8,7 +8,7 @@ namespace EcoData.Sensors.DataAccess.Repositories;
 public sealed class SensorTypeRepository(IDbContextFactory<SensorsDbContext> contextFactory)
     : ISensorTypeRepository
 {
-    public async Task<IReadOnlyList<SensorTypeDtoForList>> GetAsync(CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyList<SensorTypeDtoForList>> GetListAsync(CancellationToken cancellationToken = default)
     {
         await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
         return await context.SensorTypes
@@ -87,7 +87,7 @@ public sealed class SensorTypeRepository(IDbContextFactory<SensorsDbContext> con
 public sealed class ParameterRepository(IDbContextFactory<SensorsDbContext> contextFactory)
     : IParameterRepository
 {
-    public async Task<IReadOnlyList<ParameterDtoForList>> GetAsync(CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyList<ParameterDtoForList>> GetListAsync(CancellationToken cancellationToken = default)
     {
         await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
         return await context.Parameters

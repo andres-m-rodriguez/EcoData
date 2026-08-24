@@ -8,7 +8,7 @@ namespace EcoData.Organization.Application.Client;
 
 public interface IOrganizationMemberHttpClient
 {
-    IAsyncEnumerable<OrganizationMemberDto> GetAsync(
+    IAsyncEnumerable<OrganizationMemberDto> GetListAsync(
         Guid organizationId,
         OrganizationMemberParameters parameters,
         CancellationToken cancellationToken = default

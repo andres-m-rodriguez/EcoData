@@ -214,7 +214,7 @@ public sealed class SpeciesTools
         CancellationToken cancellationToken
     )
     {
-        var categories = await repository.GetAsync(cancellationToken);
+        var categories = await repository.GetListAsync(cancellationToken);
 
         return categories
             .Select(category => new TaxonCategory(

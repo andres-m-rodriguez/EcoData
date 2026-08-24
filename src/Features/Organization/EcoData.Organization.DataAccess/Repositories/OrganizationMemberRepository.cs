@@ -14,7 +14,7 @@ public sealed class OrganizationMemberRepository(
     IUserLookupService userLookupService
 ) : IOrganizationMemberRepository
 {
-    public async IAsyncEnumerable<OrganizationMemberDto> GetAsync(
+    public async IAsyncEnumerable<OrganizationMemberDto> GetListAsync(
         Guid organizationId,
         OrganizationMemberParameters parameters,
         [EnumeratorCancellation] CancellationToken cancellationToken = default

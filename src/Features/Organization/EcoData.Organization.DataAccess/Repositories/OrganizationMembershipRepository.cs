@@ -9,7 +9,7 @@ public sealed class OrganizationMembershipRepository(
     IDbContextFactory<OrganizationDbContext> contextFactory
 ) : IOrganizationMembershipRepository
 {
-    public async Task<IReadOnlyList<OrganizationMembershipDto>> GetAsync(
+    public async Task<IReadOnlyList<OrganizationMembershipDto>> GetListAsync(
         Guid userId,
         CancellationToken cancellationToken = default
     )

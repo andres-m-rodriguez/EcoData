@@ -96,7 +96,7 @@
     [Command, RunOnLoad]
     private async Task<int?> LoadPracticeCount(CancellationToken ct)
     {
-        var result = await PracticeClient.GetAsync(ct);
+        var result = await PracticeClient.GetListAsync(ct);
         if (!result.TryPickT0(out var practices, out _)) return null;
 
         return practices.Count;
@@ -105,7 +105,7 @@
     [Command, RunOnLoad]
     private async Task<int?> LoadActionCount(CancellationToken ct)
     {
-        var result = await ActionClient.GetAsync(ct);
+        var result = await ActionClient.GetListAsync(ct);
         if (!result.TryPickT0(out var actions, out _)) return null;
 
         return actions.Count;

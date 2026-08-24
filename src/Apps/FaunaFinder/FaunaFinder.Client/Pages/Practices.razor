@@ -246,7 +246,7 @@ else
     [Command]
     private async Task<IReadOnlyList<NrcsPracticeDtoForList>?> LoadPractices(CancellationToken ct)
     {
-        var result = await PracticeClient.GetAsync(ct);
+        var result = await PracticeClient.GetListAsync(ct);
         if (result.TryPickT0(out var practices, out var error))
         {
             _practicesLoadError = null;

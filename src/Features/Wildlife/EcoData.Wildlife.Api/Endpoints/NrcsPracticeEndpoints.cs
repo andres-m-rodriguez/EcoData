@@ -21,7 +21,7 @@ public static class NrcsPracticeEndpoints
                     CancellationToken ct
                 ) =>
                 {
-                    var practices = await repository.GetAsync(ct);
+                    var practices = await repository.GetListAsync(ct);
                     return TypedResults.Ok(practices);
                 }
             )

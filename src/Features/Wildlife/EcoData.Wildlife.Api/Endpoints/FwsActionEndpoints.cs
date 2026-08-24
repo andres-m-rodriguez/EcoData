@@ -21,7 +21,7 @@ public static class FwsActionEndpoints
                     CancellationToken ct
                 ) =>
                 {
-                    var actions = await repository.GetAsync(ct);
+                    var actions = await repository.GetListAsync(ct);
                     return TypedResults.Ok(actions);
                 }
             )

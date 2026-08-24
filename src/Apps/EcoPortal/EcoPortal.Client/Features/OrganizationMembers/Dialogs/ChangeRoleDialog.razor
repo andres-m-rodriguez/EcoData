@@ -60,7 +60,7 @@
     {
         _role = CurrentRole;
 
-        var result = await RoleClient.GetAsync(OrganizationId);
+        var result = await RoleClient.GetListAsync(OrganizationId);
 
         result.Switch(
             roles => _roles = roles,

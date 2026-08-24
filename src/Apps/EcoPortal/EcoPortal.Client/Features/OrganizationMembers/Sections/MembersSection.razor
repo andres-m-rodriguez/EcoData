@@ -140,7 +140,7 @@
     );
 
     private IAsyncEnumerable<OrganizationMemberDto> GetItemsAsync(OrganizationMemberParameters parameters, CancellationToken ct) =>
-        MemberClient.GetAsync(OrganizationId, parameters, ct);
+        MemberClient.GetListAsync(OrganizationId, parameters, ct);
 
     private void ClearFilters() => SearchTextState.Value = null;
 

@@ -117,7 +117,7 @@ public sealed class OrganizationWorkspaceState(
         if (context.Can(Permissions.Organization.ManageMembers))
         {
             memberCount = 0;
-            await foreach (var _ in memberClient.GetAsync(id, new OrganizationMemberParameters(PageSize: 200)))
+            await foreach (var _ in memberClient.GetListAsync(id, new OrganizationMemberParameters(PageSize: 200)))
             {
                 memberCount++;
             }

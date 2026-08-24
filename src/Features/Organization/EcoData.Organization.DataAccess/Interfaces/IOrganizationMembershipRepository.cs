@@ -4,7 +4,7 @@ namespace EcoData.Organization.DataAccess.Interfaces;
 
 public interface IOrganizationMembershipRepository
 {
-    Task<IReadOnlyList<OrganizationMembershipDto>> GetAsync(
+    Task<IReadOnlyList<OrganizationMembershipDto>> GetListAsync(
         Guid userId,
         CancellationToken cancellationToken = default
     );
