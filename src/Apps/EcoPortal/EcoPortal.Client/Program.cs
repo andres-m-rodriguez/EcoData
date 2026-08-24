@@ -5,13 +5,11 @@ using EcoData.Spa.Navigation;
 using EcoData.Ui;
 using EcoData.Organization.Application.Client;
 using EcoData.Sensors.Application.Client;
-using EcoPortal.Client.Authorization;
 using EcoPortal.Client.Features.Organizations.Services;
 using EcoPortal.Client.Features.Organizations.Workspace;
 using EcoPortal.Client.Layout;
 using EcoPortal.Client.Services;
 using EcoPortal.Client.Services.Charts;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using MudBlazor.Services;
@@ -56,9 +54,6 @@ builder.Services.AddScoped<OrganizationWorkspaceState>();
 builder.Services.AddPermissions();
 builder.Services.AddOrganizationPermissionHttpSource();
 
-// Register custom policy provider BEFORE AddAuthorizationCore (uses TryAddSingleton)
-builder.Services.AddSingleton<IAuthorizationPolicyProvider, OrganizationPermissionPolicyProvider>();
-builder.Services.AddScoped<IAuthorizationHandler, OrganizationPermissionHandler>();
 builder.Services.AddAuthorizationCore();
 
 builder.Services.AddMudServices();

@@ -1,0 +1,128 @@
+@page "/organizations/{Id:guid}"
+@page "/organizations/{Id:guid}/{Section}"
+@page "/organizations/{Id:guid}/{Section}/{Area}"
+@layout OrganizationLayout
+@using EcoPortal.Client.Components
+@using EcoPortal.Client.Features.OrganizationAccessRequests.Sections
+@using EcoPortal.Client.Features.OrganizationMembers.Sections
+@using EcoPortal.Client.Features.OrganizationSensors.Sections
+@using EcoPortal.Client.Features.Organizations.Sections
+@using EcoPortal.Client.Layout
+@using EcoPortal.Client.Services
+@using OrganizationPermissions = EcoData.Organization.Contracts.Permissions
+@using SensorPermissions = EcoData.Sensors.Contracts.Permissions
+@inject AuthStateService AuthState
+@inject INavigationManager Navigation
+
+@* The one routable page of the workspace. Every section is the same component
+   with different route values, so moving between sections only swaps the
+   content under the frame — the header, rail and chip strip stay put. The
+   loaded context carries the caller's grants, so sections gate on it instead
+   of route policies. *@
+
+<OrganizationWorkspace OrganizationId="Id" Section="CurrentSection">
+    @if (RequiredPermission is { } permission && !context.Can(permission))
+    {
+        <AccessDenied OrganizationId="Id" />
+    }
+    else
+    {
+        switch (Keys)
+        {
+            case (null, _):
+                <OrganizationOverview Context="context" />
+                break;
+            case ("sensors", null):
+                <SensorsSection Context="context" />
+                break;
+            case ("sensors", "create"):
+                <SensorCreateSection Context="context" />
+                break;
+            case ("map", _):
+                <MapSection Context="context" />
+                break;
+            case ("team", null) or ("members", null):
+                <MembersSection Context="context" IsRoot="true" />
+                break;
+            case ("team", "members"):
+                <MembersSection Context="context" />
+                break;
+            case ("team", "requests") or ("requests", null):
+                <RequestsSection Context="context" />
+                break;
+            case ("team", "blocked") or ("blocked-users", null):
+                <BlockedSection Context="context" />
+                break;
+            case ("team", "roles") or ("roles", null):
+                <RolesSection Context="context" />
+                break;
+            case ("settings", null) or ("edit", null):
+                <SettingsHubSection Context="context" />
+                break;
+            case ("settings", { } area):
+                <SettingsFormSection Context="context" SectionName="@area" />
+                break;
+        }
+    }
+</OrganizationWorkspace>
+
+@code {
+    [Parameter]
+    public Guid Id { get; set; }
+
+    [Parameter]
+    public string? Section { get; set; }
+
+    [Parameter]
+    public string? Area { get; set; }
+
+    private (string? Section, string? Area) Keys => (Section?.ToLowerInvariant(), Area?.ToLowerInvariant());
+
+    private OrganizationSection CurrentSection => OrganizationSections.FromSegment(Section);
+
+    // The permission a section needs, or null for the overview — the workspace
+    // itself decides between the member view and the public profile there.
+    private string? RequiredPermission => Keys switch
+    {
+        (null, _) => null,
+        ("sensors", "create") => SensorPermissions.Sensor.Create,
+        ("sensors", _) or ("map", _) => SensorPermissions.Sensor.Read,
+        ("team", _) or ("members", _) or ("requests", _) or ("blocked-users", _) or ("roles", _) =>
+            OrganizationPermissions.Organization.ManageMembers,
+        ("settings", _) or ("edit", _) => OrganizationPermissions.Organization.Update,
+        _ => null,
+    };
+
+    private bool IsKnownSection => Keys switch
+    {
+        (null, _) => true,
+        ("sensors", null or "create") => true,
+        ("map", null) => true,
+        ("team", null or "members" or "requests" or "blocked" or "roles") => true,
+        ("members" or "requests" or "blocked-users" or "roles" or "edit", null) => true,
+        ("settings", _) => true,
+        _ => false,
+    };
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (!AuthState.IsInitialized)
+        {
+            await AuthState.InitializeAsync();
+        }
+
+        if (!IsKnownSection)
+        {
+            Navigation.NavigateTo(OrganizationSections.Path(Id, OrganizationSection.Overview), replace: true);
+            return;
+        }
+
+        // Route-level [Authorize] used to bounce visitors to sign-in;
+        // the host keeps that behavior for the guarded sections.
+        if (RequiredPermission is not null && !AuthState.IsAuthenticated)
+        {
+            var returnUrl = Uri.EscapeDataString(Navigation.State.Path);
+            Navigation.NavigateTo($"/login?returnUrl={returnUrl}");
+        }
+    }
+}

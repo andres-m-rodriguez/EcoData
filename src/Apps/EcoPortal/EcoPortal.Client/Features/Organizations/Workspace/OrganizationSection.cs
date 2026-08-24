@@ -31,6 +31,16 @@ public static class OrganizationSections
 
     public static string Key(OrganizationSection section) => section.ToString().ToLowerInvariant();
 
+    // The {Section} route value (current and legacy spellings) → its section.
+    public static OrganizationSection FromSegment(string? segment) => segment?.ToLowerInvariant() switch
+    {
+        "sensors" => OrganizationSection.Sensors,
+        "map" => OrganizationSection.Map,
+        "team" or "members" or "requests" or "blocked-users" or "roles" => OrganizationSection.Team,
+        "settings" or "edit" => OrganizationSection.Settings,
+        _ => OrganizationSection.Overview,
+    };
+
     public static IReadOnlyList<UiRailLink> Links(OrganizationContext context, OrganizationCounts? counts)
     {
         var id = context.Organization.Id;

@@ -1,0 +1,223 @@
+@using EcoData.Organization.Contracts
+@using EcoData.Organization.Contracts.Dtos
+@using EcoData.Organization.Contracts.Parameters
+@using EcoData.Organization.Contracts.Requests
+@using EcoData.Organization.Application.Client
+@using EcoPortal.Client.Components
+@using EcoPortal.Client.Features.Organizations.Workspace
+@using EcoPortal.Client.Features.OrganizationAccessRequests.Dialogs
+@using EcoData.Common.Pagination.Blazor
+@inject IOrganizationAccessRequestHttpClient AccessRequestClient
+@inject IOrganizationBlockedUserHttpClient BlockedUserClient
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+@inject OrganizationWorkspaceState State
+
+<TeamNav Context="Context" Active="@TeamNav.Requests" />
+
+<UiSectionHead Title="Requests" Eyebrow="People" Subtitle="People asking to join, with the role they want. Approving grants that role." />
+
+<MudChipSet T="string" SelectedValue="_statusFilter" SelectedValueChanged="OnStatusFilterChanged" SelectionMode="SelectionMode.SingleSelection" Class="mb-4">
+    <MudChip T="string" Value="@("")" Color="Color.Default" Variant="Variant.Outlined">All</MudChip>
+    <MudChip T="string" Value="@("Pending")" Color="Color.Warning" Variant="Variant.Outlined">Pending</MudChip>
+    <MudChip T="string" Value="@("Approved")" Color="Color.Success" Variant="Variant.Outlined">Approved</MudChip>
+    <MudChip T="string" Value="@("Rejected")" Color="Color.Error" Variant="Variant.Outlined">Rejected</MudChip>
+</MudChipSet>
+
+<MudPaper Elevation="0" Class="rounded-lg">
+    <EcoDataVirtualizedList @ref="_listRef"
+                            TItem="OrganizationAccessRequestDto"
+                            TParams="OrganizationAccessRequestParameters"
+                            ItemsProvider="(p, ct) => AccessRequestClient.GetByOrganizationAsync(OrganizationId, p, ct)"
+                            ParametersBuilder="CreateParameters"
+                            CursorSelector="r => r.Id"
+                            ItemSize="100"
+                            OverscanCount="3">
+        <LoadingTemplate>
+            @for (var i = 0; i < 5; i++)
+            {
+                <div class="pa-4 border-b">
+                    <MudStack Row AlignItems="AlignItems.Center" Spacing="3">
+                        <MudSkeleton SkeletonType="SkeletonType.Circle" Width="40px" Height="40px" />
+                        <MudStack Spacing="1">
+                            <MudSkeleton Width="150px" Height="20px" />
+                            <MudSkeleton Width="200px" Height="14px" />
+                        </MudStack>
+                    </MudStack>
+                </div>
+            }
+        </LoadingTemplate>
+        <EmptyTemplate>
+            <MudStack AlignItems="AlignItems.Center" Class="pa-8">
+                <MudIcon Icon="@Icons.Material.Filled.Inbox" Size="Size.Large" Color="Color.Secondary" />
+                <MudText Typo="Typo.h6" Color="Color.Secondary" Class="mt-2">No access requests</MudText>
+                <MudText Typo="Typo.body2" Color="Color.Secondary">
+                    @(string.IsNullOrEmpty(_statusFilter) ? "Nobody has asked to join yet." : $"No {_statusFilter.ToLower()} requests.")
+                </MudText>
+            </MudStack>
+        </EmptyTemplate>
+        <PlaceholderTemplate>
+            <div class="pa-4 border-b">
+                <MudStack Row AlignItems="AlignItems.Center" Spacing="3">
+                    <MudSkeleton SkeletonType="SkeletonType.Circle" Width="40px" Height="40px" />
+                    <MudStack Spacing="1">
+                        <MudSkeleton Width="150px" Height="20px" />
+                        <MudSkeleton Width="200px" Height="14px" />
+                    </MudStack>
+                </MudStack>
+            </div>
+        </PlaceholderTemplate>
+        <ItemTemplate Context="request">
+            <MudStack Class="pa-4 border-b">
+                <MudStack Row AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="flex-wrap gap-4">
+                    <MudStack Row AlignItems="AlignItems.Center" Spacing="3">
+                        <MudAvatar Color="Color.Primary" Size="Size.Medium">@GetInitials(request.UserDisplayName)</MudAvatar>
+                        <MudStack Spacing="0">
+                            <MudText Typo="Typo.subtitle1">@request.UserDisplayName</MudText>
+                            <MudText Typo="Typo.body2" Color="Color.Secondary">@request.UserEmail</MudText>
+                            <MudText Typo="Typo.caption" Color="Color.Secondary">
+                                Requested @FormatDate(request.CreatedAt) as <strong>@(request.RoleName ?? DefaultOrganizationRoles.Viewer)</strong>
+                            </MudText>
+                            @if (!string.IsNullOrWhiteSpace(request.RequestMessage))
+                            {
+                                <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mt-1">"@request.RequestMessage"</MudText>
+                            }
+                        </MudStack>
+                    </MudStack>
+                    <MudStack Row AlignItems="AlignItems.Center" Spacing="2">
+                        @switch (request.Status)
+                        {
+                            case "Pending":
+                                <MudButton Variant="Variant.Outlined" Color="Color.Error" Size="Size.Small" OnClick="() => RejectRequest(request)">Reject</MudButton>
+                                <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small" OnClick="() => ApproveRequest(request)">Approve</MudButton>
+                                break;
+                            case "Approved":
+                                <MudChip T="string" Color="Color.Success" Variant="Variant.Filled" Size="Size.Small">Approved</MudChip>
+                                break;
+                            case "Rejected":
+                                <MudChip T="string" Color="Color.Error" Variant="Variant.Filled" Size="Size.Small">Rejected</MudChip>
+                                break;
+                        }
+                    </MudStack>
+                </MudStack>
+                @if (request.Status != "Pending" && request.ReviewedAt.HasValue)
+                {
+                    <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mt-1">
+                        @(request.Status == "Approved" ? "Approved" : "Rejected") by @(request.ReviewedByDisplayName ?? "Unknown") on @FormatDate(request.ReviewedAt.Value)
+                        @if (!string.IsNullOrWhiteSpace(request.ReviewNotes))
+                        {
+                            <text> — "@request.ReviewNotes"</text>
+                        }
+                    </MudText>
+                }
+            </MudStack>
+        </ItemTemplate>
+    </EcoDataVirtualizedList>
+</MudPaper>
+
+@code {
+    [Parameter, EditorRequired]
+    public required OrganizationContext Context { get; set; }
+
+    private Guid OrganizationId => Context.Organization.Id;
+
+    private EcoDataVirtualizedList<OrganizationAccessRequestDto, OrganizationAccessRequestParameters>? _listRef;
+    private string _statusFilter = "Pending";
+
+    private OrganizationAccessRequestParameters CreateParameters(Guid? cursor) => new(
+        PageSize: 20,
+        Cursor: cursor,
+        Status: string.IsNullOrEmpty(_statusFilter) ? null : _statusFilter
+    );
+
+    private void OnStatusFilterChanged(string value)
+    {
+        _statusFilter = value;
+        _listRef?.Refresh();
+    }
+
+    private async Task ApproveRequest(OrganizationAccessRequestDto request)
+    {
+        var role = request.RoleName ?? DefaultOrganizationRoles.Viewer;
+        var parameters = new DialogParameters<ConfirmDialog>
+        {
+            { x => x.ContentText, $"Approve {request.UserDisplayName}? They join as {role}." },
+            { x => x.ButtonText, "Approve" },
+            { x => x.Color, Color.Primary }
+        };
+        var options = new DialogOptions { CloseOnEscapeKey = true, MaxWidth = MaxWidth.ExtraSmall };
+        var dialog = await DialogService.ShowAsync<ConfirmDialog>("Approve Request", parameters, options);
+        var result = await dialog.Result;
+
+        if (result is not { Canceled: false })
+        {
+            return;
+        }
+
+        var updateResult = await AccessRequestClient.UpdateStatusAsync(
+            OrganizationId, request.Id, new UpdateOrganizationAccessRequestStatusRequest(Approved: true));
+        updateResult.Switch(
+            _ =>
+            {
+                Snackbar.Add($"{request.UserDisplayName} joined as {role}", Severity.Success);
+                State.Invalidate(OrganizationId);
+                _listRef?.Refresh();
+            },
+            error => Snackbar.Add(error.Message ?? "Failed to approve request", Severity.Error)
+        );
+    }
+
+    private async Task RejectRequest(OrganizationAccessRequestDto request)
+    {
+        var parameters = new DialogParameters<RejectRequestDialog> { { x => x.RequesterName, request.UserDisplayName } };
+        var options = new DialogOptions { CloseOnEscapeKey = true, MaxWidth = MaxWidth.Small, FullWidth = true };
+        var dialog = await DialogService.ShowAsync<RejectRequestDialog>("Reject Request", parameters, options);
+        var result = await dialog.Result;
+
+        if (result is not { Canceled: false, Data: RejectRequestDialog.RejectRequestResult rejectResult })
+        {
+            return;
+        }
+
+        var updateRequest = new UpdateOrganizationAccessRequestStatusRequest(
+            Approved: false,
+            ReviewNotes: string.IsNullOrWhiteSpace(rejectResult.ReviewNotes) ? null : rejectResult.ReviewNotes
+        );
+        var updateResult = await AccessRequestClient.UpdateStatusAsync(OrganizationId, request.Id, updateRequest);
+
+        if (!updateResult.TryPickT0(out _, out var error))
+        {
+            Snackbar.Add(error.Message ?? "Failed to reject request", Severity.Error);
+            return;
+        }
+
+        if (rejectResult.BlockUser)
+        {
+            var blockResult = await BlockedUserClient.BlockUserAsync(OrganizationId, request.UserId, rejectResult.ReviewNotes);
+            blockResult.Switch(
+                _ => Snackbar.Add($"Request rejected and {request.UserDisplayName} blocked", Severity.Info),
+                blockError => Snackbar.Add(blockError.Message ?? "Request rejected but failed to block user", Severity.Warning)
+            );
+        }
+        else
+        {
+            Snackbar.Add("Request rejected", Severity.Info);
+        }
+
+        State.Invalidate(OrganizationId);
+        _listRef?.Refresh();
+    }
+
+    private static string GetInitials(string name)
+    {
+        var parts = name.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        return parts.Length switch
+        {
+            0 => "?",
+            1 => parts[0][..1].ToUpperInvariant(),
+            _ => $"{parts[0][0]}{parts[1][0]}".ToUpperInvariant(),
+        };
+    }
+
+    private static string FormatDate(DateTimeOffset date) => date.LocalDateTime.ToString("MMM d, yyyy");
+}

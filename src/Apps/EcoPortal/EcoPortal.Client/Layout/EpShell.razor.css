@@ -1,0 +1,69 @@
+/* EcoPortal chrome inside the EcoData.Ui shell: the account pill and the
+   sign-in pill. The shell's own geometry lives in the library. */
+
+.ep-user-pill,
+.ep-signin {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-left: 8px;
+    padding: 4px 12px 4px 4px;
+    border-radius: 999px;
+    font: 600 12px/1 var(--ui-font-sans);
+    text-decoration: none;
+    white-space: nowrap;
+    transition: background-color var(--ui-t-base) var(--ui-ease),
+                border-color var(--ui-t-base) var(--ui-ease),
+                color var(--ui-t-base) var(--ui-ease);
+}
+
+.ep-user-pill {
+    color: var(--ui-fg-2);
+    background: var(--ui-surface);
+    border: 1px solid var(--ui-line);
+}
+
+.ep-user-pill:hover {
+    color: var(--ui-primary);
+    background: var(--ui-primary-50);
+    border-color: var(--ui-primary-200);
+}
+
+.ep-user-initial {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: var(--ui-primary);
+    color: var(--ui-surface);
+    font-size: 11px;
+}
+
+.ep-signin {
+    padding: 8px 14px;
+    color: var(--ui-surface);
+    background: var(--ui-primary);
+    border: 1px solid transparent;
+    letter-spacing: var(--ui-tracking-pill);
+    text-transform: uppercase;
+    font-size: 11px;
+}
+
+.ep-signin:hover {
+    background: var(--ui-primary-700);
+}
+
+.ep-user-pill:focus-visible,
+.ep-signin:focus-visible {
+    outline: 2px solid var(--ui-primary);
+    outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .ep-user-pill,
+    .ep-signin {
+        transition: none;
+    }
+}

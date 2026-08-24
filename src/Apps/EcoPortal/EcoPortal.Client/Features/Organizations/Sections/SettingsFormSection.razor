@@ -1,7 +1,3 @@
-@page "/organizations/{Id:guid}/settings/{SectionName}"
-@using EcoData.Organization.Contracts
-@using EcoPortal.Client.Authorization
-@attribute [OrganizationPermission(Permissions.Organization.Update)]
 @using EcoData.Organization.Contracts.Dtos
 @using EcoData.Organization.Application.Client
 @using EcoPortal.Client.Features.Organizations.Components
@@ -17,28 +13,28 @@
    form primes from the organization the workspace already holds and saves
    the whole record back, since the update endpoint takes all of it. *@
 
-<OrganizationWorkspace OrganizationId="Id" Section="OrganizationSection.Settings">
-    @{ Prime(context.Organization); }
+@{ Prime(Context.Organization); }
 
-    <a class="settings-back" href="@SettingsPath">
-        <MudIcon Icon="@Icons.Material.Filled.ArrowBack" Size="Size.Small" />
-        <span>Settings</span>
-    </a>
+<a class="settings-back" href="@SettingsPath">
+    <MudIcon Icon="@Icons.Material.Filled.ArrowBack" Size="Size.Small" />
+    <span>Settings</span>
+</a>
 
-    <UiSectionHead Title="@Title" Eyebrow="Organization" Subtitle="@Subtitle" />
+<UiSectionHead Title="@Title" Eyebrow="Organization" Subtitle="@Subtitle" />
 
-    <MudPaper Elevation="0" Class="pa-6 rounded-lg settings-card">
-        <OrganizationForm Model="_model" Section="Section" SubmitButtonText="Save changes" ErrorMessage="@_errorMessage"
-                          IsLoading="SaveState.IsLoading" OnSubmit="HandleSubmit" OnCancel="NavigateToHub" />
-    </MudPaper>
-</OrganizationWorkspace>
+<MudPaper Elevation="0" Class="pa-6 rounded-lg settings-card">
+    <OrganizationForm Model="_model" Section="Section" SubmitButtonText="Save changes" ErrorMessage="@_errorMessage"
+                      IsLoading="SaveState.IsLoading" OnSubmit="HandleSubmit" OnCancel="NavigateToHub" />
+</MudPaper>
 
 @code {
-    [Parameter]
-    public Guid Id { get; set; }
+    [Parameter, EditorRequired]
+    public required OrganizationContext Context { get; set; }
 
     [Parameter]
     public string SectionName { get; set; } = string.Empty;
+
+    private Guid Id => Context.Organization.Id;
 
     private readonly OrganizationFormModel _model = new();
     private Guid _primedFor;

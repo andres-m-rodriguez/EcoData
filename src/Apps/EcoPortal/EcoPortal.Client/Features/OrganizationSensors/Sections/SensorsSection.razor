@@ -1,0 +1,31 @@
+@using EcoData.Sensors.Contracts
+@using EcoData.Sensors.Contracts.Dtos
+@using EcoPortal.Client.Features.Sensors.Components
+@using EcoPortal.Client.Features.Organizations.Workspace
+@inject INavigationManager Navigation
+
+<UiSectionHead Title="Sensors" Eyebrow="Stations">
+    <Actions>
+        @if (Context.Can(Permissions.Sensor.Create))
+        {
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small" StartIcon="@Icons.Material.Filled.Add"
+                       Href="@($"/organizations/{OrganizationId}/sensors/create")">
+                Add sensor
+            </MudButton>
+        }
+    </Actions>
+</UiSectionHead>
+
+<SensorList OrganizationId="OrganizationId" Elevation="0"
+            EmptyMessage="No sensors yet"
+            EmptySubMessage="Add sensors to start monitoring water quality."
+            OnSensorClick="NavigateToDetail" />
+
+@code {
+    [Parameter, EditorRequired]
+    public required OrganizationContext Context { get; set; }
+
+    private Guid OrganizationId => Context.Organization.Id;
+
+    private void NavigateToDetail(SensorDtoForList sensor) => Navigation.NavigateTo($"/sensor/{sensor.Id}");
+}
