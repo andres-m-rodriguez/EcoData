@@ -2,7 +2,7 @@ using EcoData.Common.Problems.Contracts;
 using EcoData.Sensors.Application.Client;
 using EcoData.Sensors.Contracts.Dtos;
 using EcoData.Sensors.Contracts.Parameters;
-using EcoPortal.Client.Components;
+using EcoPortal.Client.Features.Notifications.Components;
 using OneOf;
 using Tempest;
 
