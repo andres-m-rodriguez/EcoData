@@ -1,83 +1,13 @@
 // Leaflet map interop for SpaMap component
 
+const OSM_TILE_URL = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
 const OSM_ATTRIBUTION =
     '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
-
-// One basemap per ground. The host decides which by stamping data-theme on
-// <html> — the same signal the token sheets key off — so the tiles flip with
-// the rest of the shell instead of staying paper-white under a dark UI.
-const BASEMAPS = {
-    light: {
-        url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-        options: { attribution: OSM_ATTRIBUTION }
-    },
-    dark: {
-        url: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
-        options: {
-            attribution:
-                OSM_ATTRIBUTION +
-                ' &copy; <a href="https://carto.com/attributions">CARTO</a>',
-            subdomains: 'abcd',
-            maxZoom: 20
-        }
-    }
-};
-
-// Three states, matching the token sheets: an explicit stamp wins, and with
-// nothing stamped the OS decides.
-function resolveTheme() {
-    const stamped = document.documentElement.getAttribute('data-theme');
-    if (stamped === 'dark' || stamped === 'light') {
-        return stamped;
-    }
-
-    return typeof window.matchMedia === 'function'
-        && window.matchMedia('(prefers-color-scheme: dark)').matches
-        ? 'dark'
-        : 'light';
-}
-
-function applyBasemap(map, theme) {
-    if (map._spaTheme === theme) return;
-
-    if (map._spaTiles) {
-        map.removeLayer(map._spaTiles);
-    }
-
-    const basemap = BASEMAPS[theme] ?? BASEMAPS.light;
-    map._spaTiles = L.tileLayer(basemap.url, basemap.options).addTo(map);
-    // Added last, so it would otherwise sit over the markers and polygons
-    // already on the map when the theme flips mid-session.
-    map._spaTiles.bringToBack();
-    map._spaTheme = theme;
-}
-
-// A map can outlive any one theme, so it watches both sources rather than
-// reading once at init.
-function watchTheme(map) {
-    const onThemeChanged = () => applyBasemap(map, resolveTheme());
-
-    const observer = new MutationObserver(onThemeChanged);
-    observer.observe(document.documentElement, {
-        attributes: true,
-        attributeFilter: ['data-theme']
-    });
-
-    const media = typeof window.matchMedia === 'function'
-        ? window.matchMedia('(prefers-color-scheme: dark)')
-        : null;
-    media?.addEventListener('change', onThemeChanged);
-
-    map._spaThemeWatch = { observer, media, onThemeChanged };
-}
 
 export function initialize(element, lat, lng, zoom, dotNetRef) {
     const map = L.map(element).setView([lat, lng], zoom);
 
-    map._spaTiles = null;
-    map._spaTheme = null;
-    applyBasemap(map, resolveTheme());
-    watchTheme(map);
+    L.tileLayer(OSM_TILE_URL, { attribution: OSM_ATTRIBUTION }).addTo(map);
 
     map._spaMarkers = L.layerGroup().addTo(map);
     map._spaGeoJson = L.layerGroup().addTo(map);
@@ -623,15 +553,6 @@ export function dispose(map) {
     if (map) {
         if (map._spaDraw && map._spaDraw.handlers) {
             document.removeEventListener('keydown', map._spaDraw.handlers.onKeyDown);
-        }
-        // Both theme listeners are attached to document/window, so they outlive
-        // the map element unless they come off explicitly.
-        if (map._spaThemeWatch) {
-            map._spaThemeWatch.observer.disconnect();
-            map._spaThemeWatch.media?.removeEventListener(
-                'change',
-                map._spaThemeWatch.onThemeChanged);
-            map._spaThemeWatch = null;
         }
         map.remove();
     }
