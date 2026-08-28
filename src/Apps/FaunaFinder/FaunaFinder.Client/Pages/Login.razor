@@ -1,0 +1,126 @@
+@page "/login"
+@inherits StatefulComponent
+@using EcoData.Identity.Contracts.Requests
+@using FaunaFinder.Client.Services.Account
+@inject AuthStateService Auth
+@inject INavigationManager Navigation
+@inject ILocalizer L
+
+<PageTitle>FaunaFinder — @L["Auth_SignIn"]</PageTitle>
+
+<div class="ff-auth-page">
+    <MudCard Class="ff-auth-card" Elevation="2">
+        <MudCardContent>
+            <MudText Typo="Typo.h5" Align="Align.Center" Class="mb-4">@L["Auth_WelcomeBack"]</MudText>
+
+            @if (!string.IsNullOrEmpty(_errorMessage))
+            {
+                <MudAlert Severity="Severity.Error" Variant="Variant.Filled" Dense="true" Class="mb-4">
+                    @_errorMessage
+                </MudAlert>
+            }
+
+            <EditForm Model="_model" OnValidSubmit="HandleSubmit">
+                <MudStack Spacing="3">
+                    <MudTextField @bind-Value="_model.Email"
+                                  Label="@L["Auth_Email"]"
+                                  InputType="InputType.Email"
+                                  Adornment="Adornment.Start"
+                                  AdornmentIcon="@Icons.Material.Filled.Email"
+                                  Variant="Variant.Outlined"
+                                  Required="true"
+                                  Disabled="SignInState.IsLoading" />
+
+                    <MudTextField @bind-Value="_model.Password"
+                                  Label="@L["Auth_Password"]"
+                                  InputType="@(_showPassword ? InputType.Text : InputType.Password)"
+                                  Adornment="Adornment.End"
+                                  AdornmentIcon="@(_showPassword ? Icons.Material.Filled.VisibilityOff : Icons.Material.Filled.Visibility)"
+                                  OnAdornmentClick="() => _showPassword = !_showPassword"
+                                  AdornmentAriaLabel="Toggle password visibility"
+                                  Variant="Variant.Outlined"
+                                  Required="true"
+                                  Disabled="SignInState.IsLoading" />
+
+                    <MudButton ButtonType="ButtonType.Submit"
+                               Variant="Variant.Filled"
+                               Color="Color.Primary"
+                               FullWidth="true"
+                               Disabled="SignInState.IsLoading">
+                        @if (SignInState.IsLoading)
+                        {
+                            <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
+                            <span>@L["Auth_SigningIn"]</span>
+                        }
+                        else
+                        {
+                            <span>@L["Auth_SignIn"]</span>
+                        }
+                    </MudButton>
+                </MudStack>
+            </EditForm>
+
+            <MudDivider Class="my-4" />
+
+            <MudText Typo="Typo.body2" Align="Align.Center">
+                @L["Auth_NoAccount"]
+                <MudLink Href="/register" Color="Color.Primary">@L["Auth_CreateAccount"]</MudLink>
+            </MudText>
+        </MudCardContent>
+    </MudCard>
+</div>
+
+@code {
+    private readonly LoginModel _model = new();
+    private bool _showPassword;
+    private string? _errorMessage;
+
+    [SupplyParameterFromQuery]
+    public string? ReturnUrl { get; set; }
+
+    private async Task HandleSubmit()
+    {
+        await SignInState.TryExecute();
+        if (SignInState.IsError)
+        {
+            _errorMessage = L["Auth_SignInFailed"];
+        }
+    }
+
+    [Command]
+    private async Task SignIn()
+    {
+        _errorMessage = null;
+
+        var request = new LoginRequest(_model.Email, _model.Password);
+
+        var validationResult = new LoginRequestValidator().Validate(request);
+        if (!validationResult.IsValid)
+        {
+            _errorMessage = string.Join(" ", validationResult.Errors.Select(e => e.ErrorMessage));
+            return;
+        }
+
+        var result = await Auth.LoginAsync(request);
+
+        result.Switch(
+            user =>
+            {
+                var returnUrl = string.IsNullOrEmpty(ReturnUrl) ? "/" : ReturnUrl;
+                Navigation.NavigateTo(returnUrl);
+            },
+            validationFailed => _errorMessage = string.Join(" ", validationFailed.AllMessages),
+            requestFailed => _errorMessage = requestFailed.StatusCode switch
+            {
+                0 => L["Auth_ServerUnreachable"],
+                _ => requestFailed.Message ?? L["Auth_SignInFailed"],
+            }
+        );
+    }
+
+    private sealed class LoginModel
+    {
+        public string Email { get; set; } = string.Empty;
+        public string Password { get; set; } = string.Empty;
+    }
+}

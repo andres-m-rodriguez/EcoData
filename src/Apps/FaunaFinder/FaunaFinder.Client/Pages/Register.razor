@@ -1,0 +1,162 @@
+@page "/register"
+@inherits StatefulComponent
+@using EcoData.Identity.Contracts.Requests
+@using FaunaFinder.Client.Services.Account
+@inject AuthStateService Auth
+@inject INavigationManager Navigation
+@inject ILocalizer L
+@inject ISnackbar Snackbar
+
+<PageTitle>FaunaFinder — @L["Auth_CreateAccount"]</PageTitle>
+
+<div class="ff-auth-page">
+    <MudCard Class="ff-auth-card" Elevation="2">
+        <MudCardContent>
+            <MudText Typo="Typo.h5" Align="Align.Center" Class="mb-4">@L["Auth_JoinTitle"]</MudText>
+
+            @if (!string.IsNullOrEmpty(_errorMessage))
+            {
+                <MudAlert Severity="Severity.Error" Variant="Variant.Filled" Dense="true" Class="mb-4">
+                    @_errorMessage
+                </MudAlert>
+            }
+
+            <EditForm Model="_model" OnValidSubmit="HandleSubmit">
+                <MudStack Spacing="3">
+                    <MudTextField @bind-Value="_model.DisplayName"
+                                  Label="@L["Auth_DisplayName"]"
+                                  Adornment="Adornment.Start"
+                                  AdornmentIcon="@Icons.Material.Filled.Person"
+                                  Variant="Variant.Outlined"
+                                  Required="true"
+                                  Disabled="SignupState.IsLoading" />
+
+                    <MudTextField @bind-Value="_model.Email"
+                                  Label="@L["Auth_Email"]"
+                                  InputType="InputType.Email"
+                                  Adornment="Adornment.Start"
+                                  AdornmentIcon="@Icons.Material.Filled.Email"
+                                  Variant="Variant.Outlined"
+                                  Required="true"
+                                  Disabled="SignupState.IsLoading" />
+
+                    <MudTextField @bind-Value="_model.Password"
+                                  Label="@L["Auth_Password"]"
+                                  InputType="@(_showPassword ? InputType.Text : InputType.Password)"
+                                  Adornment="Adornment.End"
+                                  AdornmentIcon="@(_showPassword ? Icons.Material.Filled.VisibilityOff : Icons.Material.Filled.Visibility)"
+                                  OnAdornmentClick="() => _showPassword = !_showPassword"
+                                  AdornmentAriaLabel="Toggle password visibility"
+                                  Variant="Variant.Outlined"
+                                  Required="true"
+                                  Disabled="SignupState.IsLoading" />
+
+                    <MudTextField @bind-Value="_model.ConfirmPassword"
+                                  Label="@L["Auth_ConfirmPassword"]"
+                                  InputType="@(_showPassword ? InputType.Text : InputType.Password)"
+                                  Variant="Variant.Outlined"
+                                  Required="true"
+                                  Disabled="SignupState.IsLoading" />
+
+                    <div class="ff-auth-question">
+                        <MudText Typo="Typo.body1">@L["Auth_StudentQuestion"]</MudText>
+                        <MudRadioGroup T="bool" @bind-Value="_model.IsStudent">
+                            <MudRadio T="bool" Value="true" Color="Color.Primary" Dense="true">@L["Auth_Yes"]</MudRadio>
+                            <MudRadio T="bool" Value="false" Color="Color.Primary" Dense="true">@L["Auth_No"]</MudRadio>
+                        </MudRadioGroup>
+                    </div>
+
+                    <MudButton ButtonType="ButtonType.Submit"
+                               Variant="Variant.Filled"
+                               Color="Color.Primary"
+                               FullWidth="true"
+                               Disabled="SignupState.IsLoading">
+                        @if (SignupState.IsLoading)
+                        {
+                            <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
+                            <span>@L["Auth_CreatingAccount"]</span>
+                        }
+                        else
+                        {
+                            <span>@L["Auth_CreateAccount"]</span>
+                        }
+                    </MudButton>
+                </MudStack>
+            </EditForm>
+
+            <MudDivider Class="my-4" />
+
+            <MudText Typo="Typo.body2" Align="Align.Center">
+                @L["Auth_HaveAccount"]
+                <MudLink Href="/login" Color="Color.Primary">@L["Auth_SignIn"]</MudLink>
+            </MudText>
+        </MudCardContent>
+    </MudCard>
+</div>
+
+@code {
+    private readonly RegisterModel _model = new();
+    private bool _showPassword;
+    private string? _errorMessage;
+
+    private async Task HandleSubmit()
+    {
+        await SignupState.TryExecute();
+        if (SignupState.IsError)
+        {
+            _errorMessage = L["Auth_SignUpFailed"];
+        }
+    }
+
+    [Command]
+    private async Task Signup()
+    {
+        _errorMessage = null;
+
+        var request = new FaunaFinderSignupRequest(
+            _model.Email.Trim(),
+            _model.DisplayName.Trim(),
+            _model.Password,
+            _model.ConfirmPassword,
+            _model.IsStudent
+        );
+
+        var validationResult = new RegisterRequestValidator().Validate(
+            new RegisterRequest(request.Email, request.DisplayName, request.Password, request.ConfirmPassword)
+        );
+        if (!validationResult.IsValid)
+        {
+            _errorMessage = string.Join(" ", validationResult.Errors.Select(e => e.ErrorMessage));
+            return;
+        }
+
+        var result = await Auth.SignupAsync(request);
+
+        result.Switch(
+            signup =>
+            {
+                if (request.IsStudent && !signup.AccessRequestSubmitted)
+                {
+                    Snackbar.Add(L["Auth_RequestNotSubmitted"], Severity.Warning);
+                }
+
+                Navigation.NavigateTo("/");
+            },
+            validationFailed => _errorMessage = string.Join(" ", validationFailed.AllMessages),
+            requestFailed => _errorMessage = requestFailed.StatusCode switch
+            {
+                0 => L["Auth_ServerUnreachable"],
+                _ => requestFailed.Message ?? L["Auth_SignUpFailed"],
+            }
+        );
+    }
+
+    private sealed class RegisterModel
+    {
+        public string DisplayName { get; set; } = string.Empty;
+        public string Email { get; set; } = string.Empty;
+        public string Password { get; set; } = string.Empty;
+        public string ConfirmPassword { get; set; } = string.Empty;
+        public bool IsStudent { get; set; }
+    }
+}

@@ -126,6 +126,7 @@ var faunafinder = builder
     .WithExternalHttpEndpoints()
     .WithReference(locationsDb)
     .WithReference(wildlifeDb)
+    .WithReference(ecoportal)
     .WaitFor(seeder)
     .PublishAsAzureContainerApp(
         (infra, app) =>

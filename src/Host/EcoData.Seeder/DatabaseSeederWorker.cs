@@ -40,6 +40,7 @@ public sealed class DatabaseSeederWorker(
             await SeedAdminUserAsync(services, stoppingToken);
             await SeedLocationsAsync(services, stoppingToken);
             await SeedOrganizationRolesAsync(services, stoppingToken);
+            await SeedFaunaFinderOrganizationAsync(services, stoppingToken);
             await SeedWildlifeAsync(services, stoppingToken);
             await SeedPhenomenaAsync(services, stoppingToken);
             await SeedUsgsParameterMappingsAsync(services, stoppingToken);
@@ -320,6 +321,109 @@ public sealed class DatabaseSeederWorker(
             "Added Contributor role to {Count} organizations",
             organizationsWithoutContributor.Count
         );
+    }
+
+    private async Task SeedFaunaFinderOrganizationAsync(
+        IServiceProvider services,
+        CancellationToken stoppingToken
+    )
+    {
+        var context = services.GetRequiredService<OrganizationDbContext>();
+
+        const string slug = "inter-metro";
+        var now = DateTimeOffset.UtcNow;
+
+        var organizationId = await context
+            .Organizations.Where(o => o.Slug == slug)
+            .Select(o => (Guid?)o.Id)
+            .FirstOrDefaultAsync(stoppingToken);
+
+        if (organizationId is null)
+        {
+            logger.LogInformation("Creating organization '{Slug}'...", slug);
+
+            var organization = new Organization.Database.Models.Organization
+            {
+                Id = Guid.CreateVersion7(),
+                Name = "Inter Metro University",
+                Slug = slug,
+                Tagline = null,
+                ProfilePictureUrl = null,
+                CardPictureUrl = null,
+                AboutUs = null,
+                WebsiteUrl = null,
+                Location = null,
+                FoundedYear = null,
+                LegalStatus = null,
+                TaxId = null,
+                PrimaryColor = null,
+                AccentColor = null,
+                ContactEmail = null,
+                Type = Organization.Contracts.OrganizationType.University,
+                CreatedAt = now,
+                UpdatedAt = now,
+            };
+            context.Organizations.Add(organization);
+
+            foreach (var roleName in new[] { "Owner", "Admin", "Contributor", "Viewer" })
+            {
+                context.OrganizationRoles.Add(
+                    new Organization.Database.Models.OrganizationRole
+                    {
+                        Id = Guid.CreateVersion7(),
+                        OrganizationId = organization.Id,
+                        Name = roleName,
+                        CreatedAt = now,
+                    }
+                );
+            }
+
+            await context.SaveChangesAsync(stoppingToken);
+            organizationId = organization.Id;
+        }
+
+        var existingRoles = await context
+            .OrganizationRoles.Where(r => r.OrganizationId == organizationId)
+            .ToDictionaryAsync(r => r.Name, r => r.Id, stoppingToken);
+
+        foreach (var roleName in new[] { "Student", "FaunaAdministrator" })
+        {
+            if (existingRoles.ContainsKey(roleName))
+            {
+                continue;
+            }
+
+            var role = new Organization.Database.Models.OrganizationRole
+            {
+                Id = Guid.CreateVersion7(),
+                OrganizationId = organizationId.Value,
+                Name = roleName,
+                CreatedAt = now,
+            };
+            context.OrganizationRoles.Add(role);
+            existingRoles[roleName] = role.Id;
+            logger.LogInformation("Added {Role} role to organization '{Slug}'", roleName, slug);
+        }
+
+        var manageMembers = Organization.Contracts.Permissions.Organization.ManageMembers;
+        var faunaAdminRoleId = existingRoles["FaunaAdministrator"];
+        var hasManageMembers = await context.OrganizationRolePermissions.AnyAsync(
+            p => p.RoleId == faunaAdminRoleId && p.Permission == manageMembers,
+            stoppingToken
+        );
+
+        if (!hasManageMembers)
+        {
+            context.OrganizationRolePermissions.Add(
+                new Organization.Database.Models.OrganizationRolePermission
+                {
+                    RoleId = faunaAdminRoleId,
+                    Permission = manageMembers,
+                }
+            );
+        }
+
+        await context.SaveChangesAsync(stoppingToken);
     }
 
     private async Task MigrateWildlifeAsync(

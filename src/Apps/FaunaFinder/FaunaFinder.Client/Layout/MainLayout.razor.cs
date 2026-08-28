@@ -11,6 +11,8 @@ namespace FaunaFinder.Client.Layout;
 // the C# symbol frontend can.
 public partial class MainLayout : EcoDataLayout
 {
+    public sealed record AuthChanged;
+
     // The shell renders straight off the two managers' State, so subscribing is
     // the whole job — the handler body has nothing to add.
     [Event]
@@ -18,6 +20,9 @@ public partial class MainLayout : EcoDataLayout
 
     [Event]
     private void OnNavbarChanged(NavbarChanged _) { }
+
+    [Event]
+    private void OnAuthChanged(AuthChanged _) { }
 
     protected override void OnLanguageChanged() =>
         _locale = L.CurrentLanguage == "es" ? LocaleContext.Spanish : LocaleContext.English;

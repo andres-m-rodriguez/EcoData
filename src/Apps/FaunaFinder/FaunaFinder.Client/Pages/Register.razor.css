@@ -1,0 +1,16 @@
+.ff-auth-page {
+    display: flex;
+    justify-content: center;
+    padding: 48px 16px;
+}
+
+.ff-auth-page ::deep .ff-auth-card {
+    width: 100%;
+    max-width: 420px;
+}
+
+.ff-auth-question {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
