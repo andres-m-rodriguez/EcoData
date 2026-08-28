@@ -4,7 +4,9 @@ using EcoData.Spa.Navigation;
 using EcoData.Ui;
 using EcoData.Wildlife.Application.Client;
 using FaunaFinder.Client.Localization;
+using FaunaFinder.Client.Services.Account;
 using FaunaFinder.Client.Services.FieldNotebook;
+using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using MudBlazor.Services;
 using Tempest;
@@ -17,6 +19,15 @@ var baseAddress = new Uri(builder.HostEnvironment.BaseAddress);
 
 builder.Services.AddLocationsClient(baseAddress);
 builder.Services.AddWildlifeClient(baseAddress);
+
+builder.Services.AddHttpClient<IAccountHttpClient, AccountHttpClient>(client =>
+{
+    client.BaseAddress = baseAddress;
+});
+
+builder.Services.AddScoped<AuthStateService>();
+builder.Services.AddScoped<AuthenticationStateProvider, FaunaFinderAuthStateProvider>();
+builder.Services.AddAuthorizationCore();
 
 builder.Services.AddSpaNavigation();
 builder.Services.AddEcoDataUi();

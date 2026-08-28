@@ -1,8 +1,10 @@
 @using EcoData.Common.i18n
+@using FaunaFinder.Client.Services.Account
 @inherits EcoDataLayout
 @inject INavigationManager Navigation
 @inject INavbarManager Navbar
 @inject IJavascriptSafeInterop JS
+@inject AuthStateService Auth
 
 <MudThemeProvider Theme="FaunaFinderTheme.Default" IsDarkMode="_isDarkMode" />
 <MudPopoverProvider />
@@ -94,6 +96,45 @@
                     }
                 </MudMenu>
 
+                @if (Auth.IsAuthenticated)
+                {
+                    <MudBadge Visible="ShowPendingBadge"
+                              Dot="true"
+                              Color="Color.Warning"
+                              Overlap="true"
+                              Class="ff-account-badge">
+                        <MudMenu Icon="@Icons.Material.Filled.AccountCircle"
+                                 Color="Color.Inherit"
+                                 Size="Size.Small"
+                                 AriaLabel="@L["Auth_AccountLabel"]"
+                                 AnchorOrigin="Origin.BottomRight"
+                                 TransformOrigin="Origin.TopRight"
+                                 Class="ff-account-menu">
+                            <div class="ff-account-header">
+                                <span class="ff-account-name">@Auth.CurrentUser?.DisplayName</span>
+                                <span class="ff-account-email">@Auth.CurrentUser?.Email</span>
+                            </div>
+                            @if (AccessRequestStatusText is { } statusText)
+                            {
+                                <MudDivider />
+                                <div class="ff-account-status">@statusText</div>
+                            }
+                            <MudDivider />
+                            <MudMenuItem OnClick="SignOutAsync">@L["Auth_SignOut"]</MudMenuItem>
+                        </MudMenu>
+                    </MudBadge>
+                }
+                else
+                {
+                    <MudTooltip Text="@L["Auth_SignIn"]">
+                        <MudIconButton Icon="@Icons.Material.Filled.AccountCircle"
+                                       Class="ff-signin-button"
+                                       Size="Size.Small"
+                                       Href="/login"
+                                       aria-label="@L["Auth_SignIn"]" />
+                    </MudTooltip>
+                }
+
                 <MudHidden Breakpoint="Breakpoint.MdAndUp">
                     @if (!IsRootPage)
                     {
@@ -182,10 +223,30 @@
 
     private string ShellClass => _railOpen ? "ff-shell has-rail-open" : "ff-shell";
 
+    private bool ShowPendingBadge => Auth.AccessRequest?.Status == "Pending";
+
+    private string? AccessRequestStatusText => Auth.AccessRequest?.Status switch
+    {
+        "Pending" => L["Auth_Request_Pending"],
+        "Approved" => L["Auth_Request_Approved"],
+        "Rejected" => L["Auth_Request_Rejected"],
+        _ => null,
+    };
+
+    private async Task SignOutAsync()
+    {
+        await Auth.LogoutAsync();
+        Navigation.NavigateTo("/");
+    }
+
     protected override void OnInitialized()
     {
         base.OnInitialized();
         _locale = L.CurrentLanguage == "es" ? LocaleContext.Spanish : LocaleContext.English;
+
+        // Fire-and-forget: the probe publishes AuthChanged when it lands, and
+        // the [Event] handler re-renders the shell with the signed-in state.
+        _ = Auth.InitializeAsync();
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)

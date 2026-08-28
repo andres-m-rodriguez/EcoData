@@ -10,11 +10,16 @@ public static class FaunaFinderRateLimiterExtensions
 
     private const int ApiRequestsPerMinute = 120;
 
+    // Tight on purpose: everything under /account is a credential operation
+    // proxied to EcoPortal, and a burst here is either a bug or an attack.
+    private const int AccountRequestsPerMinute = 12;
+
     private static readonly TimeSpan ReplenishmentPeriod = TimeSpan.FromSeconds(10);
 
     private const int PeriodsPerMinute = 6;
 
     private const string McpPath = "/mcp";
+    private const string AccountPath = "/account";
     private static readonly string[] ApiPaths = ["/wildlife", "/locations"];
 
     public static IServiceCollection AddFaunaFinderRateLimiting(this IServiceCollection services)
@@ -41,6 +46,11 @@ public static class FaunaFinderRateLimiterExtensions
                 if (path.StartsWithSegments(McpPath, StringComparison.OrdinalIgnoreCase))
                 {
                     return TokenBucket($"mcp:{ClientKey(context)}", McpRequestsPerMinute);
+                }
+
+                if (path.StartsWithSegments(AccountPath, StringComparison.OrdinalIgnoreCase))
+                {
+                    return TokenBucket($"account:{ClientKey(context)}", AccountRequestsPerMinute);
                 }
 
                 foreach (var apiPath in ApiPaths)
