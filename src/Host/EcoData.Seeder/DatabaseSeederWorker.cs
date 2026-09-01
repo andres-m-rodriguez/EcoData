@@ -592,7 +592,22 @@ public sealed class DatabaseSeederWorker(
         }
 
         await context.SaveChangesAsync(stoppingToken);
-        logger.LogInformation("NRCS practices seeded: {Count}", practices.Count);
+
+        // The matrix JSON is the source of truth: a practice it no longer lists
+        // goes away, unless links still point at it (those are pruned later).
+        var sanctionedCodes = practices.Select(p => p.Code).ToList();
+        var removed = await context
+            .NrcsPractices.Where(p =>
+                !sanctionedCodes.Contains(p.Code)
+                && !context.FwsLinks.Any(l => l.NrcsPracticeId == p.Id)
+            )
+            .ExecuteDeleteAsync(stoppingToken);
+
+        logger.LogInformation(
+            "NRCS practices seeded: {Count}, removed (not in source): {Removed}",
+            practices.Count,
+            removed
+        );
     }
 
     private async Task SeedFwsActionsAsync(
@@ -935,19 +950,11 @@ public sealed class DatabaseSeederWorker(
             stoppingToken
         );
 
-        var existingLinks = await context
-            .FwsLinks.Select(l => new
-            {
-                l.Id,
-                l.SpeciesId,
-                l.NrcsPracticeId,
-                l.FwsActionId,
-            })
-            .ToListAsync(stoppingToken);
+        var existingLinks = await context.FwsLinks.AsTracking().ToListAsync(stoppingToken);
 
-        var existingLinkSet = existingLinks
-            .Select(l => (l.SpeciesId, l.NrcsPracticeId, l.FwsActionId))
-            .ToHashSet();
+        var existingByKey = existingLinks.ToDictionary(l =>
+            (l.SpeciesId, l.NrcsPracticeId, l.FwsActionId)
+        );
 
         await RemoveUnsanctionedFwsLinksAsync(
             context,
@@ -961,6 +968,7 @@ public sealed class DatabaseSeederWorker(
 
         var batchCount = 0;
         var seededCount = 0;
+        var refreshedCount = 0;
         foreach (var dto in links)
         {
             if (!speciesMap.TryGetValue(dto.SpeciesScientificName, out var speciesId))
@@ -973,23 +981,32 @@ public sealed class DatabaseSeederWorker(
                 continue;
 
             var linkKey = (speciesId, practiceId, actionId);
-            if (existingLinkSet.Contains(linkKey))
-                continue;
+            if (existingByKey.TryGetValue(linkKey, out var existingLink))
+            {
+                // The JSON is the source of truth for the matrix text, so a
+                // re-worded justification must overwrite what was seeded before.
+                if (existingLink.Justification.SequenceEqual(dto.Justification))
+                    continue;
 
-            context.FwsLinks.Add(
-                new FwsLink
+                existingLink.Justification = dto.Justification;
+                refreshedCount++;
+                batchCount++;
+            }
+            else
+            {
+                var link = new FwsLink
                 {
                     Id = Guid.CreateVersion7(),
                     SpeciesId = speciesId,
                     NrcsPracticeId = practiceId,
                     FwsActionId = actionId,
                     Justification = dto.Justification,
-                }
-            );
-
-            existingLinkSet.Add(linkKey);
-            batchCount++;
-            seededCount++;
+                };
+                context.FwsLinks.Add(link);
+                existingByKey[linkKey] = link;
+                batchCount++;
+                seededCount++;
+            }
 
             if (batchCount >= 100)
             {
@@ -1003,7 +1020,11 @@ public sealed class DatabaseSeederWorker(
             await context.SaveChangesAsync(stoppingToken);
         }
 
-        logger.LogInformation("FWS links seeded: {Count}", seededCount);
+        logger.LogInformation(
+            "FWS links seeded: {Count} new, {Refreshed} justifications refreshed",
+            seededCount,
+            refreshedCount
+        );
     }
 
     private async Task RemoveUnsanctionedFwsLinksAsync(
