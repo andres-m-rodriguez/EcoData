@@ -9,6 +9,7 @@ using FaunaFinder.Server.Components;
 using FaunaFinder.Server.Mcp;
 using FaunaFinder.Server.Organization;
 using FaunaFinder.Server.RateLimiting;
+using FaunaFinder.Server.Reports;
 using MudBlazor.Services;
 using Tempest;
 
@@ -75,6 +76,7 @@ app.MapRazorComponents<App>()
 app.MapStateEndpoints();
 app.MapMunicipalityEndpoints();
 app.MapWildlifeApiEndpoints();
+app.MapSpeciesReportEndpoints();
 app.MapAccountEndpoints();
 app.MapFaunaFinderMcp();
 

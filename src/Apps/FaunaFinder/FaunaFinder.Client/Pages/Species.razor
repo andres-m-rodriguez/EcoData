@@ -39,6 +39,12 @@
                 <SpeciesHero Species="detail" />
 
                 <div class="ff-hero-save">
+                    <MudTooltip Text="@ReportLabel">
+                        <MudIconButton Icon="@Icons.Material.Outlined.PictureAsPdf"
+                                       Href="@ReportUrl(detail)"
+                                       Target="_blank"
+                                       aria-label="@ReportLabel" />
+                    </MudTooltip>
                     <MudTooltip Text="@SaveLabel">
                         <MudIconButton Icon="@SaveIcon"
                                        Color="@(_isSaved ? Color.Warning : Color.Default)"
@@ -300,6 +306,11 @@ else
     }
 
     private string SaveLabel => _isSaved ? L["Notebook_Unsave"] : L["Notebook_Save"];
+
+    private string ReportLabel => L["SpeciesDetail_Report"];
+
+    private string ReportUrl(SpeciesDtoForDetail detail) =>
+        $"/reports/species/{detail.Id}.pdf?lang={Locale.Code}";
 
     private string SaveIcon => _isSaved
         ? Icons.Material.Filled.Star
