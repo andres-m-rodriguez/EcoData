@@ -29,6 +29,7 @@ public sealed class Species
     public ICollection<MunicipalitySpecies> MunicipalitySpecies { get; set; } = [];
     public ICollection<SpeciesCategoryLink> CategoryLinks { get; set; } = [];
     public ICollection<SpeciesLocation> Locations { get; set; } = [];
+    public ICollection<Sighting> Sightings { get; set; } = [];
 
     public sealed class EntityConfiguration : IEntityTypeConfiguration<Species>
     {
