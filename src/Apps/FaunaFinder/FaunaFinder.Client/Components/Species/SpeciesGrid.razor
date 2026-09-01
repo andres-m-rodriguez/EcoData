@@ -73,8 +73,8 @@
     private Guid? _lastMunicipalityId;
     private Guid? _lastCategoryId;
 
-    private int _columns = 3;
-    private float _rowHeight = 460;
+    private int _columns = 4;
+    private float _rowHeight = 350;
     private Guid _viewportSubscriptionId;
 
     protected override async Task OnInitializedAsync()
@@ -107,9 +107,10 @@
     {
         (_columns, _rowHeight) = breakpoint switch
         {
-            Breakpoint.Xs => (1, 480f),
-            Breakpoint.Sm => (2, 500f),
-            _ => (3, 460f),
+            Breakpoint.Xs => (1, 420f),
+            Breakpoint.Sm => (2, 440f),
+            Breakpoint.Md => (3, 400f),
+            _ => (4, 350f),
         };
     }
 

@@ -1,5 +1,6 @@
 .species-hero-image {
     width: 100%;
+    max-width: 360px;
     height: 240px;
     border-radius: 8px;
     overflow: hidden;
@@ -15,6 +16,7 @@
 
 .species-hero-placeholder {
     width: 100%;
+    max-width: 360px;
     height: 240px;
     border-radius: 8px;
     background-color: var(--mud-palette-background-gray);

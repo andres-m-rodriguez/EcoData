@@ -8,6 +8,12 @@
     gap: 20px;
 }
 
+@media (min-width: 1280px) {
+    .ff-grid {
+        grid-template-columns: repeat(4, 1fr);
+    }
+}
+
 @media (max-width: 900px) {
     .ff-grid {
         grid-template-columns: repeat(2, 1fr);
@@ -29,7 +35,7 @@
 }
 
 .ff-grid-skeleton-img {
-    aspect-ratio: 4 / 3;
+    aspect-ratio: 3 / 2;
     width: 100%;
 }
 

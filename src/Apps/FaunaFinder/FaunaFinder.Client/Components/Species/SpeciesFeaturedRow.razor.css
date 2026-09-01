@@ -30,9 +30,9 @@
 }
 
 .ff-featured-skeleton {
-    aspect-ratio: 4 / 3;
+    aspect-ratio: 3 / 2;
     border-radius: 14px;
-    min-height: 240px;
+    min-height: 200px;
 }
 
 @media (max-width: 900px) {
