@@ -37,6 +37,22 @@ public partial class SightingDetailDialog : EcoDataComponent
     [Parameter]
     public bool CanEdit { get; set; }
 
+    // Resolved by the caller; Wildlife carries only the id.
+    [Parameter]
+    public string? MunicipalityName { get; set; }
+
+    // Wired by the review page. A delegate on OnApprove puts the dialog in
+    // reviewer mode: the decision buttons join the footer and the approval
+    // note shows under the map.
+    [Parameter]
+    public EventCallback<SightingDto> OnApprove { get; set; }
+
+    [Parameter]
+    public EventCallback<SightingDto> OnDeny { get; set; }
+
+    [Parameter]
+    public EventCallback<SightingDto> OnUnapprove { get; set; }
+
     [Inject]
     private ISightingHttpClient SightingClient { get; set; } = default!;
 
@@ -55,6 +71,8 @@ public partial class SightingDetailDialog : EcoDataComponent
     private string? _noteError;
 
     private string CommonName => Locale.Resolve(Sighting.SpeciesCommonName, fallback: Sighting.SpeciesScientificName);
+
+    private bool CanReview => OnApprove.HasDelegate;
 
     private CultureInfo Culture => CultureInfo.GetCultureInfo(Locale.Code);
 

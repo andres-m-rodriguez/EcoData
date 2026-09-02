@@ -1,0 +1,58 @@
+@namespace FaunaFinder.Client.Components.Sightings
+@inherits EcoDataComponent
+@using EcoData.Wildlife.Contracts
+
+<div class="ff-review-actions">
+    @if (Status != SightingStatus.Approved)
+    {
+        <MudButton Variant="Variant.Filled"
+                   Color="Color.Success"
+                   Size="Size"
+                   StartIcon="@Icons.Material.Filled.Check"
+                   OnClick="OnApprove"
+                   Disabled="Disabled">
+            @L["Sighting_Review_Approve"]
+        </MudButton>
+    }
+    @if (Status != SightingStatus.Denied)
+    {
+        <MudButton Variant="Variant.Outlined"
+                   Color="Color.Error"
+                   Size="Size"
+                   StartIcon="@Icons.Material.Filled.Block"
+                   OnClick="OnDeny"
+                   Disabled="Disabled">
+            @L["Sighting_Review_Deny"]
+        </MudButton>
+    }
+    @if (Status != SightingStatus.Pending)
+    {
+        <MudButton Variant="Variant.Text"
+                   Size="Size"
+                   StartIcon="@Icons.Material.Filled.Undo"
+                   OnClick="OnUnapprove"
+                   Disabled="Disabled">
+            @L["Sighting_Review_Unapprove"]
+        </MudButton>
+    }
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public SightingStatus Status { get; set; }
+
+    [Parameter]
+    public EventCallback OnApprove { get; set; }
+
+    [Parameter]
+    public EventCallback OnDeny { get; set; }
+
+    [Parameter]
+    public EventCallback OnUnapprove { get; set; }
+
+    [Parameter]
+    public bool Disabled { get; set; }
+
+    [Parameter]
+    public Size Size { get; set; } = Size.Small;
+}
