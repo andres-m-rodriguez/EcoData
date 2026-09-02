@@ -12,7 +12,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace EcoData.Wildlife.Database.Migrations
 {
     [DbContext(typeof(WildlifeDbContext))]
-    [Migration("20260902000600_AddSightings")]
+    [Migration("20260902001420_AddSightings")]
     partial class AddSightings
     {
         /// <inheritdoc />
@@ -166,11 +166,6 @@ namespace EcoData.Wildlife.Database.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("municipality_id");
 
-                    b.Property<string>("Notes")
-                        .HasMaxLength(1000)
-                        .HasColumnType("character varying(1000)")
-                        .HasColumnName("notes");
-
                     b.Property<DateTimeOffset>("ObservedAtUtc")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("observed_at_utc");
@@ -230,6 +225,100 @@ namespace EcoData.Wildlife.Database.Migrations
                         .HasDatabaseName("sightings_org_status_ix");
 
                     b.ToTable("sightings", (string)null);
+                });
+
+            modelBuilder.Entity("EcoData.Wildlife.Database.Models.SightingImage", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("BlobName")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("blob_name");
+
+                    b.Property<string>("ContentType")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("content_type");
+
+                    b.Property<DateTimeOffset>("CreatedAtUtc")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at_utc")
+                        .HasDefaultValueSql("now()");
+
+                    b.Property<Guid>("SightingId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("sighting_id");
+
+                    b.Property<long>("SizeBytes")
+                        .HasColumnType("bigint")
+                        .HasColumnName("size_bytes");
+
+                    b.Property<string>("UploadedByDisplayName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("uploaded_by_display_name");
+
+                    b.Property<Guid>("UploadedByUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("uploaded_by_user_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_sighting_images");
+
+                    b.HasIndex("SightingId", "Id")
+                        .HasDatabaseName("sighting_images_sighting_ix");
+
+                    b.ToTable("sighting_images", (string)null);
+                });
+
+            modelBuilder.Entity("EcoData.Wildlife.Database.Models.SightingNote", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("AuthorDisplayName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("author_display_name");
+
+                    b.Property<Guid>("AuthorUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("author_user_id");
+
+                    b.Property<DateTimeOffset>("CreatedAtUtc")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at_utc")
+                        .HasDefaultValueSql("now()");
+
+                    b.Property<Guid>("SightingId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("sighting_id");
+
+                    b.Property<string>("Text")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)")
+                        .HasColumnName("text");
+
+                    b.HasKey("Id")
+                        .HasName("pk_sighting_notes");
+
+                    b.HasIndex("SightingId", "Id")
+                        .HasDatabaseName("sighting_notes_sighting_ix");
+
+                    b.ToTable("sighting_notes", (string)null);
                 });
 
             modelBuilder.Entity("EcoData.Wildlife.Database.Models.Species", b =>
@@ -559,6 +648,30 @@ namespace EcoData.Wildlife.Database.Migrations
                     b.Navigation("Species");
                 });
 
+            modelBuilder.Entity("EcoData.Wildlife.Database.Models.SightingImage", b =>
+                {
+                    b.HasOne("EcoData.Wildlife.Database.Models.Sighting", "Sighting")
+                        .WithMany("Images")
+                        .HasForeignKey("SightingId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_sighting_images_sightings_sighting_id");
+
+                    b.Navigation("Sighting");
+                });
+
+            modelBuilder.Entity("EcoData.Wildlife.Database.Models.SightingNote", b =>
+                {
+                    b.HasOne("EcoData.Wildlife.Database.Models.Sighting", "Sighting")
+                        .WithMany("Notes")
+                        .HasForeignKey("SightingId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_sighting_notes_sightings_sighting_id");
+
+                    b.Navigation("Sighting");
+                });
+
             modelBuilder.Entity("EcoData.Wildlife.Database.Models.Species", b =>
                 {
                     b.OwnsMany("EcoData.Common.i18n.LocaleValue", "CommonName", b1 =>
@@ -659,6 +772,13 @@ namespace EcoData.Wildlife.Database.Migrations
             modelBuilder.Entity("EcoData.Wildlife.Database.Models.NrcsPractice", b =>
                 {
                     b.Navigation("FwsLinks");
+                });
+
+            modelBuilder.Entity("EcoData.Wildlife.Database.Models.Sighting", b =>
+                {
+                    b.Navigation("Images");
+
+                    b.Navigation("Notes");
                 });
 
             modelBuilder.Entity("EcoData.Wildlife.Database.Models.Species", b =>

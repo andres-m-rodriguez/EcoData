@@ -27,7 +27,6 @@ public sealed class Sighting
     public required Guid? MunicipalityId { get; set; }
     public required DateTimeOffset ObservedAtUtc { get; set; }
     public required int? IndividualCount { get; set; }
-    public required string? Notes { get; set; }
     public required SightingStatus Status { get; set; }
     public required Guid? ReviewedByUserId { get; set; }
     public required string? ReviewedByDisplayName { get; set; }
@@ -39,6 +38,8 @@ public sealed class Sighting
     public required DateTimeOffset CreatedAtUtc { get; set; }
 
     public Species? Species { get; set; }
+    public ICollection<SightingNote> Notes { get; set; } = [];
+    public ICollection<SightingImage> Images { get; set; } = [];
 
     public sealed class EntityConfiguration : IEntityTypeConfiguration<Sighting>
     {
@@ -58,8 +59,6 @@ public sealed class Sighting
             builder.Property(static e => e.Longitude).IsRequired();
 
             builder.Property(static e => e.ObservedAtUtc).IsRequired();
-
-            builder.Property(static e => e.Notes).HasMaxLength(1000);
 
             builder
                 .Property(static e => e.Status)
