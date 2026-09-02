@@ -13,6 +13,9 @@ public sealed class WildlifeDbContext(DbContextOptions<WildlifeDbContext> option
     public DbSet<NrcsPractice> NrcsPractices => Set<NrcsPractice>();
     public DbSet<FwsLink> FwsLinks => Set<FwsLink>();
     public DbSet<SpeciesLocation> SpeciesLocations => Set<SpeciesLocation>();
+    public DbSet<Sighting> Sightings => Set<Sighting>();
+    public DbSet<SightingNote> SightingNotes => Set<SightingNote>();
+    public DbSet<SightingImage> SightingImages => Set<SightingImage>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -25,5 +28,8 @@ public sealed class WildlifeDbContext(DbContextOptions<WildlifeDbContext> option
         modelBuilder.ApplyConfiguration(new NrcsPractice.EntityConfiguration());
         modelBuilder.ApplyConfiguration(new FwsLink.EntityConfiguration());
         modelBuilder.ApplyConfiguration(new SpeciesLocation.EntityConfiguration());
+        modelBuilder.ApplyConfiguration(new Sighting.EntityConfiguration());
+        modelBuilder.ApplyConfiguration(new SightingNote.EntityConfiguration());
+        modelBuilder.ApplyConfiguration(new SightingImage.EntityConfiguration());
     }
 }
