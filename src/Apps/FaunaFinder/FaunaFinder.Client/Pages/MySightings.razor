@@ -1,0 +1,89 @@
+@page "/sightings/mine"
+@inherits EcoDataComponent
+@using System.Globalization
+@using EcoData.Wildlife.Contracts.Dtos
+@using EcoData.Wildlife.Contracts.Parameters
+@inject AuthStateService Auth
+@inject ISightingHttpClient SightingClient
+@inject NavigationManager NavigationManager
+@inject INavbarManager Navbar
+@inject IDialogService Dialogs
+@inject IBrowserViewportService Viewport
+
+<PageTitle>FaunaFinder | @L["Sighting_Mine_PageTitle"]</PageTitle>
+
+<NuiPageLayout ParentPath="/">
+    <div class="ff-sighting-page">
+        <header class="ff-sighting-head">
+            <div>
+                <MudText Typo="Typo.h5" Class="ff-sighting-title">@L["Sighting_Mine_Title"]</MudText>
+                <MudText Typo="Typo.body2" Class="ff-sighting-lede">@L["Sighting_Mine_Lede"]</MudText>
+            </div>
+            <MudButton Variant="Variant.Filled"
+                       Color="Color.Primary"
+                       StartIcon="@Icons.Material.Filled.AddLocationAlt"
+                       Href="/sightings/new">
+                @L["Sighting_Report_Action"]
+            </MudButton>
+        </header>
+
+        @if (!Auth.IsAuthenticated)
+        {
+            @for (var i = 0; i < 4; i++)
+            {
+                <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="72px" Class="mb-2 rounded-lg" />
+            }
+        }
+        else
+        {
+            <EcoDataVirtualizedList TItem="SightingDto"
+                                    TParams="SightingParameters"
+                                    ItemsProvider="@((parameters, ct) => SightingClient.GetMineAsync(parameters, ct))"
+                                    ParametersBuilder="@(cursor => new SightingParameters(PageSize: PageSize, Cursor: cursor))"
+                                    CursorSelector="@(s => s.Id)"
+                                    ItemSize="80"
+                                    OverscanCount="4">
+                <LoadingTemplate>
+                    @for (var i = 0; i < 4; i++)
+                    {
+                        <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="72px" Class="mb-2 rounded-lg" />
+                    }
+                </LoadingTemplate>
+                <EmptyTemplate>
+                    <NuiEmptyState Icon="@Icons.Material.Outlined.AddLocationAlt"
+                                   Title="@L[EmptyTitleKey]"
+                                   Description="@L[EmptyDescriptionKey]">
+                        <ActionContent>
+                            <MudButton Variant="Variant.Filled" Color="Color.Primary" Href="/sightings/new">
+                                @L["Sighting_Report_Action"]
+                            </MudButton>
+                        </ActionContent>
+                    </NuiEmptyState>
+                </EmptyTemplate>
+                <ItemTemplate Context="sighting">
+                    <button type="button" class="ff-sighting-row" @onclick="() => OpenDetail(sighting)">
+                        <div class="ff-sighting-row-main">
+                            <span class="ff-sighting-row-name">@Locale.Resolve(sighting.SpeciesCommonName, fallback: sighting.SpeciesScientificName)</span>
+                            @if (!SpeciesNaming.EchoesScientificName(Locale.Resolve(sighting.SpeciesCommonName, fallback: sighting.SpeciesScientificName), sighting.SpeciesScientificName))
+                            {
+                                <span class="ff-sighting-row-sci">@sighting.SpeciesScientificName</span>
+                            }
+                            <span class="ff-sighting-row-meta">
+                                <span>@sighting.ObservedAtUtc.ToLocalTime().ToString("g", CultureInfo.GetCultureInfo(Locale.Code))</span>
+                                @if (sighting.IndividualCount is { } count)
+                                {
+                                    <span class="ff-sighting-row-dot" aria-hidden="true">·</span>
+                                    <span>@L["Sighting_Count_Value", count]</span>
+                                }
+                            </span>
+                        </div>
+                        <span class="ff-status-pill status-@sighting.Status.ToString().ToLowerInvariant()">@L["Sighting_Status_" + sighting.Status]</span>
+                    </button>
+                </ItemTemplate>
+                <PlaceholderTemplate>
+                    <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="72px" Class="mb-2 rounded-lg" />
+                </PlaceholderTemplate>
+            </EcoDataVirtualizedList>
+        }
+    </div>
+</NuiPageLayout>

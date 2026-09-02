@@ -300,3 +300,9 @@
 .ff-status-pill.status-CR { background: var(--status-cr-bg); color: var(--status-cr-fg); }
 .ff-status-pill.status-EX { background: var(--status-ex-bg); color: var(--status-ex-fg); }
 .ff-status-pill.status-DD { background: var(--status-dd-bg); color: var(--status-dd-fg); }
+
+/* Sighting review status, coloured off the IUCN tokens: pending amber,
+   approved green, denied red. Used by MySightings and SightingDetailDialog. */
+.ff-status-pill.status-pending { background: var(--status-vu-bg); color: var(--status-vu-fg); }
+.ff-status-pill.status-approved { background: var(--status-lc-bg); color: var(--status-lc-fg); }
+.ff-status-pill.status-denied { background: var(--status-cr-bg); color: var(--status-cr-fg); }

@@ -10,6 +10,7 @@
 @inherits StatefulComponent
 @inject ISpeciesHttpClient SpeciesHttpClient
 @inject IConservationLinkHttpClient ConservationLinkHttpClient
+@inject AuthStateService Auth
 @inject NavigationManager NavigationManager
 @inject ISnackbar Snackbar
 @inject ILocalizer L
@@ -62,6 +63,16 @@
                             aria-label="@L["Map_Travel_Label"]"
                             OnClick="OpenTravelSheet" />
                 </MudTooltip>
+                @if (Auth.IsAuthenticated)
+                {
+                    <MudTooltip Text="@L["Sighting_Report_Action"]" Placement="Placement.Left">
+                        <MudFab Color="Color.Default"
+                                StartIcon="@Icons.Material.Filled.AddLocationAlt"
+                                Size="Size.Medium"
+                                aria-label="@L["Sighting_Report_Action"]"
+                                Href="@ReportSightingUrl" />
+                    </MudTooltip>
+                }
             </div>
         }
 
@@ -224,7 +235,30 @@
     private SpeciesDtoForDetail? _viewingSpecies;
     private int _locationIndex;
 
+    private MapCoordinate? _lastTappedPoint;
+
     [CascadingParameter] public LocaleContext Locale { get; set; } = LocaleContext.English;
+
+    // The controller only tracks the centre it was told to show, so a tap on
+    // open water or a road is the closest thing to where the user is looking.
+    private string ReportSightingUrl
+    {
+        get
+        {
+            var point = _lastTappedPoint ?? _mapController.Center;
+            return $"/sightings/new?lat={point.Latitude.ToString("F6", System.Globalization.CultureInfo.InvariantCulture)}&lng={point.Longitude.ToString("F6", System.Globalization.CultureInfo.InvariantCulture)}";
+        }
+    }
+
+    // The FAB appears once the sign-in probe has answered.
+    [Event]
+    private void OnAuthChanged(MainLayout.AuthChanged _) { }
+
+    private void OnMapClicked(MapCoordinate point)
+    {
+        _lastTappedPoint = point;
+        InvokeAsync(StateHasChanged);
+    }
 
     private bool PanelVisible => _selectedMunicipality is not null || _searchMode != AreaSearchMode.None;
 
@@ -247,6 +281,7 @@
         _mapController.OnGeoJsonLoaded += OnGeoJsonLoaded;
         _mapController.OnPolygonDrawn += OnPolygonDrawn;
         _mapController.OnPolygonDrawCancelled += OnPolygonDrawCancelled;
+        _mapController.OnMapClicked += OnMapClicked;
 
         _mapController.SetView(_region.Center, InitialZoom);
         _mapController.AddGeoJson(MunicipalityBoundaries.ForRegion(_region));
@@ -792,6 +827,7 @@
         _mapController.OnGeoJsonLoaded -= OnGeoJsonLoaded;
         _mapController.OnPolygonDrawn -= OnPolygonDrawn;
         _mapController.OnPolygonDrawCancelled -= OnPolygonDrawCancelled;
+        _mapController.OnMapClicked -= OnMapClicked;
         base.Dispose();
     }
 

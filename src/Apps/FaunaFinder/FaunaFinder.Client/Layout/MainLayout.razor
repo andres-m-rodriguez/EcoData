@@ -120,6 +120,9 @@
                                 <div class="ff-account-status">@statusText</div>
                             }
                             <MudDivider />
+                            <MudMenuItem Href="/sightings/new" Icon="@Icons.Material.Filled.AddLocationAlt">@L["Sighting_Report_Action"]</MudMenuItem>
+                            <MudMenuItem Href="/sightings/mine" Icon="@Icons.Material.Filled.FormatListBulleted">@L["Sighting_Mine_Title"]</MudMenuItem>
+                            <MudDivider />
                             <MudMenuItem OnClick="SignOutAsync">@L["Auth_SignOut"]</MudMenuItem>
                         </MudMenu>
                     </MudBadge>

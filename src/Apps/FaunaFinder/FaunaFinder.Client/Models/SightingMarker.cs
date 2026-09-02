@@ -2,12 +2,9 @@ using EcoData.Spa.Map;
 
 namespace FaunaFinder.Client.Models;
 
-public class SightingMarker : IMapMarker
-{
-    public required string SpeciesName { get; init; }
-    public required MapCoordinate Coordinate { get; init; }
-    public DateTime SightedAt { get; init; }
-
-    public string? PopupContent => $"<strong>{SpeciesName}</strong><br/>Sighted: {SightedAt:MMM d, yyyy}";
-    public string? TooltipContent => SpeciesName;
-}
+// The single pin on a sighting map: the report form moves it around, the
+// detail dialog shows where a report landed.
+public sealed record SightingMarker(
+    MapCoordinate Coordinate,
+    string? PopupContent = null,
+    string? TooltipContent = null) : IMapMarker;
