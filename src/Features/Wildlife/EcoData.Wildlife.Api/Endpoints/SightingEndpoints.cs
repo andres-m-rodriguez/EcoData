@@ -2,6 +2,7 @@ using System.Security.Claims;
 using EcoData.Common.Authorization;
 using EcoData.Identity.Contracts.Claims;
 using EcoData.Wildlife.Application;
+using EcoData.Wildlife.Contracts;
 using EcoData.Wildlife.Contracts.Dtos;
 using EcoData.Wildlife.Contracts.Parameters;
 using EcoData.Wildlife.Contracts.Validators;
@@ -133,6 +134,175 @@ public static class SightingEndpoints
             )
             .RequireAuthorization()
             .WithName("AddSightingNote");
+
+        // Review queue for members holding wildlife:occurrence:verify in the
+        // organization, and for global admins.
+        var review = app.MapGroup("/wildlife/organizations/{organizationId:guid}/sightings")
+            .WithTags("Sightings")
+            .RequireAuthorization();
+
+        // Materialized instead of streamed: an IAsyncEnumerable handler cannot
+        // answer 403, and an empty stream would look like "no sightings".
+        review
+            .MapGet(
+                "/",
+                async Task<Results<Ok<IReadOnlyList<SightingDto>>, ForbidHttpResult>> (
+                    Guid organizationId,
+                    [AsParameters] SightingParameters parameters,
+                    IAuthorization auth,
+                    ISightingRepository repository,
+                    CancellationToken ct
+                ) =>
+                {
+                    if (!await auth.HasAsync(WildlifePermissions.VerifyOccurrence, organizationId, ct))
+                        return TypedResults.Forbid();
+
+                    var page = await repository
+                        .GetByOrganizationAsync(organizationId, parameters, ct)
+                        .ToListAsync(ct);
+                    return TypedResults.Ok<IReadOnlyList<SightingDto>>(page);
+                }
+            )
+            .WithName("GetOrganizationSightings");
+
+        review
+            .MapGet(
+                "/count",
+                async Task<Results<Ok<int>, ForbidHttpResult>> (
+                    Guid organizationId,
+                    SightingStatus? status,
+                    IAuthorization auth,
+                    ISightingRepository repository,
+                    CancellationToken ct
+                ) =>
+                {
+                    if (!await auth.HasAsync(WildlifePermissions.VerifyOccurrence, organizationId, ct))
+                        return TypedResults.Forbid();
+
+                    return TypedResults.Ok(await repository.CountAsync(organizationId, status, ct));
+                }
+            )
+            .WithName("CountOrganizationSightings");
+
+        review
+            .MapGet(
+                "/{id:guid}",
+                async Task<Results<Ok<SightingDto>, NotFound, ForbidHttpResult>> (
+                    Guid organizationId,
+                    Guid id,
+                    IAuthorization auth,
+                    ISightingRepository repository,
+                    CancellationToken ct
+                ) =>
+                {
+                    if (!await auth.HasAsync(WildlifePermissions.VerifyOccurrence, organizationId, ct))
+                        return TypedResults.Forbid();
+
+                    var sighting = await repository.GetByIdAsync(organizationId, id, ct);
+                    if (sighting is null)
+                        return TypedResults.NotFound();
+
+                    return TypedResults.Ok(sighting);
+                }
+            )
+            .WithName("GetOrganizationSightingById");
+
+        review
+            .MapPost(
+                "/{id:guid}/approve",
+                async Task<Results<NoContent, NotFound, ForbidHttpResult, ValidationProblem>> (
+                    Guid organizationId,
+                    Guid id,
+                    SightingApprovalDto dto,
+                    ClaimsPrincipal user,
+                    IAuthorization auth,
+                    ISightingRepository repository,
+                    CancellationToken ct
+                ) =>
+                {
+                    if (!await auth.HasAsync(WildlifePermissions.VerifyOccurrence, organizationId, ct))
+                        return TypedResults.Forbid();
+
+                    var validation = new SightingApprovalDtoValidator().Validate(dto);
+                    if (!validation.IsValid)
+                        return TypedResults.ValidationProblem(validation.ToDictionary());
+
+                    var reviewer = new RequestClaimToken(user);
+                    var result = await repository.ApproveAsync(
+                        organizationId,
+                        id,
+                        reviewer.UserId!.Value,
+                        reviewer.DisplayName,
+                        dto.Reason,
+                        ct
+                    );
+                    if (result.IsT1)
+                        return TypedResults.NotFound();
+
+                    return TypedResults.NoContent();
+                }
+            )
+            .WithName("ApproveSighting");
+
+        review
+            .MapPost(
+                "/{id:guid}/deny",
+                async Task<Results<NoContent, NotFound, ForbidHttpResult, ValidationProblem>> (
+                    Guid organizationId,
+                    Guid id,
+                    SightingDenialDto dto,
+                    ClaimsPrincipal user,
+                    IAuthorization auth,
+                    ISightingRepository repository,
+                    CancellationToken ct
+                ) =>
+                {
+                    if (!await auth.HasAsync(WildlifePermissions.VerifyOccurrence, organizationId, ct))
+                        return TypedResults.Forbid();
+
+                    var validation = new SightingDenialDtoValidator().Validate(dto);
+                    if (!validation.IsValid)
+                        return TypedResults.ValidationProblem(validation.ToDictionary());
+
+                    var reviewer = new RequestClaimToken(user);
+                    var result = await repository.DenyAsync(
+                        organizationId,
+                        id,
+                        reviewer.UserId!.Value,
+                        reviewer.DisplayName,
+                        dto.Reason,
+                        ct
+                    );
+                    if (result.IsT1)
+                        return TypedResults.NotFound();
+
+                    return TypedResults.NoContent();
+                }
+            )
+            .WithName("DenySighting");
+
+        review
+            .MapPost(
+                "/{id:guid}/unapprove",
+                async Task<Results<NoContent, NotFound, ForbidHttpResult>> (
+                    Guid organizationId,
+                    Guid id,
+                    IAuthorization auth,
+                    ISightingRepository repository,
+                    CancellationToken ct
+                ) =>
+                {
+                    if (!await auth.HasAsync(WildlifePermissions.VerifyOccurrence, organizationId, ct))
+                        return TypedResults.Forbid();
+
+                    var result = await repository.UnapproveAsync(organizationId, id, ct);
+                    if (result.IsT1)
+                        return TypedResults.NotFound();
+
+                    return TypedResults.NoContent();
+                }
+            )
+            .WithName("UnapproveSighting");
 
         return app;
     }

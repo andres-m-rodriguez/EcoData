@@ -6,6 +6,7 @@ namespace EcoData.Identity.Contracts.Claims;
 public readonly record struct RequestClaimToken
 {
     public const string OrganizationIdClaimType = "OrganizationId";
+    public const string DisplayNameClaimType = "DisplayName";
 
     public RequestClaimToken(IEnumerable<Claim> claims)
     {
@@ -23,6 +24,11 @@ public readonly record struct RequestClaimToken
                     userId = Guid.Parse(claim.Value);
                     break;
                 case ClaimTypes.Name:
+                    displayName = claim.Value;
+                    break;
+                // EcoPortal's user JWT carries the name under this key rather
+                // than ClaimTypes.Name; a Name claim, when present, wins.
+                case DisplayNameClaimType when displayName.Length == 0:
                     displayName = claim.Value;
                     break;
                 case ClaimTypes.Email:

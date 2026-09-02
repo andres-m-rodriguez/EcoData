@@ -44,6 +44,10 @@ public sealed record SightingNoteDto(
 
 public sealed record SightingNoteDtoForCreate(string Text);
 
+public sealed record SightingApprovalDto(string? Reason);
+
+public sealed record SightingDenialDto(string Reason);
+
 public sealed record SightingImageDto(
     Guid Id,
     string ContentType,

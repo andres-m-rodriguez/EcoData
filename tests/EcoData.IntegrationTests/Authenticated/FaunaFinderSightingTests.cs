@@ -14,7 +14,8 @@ using Xunit;
 namespace EcoData.IntegrationTests.Authenticated;
 
 // Reporting and listing sightings on the faunafinder origin, as any signed-in
-// account that is not a member of the organization.
+// account that is not a member of the organization, and reviewing them as the
+// seeded global admin on the ecoportal origin, where the same routes are mapped.
 [Collection(EcoDataTestCollection.Name)]
 public sealed class FaunaFinderSightingTests(SightingReporters reporters)
     : IClassFixture<SightingReporters>
@@ -171,6 +172,191 @@ public sealed class FaunaFinderSightingTests(SightingReporters reporters)
         response.StatusCode.Should().Be(HttpStatusCode.NotFound);
     }
 
+    [Fact]
+    public async Task Review_WithoutVerifyPermission_ReturnsForbidden()
+    {
+        var prefix = $"/wildlife/organizations/{reporters.OrganizationId}/sightings";
+        var id = Guid.CreateVersion7();
+
+        var list = await reporters.Reporter.GetAsync(prefix);
+        list.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+
+        var count = await reporters.Reporter.GetAsync($"{prefix}/count");
+        count.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+
+        var approve = await reporters.Reporter.PostAsJsonAsync(
+            $"{prefix}/{id}/approve",
+            new SightingApprovalDto(null)
+        );
+        approve.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+
+        var deny = await reporters.Reporter.PostAsJsonAsync(
+            $"{prefix}/{id}/deny",
+            new SightingDenialDto("Not enough detail")
+        );
+        deny.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+
+        var unapprove = await reporters.Reporter.PostAsync($"{prefix}/{id}/unapprove", null);
+        unapprove.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+    }
+
+    [Fact]
+    public async Task Approve_ThenUnapprove_AdminReviewsAndReporterSeesTheStatus()
+    {
+        var prefix = $"/wildlife/organizations/{reporters.OrganizationId}/sightings";
+        var pendingBefore = await reporters.Admin.GetFromJsonAsync<int>(
+            $"{prefix}/count?status=Pending"
+        );
+
+        var response = await reporters.Reporter.PostAsJsonAsync(prefix, ValidReport());
+        response.StatusCode.Should().Be(HttpStatusCode.Created);
+        var sighting = (await response.Content.ReadFromJsonAsync<SightingDto>())!;
+
+        var pending = await reporters.Admin.GetFromJsonAsync<List<SightingDto>>(
+            $"{prefix}?status=Pending"
+        );
+        pending.Should().Contain(item => item.Id == sighting.Id);
+        (await reporters.Admin.GetFromJsonAsync<int>($"{prefix}/count?status=Pending"))
+            .Should()
+            .Be(pendingBefore + 1);
+
+        var approved = await reporters.Admin.PostAsJsonAsync(
+            $"{prefix}/{sighting.Id}/approve",
+            new SightingApprovalDto("Matches the photo on file")
+        );
+        approved.StatusCode.Should().Be(HttpStatusCode.NoContent);
+
+        var reviewed = await reporters.Admin.GetFromJsonAsync<SightingDto>(
+            $"{prefix}/{sighting.Id}"
+        );
+        reviewed!.Status.Should().Be(SightingStatus.Approved);
+        reviewed.ReviewedByDisplayName.Should().NotBeNullOrEmpty();
+        reviewed.ReviewedAtUtc.Should().NotBeNull();
+        reviewed.ReviewReason.Should().Be("Matches the photo on file");
+        (await reporters.Admin.GetFromJsonAsync<int>($"{prefix}/count?status=Pending"))
+            .Should()
+            .Be(pendingBefore);
+
+        var mine = await reporters.Reporter.GetFromJsonAsync<List<SightingDto>>(
+            "/wildlife/me/sightings"
+        );
+        mine!.Single(item => item.Id == sighting.Id).Status.Should().Be(SightingStatus.Approved);
+
+        var unapproved = await reporters.Admin.PostAsync($"{prefix}/{sighting.Id}/unapprove", null);
+        unapproved.StatusCode.Should().Be(HttpStatusCode.NoContent);
+
+        var reset = await reporters.Admin.GetFromJsonAsync<SightingDto>($"{prefix}/{sighting.Id}");
+        reset!.Status.Should().Be(SightingStatus.Pending);
+        reset.ReviewedByDisplayName.Should().BeNull();
+        reset.ReviewedAtUtc.Should().BeNull();
+        reset.ReviewReason.Should().BeNull();
+        (await reporters.Admin.GetFromJsonAsync<int>($"{prefix}/count?status=Pending"))
+            .Should()
+            .Be(pendingBefore + 1);
+    }
+
+    [Fact]
+    public async Task Deny_WithReason_ThenUnapprove_BlankReasonRejected()
+    {
+        var prefix = $"/wildlife/organizations/{reporters.OrganizationId}/sightings";
+
+        var response = await reporters.Reporter.PostAsJsonAsync(prefix, ValidReport());
+        response.StatusCode.Should().Be(HttpStatusCode.Created);
+        var sighting = (await response.Content.ReadFromJsonAsync<SightingDto>())!;
+
+        var blank = await reporters.Admin.PostAsJsonAsync(
+            $"{prefix}/{sighting.Id}/deny",
+            new SightingDenialDto("   ")
+        );
+        blank.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        var problem = await ProblemDetailsParser.ParseAsync(blank, CancellationToken.None);
+        problem!
+            .Errors!.Keys.Should()
+            .ContainSingle(key => key.Equals("reason", StringComparison.OrdinalIgnoreCase));
+
+        var denied = await reporters.Admin.PostAsJsonAsync(
+            $"{prefix}/{sighting.Id}/deny",
+            new SightingDenialDto("The point is in the middle of the ocean")
+        );
+        denied.StatusCode.Should().Be(HttpStatusCode.NoContent);
+
+        var reviewed = await reporters.Admin.GetFromJsonAsync<SightingDto>(
+            $"{prefix}/{sighting.Id}"
+        );
+        reviewed!.Status.Should().Be(SightingStatus.Denied);
+        reviewed.ReviewedByDisplayName.Should().NotBeNullOrEmpty();
+        reviewed.ReviewReason.Should().Be("The point is in the middle of the ocean");
+
+        var mine = await reporters.Reporter.GetFromJsonAsync<List<SightingDto>>(
+            "/wildlife/me/sightings"
+        );
+        var theirs = mine!.Single(item => item.Id == sighting.Id);
+        theirs.Status.Should().Be(SightingStatus.Denied);
+        theirs.ReviewReason.Should().Be("The point is in the middle of the ocean");
+
+        var unapproved = await reporters.Admin.PostAsync($"{prefix}/{sighting.Id}/unapprove", null);
+        unapproved.StatusCode.Should().Be(HttpStatusCode.NoContent);
+
+        var reset = await reporters.Admin.GetFromJsonAsync<SightingDto>($"{prefix}/{sighting.Id}");
+        reset!.Status.Should().Be(SightingStatus.Pending);
+        reset.ReviewReason.Should().BeNull();
+        reset.ReviewedByDisplayName.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task Notes_AdminAppends_ReporterSeesItInTheThread()
+    {
+        var response = await reporters.Reporter.PostAsJsonAsync(
+            $"/wildlife/organizations/{reporters.OrganizationId}/sightings",
+            ValidReport()
+        );
+        response.StatusCode.Should().Be(HttpStatusCode.Created);
+        var sighting = (await response.Content.ReadFromJsonAsync<SightingDto>())!;
+
+        var appended = await reporters.Admin.PostAsJsonAsync(
+            $"/wildlife/sightings/{sighting.Id}/notes",
+            new SightingNoteDtoForCreate("Could you add a photo?")
+        );
+        appended.StatusCode.Should().Be(HttpStatusCode.Created);
+        var note = (await appended.Content.ReadFromJsonAsync<SightingNoteDto>())!;
+        note.AuthorUserId.Should().NotBe(sighting.ReporterUserId);
+
+        var mine = await reporters.Reporter.GetFromJsonAsync<List<SightingDto>>(
+            "/wildlife/me/sightings"
+        );
+        var refreshed = mine!.Single(item => item.Id == sighting.Id);
+        refreshed.Notes.Should().ContainSingle(item => item.Id == note.Id);
+        refreshed.Notes[0].Text.Should().Be("Could you add a photo?");
+    }
+
+    [Fact]
+    public async Task Approve_UnknownSighting_ReturnsNotFound()
+    {
+        var response = await reporters.Admin.PostAsJsonAsync(
+            $"/wildlife/organizations/{reporters.OrganizationId}/sightings/{Guid.CreateVersion7()}/approve",
+            new SightingApprovalDto(null)
+        );
+
+        response.StatusCode.Should().Be(HttpStatusCode.NotFound);
+    }
+
+    [Fact]
+    public async Task GetById_FromAnotherOrganization_ReturnsNotFound()
+    {
+        var response = await reporters.Reporter.PostAsJsonAsync(
+            $"/wildlife/organizations/{reporters.OrganizationId}/sightings",
+            ValidReport()
+        );
+        response.StatusCode.Should().Be(HttpStatusCode.Created);
+        var sighting = (await response.Content.ReadFromJsonAsync<SightingDto>())!;
+
+        var elsewhere = await reporters.Admin.GetAsync(
+            $"/wildlife/organizations/{Guid.CreateVersion7()}/sightings/{sighting.Id}"
+        );
+
+        elsewhere.StatusCode.Should().Be(HttpStatusCode.NotFound);
+    }
+
     private SightingDtoForCreate ValidReport() =>
         new(
             reporters.SpeciesId,
@@ -198,6 +384,10 @@ public sealed class SightingReporters(EcoDataTestFixture fixture) : IAsyncLifeti
     public HttpClient Anonymous { get; private set; } = null!;
     public HttpClient Reporter { get; private set; } = null!;
     public HttpClient Other { get; private set; } = null!;
+
+    // The fixture's admin session on the ecoportal origin; global admins pass
+    // every organization permission check without a membership.
+    public HttpClient Admin { get; private set; } = null!;
     public Guid OrganizationId { get; private set; }
     public Guid SpeciesId { get; private set; }
 
@@ -206,6 +396,7 @@ public sealed class SightingReporters(EcoDataTestFixture fixture) : IAsyncLifeti
         Anonymous = await CreateFaunaFinderClientAsync();
         Reporter = await CreateFaunaFinderClientAsync();
         Other = await CreateFaunaFinderClientAsync();
+        Admin = fixture.Services.GetRequiredService<HttpClient>();
 
         await SignupAsync(Reporter, ReporterDisplayName);
         await SignupAsync(Other, OtherDisplayName);
