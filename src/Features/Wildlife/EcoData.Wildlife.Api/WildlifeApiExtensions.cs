@@ -13,6 +13,7 @@ public static class WildlifeApiExtensions
         app.MapNrcsPracticeEndpoints();
         app.MapFwsActionEndpoints();
         app.MapConservationLinkEndpoints();
+        app.MapSightingEndpoints();
 
         return app;
     }

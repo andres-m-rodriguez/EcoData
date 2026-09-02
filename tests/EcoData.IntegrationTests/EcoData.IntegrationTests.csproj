@@ -32,6 +32,7 @@
     <ProjectReference Include="..\..\src\Features\Identity\EcoData.Identity.Database\EcoData.Identity.Database.csproj" />
     <ProjectReference Include="..\..\src\Features\Identity\EcoData.Identity.DataAccess\EcoData.Identity.DataAccess.csproj" />
     <ProjectReference Include="..\..\src\Features\Locations\EcoData.Locations.Application.Client\EcoData.Locations.Application.Client.csproj" />
+    <ProjectReference Include="..\..\src\Features\Wildlife\EcoData.Wildlife.Contracts\EcoData.Wildlife.Contracts.csproj" />
     <ProjectReference Include="..\..\src\Apps\FaunaFinder\FaunaFinder.Client\FaunaFinder.Client.csproj" />
   </ItemGroup>
 

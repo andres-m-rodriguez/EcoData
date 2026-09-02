@@ -8,7 +8,9 @@
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\EcoData.Wildlife.Application\EcoData.Wildlife.Application.csproj" />
     <ProjectReference Include="..\EcoData.Wildlife.Application.Server\EcoData.Wildlife.Application.Server.csproj" />
     <ProjectReference Include="..\EcoData.Wildlife.DataAccess\EcoData.Wildlife.DataAccess.csproj" />
+    <ProjectReference Include="..\..\Identity\EcoData.Identity.Contracts\EcoData.Identity.Contracts.csproj" />
   </ItemGroup>
 </Project>
