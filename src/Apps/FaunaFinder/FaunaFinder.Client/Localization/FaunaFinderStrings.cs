@@ -410,6 +410,19 @@ public static class FaunaFinderStrings
         ["Sighting_Notes_Empty"] = "No notes yet. Reviewers may ask questions here.",
         ["Sighting_Note_Add"] = "Add a note",
         ["Sighting_Note_Send"] = "Send",
+        ["Sighting_Image_Add"] = "Add photos",
+        ["Sighting_Image_Hint"] = "Up to 5 photos, 10 MB each (JPEG, PNG or WebP).",
+        ["Sighting_Image_Empty"] = "No photos yet.",
+        ["Sighting_Image_TooMany"] = "You can attach up to {0} photos.",
+        ["Sighting_Image_TooLarge"] = "{0} is larger than 10 MB.",
+        ["Sighting_Image_NotImage"] = "{0} is not an image.",
+        ["Sighting_Image_UploadFailed"] = "{0} could not be uploaded.",
+        ["Sighting_Image_Uploading"] = "Uploading photos…",
+        ["Sighting_Image_View"] = "View photo",
+        ["Sighting_Image_Close"] = "Close photo",
+        ["Sighting_Image_Delete"] = "Delete photo",
+        ["Sighting_Image_Delete_Confirm"] = "Delete this photo? This cannot be undone.",
+        ["Sighting_Image_DeleteFailed"] = "The photo could not be deleted.",
     };
 
     private static readonly Dictionary<string, string> Es = new(StringComparer.Ordinal)
@@ -795,5 +808,18 @@ public static class FaunaFinderStrings
         ["Sighting_Notes_Empty"] = "Aún no hay notas. Los revisores pueden hacer preguntas aquí.",
         ["Sighting_Note_Add"] = "Añadir una nota",
         ["Sighting_Note_Send"] = "Enviar",
+        ["Sighting_Image_Add"] = "Añadir fotos",
+        ["Sighting_Image_Hint"] = "Hasta 5 fotos de 10 MB cada una (JPEG, PNG o WebP).",
+        ["Sighting_Image_Empty"] = "Aún no hay fotos.",
+        ["Sighting_Image_TooMany"] = "Puedes adjuntar hasta {0} fotos.",
+        ["Sighting_Image_TooLarge"] = "{0} pesa más de 10 MB.",
+        ["Sighting_Image_NotImage"] = "{0} no es una imagen.",
+        ["Sighting_Image_UploadFailed"] = "No se pudo subir {0}.",
+        ["Sighting_Image_Uploading"] = "Subiendo fotos…",
+        ["Sighting_Image_View"] = "Ver foto",
+        ["Sighting_Image_Close"] = "Cerrar foto",
+        ["Sighting_Image_Delete"] = "Eliminar foto",
+        ["Sighting_Image_Delete_Confirm"] = "¿Eliminar esta foto? No se puede deshacer.",
+        ["Sighting_Image_DeleteFailed"] = "No se pudo eliminar la foto.",
     };
 }

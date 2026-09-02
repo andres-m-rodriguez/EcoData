@@ -49,17 +49,82 @@
                 </div>
             </dl>
 
-            @if (Sighting.Images.Count > 0)
+            @if (_images.Count > 0 || CanEdit)
             {
                 <section class="ff-detail-section">
                     <div class="ff-detail-section-title">@L["Sighting_Photos"]</div>
-                    <div class="ff-detail-images">
-                        @foreach (var image in Sighting.Images)
-                        {
-                            <img src="@($"/wildlife/sightings/{Sighting.Id}/images/{image.Id}")" alt="" loading="lazy" />
-                        }
-                    </div>
+                    @if (_images.Count == 0)
+                    {
+                        <p class="ff-detail-empty">@L["Sighting_Image_Empty"]</p>
+                    }
+                    else
+                    {
+                        <div class="ff-detail-images">
+                            @foreach (var image in _images)
+                            {
+                                <div class="ff-detail-image">
+                                    <button type="button"
+                                            class="ff-detail-image-open"
+                                            aria-label="@L["Sighting_Image_View"]"
+                                            @onclick="() => _viewing = image">
+                                        <img src="@ImageUrl(image)" alt="" loading="lazy" />
+                                    </button>
+                                    @if (CanEdit)
+                                    {
+                                        <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                                       Size="Size.Small"
+                                                       Class="ff-detail-image-delete"
+                                                       aria-label="@L["Sighting_Image_Delete"]"
+                                                       Disabled="UploadPendingState.IsLoading"
+                                                       OnClick="() => DeleteImage(image)" />
+                                    }
+                                </div>
+                            }
+                        </div>
+                    }
+
+                    @if (CanEdit)
+                    {
+                        <div class="ff-detail-images-foot">
+                            <MudFileUpload T="IReadOnlyList<IBrowserFile>"
+                                           Accept="image/*"
+                                           MaximumFileCount="MaxImages"
+                                           FilesChanged="OnFilesPicked"
+                                           Disabled="@(UploadPendingState.IsLoading || _images.Count >= MaxImages)">
+                                <CustomContent Context="upload">
+                                    <MudButton Variant="Variant.Outlined"
+                                               Size="Size.Small"
+                                               StartIcon="@Icons.Material.Filled.AddPhotoAlternate"
+                                               OnClick="@(() => upload.OpenFilePickerAsync())"
+                                               Disabled="@(UploadPendingState.IsLoading || _images.Count >= MaxImages)">
+                                        @if (UploadPendingState.IsLoading)
+                                        {
+                                            <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
+                                            <span>@L["Sighting_Image_Uploading"]</span>
+                                        }
+                                        else
+                                        {
+                                            <span>@L["Sighting_Image_Add"]</span>
+                                        }
+                                    </MudButton>
+                                </CustomContent>
+                                <SelectedTemplate Context="picked"></SelectedTemplate>
+                            </MudFileUpload>
+                            <span class="ff-detail-images-hint">@L["Sighting_Image_Hint"]</span>
+                        </div>
+                    }
                 </section>
+            }
+
+            @if (_viewing is { } viewing)
+            {
+                <div class="ff-detail-lightbox" @onclick="() => _viewing = null">
+                    <img src="@ImageUrl(viewing)" alt="" />
+                    <MudIconButton Icon="@Icons.Material.Filled.Close"
+                                   Class="ff-detail-lightbox-close"
+                                   aria-label="@L["Sighting_Image_Close"]"
+                                   OnClick="() => _viewing = null" />
+                </div>
             }
 
             @if (Sighting.Status != SightingStatus.Pending && Sighting.ReviewedByDisplayName is { } reviewer)

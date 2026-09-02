@@ -66,6 +66,12 @@ eventsTopic.AddServiceBusSubscription(ReadingCreatedEvent.SubscriptionName);
 eventsTopic.AddServiceBusSubscription(SensorHealthAlertEvent.SubscriptionName);
 eventsTopic.AddServiceBusSubscription(UserNotificationEvent.SubscriptionName);
 
+// Sighting photos. Azurite in Docker locally, a storage account when deployed.
+// The container is private and the Wildlife API is the only reader, so no URL
+// into it is ever handed to a browser.
+var storage = builder.AddAzureStorage("storage").RunAsEmulator();
+var sightingImages = storage.AddBlobContainer("sighting-images", "sighting-images");
+
 var seeder = builder
     .AddProject<Projects.EcoData_Seeder>("seeder")
     .WithReference(organizationDb)
@@ -103,7 +109,9 @@ var ecoportal = builder
     .WithReference(identityDb)
     .WithReference(wildlifeDb)
     .WithReference(serviceBus)
+    .WithReference(sightingImages)
     .WaitFor(eventsTopic)
+    .WaitFor(sightingImages)
     .WithEnvironment("Jwt__SensorSecretKey", jwtSensorSecretKey)
     .WithEnvironment("Jwt__UserSecretKey", jwtUserSecretKey)
     .WithEnvironment("Jwt__Issuer", "EcoData")
@@ -126,8 +134,10 @@ var faunafinder = builder
     .WithExternalHttpEndpoints()
     .WithReference(locationsDb)
     .WithReference(wildlifeDb)
+    .WithReference(sightingImages)
     .WithReference(ecoportal)
     .WaitFor(seeder)
+    .WaitFor(sightingImages)
     .PublishAsAzureContainerApp(
         (infra, app) =>
         {

@@ -142,6 +142,44 @@
                                   ErrorText="@_noteError"
                                   Disabled="SubmitState.IsLoading" />
 
+                    <section class="ff-sighting-photos">
+                        <div class="ff-sighting-label">@L["Sighting_Photos"]</div>
+                        @if (_files.Count > 0)
+                        {
+                            <div class="ff-sighting-files">
+                                @foreach (var file in _files)
+                                {
+                                    <MudChip T="string"
+                                             Icon="@Icons.Material.Filled.Image"
+                                             OnClose="@(() => _files.Remove(file))"
+                                             CloseIcon="@Icons.Material.Filled.Close"
+                                             Disabled="SubmitState.IsLoading">
+                                        @file.Name (@(file.Size >= 1024 * 1024 ? $"{file.Size / 1024d / 1024d:F1} MB" : $"{Math.Max(1, file.Size / 1024)} KB"))
+                                    </MudChip>
+                                }
+                            </div>
+                        }
+                        <div class="ff-sighting-photos-foot">
+                            <MudFileUpload T="IReadOnlyList<IBrowserFile>"
+                                           Accept="image/*"
+                                           MaximumFileCount="MaxImages"
+                                           FilesChanged="OnFilesPicked"
+                                           Disabled="@(SubmitState.IsLoading || _files.Count >= MaxImages)">
+                                <CustomContent Context="upload">
+                                    <MudButton Variant="Variant.Outlined"
+                                               Size="Size.Small"
+                                               StartIcon="@Icons.Material.Filled.AddPhotoAlternate"
+                                               OnClick="@(() => upload.OpenFilePickerAsync())"
+                                               Disabled="@(SubmitState.IsLoading || _files.Count >= MaxImages)">
+                                        @L["Sighting_Image_Add"]
+                                    </MudButton>
+                                </CustomContent>
+                                <SelectedTemplate Context="picked"></SelectedTemplate>
+                            </MudFileUpload>
+                            <span class="ff-sighting-photos-hint">@L["Sighting_Image_Hint"]</span>
+                        </div>
+                    </section>
+
                     @if (Auth.Organization is null)
                     {
                         <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Dense="true">

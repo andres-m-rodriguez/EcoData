@@ -7,6 +7,7 @@ using EcoData.Wildlife.Contracts.Validators;
 using FaunaFinder.Client.Localization;
 using FaunaFinder.Client.Models;
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Forms;
 using MudBlazor;
 using Tempest;
 
@@ -20,6 +21,8 @@ public partial class SightingDetailDialog : EcoDataComponent
 {
     private const int NoteMaxLength = 2000;
     private const int DetailZoom = 13;
+    private const int MaxImages = 5;
+    private const long MaxImageBytes = 10 * 1024 * 1024;
 
     [CascadingParameter]
     private IMudDialogInstance MudDialog { get; set; } = null!;
@@ -30,20 +33,32 @@ public partial class SightingDetailDialog : EcoDataComponent
     [Parameter]
     public LocaleContext Locale { get; set; } = LocaleContext.English;
 
+    // The reporter adds and removes photos; a reviewer only looks.
+    [Parameter]
+    public bool CanEdit { get; set; }
+
     [Inject]
     private ISightingHttpClient SightingClient { get; set; } = default!;
 
     [Inject]
     private ISnackbar Snackbar { get; set; } = default!;
 
+    [Inject]
+    private IDialogService Dialogs { get; set; } = default!;
+
     private readonly MapController<SightingMarker> _mapController = new();
     private readonly List<SightingNoteDto> _notes = [];
+    private readonly List<SightingImageDto> _images = [];
+    private readonly List<IBrowserFile> _pendingFiles = [];
+    private SightingImageDto? _viewing;
     private string _noteText = string.Empty;
     private string? _noteError;
 
     private string CommonName => Locale.Resolve(Sighting.SpeciesCommonName, fallback: Sighting.SpeciesScientificName);
 
     private CultureInfo Culture => CultureInfo.GetCultureInfo(Locale.Code);
+
+    private string ImageUrl(SightingImageDto image) => $"/wildlife/sightings/{Sighting.Id}/images/{image.Id}";
 
     protected override void OnInitialized()
     {
@@ -53,6 +68,7 @@ public partial class SightingDetailDialog : EcoDataComponent
         _mapController.SetView(point, DetailZoom);
         _mapController.SetMarkers([new SightingMarker(point)]);
         _notes.AddRange(Sighting.Notes);
+        _images.AddRange(Sighting.Images);
     }
 
     [Command]
@@ -92,6 +108,77 @@ public partial class SightingDetailDialog : EcoDataComponent
 
         _notes.Add(note);
         _noteText = string.Empty;
+    }
+
+    private void OnFilesPicked(IReadOnlyList<IBrowserFile>? picked)
+    {
+        if (picked is null) return;
+
+        _pendingFiles.Clear();
+        foreach (var file in picked)
+        {
+            if (_images.Count + _pendingFiles.Count >= MaxImages)
+            {
+                Snackbar.Add(L["Sighting_Image_TooMany", MaxImages], Severity.Warning);
+                break;
+            }
+
+            if (!file.ContentType.StartsWith("image/", StringComparison.OrdinalIgnoreCase))
+            {
+                Snackbar.Add(L["Sighting_Image_NotImage", file.Name], Severity.Warning);
+                continue;
+            }
+
+            if (file.Size > MaxImageBytes)
+            {
+                Snackbar.Add(L["Sighting_Image_TooLarge", file.Name], Severity.Warning);
+                continue;
+            }
+
+            _pendingFiles.Add(file);
+        }
+
+        if (_pendingFiles.Count > 0)
+        {
+            _ = UploadPendingState.TryExecute();
+        }
+    }
+
+    [Command]
+    private async Task UploadPending()
+    {
+        foreach (var file in _pendingFiles)
+        {
+            await using var content = file.OpenReadStream(MaxImageBytes);
+            var result = await SightingClient.UploadImageAsync(Sighting.Id, content, file.Name, file.ContentType);
+            if (!result.TryPickT0(out var image, out _))
+            {
+                Snackbar.Add(L["Sighting_Image_UploadFailed", file.Name], Severity.Warning);
+                continue;
+            }
+            _images.Add(image);
+        }
+        _pendingFiles.Clear();
+    }
+
+    private async Task DeleteImage(SightingImageDto image)
+    {
+        var confirmed = await Dialogs.ShowMessageBoxAsync(
+            L["Sighting_Image_Delete"],
+            L["Sighting_Image_Delete_Confirm"],
+            yesText: L["Sighting_Image_Delete"],
+            cancelText: L["Common_Cancel"]);
+        if (confirmed != true) return;
+
+        var result = await SightingClient.DeleteImageAsync(Sighting.Id, image.Id);
+        if (!result.IsT0)
+        {
+            Snackbar.Add(L["Sighting_Image_DeleteFailed"], Severity.Error);
+            return;
+        }
+
+        _images.Remove(image);
+        if (_viewing == image) _viewing = null;
     }
 
     private void Close() => MudDialog.Close();

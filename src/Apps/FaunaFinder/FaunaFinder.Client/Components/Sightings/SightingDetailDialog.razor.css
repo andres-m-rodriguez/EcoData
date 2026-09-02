@@ -86,13 +86,86 @@
     padding-bottom: 4px;
 }
 
-.ff-detail-images img {
+.ff-detail-image {
+    position: relative;
+    flex-shrink: 0;
+}
+
+.ff-detail-image-open {
+    display: block;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    cursor: zoom-in;
+    border-radius: 10px;
+}
+
+.ff-detail-image-open:focus-visible {
+    outline: 2px solid var(--fauna-primary-400);
+    outline-offset: 2px;
+}
+
+.ff-detail-image img {
+    display: block;
     width: 120px;
     height: 120px;
     object-fit: cover;
     border-radius: 10px;
     border: 1px solid var(--fauna-line);
-    flex-shrink: 0;
+}
+
+/* Delete sits on the photo's corner and carries its own ground to stay
+   legible over any picture. */
+.ff-detail-image ::deep .ff-detail-image-delete {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    background: color-mix(in srgb, var(--fauna-surface) 85%, transparent);
+    border: 1px solid var(--fauna-line);
+    backdrop-filter: blur(4px);
+}
+
+.ff-detail-images-foot {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-top: 10px;
+}
+
+.ff-detail-images-hint {
+    font: var(--fauna-body-sm);
+    color: var(--fauna-fg-4);
+}
+
+/* Full-size view. Above the dialog (MudBlazor dialogs sit around 1300), and
+   any tap outside the picture closes it. */
+.ff-detail-lightbox {
+    position: fixed;
+    inset: 0;
+    z-index: 1400;
+    display: grid;
+    place-items: center;
+    padding: 24px;
+    background: rgba(6, 12, 10, 0.88);
+    cursor: zoom-out;
+}
+
+.ff-detail-lightbox img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+    border-radius: 12px;
+    box-shadow: var(--fauna-shadow-hero);
+}
+
+.ff-detail-lightbox ::deep .ff-detail-lightbox-close {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    color: #fff;
+    background: rgba(255, 255, 255, 0.12);
 }
 
 .ff-detail-review {

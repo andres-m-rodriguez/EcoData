@@ -1,4 +1,5 @@
 using System.Net;
+using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using Aspire.Hosting;
 using Aspire.Hosting.ApplicationModel;
@@ -355,6 +356,149 @@ public sealed class FaunaFinderSightingTests(SightingReporters reporters)
         );
 
         elsewhere.StatusCode.Should().Be(HttpStatusCode.NotFound);
+    }
+
+    [Fact]
+    public async Task Images_ReporterUploadsPng_AppearsInMineAndStreamsBack()
+    {
+        var sighting = await ReportAsync(reporters.Reporter);
+
+        var uploaded = await reporters.Reporter.PostAsync(
+            $"/wildlife/sightings/{sighting.Id}/images",
+            ImageForm(OnePixelPng, "pixel.png", "image/png")
+        );
+        uploaded.StatusCode.Should().Be(HttpStatusCode.Created);
+        var image = (await uploaded.Content.ReadFromJsonAsync<SightingImageDto>())!;
+        image.ContentType.Should().Be("image/png");
+        image.SizeBytes.Should().Be(OnePixelPng.Length);
+        image.UploadedByDisplayName.Should().Be(SightingReporters.ReporterDisplayName);
+        uploaded
+            .Headers.Location!.ToString()
+            .Should()
+            .EndWith($"/wildlife/sightings/{sighting.Id}/images/{image.Id}");
+
+        var mine = await reporters.Reporter.GetFromJsonAsync<List<SightingDto>>(
+            "/wildlife/me/sightings"
+        );
+        mine!.Single(item => item.Id == sighting.Id).Images.Should().ContainSingle(item => item.Id == image.Id);
+
+        var read = await reporters.Reporter.GetAsync(
+            $"/wildlife/sightings/{sighting.Id}/images/{image.Id}"
+        );
+        read.StatusCode.Should().Be(HttpStatusCode.OK);
+        read.Content.Headers.ContentType!.MediaType.Should().Be("image/png");
+        read.Headers.CacheControl!.Private.Should().BeTrue();
+        read.Headers.CacheControl.MaxAge.Should().Be(TimeSpan.FromHours(1));
+        (await read.Content.ReadAsByteArrayAsync()).Should().Equal(OnePixelPng);
+    }
+
+    [Fact]
+    public async Task Images_TextRenamedToPng_ReturnsValidationProblemOnFile()
+    {
+        var sighting = await ReportAsync(reporters.Reporter);
+
+        var response = await reporters.Reporter.PostAsync(
+            $"/wildlife/sightings/{sighting.Id}/images",
+            ImageForm("This is not a picture."u8.ToArray(), "notes.png", "image/png")
+        );
+
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        var problem = await ProblemDetailsParser.ParseAsync(response, CancellationToken.None);
+        problem!
+            .Errors!.Keys.Should()
+            .ContainSingle(key => key.Equals("file", StringComparison.OrdinalIgnoreCase));
+    }
+
+    [Fact]
+    public async Task Images_OtherUserForbidden_AdminCanRead()
+    {
+        var sighting = await ReportAsync(reporters.Reporter);
+        var image = await UploadAsync(reporters.Reporter, sighting.Id);
+        var url = $"/wildlife/sightings/{sighting.Id}/images/{image.Id}";
+
+        var upload = await reporters.Other.PostAsync(
+            $"/wildlife/sightings/{sighting.Id}/images",
+            ImageForm(OnePixelPng, "pixel.png", "image/png")
+        );
+        upload.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+
+        (await reporters.Other.GetAsync(url)).StatusCode.Should().Be(HttpStatusCode.Forbidden);
+        (await reporters.Other.DeleteAsync(url)).StatusCode.Should().Be(HttpStatusCode.Forbidden);
+
+        var admin = await reporters.Admin.GetAsync(url);
+        admin.StatusCode.Should().Be(HttpStatusCode.OK);
+        (await admin.Content.ReadAsByteArrayAsync()).Should().Equal(OnePixelPng);
+    }
+
+    [Fact]
+    public async Task Images_SixthUpload_ReturnsValidationProblemOnFile()
+    {
+        var sighting = await ReportAsync(reporters.Reporter);
+
+        for (var i = 0; i < 5; i++)
+        {
+            await UploadAsync(reporters.Reporter, sighting.Id);
+        }
+
+        var sixth = await reporters.Reporter.PostAsync(
+            $"/wildlife/sightings/{sighting.Id}/images",
+            ImageForm(OnePixelPng, "pixel.png", "image/png")
+        );
+
+        sixth.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        var problem = await ProblemDetailsParser.ParseAsync(sixth, CancellationToken.None);
+        problem!
+            .Errors!.Keys.Should()
+            .ContainSingle(key => key.Equals("file", StringComparison.OrdinalIgnoreCase));
+    }
+
+    [Fact]
+    public async Task Images_Delete_ReturnsNoContentThenNotFound()
+    {
+        var sighting = await ReportAsync(reporters.Reporter);
+        var image = await UploadAsync(reporters.Reporter, sighting.Id);
+        var url = $"/wildlife/sightings/{sighting.Id}/images/{image.Id}";
+
+        (await reporters.Reporter.DeleteAsync(url)).StatusCode.Should().Be(HttpStatusCode.NoContent);
+        (await reporters.Reporter.GetAsync(url)).StatusCode.Should().Be(HttpStatusCode.NotFound);
+        (await reporters.Reporter.DeleteAsync(url)).StatusCode.Should().Be(HttpStatusCode.NotFound);
+
+        var mine = await reporters.Reporter.GetFromJsonAsync<List<SightingDto>>(
+            "/wildlife/me/sightings"
+        );
+        mine!.Single(item => item.Id == sighting.Id).Images.Should().BeEmpty();
+    }
+
+    // A 1x1 transparent PNG, the smallest file the magic-byte check accepts.
+    private static readonly byte[] OnePixelPng = Convert.FromBase64String(
+        "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=="
+    );
+
+    private static MultipartFormDataContent ImageForm(byte[] bytes, string fileName, string contentType)
+    {
+        var file = new ByteArrayContent(bytes);
+        file.Headers.ContentType = new MediaTypeHeaderValue(contentType);
+        return new MultipartFormDataContent { { file, "file", fileName } };
+    }
+
+    private async Task<SightingDto> ReportAsync(HttpClient client)
+    {
+        var response = await client.PostAsJsonAsync(
+            $"/wildlife/organizations/{reporters.OrganizationId}/sightings",
+            ValidReport()
+        );
+        response.StatusCode.Should().Be(HttpStatusCode.Created);
+        return (await response.Content.ReadFromJsonAsync<SightingDto>())!;
+    }
+
+    private static async Task<SightingImageDto> UploadAsync(HttpClient client, Guid sightingId)
+    {
+        var response = await client.PostAsync(
+            $"/wildlife/sightings/{sightingId}/images",
+            ImageForm(OnePixelPng, "pixel.png", "image/png")
+        );
+        response.StatusCode.Should().Be(HttpStatusCode.Created);
+        return (await response.Content.ReadFromJsonAsync<SightingImageDto>())!;
     }
 
     private SightingDtoForCreate ValidReport() =>
