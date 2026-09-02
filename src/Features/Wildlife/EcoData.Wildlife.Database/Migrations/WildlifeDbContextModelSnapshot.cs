@@ -182,6 +182,11 @@ namespace EcoData.Wildlife.Database.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("reporter_user_id");
 
+                    b.Property<string>("ReviewReason")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)")
+                        .HasColumnName("review_reason");
+
                     b.Property<DateTimeOffset?>("ReviewedAtUtc")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("reviewed_at_utc");

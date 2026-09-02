@@ -29,6 +29,7 @@ namespace EcoData.Wildlife.Database.Migrations
                     reviewed_by_user_id = table.Column<Guid>(type: "uuid", nullable: true),
                     reviewed_by_display_name = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: true),
                     reviewed_at_utc = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
+                    review_reason = table.Column<string>(type: "character varying(1000)", maxLength: 1000, nullable: true),
                     created_at_utc = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false, defaultValueSql: "now()")
                 },
                 constraints: table =>

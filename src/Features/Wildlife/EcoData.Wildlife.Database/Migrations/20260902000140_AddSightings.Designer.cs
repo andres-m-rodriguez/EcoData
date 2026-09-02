@@ -12,7 +12,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace EcoData.Wildlife.Database.Migrations
 {
     [DbContext(typeof(WildlifeDbContext))]
-    [Migration("20260901235348_AddSightings")]
+    [Migration("20260902000140_AddSightings")]
     partial class AddSightings
     {
         /// <inheritdoc />
@@ -184,6 +184,11 @@ namespace EcoData.Wildlife.Database.Migrations
                     b.Property<Guid>("ReporterUserId")
                         .HasColumnType("uuid")
                         .HasColumnName("reporter_user_id");
+
+                    b.Property<string>("ReviewReason")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)")
+                        .HasColumnName("review_reason");
 
                     b.Property<DateTimeOffset?>("ReviewedAtUtc")
                         .HasColumnType("timestamp with time zone")

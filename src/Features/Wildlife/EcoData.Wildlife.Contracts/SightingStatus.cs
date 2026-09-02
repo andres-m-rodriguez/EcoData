@@ -4,4 +4,5 @@ public enum SightingStatus
 {
     Pending,
     Approved,
+    Denied,
 }

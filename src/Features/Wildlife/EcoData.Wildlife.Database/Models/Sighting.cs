@@ -27,6 +27,10 @@ public sealed class Sighting
     public required Guid? ReviewedByUserId { get; set; }
     public required string? ReviewedByDisplayName { get; set; }
     public required DateTimeOffset? ReviewedAtUtc { get; set; }
+
+    // Filled when a manager denies (optionally when approving); cleared with
+    // the other review columns on unapprove.
+    public required string? ReviewReason { get; set; }
     public required DateTimeOffset CreatedAtUtc { get; set; }
 
     public Species? Species { get; set; }
@@ -59,6 +63,8 @@ public sealed class Sighting
                 .IsRequired();
 
             builder.Property(static e => e.ReviewedByDisplayName).HasMaxLength(200);
+
+            builder.Property(static e => e.ReviewReason).HasMaxLength(1000);
 
             builder
                 .Property(static e => e.CreatedAtUtc)
