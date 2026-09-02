@@ -186,13 +186,13 @@ public sealed class FaunaFinderSightingTests(SightingReporters reporters)
 
         var approve = await reporters.Reporter.PostAsJsonAsync(
             $"{prefix}/{id}/approve",
-            new SightingReviewDto(null)
+            new SightingApprovalDto(null)
         );
         approve.StatusCode.Should().Be(HttpStatusCode.Forbidden);
 
         var deny = await reporters.Reporter.PostAsJsonAsync(
             $"{prefix}/{id}/deny",
-            new SightingReviewDto("Not enough detail")
+            new SightingDenialDto("Not enough detail")
         );
         deny.StatusCode.Should().Be(HttpStatusCode.Forbidden);
 
@@ -222,7 +222,7 @@ public sealed class FaunaFinderSightingTests(SightingReporters reporters)
 
         var approved = await reporters.Admin.PostAsJsonAsync(
             $"{prefix}/{sighting.Id}/approve",
-            new SightingReviewDto("Matches the photo on file")
+            new SightingApprovalDto("Matches the photo on file")
         );
         approved.StatusCode.Should().Be(HttpStatusCode.NoContent);
 
@@ -266,7 +266,7 @@ public sealed class FaunaFinderSightingTests(SightingReporters reporters)
 
         var blank = await reporters.Admin.PostAsJsonAsync(
             $"{prefix}/{sighting.Id}/deny",
-            new SightingReviewDto("   ")
+            new SightingDenialDto("   ")
         );
         blank.StatusCode.Should().Be(HttpStatusCode.BadRequest);
         var problem = await ProblemDetailsParser.ParseAsync(blank, CancellationToken.None);
@@ -276,7 +276,7 @@ public sealed class FaunaFinderSightingTests(SightingReporters reporters)
 
         var denied = await reporters.Admin.PostAsJsonAsync(
             $"{prefix}/{sighting.Id}/deny",
-            new SightingReviewDto("The point is in the middle of the ocean")
+            new SightingDenialDto("The point is in the middle of the ocean")
         );
         denied.StatusCode.Should().Be(HttpStatusCode.NoContent);
 
@@ -334,7 +334,7 @@ public sealed class FaunaFinderSightingTests(SightingReporters reporters)
     {
         var response = await reporters.Admin.PostAsJsonAsync(
             $"/wildlife/organizations/{reporters.OrganizationId}/sightings/{Guid.CreateVersion7()}/approve",
-            new SightingReviewDto(null)
+            new SightingApprovalDto(null)
         );
 
         response.StatusCode.Should().Be(HttpStatusCode.NotFound);

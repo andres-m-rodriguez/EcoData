@@ -174,7 +174,7 @@ public sealed class SightingHttpClient(HttpClient httpClient) : ISightingHttpCli
     public async Task<OneOf<Success, ValidationFailed, RequestFailed>> ApproveAsync(
         Guid organizationId,
         Guid id,
-        SightingReviewDto dto,
+        SightingApprovalDto dto,
         CancellationToken ct = default)
     {
         try
@@ -201,7 +201,7 @@ public sealed class SightingHttpClient(HttpClient httpClient) : ISightingHttpCli
     public async Task<OneOf<Success, ValidationFailed, RequestFailed>> DenyAsync(
         Guid organizationId,
         Guid id,
-        SightingReviewDto dto,
+        SightingDenialDto dto,
         CancellationToken ct = default)
     {
         try

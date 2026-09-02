@@ -396,6 +396,7 @@ public sealed class SightingRepository(IDbContextFactory<WildlifeDbContext> cont
         await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
 
         var now = DateTimeOffset.UtcNow;
+        var reviewReason = string.IsNullOrWhiteSpace(reason) ? null : reason.Trim();
         var updated = await context
             .Sightings.Where(sighting =>
                 sighting.OrganizationId == organizationId
@@ -409,7 +410,7 @@ public sealed class SightingRepository(IDbContextFactory<WildlifeDbContext> cont
                         .SetProperty(sighting => sighting.ReviewedByUserId, reviewerUserId)
                         .SetProperty(sighting => sighting.ReviewedByDisplayName, reviewerDisplayName)
                         .SetProperty(sighting => sighting.ReviewedAtUtc, now)
-                        .SetProperty(sighting => sighting.ReviewReason, reason),
+                        .SetProperty(sighting => sighting.ReviewReason, reviewReason),
                 cancellationToken
             );
         if (updated > 0)
@@ -437,6 +438,7 @@ public sealed class SightingRepository(IDbContextFactory<WildlifeDbContext> cont
         await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
 
         var now = DateTimeOffset.UtcNow;
+        var reviewReason = reason.Trim();
         var updated = await context
             .Sightings.Where(sighting =>
                 sighting.OrganizationId == organizationId
@@ -450,7 +452,7 @@ public sealed class SightingRepository(IDbContextFactory<WildlifeDbContext> cont
                         .SetProperty(sighting => sighting.ReviewedByUserId, reviewerUserId)
                         .SetProperty(sighting => sighting.ReviewedByDisplayName, reviewerDisplayName)
                         .SetProperty(sighting => sighting.ReviewedAtUtc, now)
-                        .SetProperty(sighting => sighting.ReviewReason, reason),
+                        .SetProperty(sighting => sighting.ReviewReason, reviewReason),
                 cancellationToken
             );
         if (updated > 0)

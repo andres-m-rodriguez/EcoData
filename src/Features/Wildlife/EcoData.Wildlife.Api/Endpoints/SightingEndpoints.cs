@@ -213,7 +213,7 @@ public static class SightingEndpoints
                 async Task<Results<NoContent, NotFound, ForbidHttpResult, ValidationProblem>> (
                     Guid organizationId,
                     Guid id,
-                    SightingReviewDto dto,
+                    SightingApprovalDto dto,
                     ClaimsPrincipal user,
                     IAuthorization auth,
                     ISightingRepository repository,
@@ -223,7 +223,7 @@ public static class SightingEndpoints
                     if (!await auth.HasAsync(WildlifePermissions.VerifyOccurrence, organizationId, ct))
                         return TypedResults.Forbid();
 
-                    var validation = new SightingReviewDtoValidator().Validate(dto);
+                    var validation = new SightingApprovalDtoValidator().Validate(dto);
                     if (!validation.IsValid)
                         return TypedResults.ValidationProblem(validation.ToDictionary());
 
@@ -233,7 +233,7 @@ public static class SightingEndpoints
                         id,
                         reviewer.UserId!.Value,
                         reviewer.DisplayName,
-                        string.IsNullOrWhiteSpace(dto.Reason) ? null : dto.Reason.Trim(),
+                        dto.Reason,
                         ct
                     );
                     if (result.IsT1)
@@ -250,7 +250,7 @@ public static class SightingEndpoints
                 async Task<Results<NoContent, NotFound, ForbidHttpResult, ValidationProblem>> (
                     Guid organizationId,
                     Guid id,
-                    SightingReviewDto dto,
+                    SightingDenialDto dto,
                     ClaimsPrincipal user,
                     IAuthorization auth,
                     ISightingRepository repository,
@@ -260,17 +260,9 @@ public static class SightingEndpoints
                     if (!await auth.HasAsync(WildlifePermissions.VerifyOccurrence, organizationId, ct))
                         return TypedResults.Forbid();
 
-                    var validation = new SightingReviewDtoValidator().Validate(dto);
+                    var validation = new SightingDenialDtoValidator().Validate(dto);
                     if (!validation.IsValid)
                         return TypedResults.ValidationProblem(validation.ToDictionary());
-
-                    if (string.IsNullOrWhiteSpace(dto.Reason))
-                        return TypedResults.ValidationProblem(
-                            new Dictionary<string, string[]>
-                            {
-                                [nameof(SightingReviewDto.Reason)] = ["A reason is required to deny a sighting"],
-                            }
-                        );
 
                     var reviewer = new RequestClaimToken(user);
                     var result = await repository.DenyAsync(
@@ -278,7 +270,7 @@ public static class SightingEndpoints
                         id,
                         reviewer.UserId!.Value,
                         reviewer.DisplayName,
-                        dto.Reason.Trim(),
+                        dto.Reason,
                         ct
                     );
                     if (result.IsT1)

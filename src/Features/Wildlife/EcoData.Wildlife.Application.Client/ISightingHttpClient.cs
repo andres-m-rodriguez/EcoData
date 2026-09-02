@@ -42,13 +42,13 @@ public interface ISightingHttpClient
     Task<OneOf<Success, ValidationFailed, RequestFailed>> ApproveAsync(
         Guid organizationId,
         Guid id,
-        SightingReviewDto dto,
+        SightingApprovalDto dto,
         CancellationToken ct = default);
 
     Task<OneOf<Success, ValidationFailed, RequestFailed>> DenyAsync(
         Guid organizationId,
         Guid id,
-        SightingReviewDto dto,
+        SightingDenialDto dto,
         CancellationToken ct = default);
 
     Task<OneOf<Success, RequestFailed>> UnapproveAsync(
