@@ -27,4 +27,12 @@ public interface IAccountHttpClient
     Task<OneOf<List<OrganizationAccessRequestDto>, RequestFailed>> GetAccessRequestsAsync(
         CancellationToken cancellationToken = default
     );
+
+    Task<OneOf<FaunaFinderOrganizationDto, RequestFailed>> GetOrganizationAsync(
+        CancellationToken cancellationToken = default
+    );
+
+    Task<OneOf<UserPermissionsDto, RequestFailed>> GetPermissionsAsync(
+        CancellationToken cancellationToken = default
+    );
 }

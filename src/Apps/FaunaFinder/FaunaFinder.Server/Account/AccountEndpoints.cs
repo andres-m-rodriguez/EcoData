@@ -3,6 +3,7 @@ using EcoData.Identity.Contracts.Responses;
 using EcoData.Organization.Contracts.Dtos;
 using EcoData.Organization.Contracts.Requests;
 using FaunaFinder.Client.Services.Account;
+using FaunaFinder.Server.Authentication;
 using FaunaFinder.Server.Organization;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Polly.CircuitBreaker;
@@ -17,7 +18,7 @@ namespace FaunaFinder.Server.Account;
 public static class AccountEndpoints
 {
     public const string HttpClientName = "ecoportal-auth";
-    private const string AuthCookieName = "auth_token";
+    private const string AuthCookieName = EcoPortalSessionAuthenticationHandler.CookieName;
 
     public static IEndpointRouteBuilder MapAccountEndpoints(this IEndpointRouteBuilder app)
     {
@@ -306,6 +307,88 @@ public static class AccountEndpoints
                 }
             )
             .WithName("GetMyAccessRequests");
+
+        group
+            .MapGet(
+                "/organization",
+                Results<Ok<FaunaFinderOrganizationDto>, ProblemHttpResult> (
+                    FaunaFinderOrganizationLoader organizationLoader
+                ) =>
+                {
+                    if (organizationLoader.Current is not { } organization)
+                    {
+                        return TypedResults.Problem(
+                            detail: "The FaunaFinder organization has not been resolved yet.",
+                            statusCode: StatusCodes.Status503ServiceUnavailable
+                        );
+                    }
+
+                    return TypedResults.Ok(
+                        new FaunaFinderOrganizationDto(
+                            organization.Id,
+                            organization.Name,
+                            organization.Slug
+                        )
+                    );
+                }
+            )
+            .WithName("GetOrganization");
+
+        group
+            .MapGet(
+                "/permissions",
+                async Task<Results<Ok<UserPermissionsDto>, ContentHttpResult, ProblemHttpResult>> (
+                    IHttpClientFactory httpClientFactory,
+                    FaunaFinderOrganizationLoader organizationLoader,
+                    HttpContext httpContext,
+                    CancellationToken ct
+                ) =>
+                {
+                    if (organizationLoader.Current is not { } organization)
+                    {
+                        return TypedResults.Problem(
+                            detail: "The FaunaFinder organization has not been resolved yet.",
+                            statusCode: StatusCodes.Status503ServiceUnavailable
+                        );
+                    }
+
+                    // The authorization policy already required the cookie.
+                    var token = httpContext.Request.Cookies[AuthCookieName];
+                    var httpClient = httpClientFactory.CreateClient(HttpClientName);
+
+                    try
+                    {
+                        using var request = new HttpRequestMessage(
+                            HttpMethod.Get,
+                            $"organization/organizations/{organization.Id}/my-permissions"
+                        );
+                        request.Headers.Add("Cookie", $"{AuthCookieName}={token}");
+
+                        var response = await httpClient.SendAsync(request, ct);
+                        if (!response.IsSuccessStatusCode)
+                        {
+                            return await RelayAsync(response, ct);
+                        }
+
+                        var permissions = (
+                            await response.Content.ReadFromJsonAsync<UserPermissionsDto>(ct)
+                        )!;
+                        return TypedResults.Ok(permissions);
+                    }
+                    catch (Exception e)
+                        when (e is HttpRequestException
+                                or TimeoutRejectedException
+                                or BrokenCircuitException
+                        )
+                    {
+                        return TypedResults.Problem(
+                            statusCode: StatusCodes.Status503ServiceUnavailable
+                        );
+                    }
+                }
+            )
+            .RequireAuthorization()
+            .WithName("GetMyPermissions");
 
         return app;
     }

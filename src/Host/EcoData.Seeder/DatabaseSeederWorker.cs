@@ -405,21 +405,39 @@ public sealed class DatabaseSeederWorker(
             logger.LogInformation("Added {Role} role to organization '{Slug}'", roleName, slug);
         }
 
-        var manageMembers = Organization.Contracts.Permissions.Organization.ManageMembers;
-        var faunaAdminRoleId = existingRoles["FaunaAdministrator"];
-        var hasManageMembers = await context.OrganizationRolePermissions.AnyAsync(
-            p => p.RoleId == faunaAdminRoleId && p.Permission == manageMembers,
-            stoppingToken
-        );
-
-        if (!hasManageMembers)
+        // Any other role gets its keys from EcoPortal's Roles page; these are
+        // only what a fresh database needs for FaunaFinder to work at all.
+        var grants = new (string RoleName, string Permission)[]
         {
+            ("FaunaAdministrator", Organization.Contracts.Permissions.Organization.ManageMembers),
+            ("FaunaAdministrator", Permissions.Occurrence.Verify),
+        };
+
+        foreach (var (roleName, permission) in grants)
+        {
+            var roleId = existingRoles[roleName];
+            var hasGrant = await context.OrganizationRolePermissions.AnyAsync(
+                p => p.RoleId == roleId && p.Permission == permission,
+                stoppingToken
+            );
+
+            if (hasGrant)
+            {
+                continue;
+            }
+
             context.OrganizationRolePermissions.Add(
                 new Organization.Database.Models.OrganizationRolePermission
                 {
-                    RoleId = faunaAdminRoleId,
-                    Permission = manageMembers,
+                    RoleId = roleId,
+                    Permission = permission,
                 }
+            );
+            logger.LogInformation(
+                "Granted {Permission} to {Role} in organization '{Slug}'",
+                permission,
+                roleName,
+                slug
             );
         }
 

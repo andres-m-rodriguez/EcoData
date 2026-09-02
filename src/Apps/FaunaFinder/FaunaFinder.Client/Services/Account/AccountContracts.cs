@@ -11,3 +11,5 @@ public sealed record FaunaFinderSignupRequest(
 );
 
 public sealed record FaunaFinderSignupResponse(UserInfo User, bool AccessRequestSubmitted);
+
+public sealed record FaunaFinderOrganizationDto(Guid Id, string Name, string Slug);

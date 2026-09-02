@@ -139,4 +139,56 @@ public sealed class AccountHttpClient(HttpClient httpClient) : IAccountHttpClien
             return new RequestFailed(0, e.Message);
         }
     }
+
+    public async Task<OneOf<FaunaFinderOrganizationDto, RequestFailed>> GetOrganizationAsync(
+        CancellationToken cancellationToken = default
+    )
+    {
+        try
+        {
+            var response = await httpClient.GetAsync("/account/organization", cancellationToken);
+            if (!response.IsSuccessStatusCode)
+            {
+                var problem = await ProblemDetailsParser.ParseAsync(response, cancellationToken);
+                return new RequestFailed((int)response.StatusCode, problem?.Detail ?? problem?.Title);
+            }
+
+            var organization = await response.Content.ReadFromJsonAsync<FaunaFinderOrganizationDto>(
+                cancellationToken
+            );
+            if (organization is null)
+                return new RequestFailed((int)response.StatusCode, "Empty response from server.");
+            return organization;
+        }
+        catch (HttpRequestException e)
+        {
+            return new RequestFailed(0, e.Message);
+        }
+    }
+
+    public async Task<OneOf<UserPermissionsDto, RequestFailed>> GetPermissionsAsync(
+        CancellationToken cancellationToken = default
+    )
+    {
+        try
+        {
+            var response = await httpClient.GetAsync("/account/permissions", cancellationToken);
+            if (!response.IsSuccessStatusCode)
+            {
+                var problem = await ProblemDetailsParser.ParseAsync(response, cancellationToken);
+                return new RequestFailed((int)response.StatusCode, problem?.Detail ?? problem?.Title);
+            }
+
+            var permissions = await response.Content.ReadFromJsonAsync<UserPermissionsDto>(
+                cancellationToken
+            );
+            if (permissions is null)
+                return new RequestFailed((int)response.StatusCode, "Empty response from server.");
+            return permissions;
+        }
+        catch (HttpRequestException e)
+        {
+            return new RequestFailed(0, e.Message);
+        }
+    }
 }
