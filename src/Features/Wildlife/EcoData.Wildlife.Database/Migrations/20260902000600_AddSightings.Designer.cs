@@ -12,7 +12,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace EcoData.Wildlife.Database.Migrations
 {
     [DbContext(typeof(WildlifeDbContext))]
-    [Migration("20260902000140_AddSightings")]
+    [Migration("20260902000600_AddSightings")]
     partial class AddSightings
     {
         /// <inheritdoc />
@@ -161,6 +161,10 @@ namespace EcoData.Wildlife.Database.Migrations
                     b.Property<double>("Longitude")
                         .HasColumnType("double precision")
                         .HasColumnName("longitude");
+
+                    b.Property<Guid?>("MunicipalityId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("municipality_id");
 
                     b.Property<string>("Notes")
                         .HasMaxLength(1000)

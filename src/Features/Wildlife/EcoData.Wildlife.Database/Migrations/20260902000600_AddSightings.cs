@@ -22,6 +22,7 @@ namespace EcoData.Wildlife.Database.Migrations
                     reporter_display_name = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
                     latitude = table.Column<double>(type: "double precision", nullable: false),
                     longitude = table.Column<double>(type: "double precision", nullable: false),
+                    municipality_id = table.Column<Guid>(type: "uuid", nullable: true),
                     observed_at_utc = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
                     individual_count = table.Column<int>(type: "integer", nullable: true),
                     notes = table.Column<string>(type: "character varying(1000)", maxLength: 1000, nullable: true),

@@ -159,6 +159,10 @@ namespace EcoData.Wildlife.Database.Migrations
                         .HasColumnType("double precision")
                         .HasColumnName("longitude");
 
+                    b.Property<Guid?>("MunicipalityId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("municipality_id");
+
                     b.Property<string>("Notes")
                         .HasMaxLength(1000)
                         .HasColumnType("character varying(1000)")

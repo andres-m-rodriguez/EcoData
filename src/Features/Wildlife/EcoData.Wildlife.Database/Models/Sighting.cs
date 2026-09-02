@@ -20,6 +20,11 @@ public sealed class Sighting
     // Exact point, never published outside the organization.
     public required double Latitude { get; set; }
     public required double Longitude { get; set; }
+
+    // Soft reference to the Locations module, no FK. Resolved by the client
+    // from the point at submit time, null when the point falls outside every
+    // municipality, and used on approval to link the species to the municipio.
+    public required Guid? MunicipalityId { get; set; }
     public required DateTimeOffset ObservedAtUtc { get; set; }
     public required int? IndividualCount { get; set; }
     public required string? Notes { get; set; }
