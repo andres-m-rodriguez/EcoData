@@ -504,4 +504,82 @@ public sealed class SightingRepository(IDbContextFactory<WildlifeDbContext> cont
 
         return new Success();
     }
+
+    public async Task<SightingImageDto> AddImageAsync(
+        Guid sightingId,
+        Guid imageId,
+        Guid uploaderUserId,
+        string uploaderDisplayName,
+        string blobName,
+        string contentType,
+        long sizeBytes,
+        CancellationToken cancellationToken = default
+    )
+    {
+        await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
+
+        var image = new SightingImage
+        {
+            Id = imageId,
+            SightingId = sightingId,
+            BlobName = blobName,
+            ContentType = contentType,
+            SizeBytes = sizeBytes,
+            UploadedByUserId = uploaderUserId,
+            UploadedByDisplayName = uploaderDisplayName,
+            CreatedAtUtc = DateTimeOffset.UtcNow,
+        };
+        context.SightingImages.Add(image);
+        await context.SaveChangesAsync(cancellationToken);
+
+        return new SightingImageDto(
+            image.Id,
+            image.ContentType,
+            image.SizeBytes,
+            image.UploadedByDisplayName,
+            image.CreatedAtUtc
+        );
+    }
+
+    public async Task<SightingImageLocation?> GetImageAsync(
+        Guid sightingId,
+        Guid imageId,
+        CancellationToken cancellationToken = default
+    )
+    {
+        await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
+
+        return await context
+            .SightingImages.Where(image => image.SightingId == sightingId && image.Id == imageId)
+            .Select(image => new SightingImageLocation(image.BlobName, image.ContentType))
+            .FirstOrDefaultAsync(cancellationToken);
+    }
+
+    public async Task<int> CountImagesAsync(
+        Guid sightingId,
+        CancellationToken cancellationToken = default
+    )
+    {
+        await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
+
+        return await context.SightingImages.CountAsync(
+            image => image.SightingId == sightingId,
+            cancellationToken
+        );
+    }
+
+    public async Task<OneOf<Success, NotFound>> DeleteImageAsync(
+        Guid sightingId,
+        Guid imageId,
+        CancellationToken cancellationToken = default
+    )
+    {
+        await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
+
+        var deleted = await context
+            .SightingImages.Where(image => image.SightingId == sightingId && image.Id == imageId)
+            .ExecuteDeleteAsync(cancellationToken);
+
+        return deleted > 0 ? new Success() : new NotFound();
+    }
 }

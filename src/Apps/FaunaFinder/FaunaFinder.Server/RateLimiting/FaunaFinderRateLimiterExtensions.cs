@@ -14,12 +14,18 @@ public static class FaunaFinderRateLimiterExtensions
     // proxied to EcoPortal, and a burst here is either a bug or an attack.
     private const int AccountRequestsPerMinute = 12;
 
+    // Each sighting photo upload writes to storage, so the bucket is a fraction
+    // of the general API one.
+    private const int ImageUploadRequestsPerMinute = 24;
+
     private static readonly TimeSpan ReplenishmentPeriod = TimeSpan.FromSeconds(10);
 
     private const int PeriodsPerMinute = 6;
 
     private const string McpPath = "/mcp";
     private const string AccountPath = "/account";
+    private const string SightingsPath = "/wildlife/sightings";
+    private const string ImagesSegment = "/images";
     private static readonly string[] ApiPaths = ["/wildlife", "/locations"];
 
     public static IServiceCollection AddFaunaFinderRateLimiting(this IServiceCollection services)
@@ -51,6 +57,15 @@ public static class FaunaFinderRateLimiterExtensions
                 if (path.StartsWithSegments(AccountPath, StringComparison.OrdinalIgnoreCase))
                 {
                     return TokenBucket($"account:{ClientKey(context)}", AccountRequestsPerMinute);
+                }
+
+                if (
+                    HttpMethods.IsPost(context.Request.Method)
+                    && path.StartsWithSegments(SightingsPath, StringComparison.OrdinalIgnoreCase)
+                    && path.Value!.EndsWith(ImagesSegment, StringComparison.OrdinalIgnoreCase)
+                )
+                {
+                    return TokenBucket($"images:{ClientKey(context)}", ImageUploadRequestsPerMinute);
                 }
 
                 foreach (var apiPath in ApiPaths)

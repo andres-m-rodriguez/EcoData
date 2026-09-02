@@ -115,6 +115,26 @@
     gap: 16px;
 }
 
+.ff-sighting-files {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 10px;
+}
+
+.ff-sighting-photos-foot {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.ff-sighting-photos-hint {
+    font: var(--fauna-body-sm);
+    color: var(--fauna-fg-4);
+}
+
 @media (max-width: 600px) {
     .ff-sighting-page ::deep .ff-sighting-card {
         padding: 16px;

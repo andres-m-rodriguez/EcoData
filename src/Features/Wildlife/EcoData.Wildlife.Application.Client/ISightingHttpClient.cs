@@ -24,6 +24,18 @@ public interface ISightingHttpClient
         SightingNoteDtoForCreate dto,
         CancellationToken ct = default);
 
+    Task<OneOf<SightingImageDto, ValidationFailed, RequestFailed>> UploadImageAsync(
+        Guid sightingId,
+        Stream content,
+        string fileName,
+        string contentType,
+        CancellationToken ct = default);
+
+    Task<OneOf<Success, RequestFailed>> DeleteImageAsync(
+        Guid sightingId,
+        Guid imageId,
+        CancellationToken ct = default);
+
     Task<OneOf<IReadOnlyList<SightingDto>, RequestFailed>> GetByOrganizationAsync(
         Guid organizationId,
         SightingParameters parameters,

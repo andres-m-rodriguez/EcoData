@@ -76,4 +76,33 @@ public interface ISightingRepository
         Guid id,
         CancellationToken cancellationToken = default
     );
+
+    // The image id is minted by the caller because the blob is named after it
+    // and written before the row exists.
+    Task<SightingImageDto> AddImageAsync(
+        Guid sightingId,
+        Guid imageId,
+        Guid uploaderUserId,
+        string uploaderDisplayName,
+        string blobName,
+        string contentType,
+        long sizeBytes,
+        CancellationToken cancellationToken = default
+    );
+
+    Task<SightingImageLocation?> GetImageAsync(
+        Guid sightingId,
+        Guid imageId,
+        CancellationToken cancellationToken = default
+    );
+
+    Task<int> CountImagesAsync(Guid sightingId, CancellationToken cancellationToken = default);
+
+    Task<OneOf<Success, NotFound>> DeleteImageAsync(
+        Guid sightingId,
+        Guid imageId,
+        CancellationToken cancellationToken = default
+    );
 }
+
+public sealed record SightingImageLocation(string BlobName, string ContentType);

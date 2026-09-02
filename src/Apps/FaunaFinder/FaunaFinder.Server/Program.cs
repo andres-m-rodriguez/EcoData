@@ -22,6 +22,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.AddServiceDefaults();
 builder.AddLocationsDatabase();
 builder.AddWildlifeDatabase();
+builder.AddAzureBlobContainerClient("sighting-images");
 
 builder.Services.AddRazorComponents().AddInteractiveWebAssemblyComponents();
 builder.Services.AddMudServices();

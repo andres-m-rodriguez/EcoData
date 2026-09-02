@@ -9,6 +9,7 @@ using FaunaFinder.Client.Layout;
 using FaunaFinder.Client.Localization;
 using FaunaFinder.Client.Models;
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Forms;
 using MudBlazor;
 using Tempest;
 
@@ -24,6 +25,8 @@ public partial class ReportSighting : EcoDataComponent
     private const int RegionZoom = 9;
     private const int PointZoom = 14;
     private const int SearchPageSize = 10;
+    private const int MaxImages = 5;
+    private const long MaxImageBytes = 10 * 1024 * 1024;
 
     [SupplyParameterFromQuery(Name = "speciesId")]
     public Guid? SpeciesId { get; set; }
@@ -53,6 +56,8 @@ public partial class ReportSighting : EcoDataComponent
     private string? _observedError;
     private string? _countError;
     private string? _noteError;
+
+    private readonly List<IBrowserFile> _files = [];
 
     private bool _prefilled;
 
@@ -228,7 +233,7 @@ public partial class ReportSighting : EcoDataComponent
             return;
         }
 
-        if (remainder.TryPickT1(out var requestFailed, out _))
+        if (remainder.TryPickT1(out var requestFailed, out var sighting))
         {
             var message = requestFailed.StatusCode switch
             {
@@ -243,8 +248,48 @@ public partial class ReportSighting : EcoDataComponent
             return;
         }
 
+        // The sighting is saved from here on; a photo that fails to upload is
+        // reported and skipped, never a reason to lose the report.
+        foreach (var file in _files)
+        {
+            await using var content = file.OpenReadStream(MaxImageBytes);
+            var upload = await SightingClient.UploadImageAsync(sighting.Id, content, file.Name, file.ContentType);
+            if (!upload.IsT0)
+            {
+                Snackbar.Add(L["Sighting_Image_UploadFailed", file.Name], Severity.Warning);
+            }
+        }
+
         Snackbar.Add(L["Sighting_Report_Success"], Severity.Success);
         NavigationManager.NavigateTo("/sightings/mine");
+    }
+
+    private void OnFilesPicked(IReadOnlyList<IBrowserFile>? picked)
+    {
+        if (picked is null) return;
+
+        foreach (var file in picked)
+        {
+            if (_files.Count >= MaxImages)
+            {
+                Snackbar.Add(L["Sighting_Image_TooMany", MaxImages], Severity.Warning);
+                return;
+            }
+
+            if (!file.ContentType.StartsWith("image/", StringComparison.OrdinalIgnoreCase))
+            {
+                Snackbar.Add(L["Sighting_Image_NotImage", file.Name], Severity.Warning);
+                continue;
+            }
+
+            if (file.Size > MaxImageBytes)
+            {
+                Snackbar.Add(L["Sighting_Image_TooLarge", file.Name], Severity.Warning);
+                continue;
+            }
+
+            _files.Add(file);
+        }
     }
 
     // Keys arrive as PascalCase from the inline validator and in whatever

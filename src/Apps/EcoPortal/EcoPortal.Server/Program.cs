@@ -37,6 +37,7 @@ builder.AddLocationsDatabase();
 builder.AddOrganizationDatabase();
 builder.AddSensorsDatabase();
 builder.AddWildlifeDatabase();
+builder.AddAzureBlobContainerClient("sighting-images");
 
 builder.Services.AddRazorComponents().AddInteractiveWebAssemblyComponents().AddAuthenticationStateSerialization();
 builder.Services.AddCascadingAuthenticationState();

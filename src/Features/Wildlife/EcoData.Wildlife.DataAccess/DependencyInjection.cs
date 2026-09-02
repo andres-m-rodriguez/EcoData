@@ -1,6 +1,7 @@
 using EcoData.Wildlife.Contracts;
 using EcoData.Wildlife.DataAccess.Interfaces;
 using EcoData.Wildlife.DataAccess.Repositories;
+using EcoData.Wildlife.DataAccess.Storage;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -27,6 +28,10 @@ public static class DependencyInjection
         services.AddScoped<IFwsActionRepository, FwsActionRepository>();
         services.AddScoped<IConservationLinkRepository, ConservationLinkRepository>();
         services.AddScoped<ISightingRepository, SightingRepository>();
+
+        // Over the BlobContainerClient the host registers for the
+        // "sighting-images" resource with AddAzureBlobContainerClient.
+        services.AddSingleton<ISightingImageStore, SightingImageStore>();
 
         return services;
     }

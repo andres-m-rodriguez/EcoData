@@ -64,6 +64,7 @@ public partial class MySightings : EcoDataComponent
         {
             { x => x.Sighting, sighting },
             { x => x.Locale, Locale },
+            { x => x.CanEdit, true },
         };
 
         await Dialogs.ShowAsync<SightingDetailDialog>(null, parameters, options);
