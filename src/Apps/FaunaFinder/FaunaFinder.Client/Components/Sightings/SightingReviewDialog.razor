@@ -1,0 +1,53 @@
+@namespace FaunaFinder.Client.Components.Sightings
+@inherits EcoDataComponent
+
+<MudDialog>
+    <TitleContent>
+        <div class="ff-review-dialog-head">
+            <h3>@L[Approve ? "Sighting_Review_Approve_Title" : "Sighting_Review_Deny_Title"]</h3>
+            <span class="ff-review-dialog-species">@Locale.Resolve(Sighting.SpeciesCommonName, fallback: Sighting.SpeciesScientificName)</span>
+        </div>
+    </TitleContent>
+
+    <DialogContent>
+        <div class="ff-review-dialog-body">
+            @if (Approve)
+            {
+                <p class="ff-review-dialog-effect">@L["Sighting_Review_Approve_Effect"]</p>
+            }
+
+            <MudTextField T="string"
+                          @bind-Value="_reason"
+                          @bind-Value:after="() => _reasonError = null"
+                          Label="@L["Sighting_Review_Reason"]"
+                          HelperText="@L[Approve ? "Sighting_Review_Reason_Optional_Hint" : "Sighting_Review_Reason_Required_Hint"]"
+                          Required="@(!Approve)"
+                          Lines="3"
+                          MaxLength="ReasonMaxLength"
+                          Counter="ReasonMaxLength"
+                          Immediate="true"
+                          Variant="Variant.Outlined"
+                          Error="@(_reasonError is not null)"
+                          ErrorText="@_reasonError"
+                          Disabled="SubmitState.IsLoading" />
+        </div>
+    </DialogContent>
+
+    <DialogActions>
+        <MudButton OnClick="Cancel" Variant="Variant.Text" Disabled="SubmitState.IsLoading">@L["Common_Cancel"]</MudButton>
+        <MudButton Variant="Variant.Filled"
+                   Color="@(Approve ? Color.Success : Color.Error)"
+                   OnClick="() => SubmitState.TryExecute()"
+                   Disabled="SubmitState.IsLoading">
+            @if (SubmitState.IsLoading)
+            {
+                <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
+                <span>@L["Sighting_Review_Working"]</span>
+            }
+            else
+            {
+                <span>@L[Approve ? "Sighting_Review_Approve" : "Sighting_Review_Deny"]</span>
+            }
+        </MudButton>
+    </DialogActions>
+</MudDialog>

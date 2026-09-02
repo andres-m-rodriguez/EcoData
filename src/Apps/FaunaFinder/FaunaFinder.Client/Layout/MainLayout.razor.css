@@ -514,3 +514,13 @@
     font: 500 11px/1.4 var(--fauna-font-sans);
     color: var(--fauna-fg-3);
 }
+
+/* Pending-review count on the desktop nav entry and the account menu item.
+   The menu badge sits outside its label, so the root reserves the room. */
+::deep .ff-nav-badge {
+    margin-left: 2px;
+}
+
+::deep .ff-account-review-badge {
+    margin-right: 28px;
+}

@@ -263,3 +263,15 @@
         grid-template-columns: 1fr;
     }
 }
+
+/* Reviewer mode: what approval does to the public catalogue, stated before
+   the decision. */
+.ff-detail-effect {
+    margin: 0;
+    padding: 10px 12px;
+    border-radius: 10px;
+    border: 1px solid var(--status-lc);
+    background: var(--status-lc-bg);
+    font: var(--fauna-body-sm);
+    color: var(--fauna-fg-2);
+}

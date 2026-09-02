@@ -51,6 +51,16 @@
                         <a href="/categories" class="@GetNavLinkClass("/categories")">@L["Nav_Categories"]</a>
                         <a href="/practices" class="@GetNavLinkClass("/practices")">@L["Nav_Practices"]</a>
                         <a href="/actions" class="@GetNavLinkClass("/actions")">@L["Nav_Actions"]</a>
+                        @if (Auth.CanReviewSightings)
+                        {
+                            <MudBadge Content="@LoadPendingCountState.Result"
+                                      Visible="@(LoadPendingCountState.Result > 0)"
+                                      Color="Color.Warning"
+                                      Overlap="true"
+                                      Class="ff-nav-badge">
+                                <a href="/sightings/review" class="@GetNavLinkClass("/sightings/review")">@L["Sighting_Review_Nav"]</a>
+                            </MudBadge>
+                        }
                     </nav>
                 </MudHidden>
 
@@ -122,6 +132,19 @@
                             <MudDivider />
                             <MudMenuItem Href="/sightings/new" Icon="@Icons.Material.Filled.AddLocationAlt">@L["Sighting_Report_Action"]</MudMenuItem>
                             <MudMenuItem Href="/sightings/mine" Icon="@Icons.Material.Filled.FormatListBulleted">@L["Sighting_Mine_Title"]</MudMenuItem>
+                            @if (Auth.CanReviewSightings)
+                            {
+                                <MudMenuItem Href="/sightings/review" Icon="@Icons.Material.Filled.FactCheck">
+                                    <MudBadge Content="@LoadPendingCountState.Result"
+                                              Visible="@(LoadPendingCountState.Result > 0)"
+                                              Color="Color.Warning"
+                                              Origin="Origin.CenterRight"
+                                              Overlap="false"
+                                              Class="ff-account-review-badge">
+                                        <span>@L["Sighting_Review_Nav"]</span>
+                                    </MudBadge>
+                                </MudMenuItem>
+                            }
                             <MudDivider />
                             <MudMenuItem OnClick="SignOutAsync">@L["Auth_SignOut"]</MudMenuItem>
                         </MudMenu>

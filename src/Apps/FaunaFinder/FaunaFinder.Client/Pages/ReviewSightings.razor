@@ -1,0 +1,193 @@
+@page "/sightings/review"
+@inherits EcoDataComponent
+@using System.Globalization
+@using EcoData.Wildlife.Contracts
+@using EcoData.Wildlife.Contracts.Dtos
+@inject AuthStateService Auth
+@inject ISightingHttpClient SightingClient
+@inject ISpeciesHttpClient SpeciesClient
+@inject IMunicipalityHttpClient MunicipalityClient
+@inject NavigationManager NavigationManager
+@inject INavbarManager Navbar
+@inject IDialogService Dialogs
+@inject ISnackbar Snackbar
+@inject IBrowserViewportService Viewport
+
+<PageTitle>FaunaFinder | @L["Sighting_Review_PageTitle"]</PageTitle>
+
+<NuiPageLayout ParentPath="/">
+    <div class="ff-review-page">
+        @if (!Auth.IsInitialized || !Auth.IsAuthenticated)
+        {
+            @for (var i = 0; i < 4; i++)
+            {
+                <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="96px" Class="mb-2 rounded-lg" />
+            }
+        }
+        else if (!Auth.CanReviewSightings)
+        {
+            <div class="ff-review-noaccess">
+                <MudAvatar Color="Color.Warning" Size="Size.Large">
+                    <MudIcon Icon="@Icons.Material.Filled.Lock" />
+                </MudAvatar>
+                <MudText Typo="Typo.h5" Align="Align.Center" Class="ff-review-noaccess-title">@L["Sighting_Review_NoAccess_Title"]</MudText>
+                <MudText Typo="Typo.body1" Align="Align.Center" Class="ff-review-noaccess-body">@L["Sighting_Review_NoAccess_Body"]</MudText>
+                <MudButton Variant="Variant.Filled"
+                           Color="Color.Primary"
+                           StartIcon="@Icons.Material.Filled.Map"
+                           Href="/">
+                    @L["Sighting_Review_NoAccess_Back"]
+                </MudButton>
+            </div>
+        }
+        else if (Auth.Organization is not { } organization)
+        {
+            <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Dense="true">
+                @L["Sighting_Unavailable"]
+            </MudAlert>
+        }
+        else
+        {
+            <header class="ff-review-head">
+                <MudText Typo="Typo.h5" Class="ff-review-title">@L["Sighting_Review_Title"]</MudText>
+                <MudText Typo="Typo.body2" Class="ff-review-lede">@L["Sighting_Review_Lede", organization.Name]</MudText>
+            </header>
+
+            <div class="ff-review-toolbar">
+                <MudChipSet T="SightingStatus"
+                            SelectedValue="_status"
+                            SelectedValueChanged="SetStatus"
+                            SelectionMode="SelectionMode.SingleSelection"
+                            CheckMark="false"
+                            Class="ff-review-tabs">
+                    @foreach (var status in Statuses)
+                    {
+                        <MudChip T="SightingStatus" Value="status" Color="Color.Primary" Variant="Variant.Outlined">
+                            <span>@L["Sighting_Status_" + status]</span>
+                            @if (_counts.TryGetValue(status, out var count))
+                            {
+                                <span class="ff-review-tab-count">@count</span>
+                            }
+                        </MudChip>
+                    }
+                </MudChipSet>
+
+                <MudAutocomplete T="SpeciesDtoForList"
+                                 @bind-Value="_species"
+                                 @bind-Value:after="ResetRows"
+                                 Label="@L["Sighting_Review_Filter_Species"]"
+                                 Placeholder="@L["Sighting_Species_Placeholder"]"
+                                 SearchFunc="SearchSpecies"
+                                 ToStringFunc="@(s => s is null ? string.Empty : Locale.Resolve(s.CommonName, fallback: s.ScientificName))"
+                                 MinCharacters="2"
+                                 DebounceInterval="250"
+                                 MaxItems="10"
+                                 Clearable="true"
+                                 ResetValueOnEmptyText="true"
+                                 ShowProgressIndicator="true"
+                                 ProgressIndicatorColor="Color.Primary"
+                                 Variant="Variant.Outlined"
+                                 Margin="Margin.Dense"
+                                 Adornment="Adornment.Start"
+                                 AdornmentIcon="@Icons.Material.Filled.Pets"
+                                 Class="ff-review-species">
+                    <ItemTemplate Context="option">
+                        <div class="ff-review-option">
+                            <span class="ff-review-option-name">@Locale.Resolve(option.CommonName, fallback: option.ScientificName)</span>
+                            @if (!SpeciesNaming.EchoesScientificName(Locale.Resolve(option.CommonName, fallback: option.ScientificName), option.ScientificName))
+                            {
+                                <span class="ff-review-option-sci">@option.ScientificName</span>
+                            }
+                        </div>
+                    </ItemTemplate>
+                    <NoItemsTemplate>
+                        <div class="ff-review-option-empty">@L["Sighting_Species_NoResults"]</div>
+                    </NoItemsTemplate>
+                </MudAutocomplete>
+            </div>
+
+            @if (_rows is null)
+            {
+                @for (var i = 0; i < 4; i++)
+                {
+                    <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="96px" Class="mb-2 rounded-lg" />
+                }
+            }
+            else if (_rows.Count == 0)
+            {
+                <NuiEmptyState Icon="@Icons.Material.Outlined.FactCheck"
+                               Title="@L[EmptyTitleKey]"
+                               Description="@L[EmptyDescriptionKey]" />
+            }
+            else
+            {
+                <div class="ff-review-list">
+                    @foreach (var sighting in _rows)
+                    {
+                        var commonName = Locale.Resolve(sighting.SpeciesCommonName, fallback: sighting.SpeciesScientificName);
+                        <div class="ff-review-row" @key="sighting.Id">
+                            <button type="button" class="ff-review-row-main" @onclick="() => OpenDetail(sighting)">
+                                <span class="ff-review-row-names">
+                                    <span class="ff-review-row-name">@commonName</span>
+                                    @if (!SpeciesNaming.EchoesScientificName(commonName, sighting.SpeciesScientificName))
+                                    {
+                                        <span class="ff-review-row-sci">@sighting.SpeciesScientificName</span>
+                                    }
+                                </span>
+                                <span class="ff-review-row-meta">
+                                    <span>@L["Sighting_Review_ReportedBy", sighting.ReporterDisplayName]</span>
+                                    <span class="ff-review-row-dot" aria-hidden="true">·</span>
+                                    <span>@sighting.ObservedAtUtc.ToLocalTime().ToString("g", Culture)</span>
+                                    @if (sighting.IndividualCount is { } individuals)
+                                    {
+                                        <span class="ff-review-row-dot" aria-hidden="true">·</span>
+                                        <span>@L["Sighting_Count_Value", individuals]</span>
+                                    }
+                                    <span class="ff-review-row-dot" aria-hidden="true">·</span>
+                                    <span>@(MunicipalityName(sighting) ?? L["Sighting_Municipality_Unknown"])</span>
+                                    <span class="ff-review-row-dot" aria-hidden="true">·</span>
+                                    <span>@sighting.Latitude.ToString("F5", CultureInfo.InvariantCulture), @sighting.Longitude.ToString("F5", CultureInfo.InvariantCulture)</span>
+                                </span>
+                            </button>
+                            <div class="ff-review-row-side">
+                                <span class="ff-status-pill status-@sighting.Status.ToString().ToLowerInvariant()">@L["Sighting_Status_" + sighting.Status]</span>
+                                @if (sighting.Images.Count > 0)
+                                {
+                                    <span class="ff-review-row-images">
+                                        <MudIcon Icon="@Icons.Material.Outlined.Photo" Size="Size.Small" />
+                                        @(sighting.Images.Count == 1 ? L["Sighting_Review_Images_One"] : L["Sighting_Review_Images_Many", sighting.Images.Count])
+                                    </span>
+                                }
+                            </div>
+                            <SightingReviewActions Status="sighting.Status"
+                                                   OnApprove="() => Review(sighting, approve: true)"
+                                                   OnDeny="() => Review(sighting, approve: false)"
+                                                   OnUnapprove="() => Unapprove(sighting)"
+                                                   Disabled="RevertToPendingState.IsLoading" />
+                        </div>
+                    }
+                </div>
+
+                @if (_hasMore)
+                {
+                    <div class="ff-review-more">
+                        <MudButton Variant="Variant.Outlined"
+                                   Color="Color.Primary"
+                                   OnClick="() => LoadPageState.TryExecute()"
+                                   Disabled="LoadPageState.IsLoading">
+                            @if (LoadPageState.IsLoading)
+                            {
+                                <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
+                                <span>@L["Common_Loading"]</span>
+                            }
+                            else
+                            {
+                                <span>@L["Sighting_Review_LoadMore"]</span>
+                            }
+                        </MudButton>
+                    </div>
+                }
+            }
+        }
+    </div>
+</NuiPageLayout>

@@ -27,7 +27,16 @@
                         Width="100%" />
             </div>
 
+            @if (CanReview && Sighting.Status != SightingStatus.Approved)
+            {
+                <p class="ff-detail-effect">@L["Sighting_Review_Approve_Effect"]</p>
+            }
+
             <dl class="ff-detail-facts">
+                <div>
+                    <dt>@L["Sighting_Review_Reporter"]</dt>
+                    <dd>@Sighting.ReporterDisplayName</dd>
+                </div>
                 <div>
                     <dt>@L["Sighting_ObservedAt"]</dt>
                     <dd>@Sighting.ObservedAtUtc.ToLocalTime().ToString("g", Culture)</dd>
@@ -37,6 +46,13 @@
                     <div>
                         <dt>@L["Sighting_Count"]</dt>
                         <dd>@count</dd>
+                    </div>
+                }
+                @if (MunicipalityName is { } municipality)
+                {
+                    <div>
+                        <dt>@L["Sighting_Review_Municipality"]</dt>
+                        <dd>@municipality</dd>
                     </div>
                 }
                 <div>
@@ -188,6 +204,15 @@
     </DialogContent>
 
     <DialogActions>
+        @if (CanReview)
+        {
+            <SightingReviewActions Status="Sighting.Status"
+                                   Size="Size.Medium"
+                                   OnApprove="() => OnApprove.InvokeAsync(Sighting)"
+                                   OnDeny="() => OnDeny.InvokeAsync(Sighting)"
+                                   OnUnapprove="() => OnUnapprove.InvokeAsync(Sighting)" />
+            <MudSpacer />
+        }
         <MudButton OnClick="Close" Variant="Variant.Text">@L["Common_Close"]</MudButton>
     </DialogActions>
 </MudDialog>

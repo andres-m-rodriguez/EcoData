@@ -1,0 +1,36 @@
+.ff-review-dialog-head {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 4px 0 8px;
+}
+
+.ff-review-dialog-head h3 {
+    font: 600 1.125rem/1.2 var(--fauna-font-serif);
+    color: var(--fauna-primary);
+    letter-spacing: -0.02em;
+    margin: 0;
+}
+
+.ff-review-dialog-species {
+    font: italic 400 0.875rem/1.3 var(--fauna-font-serif);
+    color: var(--fauna-fg-4);
+}
+
+.ff-review-dialog-body {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding: 4px 0;
+}
+
+/* What approval does to the public catalogue, stated before the decision. */
+.ff-review-dialog-effect {
+    margin: 0;
+    padding: 10px 12px;
+    border-radius: 10px;
+    border: 1px solid var(--status-lc);
+    background: var(--status-lc-bg);
+    font: var(--fauna-body-sm);
+    color: var(--fauna-fg-2);
+}
