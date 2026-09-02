@@ -44,6 +44,27 @@ public sealed class FaunaFinderAccountTests(EcoDataTestFixture fixture) : IDispo
     }
 
     [Fact]
+    public async Task Permissions_WithoutSession_ReturnsUnauthorized()
+    {
+        var client = await CreateFaunaFinderClientAsync();
+
+        var response = await client.GetAsync("/account/permissions");
+
+        response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+    }
+
+    [Fact]
+    public async Task Organization_WithoutSession_ReturnsTheFaunaFinderOrganization()
+    {
+        var client = await CreateFaunaFinderClientAsync();
+
+        var organization = await WaitForOrganizationAsync(client);
+
+        organization.Slug.Should().Be("inter-metro");
+        organization.Id.Should().NotBeEmpty();
+    }
+
+    [Fact]
     public async Task Signup_DuplicateEmail_ReturnsConflict()
     {
         var client = await CreateFaunaFinderClientAsync();
@@ -71,6 +92,14 @@ public sealed class FaunaFinderAccountTests(EcoDataTestFixture fixture) : IDispo
             "/account/access-requests"
         );
         requests.Should().BeEmpty();
+
+        // The same session reaches the RequireAuthorization endpoint on the
+        // faunafinder origin, and a non-member holds no grants there.
+        var organization = await WaitForOrganizationAsync(client);
+        var permissions = await client.GetFromJsonAsync<UserPermissionsDto>("/account/permissions");
+        permissions!.OrganizationId.Should().Be(organization.Id);
+        permissions.Permissions.Should().BeEmpty();
+        permissions.IsGlobalAdmin.Should().BeFalse();
     }
 
     [Fact]
@@ -165,6 +194,31 @@ public sealed class FaunaFinderAccountTests(EcoDataTestFixture fixture) : IDispo
         );
     }
 
+    // The organization loader retries every 30 seconds until EcoPortal
+    // answers, and the endpoint reports 503 until then.
+    private static async Task<FaunaFinderOrganizationDto> WaitForOrganizationAsync(
+        HttpClient client
+    )
+    {
+        for (var attempt = 1; attempt <= 6; attempt++)
+        {
+            var response = await client.GetAsync("/account/organization");
+
+            if (response.StatusCode == HttpStatusCode.ServiceUnavailable)
+            {
+                await Task.Delay(TimeSpan.FromSeconds(35));
+                continue;
+            }
+
+            response.EnsureSuccessStatusCode();
+            return (await response.Content.ReadFromJsonAsync<FaunaFinderOrganizationDto>())!;
+        }
+
+        throw new InvalidOperationException(
+            "The FaunaFinder organization was not resolved before the retry budget ran out."
+        );
+    }
+
     private async Task<HttpClient> CreateFaunaFinderClientAsync()
     {
         var notifications = fixture.App.Services.GetRequiredService<ResourceNotificationService>();
@@ -181,11 +235,45 @@ public sealed class FaunaFinderAccountTests(EcoDataTestFixture fixture) : IDispo
             ServerCertificateCustomValidationCallback =
                 HttpClientHandler.DangerousAcceptAnyServerCertificateValidator,
         };
-        var client = new HttpClient(handler) { BaseAddress = tempClient.BaseAddress };
+        var client = new HttpClient(new AccountLimiterRetryHandler(handler))
+        {
+            BaseAddress = tempClient.BaseAddress,
+        };
 
         _disposables.Add(handler);
         _disposables.Add(client);
         return client;
+    }
+
+    // FaunaFinder's own /account bucket allows 12 requests per minute per
+    // client, and this class alone spends more than that in a burst. Its 429
+    // carries Retry-After (at most the 10 second replenishment period);
+    // EcoPortal's login 429 is relayed without one and stays with SignupAsync.
+    private sealed class AccountLimiterRetryHandler(HttpMessageHandler inner)
+        : DelegatingHandler(inner)
+    {
+        protected override async Task<HttpResponseMessage> SendAsync(
+            HttpRequestMessage request,
+            CancellationToken cancellationToken
+        )
+        {
+            for (var attempt = 1; ; attempt++)
+            {
+                var response = await base.SendAsync(request, cancellationToken);
+
+                if (
+                    attempt == 4
+                    || response.StatusCode != HttpStatusCode.TooManyRequests
+                    || response.Headers.RetryAfter?.Delta is not { } retryAfter
+                )
+                {
+                    return response;
+                }
+
+                response.Dispose();
+                await Task.Delay(retryAfter + TimeSpan.FromSeconds(1), cancellationToken);
+            }
+        }
     }
 
     public void Dispose()

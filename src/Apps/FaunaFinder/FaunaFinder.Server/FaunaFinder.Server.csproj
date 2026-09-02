@@ -15,6 +15,7 @@
   <ItemGroup>
     <ProjectReference Include="..\FaunaFinder.Client\FaunaFinder.Client.csproj" />
     <ProjectReference Include="..\..\..\Host\EcoData.ServiceDefaults\EcoData.ServiceDefaults.csproj" />
+    <ProjectReference Include="..\..\..\Features\Common\EcoData.Common.Authorization\EcoData.Common.Authorization.csproj" />
     <ProjectReference Include="..\..\..\Features\Identity\EcoData.Identity.Contracts\EcoData.Identity.Contracts.csproj" />
     <ProjectReference Include="..\..\..\Features\Organization\EcoData.Organization.Contracts\EcoData.Organization.Contracts.csproj" />
     <ProjectReference Include="..\..\..\Features\Wildlife\EcoData.Wildlife.Api\EcoData.Wildlife.Api.csproj" />
