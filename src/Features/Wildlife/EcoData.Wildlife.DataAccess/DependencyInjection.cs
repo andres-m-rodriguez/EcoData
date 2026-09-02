@@ -26,6 +26,7 @@ public static class DependencyInjection
         services.AddScoped<INrcsPracticeRepository, NrcsPracticeRepository>();
         services.AddScoped<IFwsActionRepository, FwsActionRepository>();
         services.AddScoped<IConservationLinkRepository, ConservationLinkRepository>();
+        services.AddScoped<ISightingRepository, SightingRepository>();
 
         return services;
     }
