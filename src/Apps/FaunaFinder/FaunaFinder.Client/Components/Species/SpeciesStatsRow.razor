@@ -1,5 +1,6 @@
 @namespace FaunaFinder.Client.Components.Species
 @inherits EcoDataComponent
+@using EcoData.Wildlife.Contracts
 @using EcoData.Wildlife.Contracts.Dtos
 
 <section class="ff-stats">
@@ -43,7 +44,7 @@
         <div class="ff-stat-label">@L["Species_Stats_Municipios_Label"]</div>
         <div class="ff-stat-value">
             @FormatNumber(Stats?.MunicipalitiesCovered)
-            <span class="unit">/ @(Stats?.TotalMunicipalities ?? 78)</span>
+            <span class="unit">/ @(Stats?.TotalMunicipalities ?? MunicipalityCoverage.Total)</span>
         </div>
         <div class="ff-stat-sub">@CoverageShare</div>
     </div>
@@ -74,7 +75,12 @@
         {
             if (Stats is null || Stats.TotalMunicipalities == 0) return "—";
             var pct = 100.0 * Stats.MunicipalitiesCovered / Stats.TotalMunicipalities;
-            return L["Species_Stats_Municipios_Sub", pct.ToString("0")];
+            return L[
+                "Species_Stats_Municipios_Sub",
+                pct.ToString("0"),
+                MunicipalityCoverage.PuertoRicoMunicipios,
+                MunicipalityCoverage.UsVirginIslands
+            ];
         }
     }
 }

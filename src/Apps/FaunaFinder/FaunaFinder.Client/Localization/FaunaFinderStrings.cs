@@ -113,7 +113,7 @@ public static class FaunaFinderStrings
         ["Species_Stats_Threatened_Label"] = "Threatened · VU–CR",
         ["Species_Stats_Threatened_Sub_Delta"] = "{0} reclassified",
         ["Species_Stats_Municipios_Label"] = "Municipios covered",
-        ["Species_Stats_Municipios_Sub"] = "{0}% island coverage",
+        ["Species_Stats_Municipios_Sub"] = "{0}% of {1} municipios + {2} Virgin Islands",
 
         ["Species_Featured_Heading"] = "Featured this week",
         ["Species_Featured_Meta"] = "Curated · updated Mondays",
@@ -204,7 +204,7 @@ public static class FaunaFinderStrings
 
         ["Muni_Stats_Total_Label"] = "Total municipios",
         ["Muni_Stats_Total_Unit"] = "/ {0} tracked",
-        ["Muni_Stats_Total_Sub"] = "100% island coverage",
+        ["Muni_Stats_Total_Sub"] = "{0} municipios + {1} U.S. Virgin Islands",
         ["Muni_Stats_Species_Label"] = "Species catalogued",
         ["Muni_Stats_Species_Sub"] = "across the island",
         ["Muni_Stats_Avg_Label"] = "Avg · species / municipio",
@@ -544,7 +544,7 @@ public static class FaunaFinderStrings
         ["Species_Stats_Threatened_Label"] = "Amenazadas · VU–CR",
         ["Species_Stats_Threatened_Sub_Delta"] = "{0} reclasificadas",
         ["Species_Stats_Municipios_Label"] = "Municipios cubiertos",
-        ["Species_Stats_Municipios_Sub"] = "{0}% de la isla cubierta",
+        ["Species_Stats_Municipios_Sub"] = "{0}% de {1} municipios + {2} Islas Vírgenes",
 
         ["Species_Featured_Heading"] = "Destacadas esta semana",
         ["Species_Featured_Meta"] = "Curado · actualizado los lunes",
@@ -635,7 +635,7 @@ public static class FaunaFinderStrings
 
         ["Muni_Stats_Total_Label"] = "Total de municipios",
         ["Muni_Stats_Total_Unit"] = "/ {0} rastreados",
-        ["Muni_Stats_Total_Sub"] = "100% de la isla",
+        ["Muni_Stats_Total_Sub"] = "{0} municipios + {1} Islas Vírgenes de EE. UU.",
         ["Muni_Stats_Species_Label"] = "Especies catalogadas",
         ["Muni_Stats_Species_Sub"] = "en toda la isla",
         ["Muni_Stats_Avg_Label"] = "Prom · especies / municipio",

@@ -50,7 +50,7 @@ builder.Services.AddIdentityApplication(builder.Configuration);
 builder.Services.AddLocationsDataAccess();
 builder.Services.AddOrganizationDataAccess();
 builder.Services.AddSensorsDataAccess();
-builder.Services.AddWildlifeDataAccess(builder.Configuration);
+builder.Services.AddWildlifeDataAccess();
 builder.Services.AddMessaging(messaging =>
     messaging.UseAzureServiceBus(builder.Configuration.GetSection("Messaging:ServiceBus")));
 builder.Services.AddScoped<INotificationRoutingService, NotificationRoutingService>();

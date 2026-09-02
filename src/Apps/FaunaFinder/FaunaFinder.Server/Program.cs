@@ -28,7 +28,7 @@ builder.Services.AddRazorComponents().AddInteractiveWebAssemblyComponents();
 builder.Services.AddMudServices();
 builder.Services.AddTempest();
 builder.Services.AddLocationsDataAccess();
-builder.Services.AddWildlifeDataAccess(builder.Configuration);
+builder.Services.AddWildlifeDataAccess();
 builder.Services.AddFaunaFinderMcp();
 builder.Services.AddFaunaFinderRateLimiting();
 

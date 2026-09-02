@@ -5,14 +5,11 @@ using EcoData.Wildlife.Contracts.Parameters;
 using EcoData.Wildlife.DataAccess.Interfaces;
 using EcoData.Wildlife.Database;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Options;
 
 namespace EcoData.Wildlife.DataAccess.Repositories;
 
-public sealed class SpeciesRepository(
-    IDbContextFactory<WildlifeDbContext> contextFactory,
-    IOptions<WildlifeOptions> options
-) : ISpeciesRepository
+public sealed class SpeciesRepository(IDbContextFactory<WildlifeDbContext> contextFactory)
+    : ISpeciesRepository
 {
     public async Task<SpeciesDtoForDetail?> GetByIdAsync(
         Guid id,
@@ -583,7 +580,7 @@ public sealed class SpeciesRepository(
             endemicCount,
             threatenedCount,
             municipalitiesCovered,
-            options.Value.TotalMunicipalities,
+            MunicipalityCoverage.Total,
             addedThisQuarter,
             ReclassifiedThisQuarter: 0,
             endemicHotspotCount

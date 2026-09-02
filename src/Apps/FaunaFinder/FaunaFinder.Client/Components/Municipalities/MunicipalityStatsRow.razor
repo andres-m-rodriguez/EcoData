@@ -1,5 +1,6 @@
 @namespace FaunaFinder.Client.Components.Municipalities
 @inherits EcoDataComponent
+@using EcoData.Wildlife.Contracts
 @using EcoData.Wildlife.Contracts.Dtos
 
 <section class="mm-stats">
@@ -7,9 +8,9 @@
         <div class="mm-stat-label">@L["Muni_Stats_Total_Label"]</div>
         <div class="mm-stat-value">
             @FormatNumber(Stats?.TotalMunicipalities)
-            <span class="unit">@L["Muni_Stats_Total_Unit", Stats?.TotalMunicipalities ?? 78]</span>
+            <span class="unit">@L["Muni_Stats_Total_Unit", Stats?.TotalMunicipalities ?? MunicipalityCoverage.Total]</span>
         </div>
-        <div class="mm-stat-sub">@L["Muni_Stats_Total_Sub"]</div>
+        <div class="mm-stat-sub">@L["Muni_Stats_Total_Sub", MunicipalityCoverage.PuertoRicoMunicipios, MunicipalityCoverage.UsVirginIslands]</div>
     </div>
 
     <div class="mm-stat">
