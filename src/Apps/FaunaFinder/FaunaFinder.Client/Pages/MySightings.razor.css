@@ -1,0 +1,91 @@
+.ff-sighting-page {
+    max-width: 720px;
+    margin: 0 auto;
+}
+
+.ff-sighting-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+}
+
+.ff-sighting-page ::deep .ff-sighting-title {
+    font-family: var(--fauna-font-serif);
+    color: var(--fauna-primary);
+    letter-spacing: var(--fauna-tracking-tight);
+}
+
+.ff-sighting-page ::deep .ff-sighting-lede {
+    color: var(--fauna-fg-3);
+    margin-top: 4px;
+}
+
+/* A row is a real button so a tap, a click and Enter all open the detail. */
+.ff-sighting-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    width: 100%;
+    min-height: 72px;
+    margin-bottom: 8px;
+    padding: 12px 16px;
+    text-align: left;
+    background: var(--fauna-surface);
+    border: 1px solid var(--fauna-line);
+    border-radius: 12px;
+    cursor: pointer;
+    transition: border-color var(--fauna-t-base) var(--fauna-ease),
+                box-shadow var(--fauna-t-base) var(--fauna-ease);
+}
+
+.ff-sighting-row:hover {
+    border-color: var(--fauna-primary-200);
+    box-shadow: var(--fauna-shadow-1);
+}
+
+.ff-sighting-row:focus-visible {
+    outline: 2px solid var(--fauna-primary-400);
+    outline-offset: 2px;
+}
+
+.ff-sighting-row-main {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.ff-sighting-row-name {
+    font: 500 0.9375rem/1.3 var(--fauna-font-sans);
+    color: var(--fauna-fg);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.ff-sighting-row-sci {
+    font: italic 400 0.8125rem/1.3 var(--fauna-font-serif);
+    color: var(--fauna-fg-4);
+}
+
+.ff-sighting-row-meta {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font: var(--fauna-mono);
+    font-size: 11px;
+    color: var(--fauna-fg-4);
+}
+
+.ff-sighting-row-dot {
+    color: var(--fauna-fg-5);
+}
+
+.ff-sighting-row .ff-status-pill {
+    flex-shrink: 0;
+    text-transform: uppercase;
+}

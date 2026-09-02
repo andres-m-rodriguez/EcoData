@@ -55,6 +55,15 @@
                 </div>
             </div>
 
+            <div class="ff-detail-actions">
+                <MudButton Variant="Variant.Filled"
+                           Color="Color.Primary"
+                           StartIcon="@Icons.Material.Filled.AddLocationAlt"
+                           Href="@($"/sightings/new?speciesId={detail.Id}")">
+                    @L["Sighting_Report_Action"]
+                </MudButton>
+            </div>
+
             <MudPaper Elevation="0" Class="pa-4 pa-md-6 rounded-lg border-solid border mud-border-lines-default mb-4">
                 <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Class="mb-4">
                     <MudIcon Icon="@Icons.Material.Filled.LocationCity" Color="Color.Primary" />

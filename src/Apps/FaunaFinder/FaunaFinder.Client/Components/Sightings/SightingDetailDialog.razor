@@ -1,0 +1,128 @@
+@namespace FaunaFinder.Client.Components.Sightings
+@inherits EcoDataComponent
+@using System.Globalization
+@using EcoData.Wildlife.Contracts
+@using EcoData.Wildlife.Contracts.Dtos
+
+<MudDialog>
+    <TitleContent>
+        <div class="ff-detail-head">
+            <div class="ff-detail-head-names">
+                <h3>@CommonName</h3>
+                @if (!SpeciesNaming.EchoesScientificName(CommonName, Sighting.SpeciesScientificName))
+                {
+                    <span class="ff-detail-head-sci">@Sighting.SpeciesScientificName</span>
+                }
+            </div>
+            <span class="ff-status-pill status-@Sighting.Status.ToString().ToLowerInvariant()">@L["Sighting_Status_" + Sighting.Status]</span>
+        </div>
+    </TitleContent>
+
+    <DialogContent>
+        <div class="ff-detail-body">
+            <div class="ff-detail-map">
+                <SpaMap TMarker="SightingMarker"
+                        Controller="_mapController"
+                        Height="100%"
+                        Width="100%" />
+            </div>
+
+            <dl class="ff-detail-facts">
+                <div>
+                    <dt>@L["Sighting_ObservedAt"]</dt>
+                    <dd>@Sighting.ObservedAtUtc.ToLocalTime().ToString("g", Culture)</dd>
+                </div>
+                @if (Sighting.IndividualCount is { } count)
+                {
+                    <div>
+                        <dt>@L["Sighting_Count"]</dt>
+                        <dd>@count</dd>
+                    </div>
+                }
+                <div>
+                    <dt>@L["Sighting_Coordinates"]</dt>
+                    <dd class="ff-detail-mono">@Sighting.Latitude.ToString("F5", CultureInfo.InvariantCulture), @Sighting.Longitude.ToString("F5", CultureInfo.InvariantCulture)</dd>
+                </div>
+                <div>
+                    <dt>@L["Sighting_ReportedAt"]</dt>
+                    <dd>@Sighting.CreatedAtUtc.ToLocalTime().ToString("g", Culture)</dd>
+                </div>
+            </dl>
+
+            @if (Sighting.Images.Count > 0)
+            {
+                <section class="ff-detail-section">
+                    <div class="ff-detail-section-title">@L["Sighting_Photos"]</div>
+                    <div class="ff-detail-images">
+                        @foreach (var image in Sighting.Images)
+                        {
+                            <img src="@($"/wildlife/sightings/{Sighting.Id}/images/{image.Id}")" alt="" loading="lazy" />
+                        }
+                    </div>
+                </section>
+            }
+
+            @if (Sighting.Status != SightingStatus.Pending && Sighting.ReviewedByDisplayName is { } reviewer)
+            {
+                <section class="ff-detail-section ff-detail-review status-@Sighting.Status.ToString().ToLowerInvariant()">
+                    <div class="ff-detail-section-title">@L["Sighting_Review"]</div>
+                    <p class="ff-detail-review-by">
+                        @L["Sighting_ReviewedBy", reviewer, Sighting.ReviewedAtUtc?.ToLocalTime().ToString("g", Culture) ?? string.Empty]
+                    </p>
+                    @if (Sighting.ReviewReason is { } reason)
+                    {
+                        <p class="ff-detail-review-reason">@reason</p>
+                    }
+                </section>
+            }
+
+            <section class="ff-detail-section">
+                <div class="ff-detail-section-title">@L["Sighting_Notes"]</div>
+                @if (_notes.Count == 0)
+                {
+                    <p class="ff-detail-empty">@L["Sighting_Notes_Empty"]</p>
+                }
+                else
+                {
+                    <ol class="ff-detail-notes">
+                        @foreach (var note in _notes)
+                        {
+                            <li class="@(note.AuthorUserId == Sighting.ReporterUserId ? "ff-detail-note is-mine" : "ff-detail-note")">
+                                <div class="ff-detail-note-who">
+                                    <span>@note.AuthorDisplayName</span>
+                                    <time>@note.CreatedAtUtc.ToLocalTime().ToString("g", Culture)</time>
+                                </div>
+                                <p>@note.Text</p>
+                            </li>
+                        }
+                    </ol>
+                }
+
+                <div class="ff-detail-add-note">
+                    <MudTextField T="string"
+                                  @bind-Value="_noteText"
+                                  @bind-Value:after="() => _noteError = null"
+                                  Label="@L["Sighting_Note_Add"]"
+                                  Lines="2"
+                                  MaxLength="NoteMaxLength"
+                                  Counter="NoteMaxLength"
+                                  Immediate="true"
+                                  Variant="Variant.Outlined"
+                                  Error="@(_noteError is not null)"
+                                  ErrorText="@_noteError"
+                                  Disabled="AddNoteState.IsLoading" />
+                    <MudButton Variant="Variant.Filled"
+                               Color="Color.Primary"
+                               OnClick="() => AddNoteState.TryExecute()"
+                               Disabled="@(AddNoteState.IsLoading || string.IsNullOrWhiteSpace(_noteText))">
+                        @L["Sighting_Note_Send"]
+                    </MudButton>
+                </div>
+            </section>
+        </div>
+    </DialogContent>
+
+    <DialogActions>
+        <MudButton OnClick="Close" Variant="Variant.Text">@L["Common_Close"]</MudButton>
+    </DialogActions>
+</MudDialog>

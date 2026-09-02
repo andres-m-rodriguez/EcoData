@@ -17,6 +17,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\..\Features\Common\EcoData.Common.Authorization\EcoData.Common.Authorization.csproj" />
+    <ProjectReference Include="..\..\..\Features\Common\EcoData.Common.Pagination.Blazor\EcoData.Common.Pagination.Blazor.csproj" />
     <ProjectReference Include="..\..\..\Features\Common\EcoData.Common.Problems.Contracts\EcoData.Common.Problems.Contracts.csproj" />
     <ProjectReference Include="..\..\..\Features\Common\EcoData.NativeUi\EcoData.NativeUi.csproj" />
     <ProjectReference Include="..\..\..\Features\Common\EcoData.Ui\EcoData.Ui.csproj" />

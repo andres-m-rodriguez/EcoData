@@ -13,6 +13,11 @@ public interface IMunicipalityHttpClient
 
     Task<OneOf<MunicipalityDtoForDetail, RequestFailed>> GetByIdAsync(Guid id, CancellationToken ct = default);
 
+    Task<OneOf<MunicipalityDtoForDetail, RequestFailed>> GetByPointAsync(
+        double latitude,
+        double longitude,
+        CancellationToken ct = default);
+
     Task<OneOf<IReadOnlyList<MunicipalityDtoForList>, RequestFailed>> GetByIdsAsync(
         IReadOnlyCollection<Guid> ids,
         CancellationToken ct = default);

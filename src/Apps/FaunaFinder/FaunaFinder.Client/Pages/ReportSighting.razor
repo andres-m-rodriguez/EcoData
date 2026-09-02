@@ -1,0 +1,173 @@
+@page "/sightings/new"
+@inherits EcoDataComponent
+@using System.Globalization
+@using EcoData.Wildlife.Contracts.Dtos
+@inject AuthStateService Auth
+@inject ISpeciesHttpClient SpeciesClient
+@inject IMunicipalityHttpClient MunicipalityClient
+@inject ISightingHttpClient SightingClient
+@inject NavigationManager NavigationManager
+@inject INavbarManager Navbar
+@inject ISnackbar Snackbar
+
+<PageTitle>FaunaFinder | @L["Sighting_Report_PageTitle"]</PageTitle>
+
+<NuiPageLayout ParentPath="/">
+    <div class="ff-sighting-page">
+        <header class="ff-sighting-head">
+            <MudText Typo="Typo.h5" Class="ff-sighting-title">@L["Sighting_Report_Title"]</MudText>
+            <MudText Typo="Typo.body2" Class="ff-sighting-lede">@L["Sighting_Report_Lede"]</MudText>
+        </header>
+
+        @if (!Auth.IsAuthenticated)
+        {
+            <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="56px" Class="mb-4 rounded-lg" />
+            <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="260px" Class="mb-4 rounded-lg" />
+            <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="56px" Class="rounded-lg" />
+        }
+        else
+        {
+            <MudPaper Elevation="0" Class="ff-sighting-card">
+                <MudStack Spacing="4">
+                    <MudAutocomplete T="SpeciesDtoForList"
+                                     @bind-Value="_species"
+                                     @bind-Value:after="() => _speciesError = null"
+                                     Label="@L["Sighting_Species"]"
+                                     Placeholder="@L["Sighting_Species_Placeholder"]"
+                                     SearchFunc="SearchSpecies"
+                                     ToStringFunc="@(s => s is null ? string.Empty : Locale.Resolve(s.CommonName, fallback: s.ScientificName))"
+                                     MinCharacters="2"
+                                     DebounceInterval="250"
+                                     MaxItems="10"
+                                     Clearable="true"
+                                     ResetValueOnEmptyText="true"
+                                     ShowProgressIndicator="true"
+                                     ProgressIndicatorColor="Color.Primary"
+                                     Variant="Variant.Outlined"
+                                     Adornment="Adornment.Start"
+                                     AdornmentIcon="@Icons.Material.Filled.Pets"
+                                     Error="@(_speciesError is not null)"
+                                     ErrorText="@_speciesError"
+                                     Disabled="@(SubmitState.IsLoading || LoadSpeciesState.IsLoading)">
+                        <ItemTemplate Context="option">
+                            <div class="ff-sighting-option">
+                                <span class="ff-sighting-option-name">@Locale.Resolve(option.CommonName, fallback: option.ScientificName)</span>
+                                @if (!SpeciesNaming.EchoesScientificName(Locale.Resolve(option.CommonName, fallback: option.ScientificName), option.ScientificName))
+                                {
+                                    <span class="ff-sighting-option-sci">@option.ScientificName</span>
+                                }
+                            </div>
+                        </ItemTemplate>
+                        <NoItemsTemplate>
+                            <div class="ff-sighting-option-empty">@L["Sighting_Species_NoResults"]</div>
+                        </NoItemsTemplate>
+                    </MudAutocomplete>
+
+                    <section class="ff-sighting-location">
+                        <div class="ff-sighting-label">@L["Sighting_Location"]</div>
+                        <div class="@(_locationError is null ? "ff-sighting-map" : "ff-sighting-map has-error")">
+                            <SpaMap TMarker="SightingMarker"
+                                    Controller="_mapController"
+                                    Height="100%"
+                                    Width="100%" />
+                        </div>
+                        <div class="ff-sighting-location-foot">
+                            <div class="ff-sighting-coords">
+                                @if (_point is { } point)
+                                {
+                                    <span class="ff-sighting-coords-value">@point.Latitude.ToString("F5", CultureInfo.InvariantCulture), @point.Longitude.ToString("F5", CultureInfo.InvariantCulture)</span>
+                                    <span class="ff-sighting-muni">
+                                        <MudIcon Icon="@Icons.Material.Filled.LocationCity" Size="Size.Small" />
+                                        @MunicipalityLabel
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="ff-sighting-coords-hint">@L["Sighting_Location_Hint"]</span>
+                                }
+                            </div>
+                            <MudButton Variant="Variant.Text"
+                                       Size="Size.Small"
+                                       StartIcon="@Icons.Material.Filled.MyLocation"
+                                       OnClick="() => UseMyLocationState.TryExecute()"
+                                       Disabled="@(UseMyLocationState.IsLoading || SubmitState.IsLoading)">
+                                @L["Sighting_UseMyLocation"]
+                            </MudButton>
+                        </div>
+                        @if (_locationError is not null)
+                        {
+                            <MudText Typo="Typo.caption" Color="Color.Error" Class="ff-sighting-field-error">@_locationError</MudText>
+                        }
+                    </section>
+
+                    <div class="ff-sighting-row">
+                        <MudDatePicker Label="@L["Sighting_ObservedDate"]"
+                                       @bind-Date="_observedDate"
+                                       @bind-Date:after="() => _observedError = null"
+                                       MaxDate="DateTime.Today"
+                                       Variant="Variant.Outlined"
+                                       Error="@(_observedError is not null)"
+                                       ErrorText="@_observedError"
+                                       Disabled="SubmitState.IsLoading" />
+                        <MudTimePicker Label="@L["Sighting_ObservedTime"]"
+                                       @bind-Time="_observedTime"
+                                       @bind-Time:after="() => _observedError = null"
+                                       Variant="Variant.Outlined"
+                                       Disabled="SubmitState.IsLoading" />
+                    </div>
+
+                    <MudNumericField T="int?"
+                                     @bind-Value="_count"
+                                     @bind-Value:after="() => _countError = null"
+                                     Label="@L["Sighting_Count"]"
+                                     HelperText="@L["Sighting_Count_Hint"]"
+                                     Min="1"
+                                     Max="10000"
+                                     Variant="Variant.Outlined"
+                                     Error="@(_countError is not null)"
+                                     ErrorText="@_countError"
+                                     Disabled="SubmitState.IsLoading" />
+
+                    <MudTextField T="string"
+                                  @bind-Value="_note"
+                                  @bind-Value:after="() => _noteError = null"
+                                  Label="@L["Sighting_Note"]"
+                                  HelperText="@L["Sighting_Note_Hint"]"
+                                  Lines="4"
+                                  MaxLength="NoteMaxLength"
+                                  Counter="NoteMaxLength"
+                                  Immediate="true"
+                                  Variant="Variant.Outlined"
+                                  Error="@(_noteError is not null)"
+                                  ErrorText="@_noteError"
+                                  Disabled="SubmitState.IsLoading" />
+
+                    @if (Auth.Organization is null)
+                    {
+                        <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Dense="true">
+                            @L["Sighting_Unavailable"]
+                        </MudAlert>
+                    }
+                    else
+                    {
+                        <MudButton Variant="Variant.Filled"
+                                   Color="Color.Primary"
+                                   FullWidth="true"
+                                   OnClick="() => SubmitState.TryExecute()"
+                                   Disabled="SubmitState.IsLoading">
+                            @if (SubmitState.IsLoading)
+                            {
+                                <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
+                                <span>@L["Sighting_Submitting"]</span>
+                            }
+                            else
+                            {
+                                <span>@L["Sighting_Submit"]</span>
+                            }
+                        </MudButton>
+                    }
+                </MudStack>
+            </MudPaper>
+        }
+    </div>
+</NuiPageLayout>

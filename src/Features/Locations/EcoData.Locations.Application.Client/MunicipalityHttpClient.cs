@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Net.Http.Json;
 using EcoData.Common.Http.Helpers;
 using EcoData.Common.Problems.Contracts;
@@ -61,6 +62,32 @@ public sealed class MunicipalityHttpClient(HttpClient httpClient) : IMunicipalit
         try
         {
             var response = await httpClient.GetAsync($"locations/municipalities/{id}", ct);
+            if (!response.IsSuccessStatusCode)
+            {
+                var problem = await ProblemDetailsParser.ParseAsync(response, ct);
+                return new RequestFailed((int)response.StatusCode, problem?.Detail ?? problem?.Title);
+            }
+            var municipality = await response.Content.ReadFromJsonAsync<MunicipalityDtoForDetail>(ct);
+            if (municipality is null)
+                return new RequestFailed((int)response.StatusCode, "The server returned an empty response.");
+            return municipality;
+        }
+        catch (HttpRequestException e)
+        {
+            return new RequestFailed(0, e.Message);
+        }
+    }
+
+    public async Task<OneOf<MunicipalityDtoForDetail, RequestFailed>> GetByPointAsync(
+        double latitude,
+        double longitude,
+        CancellationToken ct = default)
+    {
+        try
+        {
+            var response = await httpClient.GetAsync(
+                $"locations/municipalities/by-point?latitude={latitude.ToString("F6", CultureInfo.InvariantCulture)}&longitude={longitude.ToString("F6", CultureInfo.InvariantCulture)}",
+                ct);
             if (!response.IsSuccessStatusCode)
             {
                 var problem = await ProblemDetailsParser.ParseAsync(response, ct);

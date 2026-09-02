@@ -30,3 +30,11 @@
 .ff-hero-save ::deep .mud-icon-button:hover {
     background: var(--fauna-surface);
 }
+
+/* Primary action under the hero: report this species. Anonymous visitors
+   still see it; the form sends them through sign-in and back. */
+.ff-detail-actions {
+    display: flex;
+    justify-content: flex-end;
+    margin: 0 0 16px;
+}
