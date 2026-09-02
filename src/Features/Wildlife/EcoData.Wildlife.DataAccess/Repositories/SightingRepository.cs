@@ -235,4 +235,271 @@ public sealed class SightingRepository(IDbContextFactory<WildlifeDbContext> cont
 
         return owner is null ? null : (owner.OrganizationId, owner.ReporterUserId);
     }
+
+    public async IAsyncEnumerable<SightingDto> GetByOrganizationAsync(
+        Guid organizationId,
+        SightingParameters parameters,
+        [EnumeratorCancellation] CancellationToken cancellationToken = default
+    )
+    {
+        await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
+
+        var query = context.Sightings.Where(sighting => sighting.OrganizationId == organizationId);
+
+        if (parameters.Status is { } status)
+        {
+            query = query.Where(sighting => sighting.Status == status);
+        }
+
+        if (parameters.SpeciesId is { } speciesId)
+        {
+            query = query.Where(sighting => sighting.SpeciesId == speciesId);
+        }
+
+        if (parameters.Cursor is { } cursor)
+        {
+            query = query.Where(sighting => sighting.Id < cursor);
+        }
+
+        await foreach (
+            var sighting in query
+                .OrderByDescending(sighting => sighting.Id)
+                .Take(parameters.PageSize + 1)
+                .Select(sighting => new SightingDto(
+                    sighting.Id,
+                    sighting.OrganizationId,
+                    sighting.SpeciesId,
+                    sighting.Species!.CommonName,
+                    sighting.Species.ScientificName,
+                    sighting.Latitude,
+                    sighting.Longitude,
+                    sighting.MunicipalityId,
+                    sighting.ObservedAtUtc,
+                    sighting.IndividualCount,
+                    sighting.Status,
+                    sighting.ReporterUserId,
+                    sighting.ReporterDisplayName,
+                    sighting.ReviewedByDisplayName,
+                    sighting.ReviewedAtUtc,
+                    sighting.ReviewReason,
+                    sighting.CreatedAtUtc,
+                    sighting
+                        .Notes.OrderBy(note => note.Id)
+                        .Select(note => new SightingNoteDto(
+                            note.Id,
+                            note.AuthorUserId,
+                            note.AuthorDisplayName,
+                            note.Text,
+                            note.CreatedAtUtc
+                        ))
+                        .ToList(),
+                    sighting
+                        .Images.OrderBy(image => image.Id)
+                        .Select(image => new SightingImageDto(
+                            image.Id,
+                            image.ContentType,
+                            image.SizeBytes,
+                            image.UploadedByDisplayName,
+                            image.CreatedAtUtc
+                        ))
+                        .ToList()
+                ))
+                .AsAsyncEnumerable()
+                .WithCancellation(cancellationToken)
+        )
+        {
+            yield return sighting;
+        }
+    }
+
+    public async Task<int> CountAsync(
+        Guid organizationId,
+        SightingStatus? status,
+        CancellationToken cancellationToken = default
+    )
+    {
+        await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
+
+        var query = context.Sightings.Where(sighting => sighting.OrganizationId == organizationId);
+
+        if (status is { } value)
+        {
+            query = query.Where(sighting => sighting.Status == value);
+        }
+
+        return await query.CountAsync(cancellationToken);
+    }
+
+    public async Task<SightingDto?> GetByIdAsync(
+        Guid organizationId,
+        Guid id,
+        CancellationToken cancellationToken = default
+    )
+    {
+        await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
+
+        return await context
+            .Sightings.Where(sighting => sighting.OrganizationId == organizationId && sighting.Id == id)
+            .Select(sighting => new SightingDto(
+                sighting.Id,
+                sighting.OrganizationId,
+                sighting.SpeciesId,
+                sighting.Species!.CommonName,
+                sighting.Species.ScientificName,
+                sighting.Latitude,
+                sighting.Longitude,
+                sighting.MunicipalityId,
+                sighting.ObservedAtUtc,
+                sighting.IndividualCount,
+                sighting.Status,
+                sighting.ReporterUserId,
+                sighting.ReporterDisplayName,
+                sighting.ReviewedByDisplayName,
+                sighting.ReviewedAtUtc,
+                sighting.ReviewReason,
+                sighting.CreatedAtUtc,
+                sighting
+                    .Notes.OrderBy(note => note.Id)
+                    .Select(note => new SightingNoteDto(
+                        note.Id,
+                        note.AuthorUserId,
+                        note.AuthorDisplayName,
+                        note.Text,
+                        note.CreatedAtUtc
+                    ))
+                    .ToList(),
+                sighting
+                    .Images.OrderBy(image => image.Id)
+                    .Select(image => new SightingImageDto(
+                        image.Id,
+                        image.ContentType,
+                        image.SizeBytes,
+                        image.UploadedByDisplayName,
+                        image.CreatedAtUtc
+                    ))
+                    .ToList()
+            ))
+            .FirstOrDefaultAsync(cancellationToken);
+    }
+
+    // A row already in the target status is left alone so a repeated review
+    // keeps its original stamp; the row still has to exist in the organization.
+    public async Task<OneOf<Success, NotFound>> ApproveAsync(
+        Guid organizationId,
+        Guid id,
+        Guid reviewerUserId,
+        string reviewerDisplayName,
+        string? reason,
+        CancellationToken cancellationToken = default
+    )
+    {
+        await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
+
+        var now = DateTimeOffset.UtcNow;
+        var updated = await context
+            .Sightings.Where(sighting =>
+                sighting.OrganizationId == organizationId
+                && sighting.Id == id
+                && sighting.Status != SightingStatus.Approved
+            )
+            .ExecuteUpdateAsync(
+                setters =>
+                    setters
+                        .SetProperty(sighting => sighting.Status, SightingStatus.Approved)
+                        .SetProperty(sighting => sighting.ReviewedByUserId, reviewerUserId)
+                        .SetProperty(sighting => sighting.ReviewedByDisplayName, reviewerDisplayName)
+                        .SetProperty(sighting => sighting.ReviewedAtUtc, now)
+                        .SetProperty(sighting => sighting.ReviewReason, reason),
+                cancellationToken
+            );
+        if (updated > 0)
+            return new Success();
+
+        var exists = await context.Sightings.AnyAsync(
+            sighting => sighting.OrganizationId == organizationId && sighting.Id == id,
+            cancellationToken
+        );
+        if (!exists)
+            return new NotFound();
+
+        return new Success();
+    }
+
+    public async Task<OneOf<Success, NotFound>> DenyAsync(
+        Guid organizationId,
+        Guid id,
+        Guid reviewerUserId,
+        string reviewerDisplayName,
+        string reason,
+        CancellationToken cancellationToken = default
+    )
+    {
+        await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
+
+        var now = DateTimeOffset.UtcNow;
+        var updated = await context
+            .Sightings.Where(sighting =>
+                sighting.OrganizationId == organizationId
+                && sighting.Id == id
+                && sighting.Status != SightingStatus.Denied
+            )
+            .ExecuteUpdateAsync(
+                setters =>
+                    setters
+                        .SetProperty(sighting => sighting.Status, SightingStatus.Denied)
+                        .SetProperty(sighting => sighting.ReviewedByUserId, reviewerUserId)
+                        .SetProperty(sighting => sighting.ReviewedByDisplayName, reviewerDisplayName)
+                        .SetProperty(sighting => sighting.ReviewedAtUtc, now)
+                        .SetProperty(sighting => sighting.ReviewReason, reason),
+                cancellationToken
+            );
+        if (updated > 0)
+            return new Success();
+
+        var exists = await context.Sightings.AnyAsync(
+            sighting => sighting.OrganizationId == organizationId && sighting.Id == id,
+            cancellationToken
+        );
+        if (!exists)
+            return new NotFound();
+
+        return new Success();
+    }
+
+    public async Task<OneOf<Success, NotFound>> UnapproveAsync(
+        Guid organizationId,
+        Guid id,
+        CancellationToken cancellationToken = default
+    )
+    {
+        await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
+
+        var updated = await context
+            .Sightings.Where(sighting =>
+                sighting.OrganizationId == organizationId
+                && sighting.Id == id
+                && sighting.Status != SightingStatus.Pending
+            )
+            .ExecuteUpdateAsync(
+                setters =>
+                    setters
+                        .SetProperty(sighting => sighting.Status, SightingStatus.Pending)
+                        .SetProperty(sighting => sighting.ReviewedByUserId, (Guid?)null)
+                        .SetProperty(sighting => sighting.ReviewedByDisplayName, (string?)null)
+                        .SetProperty(sighting => sighting.ReviewedAtUtc, (DateTimeOffset?)null)
+                        .SetProperty(sighting => sighting.ReviewReason, (string?)null),
+                cancellationToken
+            );
+        if (updated > 0)
+            return new Success();
+
+        var exists = await context.Sightings.AnyAsync(
+            sighting => sighting.OrganizationId == organizationId && sighting.Id == id,
+            cancellationToken
+        );
+        if (!exists)
+            return new NotFound();
+
+        return new Success();
+    }
 }

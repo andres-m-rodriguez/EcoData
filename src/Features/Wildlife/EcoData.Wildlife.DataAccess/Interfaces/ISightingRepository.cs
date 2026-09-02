@@ -1,3 +1,4 @@
+using EcoData.Wildlife.Contracts;
 using EcoData.Wildlife.Contracts.Dtos;
 using EcoData.Wildlife.Contracts.Parameters;
 using OneOf;
@@ -31,6 +32,48 @@ public interface ISightingRepository
 
     Task<(Guid OrganizationId, Guid ReporterUserId)?> GetOwnerAsync(
         Guid sightingId,
+        CancellationToken cancellationToken = default
+    );
+
+    IAsyncEnumerable<SightingDto> GetByOrganizationAsync(
+        Guid organizationId,
+        SightingParameters parameters,
+        CancellationToken cancellationToken = default
+    );
+
+    Task<int> CountAsync(
+        Guid organizationId,
+        SightingStatus? status,
+        CancellationToken cancellationToken = default
+    );
+
+    Task<SightingDto?> GetByIdAsync(
+        Guid organizationId,
+        Guid id,
+        CancellationToken cancellationToken = default
+    );
+
+    Task<OneOf<Success, NotFound>> ApproveAsync(
+        Guid organizationId,
+        Guid id,
+        Guid reviewerUserId,
+        string reviewerDisplayName,
+        string? reason,
+        CancellationToken cancellationToken = default
+    );
+
+    Task<OneOf<Success, NotFound>> DenyAsync(
+        Guid organizationId,
+        Guid id,
+        Guid reviewerUserId,
+        string reviewerDisplayName,
+        string reason,
+        CancellationToken cancellationToken = default
+    );
+
+    Task<OneOf<Success, NotFound>> UnapproveAsync(
+        Guid organizationId,
+        Guid id,
         CancellationToken cancellationToken = default
     );
 }
