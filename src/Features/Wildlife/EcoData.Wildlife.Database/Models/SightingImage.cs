@@ -3,7 +3,6 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace EcoData.Wildlife.Database.Models;
 
-// Metadata only, the bytes live in the Azure Storage blob container.
 public sealed class SightingImage
 {
     public required Guid Id { get; set; }
@@ -12,7 +11,6 @@ public sealed class SightingImage
     public required string ContentType { get; set; }
     public required long SizeBytes { get; set; }
 
-    // Soft reference to Identity users; the name is snapshotted.
     public required Guid UploadedByUserId { get; set; }
     public required string UploadedByDisplayName { get; set; }
     public required DateTimeOffset CreatedAtUtc { get; set; }
