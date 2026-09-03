@@ -1,31 +1,23 @@
 @namespace FaunaFinder.Client.Components.Shell
 @inherits EcoDataComponent
 @using System.Globalization
-@using FaunaFinder.Client.Services.FieldNotebook
 @using FaunaFinder.Client.Services.Shapes
-@inject IFieldNotebook Notebook
 
 <aside class="ff-rail">
     <h2 class="ff-rail-heading">@L["Rail_Heading"]</h2>
 
-    <div class="ff-rail-chips">
-        <button type="button"
-                class="@ChipClass(RailTab.Saved)"
-                aria-pressed="@AriaPressed(RailTab.Saved)"
-                @onclick="ShowSaved">
-            @L["Rail_Tab_Saved"]
-        </button>
-        <button type="button"
-                class="@ChipClass(RailTab.Coordinates)"
-                aria-pressed="@AriaPressed(RailTab.Coordinates)"
-                @onclick="ShowCoordinates">
-            @L["Rail_Tab_Coordinates"]
-        </button>
-    </div>
+    <div class="ff-rail-cards">
+        <section class="ff-rail-card" aria-labelledby="ff-rail-card-coordinates">
+            <header class="ff-rail-card-head">
+                <span class="ff-rail-card-icon">
+                    <i class="fa-solid fa-location-dot" aria-hidden="true"></i>
+                </span>
+                <div class="ff-rail-card-title">
+                    <h3 id="ff-rail-card-coordinates">@L["Rail_Card_Coordinates"]</h3>
+                    <p>@L["Rail_Card_Coordinates_Lede"]</p>
+                </div>
+            </header>
 
-    <div class="ff-rail-list">
-        @if (_tab == RailTab.Coordinates)
-        {
             <form class="ff-rail-form" @onsubmit="ShowOnMap" @onsubmit:preventDefault="true">
                 <label class="ff-rail-field">
                     <span>@L["Rail_Coordinates_Latitude"]</span>
@@ -66,55 +58,6 @@
             {
                 <p class="ff-rail-error">@shapeError</p>
             }
-        }
-        else if (LoadSavedState.Result is null)
-        {
-            @for (var i = 0; i < SkeletonRowCount; i++)
-            {
-                <div class="ff-rail-skeleton-row">
-                    <MudSkeleton SkeletonType="SkeletonType.Rectangle" Class="ff-rail-skeleton-art" />
-                    <div class="ff-rail-skeleton-text">
-                        <MudSkeleton SkeletonType="SkeletonType.Text" Class="ff-rail-skeleton-name" />
-                        <MudSkeleton SkeletonType="SkeletonType.Text" Class="ff-rail-skeleton-count" />
-                    </div>
-                </div>
-            }
-        }
-        else if (LoadSavedState.Result is { Count: > 0 } saved)
-        {
-            @foreach (var entry in saved)
-            {
-                <a class="ff-rail-item" href="@EntryHref(entry)" @key="entry.Id">
-                    @if (entry.HasImage)
-                    {
-                        <img class="ff-rail-art ff-rail-art--photo"
-                             src="@SpeciesImageSrc(entry.Id)"
-                             alt=""
-                             loading="lazy" />
-                    }
-                    else
-                    {
-                        <span class="@ArtClass(entry.Kind)">
-                            <i class="@ArtIcon(entry.Kind)" aria-hidden="true"></i>
-                        </span>
-                    }
-                    <span class="ff-rail-body">
-                        <span class="ff-rail-name">@entry.Label</span>
-                        @if (!string.IsNullOrWhiteSpace(entry.Sublabel))
-                        {
-                            <span class="ff-rail-sci">@entry.Sublabel</span>
-                        }
-                    </span>
-                    @if (!string.IsNullOrWhiteSpace(entry.Status))
-                    {
-                        <span class="@StatusPillClass(entry.Status)">@entry.Status</span>
-                    }
-                </a>
-            }
-        }
-        else
-        {
-            <p class="ff-rail-empty">@L["Rail_Saved_Empty"]</p>
-        }
+        </section>
     </div>
 </aside>

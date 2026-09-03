@@ -1,5 +1,5 @@
 /* ==========================================================================
-   FfLibraryRail — the persistent field notebook.
+   FfLibraryRail — a stack of map tool cards.
    Harmony's rail geometry (a panel floating in the shell gutter) rendered on
    FaunaFinder's paper: separation comes from a hairline + soft shadow rather
    than from the value contrast a dark shell gets for free.
@@ -27,166 +27,70 @@
     color: var(--fauna-fg);
 }
 
-/* --- Chip row ----------------------------------------------------------- */
+/* --- Cards -------------------------------------------------------------- */
 
-.ff-rail-chips {
-    flex: none;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    padding: 0 16px 12px;
-}
-
-.ff-rail-chip {
-    appearance: none;
-    border: 1px solid var(--fauna-line);
-    border-radius: 999px;
-    padding: 5px 13px;
-    background: transparent;
-    color: var(--fauna-fg-2);
-    font: var(--fauna-body-sm);
-    font-weight: 500;
-    line-height: 1.35;
-    cursor: pointer;
-    transition: background-color var(--fauna-t-base) var(--fauna-ease),
-                border-color var(--fauna-t-base) var(--fauna-ease),
-                color var(--fauna-t-base) var(--fauna-ease);
-}
-
-.ff-rail-chip:hover {
-    border-color: var(--fauna-primary-300);
-    background: var(--fauna-primary-50);
-    color: var(--fauna-primary);
-}
-
-.ff-rail-chip--active,
-.ff-rail-chip--active:hover {
-    background: var(--fauna-primary);
-    border-color: var(--fauna-primary);
-    color: var(--fauna-surface);
-}
-
-.ff-rail-chip:focus-visible {
-    outline: 2px solid var(--fauna-primary-500);
-    outline-offset: 2px;
-}
-
-/* --- List --------------------------------------------------------------- */
-
-.ff-rail-list {
+.ff-rail-cards {
     flex: 1 1 auto;
     min-height: 0;
     display: flex;
     flex-direction: column;
-    gap: 2px;
-    padding: 0 8px 10px;
+    gap: 10px;
+    padding: 0 10px 12px;
     overflow-y: auto;
     overscroll-behavior: contain;
 }
 
-.ff-rail-item {
+.ff-rail-card {
     display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 6px 8px;
-    border-radius: 8px;
-    text-decoration: none;
-    color: var(--fauna-fg);
-    transition: background-color var(--fauna-t-base) var(--fauna-ease);
-}
-
-.ff-rail-item:hover {
+    flex-direction: column;
+    gap: 8px;
+    padding: 12px;
+    border: 1px solid var(--fauna-line);
+    border-radius: 12px;
     background: var(--fauna-bg-alt);
 }
 
-.ff-rail-item:focus-visible {
-    outline: 2px solid var(--fauna-primary-500);
-    outline-offset: 2px;
+.ff-rail-card-head {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin-bottom: 4px;
 }
 
-/* 42px art tile — a duotone field-guide chip holding one Font Awesome glyph.
-   The tile carries its own saturated ground, so the glyph stays white on both
-   themes; the gradients below are artwork and stay fixed for the same reason. */
-.ff-rail-art {
+/* A duotone tile like the field-guide art, so a card reads as a tool at a glance. */
+.ff-rail-card-icon {
     flex: none;
-    width: 42px;
-    height: 42px;
+    width: 34px;
+    height: 34px;
     border-radius: 9px;
     display: grid;
     place-items: center;
     color: #ffffff;
+    background: linear-gradient(135deg, var(--fauna-primary) 0%, var(--fauna-primary-500) 100%);
     box-shadow: var(--fauna-shadow-1);
 }
 
-.ff-rail-art i {
-    font-size: 17px;
+.ff-rail-card-icon i {
+    font-size: 15px;
     line-height: 1;
-    color: currentColor;
 }
 
-/* The photo variant is an <img>, so it needs the box explicitly — `display:
-   grid` centres a glyph but would stretch a bitmap. The tinted ground shows
-   only while the image is in flight. */
-.ff-rail-art--photo {
-    display: block;
-    object-fit: cover;
-    background: var(--fauna-bg-alt);
-}
-
-.ff-rail-art--place {
-    /* Teal duotone — artwork, deliberately off the brand ramp and theme-fixed. */
-    background: linear-gradient(135deg, #1d4e4e 0%, #3f8f8a 100%);
-}
-
-.ff-rail-art--species {
-    background: linear-gradient(135deg, var(--fauna-primary) 0%, var(--fauna-primary-500) 100%);
-}
-
-.ff-rail-body {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-    flex: 1 1 auto;
+.ff-rail-card-title {
     min-width: 0;
 }
 
-.ff-rail-name {
+.ff-rail-card-title h3 {
+    margin: 0;
     font: 600 0.9375rem/1.25 var(--fauna-font-serif);
     letter-spacing: var(--fauna-tracking-tight);
     color: var(--fauna-fg);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
 }
 
-/* Scientific name — serif italic, the field-guide convention. */
-.ff-rail-sci {
-    font: italic 400 0.8125rem/1.3 var(--fauna-font-serif);
-    color: var(--fauna-fg-3);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-/* Measured sublines — a time, a distance — carry the mono face. */
-.ff-rail-count {
-    font: var(--fauna-mono);
-    font-size: 11px;
-    color: var(--fauna-fg-4);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-/* The IUCN pill itself is global (fauna-tokens.css); only its seat is local. */
-.ff-rail-item .ff-status-pill {
-    flex: none;
-}
-
-.ff-rail-empty {
-    margin: 4px 8px;
+.ff-rail-card-title p {
+    margin: 2px 0 0;
     font: var(--fauna-body-sm);
-    color: var(--fauna-fg-4);
+    font-size: 12px;
+    color: var(--fauna-fg-3);
 }
 
 /* --- Coordinates ------------------------------------------------------- */
@@ -195,7 +99,6 @@
     display: flex;
     flex-direction: column;
     gap: 8px;
-    margin: 4px 8px;
 }
 
 .ff-rail-field {
@@ -236,7 +139,7 @@
 }
 
 .ff-rail-or {
-    margin: 10px 8px 6px;
+    margin: 4px 0 0;
     font: var(--fauna-mono);
     font-size: 11px;
     letter-spacing: var(--fauna-tracking-pill);
@@ -261,7 +164,7 @@
 }
 
 .ff-rail-hint {
-    margin: 0 8px;
+    margin: 0;
     font: var(--fauna-body-sm);
     font-size: 11px;
     color: var(--fauna-fg-4);
@@ -274,7 +177,7 @@
     align-items: center;
     justify-content: center;
     gap: 8px;
-    margin: 4px 8px;
+    margin: 0;
     padding: 9px 14px;
     border: 1px solid var(--fauna-line);
     border-radius: 10px;
@@ -287,10 +190,6 @@
     transition: background-color var(--fauna-t-base) var(--fauna-ease),
                 border-color var(--fauna-t-base) var(--fauna-ease),
                 color var(--fauna-t-base) var(--fauna-ease);
-}
-
-.ff-rail-form .ff-rail-prompt {
-    margin: 4px 0 0;
 }
 
 .ff-rail-prompt:hover {
@@ -309,54 +208,9 @@
     line-height: 1;
 }
 
-/* --- Loading -------------------------------------------------------------
-   MudSkeleton renders its own root, which never carries this component's
-   scope attribute — ::deep is required to reach it. */
-
-.ff-rail-skeleton-row {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 6px 8px;
-}
-
-.ff-rail-skeleton-text {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-    flex: 1 1 auto;
-    min-width: 0;
-}
-
-.ff-rail-skeleton-row ::deep .ff-rail-skeleton-art {
-    flex: none;
-    width: 42px;
-    height: 42px;
-    border-radius: 9px;
-}
-
-.ff-rail-skeleton-row ::deep .ff-rail-skeleton-name {
-    width: 70%;
-    height: 15px;
-    transform: none;
-}
-
-.ff-rail-skeleton-row ::deep .ff-rail-skeleton-count {
-    width: 45%;
-    height: 11px;
-    transform: none;
-}
-
 @media (prefers-reduced-motion: reduce) {
-    .ff-rail-chip,
-    .ff-rail-item,
-    .ff-rail-prompt {
+    .ff-rail-prompt,
+    .ff-rail-field input {
         transition: none;
-    }
-
-    /* MudSkeleton animates on the root (pulse) or on ::after (wave). */
-    .ff-rail-skeleton-row ::deep .mud-skeleton,
-    .ff-rail-skeleton-row ::deep .mud-skeleton::after {
-        animation: none;
     }
 }
