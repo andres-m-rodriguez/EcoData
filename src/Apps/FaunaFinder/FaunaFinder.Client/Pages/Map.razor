@@ -6,11 +6,13 @@
 @using EcoData.Wildlife.Contracts.Parameters
 @using EcoData.Common.Problems
 @using FaunaFinder.Client.Components.Map
+@using FaunaFinder.Client.Services.Shapes
 @using OneOf
 @inherits StatefulComponent
 @inject ISpeciesHttpClient SpeciesHttpClient
 @inject IConservationLinkHttpClient ConservationLinkHttpClient
 @inject AuthStateService Auth
+@inject ShapeAreaRequest Shapes
 @inject NavigationManager NavigationManager
 @inject ISnackbar Snackbar
 @inject ILocalizer L
@@ -200,6 +202,7 @@
     private MapCoordinate? _searchOrigin;
     private double _searchRadiusMeters = NearMeRadiusMeters;
     private IReadOnlyList<PolygonCoordinate>? _polygonCoordinates;
+    private ShapeArea? _shape;
     private bool _isDrawing;
     private bool _isLocating;
 
@@ -215,6 +218,9 @@
     [SupplyParameterFromQuery(Name = "lat")] public double? QueryLatitude { get; set; }
     [SupplyParameterFromQuery(Name = "lng")] public double? QueryLongitude { get; set; }
     [SupplyParameterFromQuery(Name = "km")] public double? QueryRadiusKm { get; set; }
+
+    // The file name of a shape the rail just parsed; the rings wait in ShapeAreaRequest.
+    [SupplyParameterFromQuery(Name = "shape")] public string? QueryShape { get; set; }
 
     // The controller only tracks the centre it was told to show, so a tap on
     // open water or a road is the closest thing to where the user is looking.
@@ -246,6 +252,7 @@
     {
         AreaSearchMode.NearMe => L["Map_NearMe_Title"],
         AreaSearchMode.Coordinates => L["Map_Coordinates_Title"],
+        AreaSearchMode.ShapeFile => L["Map_Shape_Title"],
         _ => L["Map_DrawArea_Title"],
     };
 
@@ -257,12 +264,28 @@
             _searchRadiusMeters / 1000,
             origin.Latitude.ToString("F4", System.Globalization.CultureInfo.InvariantCulture),
             origin.Longitude.ToString("F4", System.Globalization.CultureInfo.InvariantCulture)],
+        AreaSearchMode.ShapeFile when _shape is { } shape => shape.Name,
         _ => L["Map_DrawArea_Eyebrow"],
     };
 
     protected override async Task OnParametersSetAsync()
     {
         await base.OnParametersSetAsync();
+
+        if (QueryShape is not null)
+        {
+            if (Shapes.Pending is not { } area)
+            {
+                // A reload: the rings lived only in memory, so there is nothing to show.
+                if (_searchMode != AreaSearchMode.ShapeFile)
+                    NavigationManager.NavigateTo("/", replace: true);
+                return;
+            }
+
+            Shapes.Pending = null;
+            await SearchShapeAsync(area);
+            return;
+        }
 
         if (QueryLatitude is not { } latitude || QueryLongitude is not { } longitude)
             return;
@@ -504,6 +527,48 @@
         }
     }
 
+    private async Task SearchShapeAsync(ShapeArea area)
+    {
+        _selectedMunicipality = null;
+        CloseSpeciesLocations();
+
+        _searchMode = AreaSearchMode.ShapeFile;
+        _shape = area;
+        _searchOrigin = null;
+        _polygonCoordinates = null;
+        await RevealPanelAsync();
+
+        var rings = area.Polygons
+            .Select(ring => ring.Select(point => new MapCoordinate(point.Latitude, point.Longitude)).ToList())
+            .ToList();
+        _mapController.ShowPolygons(rings);
+
+        await SearchAreaState.TryExecute();
+        ShowNearbyCircles(SearchAreaState.Result);
+    }
+
+    // Each ring is its own search; a species found in several keeps its nearest hit.
+    private async Task<OneOf<IReadOnlyList<SpeciesNearbyDto>, RequestFailed>> SearchPolygonsAsync(
+        IReadOnlyList<IReadOnlyList<PolygonCoordinate>> polygons,
+        CancellationToken ct)
+    {
+        var nearest = new Dictionary<Guid, SpeciesNearbyDto>();
+        foreach (var polygon in polygons)
+        {
+            var result = await SpeciesHttpClient.GetInPolygonAsync(polygon, ct);
+            if (!result.TryPickT0(out var found, out var error))
+                return error;
+
+            foreach (var species in found)
+            {
+                if (!nearest.TryGetValue(species.Id, out var known) || species.DistanceMeters < known.DistanceMeters)
+                    nearest[species.Id] = species;
+            }
+        }
+
+        return nearest.Values.OrderBy(s => s.DistanceMeters).ToList();
+    }
+
     // Near me and Coordinates are the same search with a different origin.
     private async Task SearchAroundAsync(MapCoordinate origin, double radiusMeters, AreaSearchMode mode)
     {
@@ -586,6 +651,8 @@
                 await SpeciesHttpClient.GetNearbyAsync(origin.Latitude, origin.Longitude, _searchRadiusMeters, ct),
             AreaSearchMode.DrawnArea when _polygonCoordinates is { } polygon =>
                 await SpeciesHttpClient.GetInPolygonAsync(polygon, ct),
+            AreaSearchMode.ShapeFile when _shape is { } shape =>
+                await SearchPolygonsAsync(shape.Polygons, ct),
             _ => OneOf<IReadOnlyList<SpeciesNearbyDto>, RequestFailed>.FromT0([]),
         };
 
@@ -652,14 +719,16 @@
     {
         if (_searchMode == AreaSearchMode.None && !_isDrawing) return;
 
-        // The URL carried the coordinates in; drop them so a repeat from the rail
-        // is a new navigation and a reload does not reopen the search.
-        if (_searchMode == AreaSearchMode.Coordinates)
+        // The URL carried the search in; drop it so a repeat from the rail is a
+        // new navigation and a reload does not reopen the search.
+        if (_searchMode is AreaSearchMode.Coordinates or AreaSearchMode.ShapeFile)
             NavigationManager.NavigateTo("/", replace: true);
 
         _searchMode = AreaSearchMode.None;
         _searchOrigin = null;
         _polygonCoordinates = null;
+        _shape = null;
+        _mapController.ClearPolygons();
         _isDrawing = false;
         _mapController.ClearCircles();
         _mapController.ClearSearchRadius();
@@ -673,6 +742,7 @@
         NearMe,
         Coordinates,
         DrawnArea,
+        ShapeFile,
     }
 
     [Command]

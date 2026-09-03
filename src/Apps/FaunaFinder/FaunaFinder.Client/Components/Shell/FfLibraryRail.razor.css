@@ -235,7 +235,39 @@
     color: var(--mud-palette-error);
 }
 
-/* The submit. A full-width outline button, not a chip. */
+.ff-rail-or {
+    margin: 10px 8px 6px;
+    font: var(--fauna-mono);
+    font-size: 11px;
+    letter-spacing: var(--fauna-tracking-pill);
+    text-transform: uppercase;
+    text-align: center;
+    color: var(--fauna-fg-4);
+}
+
+/* The label is the button; the real file input sits invisibly on top of it so
+   a click anywhere opens the picker. InputFile is a component, hence ::deep. */
+.ff-rail-file {
+    position: relative;
+    overflow: hidden;
+}
+
+.ff-rail-file ::deep input {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    opacity: 0;
+    cursor: pointer;
+}
+
+.ff-rail-hint {
+    margin: 0 8px;
+    font: var(--fauna-body-sm);
+    font-size: 11px;
+    color: var(--fauna-fg-4);
+}
+
+/* The submit and the upload. A full-width outline button, not a chip. */
 .ff-rail-prompt {
     appearance: none;
     display: flex;

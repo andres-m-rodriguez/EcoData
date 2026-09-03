@@ -36,6 +36,7 @@
         Controller.OnCircleFocusRequested += HandleCircleFocusRequested;
         Controller.OnSearchRadiusChanged += HandleSearchRadiusChanged;
         Controller.OnPolygonDrawActionRequested += HandlePolygonDrawActionRequested;
+        Controller.OnPolygonsChanged += HandlePolygonsChanged;
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -64,6 +65,7 @@
             await UpdateGeoJson();
             await UpdateCircles();
             await UpdateSearchRadius();
+            await UpdatePolygons();
         }
     }
 
@@ -171,6 +173,23 @@
         if (!_isInitialized || _mapInstance is null || _module is null) return;
 
         await InvokeAsync(async () => await UpdateSearchRadius());
+    }
+
+    private async void HandlePolygonsChanged()
+    {
+        if (!_isInitialized || _mapInstance is null || _module is null) return;
+
+        await InvokeAsync(async () => await UpdatePolygons());
+    }
+
+    private async Task UpdatePolygons()
+    {
+        if (_mapInstance is null || _module is null) return;
+
+        var polygons = Controller.Polygons
+            .Select(ring => ring.Select(point => new { lat = point.Latitude, lng = point.Longitude }).ToArray())
+            .ToArray();
+        await _module.InvokeVoidAsync("setPolygons", _mapInstance, polygons);
     }
 
     private async Task UpdateSearchRadius()
@@ -294,6 +313,7 @@
         Controller.OnCircleFocusRequested -= HandleCircleFocusRequested;
         Controller.OnSearchRadiusChanged -= HandleSearchRadiusChanged;
         Controller.OnPolygonDrawActionRequested -= HandlePolygonDrawActionRequested;
+        Controller.OnPolygonsChanged -= HandlePolygonsChanged;
 
         if (Controller is MapController<TMarker> mapController)
         {

@@ -2,6 +2,7 @@
 @inherits EcoDataComponent
 @using System.Globalization
 @using FaunaFinder.Client.Services.FieldNotebook
+@using FaunaFinder.Client.Services.Shapes
 @inject IFieldNotebook Notebook
 
 <aside class="ff-rail">
@@ -52,6 +53,19 @@
                     @L["Rail_Coordinates_Show"]
                 </button>
             </form>
+
+            <p class="ff-rail-or">@L["Rail_Or"]</p>
+
+            <label class="ff-rail-prompt ff-rail-file">
+                <i class="fa-solid fa-file-arrow-up" aria-hidden="true"></i>
+                @(_readingShape ? L["Rail_Shape_Reading"] : L["Rail_Shape_Upload"])
+                <InputFile OnChange="LoadShapeAsync" accept=".geojson,.json,.kml,.zip,.shp" disabled="@_readingShape" />
+            </label>
+            <p class="ff-rail-hint">@L["Rail_Shape_Formats"]</p>
+            @if (_shapeError is { } shapeError)
+            {
+                <p class="ff-rail-error">@shapeError</p>
+            }
         }
         else if (LoadSavedState.Result is null)
         {
