@@ -67,7 +67,4 @@ public sealed class CachedSpeciesRepository(SpeciesRepository inner, IMemoryCach
         IReadOnlyList<PolygonCoordinate> coordinates,
         CancellationToken cancellationToken = default
     ) => inner.GetInPolygonAsync(coordinates, cancellationToken);
-
-    public Task<IReadOnlyList<HeatmapPointDto>> GetHeatmapAsync(CancellationToken cancellationToken = default) =>
-        inner.GetHeatmapAsync(cancellationToken);
 }

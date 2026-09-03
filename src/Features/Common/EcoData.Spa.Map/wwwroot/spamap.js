@@ -15,7 +15,6 @@ export function initialize(element, lat, lng, zoom, dotNetRef) {
     map._dotNetRef = dotNetRef;
     map._spaSearchRadius = null;
     map._spaUserLocation = null;
-    map._spaHeat = { layer: null, points: [], filter: 'all' };
     map._spaDraw = { active: false, points: [], markers: [], polygon: null, previewLine: null, handlers: null };
     map._spaGeoJsonGeneration = 0;
 
@@ -484,69 +483,6 @@ export function clearDrawnPolygon(map) {
     draw.markers.forEach(m => map.removeLayer(m));
     draw.markers = [];
     draw.points = [];
-}
-
-// ===== Heatmap (requires the leaflet.heat plugin; no-op without it) =====
-
-export function showHeatmap(map, points, filter) {
-    if (!map) return;
-
-    map._spaHeat.points = points;
-    map._spaHeat.filter = filter || 'all';
-    updateHeatLayer(map);
-}
-
-export function setHeatmapFilter(map, filter) {
-    if (!map) return;
-
-    map._spaHeat.filter = filter;
-    updateHeatLayer(map);
-}
-
-export function hideHeatmap(map) {
-    if (!map) return;
-
-    if (map._spaHeat.layer) {
-        map.removeLayer(map._spaHeat.layer);
-        map._spaHeat.layer = null;
-    }
-    map._spaHeat.points = [];
-}
-
-function updateHeatLayer(map) {
-    if (typeof L.heatLayer !== 'function') {
-        console.warn('spamap: leaflet.heat plugin is not loaded; heatmap is unavailable.');
-        return;
-    }
-
-    if (map._spaHeat.layer) {
-        map.removeLayer(map._spaHeat.layer);
-        map._spaHeat.layer = null;
-    }
-
-    let filtered = map._spaHeat.points;
-    if (map._spaHeat.filter === 'fauna') {
-        filtered = filtered.filter(p => p.isFauna);
-    } else if (map._spaHeat.filter === 'flora') {
-        filtered = filtered.filter(p => !p.isFauna);
-    }
-
-    if (filtered.length === 0) return;
-
-    const heatData = filtered.map(p => [p.latitude, p.longitude, p.intensity]);
-    map._spaHeat.layer = L.heatLayer(heatData, {
-        radius: 25,
-        blur: 15,
-        maxZoom: 17,
-        max: 1.0,
-        gradient: {
-            0.0: '#3b82f6',
-            0.25: '#22c55e',
-            0.5: '#eab308',
-            0.75: '#f97316',
-            1.0: '#ef4444'
-        }
-    }).addTo(map);
 }
 
 export function dispose(map) {

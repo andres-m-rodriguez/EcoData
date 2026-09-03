@@ -147,16 +147,6 @@ public static class SpeciesEndpoints
             )
             .WithName("GetSpeciesInPolygon");
 
-        group
-            .MapGet(
-                "/heatmap",
-                async Task<Ok<IReadOnlyList<HeatmapPointDto>>> (
-                    ISpeciesRepository repository,
-                    CancellationToken ct
-                ) => TypedResults.Ok(await repository.GetHeatmapAsync(ct))
-            )
-            .WithName("GetSpeciesHeatmap");
-
         return app;
     }
 }

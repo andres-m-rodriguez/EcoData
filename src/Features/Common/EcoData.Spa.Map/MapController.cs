@@ -42,11 +42,6 @@ public class MapController<TMarker> : IMapController<TMarker>
     public event Action<MapPolygonDrawAction>? OnPolygonDrawActionRequested;
     public event Action<IReadOnlyList<MapCoordinate>>? OnPolygonDrawn;
     public event Action? OnPolygonDrawCancelled;
-    public event Action? OnHeatmapChanged;
-
-    internal IReadOnlyList<MapHeatPoint> HeatPoints { get; private set; } = [];
-    internal MapHeatmapFilter HeatmapFilter { get; private set; } = MapHeatmapFilter.All;
-    internal bool HeatmapVisible { get; private set; }
 
     public void SetMarkers(IEnumerable<TMarker> markers)
     {
@@ -177,27 +172,6 @@ public class MapController<TMarker> : IMapController<TMarker>
     public void ClearDrawnPolygon()
     {
         OnPolygonDrawActionRequested?.Invoke(MapPolygonDrawAction.ClearDrawn);
-    }
-
-    public void ShowHeatmap(IReadOnlyList<MapHeatPoint> points, MapHeatmapFilter filter = MapHeatmapFilter.All)
-    {
-        HeatPoints = points;
-        HeatmapFilter = filter;
-        HeatmapVisible = true;
-        OnHeatmapChanged?.Invoke();
-    }
-
-    public void SetHeatmapFilter(MapHeatmapFilter filter)
-    {
-        HeatmapFilter = filter;
-        OnHeatmapChanged?.Invoke();
-    }
-
-    public void HideHeatmap()
-    {
-        HeatmapVisible = false;
-        HeatPoints = [];
-        OnHeatmapChanged?.Invoke();
     }
 
     public async Task<MapGeolocationResult?> GetCurrentPositionAsync()
