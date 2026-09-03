@@ -32,5 +32,12 @@
                 <MudText Typo="Typo.caption">@L["Nav_Browse"]</MudText>
             </MudStack>
         </MudButton>
+        <MudButton Variant="Variant.Text" Color="@TabColor(NavigationTab.Account)" Class="@TabClass(NavigationTab.Account)"
+                   OnClick="@(() => GoTo(NavigationTab.Account))">
+            <MudStack AlignItems="AlignItems.Center" Spacing="0">
+                <MudIcon Icon="@Icons.Material.Filled.Person" Size="Size.Small" />
+                <MudText Typo="Typo.caption">@L["Nav_Account"]</MudText>
+            </MudStack>
+        </MudButton>
     </MudStack>
 </nav>

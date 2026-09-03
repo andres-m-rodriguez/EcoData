@@ -1,0 +1,403 @@
+.ff-account-page {
+    min-height: 100%;
+}
+
+.ff-account-column {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+/* --------------------------------------------------------------------------
+   Signed-out welcome
+   -------------------------------------------------------------------------- */
+.ff-account-welcome {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    padding: 48px 16px;
+}
+
+.ff-account-welcome ::deep .ff-account-welcome-title {
+    font-family: var(--fauna-font-serif);
+    color: var(--fauna-primary);
+}
+
+.ff-account-welcome ::deep .ff-account-welcome-body {
+    color: var(--fauna-fg-3);
+    max-width: 420px;
+}
+
+.ff-account-welcome-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 8px;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+/* --------------------------------------------------------------------------
+   Editorial header
+   -------------------------------------------------------------------------- */
+.ff-account-head {
+    max-width: 640px;
+    margin-bottom: 40px;
+}
+
+.ff-account-eyebrow {
+    display: block;
+    margin-bottom: 12px;
+    font: 700 11px/1 var(--fauna-font-sans);
+    letter-spacing: var(--fauna-tracking-eyebrow);
+    text-transform: uppercase;
+    color: var(--fauna-accent);
+}
+
+.ff-account-title {
+    margin: 0 0 16px;
+    font: 700 clamp(2rem, 4vw, 3rem)/1.1 var(--fauna-font-serif);
+    letter-spacing: var(--fauna-tracking-tight);
+    color: var(--fauna-primary);
+}
+
+.ff-account-title em {
+    font-style: italic;
+    font-weight: 400;
+    opacity: 0.85;
+}
+
+.ff-account-lede {
+    margin: 0;
+    max-width: 560px;
+    font: 400 16px/1.7 var(--fauna-font-sans);
+    color: var(--fauna-fg-3);
+}
+
+/* --------------------------------------------------------------------------
+   Profile card (left column)
+   -------------------------------------------------------------------------- */
+.ff-profile-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    padding: 24px 20px;
+    background: var(--fauna-surface);
+    border: 1px solid var(--fauna-line);
+    border-radius: 12px;
+}
+
+.ff-profile-card ::deep .ff-profile-avatar {
+    width: 72px;
+    height: 72px;
+    font: 600 28px/1 var(--fauna-font-sans);
+}
+
+.ff-profile-identity {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    min-width: 0;
+    max-width: 100%;
+}
+
+.ff-profile-name {
+    font: 600 18px/1.3 var(--fauna-font-serif);
+    color: var(--fauna-primary);
+    text-align: center;
+}
+
+.ff-profile-email {
+    font: 400 13px/1.3 var(--fauna-font-sans);
+    color: var(--fauna-fg-3);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 100%;
+}
+
+.ff-role-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 12px;
+    border-radius: 999px;
+    border: 1px solid var(--fauna-line);
+    background: var(--fauna-bg-alt);
+    color: var(--fauna-fg-3);
+    font: 700 11px/1 var(--fauna-font-sans);
+    letter-spacing: var(--fauna-tracking-pill);
+    text-transform: uppercase;
+}
+
+.ff-role-pill.is-approved {
+    background: var(--fauna-primary-50);
+    border-color: var(--fauna-primary-200);
+    color: var(--fauna-primary-700);
+}
+
+.ff-role-pill.is-pending {
+    background: color-mix(in srgb, var(--fauna-accent-warm) 12%, transparent);
+    border-color: color-mix(in srgb, var(--fauna-accent-warm) 35%, transparent);
+    color: var(--fauna-accent-warm);
+}
+
+.ff-role-pill.is-rejected {
+    background: color-mix(in srgb, var(--mud-palette-error) 8%, transparent);
+    border-color: color-mix(in srgb, var(--mud-palette-error) 30%, transparent);
+    color: var(--mud-palette-error);
+}
+
+.ff-role-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: currentColor;
+}
+
+.ff-profile-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px 16px;
+    width: 100%;
+    margin: 8px 0 0;
+    padding-top: 16px;
+    border-top: 1px solid var(--fauna-line-soft);
+}
+
+.ff-profile-stat {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.ff-profile-stat dt {
+    font: 700 10px/1 var(--fauna-font-sans);
+    letter-spacing: var(--fauna-tracking-eyebrow);
+    text-transform: uppercase;
+    color: var(--fauna-fg-4);
+}
+
+.ff-profile-stat dd {
+    margin: 0;
+    font: 600 15px/1.3 var(--fauna-font-serif);
+    color: var(--fauna-primary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* --------------------------------------------------------------------------
+   Links to the sighting pages (left column)
+   -------------------------------------------------------------------------- */
+.ff-account-links {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.ff-account-link {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 18px 20px;
+    background: var(--fauna-surface);
+    border: 1px solid var(--fauna-line);
+    border-radius: 12px;
+    color: var(--fauna-fg);
+    text-decoration: none;
+    transition: border-color var(--fauna-t-base) var(--fauna-ease),
+                background-color var(--fauna-t-base) var(--fauna-ease);
+}
+
+.ff-account-link:hover {
+    background: var(--fauna-primary-50);
+    border-color: var(--fauna-primary-200);
+}
+
+.ff-account-link:focus-visible {
+    outline: 2px solid var(--fauna-primary-400);
+    outline-offset: 2px;
+}
+
+.ff-account-link ::deep .ff-account-link-icon {
+    flex: none;
+    color: var(--fauna-primary);
+}
+
+.ff-account-link-text {
+    flex: 1 1 auto;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.ff-account-link-title {
+    font: 600 15px/1.3 var(--fauna-font-sans);
+}
+
+.ff-account-link-desc {
+    font: 400 13px/1.4 var(--fauna-font-sans);
+    color: var(--fauna-fg-3);
+}
+
+.ff-account-link-count {
+    flex: none;
+    min-width: 24px;
+    padding: 3px 8px;
+    border-radius: 999px;
+    background: var(--mud-palette-warning);
+    color: var(--mud-palette-warning-text);
+    font: 700 12px/1 var(--fauna-font-sans);
+    text-align: center;
+}
+
+.ff-account-link ::deep .ff-account-link-chevron {
+    flex: none;
+    color: var(--fauna-fg-4);
+}
+
+/* --------------------------------------------------------------------------
+   Recent sightings (right column)
+   -------------------------------------------------------------------------- */
+.ff-recent-card {
+    padding: 20px 22px;
+    background: var(--fauna-surface);
+    border: 1px solid var(--fauna-line);
+    border-radius: 12px;
+}
+
+.ff-recent-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+}
+
+.ff-recent-title {
+    margin: 0;
+    font: 600 20px/1.3 var(--fauna-font-serif);
+    letter-spacing: var(--fauna-tracking-tight);
+    color: var(--fauna-primary);
+}
+
+.ff-recent-lede {
+    margin: 4px 0 0;
+    font: 400 13px/1.4 var(--fauna-font-sans);
+    color: var(--fauna-fg-3);
+}
+
+.ff-recent-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.ff-recent-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    min-height: 64px;
+    padding: 10px 14px;
+    background: var(--fauna-bg-alt);
+    border: 1px solid var(--fauna-line-soft);
+    border-radius: 10px;
+}
+
+.ff-recent-row-main {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.ff-recent-row-name {
+    font: 500 15px/1.3 var(--fauna-font-sans);
+    color: var(--fauna-fg);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.ff-recent-row-sci {
+    font: italic 400 13px/1.3 var(--fauna-font-serif);
+    color: var(--fauna-fg-4);
+}
+
+.ff-recent-row-meta {
+    font: var(--fauna-mono);
+    font-size: 11px;
+    color: var(--fauna-fg-4);
+}
+
+.ff-recent-row .ff-status-pill {
+    flex-shrink: 0;
+    text-transform: uppercase;
+}
+
+/* --------------------------------------------------------------------------
+   Sign out (right column)
+   -------------------------------------------------------------------------- */
+.ff-signout-card {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 16px 18px;
+    background: color-mix(in srgb, var(--mud-palette-error) 4%, transparent);
+    border: 1px solid color-mix(in srgb, var(--mud-palette-error) 25%, transparent);
+    border-radius: 12px;
+}
+
+.ff-signout-text {
+    flex: 1 1 auto;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.ff-signout-title {
+    font: 600 15px/1.3 var(--fauna-font-sans);
+    color: var(--mud-palette-error);
+}
+
+.ff-signout-desc {
+    font: 400 13px/1.4 var(--fauna-font-sans);
+    color: var(--fauna-fg-3);
+}
+
+.ff-signout-card ::deep .ff-signout-button {
+    flex: none;
+    white-space: nowrap;
+}
+
+@media (max-width: 960px) {
+    .ff-account-head {
+        margin-bottom: 24px;
+    }
+}
+
+@media (max-width: 600px) {
+    .ff-signout-card {
+        flex-wrap: wrap;
+    }
+
+    .ff-signout-card ::deep .ff-signout-button {
+        width: 100%;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .ff-account-link {
+        transition: none;
+    }
+}

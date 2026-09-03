@@ -1,0 +1,204 @@
+@page "/account"
+@inherits EcoDataComponent
+@using System.Globalization
+@inject AuthStateService Auth
+@inject INavigationManager Navigation
+@inject INavbarManager Navbar
+
+<PageTitle>FaunaFinder | @L["Account_PageTitle"]</PageTitle>
+
+<div class="ff-account-page">
+    @if (!Auth.IsInitialized)
+    {
+        <MudContainer MaxWidth="MaxWidth.Large" Class="py-6">
+            <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="220px" Class="mb-3 rounded-lg" />
+            <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="72px" Class="mb-2 rounded-lg" />
+            <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="72px" Class="mb-2 rounded-lg" />
+        </MudContainer>
+    }
+    else if (!Auth.IsAuthenticated)
+    {
+        <MudContainer MaxWidth="MaxWidth.Small" Class="py-8">
+            <div class="ff-account-welcome">
+                <MudAvatar Color="Color.Primary" Size="Size.Large">
+                    <MudIcon Icon="@Icons.Material.Filled.Person" />
+                </MudAvatar>
+                <MudText Typo="Typo.h5" Align="Align.Center" Class="ff-account-welcome-title">@L["Account_Welcome_Title"]</MudText>
+                <MudText Typo="Typo.body1" Align="Align.Center" Class="ff-account-welcome-body">@L["Account_Welcome_Body"]</MudText>
+                <div class="ff-account-welcome-actions">
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" Href="/login">@L["Auth_SignIn"]</MudButton>
+                    <MudButton Variant="Variant.Outlined" Color="Color.Primary" Href="/register">@L["Auth_CreateAccount"]</MudButton>
+                </div>
+            </div>
+        </MudContainer>
+    }
+    else
+    {
+        <MudContainer MaxWidth="MaxWidth.Large" Class="py-6">
+            <header class="ff-account-head">
+                <span class="ff-account-eyebrow">@L["Account_Eyebrow"]</span>
+                <h1 class="ff-account-title">@L["Account_Title"] <em>@L["Account_Title_Em"]</em></h1>
+                <p class="ff-account-lede">@L["Account_Lede"]</p>
+            </header>
+
+            <MudGrid Spacing="4">
+                <MudItem xs="12" md="4">
+                    <div class="ff-account-column">
+                        <section class="ff-profile-card">
+                            <MudAvatar Color="Color.Primary" Class="ff-profile-avatar">@UserInitial</MudAvatar>
+                            <div class="ff-profile-identity">
+                                <span class="ff-profile-name">@Auth.CurrentUser?.DisplayName</span>
+                                <span class="ff-profile-email">@Auth.CurrentUser?.Email</span>
+                            </div>
+                            <span class="@RolePillClass">
+                                <span class="ff-role-dot"></span>
+                                @RoleText
+                            </span>
+                            <dl class="ff-profile-stats">
+                                <div class="ff-profile-stat">
+                                    <dt>@L["Account_MemberSince"]</dt>
+                                    <dd>@MemberSince</dd>
+                                </div>
+                                @if (Auth.Organization is { } organization)
+                                {
+                                    <div class="ff-profile-stat">
+                                        <dt>@L["Account_Organization"]</dt>
+                                        <dd>@organization.Name</dd>
+                                    </div>
+                                }
+                            </dl>
+                        </section>
+
+                        <nav class="ff-account-links" aria-label="@L["Auth_AccountLabel"]">
+                            <a href="/sightings/mine" class="ff-account-link">
+                                <MudIcon Icon="@Icons.Material.Outlined.FormatListBulleted" Class="ff-account-link-icon" />
+                                <span class="ff-account-link-text">
+                                    <span class="ff-account-link-title">@L["Sighting_Mine_Title"]</span>
+                                    <span class="ff-account-link-desc">@L["Account_Link_Mine_Desc"]</span>
+                                </span>
+                                <MudIcon Icon="@Icons.Material.Filled.ChevronRight" Size="Size.Small" Class="ff-account-link-chevron" />
+                            </a>
+                            @if (Auth.CanReviewSightings)
+                            {
+                                <a href="/sightings/review" class="ff-account-link">
+                                    <MudIcon Icon="@Icons.Material.Outlined.FactCheck" Class="ff-account-link-icon" />
+                                    <span class="ff-account-link-text">
+                                        <span class="ff-account-link-title">@L["Sighting_Review_Nav"]</span>
+                                        <span class="ff-account-link-desc">@L["Account_Link_Review_Desc"]</span>
+                                    </span>
+                                    @if (LoadPendingCountState.Result > 0)
+                                    {
+                                        <span class="ff-account-link-count">@LoadPendingCountState.Result</span>
+                                    }
+                                    <MudIcon Icon="@Icons.Material.Filled.ChevronRight" Size="Size.Small" Class="ff-account-link-chevron" />
+                                </a>
+                            }
+                        </nav>
+                    </div>
+                </MudItem>
+
+                <MudItem xs="12" md="8">
+                    <div class="ff-account-column">
+                        <section class="ff-recent-card">
+                            <header class="ff-recent-head">
+                                <div>
+                                    <h2 class="ff-recent-title">@L["Account_Recent_Title"]</h2>
+                                    <p class="ff-recent-lede">@L["Account_Recent_Lede"]</p>
+                                </div>
+                                <MudButton Variant="Variant.Text"
+                                           Color="Color.Primary"
+                                           EndIcon="@Icons.Material.Filled.ArrowForward"
+                                           Href="/sightings/mine">
+                                    @L["Account_Recent_SeeAll"]
+                                </MudButton>
+                            </header>
+
+                            @if (LoadRecentState.Result is not { } recent)
+                            {
+                                @for (var i = 0; i < 3; i++)
+                                {
+                                    <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="64px" Class="mb-2 rounded-lg" />
+                                }
+                            }
+                            else if (recent.Count == 0)
+                            {
+                                <NuiEmptyState Icon="@Icons.Material.Outlined.AddLocationAlt"
+                                               Title="@L[EmptyTitleKey]"
+                                               Description="@L[EmptyDescriptionKey]">
+                                    <ActionContent>
+                                        <MudButton Variant="Variant.Filled" Color="Color.Primary" Href="/sightings/new">
+                                            @L["Sighting_Report_Action"]
+                                        </MudButton>
+                                    </ActionContent>
+                                </NuiEmptyState>
+                            }
+                            else
+                            {
+                                <ul class="ff-recent-list">
+                                    @foreach (var sighting in recent)
+                                    {
+                                        var commonName = Locale.Resolve(sighting.SpeciesCommonName, fallback: sighting.SpeciesScientificName);
+                                        <li class="ff-recent-row">
+                                            <div class="ff-recent-row-main">
+                                                <span class="ff-recent-row-name">@commonName</span>
+                                                @if (!SpeciesNaming.EchoesScientificName(commonName, sighting.SpeciesScientificName))
+                                                {
+                                                    <span class="ff-recent-row-sci">@sighting.SpeciesScientificName</span>
+                                                }
+                                                <span class="ff-recent-row-meta">@sighting.ObservedAtUtc.ToLocalTime().ToString("g", CultureInfo.GetCultureInfo(Locale.Code))</span>
+                                            </div>
+                                            <span class="ff-status-pill status-@sighting.Status.ToString().ToLowerInvariant()">@L["Sighting_Status_" + sighting.Status]</span>
+                                        </li>
+                                    }
+                                </ul>
+                            }
+                        </section>
+
+                        <section class="ff-signout-card">
+                            <MudIcon Icon="@Icons.Material.Outlined.Logout" Color="Color.Error" />
+                            <div class="ff-signout-text">
+                                <span class="ff-signout-title">@L["Account_SignOut_Title"]</span>
+                                <span class="ff-signout-desc">@L["Account_SignOut_Body"]</span>
+                            </div>
+                            <MudButton Variant="Variant.Outlined"
+                                       Color="Color.Error"
+                                       StartIcon="@Icons.Material.Outlined.Logout"
+                                       OnClick="SignOutState.TryExecute"
+                                       Disabled="SignOutState.IsLoading"
+                                       Class="ff-signout-button">
+                                @L["Auth_SignOut"]
+                            </MudButton>
+                        </section>
+                    </div>
+                </MudItem>
+            </MudGrid>
+        </MudContainer>
+    }
+</div>
+
+@code {
+    private string UserInitial => Auth.CurrentUser?.DisplayName is { Length: > 0 } name
+        ? name[..1].ToUpperInvariant()
+        : "?";
+
+    private string MemberSince =>
+        Auth.CurrentUser?.CreatedAt.ToString("MMM yyyy", CultureInfo.GetCultureInfo(Locale.Code)) ?? "—";
+
+    private string RoleText => Auth.AccessRequest?.Status switch
+    {
+        "Pending" => L["Auth_Request_Pending"],
+        "Approved" => L["Auth_Request_Approved"],
+        "Rejected" => L["Auth_Request_Rejected"],
+        _ when Auth.CanReviewSightings => L["Account_Role_Reviewer"],
+        _ => L["Account_Role_Member"],
+    };
+
+    private string RolePillClass => Auth.AccessRequest?.Status switch
+    {
+        "Pending" => "ff-role-pill is-pending",
+        "Rejected" => "ff-role-pill is-rejected",
+        "Approved" => "ff-role-pill is-approved",
+        _ when Auth.CanReviewSightings => "ff-role-pill is-approved",
+        _ => "ff-role-pill",
+    };
+}

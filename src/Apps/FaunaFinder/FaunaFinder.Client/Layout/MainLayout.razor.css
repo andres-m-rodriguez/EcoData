@@ -475,16 +475,17 @@
     }
 
     ::deep .ff-nav-link,
-    ::deep .ff-lang-menu > .mud-button-root {
+    ::deep .ff-lang-menu > .mud-button-root,
+    .ff-user-pill {
         transition: none;
     }
 }
 
 /* --------------------------------------------------------------------------
-   Account — sign-in button and account menu in the app bar.
+   Account — sign-in button and the profile pill that opens /account.
    -------------------------------------------------------------------------- */
 ::deep .ff-account-badge {
-    margin-left: 4px;
+    margin-left: 8px;
 }
 
 ::deep .ff-signin-button {
@@ -492,35 +493,58 @@
     color: var(--fauna-fg-2);
 }
 
-.ff-account-header {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-    padding: 8px 16px;
-    min-width: 200px;
+.ff-user-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 12px 4px 4px;
+    border-radius: 999px;
+    border: 1px solid var(--fauna-line);
+    background: var(--fauna-surface);
+    color: var(--fauna-fg-2);
+    font: 600 12px/1 var(--fauna-font-sans);
+    text-decoration: none;
+    white-space: nowrap;
+    transition: background-color var(--fauna-t-base) var(--fauna-ease),
+                border-color var(--fauna-t-base) var(--fauna-ease),
+                color var(--fauna-t-base) var(--fauna-ease);
 }
 
-.ff-account-name {
-    font: 600 13px/1.3 var(--fauna-font-sans);
+.ff-user-pill:hover {
+    color: var(--fauna-primary);
+    background: var(--fauna-primary-50);
+    border-color: var(--fauna-primary-200);
 }
 
-.ff-account-email {
-    font: 400 11px/1.3 var(--fauna-font-sans);
-    color: var(--fauna-fg-4);
+.ff-user-pill:focus-visible {
+    outline: 2px solid var(--fauna-primary);
+    outline-offset: 2px;
 }
 
-.ff-account-status {
-    padding: 6px 16px;
-    font: 500 11px/1.4 var(--fauna-font-sans);
-    color: var(--fauna-fg-3);
+.ff-user-initial {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: var(--fauna-primary);
+    color: var(--fauna-surface);
+    font-size: 11px;
 }
 
-/* Pending-review count on the desktop nav entry and the account menu item.
-   The menu badge sits outside its label, so the root reserves the room. */
+/* The name is desktop chrome; on phones the initial alone is the pill. */
+@media (max-width: 959px) {
+    .ff-user-pill {
+        padding-right: 4px;
+    }
+
+    .ff-user-name {
+        display: none;
+    }
+}
+
+/* Pending-review count on the desktop nav entry. */
 ::deep .ff-nav-badge {
     margin-left: 2px;
-}
-
-::deep .ff-account-review-badge {
-    margin-right: 28px;
 }
