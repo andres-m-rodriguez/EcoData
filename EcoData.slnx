@@ -40,6 +40,8 @@
     <Project Path="src/Features/Common/EcoData.Common.Messaging/EcoData.Common.Messaging.csproj" />
     <Project Path="src/Features/Common/EcoData.Common.Pagination/EcoData.Common.Pagination.csproj" />
     <Project Path="src/Features/Common/EcoData.Common.Pagination.Blazor/EcoData.Common.Pagination.Blazor.csproj" />
+    <Project Path="src/Features/Common/EcoData.Common.Problems/EcoData.Common.Problems.csproj" />
+    <Project Path="src/Features/Common/EcoData.Common.Problems.AspNetCore/EcoData.Common.Problems.AspNetCore.csproj" />
     <Project Path="src/Features/Common/EcoData.Common.Problems.Contracts/EcoData.Common.Problems.Contracts.csproj" />
     <Project Path="src/Features/Common/EcoData.NativeUi/EcoData.NativeUi.csproj" />
     <Project Path="src/Features/Common/EcoData.Spa.Blazor/EcoData.Spa.Blazor.csproj" />
@@ -95,6 +97,7 @@
   </Folder>
   <Folder Name="/Tests/">
     <Project Path="tests/EcoData.Analyzers.Tests/EcoData.Analyzers.Tests.csproj" />
+    <Project Path="tests/EcoData.Common.Problems.Tests/EcoData.Common.Problems.Tests.csproj" />
     <Project Path="tests/EcoData.IntegrationTests/EcoData.IntegrationTests.csproj" />
   </Folder>
 </Solution>
