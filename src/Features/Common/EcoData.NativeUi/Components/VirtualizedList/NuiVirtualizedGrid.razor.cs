@@ -26,6 +26,7 @@ public partial class NuiVirtualizedGrid<TItem, TParams> : ComponentBase
     private bool _isEmpty;
     private bool _isInitialLoading = true;
     private int _generation;
+    private HttpRequestException? _loadError;
     private Virtualize<IReadOnlyList<TItem>>? _virtualizeRef;
 
     [Parameter, EditorRequired]
@@ -45,6 +46,12 @@ public partial class NuiVirtualizedGrid<TItem, TParams> : ComponentBase
     [Parameter] public RenderFragment? LoadingTemplate { get; set; }
 
     [Parameter] public RenderFragment? EmptyTemplate { get; set; }
+
+    /// <summary>
+    /// Shown when a page could not be fetched. The stream has no other error channel:
+    /// a status code of null or zero means the server was never reached.
+    /// </summary>
+    [Parameter] public RenderFragment<HttpRequestException>? ErrorTemplate { get; set; }
 
     /// <summary>Height of a single row in pixels. Used by Virtualize for scroll math.</summary>
     [Parameter] public float ItemSize { get; set; } = 400;
@@ -85,16 +92,24 @@ public partial class NuiVirtualizedGrid<TItem, TParams> : ComponentBase
     {
         var parameters = ParametersBuilder(null);
 
-        await foreach (var item in ItemsProvider(parameters, CancellationToken.None))
+        try
         {
-            _cachedItems.Add(item);
-            _lastCursor = CursorSelector(item);
+            await foreach (var item in ItemsProvider(parameters, CancellationToken.None))
+            {
+                _cachedItems.Add(item);
+                _lastCursor = CursorSelector(item);
+            }
+        }
+        catch (HttpRequestException e)
+        {
+            _loadError = e;
+            _hasMoreItems = false;
         }
 
         if (_cachedItems.Count < parameters.PageSize)
             _hasMoreItems = false;
 
-        _isEmpty = _cachedItems.Count == 0;
+        _isEmpty = _loadError is null && _cachedItems.Count == 0;
         _isInitialLoading = false;
     }
 
@@ -114,14 +129,25 @@ public partial class NuiVirtualizedGrid<TItem, TParams> : ComponentBase
             var parameters = ParametersBuilder(_lastCursor);
 
             var fetchedCount = 0;
-            await foreach (var item in ItemsProvider(parameters, request.CancellationToken))
+            try
             {
-                if (_generation != currentGeneration)
-                    return EmptyResult();
+                await foreach (var item in ItemsProvider(parameters, request.CancellationToken))
+                {
+                    if (_generation != currentGeneration)
+                        return EmptyResult();
 
-                _cachedItems.Add(item);
-                _lastCursor = CursorSelector(item);
-                fetchedCount++;
+                    _cachedItems.Add(item);
+                    _lastCursor = CursorSelector(item);
+                    fetchedCount++;
+                }
+            }
+            catch (HttpRequestException e)
+            {
+                // Keep what loaded; the error renders under it and stops further paging.
+                _loadError = e;
+                _hasMoreItems = false;
+                StateHasChanged();
+                break;
             }
 
             if (fetchedCount < parameters.PageSize)
@@ -160,6 +186,7 @@ public partial class NuiVirtualizedGrid<TItem, TParams> : ComponentBase
         _hasMoreItems = true;
         _isEmpty = false;
         _isInitialLoading = true;
+        _loadError = null;
         StateHasChanged();
 
         await LoadInitialDataAsync();

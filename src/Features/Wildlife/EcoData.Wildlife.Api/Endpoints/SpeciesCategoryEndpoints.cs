@@ -4,6 +4,8 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Routing;
+using EcoData.Common.Problems;
+using EcoData.Common.Problems.AspNetCore;
 
 namespace EcoData.Wildlife.Api.Endpoints;
 
@@ -30,7 +32,7 @@ public static class SpeciesCategoryEndpoints
         group
             .MapGet(
                 "/{id:guid}",
-                async Task<Results<Ok<SpeciesCategoryDtoForDetail>, NotFound>> (
+                async Task<Results<Ok<SpeciesCategoryDtoForDetail>, JsonHttpResult<EcoDataProblemDetails>>> (
                     Guid id,
                     ISpeciesCategoryRepository repository,
                     CancellationToken ct
@@ -38,7 +40,7 @@ public static class SpeciesCategoryEndpoints
                 {
                     var category = await repository.GetByIdAsync(id, ct);
                     return category is null
-                        ? TypedResults.NotFound()
+                        ? ProblemResults.NotFound($"Category {id} was not found.")
                         : TypedResults.Ok(category);
                 }
             )
@@ -47,7 +49,7 @@ public static class SpeciesCategoryEndpoints
         group
             .MapGet(
                 "/by-code/{code}",
-                async Task<Results<Ok<SpeciesCategoryDtoForDetail>, NotFound>> (
+                async Task<Results<Ok<SpeciesCategoryDtoForDetail>, JsonHttpResult<EcoDataProblemDetails>>> (
                     string code,
                     ISpeciesCategoryRepository repository,
                     CancellationToken ct
@@ -55,7 +57,7 @@ public static class SpeciesCategoryEndpoints
                 {
                     var category = await repository.GetByCodeAsync(code, ct);
                     return category is null
-                        ? TypedResults.NotFound()
+                        ? ProblemResults.NotFound($"Category '{code}' was not found.")
                         : TypedResults.Ok(category);
                 }
             )

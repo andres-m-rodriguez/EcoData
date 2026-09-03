@@ -38,6 +38,10 @@
                        Title="@L[EmptyTitleKey]"
                        Description="@L[EmptyDescriptionKey]" />
     </EmptyTemplate>
+    <ErrorTemplate Context="error">
+        <NuiEmptyState Icon="@Icons.Material.Outlined.CloudOff"
+                       Title="@L[error.StatusCode is null or 0 ? UnreachableKey : LoadFailedKey]" />
+    </ErrorTemplate>
     <ItemTemplate Context="species">
         <SpeciesCard Species="species" OnClick="HandleClick" />
     </ItemTemplate>
@@ -54,6 +58,8 @@
 
 @code {
     private const int PageSize = 24;
+    private const string UnreachableKey = "Species_Grid_Error_Unreachable";
+    private const string LoadFailedKey = "Species_Grid_Error_Generic";
 
     [Parameter] public SpeciesFilterResult Filter { get; set; } = SpeciesFilterResult.Empty;
     [Parameter] public string? Search { get; set; }
