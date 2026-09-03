@@ -1,8 +1,7 @@
 @namespace FaunaFinder.Client.Components.Shell
 @inherits EcoDataComponent
-@using EcoData.Wildlife.Contracts.Dtos
+@using System.Globalization
 @using FaunaFinder.Client.Services.FieldNotebook
-@inject ISpeciesHttpClient SpeciesClient
 @inject IFieldNotebook Notebook
 
 <aside class="ff-rail">
@@ -16,15 +15,45 @@
             @L["Rail_Tab_Saved"]
         </button>
         <button type="button"
-                class="@ChipClass(RailTab.Nearby)"
-                aria-pressed="@AriaPressed(RailTab.Nearby)"
-                @onclick="ShowNearby">
-            @L["Rail_Tab_Nearby"]
+                class="@ChipClass(RailTab.Coordinates)"
+                aria-pressed="@AriaPressed(RailTab.Coordinates)"
+                @onclick="ShowCoordinates">
+            @L["Rail_Tab_Coordinates"]
         </button>
     </div>
 
     <div class="ff-rail-list">
-        @if (ActiveListPending)
+        @if (_tab == RailTab.Coordinates)
+        {
+            <form class="ff-rail-form" @onsubmit="ShowOnMap" @onsubmit:preventDefault="true">
+                <label class="ff-rail-field">
+                    <span>@L["Rail_Coordinates_Latitude"]</span>
+                    <input type="number" step="any" min="-90" max="90" required
+                           placeholder="18.2208"
+                           @bind="_latitude" @bind:culture="CultureInfo.InvariantCulture" />
+                </label>
+                <label class="ff-rail-field">
+                    <span>@L["Rail_Coordinates_Longitude"]</span>
+                    <input type="number" step="any" min="-180" max="180" required
+                           placeholder="-66.5901"
+                           @bind="_longitude" @bind:culture="CultureInfo.InvariantCulture" />
+                </label>
+                <label class="ff-rail-field">
+                    <span>@L["Rail_Coordinates_Radius"]</span>
+                    <input type="number" step="1" min="1" max="50" required
+                           @bind="_radiusKm" @bind:culture="CultureInfo.InvariantCulture" />
+                </label>
+                @if (_coordinatesError is { } coordinatesError)
+                {
+                    <p class="ff-rail-error">@coordinatesError</p>
+                }
+                <button type="submit" class="ff-rail-prompt">
+                    <i class="fa-solid fa-location-dot" aria-hidden="true"></i>
+                    @L["Rail_Coordinates_Show"]
+                </button>
+            </form>
+        }
+        else if (LoadSavedState.Result is null)
         {
             @for (var i = 0; i < SkeletonRowCount; i++)
             {
@@ -37,88 +66,41 @@
                 </div>
             }
         }
-        else if (_tab == RailTab.Saved)
+        else if (LoadSavedState.Result is { Count: > 0 } saved)
         {
-            @if (LoadSavedState.Result is { Count: > 0 } saved)
+            @foreach (var entry in saved)
             {
-                @foreach (var entry in saved)
-                {
-                    <a class="ff-rail-item" href="@EntryHref(entry)" @key="entry.Id">
-                        @if (entry.HasImage)
-                        {
-                            <img class="ff-rail-art ff-rail-art--photo"
-                                 src="@SpeciesImageSrc(entry.Id)"
-                                 alt=""
-                                 loading="lazy" />
-                        }
-                        else
-                        {
-                            <span class="@ArtClass(entry.Kind)">
-                                <i class="@ArtIcon(entry.Kind)" aria-hidden="true"></i>
-                            </span>
-                        }
-                        <span class="ff-rail-body">
-                            <span class="ff-rail-name">@entry.Label</span>
-                            @if (!string.IsNullOrWhiteSpace(entry.Sublabel))
-                            {
-                                <span class="ff-rail-sci">@entry.Sublabel</span>
-                            }
+                <a class="ff-rail-item" href="@EntryHref(entry)" @key="entry.Id">
+                    @if (entry.HasImage)
+                    {
+                        <img class="ff-rail-art ff-rail-art--photo"
+                             src="@SpeciesImageSrc(entry.Id)"
+                             alt=""
+                             loading="lazy" />
+                    }
+                    else
+                    {
+                        <span class="@ArtClass(entry.Kind)">
+                            <i class="@ArtIcon(entry.Kind)" aria-hidden="true"></i>
                         </span>
-                        @if (!string.IsNullOrWhiteSpace(entry.Status))
-                        {
-                            <span class="@StatusPillClass(entry.Status)">@entry.Status</span>
-                        }
-                    </a>
-                }
-            }
-            else
-            {
-                <p class="ff-rail-empty">@L["Rail_Saved_Empty"]</p>
-            }
-        }
-        else if (_nearby == NearbyState.Idle)
-        {
-            <button type="button" class="ff-rail-prompt" @onclick="RequestNearbyAsync">
-                <i class="fa-solid fa-location-crosshairs" aria-hidden="true"></i>
-                @L["Rail_Nearby_Prompt"]
-            </button>
-        }
-        else if (_nearby == NearbyState.Locating)
-        {
-            <p class="ff-rail-note">@L["Rail_Nearby_Locating"]</p>
-        }
-        else if (_nearby == NearbyState.Denied)
-        {
-            <p class="ff-rail-empty">@L["Rail_Nearby_Denied"]</p>
-            <button type="button" class="ff-rail-prompt" @onclick="RequestNearbyAsync">
-                <i class="fa-solid fa-location-crosshairs" aria-hidden="true"></i>
-                @L["Rail_Nearby_Prompt"]
-            </button>
-        }
-        else if (_nearby == NearbyState.Unsupported)
-        {
-            <p class="ff-rail-empty">@L["Rail_Nearby_Unsupported"]</p>
-        }
-        else if (LoadNearbyState.Result is { Count: > 0 } nearby)
-        {
-            <p class="ff-rail-note">@L["Rail_Nearby_Origin", NearbyRadiusKm]</p>
-            @foreach (var species in nearby)
-            {
-                var nearbyName = Locale.Resolve(species.CommonName, fallback: species.ScientificName);
-                <a class="ff-rail-item" href="@SpeciesHref(species.Id)" @key="species.Id">
-                    <span class="ff-rail-art ff-rail-art--species">
-                        <i class="fa-solid fa-paw" aria-hidden="true"></i>
-                    </span>
+                    }
                     <span class="ff-rail-body">
-                        <span class="ff-rail-name">@nearbyName</span>
-                        <span class="ff-rail-count">@FormatDistance(species.DistanceMeters)</span>
+                        <span class="ff-rail-name">@entry.Label</span>
+                        @if (!string.IsNullOrWhiteSpace(entry.Sublabel))
+                        {
+                            <span class="ff-rail-sci">@entry.Sublabel</span>
+                        }
                     </span>
+                    @if (!string.IsNullOrWhiteSpace(entry.Status))
+                    {
+                        <span class="@StatusPillClass(entry.Status)">@entry.Status</span>
+                    }
                 </a>
             }
         }
         else
         {
-            <p class="ff-rail-empty">@L["Rail_Nearby_Empty", NearbyRadiusKm]</p>
+            <p class="ff-rail-empty">@L["Rail_Saved_Empty"]</p>
         }
     </div>
 </aside>

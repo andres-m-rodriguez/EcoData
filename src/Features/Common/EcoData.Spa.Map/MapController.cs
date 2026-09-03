@@ -23,6 +23,8 @@ public class MapController<TMarker> : IMapController<TMarker>
 
     public int Zoom { get; private set; } = 9;
 
+    public (MapCoordinate Center, double RadiusMeters)? SearchRadius { get; private set; }
+
     /// <summary>
     /// Set by the map component while attached; used for calls that need a result back from JS.
     /// </summary>
@@ -146,11 +148,13 @@ public class MapController<TMarker> : IMapController<TMarker>
 
     public void ShowSearchRadius(MapCoordinate center, double radiusMeters)
     {
+        SearchRadius = (center, radiusMeters);
         OnSearchRadiusChanged?.Invoke((center, radiusMeters));
     }
 
     public void ClearSearchRadius()
     {
+        SearchRadius = null;
         OnSearchRadiusChanged?.Invoke(null);
     }
 

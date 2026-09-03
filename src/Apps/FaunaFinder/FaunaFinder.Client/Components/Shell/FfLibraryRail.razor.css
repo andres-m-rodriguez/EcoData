@@ -189,12 +189,22 @@
     color: var(--fauna-fg-4);
 }
 
-/* --- Near me ------------------------------------------------------------ */
+/* --- Coordinates ------------------------------------------------------- */
 
-/* Heads the nearby list ("Within 5 km of you") and stands in for it while the
-   browser is being asked. Mono, to read as instrumentation rather than prose. */
-.ff-rail-note {
-    margin: 4px 8px 6px;
+.ff-rail-form {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin: 4px 8px;
+}
+
+.ff-rail-field {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.ff-rail-field span {
     font: var(--fauna-mono);
     font-size: 11px;
     letter-spacing: var(--fauna-tracking-pill);
@@ -202,8 +212,30 @@
     color: var(--fauna-fg-4);
 }
 
-/* The opt-in. Nothing is asked of the browser until this is pressed, so it
-   reads as an offer — a full-width outline button, not a chip. */
+.ff-rail-field input {
+    width: 100%;
+    padding: 8px 10px;
+    border: 1px solid var(--fauna-line);
+    border-radius: 8px;
+    background: var(--fauna-surface);
+    color: var(--fauna-fg);
+    font: var(--fauna-body-sm);
+    font-variant-numeric: tabular-nums;
+    transition: border-color var(--fauna-t-base) var(--fauna-ease);
+}
+
+.ff-rail-field input:focus-visible {
+    outline: none;
+    border-color: var(--fauna-primary-400);
+}
+
+.ff-rail-error {
+    margin: 0;
+    font: var(--fauna-body-sm);
+    color: var(--mud-palette-error);
+}
+
+/* The submit. A full-width outline button, not a chip. */
 .ff-rail-prompt {
     appearance: none;
     display: flex;
@@ -223,6 +255,10 @@
     transition: background-color var(--fauna-t-base) var(--fauna-ease),
                 border-color var(--fauna-t-base) var(--fauna-ease),
                 color var(--fauna-t-base) var(--fauna-ease);
+}
+
+.ff-rail-form .ff-rail-prompt {
+    margin: 4px 0 0;
 }
 
 .ff-rail-prompt:hover {

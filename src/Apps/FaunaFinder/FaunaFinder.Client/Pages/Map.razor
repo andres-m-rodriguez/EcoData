@@ -177,6 +177,7 @@
 
 @code {
     private const double NearMeRadiusMeters = 5000;
+    private const int CoordinateZoom = 12;
 
     // Circle colors; index-aligned with MapNearbyPanel's .mnp-dot palette classes.
     private static readonly string[] CirclePalette =
@@ -197,6 +198,7 @@
 
     private AreaSearchMode _searchMode;
     private MapCoordinate? _searchOrigin;
+    private double _searchRadiusMeters = NearMeRadiusMeters;
     private IReadOnlyList<PolygonCoordinate>? _polygonCoordinates;
     private bool _isDrawing;
     private bool _isLocating;
@@ -208,6 +210,11 @@
     private MapCoordinate? _lastTappedPoint;
 
     [CascadingParameter] public LocaleContext Locale { get; set; } = LocaleContext.English;
+
+    // A point handed over in the URL, by the rail's Coordinates tab or a shared link.
+    [SupplyParameterFromQuery(Name = "lat")] public double? QueryLatitude { get; set; }
+    [SupplyParameterFromQuery(Name = "lng")] public double? QueryLongitude { get; set; }
+    [SupplyParameterFromQuery(Name = "km")] public double? QueryRadiusKm { get; set; }
 
     // The controller only tracks the centre it was told to show, so a tap on
     // open water or a road is the closest thing to where the user is looking.
@@ -235,13 +242,39 @@
     private bool ShowActionButtons =>
         !PanelVisible && !_isDrawing && _viewingSpecies is null && !_travelSheetOpen;
 
-    private string SearchTitle =>
-        _searchMode == AreaSearchMode.NearMe ? L["Map_NearMe_Title"] : L["Map_DrawArea_Title"];
+    private string SearchTitle => _searchMode switch
+    {
+        AreaSearchMode.NearMe => L["Map_NearMe_Title"],
+        AreaSearchMode.Coordinates => L["Map_Coordinates_Title"],
+        _ => L["Map_DrawArea_Title"],
+    };
 
-    private string SearchEyebrow =>
-        _searchMode == AreaSearchMode.NearMe
-            ? L["Map_NearMe_Eyebrow", NearMeRadiusMeters / 1000]
-            : L["Map_DrawArea_Eyebrow"];
+    private string SearchEyebrow => _searchMode switch
+    {
+        AreaSearchMode.NearMe => L["Map_NearMe_Eyebrow", _searchRadiusMeters / 1000],
+        AreaSearchMode.Coordinates when _searchOrigin is { } origin => L[
+            "Map_Coordinates_Eyebrow",
+            _searchRadiusMeters / 1000,
+            origin.Latitude.ToString("F4", System.Globalization.CultureInfo.InvariantCulture),
+            origin.Longitude.ToString("F4", System.Globalization.CultureInfo.InvariantCulture)],
+        _ => L["Map_DrawArea_Eyebrow"],
+    };
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await base.OnParametersSetAsync();
+
+        if (QueryLatitude is not { } latitude || QueryLongitude is not { } longitude)
+            return;
+
+        var origin = new MapCoordinate(latitude, longitude);
+        var radiusMeters = Math.Clamp(QueryRadiusKm ?? NearMeRadiusMeters / 1000, 1, 50) * 1000;
+        if (_searchMode == AreaSearchMode.Coordinates && _searchOrigin == origin && _searchRadiusMeters == radiusMeters)
+            return;
+
+        _mapController.SetView(origin, CoordinateZoom);
+        await SearchAroundAsync(origin, radiusMeters, AreaSearchMode.Coordinates);
+    }
 
     protected override void OnInitialized()
     {
@@ -462,22 +495,30 @@
                 return;
             }
 
-            _selectedMunicipality = null;
-            CloseSpeciesLocations();
-
-            _searchMode = AreaSearchMode.NearMe;
-            _searchOrigin = new MapCoordinate(position.Latitude, position.Longitude);
-            await RevealPanelAsync();
-
-            _mapController.ShowSearchRadius(_searchOrigin.Value, NearMeRadiusMeters);
-
-            await SearchAreaState.TryExecute();
-            ShowNearbyCircles(SearchAreaState.Result);
+            var origin = new MapCoordinate(position.Latitude, position.Longitude);
+            await SearchAroundAsync(origin, NearMeRadiusMeters, AreaSearchMode.NearMe);
         }
         finally
         {
             _isLocating = false;
         }
+    }
+
+    // Near me and Coordinates are the same search with a different origin.
+    private async Task SearchAroundAsync(MapCoordinate origin, double radiusMeters, AreaSearchMode mode)
+    {
+        _selectedMunicipality = null;
+        CloseSpeciesLocations();
+
+        _searchMode = mode;
+        _searchOrigin = origin;
+        _searchRadiusMeters = radiusMeters;
+        await RevealPanelAsync();
+
+        _mapController.ShowSearchRadius(origin, radiusMeters);
+
+        await SearchAreaState.TryExecute();
+        ShowNearbyCircles(SearchAreaState.Result);
     }
 
     private static string ErrorMessage(RequestFailed error, string fallback) =>
@@ -541,8 +582,8 @@
     {
         OneOf<IReadOnlyList<SpeciesNearbyDto>, RequestFailed> result = _searchMode switch
         {
-            AreaSearchMode.NearMe when _searchOrigin is { } origin =>
-                await SpeciesHttpClient.GetNearbyAsync(origin.Latitude, origin.Longitude, NearMeRadiusMeters, ct),
+            AreaSearchMode.NearMe or AreaSearchMode.Coordinates when _searchOrigin is { } origin =>
+                await SpeciesHttpClient.GetNearbyAsync(origin.Latitude, origin.Longitude, _searchRadiusMeters, ct),
             AreaSearchMode.DrawnArea when _polygonCoordinates is { } polygon =>
                 await SpeciesHttpClient.GetInPolygonAsync(polygon, ct),
             _ => OneOf<IReadOnlyList<SpeciesNearbyDto>, RequestFailed>.FromT0([]),
@@ -611,6 +652,11 @@
     {
         if (_searchMode == AreaSearchMode.None && !_isDrawing) return;
 
+        // The URL carried the coordinates in; drop them so a repeat from the rail
+        // is a new navigation and a reload does not reopen the search.
+        if (_searchMode == AreaSearchMode.Coordinates)
+            NavigationManager.NavigateTo("/", replace: true);
+
         _searchMode = AreaSearchMode.None;
         _searchOrigin = null;
         _polygonCoordinates = null;
@@ -625,6 +671,7 @@
     {
         None,
         NearMe,
+        Coordinates,
         DrawnArea,
     }
 

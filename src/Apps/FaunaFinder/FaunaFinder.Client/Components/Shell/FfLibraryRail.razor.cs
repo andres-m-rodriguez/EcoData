@@ -1,16 +1,14 @@
-using EcoData.Spa.Blazor;
 using System.Globalization;
-using EcoData.Wildlife.Contracts.Dtos;
+using EcoData.Spa.Blazor;
+using EcoData.Spa.Navigation;
 using FaunaFinder.Client.Localization;
 using FaunaFinder.Client.Services.FieldNotebook;
-using FaunaFinder.Client.Services.Geolocation;
 using Microsoft.AspNetCore.Components;
-using EcoData.Ui.Interop;
 using Tempest;
 
 namespace FaunaFinder.Client.Components.Shell;
 
-// The [Command]s live in this code-behind (with the base stated explicitly)
+// The [Command] lives in this code-behind (with the base stated explicitly)
 // because Tempest's razor frontend matches the @inherits text by simple name and
 // can't see that EcoDataComponent is a StatefulComponent; the C# symbol
 // frontend can.
@@ -18,31 +16,20 @@ public partial class FfLibraryRail : EcoDataComponent
 {
     private const int SkeletonRowCount = 6;
 
-    private const double NearbyRadiusMeters = 5000;
-
-    private const double NearbyRadiusKm = NearbyRadiusMeters / 1000;
-
-    private const string GeolocationDenied = "denied";
-    private const string GeolocationUnsupported = "unsupported";
+    private const double DefaultRadiusKm = 5;
 
     [CascadingParameter]
     public LocaleContext Locale { get; set; } = LocaleContext.English;
 
     [Inject]
-    private IJavascriptSafeInterop JS { get; set; } = default!;
+    private INavigationManager Navigation { get; set; } = default!;
 
     private RailTab _tab = RailTab.Saved;
 
-    private NearbyState _nearby = NearbyState.Idle;
-
-    private double _originLatitude;
-    private double _originLongitude;
-
-    private bool ActiveListPending => _tab switch
-    {
-        RailTab.Saved => LoadSavedState.Result is null,
-        _ => _nearby == NearbyState.Ready && LoadNearbyState.Result is null,
-    };
+    private double? _latitude;
+    private double? _longitude;
+    private double _radiusKm = DefaultRadiusKm;
+    private string? _coordinatesError;
 
     protected override void OnInitialized()
     {
@@ -66,7 +53,7 @@ public partial class FfLibraryRail : EcoDataComponent
 
     private void ShowSaved() => _tab = RailTab.Saved;
 
-    private void ShowNearby() => _tab = RailTab.Nearby;
+    private void ShowCoordinates() => _tab = RailTab.Coordinates;
 
     private string ChipClass(RailTab tab) =>
         tab == _tab ? "ff-rail-chip ff-rail-chip--active" : "ff-rail-chip";
@@ -96,78 +83,34 @@ public partial class FfLibraryRail : EcoDataComponent
     // The status pill palette is global (fauna-tokens.css), keyed by IUCN code.
     private static string StatusPillClass(string status) => $"ff-status-pill status-{status}";
 
-    private string FormatDistance(double meters) =>
-        meters < 1000
-            ? L["Rail_Distance_M", meters.ToString("N0", CultureInfo.CurrentCulture)]
-            : L["Rail_Distance_Km", (meters / 1000).ToString("N1", CultureInfo.CurrentCulture)];
-
-    private async Task RequestNearbyAsync()
+    // The map page owns the search; the rail only hands it the point through the
+    // URL, so the same link works from any page and can be shared.
+    private void ShowOnMap()
     {
-        _nearby = NearbyState.Locating;
+        if (_latitude is not { } latitude || _longitude is not { } longitude)
+            return;
 
-        var position = await ResolvePositionAsync();
-        if (position.Error is { } error)
+        if (latitude is < -90 or > 90 || longitude is < -180 or > 180)
         {
-            _nearby = error == GeolocationDenied ? NearbyState.Denied : NearbyState.Unsupported;
+            _coordinatesError = L["Rail_Coordinates_Invalid"];
             return;
         }
 
-        _originLatitude = position.Latitude;
-        _originLongitude = position.Longitude;
-        _nearby = NearbyState.Ready;
-
-        await LoadNearbyState.TryExecute();
-    }
-
-    private async Task<GeolocationOutcome> ResolvePositionAsync()
-    {
-        var position = await BrowserGeolocation.GetPositionAsync(JS);
-
-        return position.Status switch
-        {
-            GeoStatus.Ok => new GeolocationOutcome(position.Latitude, position.Longitude, null),
-            GeoStatus.Denied => new GeolocationOutcome(0, 0, GeolocationDenied),
-            _ => new GeolocationOutcome(0, 0, GeolocationUnsupported),
-        };
+        _coordinatesError = null;
+        var radiusKm = Math.Clamp(_radiusKm, 1, 50);
+        var lat = latitude.ToString("F6", CultureInfo.InvariantCulture);
+        var lng = longitude.ToString("F6", CultureInfo.InvariantCulture);
+        var km = radiusKm.ToString("0.##", CultureInfo.InvariantCulture);
+        Navigation.NavigateTo($"/?lat={lat}&lng={lng}&km={km}");
     }
 
     [Command, RunOnLoad]
     private async Task<IReadOnlyList<NotebookEntry>> LoadSaved(CancellationToken ct) =>
         await Notebook.GetSavedAsync(ct);
 
-    [Command]
-    private async Task<IReadOnlyList<SpeciesNearbyDto>> LoadNearby(CancellationToken ct)
-    {
-        var result = await SpeciesClient.GetNearbyAsync(
-            _originLatitude,
-            _originLongitude,
-            NearbyRadiusMeters,
-            ct);
-
-        if (!result.TryPickT0(out var nearby, out _))
-            return [];
-
-        return nearby;
-    }
-
     private enum RailTab
     {
         Saved,
-        Nearby
+        Coordinates
     }
-
-    private enum NearbyState
-    {
-        Idle,
-        Locating,
-        Denied,
-        Unsupported,
-        Ready
-    }
-
-    private readonly record struct GeolocationOutcome(
-        double Latitude,
-        double Longitude,
-        string? Error
-    );
 }

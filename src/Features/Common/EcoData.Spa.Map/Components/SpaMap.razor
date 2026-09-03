@@ -63,6 +63,7 @@
             await UpdateMarkers();
             await UpdateGeoJson();
             await UpdateCircles();
+            await UpdateSearchRadius();
         }
     }
 
@@ -169,22 +170,22 @@
     {
         if (!_isInitialized || _mapInstance is null || _module is null) return;
 
-        await InvokeAsync(async () =>
-        {
-            if (radius is { } r)
-            {
-                await _module.InvokeVoidAsync(
-                    "showSearchRadius",
-                    _mapInstance,
-                    r.Center.Latitude,
-                    r.Center.Longitude,
-                    r.RadiusMeters);
-            }
-            else
-            {
-                await _module.InvokeVoidAsync("clearSearchRadius", _mapInstance);
-            }
-        });
+        await InvokeAsync(async () => await UpdateSearchRadius());
+    }
+
+    private async Task UpdateSearchRadius()
+    {
+        if (_mapInstance is null || _module is null) return;
+
+        if (Controller.SearchRadius is { } radius)
+            await _module.InvokeVoidAsync(
+                "showSearchRadius",
+                _mapInstance,
+                radius.Center.Latitude,
+                radius.Center.Longitude,
+                radius.RadiusMeters);
+        else
+            await _module.InvokeVoidAsync("clearSearchRadius", _mapInstance);
     }
 
     private async void HandlePolygonDrawActionRequested(MapPolygonDrawAction action)
