@@ -6,7 +6,6 @@ using EcoData.Ui;
 using EcoData.Wildlife.Application.Client;
 using FaunaFinder.Client.Localization;
 using FaunaFinder.Client.Services.Account;
-using FaunaFinder.Client.Services.FieldNotebook;
 using FaunaFinder.Client.Services.Shapes;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
@@ -37,7 +36,6 @@ builder.Services.AddSpaNavigation();
 builder.Services.AddEcoDataUi();
 builder.Services.AddMudServices();
 
-builder.Services.AddSingleton<IFieldNotebook, FieldNotebook>();
 builder.Services.AddSingleton<ShapeAreaRequest>();
 
 builder.Services.AddSingleton<ILocalizer>(_ => new Localizer(
