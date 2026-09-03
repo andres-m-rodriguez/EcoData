@@ -80,15 +80,5 @@ public static class ProblemDetailsHttpExtensions
                 ? throw new JsonException("The success response body deserialized to null.")
                 : payload;
         }
-
-        /// <summary>
-        /// Throws a <see cref="EcoDataProblemException"/> if the response is not successful; otherwise does nothing.
-        /// </summary>
-        public async Task EnsureSuccessOrProblemAsync(CancellationToken cancellationToken = default)
-        {
-            var problem = await response.ReadProblemAsync(cancellationToken).ConfigureAwait(false);
-            if (problem is not null)
-                throw new EcoDataProblemException(problem);
-        }
     }
 }
