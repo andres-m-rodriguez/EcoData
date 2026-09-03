@@ -1,4 +1,8 @@
 #:package Microsoft.CodeAnalysis.CSharp@4.*
+// A standalone script: it pins its own package above and needs neither the
+// repo's central package versions nor its analyzers.
+#:property ManagePackageVersionsCentrally=false
+#:property UseEcoDataAnalyzers=false
 
 using System.Text.Json;
 using System.Text.Json.Serialization;
