@@ -25,9 +25,7 @@ public sealed class UsgsApiClient(
         var response = await httpClient.GetFromJsonAsync<UsgsResponse>(url, cancellationToken);
 
         if (response?.Value.TimeSeries is { } timeSeries)
-        {
             logger.LogInformation("Retrieved {Count} time series from USGS", timeSeries.Count);
-        }
 
         return response;
     }

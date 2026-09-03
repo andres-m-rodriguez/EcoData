@@ -90,9 +90,7 @@ public sealed class SurfaceWaterRepository(IDbContextFactory<SensorsDbContext> c
             .ToListAsync(cancellationToken);
 
         if (sensorIds.Count == 0)
-        {
             return [];
-        }
 
         var rows = await context.Sensors
             .Where(s => sensorIds.Contains(s.Id))
@@ -164,9 +162,7 @@ public sealed class SurfaceWaterRepository(IDbContextFactory<SensorsDbContext> c
             .ToListAsync(cancellationToken);
 
         if (sensorIds.Count == 0)
-        {
             return [];
-        }
 
         var stations = await context.Sensors
             .Where(s => sensorIds.Contains(s.Id))

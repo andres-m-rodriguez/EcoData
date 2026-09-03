@@ -25,9 +25,7 @@ public static class SpeciesReportEndpoints
                 {
                     var species = await speciesRepository.GetByIdAsync(id, ct);
                     if (species is null)
-                    {
                         return TypedResults.NotFound();
-                    }
 
                     var image = species.HasProfileImage
                         ? await speciesRepository.GetProfileImageAsync(id, ct)
@@ -47,7 +45,8 @@ public static class SpeciesReportEndpoints
                     );
 
                     var fileName = $"{species.ScientificName.Replace(' ', '-')}.pdf";
-                    return TypedResults.File(document.GeneratePdf(), "application/pdf", fileName);
+                    var pdf = document.GeneratePdf();
+                    return TypedResults.File(pdf, "application/pdf", fileName);
                 }
             )
             .WithName("GetSpeciesReport")

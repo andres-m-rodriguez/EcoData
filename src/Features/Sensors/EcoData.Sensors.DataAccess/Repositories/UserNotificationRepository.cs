@@ -21,9 +21,7 @@ public sealed class UserNotificationRepository(IDbContextFactory<SensorsDbContex
             .Where(n => n.UserId == userId);
 
         if (cursor.HasValue)
-        {
             query = query.Where(n => n.Id < cursor.Value);
-        }
 
         return await query
             .OrderByDescending(n => n.Id)

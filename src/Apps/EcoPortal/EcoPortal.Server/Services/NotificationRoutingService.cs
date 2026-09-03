@@ -120,10 +120,11 @@ public sealed class NotificationRoutingService(
                 notification.Type,
                 notification.CreatedAt
             );
+            var topic = MessageTopics.GetUserNotificationsTopic(userId);
 
             await messageBus.PublishEventAsync(
                 correctedEvent,
-                MessageTopics.GetUserNotificationsTopic(userId),
+                topic,
                 cancellationToken: cancellationToken
             );
 

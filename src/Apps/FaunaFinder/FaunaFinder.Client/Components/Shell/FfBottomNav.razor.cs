@@ -38,9 +38,7 @@ public partial class FfBottomNav : EcoDataComponent
         await base.OnAfterRenderAsync(firstRender);
 
         if (firstRender)
-        {
             await AutoHide.StartAsync();
-        }
     }
 
     public override void Dispose()
@@ -71,6 +69,10 @@ public partial class FfBottomNav : EcoDataComponent
             var p when p.StartsWith("/categories", StringComparison.OrdinalIgnoreCase) => NavigationTab.Browse,
             var p when p.StartsWith("/practices", StringComparison.OrdinalIgnoreCase) => NavigationTab.Browse,
             var p when p.StartsWith("/actions", StringComparison.OrdinalIgnoreCase) => NavigationTab.Browse,
+            var p when p.StartsWith("/account", StringComparison.OrdinalIgnoreCase) => NavigationTab.Account,
+            var p when p.StartsWith("/login", StringComparison.OrdinalIgnoreCase) => NavigationTab.Account,
+            var p when p.StartsWith("/register", StringComparison.OrdinalIgnoreCase) => NavigationTab.Account,
+            var p when p.StartsWith("/sightings", StringComparison.OrdinalIgnoreCase) => NavigationTab.Account,
             _ => NavigationTab.Map
         };
     }
@@ -88,10 +90,11 @@ public partial class FfBottomNav : EcoDataComponent
             NavigationTab.Species => "/species",
             NavigationTab.Municipalities => "/municipalities",
             NavigationTab.Browse => "/browse",
+            NavigationTab.Account => "/account",
             _ => "/"
         };
         Navigation.NavigateTo(path);
     }
 
-    private enum NavigationTab { Map, Species, Municipalities, Browse }
+    private enum NavigationTab { Map, Species, Municipalities, Browse, Account }
 }

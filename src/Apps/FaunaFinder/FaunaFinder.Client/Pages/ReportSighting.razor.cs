@@ -89,9 +89,7 @@ public partial class ReportSighting : EcoDataComponent
         }
 
         if (SpeciesId is not null)
-        {
             _ = LoadSpeciesState.TryExecute();
-        }
     }
 
     protected override void OnLanguageChanged() => Navbar.SetTitle(L["Sighting_Report_Title"]);
@@ -218,9 +216,10 @@ public partial class ReportSighting : EcoDataComponent
         var validation = new SightingDtoForCreateValidator().Validate(dto);
         if (!validation.IsValid)
         {
-            ApplyFieldErrors(validation.Errors
+            var fieldErrors = validation.Errors
                 .GroupBy(e => e.PropertyName)
-                .ToDictionary(g => g.Key, g => g.Select(e => e.ErrorMessage).ToArray()));
+                .ToDictionary(g => g.Key, g => g.Select(e => e.ErrorMessage).ToArray());
+            ApplyFieldErrors(fieldErrors);
             return;
         }
 
@@ -255,9 +254,7 @@ public partial class ReportSighting : EcoDataComponent
             await using var content = file.OpenReadStream(MaxImageBytes);
             var upload = await SightingClient.UploadImageAsync(sighting.Id, content, file.Name, file.ContentType);
             if (!upload.IsT0)
-            {
                 Snackbar.Add(L["Sighting_Image_UploadFailed", file.Name], Severity.Warning);
-            }
         }
 
         Snackbar.Add(L["Sighting_Report_Success"], Severity.Success);

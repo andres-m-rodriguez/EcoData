@@ -19,7 +19,7 @@ public sealed class AuthTests(EcoDataTestFixture fixture)
         var user = await AuthHttpClient.GetCurrentUserAsync();
 
         user.Should().NotBeNull();
-        user!.Email.Should().Be("admin@gmail.com");
+        user!.Email.Should().Be("global@admin.dev");
     }
 
     [Fact]

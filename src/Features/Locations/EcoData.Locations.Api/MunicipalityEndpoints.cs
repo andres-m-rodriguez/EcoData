@@ -122,12 +122,10 @@ public static class MunicipalityEndpoints
                     var municipalities = await repository.GetGeoJsonByStateCodeAsync(stateCode, ct);
 
                     if (municipalities.Count == 0)
-                    {
                         return TypedResults.Problem(
                             detail: $"No municipalities found for state '{stateCode}'",
                             statusCode: StatusCodes.Status404NotFound
                         );
-                    }
 
                     var features = municipalities
                         .Where(m => m.BoundaryGeoJson is not null)

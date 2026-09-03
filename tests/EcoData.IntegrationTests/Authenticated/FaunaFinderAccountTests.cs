@@ -73,7 +73,7 @@ public sealed class FaunaFinderAccountTests(EcoDataTestFixture fixture) : IDispo
         // register step, so no login attempt is spent against the limiter.
         var response = await client.PostAsJsonAsync(
             "/account/signup",
-            new FaunaFinderSignupRequest("admin@gmail.com", "Impostor", Password, Password, false)
+            new FaunaFinderSignupRequest("global@admin.dev", "Impostor", Password, Password, false)
         );
 
         response.StatusCode.Should().Be(HttpStatusCode.Conflict);
@@ -170,7 +170,8 @@ public sealed class FaunaFinderAccountTests(EcoDataTestFixture fixture) : IDispo
             // caller, and in tests every login funnels through localhost.
             if (response.StatusCode == HttpStatusCode.TooManyRequests)
             {
-                await Task.Delay(TimeSpan.FromSeconds(45));
+                var backoff = TimeSpan.FromSeconds(45);
+                await Task.Delay(backoff);
                 continue;
             }
 
@@ -180,13 +181,12 @@ public sealed class FaunaFinderAccountTests(EcoDataTestFixture fixture) : IDispo
             )!;
 
             if (!waitForAccessRequest || signup.AccessRequestSubmitted)
-            {
                 return signup;
-            }
 
             // The organization loader retries every 30 seconds until EcoPortal
             // answers; a signup landing before then creates no access request.
-            await Task.Delay(TimeSpan.FromSeconds(35));
+            var loaderRetry = TimeSpan.FromSeconds(35);
+            await Task.Delay(loaderRetry);
         }
 
         throw new InvalidOperationException(
@@ -206,7 +206,8 @@ public sealed class FaunaFinderAccountTests(EcoDataTestFixture fixture) : IDispo
 
             if (response.StatusCode == HttpStatusCode.ServiceUnavailable)
             {
-                await Task.Delay(TimeSpan.FromSeconds(35));
+                var loaderRetry = TimeSpan.FromSeconds(35);
+                await Task.Delay(loaderRetry);
                 continue;
             }
 
@@ -266,9 +267,7 @@ public sealed class FaunaFinderAccountTests(EcoDataTestFixture fixture) : IDispo
                     || response.StatusCode != HttpStatusCode.TooManyRequests
                     || response.Headers.RetryAfter?.Delta is not { } retryAfter
                 )
-                {
                     return response;
-                }
 
                 response.Dispose();
                 await Task.Delay(retryAfter + TimeSpan.FromSeconds(1), cancellationToken);

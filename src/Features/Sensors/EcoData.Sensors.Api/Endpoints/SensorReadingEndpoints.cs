@@ -69,12 +69,10 @@ public static class SensorReadingEndpoints
                 {
                     var sensor = await sensorRepository.GetByIdAsync(sensorId, ct);
                     if (sensor is null)
-                    {
                         return TypedResults.Problem(
                             detail: $"Sensor {sensorId} not found",
                             statusCode: StatusCodes.Status404NotFound
                         );
-                    }
 
                     var validator = new ReadingItemValidator(timeProvider.GetUtcNow());
                     var validReadings = new List<ReadingDtoForCreate>();
@@ -85,11 +83,8 @@ public static class SensorReadingEndpoints
                         var result = validator.Validate(reading);
                         if (!result.IsValid)
                         {
-                            errors.AddRange(
-                                result.Errors.Select(e =>
-                                    $"'{reading.Parameter}': {e.ErrorMessage}"
-                                )
-                            );
+                            var messages = result.Errors.Select(e => $"'{reading.Parameter}': {e.ErrorMessage}");
+                            errors.AddRange(messages);
                             continue;
                         }
 

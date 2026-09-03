@@ -36,10 +36,8 @@ public sealed class AzureServiceBusTransport : IMessageTransport, IAsyncDisposab
         _logger = logger;
 
         if (string.IsNullOrWhiteSpace(_options.ConnectionString))
-        {
             throw new InvalidOperationException(
                 $"{AzureServiceBusOptions.SectionName}:ConnectionString is required when using the Azure Service Bus transport.");
-        }
 
         // The overload has to be picked at runtime because the same configuration key carries two
         // different shapes depending on where we run. The emulator (Aspire's .RunAsEmulator()) hands
@@ -68,9 +66,7 @@ public sealed class AzureServiceBusTransport : IMessageTransport, IAsyncDisposab
         // as the *scheme* and Uri.Host comes back empty — so parsing it as-is would silently hand
         // ServiceBusClient an empty namespace instead of failing loudly.
         if (!candidate.Contains("://", StringComparison.Ordinal))
-        {
             candidate = "https://" + candidate;
-        }
 
         return Uri.TryCreate(candidate, UriKind.Absolute, out var uri) && !string.IsNullOrEmpty(uri.Host)
             ? uri.Host
@@ -152,7 +148,8 @@ public sealed class AzureServiceBusTransport : IMessageTransport, IAsyncDisposab
 
             try
             {
-                var payload = JsonSerializer.Deserialize<T>(args.Message.Body.ToArray());
+                var body = args.Message.Body.ToArray();
+                var payload = JsonSerializer.Deserialize<T>(body);
                 if (payload is null)
                 {
                     await args.DeadLetterMessageAsync(args.Message, "DeserializationFailed", "Payload was null", CancellationToken.None);

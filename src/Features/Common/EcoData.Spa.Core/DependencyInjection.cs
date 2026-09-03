@@ -17,9 +17,7 @@ public static class DependencyInjection
     public static IServiceCollection AddSpaCore(this IServiceCollection services)
     {
         if (services.All(descriptor => descriptor.ServiceType != typeof(IEventBus)))
-        {
             services.AddTempest();
-        }
 
         return services;
     }

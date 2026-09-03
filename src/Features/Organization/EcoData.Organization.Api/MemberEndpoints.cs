@@ -45,12 +45,10 @@ public static class MemberEndpoints
                 {
                     var member = await repository.GetAsync(organizationId, userId, ct);
                     if (member is null)
-                    {
                         return TypedResults.Problem(
                             detail: "Member not found in this organization.",
                             statusCode: StatusCodes.Status404NotFound
                         );
-                    }
                     return TypedResults.Ok(member);
                 }
             )
@@ -81,9 +79,7 @@ public static class MemberEndpoints
                             ct
                         )
                     )
-                    {
                         return TypedResults.Forbid();
-                    }
 
                     var member = await repository.UpdateAsync(
                         organizationId,
@@ -92,12 +88,10 @@ public static class MemberEndpoints
                         ct
                     );
                     if (member is null)
-                    {
                         return TypedResults.Problem(
                             detail: "Member not found in this organization.",
                             statusCode: StatusCodes.Status404NotFound
                         );
-                    }
 
                     return TypedResults.Ok(member);
                 }
@@ -126,18 +120,14 @@ public static class MemberEndpoints
                             ct
                         )
                     )
-                    {
                         return TypedResults.Forbid();
-                    }
 
                     var deleted = await repository.DeleteAsync(organizationId, userId, ct);
                     if (!deleted)
-                    {
                         return TypedResults.Problem(
                             detail: "Member not found in this organization.",
                             statusCode: StatusCodes.Status404NotFound
                         );
-                    }
                     return TypedResults.NoContent();
                 }
             )

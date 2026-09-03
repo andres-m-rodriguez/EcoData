@@ -2,7 +2,6 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using EcoData.Common.i18n;
 using EcoData.Identity.Database;
-using EcoData.Identity.Database.Models;
 using EcoData.Locations.Database;
 using EcoData.Locations.Database.Models;
 using EcoData.Organization.Database;
@@ -11,7 +10,6 @@ using EcoData.Sensors.Database.Models;
 using EcoData.Wildlife.Contracts;
 using EcoData.Wildlife.Database;
 using EcoData.Wildlife.Database.Models;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using NetTopologySuite.Geometries;
 using NetTopologySuite.IO;
@@ -21,6 +19,7 @@ namespace EcoData.Seeder;
 public sealed class DatabaseSeederWorker(
     IServiceProvider serviceProvider,
     IHostApplicationLifetime lifetime,
+    IHostEnvironment environment,
     ILogger<DatabaseSeederWorker> logger
 ) : BackgroundService
 {
@@ -37,10 +36,22 @@ public sealed class DatabaseSeederWorker(
             await MigrateLocationsAsync(services, stoppingToken);
             await MigrateWildlifeAsync(services, stoppingToken);
 
-            await SeedAdminUserAsync(services, stoppingToken);
+            // Dev data is everything outside Production: the local run, the
+            // integration tests, a deployed dev slot. Organizations go first so
+            // the roles pass covers the dev ones and the dev users can join them.
+            var seedDevelopmentData = !environment.IsProduction();
+            var organizations = services.GetRequiredService<SeedOrganizations>();
+
+            await organizations.SeedAsync(stoppingToken);
+            if (seedDevelopmentData)
+                await organizations.SeedDevelopmentAsync(stoppingToken);
+
+            await services.GetRequiredService<SeedRoles>().SeedAsync(stoppingToken);
+
+            if (seedDevelopmentData)
+                await services.GetRequiredService<SeedUsers>().SeedDevelopmentAsync(stoppingToken);
+
             await SeedLocationsAsync(services, stoppingToken);
-            await SeedOrganizationRolesAsync(services, stoppingToken);
-            await SeedFaunaFinderOrganizationAsync(services, stoppingToken);
             await SeedWildlifeAsync(services, stoppingToken);
             await SeedPhenomenaAsync(services, stoppingToken);
             await SeedUsgsParameterMappingsAsync(services, stoppingToken);
@@ -104,52 +115,6 @@ public sealed class DatabaseSeederWorker(
         logger.LogInformation("Applying Locations database migrations...");
         await context.Database.MigrateAsync(stoppingToken);
         logger.LogInformation("Locations database migrations applied.");
-    }
-
-    private async Task SeedAdminUserAsync(
-        IServiceProvider services,
-        CancellationToken stoppingToken
-    )
-    {
-        var context = services.GetRequiredService<IdentityDbContext>();
-
-        const string adminEmail = "admin@gmail.com";
-        var existingAdmin = await context.Users.FirstOrDefaultAsync(
-            u => u.Email == adminEmail,
-            stoppingToken
-        );
-
-        if (existingAdmin is not null)
-        {
-            logger.LogInformation("Admin user already exists. Skipping...");
-            return;
-        }
-
-        logger.LogInformation("Creating admin user...");
-
-        var now = DateTimeOffset.UtcNow;
-        var adminUser = new User
-        {
-            Id = Guid.CreateVersion7(),
-            UserName = adminEmail,
-            NormalizedUserName = adminEmail.ToUpperInvariant(),
-            Email = adminEmail,
-            NormalizedEmail = adminEmail.ToUpperInvariant(),
-            EmailConfirmed = true,
-            DisplayName = "Admin",
-            GlobalRole = GlobalRole.GlobalAdmin,
-            SecurityStamp = Guid.NewGuid().ToString(),
-            ConcurrencyStamp = Guid.NewGuid().ToString(),
-            CreatedAt = now,
-        };
-
-        var passwordHasher = new PasswordHasher<User>();
-        adminUser.PasswordHash = passwordHasher.HashPassword(adminUser, "Admin@123");
-
-        context.Users.Add(adminUser);
-        await context.SaveChangesAsync(stoppingToken);
-
-        logger.LogInformation("Admin user created: {Email}", adminEmail);
     }
 
     private async Task SeedLocationsAsync(
@@ -274,176 +239,6 @@ public sealed class DatabaseSeederWorker(
         }
     }
 
-    private async Task SeedOrganizationRolesAsync(
-        IServiceProvider services,
-        CancellationToken stoppingToken
-    )
-    {
-        var context = services.GetRequiredService<OrganizationDbContext>();
-
-        var organizationsWithoutContributor = await context
-            .Organizations.Where(o =>
-                !context.OrganizationRoles.Any(r =>
-                    r.OrganizationId == o.Id && r.Name == "Contributor"
-                )
-            )
-            .Select(o => o.Id)
-            .ToListAsync(stoppingToken);
-
-        if (organizationsWithoutContributor.Count == 0)
-        {
-            logger.LogInformation("All organizations have Contributor role. Skipping...");
-            return;
-        }
-
-        logger.LogInformation(
-            "Adding Contributor role to {Count} organizations...",
-            organizationsWithoutContributor.Count
-        );
-
-        var now = DateTimeOffset.UtcNow;
-        foreach (var organizationId in organizationsWithoutContributor)
-        {
-            context.OrganizationRoles.Add(
-                new Organization.Database.Models.OrganizationRole
-                {
-                    Id = Guid.CreateVersion7(),
-                    OrganizationId = organizationId,
-                    Name = "Contributor",
-                    CreatedAt = now,
-                }
-            );
-        }
-
-        await context.SaveChangesAsync(stoppingToken);
-
-        logger.LogInformation(
-            "Added Contributor role to {Count} organizations",
-            organizationsWithoutContributor.Count
-        );
-    }
-
-    private async Task SeedFaunaFinderOrganizationAsync(
-        IServiceProvider services,
-        CancellationToken stoppingToken
-    )
-    {
-        var context = services.GetRequiredService<OrganizationDbContext>();
-
-        const string slug = "inter-metro";
-        var now = DateTimeOffset.UtcNow;
-
-        var organizationId = await context
-            .Organizations.Where(o => o.Slug == slug)
-            .Select(o => (Guid?)o.Id)
-            .FirstOrDefaultAsync(stoppingToken);
-
-        if (organizationId is null)
-        {
-            logger.LogInformation("Creating organization '{Slug}'...", slug);
-
-            var organization = new Organization.Database.Models.Organization
-            {
-                Id = Guid.CreateVersion7(),
-                Name = "Inter Metro University",
-                Slug = slug,
-                Tagline = null,
-                ProfilePictureUrl = null,
-                CardPictureUrl = null,
-                AboutUs = null,
-                WebsiteUrl = null,
-                Location = null,
-                FoundedYear = null,
-                LegalStatus = null,
-                TaxId = null,
-                PrimaryColor = null,
-                AccentColor = null,
-                ContactEmail = null,
-                Type = Organization.Contracts.OrganizationType.University,
-                CreatedAt = now,
-                UpdatedAt = now,
-            };
-            context.Organizations.Add(organization);
-
-            foreach (var roleName in new[] { "Owner", "Admin", "Contributor", "Viewer" })
-            {
-                context.OrganizationRoles.Add(
-                    new Organization.Database.Models.OrganizationRole
-                    {
-                        Id = Guid.CreateVersion7(),
-                        OrganizationId = organization.Id,
-                        Name = roleName,
-                        CreatedAt = now,
-                    }
-                );
-            }
-
-            await context.SaveChangesAsync(stoppingToken);
-            organizationId = organization.Id;
-        }
-
-        var existingRoles = await context
-            .OrganizationRoles.Where(r => r.OrganizationId == organizationId)
-            .ToDictionaryAsync(r => r.Name, r => r.Id, stoppingToken);
-
-        foreach (var roleName in new[] { "Student", "FaunaAdministrator" })
-        {
-            if (existingRoles.ContainsKey(roleName))
-            {
-                continue;
-            }
-
-            var role = new Organization.Database.Models.OrganizationRole
-            {
-                Id = Guid.CreateVersion7(),
-                OrganizationId = organizationId.Value,
-                Name = roleName,
-                CreatedAt = now,
-            };
-            context.OrganizationRoles.Add(role);
-            existingRoles[roleName] = role.Id;
-            logger.LogInformation("Added {Role} role to organization '{Slug}'", roleName, slug);
-        }
-
-        // Any other role gets its keys from EcoPortal's Roles page; these are
-        // only what a fresh database needs for FaunaFinder to work at all.
-        var grants = new (string RoleName, string Permission)[]
-        {
-            ("FaunaAdministrator", Organization.Contracts.Permissions.Organization.ManageMembers),
-            ("FaunaAdministrator", Permissions.Occurrence.Verify),
-        };
-
-        foreach (var (roleName, permission) in grants)
-        {
-            var roleId = existingRoles[roleName];
-            var hasGrant = await context.OrganizationRolePermissions.AnyAsync(
-                p => p.RoleId == roleId && p.Permission == permission,
-                stoppingToken
-            );
-
-            if (hasGrant)
-            {
-                continue;
-            }
-
-            context.OrganizationRolePermissions.Add(
-                new Organization.Database.Models.OrganizationRolePermission
-                {
-                    RoleId = roleId,
-                    Permission = permission,
-                }
-            );
-            logger.LogInformation(
-                "Granted {Permission} to {Role} in organization '{Slug}'",
-                permission,
-                roleName,
-                slug
-            );
-        }
-
-        await context.SaveChangesAsync(stoppingToken);
-    }
-
     private async Task MigrateWildlifeAsync(
         IServiceProvider services,
         CancellationToken stoppingToken
@@ -494,7 +289,6 @@ public sealed class DatabaseSeederWorker(
         foreach (var (code, nameEn, nameEs) in defaultCategories)
         {
             if (!existing.ContainsKey(code))
-            {
                 context.SpeciesCategories.Add(
                     new SpeciesCategory
                     {
@@ -503,14 +297,14 @@ public sealed class DatabaseSeederWorker(
                         Name = [new LocaleValue("en", nameEn), new LocaleValue("es", nameEs)],
                     }
                 );
-            }
         }
 
         await context.SaveChangesAsync(stoppingToken);
+        var sanctionedCodes = defaultCategories.Select(c => c.Item1).ToHashSet();
 
         await RetireLegacyCategoriesAsync(
             context,
-            defaultCategories.Select(c => c.Item1).ToHashSet(),
+            sanctionedCodes,
             stoppingToken
         );
 
@@ -566,9 +360,7 @@ public sealed class DatabaseSeederWorker(
         }
 
         if (retired > 0)
-        {
             logger.LogInformation("Legacy species categories retired: {Count}", retired);
-        }
     }
 
     private async Task SeedNrcsPracticesAsync(
@@ -597,7 +389,6 @@ public sealed class DatabaseSeederWorker(
         foreach (var dto in practices)
         {
             if (!existing.ContainsKey(dto.Code))
-            {
                 context.NrcsPractices.Add(
                     new NrcsPractice
                     {
@@ -606,7 +397,6 @@ public sealed class DatabaseSeederWorker(
                         Name = dto.Name,
                     }
                 );
-            }
         }
 
         await context.SaveChangesAsync(stoppingToken);
@@ -654,7 +444,6 @@ public sealed class DatabaseSeederWorker(
         foreach (var dto in actions)
         {
             if (!existing.ContainsKey(dto.Code))
-            {
                 context.FwsActions.Add(
                     new FwsAction
                     {
@@ -663,7 +452,6 @@ public sealed class DatabaseSeederWorker(
                         Name = dto.Name,
                     }
                 );
-            }
         }
 
         await context.SaveChangesAsync(stoppingToken);
@@ -728,18 +516,14 @@ public sealed class DatabaseSeederWorker(
                 }
 
                 if (species.ImageSourceUrl is null && !string.IsNullOrEmpty(dto.ImageSourceUrl))
-                {
                     species.ImageSourceUrl = dto.ImageSourceUrl;
-                }
 
                 // Backfill editorial fields for rows that predated the Plan 1 migration.
                 // Only ever from the JSON: a species with no assessment stays unknown
                 // rather than being handed a derived value.
                 species.IucnStatus ??= dto.IucnStatus;
                 if (species.EndemicStatus is EndemicStatus.Unknown)
-                {
                     species.EndemicStatus = dto.EndemicStatus ?? EndemicStatus.Unknown;
-                }
             }
             else
             {
@@ -784,7 +568,6 @@ public sealed class DatabaseSeederWorker(
                         municipalities.TryGetValue(geoJsonId, out var municipalityId)
                         && !existingLinks.Contains(municipalityId)
                     )
-                    {
                         context.MunicipalitySpecies.Add(
                             new MunicipalitySpecies
                             {
@@ -793,7 +576,6 @@ public sealed class DatabaseSeederWorker(
                                 SpeciesId = species.Id,
                             }
                         );
-                    }
                 }
             }
 
@@ -835,15 +617,11 @@ public sealed class DatabaseSeederWorker(
                 {
                     var categoryCode = NormalizeCategoryCode(rawCode);
                     if (!categories.TryGetValue(categoryCode, out var category))
-                    {
                         continue;
-                    }
 
                     sanctionedCategoryIds.Add(category.Id);
                     if (existingCategoryLinks.Contains(category.Id))
-                    {
                         continue;
-                    }
 
                     context.SpeciesCategoryLinks.Add(
                         new SpeciesCategoryLink
@@ -885,9 +663,7 @@ public sealed class DatabaseSeederWorker(
     {
         var alreadyFeatured = await context.Species.CountAsync(s => s.IsFeatured, stoppingToken);
         if (alreadyFeatured >= 3)
-        {
             return;
-        }
 
         var picks = await context
             .Species.Where(s => !s.IsFeatured)
@@ -918,13 +694,9 @@ public sealed class DatabaseSeederWorker(
     {
         var values = new List<LocaleValue>();
         if (!string.IsNullOrWhiteSpace(dto.CommonNameEn))
-        {
             values.Add(new LocaleValue("en", dto.CommonNameEn));
-        }
         if (!string.IsNullOrWhiteSpace(dto.CommonNameEs))
-        {
             values.Add(new LocaleValue("es", dto.CommonNameEs));
-        }
         return values;
     }
 
@@ -973,6 +745,7 @@ public sealed class DatabaseSeederWorker(
         var existingByKey = existingLinks.ToDictionary(l =>
             (l.SpeciesId, l.NrcsPracticeId, l.FwsActionId)
         );
+        var existingKeys = existingLinks.Select(l => (l.Id, l.SpeciesId, l.NrcsPracticeId, l.FwsActionId));
 
         await RemoveUnsanctionedFwsLinksAsync(
             context,
@@ -980,7 +753,7 @@ public sealed class DatabaseSeederWorker(
             speciesMap,
             practiceMap,
             actionMap,
-            existingLinks.Select(l => (l.Id, l.SpeciesId, l.NrcsPracticeId, l.FwsActionId)),
+            existingKeys,
             stoppingToken
         );
 
@@ -1034,9 +807,7 @@ public sealed class DatabaseSeederWorker(
         }
 
         if (batchCount > 0)
-        {
             await context.SaveChangesAsync(stoppingToken);
-        }
 
         logger.LogInformation(
             "FWS links seeded: {Count} new, {Refreshed} justifications refreshed",
@@ -1063,9 +834,7 @@ public sealed class DatabaseSeederWorker(
                 && practiceMap.TryGetValue(dto.NrcsPracticeCode, out var practiceId)
                 && actionMap.TryGetValue(dto.FwsActionCode, out var actionId)
             )
-            {
                 sanctioned.Add((speciesId, practiceId, actionId));
-            }
         }
 
         var staleIds = existingLinks
@@ -1074,9 +843,7 @@ public sealed class DatabaseSeederWorker(
             .ToList();
 
         if (staleIds.Count == 0)
-        {
             return;
-        }
 
         foreach (var batch in staleIds.Chunk(500))
         {
@@ -1164,9 +931,7 @@ public sealed class DatabaseSeederWorker(
         foreach (var mapping in UsgsParameterMappings.All)
         {
             if (existingSet.Contains(mapping.Code))
-            {
                 continue;
-            }
             if (!phenomenaByCode.TryGetValue(mapping.PhenomenonCode, out var phenomenonId))
             {
                 logger.LogWarning(
@@ -1253,9 +1018,7 @@ public sealed class DatabaseSeederWorker(
                 .ToListAsync(stoppingToken);
 
             if (batchIds.Count == 0)
-            {
                 break;
-            }
 
             totalScanned += batchIds.Count;
             lastId = batchIds[^1];
@@ -1287,24 +1050,18 @@ public sealed class DatabaseSeederWorker(
             );
 
             if (batchIds.Count < BackfillBatchSize)
-            {
                 break;
-            }
         }
 
         var stillUnresolved = totalScanned - totalResolved;
         if (stillUnresolved > 0)
-        {
             logger.LogWarning(
                 "Backfill resolved {Resolved} reading(s); {Remaining} remain unresolved (no parameter mapping for their source/code)",
                 totalResolved,
                 stillUnresolved
             );
-        }
         else
-        {
             logger.LogInformation("Backfill resolved {Resolved} reading(s)", totalResolved);
-        }
     }
 
     private static readonly JsonSerializerOptions JsonOptions = new()

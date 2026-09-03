@@ -98,7 +98,8 @@ public partial class SightingDetailDialog : EcoDataComponent
         var validation = new SightingNoteDtoForCreateValidator().Validate(dto);
         if (!validation.IsValid)
         {
-            _noteError = string.Join(" ", validation.Errors.Select(e => e.ErrorMessage));
+            var messages = validation.Errors.Select(e => e.ErrorMessage);
+            _noteError = string.Join(" ", messages);
             return;
         }
 
@@ -157,9 +158,7 @@ public partial class SightingDetailDialog : EcoDataComponent
         }
 
         if (_pendingFiles.Count > 0)
-        {
             _ = UploadPendingState.TryExecute();
-        }
     }
 
     [Command]

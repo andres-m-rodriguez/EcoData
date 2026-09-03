@@ -12,17 +12,13 @@ public static class UserClaimsExtensions
         yield return new Claim(ClaimTypes.Name, user.DisplayName);
 
         if (user.GlobalRole.HasValue)
-        {
             yield return new Claim(ClaimTypes.Role, user.GlobalRole.Value.ToString());
-        }
     }
 
     public static ClaimsPrincipal ToClaimsPrincipal(this UserInfo? user, string authenticationType = "EcoPortal")
     {
         if (user is null)
-        {
             return new ClaimsPrincipal(new ClaimsIdentity());
-        }
 
         var identity = new ClaimsIdentity(user.ToClaims(), authenticationType);
         return new ClaimsPrincipal(identity);

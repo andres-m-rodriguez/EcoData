@@ -68,9 +68,7 @@ public sealed class ReadingRepository(IDbContextFactory<SensorsDbContext> contex
         }
 
         if (!string.IsNullOrWhiteSpace(parameters.Parameter))
-        {
             query = query.Where(r => r.Parameter == parameters.Parameter);
-        }
 
         if (parameters.FromDate.HasValue)
         {
@@ -85,9 +83,7 @@ public sealed class ReadingRepository(IDbContextFactory<SensorsDbContext> contex
         }
 
         if (parameters.Cursor.HasValue)
-        {
             query = query.Where(r => r.Id < parameters.Cursor.Value);
-        }
 
         await foreach (
             var reading in query
@@ -198,9 +194,7 @@ public sealed class ReadingRepository(IDbContextFactory<SensorsDbContext> contex
         }
 
         if (!string.IsNullOrWhiteSpace(parameters.Parameter))
-        {
             query = query.Where(r => r.Parameter == parameters.Parameter);
-        }
 
         var aggregates = await query
             .GroupBy(r => r.Parameter)

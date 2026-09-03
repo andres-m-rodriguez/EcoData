@@ -49,7 +49,7 @@ public partial class NuiVirtualizedGrid<TItem, TParams> : ComponentBase
     /// <summary>Height of a single row in pixels. Used by Virtualize for scroll math.</summary>
     [Parameter] public float ItemSize { get; set; } = 400;
 
-    /// <summary>Number of extra rows rendered before and after the visible range.</summary>
+    /// <summary>Number of extra rows rendered before and after the visible row.</summary>
     [Parameter] public int OverscanCount { get; set; } = 4;
 
     /// <summary>Columns per row. Defaults to 1 (single-column list).</summary>
@@ -92,9 +92,7 @@ public partial class NuiVirtualizedGrid<TItem, TParams> : ComponentBase
         }
 
         if (_cachedItems.Count < parameters.PageSize)
-        {
             _hasMoreItems = false;
-        }
 
         _isEmpty = _cachedItems.Count == 0;
         _isInitialLoading = false;
@@ -111,9 +109,7 @@ public partial class NuiVirtualizedGrid<TItem, TParams> : ComponentBase
         while (_hasMoreItems && _cachedItems.Count < lastItemIndex)
         {
             if (_generation != currentGeneration)
-            {
                 return EmptyResult();
-            }
 
             var parameters = ParametersBuilder(_lastCursor);
 
@@ -121,9 +117,7 @@ public partial class NuiVirtualizedGrid<TItem, TParams> : ComponentBase
             await foreach (var item in ItemsProvider(parameters, request.CancellationToken))
             {
                 if (_generation != currentGeneration)
-                {
                     return EmptyResult();
-                }
 
                 _cachedItems.Add(item);
                 _lastCursor = CursorSelector(item);
@@ -131,9 +125,7 @@ public partial class NuiVirtualizedGrid<TItem, TParams> : ComponentBase
             }
 
             if (fetchedCount < parameters.PageSize)
-            {
                 _hasMoreItems = false;
-            }
         }
 
         var rows = new List<IReadOnlyList<TItem>>(request.Count);
@@ -141,12 +133,11 @@ public partial class NuiVirtualizedGrid<TItem, TParams> : ComponentBase
         {
             var rowStart = rowIndex * cols;
             if (rowStart >= _cachedItems.Count)
-            {
                 break;
-            }
 
             var rowEnd = Math.Min(rowStart + cols, _cachedItems.Count);
-            rows.Add(_cachedItems.GetRange(rowStart, rowEnd - rowStart));
+            var row = _cachedItems.GetRange(rowStart, rowEnd - rowStart);
+            rows.Add(row);
         }
 
         var knownRows = (_cachedItems.Count + cols - 1) / cols;

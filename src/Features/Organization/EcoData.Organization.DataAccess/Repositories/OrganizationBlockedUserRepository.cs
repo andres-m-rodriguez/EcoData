@@ -34,9 +34,7 @@ public sealed class OrganizationBlockedUserRepository(
             .ToListAsync(cancellationToken);
 
         if (blockedUsers.Count == 0)
-        {
             yield break;
-        }
 
         var userIds = blockedUsers
             .SelectMany(b => new[] { b.UserId, b.BlockedByUserId })
@@ -133,9 +131,7 @@ public sealed class OrganizationBlockedUserRepository(
             );
 
         if (entity is null)
-        {
             return false;
-        }
 
         context.OrganizationBlockedUsers.Remove(entity);
         await context.SaveChangesAsync(cancellationToken);

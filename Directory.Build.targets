@@ -1,0 +1,11 @@
+<Project>
+
+  <!-- Every project runs the EcoData analyzers on build. The analyzer projects and their
+       tests opt out with UseEcoDataAnalyzers=false; the tests reference them as ordinary
+       assemblies instead. -->
+  <ItemGroup Condition="'$(UseEcoDataAnalyzers)' != 'false' and '$(MSBuildProjectExtension)' == '.csproj'">
+    <ProjectReference Include="$(MSBuildThisFileDirectory)src\Analyzers\EcoData.Analyzers\EcoData.Analyzers.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+    <ProjectReference Include="$(MSBuildThisFileDirectory)src\Analyzers\EcoData.Analyzers.CodeFixes\EcoData.Analyzers.CodeFixes.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+  </ItemGroup>
+
+</Project>

@@ -47,12 +47,10 @@ public static class SensorHealthConfigEndpoints
                 {
                     var sensor = await sensorRepository.GetByIdAsync(sensorId, ct);
                     if (sensor is null)
-                    {
                         return TypedResults.Problem(
                             detail: "Sensor not found",
                             statusCode: StatusCodes.Status404NotFound
                         );
-                    }
 
                     var config = await repository.UpsertConfigAsync(sensorId, dto, ct);
                     return TypedResults.Ok(config);

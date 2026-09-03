@@ -25,9 +25,7 @@ public sealed class ClientRoutedPageAuthorizationHandler : IAuthorizationMiddlew
             !authorizeResult.Succeeded
             && context.GetEndpoint()?.Metadata.GetMetadata<ComponentTypeMetadata>() is not null
         )
-        {
             return next(context);
-        }
 
         return _default.HandleAsync(next, context, policy, authorizeResult);
     }

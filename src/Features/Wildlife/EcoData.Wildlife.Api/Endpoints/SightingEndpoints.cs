@@ -181,8 +181,8 @@ public static class SightingEndpoints
                 {
                     if (!await auth.HasAsync(WildlifePermissions.VerifyOccurrence, organizationId, ct))
                         return TypedResults.Forbid();
-
-                    return TypedResults.Ok(await repository.CountAsync(organizationId, status, ct));
+                    var count = await repository.CountAsync(organizationId, status, ct);
+                    return TypedResults.Ok(count);
                 }
             )
             .WithName("CountOrganizationSightings");

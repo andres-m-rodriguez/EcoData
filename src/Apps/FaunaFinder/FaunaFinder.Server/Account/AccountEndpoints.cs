@@ -52,9 +52,7 @@ public static class AccountEndpoints
                         );
 
                         if (!registerResponse.IsSuccessStatusCode)
-                        {
                             return await RelayAsync(registerResponse, ct);
-                        }
 
                         var loginResponse = await httpClient.PostAsJsonAsync(
                             "identity/auth/login",
@@ -63,9 +61,7 @@ public static class AccountEndpoints
                         );
 
                         if (!loginResponse.IsSuccessStatusCode)
-                        {
                             return await RelayAsync(loginResponse, ct);
-                        }
 
                         var login = (await loginResponse.Content.ReadFromJsonAsync<LoginResponse>(ct))!;
 
@@ -98,7 +94,6 @@ public static class AccountEndpoints
                                 accessRequestSubmitted = accessResponse.IsSuccessStatusCode;
 
                                 if (!accessRequestSubmitted)
-                                {
                                     loggerFactory
                                         .CreateLogger(nameof(AccountEndpoints))
                                         .LogWarning(
@@ -106,7 +101,6 @@ public static class AccountEndpoints
                                             login.User.Id,
                                             (int)accessResponse.StatusCode
                                         );
-                                }
                             }
                             catch (Exception e)
                                 when (e is HttpRequestException
@@ -165,9 +159,7 @@ public static class AccountEndpoints
                         );
 
                         if (!response.IsSuccessStatusCode)
-                        {
                             return await RelayAsync(response, ct);
-                        }
 
                         var login = (await response.Content.ReadFromJsonAsync<LoginResponse>(ct))!;
 
@@ -210,9 +202,7 @@ public static class AccountEndpoints
                 ) =>
                 {
                     if (!httpContext.Request.Cookies.TryGetValue(AuthCookieName, out var token))
-                    {
                         return TypedResults.Unauthorized();
-                    }
 
                     var httpClient = httpClientFactory.CreateClient(HttpClientName);
 
@@ -226,9 +216,7 @@ public static class AccountEndpoints
 
                         var response = await httpClient.SendAsync(request, ct);
                         if (!response.IsSuccessStatusCode)
-                        {
                             return TypedResults.Unauthorized();
-                        }
 
                         var userInfo = (await response.Content.ReadFromJsonAsync<UserInfo>(ct))!;
                         return TypedResults.Ok(userInfo);
@@ -260,14 +248,10 @@ public static class AccountEndpoints
                 ) =>
                 {
                     if (!httpContext.Request.Cookies.TryGetValue(AuthCookieName, out var token))
-                    {
                         return TypedResults.Unauthorized();
-                    }
 
                     if (organizationLoader.Current is not { } organization)
-                    {
                         return TypedResults.Ok(new List<OrganizationAccessRequestDto>());
-                    }
 
                     var httpClient = httpClientFactory.CreateClient(HttpClientName);
 
@@ -281,18 +265,15 @@ public static class AccountEndpoints
 
                         var response = await httpClient.SendAsync(request, ct);
                         if (!response.IsSuccessStatusCode)
-                        {
                             return TypedResults.Unauthorized();
-                        }
 
                         var requests = (
                             await response.Content.ReadFromJsonAsync<
                                 List<OrganizationAccessRequestDto>
                             >(ct)
                         )!;
-                        return TypedResults.Ok(
-                            requests.Where(r => r.OrganizationId == organization.Id).ToList()
-                        );
+                        var mine = requests.Where(r => r.OrganizationId == organization.Id).ToList();
+                        return TypedResults.Ok(mine);
                     }
                     catch (Exception e)
                         when (e is HttpRequestException
@@ -316,12 +297,10 @@ public static class AccountEndpoints
                 ) =>
                 {
                     if (organizationLoader.Current is not { } organization)
-                    {
                         return TypedResults.Problem(
                             detail: "The FaunaFinder organization has not been resolved yet.",
                             statusCode: StatusCodes.Status503ServiceUnavailable
                         );
-                    }
 
                     return TypedResults.Ok(
                         new FaunaFinderOrganizationDto(
@@ -345,12 +324,10 @@ public static class AccountEndpoints
                 ) =>
                 {
                     if (organizationLoader.Current is not { } organization)
-                    {
                         return TypedResults.Problem(
                             detail: "The FaunaFinder organization has not been resolved yet.",
                             statusCode: StatusCodes.Status503ServiceUnavailable
                         );
-                    }
 
                     // The authorization policy already required the cookie.
                     var token = httpContext.Request.Cookies[AuthCookieName];
@@ -366,9 +343,7 @@ public static class AccountEndpoints
 
                         var response = await httpClient.SendAsync(request, ct);
                         if (!response.IsSuccessStatusCode)
-                        {
                             return await RelayAsync(response, ct);
-                        }
 
                         var permissions = (
                             await response.Content.ReadFromJsonAsync<UserPermissionsDto>(ct)

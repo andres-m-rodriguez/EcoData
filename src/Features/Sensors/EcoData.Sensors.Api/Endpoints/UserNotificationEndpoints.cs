@@ -33,13 +33,12 @@ public static class UserNotificationEndpoints
                 {
                     var token = new RequestClaimToken(user);
                     if (!token.IsAuthenticated)
-                    {
                         return TypedResults.Unauthorized();
-                    }
+                    var limit = Math.Min(pageSize, 100);
 
                     var notifications = await repository.GetByUserAsync(
                         token.UserId.Value,
-                        Math.Min(pageSize, 100),
+                        limit,
                         cursor,
                         ct
                     );
@@ -60,9 +59,7 @@ public static class UserNotificationEndpoints
                 {
                     var token = new RequestClaimToken(user);
                     if (!token.IsAuthenticated)
-                    {
                         return TypedResults.Unauthorized();
-                    }
 
                     var count = await repository.GetUnreadCountAsync(token.UserId.Value, ct);
                     return TypedResults.Ok(new UnreadCountDto(count));
@@ -82,9 +79,7 @@ public static class UserNotificationEndpoints
                 {
                     var token = new RequestClaimToken(user);
                     if (!token.IsAuthenticated)
-                    {
                         return TypedResults.Unauthorized();
-                    }
 
                     var notification = await repository.MarkAsReadAsync(
                         token.UserId.Value,
@@ -93,9 +88,7 @@ public static class UserNotificationEndpoints
                     );
 
                     if (notification is null)
-                    {
                         return TypedResults.NotFound();
-                    }
 
                     return TypedResults.Ok(notification);
                 }
@@ -113,9 +106,7 @@ public static class UserNotificationEndpoints
                 {
                     var token = new RequestClaimToken(user);
                     if (!token.IsAuthenticated)
-                    {
                         return TypedResults.Unauthorized();
-                    }
 
                     var count = await repository.MarkAllAsReadAsync(token.UserId.Value, ct);
                     return TypedResults.Ok(count);

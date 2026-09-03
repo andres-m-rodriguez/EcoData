@@ -48,16 +48,12 @@ public sealed class OrganizationMemberHttpClient(HttpClient httpClient)
                 return new RequestFailed((int)response.StatusCode, problem?.Detail ?? problem?.Title);
             }
 
-            var result = await response.Content.ReadFromJsonAsync<OrganizationMemberDto>(
-                cancellationToken
-            );
+            var result = await response.Content.ReadFromJsonAsync<OrganizationMemberDto>(cancellationToken);
             if (result is null)
-            {
                 return new RequestFailed(
                     (int)response.StatusCode,
                     "The server returned an empty response."
                 );
-            }
 
             return result;
         }
@@ -88,16 +84,12 @@ public sealed class OrganizationMemberHttpClient(HttpClient httpClient)
                 return new RequestFailed((int)response.StatusCode, problem?.Detail ?? problem?.Title);
             }
 
-            var result = await response.Content.ReadFromJsonAsync<OrganizationMemberDto>(
-                cancellationToken
-            );
+            var result = await response.Content.ReadFromJsonAsync<OrganizationMemberDto>(cancellationToken);
             if (result is null)
-            {
                 return new RequestFailed(
                     (int)response.StatusCode,
                     "The server returned an empty response."
                 );
-            }
 
             return result;
         }

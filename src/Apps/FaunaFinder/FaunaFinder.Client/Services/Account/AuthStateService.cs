@@ -40,9 +40,7 @@ public sealed class AuthStateService(IAccountHttpClient accountClient, IEventBus
 
         _currentUser = await accountClient.GetCurrentUserAsync();
         if (_currentUser is not null)
-        {
             await RefreshMembershipAsync();
-        }
 
         _isInitialized = true;
         NotifyStateChanged();

@@ -24,7 +24,7 @@ def main():
     print("Logging in as admin...")
     login_response = session.post(
         f"{BASE_URL}/identity/auth/login",
-        json={"email": "admin@gmail.com", "password": "Admin@123"}
+        json={"email": "global@admin.dev", "password": "Dev@12345"}
     )
 
     if login_response.status_code != 200:

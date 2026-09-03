@@ -43,9 +43,7 @@ public static class OrganizationAccessRequestEndpoints
                 {
                     var token = new RequestClaimToken(user);
                     if (!token.IsAuthenticated)
-                    {
                         return TypedResults.Unauthorized();
-                    }
 
                     var isBlocked = await blockedUserRepository.IsBlockedAsync(
                         organizationId,
@@ -53,12 +51,10 @@ public static class OrganizationAccessRequestEndpoints
                         ct
                     );
                     if (isBlocked)
-                    {
                         return TypedResults.Problem(
                             detail: "You are blocked from requesting access to this organization.",
                             statusCode: StatusCodes.Status409Conflict
                         );
-                    }
 
                     var isMember = await memberRepository.ExistsAsync(
                         organizationId,
@@ -66,12 +62,10 @@ public static class OrganizationAccessRequestEndpoints
                         ct
                     );
                     if (isMember)
-                    {
                         return TypedResults.Problem(
                             detail: "You are already a member of this organization.",
                             statusCode: StatusCodes.Status409Conflict
                         );
-                    }
 
                     var hasPending = await repository.ExistsPendingAsync(
                         token.UserId.Value,
@@ -79,22 +73,18 @@ public static class OrganizationAccessRequestEndpoints
                         ct
                     );
                     if (hasPending)
-                    {
                         return TypedResults.Problem(
                             detail: "You already have a pending access request for this organization.",
                             statusCode: StatusCodes.Status409Conflict
                         );
-                    }
 
                     var role = await roleRepository.GetByNameAsync(organizationId, request.RoleName, ct);
 
                     if (role is null)
-                    {
                         return TypedResults.Problem(
                             detail: $"Role '{request.RoleName}' does not exist in this organization.",
                             statusCode: StatusCodes.Status400BadRequest
                         );
-                    }
 
                     var accessRequest = await repository.CreateAsync(
                         token.UserId.Value,
@@ -136,13 +126,10 @@ public static class OrganizationAccessRequestEndpoints
                             ct
                         )
                     )
-                    {
                         return TypedResults.Forbid();
-                    }
+                    var accessRequests = repository.GetByOrganizationAsync(organizationId, parameters, ct);
 
-                    return TypedResults.Ok(
-                        repository.GetByOrganizationAsync(organizationId, parameters, ct)
-                    );
+                    return TypedResults.Ok(accessRequests);
                 }
             )
             .WithName("GetOrganizationAccessRequests");
@@ -169,18 +156,14 @@ public static class OrganizationAccessRequestEndpoints
                             ct
                         )
                     )
-                    {
                         return TypedResults.Forbid();
-                    }
 
                     var accessRequest = await repository.GetByIdAsync(id, ct);
                     if (accessRequest is null || accessRequest.OrganizationId != organizationId)
-                    {
                         return TypedResults.Problem(
                             detail: "Access request not found.",
                             statusCode: StatusCodes.Status404NotFound
                         );
-                    }
 
                     return TypedResults.Ok(accessRequest);
                 }
@@ -213,28 +196,22 @@ public static class OrganizationAccessRequestEndpoints
                             ct
                         )
                     )
-                    {
                         return TypedResults.Forbid();
-                    }
 
                     var existingRequest = await repository.GetByIdAsync(id, ct);
                     if (existingRequest is null || existingRequest.OrganizationId != organizationId)
-                    {
                         return TypedResults.Problem(
                             detail: "Access request not found.",
                             statusCode: StatusCodes.Status404NotFound
                         );
-                    }
 
                     if (
                         existingRequest.Status != OrganizationAccessRequestStatus.Pending.ToString()
                     )
-                    {
                         return TypedResults.Problem(
                             detail: "This request has already been processed.",
                             statusCode: StatusCodes.Status400BadRequest
                         );
-                    }
 
                     var status = request.Approved
                         ? OrganizationAccessRequestStatus.Approved
@@ -249,15 +226,12 @@ public static class OrganizationAccessRequestEndpoints
                     );
 
                     if (updatedRequest is null)
-                    {
                         return TypedResults.Problem(
                             detail: "Access request not found.",
                             statusCode: StatusCodes.Status404NotFound
                         );
-                    }
 
                     if (request.Approved)
-                    {
                         await memberRepository.CreateAsync(
                             organizationId,
                             existingRequest.UserId,
@@ -265,7 +239,6 @@ public static class OrganizationAccessRequestEndpoints
                             existingRequest.RoleName ?? DefaultRoles.Viewer,
                             ct
                         );
-                    }
 
                     return TypedResults.Ok(updatedRequest);
                 }
@@ -291,13 +264,10 @@ public static class OrganizationAccessRequestEndpoints
                 {
                     var token = new RequestClaimToken(user);
                     if (!token.IsAuthenticated)
-                    {
                         return TypedResults.Unauthorized();
-                    }
+                    var accessRequests = repository.GetByUserAsync(token.UserId.Value, parameters, ct);
 
-                    return TypedResults.Ok(
-                        repository.GetByUserAsync(token.UserId.Value, parameters, ct)
-                    );
+                    return TypedResults.Ok(accessRequests);
                 }
             )
             .WithName("GetMyAccessRequests");
@@ -316,35 +286,27 @@ public static class OrganizationAccessRequestEndpoints
                 {
                     var token = new RequestClaimToken(user);
                     if (!token.IsAuthenticated)
-                    {
                         return TypedResults.Unauthorized();
-                    }
 
                     var accessRequest = await repository.GetByIdAsync(id, ct);
                     if (accessRequest is null || accessRequest.UserId != token.UserId.Value)
-                    {
                         return TypedResults.Problem(
                             detail: "Access request not found.",
                             statusCode: StatusCodes.Status404NotFound
                         );
-                    }
 
                     if (accessRequest.Status != OrganizationAccessRequestStatus.Pending.ToString())
-                    {
                         return TypedResults.Problem(
                             detail: "Only pending requests can be cancelled.",
                             statusCode: StatusCodes.Status400BadRequest
                         );
-                    }
 
                     var cancelled = await repository.CancelAsync(id, ct);
                     if (cancelled is null)
-                    {
                         return TypedResults.Problem(
                             detail: "Access request not found.",
                             statusCode: StatusCodes.Status404NotFound
                         );
-                    }
 
                     return TypedResults.Ok(cancelled);
                 }

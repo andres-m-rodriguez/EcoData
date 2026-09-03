@@ -58,9 +58,7 @@ public sealed class UserJwtAuthenticationHandler(
         var token = Request.Cookies[UserJwtAuthentication.CookieName];
 
         if (string.IsNullOrEmpty(token))
-        {
             return Task.FromResult(AuthenticateResult.NoResult());
-        }
 
         try
         {
@@ -83,20 +81,21 @@ public sealed class UserJwtAuthenticationHandler(
 
             var tokenType = principal.FindFirst("token_type")?.Value;
             if (tokenType != "user")
-            {
                 return Task.FromResult(AuthenticateResult.Fail("Invalid token type"));
-            }
 
             var ticket = new AuthenticationTicket(principal, UserJwtAuthentication.SchemeName);
-            return Task.FromResult(AuthenticateResult.Success(ticket));
+            var succeeded = AuthenticateResult.Success(ticket);
+            return Task.FromResult(succeeded);
         }
         catch (SecurityTokenExpiredException)
         {
-            return Task.FromResult(AuthenticateResult.Fail("Token has expired"));
+            var expired = AuthenticateResult.Fail("Token has expired");
+            return Task.FromResult(expired);
         }
         catch (Exception ex)
         {
-            return Task.FromResult(AuthenticateResult.Fail($"Token validation failed: {ex.Message}"));
+            var failed = AuthenticateResult.Fail($"Token validation failed: {ex.Message}");
+            return Task.FromResult(failed);
         }
     }
 }

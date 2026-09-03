@@ -18,9 +18,8 @@ public static class GeometryHelpers
 
     public static Polygon CreatePolygon(double[][] coordinates)
     {
-        var ring = GeometryFactory.CreateLinearRing(
-            coordinates.Select(c => new Coordinate(c[0], c[1])).ToArray()
-        );
+        var points = coordinates.Select(c => new Coordinate(c[0], c[1])).ToArray();
+        var ring = GeometryFactory.CreateLinearRing(points);
         return GeometryFactory.CreatePolygon(ring);
     }
 }

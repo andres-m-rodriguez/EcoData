@@ -64,9 +64,7 @@ public sealed class VirginIslandsBackfillWorker(
 
         var geoJsonPath = Path.Combine(AppContext.BaseDirectory, "Data", "usvi-islands.geojson");
         if (!File.Exists(geoJsonPath))
-        {
             throw new FileNotFoundException("usvi-islands.geojson not found.", geoJsonPath);
-        }
 
         var geoJsonContent = await File.ReadAllTextAsync(geoJsonPath, stoppingToken);
         var geoJsonReader = new GeoJsonReader();
@@ -105,9 +103,7 @@ public sealed class VirginIslandsBackfillWorker(
 
         using var doc = JsonDocument.Parse(geoJsonContent);
         if (!doc.RootElement.TryGetProperty("features", out var features))
-        {
             throw new InvalidOperationException("usvi-islands.geojson has no features array.");
-        }
 
         var islands = new List<Municipality>();
 
@@ -124,8 +120,8 @@ public sealed class VirginIslandsBackfillWorker(
 
             var countyFips = properties.GetProperty("COUNTY").GetString() ?? "";
             var name = properties.GetProperty("NAME").GetString() ?? "";
-
-            var boundary = geoJsonReader.Read<Geometry>(geometryElement.GetRawText());
+            var geoJson = geometryElement.GetRawText();
+            var boundary = geoJsonReader.Read<Geometry>(geoJson);
             boundary.SRID = 4326;
             var centroid = boundary.Centroid;
 
@@ -166,9 +162,7 @@ public sealed class VirginIslandsBackfillWorker(
 
         using var doc = JsonDocument.Parse(geoJsonContent);
         if (!doc.RootElement.TryGetProperty("features", out var features))
-        {
             throw new InvalidOperationException("usvi-islands.geojson has no features array.");
-        }
 
         var refreshed = 0;
 
@@ -185,8 +179,8 @@ public sealed class VirginIslandsBackfillWorker(
 
             if (!islands.TryGetValue(geoJsonId, out var island))
                 continue;
-
-            var boundary = geoJsonReader.Read<Geometry>(geometryElement.GetRawText());
+            var geoJson = geometryElement.GetRawText();
+            var boundary = geoJsonReader.Read<Geometry>(geoJson);
             boundary.SRID = 4326;
 
             if (island.Boundary is not null && island.Boundary.EqualsTopologically(boundary))
@@ -223,9 +217,7 @@ public sealed class VirginIslandsBackfillWorker(
             "usvi_species_locations.json"
         );
         if (!File.Exists(jsonPath))
-        {
             throw new FileNotFoundException("usvi_species_locations.json not found.", jsonPath);
-        }
 
         var json = await File.ReadAllTextAsync(jsonPath, stoppingToken);
         var payload = JsonSerializer.Deserialize<UsviLocationsDto>(json, JsonOptions);
@@ -240,11 +232,9 @@ public sealed class VirginIslandsBackfillWorker(
             .ToDictionaryAsync(m => m.GeoJsonId, m => m.Id, stoppingToken);
 
         if (islands.Count == 0)
-        {
             throw new InvalidOperationException(
                 "No U.S. Virgin Islands municipalities found; the geography step must run first."
             );
-        }
 
         var islandIds = islands.Values.ToHashSet();
 
@@ -329,9 +319,7 @@ public sealed class VirginIslandsBackfillWorker(
                     !islands.TryGetValue(location.IslandGeoJsonId, out var islandId)
                     || !existingLinks.Add(islandId)
                 )
-                {
                     continue;
-                }
 
                 context.MunicipalitySpecies.Add(
                     new MunicipalitySpecies

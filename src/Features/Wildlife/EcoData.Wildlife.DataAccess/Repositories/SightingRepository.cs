@@ -51,7 +51,6 @@ public sealed class SightingRepository(IDbContextFactory<WildlifeDbContext> cont
         context.Sightings.Add(sighting);
 
         if (!string.IsNullOrWhiteSpace(dto.Note))
-        {
             context.SightingNotes.Add(
                 new SightingNote
                 {
@@ -63,7 +62,6 @@ public sealed class SightingRepository(IDbContextFactory<WildlifeDbContext> cont
                     CreatedAtUtc = now,
                 }
             );
-        }
 
         await context.SaveChangesAsync(cancellationToken);
 
@@ -122,19 +120,13 @@ public sealed class SightingRepository(IDbContextFactory<WildlifeDbContext> cont
         var query = context.Sightings.Where(sighting => sighting.ReporterUserId == reporterUserId);
 
         if (parameters.Status is { } status)
-        {
             query = query.Where(sighting => sighting.Status == status);
-        }
 
         if (parameters.SpeciesId is { } speciesId)
-        {
             query = query.Where(sighting => sighting.SpeciesId == speciesId);
-        }
 
         if (parameters.Cursor is { } cursor)
-        {
             query = query.Where(sighting => sighting.Id < cursor);
-        }
 
         await foreach (
             var sighting in query
@@ -247,19 +239,13 @@ public sealed class SightingRepository(IDbContextFactory<WildlifeDbContext> cont
         var query = context.Sightings.Where(sighting => sighting.OrganizationId == organizationId);
 
         if (parameters.Status is { } status)
-        {
             query = query.Where(sighting => sighting.Status == status);
-        }
 
         if (parameters.SpeciesId is { } speciesId)
-        {
             query = query.Where(sighting => sighting.SpeciesId == speciesId);
-        }
 
         if (parameters.Cursor is { } cursor)
-        {
             query = query.Where(sighting => sighting.Id < cursor);
-        }
 
         await foreach (
             var sighting in query
@@ -323,9 +309,7 @@ public sealed class SightingRepository(IDbContextFactory<WildlifeDbContext> cont
         var query = context.Sightings.Where(sighting => sighting.OrganizationId == organizationId);
 
         if (status is { } value)
-        {
             query = query.Where(sighting => sighting.Status == value);
-        }
 
         return await query.CountAsync(cancellationToken);
     }

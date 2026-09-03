@@ -18,7 +18,8 @@ public class OrganizationCacheService(IMemoryCache cache) : IOrganizationCacheSe
 
     public void Set(OrganizationDtoForDetail organization)
     {
-        cache.Set(GetCacheKey(organization.Id), organization, CacheExpiration);
+        var cacheKey = GetCacheKey(organization.Id);
+        cache.Set(cacheKey, organization, CacheExpiration);
     }
 
     public OrganizationDtoForDetail? Get(Guid id)
@@ -30,6 +31,7 @@ public class OrganizationCacheService(IMemoryCache cache) : IOrganizationCacheSe
 
     public void Clear(Guid id)
     {
-        cache.Remove(GetCacheKey(id));
+        var cacheKey = GetCacheKey(id);
+        cache.Remove(cacheKey);
     }
 }

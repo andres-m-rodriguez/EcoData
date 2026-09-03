@@ -26,9 +26,7 @@ public sealed class Localizer : ILocalizer
         IReadOnlyList<ITranslation> translations)
     {
         if (languages.Count == 0)
-        {
             throw new ArgumentException("At least one language must be provided.", nameof(languages));
-        }
 
         _languages = languages;
         _defaultLanguage = languages.FirstOrDefault(l => l.IsDefault)?.Code ?? languages[0].Code;
@@ -42,9 +40,7 @@ public sealed class Localizer : ILocalizer
         foreach (var t in translations)
         {
             if (_byLanguage.TryGetValue(t.LanguageCode, out var bucket))
-            {
                 bucket[t.Key] = t.Value;
-            }
         }
     }
 
@@ -56,13 +52,9 @@ public sealed class Localizer : ILocalizer
     public void SetLanguage(string languageCode)
     {
         if (string.Equals(languageCode, CurrentLanguage, StringComparison.OrdinalIgnoreCase))
-        {
             return;
-        }
         if (!_byLanguage.ContainsKey(languageCode))
-        {
             return;
-        }
         CurrentLanguage = languageCode;
         LanguageChanged?.Invoke();
     }
@@ -73,16 +65,12 @@ public sealed class Localizer : ILocalizer
     {
         if (_byLanguage.TryGetValue(CurrentLanguage, out var bucket)
             && bucket.TryGetValue(key, out var value))
-        {
             return value;
-        }
 
         if (!string.Equals(CurrentLanguage, _defaultLanguage, StringComparison.OrdinalIgnoreCase)
             && _byLanguage.TryGetValue(_defaultLanguage, out var defaultBucket)
             && defaultBucket.TryGetValue(key, out var defaultValue))
-        {
             return defaultValue;
-        }
 
         return key;
     }

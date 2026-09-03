@@ -30,9 +30,7 @@ public sealed class OrganizationRepository(IDbContextFactory<OrganizationDbConte
         }
 
         if (parameters.Cursor.HasValue)
-        {
             query = query.Where(o => o.Id > parameters.Cursor.Value);
-        }
 
         query = query.OrderBy(o => o.Id).Take(parameters.PageSize);
 
@@ -253,17 +251,13 @@ public sealed class OrganizationRepository(IDbContextFactory<OrganizationDbConte
             .FirstOrDefaultAsync(o => o.Id == id, cancellationToken);
 
         if (entity is null)
-        {
             return null;
-        }
 
         if (!string.IsNullOrWhiteSpace(dto.Slug))
         {
             var requested = SlugGenerator.FromName(dto.Slug);
             if (!string.Equals(requested, entity.Slug, StringComparison.Ordinal))
-            {
                 entity.Slug = await ResolveUniqueSlugAsync(context, requested, entity.Id, cancellationToken);
-            }
         }
 
         entity.Name = dto.Name;
@@ -315,9 +309,7 @@ public sealed class OrganizationRepository(IDbContextFactory<OrganizationDbConte
             .FirstOrDefaultAsync(o => o.Id == id, cancellationToken);
 
         if (entity is null)
-        {
             return false;
-        }
 
         context.Organizations.Remove(entity);
         await context.SaveChangesAsync(cancellationToken);
@@ -361,9 +353,7 @@ public sealed class OrganizationRepository(IDbContextFactory<OrganizationDbConte
     )
     {
         if (string.IsNullOrEmpty(baseSlug))
-        {
             throw new ArgumentException("Slug cannot be empty after normalization", nameof(baseSlug));
-        }
 
         var candidate = baseSlug;
         var attempt = 2;

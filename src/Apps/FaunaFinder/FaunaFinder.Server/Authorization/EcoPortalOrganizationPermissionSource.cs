@@ -63,11 +63,9 @@ public sealed class EcoPortalOrganizationPermissionSource(
             )
             || string.IsNullOrEmpty(token)
         )
-        {
             return Task.FromResult(
                 new UserPermissionsDto(organizationId, [], IsGlobalAdmin: false)
             );
-        }
 
         if (!_cache.TryGetValue(organizationId, out var task))
         {
@@ -105,13 +103,11 @@ public sealed class EcoPortalOrganizationPermissionSource(
             if (!response.IsSuccessStatusCode)
             {
                 if (response.StatusCode != HttpStatusCode.Unauthorized)
-                {
                     logger.LogWarning(
                         "EcoPortal answered {StatusCode} while resolving permissions for organization {OrganizationId}",
                         (int)response.StatusCode,
                         organizationId
                     );
-                }
 
                 return new UserPermissionsDto(organizationId, [], IsGlobalAdmin: false);
             }

@@ -83,9 +83,7 @@ public sealed class JwtTokenService(IOptions<JwtSettings> settings) : IJwtTokenS
         };
 
         if (role is not null)
-        {
             claims.Add(new Claim(ClaimTypes.Role, role));
-        }
 
         var token = new JwtSecurityToken(
             issuer: _settings.Issuer,

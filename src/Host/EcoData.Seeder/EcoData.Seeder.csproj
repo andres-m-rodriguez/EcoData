@@ -7,17 +7,18 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.3">
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="NetTopologySuite.IO.GeoJSON" Version="4.0.0" />
+    <PackageReference Include="NetTopologySuite.IO.GeoJSON" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\EcoData.ServiceDefaults\EcoData.ServiceDefaults.csproj" />
     <ProjectReference Include="..\..\Features\Organization\EcoData.Organization.Contracts\EcoData.Organization.Contracts.csproj" />
     <ProjectReference Include="..\..\Features\Organization\EcoData.Organization.Database\EcoData.Organization.Database.csproj" />
+    <ProjectReference Include="..\..\Features\Sensors\EcoData.Sensors.Contracts\EcoData.Sensors.Contracts.csproj" />
     <ProjectReference Include="..\..\Features\Sensors\EcoData.Sensors.Database\EcoData.Sensors.Database.csproj" />
     <ProjectReference Include="..\..\Features\Identity\EcoData.Identity.Database\EcoData.Identity.Database.csproj" />
     <ProjectReference Include="..\..\Features\Locations\EcoData.Locations.Database\EcoData.Locations.Database.csproj" />

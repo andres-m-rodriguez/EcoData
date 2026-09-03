@@ -106,9 +106,7 @@ public partial class EcoDataVirtualizedGrid<TItem, TParams> : ComponentBase
         }
 
         if (_cachedItems.Count < parameters.PageSize)
-        {
             _hasMoreItems = false;
-        }
 
         _isEmpty = _cachedItems.Count == 0;
         _isInitialLoading = false;
@@ -139,9 +137,7 @@ public partial class EcoDataVirtualizedGrid<TItem, TParams> : ComponentBase
             }
 
             if (fetchedCount < parameters.PageSize)
-            {
                 _hasMoreItems = false;
-            }
         }
 
         return CreateResult(startIndex, request.Count);

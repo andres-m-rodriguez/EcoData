@@ -44,11 +44,9 @@ public static class OrganizationBlockedUserEndpoints
                             ct
                         )
                     )
-                    {
                         return TypedResults.Forbid();
-                    }
-
-                    return TypedResults.Ok(repository.GetByOrganizationAsync(organizationId, ct));
+                    var blockedUsers = repository.GetByOrganizationAsync(organizationId, ct);
+                    return TypedResults.Ok(blockedUsers);
                 }
             )
             .WithName("GetBlockedUsers");
@@ -81,9 +79,7 @@ public static class OrganizationBlockedUserEndpoints
                             ct
                         )
                     )
-                    {
                         return TypedResults.Forbid();
-                    }
 
                     var isAlreadyBlocked = await repository.IsBlockedAsync(
                         organizationId,
@@ -91,12 +87,10 @@ public static class OrganizationBlockedUserEndpoints
                         ct
                     );
                     if (isAlreadyBlocked)
-                    {
                         return TypedResults.Problem(
                             detail: "This user is already blocked.",
                             statusCode: StatusCodes.Status409Conflict
                         );
-                    }
 
                     var blocked = await repository.BlockAsync(
                         organizationId,
@@ -136,18 +130,14 @@ public static class OrganizationBlockedUserEndpoints
                             ct
                         )
                     )
-                    {
                         return TypedResults.Forbid();
-                    }
 
                     var unblocked = await repository.UnblockAsync(organizationId, userId, ct);
                     if (!unblocked)
-                    {
                         return TypedResults.Problem(
                             detail: "User is not blocked.",
                             statusCode: StatusCodes.Status404NotFound
                         );
-                    }
                     return TypedResults.NoContent();
                 }
             )

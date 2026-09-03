@@ -47,9 +47,7 @@ public sealed class SensorHealthMonitorWorker(
         using var scope = scopeFactory.CreateScope();
         var healthRepository = scope.ServiceProvider.GetRequiredService<ISensorHealthRepository>();
 
-        var monitoredStatuses = await healthRepository.GetMonitoredStatusesWithConfigAsync(
-            cancellationToken
-        );
+        var monitoredStatuses = await healthRepository.GetMonitoredStatusesWithConfigAsync(cancellationToken);
 
         if (monitoredStatuses.Count == 0)
         {
@@ -88,12 +86,13 @@ public sealed class SensorHealthMonitorWorker(
                 previousStatus,
                 newStatus
             );
+            var statusMessage = GetStatusMessage(newStatus, status.LastReadingAt, now);
 
             await healthRepository.UpdateStatusAsync(
                 status.SensorId,
                 newStatus,
                 status.LastReadingAt,
-                GetStatusMessage(newStatus, status.LastReadingAt, now),
+                statusMessage,
                 cancellationToken
             );
 
@@ -150,18 +149,14 @@ public sealed class SensorHealthMonitorWorker(
         }
 
         if (staleCount > 0 || unhealthyCount > 0 || recoveredCount > 0)
-        {
             logger.LogInformation(
                 "Health check completed. Stale: {StaleCount}, Unhealthy: {UnhealthyCount}, Recovered: {RecoveredCount}",
                 staleCount,
                 unhealthyCount,
                 recoveredCount
             );
-        }
         else
-        {
             logger.LogDebug("Health check completed. No status changes detected");
-        }
     }
 
     private static SensorHealthStatusType DetermineHealthStatus(
@@ -170,23 +165,17 @@ public sealed class SensorHealthMonitorWorker(
     )
     {
         if (!status.LastReadingAt.HasValue)
-        {
             return SensorHealthStatusType.Unknown;
-        }
 
         var timeSinceLastReading = now - status.LastReadingAt.Value;
         var staleThreshold = TimeSpan.FromSeconds(status.StaleThresholdSeconds);
         var unhealthyThreshold = TimeSpan.FromSeconds(status.UnhealthyThresholdSeconds);
 
         if (timeSinceLastReading >= unhealthyThreshold)
-        {
             return SensorHealthStatusType.Unhealthy;
-        }
 
         if (timeSinceLastReading >= staleThreshold)
-        {
             return SensorHealthStatusType.Stale;
-        }
 
         return SensorHealthStatusType.Healthy;
     }
@@ -198,9 +187,7 @@ public sealed class SensorHealthMonitorWorker(
     )
     {
         if (!lastReadingAt.HasValue)
-        {
             return "No readings received yet";
-        }
 
         var timeSinceLastReading = now - lastReadingAt.Value;
 
@@ -217,9 +204,7 @@ public sealed class SensorHealthMonitorWorker(
     private static string FormatLastReading(DateTimeOffset? lastReadingAt, DateTimeOffset now)
     {
         if (!lastReadingAt.HasValue)
-        {
             return "never";
-        }
 
         var timeSinceLastReading = now - lastReadingAt.Value;
         return $"{FormatDuration(timeSinceLastReading)} ago";
@@ -228,19 +213,13 @@ public sealed class SensorHealthMonitorWorker(
     private static string FormatDuration(TimeSpan duration)
     {
         if (duration.TotalDays >= 1)
-        {
             return $"{(int)duration.TotalDays} day(s)";
-        }
 
         if (duration.TotalHours >= 1)
-        {
             return $"{(int)duration.TotalHours} hour(s)";
-        }
 
         if (duration.TotalMinutes >= 1)
-        {
             return $"{(int)duration.TotalMinutes} minute(s)";
-        }
 
         return $"{(int)duration.TotalSeconds} second(s)";
     }
@@ -267,10 +246,11 @@ public sealed class SensorHealthMonitorWorker(
             alert.ResolvedAt,
             alert.Message
         );
+        var sensorTopic = alert.SensorId.ToString();
 
         await messageBus.PublishEventAsync(
             alertEvent,
-            alert.SensorId.ToString(),
+            sensorTopic,
             cancellationToken: cancellationToken
         );
 

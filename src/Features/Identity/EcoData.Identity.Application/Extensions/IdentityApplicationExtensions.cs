@@ -17,7 +17,8 @@ public static class IdentityApplicationExtensions
         IConfiguration configuration
     )
     {
-        services.Configure<JwtSettings>(configuration.GetSection(JwtSettings.SectionName));
+        var jwtSection = configuration.GetSection(JwtSettings.SectionName);
+        services.Configure<JwtSettings>(jwtSection);
 
         services.AddIdentity<User, IdentityRole<Guid>>(options =>
         {

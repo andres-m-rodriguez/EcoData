@@ -26,17 +26,13 @@ public static class BrowserGeolocation
     {
         var imported = await js.ImportAsync(ModulePath, ct);
         if (!imported.TryPickT0(out var module, out _))
-        {
             return Unavailable;
-        }
 
         var position = await js.InvokeAsync<RawPosition>(module, "getPosition", ct, timeoutMs);
         await js.DisposeAsync(module);
 
         if (!position.TryPickT0(out var raw, out _))
-        {
             return Unavailable;
-        }
 
         var status = raw.Status switch
         {

@@ -7,9 +7,7 @@ public sealed class QueryStringBuilder
     public QueryStringBuilder Add(string key, string? value)
     {
         if (!string.IsNullOrWhiteSpace(value))
-        {
             _parameters.Add($"{key}={Uri.EscapeDataString(value)}");
-        }
 
         return this;
     }
@@ -17,9 +15,7 @@ public sealed class QueryStringBuilder
     public QueryStringBuilder Add(string key, int? value)
     {
         if (value.HasValue)
-        {
             _parameters.Add($"{key}={value.Value}");
-        }
 
         return this;
     }
@@ -27,9 +23,7 @@ public sealed class QueryStringBuilder
     public QueryStringBuilder Add(string key, decimal? value)
     {
         if (value.HasValue)
-        {
             _parameters.Add($"{key}={value.Value}");
-        }
 
         return this;
     }
@@ -37,9 +31,7 @@ public sealed class QueryStringBuilder
     public QueryStringBuilder Add(string key, Guid? value)
     {
         if (value.HasValue)
-        {
             _parameters.Add($"{key}={value.Value}");
-        }
 
         return this;
     }
@@ -47,9 +39,7 @@ public sealed class QueryStringBuilder
     public QueryStringBuilder Add(string key, bool? value)
     {
         if (value.HasValue)
-        {
             _parameters.Add($"{key}={value.Value.ToString().ToLowerInvariant()}");
-        }
 
         return this;
     }
@@ -57,9 +47,7 @@ public sealed class QueryStringBuilder
     public QueryStringBuilder Add(string key, DateTimeOffset? value)
     {
         if (value.HasValue)
-        {
             _parameters.Add($"{key}={Uri.EscapeDataString(value.Value.ToString("o"))}");
-        }
 
         return this;
     }
@@ -67,22 +55,16 @@ public sealed class QueryStringBuilder
     public QueryStringBuilder Add<T>(string key, IReadOnlyList<T>? values)
     {
         if (values is null || values.Count == 0)
-        {
             return this;
-        }
 
         foreach (var value in values)
         {
             if (value is null)
-            {
                 continue;
-            }
 
             var text = value.ToString();
             if (string.IsNullOrEmpty(text))
-            {
                 continue;
-            }
 
             _parameters.Add($"{key}={Uri.EscapeDataString(text)}");
         }
@@ -94,9 +76,7 @@ public sealed class QueryStringBuilder
         where TEnum : struct, Enum
     {
         if (value.HasValue)
-        {
             _parameters.Add($"{key}={Uri.EscapeDataString(value.Value.ToString())}");
-        }
 
         return this;
     }

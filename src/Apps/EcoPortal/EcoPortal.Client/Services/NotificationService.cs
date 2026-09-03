@@ -55,9 +55,7 @@ public sealed class NotificationService(IUserNotificationHttpClient notification
     {
         var result = await notificationClient.MarkAllAsReadAsync();
         if (result.IsT1)
-        {
             return false;
-        }
 
         _unreadCount = 0;
         bus.Publish(new NotificationBell.UnreadCountChanged(_unreadCount));

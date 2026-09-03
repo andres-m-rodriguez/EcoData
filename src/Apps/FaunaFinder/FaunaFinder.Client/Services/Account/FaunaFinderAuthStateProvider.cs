@@ -20,7 +20,8 @@ public sealed class FaunaFinderAuthStateProvider : AuthenticationStateProvider, 
             typeof(MainLayout.AuthChanged),
             _ =>
             {
-                NotifyAuthenticationStateChanged(GetAuthenticationStateAsync());
+                var authenticationState = GetAuthenticationStateAsync();
+                NotifyAuthenticationStateChanged(authenticationState);
                 return Task.CompletedTask;
             }
         );
@@ -29,9 +30,7 @@ public sealed class FaunaFinderAuthStateProvider : AuthenticationStateProvider, 
     public override async Task<AuthenticationState> GetAuthenticationStateAsync()
     {
         if (!_authStateService.IsInitialized)
-        {
             await _authStateService.InitializeAsync();
-        }
 
         var principal = _authStateService.CurrentUser.ToClaimsPrincipal();
         return new AuthenticationState(principal);

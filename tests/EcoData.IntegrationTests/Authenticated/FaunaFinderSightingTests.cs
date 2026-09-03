@@ -24,9 +24,10 @@ public sealed class FaunaFinderSightingTests(SightingReporters reporters)
     [Fact]
     public async Task Report_WithoutSession_ReturnsUnauthorized()
     {
+        var report = ValidReport();
         var response = await reporters.Anonymous.PostAsJsonAsync(
             $"/wildlife/organizations/{reporters.OrganizationId}/sightings",
-            ValidReport()
+            report
         );
 
         response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
@@ -43,9 +44,10 @@ public sealed class FaunaFinderSightingTests(SightingReporters reporters)
     [Fact]
     public async Task Report_Valid_ReturnsCreatedAndAppearsFirstInMyList()
     {
+        var report = ValidReport();
         var response = await reporters.Reporter.PostAsJsonAsync(
             $"/wildlife/organizations/{reporters.OrganizationId}/sightings",
-            ValidReport()
+            report
         );
 
         response.StatusCode.Should().Be(HttpStatusCode.Created);
@@ -101,9 +103,10 @@ public sealed class FaunaFinderSightingTests(SightingReporters reporters)
     [Fact]
     public async Task GetMine_ExcludesAnotherUsersReports()
     {
+        var report = ValidReport();
         var response = await reporters.Other.PostAsJsonAsync(
             $"/wildlife/organizations/{reporters.OrganizationId}/sightings",
-            ValidReport()
+            report
         );
         response.StatusCode.Should().Be(HttpStatusCode.Created);
         var theirs = (await response.Content.ReadFromJsonAsync<SightingDto>())!;
@@ -208,8 +211,8 @@ public sealed class FaunaFinderSightingTests(SightingReporters reporters)
         var pendingBefore = await reporters.Admin.GetFromJsonAsync<int>(
             $"{prefix}/count?status=Pending"
         );
-
-        var response = await reporters.Reporter.PostAsJsonAsync(prefix, ValidReport());
+        var report = ValidReport();
+        var response = await reporters.Reporter.PostAsJsonAsync(prefix, report);
         response.StatusCode.Should().Be(HttpStatusCode.Created);
         var sighting = (await response.Content.ReadFromJsonAsync<SightingDto>())!;
 
@@ -260,8 +263,8 @@ public sealed class FaunaFinderSightingTests(SightingReporters reporters)
     public async Task Deny_WithReason_ThenUnapprove_BlankReasonRejected()
     {
         var prefix = $"/wildlife/organizations/{reporters.OrganizationId}/sightings";
-
-        var response = await reporters.Reporter.PostAsJsonAsync(prefix, ValidReport());
+        var report = ValidReport();
+        var response = await reporters.Reporter.PostAsJsonAsync(prefix, report);
         response.StatusCode.Should().Be(HttpStatusCode.Created);
         var sighting = (await response.Content.ReadFromJsonAsync<SightingDto>())!;
 
@@ -307,9 +310,10 @@ public sealed class FaunaFinderSightingTests(SightingReporters reporters)
     [Fact]
     public async Task Notes_AdminAppends_ReporterSeesItInTheThread()
     {
+        var report = ValidReport();
         var response = await reporters.Reporter.PostAsJsonAsync(
             $"/wildlife/organizations/{reporters.OrganizationId}/sightings",
-            ValidReport()
+            report
         );
         response.StatusCode.Should().Be(HttpStatusCode.Created);
         var sighting = (await response.Content.ReadFromJsonAsync<SightingDto>())!;
@@ -344,9 +348,10 @@ public sealed class FaunaFinderSightingTests(SightingReporters reporters)
     [Fact]
     public async Task GetById_FromAnotherOrganization_ReturnsNotFound()
     {
+        var report = ValidReport();
         var response = await reporters.Reporter.PostAsJsonAsync(
             $"/wildlife/organizations/{reporters.OrganizationId}/sightings",
-            ValidReport()
+            report
         );
         response.StatusCode.Should().Be(HttpStatusCode.Created);
         var sighting = (await response.Content.ReadFromJsonAsync<SightingDto>())!;
@@ -362,10 +367,11 @@ public sealed class FaunaFinderSightingTests(SightingReporters reporters)
     public async Task Images_ReporterUploadsPng_AppearsInMineAndStreamsBack()
     {
         var sighting = await ReportAsync(reporters.Reporter);
+        var imageForm = ImageForm(OnePixelPng, "pixel.png", "image/png");
 
         var uploaded = await reporters.Reporter.PostAsync(
             $"/wildlife/sightings/{sighting.Id}/images",
-            ImageForm(OnePixelPng, "pixel.png", "image/png")
+            imageForm
         );
         uploaded.StatusCode.Should().Be(HttpStatusCode.Created);
         var image = (await uploaded.Content.ReadFromJsonAsync<SightingImageDto>())!;
@@ -396,10 +402,12 @@ public sealed class FaunaFinderSightingTests(SightingReporters reporters)
     public async Task Images_TextRenamedToPng_ReturnsValidationProblemOnFile()
     {
         var sighting = await ReportAsync(reporters.Reporter);
+        var notAPicture = "This is not a picture."u8.ToArray();
+        var imageForm = ImageForm(notAPicture, "notes.png", "image/png");
 
         var response = await reporters.Reporter.PostAsync(
             $"/wildlife/sightings/{sighting.Id}/images",
-            ImageForm("This is not a picture."u8.ToArray(), "notes.png", "image/png")
+            imageForm
         );
 
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
@@ -415,10 +423,11 @@ public sealed class FaunaFinderSightingTests(SightingReporters reporters)
         var sighting = await ReportAsync(reporters.Reporter);
         var image = await UploadAsync(reporters.Reporter, sighting.Id);
         var url = $"/wildlife/sightings/{sighting.Id}/images/{image.Id}";
+        var imageForm = ImageForm(OnePixelPng, "pixel.png", "image/png");
 
         var upload = await reporters.Other.PostAsync(
             $"/wildlife/sightings/{sighting.Id}/images",
-            ImageForm(OnePixelPng, "pixel.png", "image/png")
+            imageForm
         );
         upload.StatusCode.Should().Be(HttpStatusCode.Forbidden);
 
@@ -439,10 +448,11 @@ public sealed class FaunaFinderSightingTests(SightingReporters reporters)
         {
             await UploadAsync(reporters.Reporter, sighting.Id);
         }
+        var imageForm = ImageForm(OnePixelPng, "pixel.png", "image/png");
 
         var sixth = await reporters.Reporter.PostAsync(
             $"/wildlife/sightings/{sighting.Id}/images",
-            ImageForm(OnePixelPng, "pixel.png", "image/png")
+            imageForm
         );
 
         sixth.StatusCode.Should().Be(HttpStatusCode.BadRequest);
@@ -483,9 +493,10 @@ public sealed class FaunaFinderSightingTests(SightingReporters reporters)
 
     private async Task<SightingDto> ReportAsync(HttpClient client)
     {
+        var report = ValidReport();
         var response = await client.PostAsJsonAsync(
             $"/wildlife/organizations/{reporters.OrganizationId}/sightings",
-            ValidReport()
+            report
         );
         response.StatusCode.Should().Be(HttpStatusCode.Created);
         return (await response.Content.ReadFromJsonAsync<SightingDto>())!;
@@ -493,9 +504,10 @@ public sealed class FaunaFinderSightingTests(SightingReporters reporters)
 
     private static async Task<SightingImageDto> UploadAsync(HttpClient client, Guid sightingId)
     {
+        var imageForm = ImageForm(OnePixelPng, "pixel.png", "image/png");
         var response = await client.PostAsync(
             $"/wildlife/sightings/{sightingId}/images",
-            ImageForm(OnePixelPng, "pixel.png", "image/png")
+            imageForm
         );
         response.StatusCode.Should().Be(HttpStatusCode.Created);
         return (await response.Content.ReadFromJsonAsync<SightingImageDto>())!;
@@ -578,7 +590,8 @@ public sealed class SightingReporters(EcoDataTestFixture fixture) : IAsyncLifeti
             // caller, and in tests every login funnels through localhost.
             if (response.StatusCode == HttpStatusCode.TooManyRequests)
             {
-                await Task.Delay(TimeSpan.FromSeconds(45));
+                var backoff = TimeSpan.FromSeconds(45);
+                await Task.Delay(backoff);
                 continue;
             }
 
@@ -603,7 +616,8 @@ public sealed class SightingReporters(EcoDataTestFixture fixture) : IAsyncLifeti
 
             if (response.StatusCode == HttpStatusCode.ServiceUnavailable)
             {
-                await Task.Delay(TimeSpan.FromSeconds(35));
+                var loaderRetry = TimeSpan.FromSeconds(35);
+                await Task.Delay(loaderRetry);
                 continue;
             }
 
@@ -663,9 +677,7 @@ public sealed class SightingReporters(EcoDataTestFixture fixture) : IAsyncLifeti
                     || response.StatusCode != HttpStatusCode.TooManyRequests
                     || response.Headers.RetryAfter?.Delta is not { } retryAfter
                 )
-                {
                     return response;
-                }
 
                 response.Dispose();
                 await Task.Delay(retryAfter + TimeSpan.FromSeconds(1), cancellationToken);

@@ -38,17 +38,13 @@ public sealed class AuthService(
     {
         var validationResult = await registerValidator.ValidateAsync(request, cancellationToken);
         if (!validationResult.IsValid)
-        {
             return new ValidationFailed(
                 new Dictionary<string, string[]>(validationResult.ToDictionary())
             );
-        }
 
         var existingUser = await userManager.FindByEmailAsync(request.Email);
         if (existingUser is not null)
-        {
             return new EmailAlreadyExists();
-        }
 
         var user = new User
         {
@@ -63,14 +59,12 @@ public sealed class AuthService(
 
         var createResult = await userManager.CreateAsync(user, request.Password);
         if (!createResult.Succeeded)
-        {
             // Identity errors have no field name; the error code stands in as the map key.
             return new ValidationFailed(
                 createResult
                     .Errors.GroupBy(e => e.Code)
                     .ToDictionary(g => g.Key, g => g.Select(e => e.Description).ToArray())
             );
-        }
 
         return new UserInfo(
             user.Id,
@@ -90,22 +84,16 @@ public sealed class AuthService(
     {
         var validationResult = await loginValidator.ValidateAsync(request, cancellationToken);
         if (!validationResult.IsValid)
-        {
             return new ValidationFailed(
                 new Dictionary<string, string[]>(validationResult.ToDictionary())
             );
-        }
 
         var user = await userManager.FindByEmailAsync(request.Email);
         if (user is null)
-        {
             return new InvalidCredentials();
-        }
 
         if (await userManager.IsLockedOutAsync(user))
-        {
             return new AccountLocked();
-        }
 
         var passwordValid = await userManager.CheckPasswordAsync(user, request.Password);
         if (!passwordValid)
@@ -113,9 +101,7 @@ public sealed class AuthService(
             await userManager.AccessFailedAsync(user);
 
             if (await userManager.IsLockedOutAsync(user))
-            {
                 return new AccountLocked();
-            }
 
             return new InvalidCredentials();
         }
@@ -156,15 +142,11 @@ public sealed class AuthService(
     )
     {
         if (principal?.Identity?.IsAuthenticated != true)
-        {
             return null;
-        }
 
         var user = await userManager.GetUserAsync(principal);
         if (user is null)
-        {
             return null;
-        }
 
         return new UserInfo(
             user.Id,
@@ -203,9 +185,7 @@ public sealed class AuthService(
         }
 
         if (parameters.Cursor.HasValue)
-        {
             query = query.Where(u => u.Id > parameters.Cursor.Value);
-        }
 
         await foreach (
             var user in query
@@ -236,17 +216,13 @@ public sealed class AuthService(
     {
         var validationResult = await updateProfileValidator.ValidateAsync(request, cancellationToken);
         if (!validationResult.IsValid)
-        {
             return new ValidationFailed(
                 new Dictionary<string, string[]>(validationResult.ToDictionary())
             );
-        }
-
-        var user = await userManager.FindByIdAsync(userId.ToString());
+        var id = userId.ToString();
+        var user = await userManager.FindByIdAsync(id);
         if (user is null)
-        {
             return new ValidationFailed(NotFoundErrors);
-        }
 
         user.DisplayName = request.DisplayName;
         await userManager.UpdateAsync(user);
@@ -270,29 +246,21 @@ public sealed class AuthService(
     {
         var validationResult = await updateEmailValidator.ValidateAsync(request, cancellationToken);
         if (!validationResult.IsValid)
-        {
             return new ValidationFailed(
                 new Dictionary<string, string[]>(validationResult.ToDictionary())
             );
-        }
-
-        var user = await userManager.FindByIdAsync(userId.ToString());
+        var id = userId.ToString();
+        var user = await userManager.FindByIdAsync(id);
         if (user is null)
-        {
             return new ValidationFailed(NotFoundErrors);
-        }
 
         var passwordValid = await userManager.CheckPasswordAsync(user, request.CurrentPassword);
         if (!passwordValid)
-        {
             return new InvalidPassword();
-        }
 
         var existingUser = await userManager.FindByEmailAsync(request.NewEmail);
         if (existingUser is not null && existingUser.Id != userId)
-        {
             return new EmailAlreadyExists();
-        }
 
         user.Email = request.NewEmail;
         user.UserName = request.NewEmail;
@@ -319,25 +287,19 @@ public sealed class AuthService(
     {
         var validationResult = await changePasswordValidator.ValidateAsync(request, cancellationToken);
         if (!validationResult.IsValid)
-        {
             return new ValidationFailed(
                 new Dictionary<string, string[]>(validationResult.ToDictionary())
             );
-        }
-
-        var user = await userManager.FindByIdAsync(userId.ToString());
+        var id = userId.ToString();
+        var user = await userManager.FindByIdAsync(id);
         if (user is null)
-        {
             return new ValidationFailed(NotFoundErrors);
-        }
 
         var result = await userManager.ChangePasswordAsync(user, request.CurrentPassword, request.NewPassword);
         if (!result.Succeeded)
         {
             if (result.Errors.Any(e => e.Code == "PasswordMismatch"))
-            {
                 return new InvalidPassword();
-            }
             // Identity errors have no field name; the error code stands in as the map key.
             return new ValidationFailed(
                 result

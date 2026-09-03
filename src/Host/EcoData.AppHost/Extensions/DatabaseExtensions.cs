@@ -63,9 +63,7 @@ public static class DatabaseExtensions
         );
 
         if (string.IsNullOrEmpty(connectionString))
-        {
             return CommandResults.Failure("Could not get connection string");
-        }
 
         try
         {

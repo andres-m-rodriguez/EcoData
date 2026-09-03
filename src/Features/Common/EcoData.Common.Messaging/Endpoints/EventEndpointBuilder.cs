@@ -45,14 +45,10 @@ public sealed class EventEndpointBuilder<TEvent>
     internal string GetTopic(HttpContext context)
     {
         if (_staticTopic is not null)
-        {
             return _staticTopic;
-        }
 
         if (_topicResolver is not null)
-        {
             return _topicResolver(context);
-        }
 
         return typeof(TEvent).Name;
     }

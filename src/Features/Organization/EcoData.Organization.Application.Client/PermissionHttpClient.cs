@@ -25,16 +25,12 @@ public sealed class PermissionHttpClient(HttpClient httpClient) : IPermissionHtt
                 return new RequestFailed((int)response.StatusCode, problem?.Detail ?? problem?.Title);
             }
 
-            var result = await response.Content.ReadFromJsonAsync<UserPermissionsDto>(
-                cancellationToken
-            );
+            var result = await response.Content.ReadFromJsonAsync<UserPermissionsDto>(cancellationToken);
             if (result is null)
-            {
                 return new RequestFailed(
                     (int)response.StatusCode,
                     "The server returned an empty response."
                 );
-            }
 
             return result;
         }

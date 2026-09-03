@@ -113,41 +113,10 @@
                               Color="Color.Warning"
                               Overlap="true"
                               Class="ff-account-badge">
-                        <MudMenu Icon="@Icons.Material.Filled.AccountCircle"
-                                 Color="Color.Inherit"
-                                 Size="Size.Small"
-                                 AriaLabel="@L["Auth_AccountLabel"]"
-                                 AnchorOrigin="Origin.BottomRight"
-                                 TransformOrigin="Origin.TopRight"
-                                 Class="ff-account-menu">
-                            <div class="ff-account-header">
-                                <span class="ff-account-name">@Auth.CurrentUser?.DisplayName</span>
-                                <span class="ff-account-email">@Auth.CurrentUser?.Email</span>
-                            </div>
-                            @if (AccessRequestStatusText is { } statusText)
-                            {
-                                <MudDivider />
-                                <div class="ff-account-status">@statusText</div>
-                            }
-                            <MudDivider />
-                            <MudMenuItem Href="/sightings/new" Icon="@Icons.Material.Filled.AddLocationAlt">@L["Sighting_Report_Action"]</MudMenuItem>
-                            <MudMenuItem Href="/sightings/mine" Icon="@Icons.Material.Filled.FormatListBulleted">@L["Sighting_Mine_Title"]</MudMenuItem>
-                            @if (Auth.CanReviewSightings)
-                            {
-                                <MudMenuItem Href="/sightings/review" Icon="@Icons.Material.Filled.FactCheck">
-                                    <MudBadge Content="@LoadPendingCountState.Result"
-                                              Visible="@(LoadPendingCountState.Result > 0)"
-                                              Color="Color.Warning"
-                                              Origin="Origin.CenterRight"
-                                              Overlap="false"
-                                              Class="ff-account-review-badge">
-                                        <span>@L["Sighting_Review_Nav"]</span>
-                                    </MudBadge>
-                                </MudMenuItem>
-                            }
-                            <MudDivider />
-                            <MudMenuItem OnClick="SignOutAsync">@L["Auth_SignOut"]</MudMenuItem>
-                        </MudMenu>
+                        <a href="/account" class="ff-user-pill" aria-label="@L["Auth_AccountLabel"]">
+                            <span class="ff-user-initial">@UserInitial</span>
+                            <span class="ff-user-name">@Auth.CurrentUser?.DisplayName</span>
+                        </a>
                     </MudBadge>
                 }
                 else
@@ -251,19 +220,9 @@
 
     private bool ShowPendingBadge => Auth.AccessRequest?.Status == "Pending";
 
-    private string? AccessRequestStatusText => Auth.AccessRequest?.Status switch
-    {
-        "Pending" => L["Auth_Request_Pending"],
-        "Approved" => L["Auth_Request_Approved"],
-        "Rejected" => L["Auth_Request_Rejected"],
-        _ => null,
-    };
-
-    private async Task SignOutAsync()
-    {
-        await Auth.LogoutAsync();
-        Navigation.NavigateTo("/");
-    }
+    private string UserInitial => Auth.CurrentUser?.DisplayName is { Length: > 0 } name
+        ? name[..1].ToUpperInvariant()
+        : "?";
 
     protected override void OnInitialized()
     {

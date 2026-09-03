@@ -85,16 +85,12 @@ public sealed class OrganizationHttpClient(HttpClient httpClient) : IOrganizatio
                 return new RequestFailed((int)response.StatusCode, problem?.Detail ?? problem?.Title);
             }
 
-            var result = await response.Content.ReadFromJsonAsync<OrganizationDtoForDetail>(
-                cancellationToken
-            );
+            var result = await response.Content.ReadFromJsonAsync<OrganizationDtoForDetail>(cancellationToken);
             if (result is null)
-            {
                 return new RequestFailed(
                     (int)response.StatusCode,
                     "The server returned an empty response."
                 );
-            }
 
             return result;
         }
@@ -122,16 +118,12 @@ public sealed class OrganizationHttpClient(HttpClient httpClient) : IOrganizatio
                 return new RequestFailed((int)response.StatusCode, problem?.Detail ?? problem?.Title);
             }
 
-            var result = await response.Content.ReadFromJsonAsync<OrganizationDtoForDetail>(
-                cancellationToken
-            );
+            var result = await response.Content.ReadFromJsonAsync<OrganizationDtoForDetail>(cancellationToken);
             if (result is null)
-            {
                 return new RequestFailed(
                     (int)response.StatusCode,
                     "The server returned an empty response."
                 );
-            }
 
             return result;
         }
@@ -160,16 +152,12 @@ public sealed class OrganizationHttpClient(HttpClient httpClient) : IOrganizatio
                 return new RequestFailed((int)response.StatusCode, problem?.Detail ?? problem?.Title);
             }
 
-            var result = await response.Content.ReadFromJsonAsync<OrganizationDtoForCreated>(
-                cancellationToken
-            );
+            var result = await response.Content.ReadFromJsonAsync<OrganizationDtoForCreated>(cancellationToken);
             if (result is null)
-            {
                 return new RequestFailed(
                     (int)response.StatusCode,
                     "The server returned an empty response."
                 );
-            }
 
             return result;
         }
@@ -199,16 +187,12 @@ public sealed class OrganizationHttpClient(HttpClient httpClient) : IOrganizatio
                 return new RequestFailed((int)response.StatusCode, problem?.Detail ?? problem?.Title);
             }
 
-            var result = await response.Content.ReadFromJsonAsync<OrganizationDtoForDetail>(
-                cancellationToken
-            );
+            var result = await response.Content.ReadFromJsonAsync<OrganizationDtoForDetail>(cancellationToken);
             if (result is null)
-            {
                 return new RequestFailed(
                     (int)response.StatusCode,
                     "The server returned an empty response."
                 );
-            }
 
             return result;
         }

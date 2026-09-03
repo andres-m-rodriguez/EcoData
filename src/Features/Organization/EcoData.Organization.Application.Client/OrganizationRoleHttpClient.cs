@@ -27,9 +27,7 @@ public sealed class OrganizationRoleHttpClient(HttpClient httpClient) : IOrganiz
                 return new RequestFailed((int)response.StatusCode, problem?.Detail ?? problem?.Title);
             }
 
-            var result = await response.Content.ReadFromJsonAsync<List<OrganizationRoleDto>>(
-                cancellationToken
-            );
+            var result = await response.Content.ReadFromJsonAsync<List<OrganizationRoleDto>>(cancellationToken);
 
             return result ?? [];
         }
@@ -124,12 +122,10 @@ public sealed class OrganizationRoleHttpClient(HttpClient httpClient) : IOrganiz
 
         var result = await response.Content.ReadFromJsonAsync<OrganizationRoleDto>(cancellationToken);
         if (result is null)
-        {
             return new RequestFailed(
                 (int)response.StatusCode,
                 "The server returned an empty response."
             );
-        }
 
         return result;
     }

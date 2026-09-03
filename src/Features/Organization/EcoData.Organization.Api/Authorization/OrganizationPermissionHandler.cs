@@ -52,13 +52,9 @@ public sealed partial class OrganizationPermissionHandler(
         );
 
         if (hasPermission)
-        {
             context.Succeed(requirement);
-        }
         else
-        {
             context.Fail();
-        }
     }
 
     private static Guid? ExtractOrganizationId(PathString path)
@@ -66,9 +62,7 @@ public sealed partial class OrganizationPermissionHandler(
         var match = OrganizationIdPattern().Match(path.Value ?? string.Empty);
 
         if (match.Success && Guid.TryParse(match.Groups[1].Value, out var id))
-        {
             return id;
-        }
 
         return null;
     }

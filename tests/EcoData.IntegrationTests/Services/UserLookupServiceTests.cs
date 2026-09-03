@@ -130,7 +130,7 @@ public sealed class UserLookupServiceTests(EcoDataTestFixture fixture) : Service
             .CreateDbContext();
 
         var admin = await context
-            .Users.Where(u => u.Email == "admin@gmail.com")
+            .Users.Where(u => u.Email == "global@admin.dev")
             .Select(u => new UserLookupDto(u.Id, u.Email!, u.DisplayName))
             .FirstOrDefaultAsync();
 

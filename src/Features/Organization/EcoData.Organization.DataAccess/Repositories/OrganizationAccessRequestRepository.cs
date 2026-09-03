@@ -34,14 +34,10 @@ public sealed class OrganizationAccessRequestRepository(
                 out var status
             )
         )
-        {
             query = query.Where(r => r.Status == status);
-        }
 
         if (parameters.Cursor.HasValue)
-        {
             query = query.Where(r => r.Id.CompareTo(parameters.Cursor.Value) > 0);
-        }
 
         var requests = await query
             .OrderBy(r => r.Id)
@@ -63,9 +59,7 @@ public sealed class OrganizationAccessRequestRepository(
             .ToListAsync(cancellationToken);
 
         if (requests.Count == 0)
-        {
             yield break;
-        }
 
         var userIds = requests
             .SelectMany(r => new[] { r.UserId, r.ReviewedByUserId })
@@ -120,9 +114,7 @@ public sealed class OrganizationAccessRequestRepository(
                 out var status
             )
         )
-        {
             query = query.Where(r => r.Status == status);
-        }
 
         if (!string.IsNullOrEmpty(parameters.Search))
         {
@@ -131,9 +123,7 @@ public sealed class OrganizationAccessRequestRepository(
         }
 
         if (parameters.Cursor.HasValue)
-        {
             query = query.Where(r => r.Id.CompareTo(parameters.Cursor.Value) > 0);
-        }
 
         var requests = await query
             .OrderBy(r => r.Id)
@@ -155,9 +145,7 @@ public sealed class OrganizationAccessRequestRepository(
             .ToListAsync(cancellationToken);
 
         if (requests.Count == 0)
-        {
             yield break;
-        }
 
         var user = await userLookupService.GetByIdAsync(userId, cancellationToken);
 
@@ -219,9 +207,7 @@ public sealed class OrganizationAccessRequestRepository(
             .FirstOrDefaultAsync(cancellationToken);
 
         if (request is null)
-        {
             return null;
-        }
 
         var user = await userLookupService.GetByIdAsync(request.UserId, cancellationToken);
         var reviewer = request.ReviewedByUserId.HasValue
@@ -319,9 +305,7 @@ public sealed class OrganizationAccessRequestRepository(
             .FirstOrDefaultAsync(r => r.Id == id, cancellationToken);
 
         if (entity is null)
-        {
             return null;
-        }
 
         entity.Status = status;
         entity.ReviewNotes = reviewNotes;
@@ -367,9 +351,7 @@ public sealed class OrganizationAccessRequestRepository(
             .FirstOrDefaultAsync(r => r.Id == id, cancellationToken);
 
         if (entity is null)
-        {
             return false;
-        }
 
         context.OrganizationAccessRequests.Remove(entity);
         await context.SaveChangesAsync(cancellationToken);
@@ -389,9 +371,7 @@ public sealed class OrganizationAccessRequestRepository(
             .FirstOrDefaultAsync(r => r.Id == id, cancellationToken);
 
         if (entity is null)
-        {
             return null;
-        }
 
         entity.Status = OrganizationAccessRequestStatus.Cancelled;
 
@@ -448,9 +428,7 @@ public sealed class OrganizationAccessRequestRepository(
     )
     {
         if (roleId is null)
-        {
             return null;
-        }
 
         return await context
             .OrganizationRoles.Where(r => r.Id == roleId)

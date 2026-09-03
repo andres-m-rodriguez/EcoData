@@ -86,10 +86,11 @@ var seeder = builder
     .WaitFor(wildlifeDb)
     .PublishAsAzureContainerAppJob();
 
-if (builder.Environment.EnvironmentName == "Testing")
-{
-    seeder.WithEnvironment("SEED_TEST_DATA", "true");
-}
+// The seeder keys its dev accounts and organizations off IHostEnvironment. Locally and
+// under the integration tests it inherits the app host's name; a published job gets
+// nothing and so defaults to Production.
+if (builder.ExecutionContext.IsRunMode)
+    seeder.WithEnvironment("DOTNET_ENVIRONMENT", builder.Environment.EnvironmentName);
 
 // One-shot backfill: adds the U.S. Virgin Islands jurisdiction and the USVI occurrences of
 // species already in the catalogue. Manual-trigger job; a no-op once it has run.

@@ -10,15 +10,15 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Aspire.Hosting.Azure.ApplicationInsights" Version="13.2.0" />
-    <PackageReference Include="Aspire.Hosting.Azure.AppContainers" Version="13.2.0" />
-    <PackageReference Include="Aspire.Hosting.Azure.KeyVault" Version="13.2.0" />
-    <PackageReference Include="Aspire.Hosting.Azure.OperationalInsights" Version="13.2.0" />
-    <PackageReference Include="Aspire.Hosting.Azure.PostgreSQL" Version="13.2.0" />
-    <PackageReference Include="Aspire.Hosting.Azure.ServiceBus" Version="13.2.4" />
-    <PackageReference Include="Aspire.Hosting.Azure.Storage" Version="13.2.0" />
-    <PackageReference Include="Aspire.Hosting.PostgreSQL" Version="13.2.0" />
-    <PackageReference Include="Npgsql" Version="9.0.3" />
+    <PackageReference Include="Aspire.Hosting.Azure.ApplicationInsights" />
+    <PackageReference Include="Aspire.Hosting.Azure.AppContainers" />
+    <PackageReference Include="Aspire.Hosting.Azure.KeyVault" />
+    <PackageReference Include="Aspire.Hosting.Azure.OperationalInsights" />
+    <PackageReference Include="Aspire.Hosting.Azure.PostgreSQL" />
+    <PackageReference Include="Aspire.Hosting.Azure.ServiceBus" />
+    <PackageReference Include="Aspire.Hosting.Azure.Storage" />
+    <PackageReference Include="Aspire.Hosting.PostgreSQL" />
+    <PackageReference Include="Npgsql" />
   </ItemGroup>
 
   <ItemGroup>

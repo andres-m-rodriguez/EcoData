@@ -37,9 +37,7 @@ public sealed class StateRepository(IDbContextFactory<LocationsDbContext> contex
         }
 
         if (parameters.Cursor.HasValue)
-        {
             query = query.Where(s => s.Id > parameters.Cursor.Value);
-        }
 
         await foreach (var state in query
             .OrderBy(s => s.Id)

@@ -28,9 +28,7 @@ public sealed class OrganizationWorkspaceState(
     public Task<OrganizationContext?> GetAsync(Guid organizationId, CancellationToken cancellationToken = default)
     {
         if (_contexts.TryGetValue(organizationId, out var cached))
-        {
             return cached;
-        }
 
         var task = LoadContextAsync(organizationId);
         _contexts[organizationId] = task;
@@ -44,11 +42,8 @@ public sealed class OrganizationWorkspaceState(
     )
     {
         var id = context.Organization.Id;
-
         if (_counts.TryGetValue(id, out var cached))
-        {
             return cached;
-        }
 
         var task = LoadCountsAsync(context);
         _counts[id] = task;
@@ -107,7 +102,6 @@ public sealed class OrganizationWorkspaceState(
     private async Task<OrganizationCounts> LoadCountsAsync(OrganizationContext context)
     {
         var id = context.Organization.Id;
-
         var sensors = await sensorClient.GetSensorCountAsync(new SensorParameters(OrganizationId: id));
         var sensorCount = sensors.Match(count => (int?)count, _ => null);
 

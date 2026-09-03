@@ -21,16 +21,12 @@ public sealed class DataSourceHttpClient(HttpClient httpClient) : IDataSourceHtt
                 return new RequestFailed((int)response.StatusCode, problem?.Detail ?? problem?.Title);
             }
 
-            var result = await response.Content.ReadFromJsonAsync<IReadOnlyList<DataSourceDtoForList>>(
-                cancellationToken
-            );
+            var result = await response.Content.ReadFromJsonAsync<IReadOnlyList<DataSourceDtoForList>>(cancellationToken);
             if (result is null)
-            {
                 return new RequestFailed(
                     (int)response.StatusCode,
                     "The server returned an empty response."
                 );
-            }
 
             return OneOf<IReadOnlyList<DataSourceDtoForList>, RequestFailed>.FromT0(result);
         }

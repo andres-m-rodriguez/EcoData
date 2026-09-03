@@ -77,13 +77,9 @@ app.UseForwardedHeaders();
 app.MapDefaultEndpoints();
 
 if (app.Environment.IsDevelopment())
-{
     app.UseWebAssemblyDebugging();
-}
 else
-{
     app.UseHsts();
-}
 
 // The limiter runs first so an anonymous flood never reaches EcoPortal;
 // antiforgery follows authentication because its tokens are bound to the
