@@ -1,0 +1,37 @@
+.ff-coordinates-page {
+    min-height: 100%;
+}
+
+.ff-coordinates-head {
+    max-width: 560px;
+    margin-bottom: 24px;
+}
+
+.ff-coordinates-eyebrow {
+    display: block;
+    margin-bottom: 10px;
+    font: 700 11px/1 var(--fauna-font-sans);
+    letter-spacing: var(--fauna-tracking-eyebrow);
+    text-transform: uppercase;
+    color: var(--fauna-accent);
+}
+
+.ff-coordinates-title {
+    margin: 0 0 12px;
+    font: 700 clamp(1.75rem, 3.5vw, 2.5rem)/1.1 var(--fauna-font-serif);
+    letter-spacing: var(--fauna-tracking-tight);
+    color: var(--fauna-primary);
+}
+
+.ff-coordinates-lede {
+    margin: 0;
+    font: 400 15px/1.6 var(--fauna-font-sans);
+    color: var(--fauna-fg-3);
+}
+
+.ff-coordinates-card {
+    padding: 20px 22px;
+    background: var(--fauna-surface);
+    border: 1px solid var(--fauna-line);
+    border-radius: 12px;
+}

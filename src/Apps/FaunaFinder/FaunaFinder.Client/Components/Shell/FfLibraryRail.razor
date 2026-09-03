@@ -1,63 +1,19 @@
 @namespace FaunaFinder.Client.Components.Shell
 @inherits EcoDataComponent
-@using System.Globalization
-@using FaunaFinder.Client.Services.Shapes
 
 <aside class="ff-rail">
     <h2 class="ff-rail-heading">@L["Rail_Heading"]</h2>
 
-    <div class="ff-rail-cards">
-        <section class="ff-rail-card" aria-labelledby="ff-rail-card-coordinates">
-            <header class="ff-rail-card-head">
-                <span class="ff-rail-card-icon">
-                    <i class="fa-solid fa-location-dot" aria-hidden="true"></i>
-                </span>
-                <div class="ff-rail-card-title">
-                    <h3 id="ff-rail-card-coordinates">@L["Rail_Card_Coordinates"]</h3>
-                    <p>@L["Rail_Card_Coordinates_Lede"]</p>
-                </div>
-            </header>
-
-            <form class="ff-rail-form" @onsubmit="ShowOnMap" @onsubmit:preventDefault="true">
-                <label class="ff-rail-field">
-                    <span>@L["Rail_Coordinates_Latitude"]</span>
-                    <input type="number" step="any" min="-90" max="90" required
-                           placeholder="18.2208"
-                           @bind="_latitude" @bind:culture="CultureInfo.InvariantCulture" />
-                </label>
-                <label class="ff-rail-field">
-                    <span>@L["Rail_Coordinates_Longitude"]</span>
-                    <input type="number" step="any" min="-180" max="180" required
-                           placeholder="-66.5901"
-                           @bind="_longitude" @bind:culture="CultureInfo.InvariantCulture" />
-                </label>
-                <label class="ff-rail-field">
-                    <span>@L["Rail_Coordinates_Radius"]</span>
-                    <input type="number" step="1" min="1" max="50" required
-                           @bind="_radiusKm" @bind:culture="CultureInfo.InvariantCulture" />
-                </label>
-                @if (_coordinatesError is { } coordinatesError)
-                {
-                    <p class="ff-rail-error">@coordinatesError</p>
-                }
-                <button type="submit" class="ff-rail-prompt">
-                    <i class="fa-solid fa-location-dot" aria-hidden="true"></i>
-                    @L["Rail_Coordinates_Show"]
-                </button>
-            </form>
-
-            <p class="ff-rail-or">@L["Rail_Or"]</p>
-
-            <label class="ff-rail-prompt ff-rail-file">
-                <i class="fa-solid fa-file-arrow-up" aria-hidden="true"></i>
-                @(_readingShape ? L["Rail_Shape_Reading"] : L["Rail_Shape_Upload"])
-                <InputFile OnChange="LoadShapeAsync" accept=".geojson,.json,.kml,.zip,.shp" disabled="@_readingShape" />
-            </label>
-            <p class="ff-rail-hint">@L["Rail_Shape_Formats"]</p>
-            @if (_shapeError is { } shapeError)
-            {
-                <p class="ff-rail-error">@shapeError</p>
-            }
-        </section>
-    </div>
+    <nav class="ff-rail-cards" aria-label="@L["Rail_Heading"]">
+        <a href="/coordinates" class="ff-rail-card">
+            <span class="ff-rail-card-icon">
+                <i class="fa-solid fa-location-dot" aria-hidden="true"></i>
+            </span>
+            <span class="ff-rail-card-text">
+                <span class="ff-rail-card-title">@L["Rail_Card_Coordinates"]</span>
+                <span class="ff-rail-card-desc">@L["Rail_Card_Coordinates_Lede"]</span>
+            </span>
+            <i class="fa-solid fa-chevron-right ff-rail-card-chevron" aria-hidden="true"></i>
+        </a>
+    </nav>
 </aside>

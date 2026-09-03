@@ -1,21 +1,17 @@
 using System.Globalization;
 using EcoData.Spa.Blazor;
 using EcoData.Spa.Navigation;
-using FaunaFinder.Client.Localization;
 using FaunaFinder.Client.Services.Shapes;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
 
-namespace FaunaFinder.Client.Components.Shell;
+namespace FaunaFinder.Client.Components.Map;
 
-public partial class FfLibraryRail : EcoDataComponent
+public partial class CoordinatesTool : EcoDataComponent
 {
     private const double DefaultRadiusKm = 5;
 
     private const long MaxShapeBytes = 10 * 1024 * 1024;
-
-    [CascadingParameter]
-    public LocaleContext Locale { get; set; } = LocaleContext.English;
 
     [Inject]
     private INavigationManager Navigation { get; set; } = default!;
@@ -31,7 +27,7 @@ public partial class FfLibraryRail : EcoDataComponent
     private bool _readingShape;
     private string? _shapeError;
 
-    // The map page owns the search; the rail only hands it the point through the
+    // The map page owns the search; this only hands it the point through the
     // URL, so the same link works from any page and can be shared.
     private void ShowOnMap()
     {

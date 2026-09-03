@@ -1,0 +1,45 @@
+@namespace FaunaFinder.Client.Components.Map
+@inherits EcoDataComponent
+@using System.Globalization
+@using FaunaFinder.Client.Services.Shapes
+
+<form class="ff-coord-form" @onsubmit="ShowOnMap" @onsubmit:preventDefault="true">
+    <label class="ff-coord-field">
+        <span>@L["Rail_Coordinates_Latitude"]</span>
+        <input type="number" step="any" min="-90" max="90" required
+               placeholder="18.2208"
+               @bind="_latitude" @bind:culture="CultureInfo.InvariantCulture" />
+    </label>
+    <label class="ff-coord-field">
+        <span>@L["Rail_Coordinates_Longitude"]</span>
+        <input type="number" step="any" min="-180" max="180" required
+               placeholder="-66.5901"
+               @bind="_longitude" @bind:culture="CultureInfo.InvariantCulture" />
+    </label>
+    <label class="ff-coord-field ff-coord-field--wide">
+        <span>@L["Rail_Coordinates_Radius"]</span>
+        <input type="number" step="1" min="1" max="50" required
+               @bind="_radiusKm" @bind:culture="CultureInfo.InvariantCulture" />
+    </label>
+    @if (_coordinatesError is { } coordinatesError)
+    {
+        <p class="ff-coord-error ff-coord-field--wide">@coordinatesError</p>
+    }
+    <button type="submit" class="ff-coord-action ff-coord-field--wide">
+        <i class="fa-solid fa-location-dot" aria-hidden="true"></i>
+        @L["Rail_Coordinates_Show"]
+    </button>
+</form>
+
+<p class="ff-coord-or">@L["Rail_Or"]</p>
+
+<label class="ff-coord-action ff-coord-file">
+    <i class="fa-solid fa-file-arrow-up" aria-hidden="true"></i>
+    @(_readingShape ? L["Rail_Shape_Reading"] : L["Rail_Shape_Upload"])
+    <InputFile OnChange="LoadShapeAsync" accept=".geojson,.json,.kml,.zip,.shp" disabled="@_readingShape" />
+</label>
+<p class="ff-coord-hint">@L["Rail_Shape_Formats"]</p>
+@if (_shapeError is { } shapeError)
+{
+    <p class="ff-coord-error">@shapeError</p>
+}

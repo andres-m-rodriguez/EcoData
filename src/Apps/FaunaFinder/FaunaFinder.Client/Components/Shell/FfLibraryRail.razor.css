@@ -1,5 +1,5 @@
 /* ==========================================================================
-   FfLibraryRail — a stack of map tool cards.
+   FfLibraryRail — a stack of map tool cards, each a link to its tool's page.
    Harmony's rail geometry (a panel floating in the shell gutter) rendered on
    FaunaFinder's paper: separation comes from a hairline + soft shadow rather
    than from the value contrast a dark shell gets for free.
@@ -40,28 +40,36 @@
     overscroll-behavior: contain;
 }
 
+/* The same anatomy as the account page's link cards: tile, text, chevron. */
 .ff-rail-card {
     display: flex;
-    flex-direction: column;
-    gap: 8px;
+    align-items: center;
+    gap: 12px;
     padding: 12px;
     border: 1px solid var(--fauna-line);
     border-radius: 12px;
     background: var(--fauna-bg-alt);
+    color: var(--fauna-fg);
+    text-decoration: none;
+    transition: background-color var(--fauna-t-base) var(--fauna-ease),
+                border-color var(--fauna-t-base) var(--fauna-ease);
 }
 
-.ff-rail-card-head {
-    display: flex;
-    align-items: flex-start;
-    gap: 10px;
-    margin-bottom: 4px;
+.ff-rail-card:hover {
+    background: var(--fauna-primary-50);
+    border-color: var(--fauna-primary-200);
+}
+
+.ff-rail-card:focus-visible {
+    outline: 2px solid var(--fauna-primary-500);
+    outline-offset: 2px;
 }
 
 /* A duotone tile like the field-guide art, so a card reads as a tool at a glance. */
 .ff-rail-card-icon {
     flex: none;
-    width: 34px;
-    height: 34px;
+    width: 36px;
+    height: 36px;
     border-radius: 9px;
     display: grid;
     place-items: center;
@@ -75,142 +83,33 @@
     line-height: 1;
 }
 
-.ff-rail-card-title {
+.ff-rail-card-text {
+    flex: 1 1 auto;
     min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
 }
 
-.ff-rail-card-title h3 {
-    margin: 0;
+.ff-rail-card-title {
     font: 600 0.9375rem/1.25 var(--fauna-font-serif);
     letter-spacing: var(--fauna-tracking-tight);
-    color: var(--fauna-fg);
 }
 
-.ff-rail-card-title p {
-    margin: 2px 0 0;
+.ff-rail-card-desc {
     font: var(--fauna-body-sm);
     font-size: 12px;
     color: var(--fauna-fg-3);
 }
 
-/* --- Coordinates ------------------------------------------------------- */
-
-.ff-rail-form {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-}
-
-.ff-rail-field {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-}
-
-.ff-rail-field span {
-    font: var(--fauna-mono);
-    font-size: 11px;
-    letter-spacing: var(--fauna-tracking-pill);
-    text-transform: uppercase;
+.ff-rail-card-chevron {
+    flex: none;
+    font-size: 12px;
     color: var(--fauna-fg-4);
-}
-
-.ff-rail-field input {
-    width: 100%;
-    padding: 8px 10px;
-    border: 1px solid var(--fauna-line);
-    border-radius: 8px;
-    background: var(--fauna-surface);
-    color: var(--fauna-fg);
-    font: var(--fauna-body-sm);
-    font-variant-numeric: tabular-nums;
-    transition: border-color var(--fauna-t-base) var(--fauna-ease);
-}
-
-.ff-rail-field input:focus-visible {
-    outline: none;
-    border-color: var(--fauna-primary-400);
-}
-
-.ff-rail-error {
-    margin: 0;
-    font: var(--fauna-body-sm);
-    color: var(--mud-palette-error);
-}
-
-.ff-rail-or {
-    margin: 4px 0 0;
-    font: var(--fauna-mono);
-    font-size: 11px;
-    letter-spacing: var(--fauna-tracking-pill);
-    text-transform: uppercase;
-    text-align: center;
-    color: var(--fauna-fg-4);
-}
-
-/* The label is the button; the real file input sits invisibly on top of it so
-   a click anywhere opens the picker. InputFile is a component, hence ::deep. */
-.ff-rail-file {
-    position: relative;
-    overflow: hidden;
-}
-
-.ff-rail-file ::deep input {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    opacity: 0;
-    cursor: pointer;
-}
-
-.ff-rail-hint {
-    margin: 0;
-    font: var(--fauna-body-sm);
-    font-size: 11px;
-    color: var(--fauna-fg-4);
-}
-
-/* The submit and the upload. A full-width outline button, not a chip. */
-.ff-rail-prompt {
-    appearance: none;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    margin: 0;
-    padding: 9px 14px;
-    border: 1px solid var(--fauna-line);
-    border-radius: 10px;
-    background: transparent;
-    color: var(--fauna-fg-2);
-    font: var(--fauna-body-sm);
-    font-weight: 500;
-    line-height: 1.35;
-    cursor: pointer;
-    transition: background-color var(--fauna-t-base) var(--fauna-ease),
-                border-color var(--fauna-t-base) var(--fauna-ease),
-                color var(--fauna-t-base) var(--fauna-ease);
-}
-
-.ff-rail-prompt:hover {
-    border-color: var(--fauna-primary-300);
-    background: var(--fauna-primary-50);
-    color: var(--fauna-primary);
-}
-
-.ff-rail-prompt:focus-visible {
-    outline: 2px solid var(--fauna-primary-500);
-    outline-offset: 2px;
-}
-
-.ff-rail-prompt i {
-    font-size: 13px;
-    line-height: 1;
 }
 
 @media (prefers-reduced-motion: reduce) {
-    .ff-rail-prompt,
-    .ff-rail-field input {
+    .ff-rail-card {
         transition: none;
     }
 }
