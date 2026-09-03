@@ -25,6 +25,8 @@ public class MapController<TMarker> : IMapController<TMarker>
 
     public (MapCoordinate Center, double RadiusMeters)? SearchRadius { get; private set; }
 
+    public IReadOnlyList<IReadOnlyList<MapCoordinate>> Polygons { get; private set; } = [];
+
     /// <summary>
     /// Set by the map component while attached; used for calls that need a result back from JS.
     /// </summary>
@@ -44,6 +46,7 @@ public class MapController<TMarker> : IMapController<TMarker>
     public event Action<MapPolygonDrawAction>? OnPolygonDrawActionRequested;
     public event Action<IReadOnlyList<MapCoordinate>>? OnPolygonDrawn;
     public event Action? OnPolygonDrawCancelled;
+    public event Action? OnPolygonsChanged;
 
     public void SetMarkers(IEnumerable<TMarker> markers)
     {
@@ -176,6 +179,18 @@ public class MapController<TMarker> : IMapController<TMarker>
     public void ClearDrawnPolygon()
     {
         OnPolygonDrawActionRequested?.Invoke(MapPolygonDrawAction.ClearDrawn);
+    }
+
+    public void ShowPolygons(IReadOnlyList<IReadOnlyList<MapCoordinate>> polygons)
+    {
+        Polygons = polygons;
+        OnPolygonsChanged?.Invoke();
+    }
+
+    public void ClearPolygons()
+    {
+        Polygons = [];
+        OnPolygonsChanged?.Invoke();
     }
 
     public async Task<MapGeolocationResult?> GetCurrentPositionAsync()

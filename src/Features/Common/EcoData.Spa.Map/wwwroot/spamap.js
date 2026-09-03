@@ -16,6 +16,7 @@ export function initialize(element, lat, lng, zoom, dotNetRef) {
     map._spaSearchRadius = null;
     map._spaUserLocation = null;
     map._spaDraw = { active: false, points: [], markers: [], polygon: null, previewLine: null, handlers: null };
+    map._spaShapes = L.featureGroup().addTo(map);
     map._spaGeoJsonGeneration = 0;
 
     // Map click handler (suppressed while drawing a polygon)
@@ -483,6 +484,27 @@ export function clearDrawnPolygon(map) {
     draw.markers.forEach(m => map.removeLayer(m));
     draw.markers = [];
     draw.points = [];
+}
+
+// ===== Shown polygons (an uploaded shape; never user-drawn) =====
+
+export function setPolygons(map, polygons) {
+    if (!map) return;
+
+    map._spaShapes.clearLayers();
+    polygons.forEach(ring => {
+        const latLngs = ring.map(p => [p.lat, p.lng]);
+        L.polygon(latLngs, {
+            fillColor: '#8b5cf6',
+            color: '#7c3aed',
+            weight: 2,
+            fillOpacity: 0.15
+        }).addTo(map._spaShapes);
+    });
+
+    if (polygons.length > 0) {
+        map.fitBounds(map._spaShapes.getBounds(), { padding: [24, 24] });
+    }
 }
 
 export function dispose(map) {

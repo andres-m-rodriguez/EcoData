@@ -93,6 +93,11 @@ public interface IMapController<TMarker>
     (MapCoordinate Center, double RadiusMeters)? SearchRadius { get; }
 
     /// <summary>
+    /// Polygons shown as-is, not drawn by the user: an uploaded shape, for instance.
+    /// </summary>
+    IReadOnlyList<IReadOnlyList<MapCoordinate>> Polygons { get; }
+
+    /// <summary>
     /// Replace all circles on the map.
     /// </summary>
     void SetCircles(IEnumerable<MapCircle> circles);
@@ -142,6 +147,16 @@ public interface IMapController<TMarker>
     /// Remove a completed drawn polygon from the map.
     /// </summary>
     void ClearDrawnPolygon();
+
+    /// <summary>
+    /// Show the given polygons and fit the view to them, replacing any shown before.
+    /// </summary>
+    void ShowPolygons(IReadOnlyList<IReadOnlyList<MapCoordinate>> polygons);
+
+    /// <summary>
+    /// Remove the polygons shown with <see cref="ShowPolygons"/>.
+    /// </summary>
+    void ClearPolygons();
 
     /// <summary>
     /// Ask the browser for the user's current position. Returns null when no map
@@ -219,6 +234,11 @@ public interface IMapController<TMarker>
     /// Fired when the user cancels polygon drawing (Escape).
     /// </summary>
     event Action? OnPolygonDrawCancelled;
+
+    /// <summary>
+    /// Fired when the shown polygons change.
+    /// </summary>
+    event Action? OnPolygonsChanged;
 
     /// <summary>
     /// Called by the component when a marker is clicked.
