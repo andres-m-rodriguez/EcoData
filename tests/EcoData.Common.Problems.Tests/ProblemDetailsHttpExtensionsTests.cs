@@ -40,7 +40,7 @@ public class ProblemDetailsHttpExtensionsTests
 
         Assert.NotNull(problem);
         Assert.Equal(ProblemTypes.NotFound, problem.Type);
-        Assert.Equal(404, problem.Status);
+        Assert.Equal(HttpStatusCode.NotFound, problem.Status);
         Assert.Equal("Species 7 does not exist.", problem.Detail);
     }
 
@@ -55,7 +55,7 @@ public class ProblemDetailsHttpExtensionsTests
 
         Assert.NotNull(problem);
         Assert.Equal(ProblemTypes.Conflict, problem.Type);
-        Assert.Equal(409, problem.Status);
+        Assert.Equal(HttpStatusCode.Conflict, problem.Status);
     }
 
     [Fact]
@@ -79,7 +79,7 @@ public class ProblemDetailsHttpExtensionsTests
         var problem = await response.ReadProblemAsync();
 
         Assert.NotNull(problem);
-        Assert.Equal(409, problem.Status);
+        Assert.Equal(HttpStatusCode.Conflict, problem.Status);
     }
 
     [Fact]
@@ -90,7 +90,7 @@ public class ProblemDetailsHttpExtensionsTests
         var problem = await response.ReadProblemAsync();
 
         Assert.NotNull(problem);
-        Assert.Equal(502, problem.Status);
+        Assert.Equal(HttpStatusCode.BadGateway, problem.Status);
         Assert.Equal("about:blank", problem.Type);
     }
 
@@ -102,7 +102,7 @@ public class ProblemDetailsHttpExtensionsTests
         var problem = await response.ReadProblemAsync();
 
         Assert.NotNull(problem);
-        Assert.Equal(500, problem.Status);
+        Assert.Equal(HttpStatusCode.InternalServerError, problem.Status);
     }
 
     [Fact]
@@ -113,7 +113,7 @@ public class ProblemDetailsHttpExtensionsTests
         var problem = await response.ReadProblemAsync();
 
         Assert.NotNull(problem);
-        Assert.Equal(503, problem.Status);
+        Assert.Equal(HttpStatusCode.ServiceUnavailable, problem.Status);
     }
 
     [Fact]
@@ -127,7 +127,7 @@ public class ProblemDetailsHttpExtensionsTests
             () => response.EnsureSuccessOrProblemAsync());
 
         Assert.Equal(ProblemTypes.Forbidden, exception.Problem.Type);
-        Assert.Equal(403, exception.Problem.Status);
+        Assert.Equal(HttpStatusCode.Forbidden, exception.Problem.Status);
     }
 
     [Fact]

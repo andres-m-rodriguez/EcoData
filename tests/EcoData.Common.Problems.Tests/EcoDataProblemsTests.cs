@@ -1,3 +1,4 @@
+using System.Net;
 using Xunit;
 
 namespace EcoData.Common.Problems.Tests;
@@ -12,7 +13,7 @@ public class EcoDataProblemsTests
         var problem = EcoDataProblemDetails.Validation(errors, detail: "d", instance: "/i");
 
         Assert.Equal(ProblemTypes.Validation, problem.Type);
-        Assert.Equal(400, problem.Status);
+        Assert.Equal(HttpStatusCode.BadRequest, problem.Status);
         Assert.Equal("d", problem.Detail);
         Assert.Equal("/i", problem.Instance);
         Assert.Same(errors, problem.Errors);
@@ -25,18 +26,18 @@ public class EcoDataProblemsTests
         Assert.Throws<ArgumentNullException>(() => EcoDataProblemDetails.Validation(null!));
     }
 
-    public static TheoryData<EcoDataProblemDetails, string, int> Factories => new()
+    public static TheoryData<EcoDataProblemDetails, string, HttpStatusCode> Factories => new()
     {
-        { EcoDataProblemDetails.NotFound(), ProblemTypes.NotFound, 404 },
-        { EcoDataProblemDetails.Unauthorized(), ProblemTypes.Unauthorized, 401 },
-        { EcoDataProblemDetails.Forbidden(), ProblemTypes.Forbidden, 403 },
-        { EcoDataProblemDetails.Conflict(), ProblemTypes.Conflict, 409 },
-        { EcoDataProblemDetails.Internal(), ProblemTypes.Internal, 500 },
+        { EcoDataProblemDetails.NotFound(), ProblemTypes.NotFound, HttpStatusCode.NotFound },
+        { EcoDataProblemDetails.Unauthorized(), ProblemTypes.Unauthorized, HttpStatusCode.Unauthorized },
+        { EcoDataProblemDetails.Forbidden(), ProblemTypes.Forbidden, HttpStatusCode.Forbidden },
+        { EcoDataProblemDetails.Conflict(), ProblemTypes.Conflict, HttpStatusCode.Conflict },
+        { EcoDataProblemDetails.Internal(), ProblemTypes.Internal, HttpStatusCode.InternalServerError },
     };
 
     [Theory]
     [MemberData(nameof(Factories))]
-    public void Factory_SetsExpectedTypeStatusAndTitle(EcoDataProblemDetails problem, string expectedType, int expectedStatus)
+    public void Factory_SetsExpectedTypeStatusAndTitle(EcoDataProblemDetails problem, string expectedType, HttpStatusCode expectedStatus)
     {
         Assert.Equal(expectedType, problem.Type);
         Assert.Equal(expectedStatus, problem.Status);

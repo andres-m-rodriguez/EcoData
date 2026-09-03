@@ -1,3 +1,4 @@
+using System.Net;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
@@ -18,7 +19,7 @@ public sealed record EcoDataProblemDetails
 
     /// <summary>HTTP status code for this occurrence of the problem.</summary>
     [JsonPropertyName("status")]
-    public int? Status { get; init; }
+    public HttpStatusCode? Status { get; init; }
 
     /// <summary>Human-readable explanation specific to this occurrence.</summary>
     [JsonPropertyName("detail")]

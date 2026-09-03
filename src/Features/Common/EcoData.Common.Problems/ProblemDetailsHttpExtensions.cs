@@ -40,7 +40,7 @@ public static class ProblemDetailsHttpExtensions
                         .ConfigureAwait(false);
                     if (problem is not null)
                         return problem.Status is null
-                            ? problem with { Status = (int)response.StatusCode }
+                            ? problem with { Status = response.StatusCode }
                             : problem;
                 }
                 catch (JsonException)
@@ -51,7 +51,7 @@ public static class ProblemDetailsHttpExtensions
 
             return new EcoDataProblemDetails
             {
-                Status = (int)response.StatusCode,
+                Status = response.StatusCode,
                 Title = string.IsNullOrEmpty(response.ReasonPhrase)
                     ? $"The request failed with status code {(int)response.StatusCode}."
                     : response.ReasonPhrase,

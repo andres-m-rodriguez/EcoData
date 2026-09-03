@@ -40,5 +40,5 @@ public static class ProblemResults
             problem,
             EcoDataProblemJsonContext.Default.EcoDataProblemDetails,
             contentType: ProblemDetailsHttpExtensions.ProblemMediaType,
-            statusCode: problem.Status);
+            statusCode: (int?)problem.Status);
 }
