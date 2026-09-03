@@ -50,9 +50,7 @@ public sealed class ParameterLookup
             !_bySourceCode.TryGetValue(rawCode, out var parameter)
             && !_byGlobalCode.TryGetValue(rawCode, out parameter)
         )
-        {
             return ResolvedReading.Unresolved(rawCode, rawUnit, rawValue, recordedAt);
-        }
 
         var canonical = parameter.ValueShape switch
         {

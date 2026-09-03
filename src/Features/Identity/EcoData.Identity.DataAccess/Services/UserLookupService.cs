@@ -15,9 +15,7 @@ public sealed class UserLookupService(IDbContextFactory<IdentityDbContext> conte
     {
         var ids = userIds.ToList();
         if (ids.Count == 0)
-        {
             return new Dictionary<Guid, UserLookupDto>();
-        }
 
         await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
 

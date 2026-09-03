@@ -28,11 +28,9 @@ public sealed class SensorRepository(IDbContextFactory<SensorsDbContext> context
         );
 
         if (existingSensor)
-        {
             return new ConflictError(
                 $"A sensor with external ID '{request.ExternalId}' already exists in this organization."
             );
-        }
 
         var sensorId = Guid.CreateVersion7();
         var now = DateTimeOffset.UtcNow;
@@ -159,19 +157,13 @@ public sealed class SensorRepository(IDbContextFactory<SensorsDbContext> context
         var query = context.Sensors.AsQueryable();
 
         if (parameters.IsActive.HasValue)
-        {
             query = query.Where(s => s.IsActive == parameters.IsActive.Value);
-        }
 
         if (parameters.DataSourceId.HasValue)
-        {
             query = query.Where(s => s.SourceId == parameters.DataSourceId.Value);
-        }
 
         if (parameters.OrganizationId.HasValue)
-        {
             query = query.Where(s => s.OrganizationId == parameters.OrganizationId.Value);
-        }
 
         if (!string.IsNullOrWhiteSpace(parameters.Search))
         {
@@ -180,14 +172,10 @@ public sealed class SensorRepository(IDbContextFactory<SensorsDbContext> context
         }
 
         if (parameters.MunicipalityId.HasValue)
-        {
             query = query.Where(s => s.MunicipalityId == parameters.MunicipalityId.Value);
-        }
 
         if (parameters.Cursor.HasValue)
-        {
             query = query.Where(s => s.Id < parameters.Cursor.Value);
-        }
 
         await foreach (
             var sensor in query
@@ -223,19 +211,13 @@ public sealed class SensorRepository(IDbContextFactory<SensorsDbContext> context
         var query = context.Sensors.AsQueryable();
 
         if (parameters.IsActive.HasValue)
-        {
             query = query.Where(s => s.IsActive == parameters.IsActive.Value);
-        }
 
         if (parameters.DataSourceId.HasValue)
-        {
             query = query.Where(s => s.SourceId == parameters.DataSourceId.Value);
-        }
 
         if (parameters.OrganizationId.HasValue)
-        {
             query = query.Where(s => s.OrganizationId == parameters.OrganizationId.Value);
-        }
 
         if (!string.IsNullOrWhiteSpace(parameters.Search))
         {
@@ -244,14 +226,10 @@ public sealed class SensorRepository(IDbContextFactory<SensorsDbContext> context
         }
 
         if (parameters.MunicipalityId.HasValue)
-        {
             query = query.Where(s => s.MunicipalityId == parameters.MunicipalityId.Value);
-        }
 
         if (parameters.Cursor.HasValue)
-        {
             query = query.Where(s => s.Id < parameters.Cursor.Value);
-        }
 
         return await query.CountAsync(cancellationToken);
     }
@@ -279,9 +257,7 @@ public sealed class SensorRepository(IDbContextFactory<SensorsDbContext> context
     )
     {
         if (dtos.Count == 0)
-        {
             return [];
-        }
 
         await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
         var now = DateTimeOffset.UtcNow;
@@ -321,9 +297,7 @@ public sealed class SensorRepository(IDbContextFactory<SensorsDbContext> context
 
         var entity = await context.Sensors.AsTracking().FirstOrDefaultAsync(s => s.Id == id, cancellationToken);
         if (entity is null)
-        {
             return null;
-        }
 
         entity.ExternalId = dto.ExternalId;
         entity.Name = dto.Name;
@@ -357,9 +331,7 @@ public sealed class SensorRepository(IDbContextFactory<SensorsDbContext> context
 
         var entity = await context.Sensors.AsTracking().FirstOrDefaultAsync(s => s.Id == id, cancellationToken);
         if (entity is null)
-        {
             return false;
-        }
 
         context.Sensors.Remove(entity);
         await context.SaveChangesAsync(cancellationToken);

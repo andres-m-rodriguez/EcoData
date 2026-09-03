@@ -64,7 +64,8 @@ public sealed class SpeciesTools
             .GetSpeciesAsync(parameters, cancellationToken)
             .WithCancellation(cancellationToken))
         {
-            results.Add(ToSummary(species));
+            var summary = ToSummary(species);
+            results.Add(summary);
         }
 
         return results;
@@ -84,9 +85,7 @@ public sealed class SpeciesTools
     {
         var species = await repository.GetByIdAsync(id, cancellationToken);
         if (species is null)
-        {
             return null;
-        }
 
         var categories = species.Categories
             .Select(category => WildlifeMcpMapping.ResolveName(category.Name, category.Code))
@@ -123,10 +122,11 @@ public sealed class SpeciesTools
         double radiusMeters = 5000
     )
     {
+        var radius = Math.Clamp(radiusMeters, 1, MaxRadiusMeters);
         var nearby = await repository.GetNearbyAsync(
             latitude,
             longitude,
-            Math.Clamp(radiusMeters, 1, MaxRadiusMeters),
+            radius,
             cancellationToken
         );
 
@@ -168,7 +168,8 @@ public sealed class SpeciesTools
             .GetSpeciesAsync(parameters, cancellationToken)
             .WithCancellation(cancellationToken))
         {
-            results.Add(ToSummary(species));
+            var summary = ToSummary(species);
+            results.Add(summary);
         }
 
         return results;
@@ -187,7 +188,6 @@ public sealed class SpeciesTools
     )
     {
         var counts = await repository.GetCountsByMunicipalityAsync(cancellationToken);
-
         return counts
             .Select(count => new MunicipalityRichness(count.MunicipalityId, count.Count))
             .ToList();

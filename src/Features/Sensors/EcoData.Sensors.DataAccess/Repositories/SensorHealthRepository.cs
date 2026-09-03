@@ -53,20 +53,14 @@ public sealed class SensorHealthRepository(IDbContextFactory<SensorsDbContext> c
         if (!string.IsNullOrWhiteSpace(parameters.Status))
         {
             if (Enum.TryParse<SensorHealthStatusType>(parameters.Status, true, out var status))
-            {
                 query = query.Where(s => s.Status == status);
-            }
         }
 
         if (parameters.DataSourceId.HasValue)
-        {
             query = query.Where(s => s.Sensor!.SourceId == parameters.DataSourceId.Value);
-        }
 
         if (parameters.Cursor.HasValue)
-        {
             query = query.Where(s => s.SensorId > parameters.Cursor.Value);
-        }
 
         await foreach (
             var status in query
@@ -208,39 +202,27 @@ public sealed class SensorHealthRepository(IDbContextFactory<SensorsDbContext> c
         var query = context.SensorHealthAlerts.AsQueryable();
 
         if (parameters.SensorId.HasValue)
-        {
             query = query.Where(a => a.SensorId == parameters.SensorId.Value);
-        }
 
         if (!string.IsNullOrWhiteSpace(parameters.AlertType))
         {
             if (Enum.TryParse<SensorHealthAlertType>(parameters.AlertType, true, out var alertType))
-            {
                 query = query.Where(a => a.AlertType == alertType);
-            }
         }
 
         if (parameters.IsResolved.HasValue)
-        {
             query = parameters.IsResolved.Value
                 ? query.Where(a => a.ResolvedAt != null)
                 : query.Where(a => a.ResolvedAt == null);
-        }
 
         if (parameters.FromDate.HasValue)
-        {
             query = query.Where(a => a.TriggeredAt >= parameters.FromDate.Value);
-        }
 
         if (parameters.ToDate.HasValue)
-        {
             query = query.Where(a => a.TriggeredAt <= parameters.ToDate.Value);
-        }
 
         if (parameters.Cursor.HasValue)
-        {
             query = query.Where(a => a.Id < parameters.Cursor.Value);
-        }
 
         await foreach (
             var alert in query
@@ -319,9 +301,7 @@ public sealed class SensorHealthRepository(IDbContextFactory<SensorsDbContext> c
             context.SensorHealthStatuses.Attach(existing);
             existing.Status = status;
             if (lastReadingAt.HasValue)
-            {
                 existing.LastReadingAt = lastReadingAt;
-            }
             existing.LastErrorMessage = errorMessage;
             existing.ConsecutiveFailures =
                 status == SensorHealthStatusType.Healthy ? 0 : existing.ConsecutiveFailures + 1;
@@ -431,9 +411,7 @@ public sealed class SensorHealthRepository(IDbContextFactory<SensorsDbContext> c
         }
 
         if (unresolvedAlerts.Count > 0)
-        {
             await context.SaveChangesAsync(cancellationToken);
-        }
     }
 
     public async Task<

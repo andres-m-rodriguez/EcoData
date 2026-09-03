@@ -70,12 +70,10 @@ public static class SensorHealthEndpoints
                 {
                     var sensor = await sensorRepository.GetByIdAsync(sensorId, ct);
                     if (sensor is null)
-                    {
                         return TypedResults.Problem(
                             detail: $"Sensor {sensorId} not found",
                             statusCode: StatusCodes.Status404NotFound
                         );
-                    }
 
                     await healthRepository.RecordReadingAsync(sensorId, DateTimeOffset.UtcNow, ct);
 

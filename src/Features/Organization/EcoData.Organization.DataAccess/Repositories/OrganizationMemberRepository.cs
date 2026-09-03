@@ -25,9 +25,7 @@ public sealed class OrganizationMemberRepository(
         var query = context.OrganizationMembers.Where(m => m.OrganizationId == organizationId);
 
         if (parameters.Cursor.HasValue)
-        {
             query = query.Where(m => m.Id.CompareTo(parameters.Cursor.Value) > 0);
-        }
 
         var members = await query
             .OrderBy(m => m.Id)
@@ -42,9 +40,7 @@ public sealed class OrganizationMemberRepository(
             .ToListAsync(cancellationToken);
 
         if (members.Count == 0)
-        {
             yield break;
-        }
 
         var userIds = members.Select(m => m.UserId).Distinct();
         var users = await userLookupService.GetByIdsAsync(userIds, cancellationToken);
@@ -85,9 +81,7 @@ public sealed class OrganizationMemberRepository(
             .FirstOrDefaultAsync(cancellationToken);
 
         if (member is null)
-        {
             return null;
-        }
 
         var user = await userLookupService.GetByIdAsync(userId, cancellationToken);
 
@@ -115,9 +109,7 @@ public sealed class OrganizationMemberRepository(
             .FirstOrDefaultAsync(cancellationToken);
 
         if (role is null)
-        {
             return null;
-        }
 
         var now = DateTimeOffset.UtcNow;
         var entity = new OrganizationMember
@@ -161,18 +153,14 @@ public sealed class OrganizationMemberRepository(
             );
 
         if (member is null)
-        {
             return null;
-        }
 
         var role = await context
             .OrganizationRoles.Where(r => r.Name == roleName && r.OrganizationId == organizationId)
             .FirstOrDefaultAsync(cancellationToken);
 
         if (role is null)
-        {
             return null;
-        }
 
         member.RoleId = role.Id;
         await context.SaveChangesAsync(cancellationToken);
@@ -205,9 +193,7 @@ public sealed class OrganizationMemberRepository(
             );
 
         if (member is null)
-        {
             return false;
-        }
 
         context.OrganizationMembers.Remove(member);
         await context.SaveChangesAsync(cancellationToken);

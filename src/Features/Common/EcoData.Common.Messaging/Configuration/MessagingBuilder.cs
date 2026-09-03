@@ -26,9 +26,7 @@ public sealed class MessagingBuilder
     public MessagingBuilder UseAzureServiceBus(Action<AzureServiceBusOptions> configure)
     {
         if (_transportConfigured)
-        {
             throw new InvalidOperationException("A transport has already been configured.");
-        }
 
         _services.Configure(configure);
         _services.AddSingleton<IMessageTransport, AzureServiceBusTransport>();
@@ -44,9 +42,7 @@ public sealed class MessagingBuilder
     public MessagingBuilder UseAzureServiceBus(IConfiguration configuration)
     {
         if (_transportConfigured)
-        {
             throw new InvalidOperationException("A transport has already been configured.");
-        }
 
         _services.Configure<AzureServiceBusOptions>(configuration);
         _services.AddSingleton<IMessageTransport, AzureServiceBusTransport>();
@@ -88,9 +84,7 @@ public sealed class MessagingBuilder
     internal void EnsureTransportConfigured()
     {
         if (!_transportConfigured)
-        {
             throw new InvalidOperationException(
                 "No messaging transport configured. Call UseAzureServiceBus(...) on the MessagingBuilder.");
-        }
     }
 }

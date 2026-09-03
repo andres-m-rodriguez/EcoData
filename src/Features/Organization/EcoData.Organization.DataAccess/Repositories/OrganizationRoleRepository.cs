@@ -54,9 +54,7 @@ public sealed class OrganizationRoleRepository(
             .FirstOrDefaultAsync(cancellationToken);
 
         if (role is null)
-        {
             return null;
-        }
 
         return new OrganizationRoleDto(role.Id, role.Name, role.Permissions, role.MemberCount);
     }
@@ -81,9 +79,7 @@ public sealed class OrganizationRoleRepository(
             .FirstOrDefaultAsync(cancellationToken);
 
         if (role is null)
-        {
             return null;
-        }
 
         return new OrganizationRoleDto(role.Id, role.Name, role.Permissions, role.MemberCount);
     }
@@ -160,9 +156,7 @@ public sealed class OrganizationRoleRepository(
             );
 
         if (entity is null)
-        {
             return null;
-        }
 
         entity.Name = name;
 
@@ -171,9 +165,7 @@ public sealed class OrganizationRoleRepository(
         foreach (var existing in entity.Permissions.ToList())
         {
             if (!wanted.Remove(existing.Permission))
-            {
                 context.OrganizationRolePermissions.Remove(existing);
-            }
         }
 
         foreach (var added in wanted)
@@ -203,9 +195,7 @@ public sealed class OrganizationRoleRepository(
         await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
 
         if (await context.OrganizationMembers.AnyAsync(m => m.RoleId == roleId, cancellationToken))
-        {
             return true;
-        }
 
         return await context.OrganizationAccessRequests.AnyAsync(
             r => r.RoleId == roleId && r.Status == OrganizationAccessRequestStatus.Pending,
@@ -229,9 +219,7 @@ public sealed class OrganizationRoleRepository(
             );
 
         if (entity is null)
-        {
             return false;
-        }
 
         // Resolved access requests keep their FK; the role row is what they pointed at, so
         // those references are cleared rather than blocking the delete.

@@ -65,9 +65,7 @@ public class MapController<TMarker> : IMapController<TMarker>
     {
         var removed = _markers.Remove(marker);
         if (removed)
-        {
             OnMarkersChanged?.Invoke();
-        }
         return removed;
     }
 
@@ -99,9 +97,7 @@ public class MapController<TMarker> : IMapController<TMarker>
     {
         var removed = _geoJsonLayers.Remove(id);
         if (removed)
-        {
             OnGeoJsonChanged?.Invoke();
-        }
         return removed;
     }
 

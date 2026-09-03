@@ -104,14 +104,13 @@ public sealed class SpeciesRepository(IDbContextFactory<WildlifeDbContext> conte
                         * Math.Cos(location.Latitude * Math.PI / 180)
                         * Math.Sin(dLon / 2)
                         * Math.Sin(dLon / 2);
-
-                var distance =
-                    earthRadiusMeters * 2 * Math.Atan2(Math.Sqrt(a), Math.Sqrt(1 - a));
+                var sqrtA = Math.Sqrt(a);
+                var sqrtOneMinusA = Math.Sqrt(1 - a);
+                var distance = earthRadiusMeters * 2 * Math.Atan2(sqrtA, sqrtOneMinusA);
 
                 // The occurrence is a circle; match when its edge falls inside the search radius.
                 var effectiveDistance = Math.Max(0, distance - location.RadiusMeters);
                 if (effectiveDistance <= radiusMeters)
-                {
                     results.Add(
                         new SpeciesNearbyDto(
                             species.Id,
@@ -125,7 +124,6 @@ public sealed class SpeciesRepository(IDbContextFactory<WildlifeDbContext> conte
                             location.Description
                         )
                     );
-                }
             }
         }
 
@@ -192,9 +190,7 @@ public sealed class SpeciesRepository(IDbContextFactory<WildlifeDbContext> conte
                             < (xj - xi) * (location.Latitude - yi) / (yj - yi) + xi
                         )
                     )
-                    {
                         inside = !inside;
-                    }
                 }
 
                 if (!inside)
@@ -211,9 +207,9 @@ public sealed class SpeciesRepository(IDbContextFactory<WildlifeDbContext> conte
                         * Math.Cos(location.Latitude * Math.PI / 180)
                         * Math.Sin(dLon / 2)
                         * Math.Sin(dLon / 2);
-
-                var distance =
-                    earthRadiusMeters * 2 * Math.Atan2(Math.Sqrt(a), Math.Sqrt(1 - a));
+                var sqrtA = Math.Sqrt(a);
+                var sqrtOneMinusA = Math.Sqrt(1 - a);
+                var distance = earthRadiusMeters * 2 * Math.Atan2(sqrtA, sqrtOneMinusA);
 
                 results.Add(
                     new SpeciesNearbyDto(
@@ -278,67 +274,45 @@ public sealed class SpeciesRepository(IDbContextFactory<WildlifeDbContext> conte
         }
 
         if (parameters.IsFauna.HasValue)
-        {
             query = query.Where(s => s.IsFauna == parameters.IsFauna.Value);
-        }
 
         if (parameters.EndemicStatuses is { Length: > 0 })
-        {
             query = query.Where(s => parameters.EndemicStatuses.Contains(s.EndemicStatus));
-        }
 
         if (parameters.HasProfileImage.HasValue)
-        {
             query = parameters.HasProfileImage.Value
                 ? query.Where(s => s.ProfileImageData != null)
                 : query.Where(s => s.ProfileImageData == null);
-        }
 
         if (parameters.CategoryId.HasValue)
-        {
             query = query.Where(s =>
                 s.CategoryLinks.Any(cl => cl.CategoryId == parameters.CategoryId.Value)
             );
-        }
 
         if (parameters.MunicipalityId.HasValue)
-        {
             query = query.Where(s =>
                 s.MunicipalitySpecies.Any(ms => ms.MunicipalityId == parameters.MunicipalityId.Value)
             );
-        }
 
         if (parameters.IucnStatuses is { Length: > 0 } statuses)
-        {
             query = query.Where(s => s.IucnStatus != null && statuses.Contains(s.IucnStatus.Value));
-        }
 
         if (parameters.TaxonCodes is { Length: > 0 } codes)
-        {
             query = query.Where(s => s.CategoryLinks.Any(cl => codes.Contains(cl.Category.Code)));
-        }
 
         if (parameters.MinMunicipalityCount is { } minCount)
-        {
             query = query.Where(s => s.MunicipalitySpecies.Count >= minCount);
-        }
 
         if (parameters.ObservedSinceUtc is { } observedSince)
-        {
             query = query.Where(s => s.LastObservedAtUtc >= observedSince);
-        }
 
         if (parameters.NrcsPracticeCodes is { Length: > 0 } nrcsCodes)
-        {
             query = query.Where(s =>
                 s.FwsLinks.Any(l => nrcsCodes.Contains(l.NrcsPractice.Code))
             );
-        }
 
         if (parameters.FwsActionCodes is { Length: > 0 } fwsCodes)
-        {
             query = query.Where(s => s.FwsLinks.Any(l => fwsCodes.Contains(l.FwsAction.Code)));
-        }
 
         if (parameters.Cursor.HasValue)
         {
@@ -358,7 +332,6 @@ public sealed class SpeciesRepository(IDbContextFactory<WildlifeDbContext> conte
                 .FirstOrDefaultAsync(cancellationToken);
 
             if (cursor is not null)
-            {
                 // Each branch mirrors the matching ordering below, including its Id
                 // tiebreaker; the two must be changed together.
                 query = parameters.Sort switch
@@ -397,7 +370,6 @@ public sealed class SpeciesRepository(IDbContextFactory<WildlifeDbContext> conte
                     ),
                     _ => query.Where(s => s.Id < cursor.Id),
                 };
-            }
         }
 
         query = parameters.Sort switch
@@ -461,67 +433,45 @@ public sealed class SpeciesRepository(IDbContextFactory<WildlifeDbContext> conte
         }
 
         if (parameters.IsFauna.HasValue)
-        {
             query = query.Where(s => s.IsFauna == parameters.IsFauna.Value);
-        }
 
         if (parameters.EndemicStatuses is { Length: > 0 })
-        {
             query = query.Where(s => parameters.EndemicStatuses.Contains(s.EndemicStatus));
-        }
 
         if (parameters.HasProfileImage.HasValue)
-        {
             query = parameters.HasProfileImage.Value
                 ? query.Where(s => s.ProfileImageData != null)
                 : query.Where(s => s.ProfileImageData == null);
-        }
 
         if (parameters.CategoryId.HasValue)
-        {
             query = query.Where(s =>
                 s.CategoryLinks.Any(cl => cl.CategoryId == parameters.CategoryId.Value)
             );
-        }
 
         if (parameters.MunicipalityId.HasValue)
-        {
             query = query.Where(s =>
                 s.MunicipalitySpecies.Any(ms => ms.MunicipalityId == parameters.MunicipalityId.Value)
             );
-        }
 
         if (parameters.IucnStatuses is { Length: > 0 } statuses)
-        {
             query = query.Where(s => s.IucnStatus != null && statuses.Contains(s.IucnStatus.Value));
-        }
 
         if (parameters.TaxonCodes is { Length: > 0 } codes)
-        {
             query = query.Where(s => s.CategoryLinks.Any(cl => codes.Contains(cl.Category.Code)));
-        }
 
         if (parameters.MinMunicipalityCount is { } minCount)
-        {
             query = query.Where(s => s.MunicipalitySpecies.Count >= minCount);
-        }
 
         if (parameters.ObservedSinceUtc is { } observedSince)
-        {
             query = query.Where(s => s.LastObservedAtUtc >= observedSince);
-        }
 
         if (parameters.NrcsPracticeCodes is { Length: > 0 } nrcsCodes)
-        {
             query = query.Where(s =>
                 s.FwsLinks.Any(l => nrcsCodes.Contains(l.NrcsPractice.Code))
             );
-        }
 
         if (parameters.FwsActionCodes is { Length: > 0 } fwsCodes)
-        {
             query = query.Where(s => s.FwsLinks.Any(l => fwsCodes.Contains(l.FwsAction.Code)));
-        }
 
         return await query.CountAsync(cancellationToken);
     }
@@ -619,71 +569,49 @@ public sealed class SpeciesRepository(IDbContextFactory<WildlifeDbContext> conte
         }
 
         if (parameters.IsFauna.HasValue)
-        {
             filtered = filtered.Where(s => s.IsFauna == parameters.IsFauna.Value);
-        }
 
         if (parameters.EndemicStatuses is { Length: > 0 })
-        {
             filtered = filtered.Where(s => parameters.EndemicStatuses.Contains(s.EndemicStatus));
-        }
 
         if (parameters.HasProfileImage.HasValue)
-        {
             filtered = parameters.HasProfileImage.Value
                 ? filtered.Where(s => s.ProfileImageData != null)
                 : filtered.Where(s => s.ProfileImageData == null);
-        }
 
         if (parameters.CategoryId.HasValue)
-        {
             filtered = filtered.Where(s =>
                 s.CategoryLinks.Any(cl => cl.CategoryId == parameters.CategoryId.Value)
             );
-        }
 
         if (parameters.MunicipalityId.HasValue)
-        {
             filtered = filtered.Where(s =>
                 s.MunicipalitySpecies.Any(ms => ms.MunicipalityId == parameters.MunicipalityId.Value)
             );
-        }
 
         if (parameters.IucnStatuses is { Length: > 0 } statuses)
-        {
             filtered = filtered.Where(s =>
                 s.IucnStatus != null && statuses.Contains(s.IucnStatus.Value)
             );
-        }
 
         if (parameters.TaxonCodes is { Length: > 0 } codes)
-        {
             filtered = filtered.Where(s =>
                 s.CategoryLinks.Any(cl => codes.Contains(cl.Category.Code))
             );
-        }
 
         if (parameters.MinMunicipalityCount is { } minCount)
-        {
             filtered = filtered.Where(s => s.MunicipalitySpecies.Count >= minCount);
-        }
 
         if (parameters.ObservedSinceUtc is { } observedSince)
-        {
             filtered = filtered.Where(s => s.LastObservedAtUtc >= observedSince);
-        }
 
         if (parameters.NrcsPracticeCodes is { Length: > 0 } nrcsCodes)
-        {
             filtered = filtered.Where(s =>
                 s.FwsLinks.Any(l => nrcsCodes.Contains(l.NrcsPractice.Code))
             );
-        }
 
         if (parameters.FwsActionCodes is { Length: > 0 } fwsCodes)
-        {
             filtered = filtered.Where(s => s.FwsLinks.Any(l => fwsCodes.Contains(l.FwsAction.Code)));
-        }
 
         var taxa = await filtered
             .SelectMany(s => s.CategoryLinks)

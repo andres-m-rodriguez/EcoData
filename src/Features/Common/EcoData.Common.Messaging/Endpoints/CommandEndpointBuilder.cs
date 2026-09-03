@@ -29,9 +29,7 @@ public sealed class CommandEndpointBuilder<TCommand, TResult>
     public CommandEndpointBuilder<TCommand, TResult> WithRouteOptions(Action<RouteHandlerBuilder> configure)
     {
         if (_routeBuilder is not null)
-        {
             configure(_routeBuilder);
-        }
         return this;
     }
 }

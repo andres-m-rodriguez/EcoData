@@ -50,30 +50,22 @@ public static class FaunaFinderRateLimiterExtensions
                 var path = context.Request.Path;
 
                 if (path.StartsWithSegments(McpPath, StringComparison.OrdinalIgnoreCase))
-                {
                     return TokenBucket($"mcp:{ClientKey(context)}", McpRequestsPerMinute);
-                }
 
                 if (path.StartsWithSegments(AccountPath, StringComparison.OrdinalIgnoreCase))
-                {
                     return TokenBucket($"account:{ClientKey(context)}", AccountRequestsPerMinute);
-                }
 
                 if (
                     HttpMethods.IsPost(context.Request.Method)
                     && path.StartsWithSegments(SightingsPath, StringComparison.OrdinalIgnoreCase)
                     && path.Value!.EndsWith(ImagesSegment, StringComparison.OrdinalIgnoreCase)
                 )
-                {
                     return TokenBucket($"images:{ClientKey(context)}", ImageUploadRequestsPerMinute);
-                }
 
                 foreach (var apiPath in ApiPaths)
                 {
                     if (path.StartsWithSegments(apiPath, StringComparison.OrdinalIgnoreCase))
-                    {
                         return TokenBucket($"api:{ClientKey(context)}", ApiRequestsPerMinute);
-                    }
                 }
 
                 return RateLimitPartition.GetNoLimiter("unmetered");

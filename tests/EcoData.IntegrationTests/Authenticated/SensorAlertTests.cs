@@ -82,10 +82,8 @@ public sealed class SensorAlertTests(EcoDataTestFixture fixture) : Authenticated
         }
 
         if (firstAlert is null)
-        {
             // No alerts in system, skip this test
             return;
-        }
 
         var detailResult = await SensorAlertHttpClient.GetAlertByIdAsync(firstAlert.Id);
 

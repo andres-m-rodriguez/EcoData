@@ -48,23 +48,17 @@ public static class OrganizationRoleEndpoints
                 ) =>
                 {
                     if (!await CanManageAsync(user, organizationId, permissionService, ct))
-                    {
                         return TypedResults.Forbid();
-                    }
 
                     var invalid = Normalize(request, out var name, out var permissions);
                     if (invalid is not null)
-                    {
                         return invalid;
-                    }
 
                     if (await repository.NameExistsAsync(organizationId, name, null, ct))
-                    {
                         return TypedResults.Problem(
                             detail: $"A role named '{name}' already exists in this organization.",
                             statusCode: StatusCodes.Status409Conflict
                         );
-                    }
 
                     var role = await repository.CreateAsync(organizationId, name, permissions, ct);
 
@@ -90,23 +84,17 @@ public static class OrganizationRoleEndpoints
                 ) =>
                 {
                     if (!await CanManageAsync(user, organizationId, permissionService, ct))
-                    {
                         return TypedResults.Forbid();
-                    }
 
                     var invalid = Normalize(request, out var name, out var permissions);
                     if (invalid is not null)
-                    {
                         return invalid;
-                    }
 
                     if (await repository.NameExistsAsync(organizationId, name, roleId, ct))
-                    {
                         return TypedResults.Problem(
                             detail: $"A role named '{name}' already exists in this organization.",
                             statusCode: StatusCodes.Status409Conflict
                         );
-                    }
 
                     var role = await repository.UpdateAsync(
                         organizationId,
@@ -117,12 +105,10 @@ public static class OrganizationRoleEndpoints
                     );
 
                     if (role is null)
-                    {
                         return TypedResults.Problem(
                             detail: "Role not found.",
                             statusCode: StatusCodes.Status404NotFound
                         );
-                    }
 
                     return TypedResults.Ok(role);
                 }
@@ -142,26 +128,20 @@ public static class OrganizationRoleEndpoints
                 ) =>
                 {
                     if (!await CanManageAsync(user, organizationId, permissionService, ct))
-                    {
                         return TypedResults.Forbid();
-                    }
 
                     var role = await repository.GetByIdAsync(organizationId, roleId, ct);
                     if (role is null)
-                    {
                         return TypedResults.Problem(
                             detail: "Role not found.",
                             statusCode: StatusCodes.Status404NotFound
                         );
-                    }
 
                     if (await repository.IsInUseAsync(roleId, ct))
-                    {
                         return TypedResults.Problem(
                             detail: $"'{role.Name}' is still assigned to members or pending access requests. Move them to another role first.",
                             statusCode: StatusCodes.Status409Conflict
                         );
-                    }
 
                     await repository.DeleteAsync(organizationId, roleId, ct);
 
@@ -184,9 +164,7 @@ public static class OrganizationRoleEndpoints
         var token = new RequestClaimToken(user);
 
         if (!token.IsAuthenticated)
-        {
             return false;
-        }
 
         return await permissionService.HasPermissionAsync(
             token.UserId.Value,
@@ -212,20 +190,16 @@ public static class OrganizationRoleEndpoints
             .ToList();
 
         if (name.Length == 0 || name.Length > MaxLength)
-        {
             return TypedResults.Problem(
                 detail: $"Role name must be between 1 and {MaxLength} characters.",
                 statusCode: StatusCodes.Status400BadRequest
             );
-        }
 
         if (permissions.Any(p => p.Length > MaxLength))
-        {
             return TypedResults.Problem(
                 detail: $"Permission keys must be at most {MaxLength} characters.",
                 statusCode: StatusCodes.Status400BadRequest
             );
-        }
 
         return null;
     }

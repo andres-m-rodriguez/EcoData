@@ -72,12 +72,10 @@ public static class OrganizationEndpoints
                 {
                     var organization = await repository.GetByIdAsync(id, ct);
                     if (organization is null)
-                    {
                         return TypedResults.Problem(
                             detail: "Organization not found.",
                             statusCode: StatusCodes.Status404NotFound
                         );
-                    }
                     return TypedResults.Ok(organization);
                 }
             )
@@ -94,12 +92,10 @@ public static class OrganizationEndpoints
                 {
                     var organization = await repository.GetBySlugAsync(slug, ct);
                     if (organization is null)
-                    {
                         return TypedResults.Problem(
                             detail: "Organization not found.",
                             statusCode: StatusCodes.Status404NotFound
                         );
-                    }
                     return TypedResults.Ok(organization);
                 }
             )
@@ -117,12 +113,10 @@ public static class OrganizationEndpoints
                 {
                     var exists = await repository.ExistsAsync(dto.Name, ct);
                     if (exists)
-                    {
                         return TypedResults.Problem(
                             detail: "An organization with this name already exists.",
                             statusCode: StatusCodes.Status409Conflict
                         );
-                    }
 
                     var created = await repository.CreateAsync(dto, ct);
                     return TypedResults.Created($"/organization/organizations/{created.Id}", created);
@@ -155,18 +149,14 @@ public static class OrganizationEndpoints
                             ct
                         )
                     )
-                    {
                         return TypedResults.Forbid();
-                    }
 
                     var updated = await repository.UpdateAsync(id, dto, ct);
                     if (updated is null)
-                    {
                         return TypedResults.Problem(
                             detail: "Organization not found.",
                             statusCode: StatusCodes.Status404NotFound
                         );
-                    }
                     return TypedResults.Ok(updated);
                 }
             )
@@ -195,27 +185,21 @@ public static class OrganizationEndpoints
                             ct
                         )
                     )
-                    {
                         return TypedResults.Forbid();
-                    }
 
                     var sensorCount = await sensorRepository.GetCountByOrganizationAsync(id, ct);
                     if (sensorCount > 0)
-                    {
                         return TypedResults.Problem(
                             detail: $"Cannot delete organization with {sensorCount} active sensor(s). Please delete or reassign all sensors first.",
                             statusCode: StatusCodes.Status409Conflict
                         );
-                    }
 
                     var deleted = await repository.DeleteAsync(id, ct);
                     if (!deleted)
-                    {
                         return TypedResults.Problem(
                             detail: "Organization not found.",
                             statusCode: StatusCodes.Status404NotFound
                         );
-                    }
                     return TypedResults.NoContent();
                 }
             )

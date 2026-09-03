@@ -92,9 +92,7 @@ public sealed class UsgsIngestionWorker(
                 {
                     var siteCode = series.SourceInfo.SiteCode.FirstOrDefault()?.Value;
                     if (string.IsNullOrEmpty(siteCode) || existingSensors.ContainsKey(siteCode) || !processedSiteCodes.Add(siteCode))
-                    {
                         continue;
-                    }
 
                     var location = series.SourceInfo.GeoLocation.GeogLocation;
                     var municipality = await municipalityRepository.GetByPointAsync(
@@ -131,9 +129,7 @@ public sealed class UsgsIngestionWorker(
                 {
                     var siteCode = series.SourceInfo.SiteCode.FirstOrDefault()?.Value;
                     if (string.IsNullOrEmpty(siteCode) || !existingSensors.TryGetValue(siteCode, out var sensor))
-                    {
                         continue;
-                    }
 
                     var parameterCode = series.Variable.VariableCode.FirstOrDefault()?.Value ?? "UNKNOWN";
                     var variableName = series.Variable.VariableName;
@@ -144,15 +140,11 @@ public sealed class UsgsIngestionWorker(
                         foreach (var reading in valuesSet.Value)
                         {
                             if (!double.TryParse(reading.Value, out var value))
-                            {
                                 continue;
-                            }
 
                             var resolved = parameterLookup.Resolve(parameterCode, unitCode, value, reading.DateTime);
                             if (resolved.PhenomenonId is null)
-                            {
                                 unresolvedCodes.Add(parameterCode);
-                            }
 
                             readingsToAdd.Add(new ReadingDtoForCreate(
                                 sensor.Id,
@@ -170,13 +162,11 @@ public sealed class UsgsIngestionWorker(
                 }
 
                 if (unresolvedCodes.Count > 0)
-                {
                     logger.LogWarning(
                         "Stored readings for {Count} unmapped USGS parameter code(s); add Parameter mappings to enable canonical values: {Codes}",
                         unresolvedCodes.Count,
                         string.Join(", ", unresolvedCodes)
                     );
-                }
 
                 if (readingsToAdd.Count > 0)
                 {

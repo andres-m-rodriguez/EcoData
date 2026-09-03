@@ -88,9 +88,7 @@ public sealed class SpeciesReportDocument(
                 {
                     column.Item().Text(commonName).FontSize(22).Bold().FontColor(Green);
                     if (!string.Equals(commonName, species.ScientificName, StringComparison.Ordinal))
-                    {
                         column.Item().Text(species.ScientificName).FontSize(14).Italic().FontColor(Muted);
-                    }
 
                     column
                         .Item()
@@ -101,9 +99,10 @@ public sealed class SpeciesReportDocument(
 
                     if (species.Categories.Count > 0)
                     {
+                        var names = species.Categories.Select(c => Resolve(c.Name, fallback: c.Code));
                         var categories = string.Join(
                             ", ",
-                            species.Categories.Select(c => Resolve(c.Name, fallback: c.Code))
+                            names
                         );
                         column
                             .Item()
@@ -115,23 +114,19 @@ public sealed class SpeciesReportDocument(
                 });
 
             if (image is not null)
-            {
                 row.ConstantItem(180)
                     .PaddingLeft(16)
                     .Column(column =>
                     {
                         column.Item().Image(image).FitWidth();
                         if (!string.IsNullOrEmpty(species.ImageSourceUrl))
-                        {
                             column
                                 .Item()
                                 .PaddingTop(4)
                                 .Text($"{labels.ImageSource}: {species.ImageSourceUrl}")
                                 .FontSize(7)
                                 .FontColor(Muted);
-                        }
                     });
-            }
         });
     }
 

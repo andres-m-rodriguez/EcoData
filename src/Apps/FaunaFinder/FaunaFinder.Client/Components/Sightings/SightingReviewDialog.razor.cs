@@ -54,7 +54,8 @@ public partial class SightingReviewDialog : EcoDataComponent
             : new SightingDenialDtoValidator().Validate(new SightingDenialDto(reason ?? string.Empty));
         if (!validation.IsValid)
         {
-            _reasonError = string.Join(" ", validation.Errors.Select(e => e.ErrorMessage));
+            var messages = validation.Errors.Select(e => e.ErrorMessage);
+            _reasonError = string.Join(" ", messages);
             return;
         }
 
@@ -81,8 +82,8 @@ public partial class SightingReviewDialog : EcoDataComponent
             Snackbar.Add(message, Severity.Error);
             return;
         }
-
-        MudDialog.Close(DialogResult.Ok(true));
+        var decided = DialogResult.Ok(true);
+        MudDialog.Close(decided);
     }
 
     private void Cancel() => MudDialog.Cancel();

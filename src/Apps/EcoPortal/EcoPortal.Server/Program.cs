@@ -57,9 +57,7 @@ builder.Services.AddScoped<INotificationRoutingService, NotificationRoutingServi
 builder.Services.AddHostedService<SensorHealthMonitorWorker>();
 builder.Services.AddHostedService<NotificationDispatcherWorker>();
 if (builder.Environment.IsDevelopment())
-{
     builder.Services.AddHostedService<ReadingEventLoggerWorker>();
-}
 
 builder
     .Services.AddAuthentication(options =>
@@ -82,13 +80,9 @@ var app = builder.Build();
 app.MapDefaultEndpoints();
 
 if (app.Environment.IsDevelopment())
-{
     app.UseWebAssemblyDebugging();
-}
 else
-{
     app.UseHsts();
-}
 
 app.UseAuthentication();
 app.UseAuthorization();

@@ -43,9 +43,7 @@ public static class SensorJwtAuthentication
                 {
                     var tokenType = context.Principal?.FindFirst("token_type")?.Value;
                     if (tokenType != "sensor")
-                    {
                         context.Fail("Invalid token type");
-                    }
                     return Task.CompletedTask;
                 }
             };

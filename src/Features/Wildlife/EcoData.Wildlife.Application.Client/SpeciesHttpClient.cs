@@ -262,14 +262,10 @@ public sealed class SpeciesHttpClient(HttpClient httpClient) : ISpeciesHttpClien
             .Add("fwsActionCodes", parameters.FwsActionCodes);
 
         if (parameters.Sort != SpeciesSort.ScientificNameAsc)
-        {
             builder.Add<SpeciesSort>("sort", parameters.Sort);
-        }
 
         if (includePageSize && parameters.PageSize != 20)
-        {
             builder.Add("pageSize", parameters.PageSize);
-        }
 
         return builder.Build();
     }

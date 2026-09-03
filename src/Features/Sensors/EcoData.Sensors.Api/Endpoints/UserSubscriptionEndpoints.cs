@@ -29,9 +29,7 @@ public static class UserSubscriptionEndpoints
                 {
                     var token = new RequestClaimToken(user);
                     if (!token.IsAuthenticated)
-                    {
                         return TypedResults.Unauthorized();
-                    }
 
                     var subscriptions = await repository.GetByUserAsync(token.UserId.Value, ct);
                     return TypedResults.Ok(subscriptions);
@@ -55,15 +53,11 @@ public static class UserSubscriptionEndpoints
                 {
                     var token = new RequestClaimToken(user);
                     if (!token.IsAuthenticated)
-                    {
                         return TypedResults.Unauthorized();
-                    }
 
                     var subscription = await repository.GetAsync(token.UserId.Value, sensorId, ct);
                     if (subscription is null)
-                    {
                         return TypedResults.NotFound();
-                    }
 
                     return TypedResults.Ok(subscription);
                 }
@@ -93,18 +87,14 @@ public static class UserSubscriptionEndpoints
                 {
                     var token = new RequestClaimToken(user);
                     if (!token.IsAuthenticated)
-                    {
                         return TypedResults.Unauthorized();
-                    }
 
                     var sensor = await sensorRepository.GetByIdAsync(sensorId, ct);
                     if (sensor is null)
-                    {
                         return TypedResults.Problem(
                             detail: "Sensor not found.",
                             statusCode: StatusCodes.Status404NotFound
                         );
-                    }
 
                     // Read permission doubles as the org-membership check for subscribing.
                     var hasAccess = await permissionService.HasPermissionAsync(
@@ -115,18 +105,14 @@ public static class UserSubscriptionEndpoints
                     );
 
                     if (!hasAccess)
-                    {
                         return TypedResults.Forbid();
-                    }
 
                     var healthConfig = await healthRepository.GetConfigByIdAsync(sensorId, ct);
                     if (healthConfig is null || !healthConfig.IsMonitoringEnabled)
-                    {
                         return TypedResults.Problem(
                             detail: "Health monitoring is not enabled for this sensor.",
                             statusCode: StatusCodes.Status400BadRequest
                         );
-                    }
 
                     var existing = await subscriptionRepository.ExistsAsync(
                         token.UserId.Value,
@@ -134,12 +120,10 @@ public static class UserSubscriptionEndpoints
                         ct
                     );
                     if (existing)
-                    {
                         return TypedResults.Problem(
                             detail: "Already subscribed to this sensor.",
                             statusCode: StatusCodes.Status409Conflict
                         );
-                    }
 
                     var subscription = await subscriptionRepository.CreateAsync(
                         token.UserId.Value,
@@ -171,9 +155,7 @@ public static class UserSubscriptionEndpoints
                 {
                     var token = new RequestClaimToken(user);
                     if (!token.IsAuthenticated)
-                    {
                         return TypedResults.Unauthorized();
-                    }
 
                     var subscription = await repository.UpdateAsync(
                         token.UserId.Value,
@@ -183,9 +165,7 @@ public static class UserSubscriptionEndpoints
                     );
 
                     if (subscription is null)
-                    {
                         return TypedResults.NotFound();
-                    }
 
                     return TypedResults.Ok(subscription);
                 }
@@ -204,15 +184,11 @@ public static class UserSubscriptionEndpoints
                 {
                     var token = new RequestClaimToken(user);
                     if (!token.IsAuthenticated)
-                    {
                         return TypedResults.Unauthorized();
-                    }
 
                     var deleted = await repository.DeleteAsync(token.UserId.Value, sensorId, ct);
                     if (!deleted)
-                    {
                         return TypedResults.NotFound();
-                    }
 
                     return TypedResults.NoContent();
                 }

@@ -34,9 +34,7 @@ public partial class UiBottomNav : StatefulComponent
         await base.OnAfterRenderAsync(firstRender);
 
         if (firstRender)
-        {
             await AutoHide.StartAsync();
-        }
     }
 
     public override void Dispose()

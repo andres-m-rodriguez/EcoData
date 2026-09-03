@@ -18,9 +18,7 @@ public sealed class OrganizationPermissionService(
     )
     {
         if (await userLookupService.IsGlobalAdminAsync(userId, cancellationToken))
-        {
             return true;
-        }
 
         var membership = await membershipRepository.GetAsync(
             userId,
@@ -29,9 +27,7 @@ public sealed class OrganizationPermissionService(
         );
 
         if (membership is null)
-        {
             return false;
-        }
 
         return membership.Permissions.Contains(permission);
     }
@@ -43,9 +39,7 @@ public sealed class OrganizationPermissionService(
     )
     {
         if (await userLookupService.IsGlobalAdminAsync(userId, cancellationToken))
-        {
             return new UserPermissionsDto(organizationId, [], IsGlobalAdmin: true);
-        }
 
         var membership = await membershipRepository.GetAsync(
             userId,

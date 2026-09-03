@@ -73,9 +73,7 @@ public partial class FfSearch : EcoDataComponent
     private void HandleLocationChanged(object? sender, LocationChangedEventArgs e)
     {
         if (!HasText && !_open)
-        {
             return;
-        }
 
         Clear();
         InvokeAsync(StateHasChanged);
@@ -92,27 +90,21 @@ public partial class FfSearch : EcoDataComponent
         }
 
         _open = true;
-
-        await Task.WhenAll(
-            SearchSpeciesState.TryExecute(),
-            SearchMunicipalitiesState.TryExecute()
-        );
+        var species = SearchSpeciesState.TryExecute();
+        var municipalities = SearchMunicipalitiesState.TryExecute();
+        await Task.WhenAll(species, municipalities);
     }
 
     private void HandleFocusIn()
     {
         if (HasQuery)
-        {
             _open = true;
-        }
     }
 
     private void HandleKeyDown(KeyboardEventArgs e)
     {
         if (e.Key == "Escape")
-        {
             Close();
-        }
     }
 
     private void Close() => _open = false;

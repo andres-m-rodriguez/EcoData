@@ -66,17 +66,13 @@ internal static class WildlifeMcpMapping
         {
             if (string.Equals(value.Code, DefaultLocale, StringComparison.OrdinalIgnoreCase)
                 && !string.IsNullOrWhiteSpace(value.Value))
-            {
                 return value.Value;
-            }
         }
 
         foreach (var value in localized)
         {
             if (!string.IsNullOrWhiteSpace(value.Value))
-            {
                 return value.Value;
-            }
         }
 
         return fallback;

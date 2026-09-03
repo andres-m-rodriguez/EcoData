@@ -32,9 +32,7 @@ public sealed class MunicipalityRepository(IDbContextFactory<LocationsDbContext>
         var query = context.Municipalities.AsNoTracking().AsQueryable();
 
         if (parameters.StateId.HasValue)
-        {
             query = query.Where(m => m.StateId == parameters.StateId.Value);
-        }
         else if (!string.IsNullOrWhiteSpace(parameters.StateCode))
         {
             var normalizedCode = parameters.StateCode.ToUpperInvariant();
@@ -48,9 +46,7 @@ public sealed class MunicipalityRepository(IDbContextFactory<LocationsDbContext>
         }
 
         if (parameters.Cursor.HasValue)
-        {
             query = query.Where(m => m.Id > parameters.Cursor.Value);
-        }
 
         await foreach (var municipality in query
             .OrderBy(m => m.Id)

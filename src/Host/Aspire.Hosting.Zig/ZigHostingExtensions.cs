@@ -47,9 +47,7 @@ public static class ZigHostingExtensions
                 context.Args.Add(resource.RunStep);
 
                 if (resource.OptimizeMode.HasValue)
-                {
                     context.Args.Add($"-Doptimize={resource.OptimizeMode.Value}");
-                }
             })
             .WithOtlpExporter();
     }
@@ -66,9 +64,7 @@ public static class ZigHostingExtensions
                     .ToList();
 
                 if (zigResources.Count == 0)
-                {
                     return;
-                }
 
                 var logger = @event
                     .Services.GetRequiredService<ILoggerFactory>()
@@ -95,26 +91,25 @@ public static class ZigHostingExtensions
         var arguments = new List<string> { "build", resource.BuildStep };
 
         if (resource.OptimizeMode.HasValue)
-        {
             arguments.Add($"-Doptimize={resource.OptimizeMode.Value}");
-        }
+
+        var commandLine = string.Join(" ", arguments);
 
         var startInfo = new ProcessStartInfo
         {
             FileName = zigPath,
-            Arguments = string.Join(" ", arguments),
+            Arguments = commandLine,
             WorkingDirectory = resource.WorkingDirectory,
             RedirectStandardOutput = true,
             RedirectStandardError = true,
             UseShellExecute = false,
             CreateNoWindow = true,
         };
-
         logger.LogInformation(
             "Building Zig app '{Name}': {Command} {Args}",
             resource.Name,
             zigPath,
-            string.Join(" ", arguments)
+            commandLine
         );
 
         using var process = new Process { StartInfo = startInfo };
@@ -145,9 +140,7 @@ public static class ZigHostingExtensions
             }
 
             if (!string.IsNullOrWhiteSpace(output))
-            {
                 logger.LogDebug("Zig build output for '{Name}':\n{Output}", resource.Name, output);
-            }
 
             logger.LogInformation("Successfully built Zig app '{Name}'", resource.Name);
         }

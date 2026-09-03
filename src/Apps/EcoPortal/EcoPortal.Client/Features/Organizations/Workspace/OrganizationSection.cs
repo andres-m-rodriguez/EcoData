@@ -44,19 +44,13 @@ public static class OrganizationSections
         };
 
         if (context.Can(SensorPermissions.Sensor.Read))
-        {
             links.Add(new(Key(OrganizationSection.Sensors), "Sensors", Path(id, OrganizationSection.Sensors), Icons.Material.Outlined.Sensors, Count: counts?.Sensors?.ToString()));
-        }
 
         if (context.Can(OrganizationPermissions.Organization.ManageMembers))
-        {
             links.Add(new(Key(OrganizationSection.Team), "Team", Path(id, OrganizationSection.Team), Icons.Material.Outlined.Group, Count: counts?.Members?.ToString(), Badge: counts?.PendingRequests ?? 0));
-        }
 
         if (context.Can(OrganizationPermissions.Organization.Update))
-        {
             links.Add(new(Key(OrganizationSection.Settings), "Settings", Path(id, OrganizationSection.Settings), Icons.Material.Outlined.Settings));
-        }
 
         return links;
     }

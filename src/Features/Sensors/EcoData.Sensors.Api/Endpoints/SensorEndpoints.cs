@@ -53,12 +53,10 @@ public static class SensorEndpoints
                 {
                     var sensor = await repository.GetByIdAsync(id, ct);
                     if (sensor is null)
-                    {
                         return TypedResults.Problem(
                             detail: "Sensor not found.",
                             statusCode: StatusCodes.Status404NotFound
                         );
-                    }
                     return TypedResults.Ok(sensor);
                 }
             )
@@ -95,9 +93,7 @@ public static class SensorEndpoints
 
                     var token = new RequestClaimToken(user);
                     if (!token.IsAuthenticated)
-                    {
                         return TypedResults.Unauthorized();
-                    }
 
                     var hasPermission = await permissionService.HasPermissionAsync(
                         token.UserId!.Value,
@@ -107,19 +103,15 @@ public static class SensorEndpoints
                     );
 
                     if (!hasPermission)
-                    {
                         return TypedResults.Forbid();
-                    }
 
                     var result = await repository.RegisterAsync(request, ct);
 
                     if (result.IsT1)
-                    {
                         return TypedResults.Problem(
                             detail: result.AsT1.Message,
                             statusCode: StatusCodes.Status409Conflict
                         );
-                    }
 
                     var sensorId = result.AsT0;
 
@@ -174,18 +166,14 @@ public static class SensorEndpoints
 
                     var token = new RequestClaimToken(user);
                     if (!token.IsAuthenticated)
-                    {
                         return TypedResults.Unauthorized();
-                    }
 
                     var existing = await repository.GetByIdAsync(id, ct);
                     if (existing is null)
-                    {
                         return TypedResults.Problem(
                             detail: "Sensor not found.",
                             statusCode: StatusCodes.Status404NotFound
                         );
-                    }
 
                     var hasPermission = await permissionService.HasPermissionAsync(
                         token.UserId!.Value,
@@ -195,18 +183,14 @@ public static class SensorEndpoints
                     );
 
                     if (!hasPermission)
-                    {
                         return TypedResults.Forbid();
-                    }
 
                     var updated = await repository.UpdateAsync(id, request, ct);
                     if (updated is null)
-                    {
                         return TypedResults.Problem(
                             detail: "Sensor not found.",
                             statusCode: StatusCodes.Status404NotFound
                         );
-                    }
                     return TypedResults.Ok(updated);
                 }
             )
@@ -228,18 +212,14 @@ public static class SensorEndpoints
                 {
                     var token = new RequestClaimToken(user);
                     if (!token.IsAuthenticated)
-                    {
                         return TypedResults.Unauthorized();
-                    }
 
                     var existing = await repository.GetByIdAsync(id, ct);
                     if (existing is null)
-                    {
                         return TypedResults.Problem(
                             detail: "Sensor not found.",
                             statusCode: StatusCodes.Status404NotFound
                         );
-                    }
 
                     var hasPermission = await permissionService.HasPermissionAsync(
                         token.UserId!.Value,
@@ -249,18 +229,14 @@ public static class SensorEndpoints
                     );
 
                     if (!hasPermission)
-                    {
                         return TypedResults.Forbid();
-                    }
 
                     var deleted = await repository.DeleteAsync(id, ct);
                     if (!deleted)
-                    {
                         return TypedResults.Problem(
                             detail: "Sensor not found.",
                             statusCode: StatusCodes.Status404NotFound
                         );
-                    }
                     return TypedResults.NoContent();
                 }
             )

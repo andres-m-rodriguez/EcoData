@@ -30,21 +30,17 @@ public static class PermissionEndpoints
             {
                 var token = new RequestClaimToken(user);
                 if (!token.IsAuthenticated)
-                {
                     return TypedResults.Unauthorized();
-                }
 
                 var userId = token.UserId!.Value;
                 var isGlobalAdmin = await userLookupService.IsGlobalAdminAsync(userId, ct);
 
                 if (isGlobalAdmin)
-                {
                     return TypedResults.Ok(new UserPermissionsDto(
                         organizationId,
                         [],
                         true
                     ));
-                }
 
                 var membership = await membershipRepository.GetAsync(userId, organizationId, ct);
 

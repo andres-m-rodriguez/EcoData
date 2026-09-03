@@ -41,23 +41,17 @@ public sealed class FieldNotebook(IJavascriptSafeInterop js) : IFieldNotebook
     public async Task<bool> ToggleSavedAsync(NotebookEntry entry, CancellationToken ct = default)
     {
         if (entry is null)
-        {
             return false;
-        }
 
         var saved = await LoadSavedAsync(ct);
         var wasSaved = saved.Exists(existing => Matches(existing, entry.Kind, entry.Id));
 
         var next = saved.Where(existing => !Matches(existing, entry.Kind, entry.Id)).ToList();
         if (!wasSaved)
-        {
             next.Insert(0, Stamp(entry));
-        }
 
         if (!await WriteAsync(SavedKey, next, ct))
-        {
             return wasSaved;
-        }
 
         _saved = next;
         Changed?.Invoke();
@@ -67,21 +61,18 @@ public sealed class FieldNotebook(IJavascriptSafeInterop js) : IFieldNotebook
     public async Task RecordVisitAsync(NotebookEntry entry, CancellationToken ct = default)
     {
         if (entry is null)
-        {
             return;
-        }
 
         var recent = await LoadRecentAsync(ct);
 
         var next = new List<NotebookEntry>(Math.Min(recent.Count + 1, RecentLimit)) { Stamp(entry) };
-        next.AddRange(recent
+        var kept = recent
             .Where(existing => !Matches(existing, entry.Kind, entry.Id))
-            .Take(RecentLimit - 1));
+            .Take(RecentLimit - 1);
+        next.AddRange(kept);
 
         if (!await WriteAsync(RecentKey, next, ct))
-        {
             return;
-        }
 
         _recent = next;
         Changed?.Invoke();
@@ -99,9 +90,7 @@ public sealed class FieldNotebook(IJavascriptSafeInterop js) : IFieldNotebook
     private async Task<List<NotebookEntry>> LoadRecentAsync(CancellationToken ct)
     {
         if (_recent is not null)
-        {
             return _recent;
-        }
 
         var stored = await ReadAsync(RecentKey, ct);
         _recent = stored.Count > RecentLimit ? stored.GetRange(0, RecentLimit) : stored;
@@ -112,17 +101,13 @@ public sealed class FieldNotebook(IJavascriptSafeInterop js) : IFieldNotebook
     {
         var module = await GetModuleAsync(ct);
         if (module is null)
-        {
             return [];
-        }
 
         // Taken as a raw JsonElement so the interop layer can't fail on a shape
         // it doesn't recognise — the deserialize below is ours to guard.
         var read = await js.InvokeAsync<JsonElement>(module, "read", ct, key);
         if (!read.TryPickT0(out var payload, out _) || payload.ValueKind != JsonValueKind.Array)
-        {
             return [];
-        }
 
         try
         {
@@ -142,9 +127,7 @@ public sealed class FieldNotebook(IJavascriptSafeInterop js) : IFieldNotebook
     {
         var module = await GetModuleAsync(ct);
         if (module is null)
-        {
             return false;
-        }
 
         var json = JsonSerializer.Serialize(entries, JsonOptions);
         var written = await js.InvokeVoidAsync(module, "write", ct, key, json);
@@ -155,14 +138,10 @@ public sealed class FieldNotebook(IJavascriptSafeInterop js) : IFieldNotebook
     private async Task<IJSObjectReference?> GetModuleAsync(CancellationToken ct)
     {
         if (_module is not null)
-        {
             return _module;
-        }
 
         if (_moduleUnavailable)
-        {
             return null;
-        }
 
         var imported = await js.ImportAsync(ModulePath, ct);
         if (imported.TryPickT0(out var module, out var failure))

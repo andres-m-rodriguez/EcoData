@@ -145,9 +145,7 @@ public partial class FfLibraryRail : EcoDataComponent
             ct);
 
         if (!result.TryPickT0(out var nearby, out _))
-        {
             return [];
-        }
 
         return nearby;
     }

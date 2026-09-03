@@ -131,12 +131,10 @@ public static class UserAuthEndpoints
                 {
                     var userIdClaim = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                     if (!Guid.TryParse(userIdClaim, out var userId))
-                    {
                         return TypedResults.Problem(
                             detail: "Invalid user",
                             statusCode: StatusCodes.Status401Unauthorized
                         );
-                    }
 
                     var result = await authService.UpdateProfileAsync(userId, request, ct);
 
@@ -161,12 +159,10 @@ public static class UserAuthEndpoints
                 {
                     var userIdClaim = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                     if (!Guid.TryParse(userIdClaim, out var userId))
-                    {
                         return TypedResults.Problem(
                             detail: "Invalid user",
                             statusCode: StatusCodes.Status401Unauthorized
                         );
-                    }
 
                     var result = await authService.UpdateEmailAsync(userId, request, ct);
 
@@ -201,12 +197,10 @@ public static class UserAuthEndpoints
                 {
                     var userIdClaim = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                     if (!Guid.TryParse(userIdClaim, out var userId))
-                    {
                         return TypedResults.Problem(
                             detail: "Invalid user",
                             statusCode: StatusCodes.Status401Unauthorized
                         );
-                    }
 
                     var result = await authService.ChangePasswordAsync(userId, request, ct);
 

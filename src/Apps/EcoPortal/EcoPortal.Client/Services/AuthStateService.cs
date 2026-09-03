@@ -37,9 +37,7 @@ public sealed class AuthStateService(IAuthHttpClient authClient, IEventBus bus)
         var result = await authClient.LoginAsync(request);
 
         if (result.IsT0)
-        {
             _currentUser = result.AsT0.User;
-        }
 
         NotifyStateChanged();
         return result.Match<OneOf<UserInfo, ValidationFailed, RequestFailed>>(

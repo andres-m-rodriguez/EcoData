@@ -75,12 +75,8 @@ public sealed class OrganizationPermissionHttpSource(IPermissionHttpClient permi
     public void InvalidateCache(Guid? organizationId = null)
     {
         if (organizationId.HasValue)
-        {
             _cache.Remove(organizationId.Value);
-        }
         else
-        {
             _cache.Clear();
-        }
     }
 }

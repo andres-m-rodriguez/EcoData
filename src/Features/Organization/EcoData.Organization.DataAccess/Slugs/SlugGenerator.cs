@@ -11,9 +11,7 @@ public static partial class SlugGenerator
     public static string FromName(string name)
     {
         if (string.IsNullOrWhiteSpace(name))
-        {
             return string.Empty;
-        }
 
         var stripped = StripDiacritics(name).ToLowerInvariant();
         var hyphenated = NonSlugCharsRegex().Replace(stripped, "-").Trim('-');
@@ -29,9 +27,7 @@ public static partial class SlugGenerator
         foreach (var ch in normalized)
         {
             if (CharUnicodeInfo.GetUnicodeCategory(ch) != UnicodeCategory.NonSpacingMark)
-            {
                 builder.Append(ch);
-            }
         }
 
         return builder.ToString().Normalize(NormalizationForm.FormC);

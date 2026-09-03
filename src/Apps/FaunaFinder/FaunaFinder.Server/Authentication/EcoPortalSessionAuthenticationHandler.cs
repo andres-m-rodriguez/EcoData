@@ -36,20 +36,15 @@ public sealed class EcoPortalSessionAuthenticationHandler(
         var token = Request.Cookies[CookieName];
 
         if (string.IsNullOrEmpty(token))
-        {
             return AuthenticateResult.NoResult();
-        }
 
-        var cacheKey =
-            "ecoportal-session:"
-            + Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(token)));
-
+        var tokenBytes = Encoding.UTF8.GetBytes(token);
+        var tokenHash = SHA256.HashData(tokenBytes);
+        var cacheKey = "ecoportal-session:" + Convert.ToHexString(tokenHash);
         if (cache.TryGetValue(cacheKey, out UserInfo? cached) && cached is not null)
-        {
             return AuthenticateResult.Success(
                 new AuthenticationTicket(cached.ToClaimsPrincipal(SchemeName), SchemeName)
             );
-        }
 
         var httpClient = httpClientFactory.CreateClient(AccountEndpoints.HttpClientName);
 
@@ -61,9 +56,7 @@ public sealed class EcoPortalSessionAuthenticationHandler(
             var response = await httpClient.SendAsync(request, Context.RequestAborted);
 
             if (response.StatusCode == HttpStatusCode.Unauthorized)
-            {
                 return AuthenticateResult.Fail("EcoPortal rejected the session token");
-            }
 
             if (!response.IsSuccessStatusCode)
             {

@@ -99,9 +99,9 @@ public partial class ReviewSightings : EcoDataComponent
     private async Task LoadCounts(CancellationToken ct)
     {
         if (Auth.Organization is not { } organization) return;
+        var counts = Statuses.Select(status => SightingClient.CountAsync(organization.Id, status, ct));
 
-        var results = await Task.WhenAll(
-            Statuses.Select(status => SightingClient.CountAsync(organization.Id, status, ct)));
+        var results = await Task.WhenAll(counts);
         for (var i = 0; i < Statuses.Length; i++)
         {
             if (results[i].TryPickT0(out var count, out _)) _counts[Statuses[i]] = count;
@@ -121,7 +121,8 @@ public partial class ReviewSightings : EcoDataComponent
         {
             _rows ??= [];
             _hasMore = false;
-            Snackbar.Add(FailureMessage(failed), Severity.Error);
+            var failureMessage = FailureMessage(failed);
+            Snackbar.Add(failureMessage, Severity.Error);
             return;
         }
 
@@ -228,7 +229,8 @@ public partial class ReviewSightings : EcoDataComponent
         var result = await SightingClient.UnapproveAsync(organization.Id, sighting.Id);
         if (!result.TryPickT0(out _, out var failed))
         {
-            Snackbar.Add(FailureMessage(failed), Severity.Error);
+            var failureMessage = FailureMessage(failed);
+            Snackbar.Add(failureMessage, Severity.Error);
             return;
         }
 
