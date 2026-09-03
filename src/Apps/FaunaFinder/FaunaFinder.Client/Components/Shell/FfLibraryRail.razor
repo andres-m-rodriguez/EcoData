@@ -1,120 +1,34 @@
 @namespace FaunaFinder.Client.Components.Shell
 @inherits EcoDataComponent
-@using System.Globalization
-@using FaunaFinder.Client.Services.FieldNotebook
-@using FaunaFinder.Client.Services.Shapes
-@inject IFieldNotebook Notebook
+@using FaunaFinder.Client.Components.Map
 
 <aside class="ff-rail">
-    <h2 class="ff-rail-heading">@L["Rail_Heading"]</h2>
+    @if (_view == RailView.Coordinates)
+    {
+        <header class="ff-rail-view-head">
+            <button type="button" class="ff-rail-back" @onclick="ShowCards" aria-label="@L["Rail_Back"]">
+                <MudIcon Icon="@Icons.Material.Filled.ArrowBack" Size="Size.Small" />
+            </button>
+            <h2 class="ff-rail-view-title">@L["Rail_Card_Coordinates"]</h2>
+        </header>
 
-    <div class="ff-rail-chips">
-        <button type="button"
-                class="@ChipClass(RailTab.Saved)"
-                aria-pressed="@AriaPressed(RailTab.Saved)"
-                @onclick="ShowSaved">
-            @L["Rail_Tab_Saved"]
-        </button>
-        <button type="button"
-                class="@ChipClass(RailTab.Coordinates)"
-                aria-pressed="@AriaPressed(RailTab.Coordinates)"
-                @onclick="ShowCoordinates">
-            @L["Rail_Tab_Coordinates"]
-        </button>
-    </div>
+        <div class="ff-rail-tool">
+            <CoordinatesTool />
+        </div>
+    }
+    else
+    {
+        <h2 class="ff-rail-heading">@L["Rail_Heading"]</h2>
 
-    <div class="ff-rail-list">
-        @if (_tab == RailTab.Coordinates)
-        {
-            <form class="ff-rail-form" @onsubmit="ShowOnMap" @onsubmit:preventDefault="true">
-                <label class="ff-rail-field">
-                    <span>@L["Rail_Coordinates_Latitude"]</span>
-                    <input type="number" step="any" min="-90" max="90" required
-                           placeholder="18.2208"
-                           @bind="_latitude" @bind:culture="CultureInfo.InvariantCulture" />
-                </label>
-                <label class="ff-rail-field">
-                    <span>@L["Rail_Coordinates_Longitude"]</span>
-                    <input type="number" step="any" min="-180" max="180" required
-                           placeholder="-66.5901"
-                           @bind="_longitude" @bind:culture="CultureInfo.InvariantCulture" />
-                </label>
-                <label class="ff-rail-field">
-                    <span>@L["Rail_Coordinates_Radius"]</span>
-                    <input type="number" step="1" min="1" max="50" required
-                           @bind="_radiusKm" @bind:culture="CultureInfo.InvariantCulture" />
-                </label>
-                @if (_coordinatesError is { } coordinatesError)
-                {
-                    <p class="ff-rail-error">@coordinatesError</p>
-                }
-                <button type="submit" class="ff-rail-prompt">
-                    <i class="fa-solid fa-location-dot" aria-hidden="true"></i>
-                    @L["Rail_Coordinates_Show"]
-                </button>
-            </form>
-
-            <p class="ff-rail-or">@L["Rail_Or"]</p>
-
-            <label class="ff-rail-prompt ff-rail-file">
-                <i class="fa-solid fa-file-arrow-up" aria-hidden="true"></i>
-                @(_readingShape ? L["Rail_Shape_Reading"] : L["Rail_Shape_Upload"])
-                <InputFile OnChange="LoadShapeAsync" accept=".geojson,.json,.kml,.zip,.shp" disabled="@_readingShape" />
-            </label>
-            <p class="ff-rail-hint">@L["Rail_Shape_Formats"]</p>
-            @if (_shapeError is { } shapeError)
-            {
-                <p class="ff-rail-error">@shapeError</p>
-            }
-        }
-        else if (LoadSavedState.Result is null)
-        {
-            @for (var i = 0; i < SkeletonRowCount; i++)
-            {
-                <div class="ff-rail-skeleton-row">
-                    <MudSkeleton SkeletonType="SkeletonType.Rectangle" Class="ff-rail-skeleton-art" />
-                    <div class="ff-rail-skeleton-text">
-                        <MudSkeleton SkeletonType="SkeletonType.Text" Class="ff-rail-skeleton-name" />
-                        <MudSkeleton SkeletonType="SkeletonType.Text" Class="ff-rail-skeleton-count" />
-                    </div>
-                </div>
-            }
-        }
-        else if (LoadSavedState.Result is { Count: > 0 } saved)
-        {
-            @foreach (var entry in saved)
-            {
-                <a class="ff-rail-item" href="@EntryHref(entry)" @key="entry.Id">
-                    @if (entry.HasImage)
-                    {
-                        <img class="ff-rail-art ff-rail-art--photo"
-                             src="@SpeciesImageSrc(entry.Id)"
-                             alt=""
-                             loading="lazy" />
-                    }
-                    else
-                    {
-                        <span class="@ArtClass(entry.Kind)">
-                            <i class="@ArtIcon(entry.Kind)" aria-hidden="true"></i>
-                        </span>
-                    }
-                    <span class="ff-rail-body">
-                        <span class="ff-rail-name">@entry.Label</span>
-                        @if (!string.IsNullOrWhiteSpace(entry.Sublabel))
-                        {
-                            <span class="ff-rail-sci">@entry.Sublabel</span>
-                        }
-                    </span>
-                    @if (!string.IsNullOrWhiteSpace(entry.Status))
-                    {
-                        <span class="@StatusPillClass(entry.Status)">@entry.Status</span>
-                    }
-                </a>
-            }
-        }
-        else
-        {
-            <p class="ff-rail-empty">@L["Rail_Saved_Empty"]</p>
-        }
-    </div>
+        <nav class="ff-rail-cards" aria-label="@L["Rail_Heading"]">
+            <button type="button" class="ff-rail-card" @onclick="ShowCoordinates">
+                <MudIcon Icon="@Icons.Material.Outlined.PinDrop" Class="ff-rail-card-icon" />
+                <span class="ff-rail-card-text">
+                    <span class="ff-rail-card-title">@L["Rail_Card_Coordinates"]</span>
+                    <span class="ff-rail-card-desc">@L["Rail_Card_Coordinates_Lede"]</span>
+                </span>
+                <MudIcon Icon="@Icons.Material.Filled.ChevronRight" Size="Size.Small" Class="ff-rail-card-chevron" />
+            </button>
+        </nav>
+    }
 </aside>
