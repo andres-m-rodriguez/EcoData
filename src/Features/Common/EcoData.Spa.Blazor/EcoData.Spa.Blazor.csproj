@@ -13,9 +13,9 @@
   <!-- Base classes only — no MudBlazor. Component libraries build on these; a
        host that wants a design system brings its own. -->
   <ItemGroup>
-    <PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="10.0.4" />
-    <PackageReference Include="Tempest.Blazor" Version="1.0.0-beta.6" />
-    <PackageReference Include="Tempest.Abstract" Version="1.0.0-beta.8" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.Web" />
+    <PackageReference Include="Tempest.Blazor" />
+    <PackageReference Include="Tempest.Abstract" />
   </ItemGroup>
 
   <ItemGroup>

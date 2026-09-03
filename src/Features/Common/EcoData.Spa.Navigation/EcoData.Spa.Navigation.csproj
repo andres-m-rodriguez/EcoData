@@ -13,8 +13,8 @@
   <!-- Services and contracts only: no MudBlazor and no Razor SDK, so a host can
        have navigation without inheriting a design system. -->
   <ItemGroup>
-    <PackageReference Include="Microsoft.AspNetCore.Components" Version="10.0.4" />
-    <PackageReference Include="Microsoft.JSInterop" Version="10.0.4" />
+    <PackageReference Include="Microsoft.AspNetCore.Components" />
+    <PackageReference Include="Microsoft.JSInterop" />
   </ItemGroup>
 
   <ItemGroup>
