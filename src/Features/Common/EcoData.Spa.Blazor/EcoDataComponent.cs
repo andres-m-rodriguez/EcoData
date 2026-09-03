@@ -51,7 +51,7 @@ public abstract class EcoDataComponent : StatefulComponent
 
     // Mutate is Tempest's marshal-run-rerender primitive, so the hook lands on
     // the renderer thread and costs exactly one re-render.
-    private void HandleLanguageChanged() => _ = Mutate(OnLanguageChanged);
+    private void HandleLanguageChanged() => _ = Mutate(() => OnLanguageChanged());
 
     public override void Dispose()
     {

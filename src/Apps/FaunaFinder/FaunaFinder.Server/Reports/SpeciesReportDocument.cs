@@ -32,9 +32,9 @@ public sealed class SpeciesReportDocument(
             page.Margin(40);
             page.DefaultTextStyle(style => style.FontSize(10).FontColor("#111827"));
 
-            page.Header().Element(ComposeHeader);
-            page.Content().Element(ComposeContent);
-            page.Footer().Element(ComposeFooter);
+            page.Header().Element(header => ComposeHeader(header));
+            page.Content().Element(content => ComposeContent(content));
+            page.Footer().Element(footer => ComposeFooter(footer));
         });
     }
 
@@ -69,11 +69,11 @@ public sealed class SpeciesReportDocument(
             {
                 column.Spacing(18);
 
-                column.Item().Element(ComposeTitle);
-                column.Item().Element(ComposeFacts);
-                column.Item().Element(ComposeMunicipalities);
-                column.Item().Element(ComposeConservation);
-                column.Item().Element(ComposeLocations);
+                column.Item().Element(item => ComposeTitle(item));
+                column.Item().Element(item => ComposeFacts(item));
+                column.Item().Element(item => ComposeMunicipalities(item));
+                column.Item().Element(item => ComposeConservation(item));
+                column.Item().Element(item => ComposeLocations(item));
             });
     }
 
@@ -206,9 +206,9 @@ public sealed class SpeciesReportDocument(
 
                     table.Header(header =>
                     {
-                        header.Cell().Element(HeaderCell).Text(labels.Practice);
-                        header.Cell().Element(HeaderCell).Text(labels.Action);
-                        header.Cell().Element(HeaderCell).Text(labels.Justification);
+                        header.Cell().Element(cell => HeaderCell(cell)).Text(labels.Practice);
+                        header.Cell().Element(cell => HeaderCell(cell)).Text(labels.Action);
+                        header.Cell().Element(cell => HeaderCell(cell)).Text(labels.Justification);
                     });
 
                     var ordered = links
@@ -219,7 +219,7 @@ public sealed class SpeciesReportDocument(
                     {
                         table
                             .Cell()
-                            .Element(BodyCell)
+                            .Element(cell => BodyCell(cell))
                             .Text(text =>
                             {
                                 text.Span(link.NrcsPractice.Code).SemiBold();
@@ -227,13 +227,13 @@ public sealed class SpeciesReportDocument(
                             });
                         table
                             .Cell()
-                            .Element(BodyCell)
+                            .Element(cell => BodyCell(cell))
                             .Text(text =>
                             {
                                 text.Span(link.FwsAction.Code).SemiBold();
                                 text.Span($" {Resolve(link.FwsAction.Name)}");
                             });
-                        table.Cell().Element(BodyCell).Text(Resolve(link.Justification)).FontSize(9);
+                        table.Cell().Element(cell => BodyCell(cell)).Text(Resolve(link.Justification)).FontSize(9);
                     }
                 });
         });
@@ -265,29 +265,29 @@ public sealed class SpeciesReportDocument(
 
                     table.Header(header =>
                     {
-                        header.Cell().Element(HeaderCell).Text(labels.Latitude);
-                        header.Cell().Element(HeaderCell).Text(labels.Longitude);
-                        header.Cell().Element(HeaderCell).Text(labels.RadiusMeters);
-                        header.Cell().Element(HeaderCell).Text(string.Empty);
+                        header.Cell().Element(cell => HeaderCell(cell)).Text(labels.Latitude);
+                        header.Cell().Element(cell => HeaderCell(cell)).Text(labels.Longitude);
+                        header.Cell().Element(cell => HeaderCell(cell)).Text(labels.RadiusMeters);
+                        header.Cell().Element(cell => HeaderCell(cell)).Text(string.Empty);
                     });
 
                     foreach (var location in species.Locations)
                     {
                         table
                             .Cell()
-                            .Element(BodyCell)
+                            .Element(cell => BodyCell(cell))
                             .Text(location.Latitude.ToString("F5", CultureInfo.InvariantCulture));
                         table
                             .Cell()
-                            .Element(BodyCell)
+                            .Element(cell => BodyCell(cell))
                             .Text(location.Longitude.ToString("F5", CultureInfo.InvariantCulture));
                         table
                             .Cell()
-                            .Element(BodyCell)
+                            .Element(cell => BodyCell(cell))
                             .Text(location.RadiusMeters.ToString("F0", CultureInfo.InvariantCulture));
                         table
                             .Cell()
-                            .Element(BodyCell)
+                            .Element(cell => BodyCell(cell))
                             .Text(location.Description ?? string.Empty)
                             .FontColor(Muted);
                     }

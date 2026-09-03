@@ -1,5 +1,6 @@
 @page "/species"
 @page "/species/{Id:guid}"
+@using System.Net
 @using EcoData.Wildlife.Contracts
 @using EcoData.Wildlife.Contracts.Dtos
 @using EcoData.Wildlife.Contracts.Parameters
@@ -122,11 +123,6 @@
 else
 {
     <div class="ff-page">
-        @if ((_statsLoadError ?? _facetsLoadError ?? _taxaCountsLoadError) is { } listLoadError)
-        {
-            <MudAlert Severity="Severity.Error" Class="mb-4">@listLoadError</MudAlert>
-        }
-
         <SpeciesEditorialHero Stats="@LoadStatsState.Result" />
 
         <SpeciesStatsRow Stats="@LoadStatsState.Result" />
@@ -140,6 +136,7 @@ else
                         Sort="@_sort"
                         SortChanged="OnSortChanged"
                         Stats="@LoadStatsState.Result"
+                        StatsError="@_statsLoadError"
                         OnFilterClick="OpenFilterDialog" />
 
         <SpeciesGrid Filter="@_filter"
@@ -274,8 +271,8 @@ else
         // A missing species keeps the dedicated not-found empty state.
         _detailLoadError = error.StatusCode switch
         {
-            404 => null,
-            0 => "Couldn't reach the server.",
+            HttpStatusCode.NotFound => null,
+            _ when error.IsTransportFailure => "Couldn't reach the server.",
             _ => error.Message ?? "Something went wrong while loading this species."
         };
         return null;
@@ -379,7 +376,8 @@ else
         {
             { x => x.Initial, _filter },
             { x => x.Facets, LoadFacetsState.Result },
-            { x => x.TaxaCounts, LoadTaxaCountsState.Result }
+            { x => x.TaxaCounts, LoadTaxaCountsState.Result },
+            { x => x.FacetsError, _facetsLoadError ?? _taxaCountsLoadError }
         };
 
         var dialog = await Dialogs.ShowAsync<SpeciesFilterDialog>("Filters", parameters, options);

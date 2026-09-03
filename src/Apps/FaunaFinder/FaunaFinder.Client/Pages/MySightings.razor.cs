@@ -21,6 +21,8 @@ public partial class MySightings : EcoDataComponent
     // (`Title="@L[SomeKey]"`) without tripping the nested-quote rule.
     private const string EmptyTitleKey = "Sighting_Mine_Empty_Title";
     private const string EmptyDescriptionKey = "Sighting_Mine_Empty_Description";
+    private const string UnreachableKey = "Sighting_Error_Unreachable";
+    private const string LoadFailedKey = "Sighting_Error_Generic";
 
     [CascadingParameter]
     public LocaleContext Locale { get; set; } = LocaleContext.English;

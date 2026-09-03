@@ -1,4 +1,5 @@
 using EcoData.Common.i18n;
+using EcoData.Common.Problems;
 using EcoData.Locations.Application.Client;
 using EcoData.Spa.Navigation;
 using EcoData.Ui;
@@ -16,6 +17,8 @@ var builder = WebAssemblyHostBuilder.CreateDefault(args);
 builder.Services.AddTempest();
 
 var baseAddress = new Uri(builder.HostEnvironment.BaseAddress);
+
+builder.Services.AddProblemHandlers();
 
 builder.Services.AddLocationsClient(baseAddress);
 builder.Services.AddWildlifeClient(baseAddress);

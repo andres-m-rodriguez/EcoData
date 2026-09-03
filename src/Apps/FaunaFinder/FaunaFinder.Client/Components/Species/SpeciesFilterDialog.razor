@@ -16,6 +16,12 @@
 
     <DialogContent>
         <div class="ff-modal-body">
+            @if (Facets is null && FacetsError is { } facetsError)
+            {
+                <MudAlert Severity="Severity.Warning" Dense="true" Class="mb-3">
+                    @L["Species_Filter_CountsUnavailable"] @facetsError
+                </MudAlert>
+            }
             <section class="ff-modal-section">
                 <div class="ff-modal-section-title">
                     <span>@L["Species_Filter_Section_Taxa"]</span>
@@ -118,6 +124,9 @@
     [Parameter] public SpeciesFacetsDto? Facets { get; set; }
 
     [Parameter] public IReadOnlyList<TaxonFacetDto>? TaxaCounts { get; set; }
+
+    // Why the counts are missing; the filters themselves still work without them.
+    [Parameter] public string? FacetsError { get; set; }
 
     private static readonly IucnStatus[] StatusOptions =
         [IucnStatus.LC, IucnStatus.NT, IucnStatus.VU, IucnStatus.EN, IucnStatus.CR, IucnStatus.DD];

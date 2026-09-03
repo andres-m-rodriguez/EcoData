@@ -12,6 +12,7 @@ public partial class EcoDataVirtualizedList<TItem, TParams> : ComponentBase
     private bool _isEmpty;
     private bool _isInitialLoading = true;
     private int _generation;
+    private HttpRequestException? _loadError;
 
     /// <summary>
     /// Function that provides items as an async enumerable given the parameters.
@@ -61,6 +62,13 @@ public partial class EcoDataVirtualizedList<TItem, TParams> : ComponentBase
     public RenderFragment? EmptyTemplate { get; set; }
 
     /// <summary>
+    /// Template shown when a page could not be fetched. The stream has no other error
+    /// channel: a status code of null or zero means the server was never reached.
+    /// </summary>
+    [Parameter]
+    public RenderFragment<HttpRequestException>? ErrorTemplate { get; set; }
+
+    /// <summary>
     /// The size of each item in pixels for virtualization.
     /// </summary>
     [Parameter]
@@ -91,16 +99,24 @@ public partial class EcoDataVirtualizedList<TItem, TParams> : ComponentBase
     {
         var parameters = ParametersBuilder(null);
 
-        await foreach (var item in ItemsProvider(parameters, CancellationToken.None))
+        try
         {
-            _cachedItems.Add(item);
-            _lastCursor = CursorSelector(item);
+            await foreach (var item in ItemsProvider(parameters, CancellationToken.None))
+            {
+                _cachedItems.Add(item);
+                _lastCursor = CursorSelector(item);
+            }
+        }
+        catch (HttpRequestException e)
+        {
+            _loadError = e;
+            _hasMoreItems = false;
         }
 
         if (_cachedItems.Count < parameters.PageSize)
             _hasMoreItems = false;
 
-        _isEmpty = _cachedItems.Count == 0;
+        _isEmpty = _loadError is null && _cachedItems.Count == 0;
         _isInitialLoading = false;
     }
 
@@ -118,14 +134,25 @@ public partial class EcoDataVirtualizedList<TItem, TParams> : ComponentBase
             var parameters = ParametersBuilder(_lastCursor);
 
             var fetchedCount = 0;
-            await foreach (var item in ItemsProvider(parameters, request.CancellationToken))
+            try
             {
-                if (_generation != currentGeneration)
-                    return CreateResult(startIndex, request.Count);
+                await foreach (var item in ItemsProvider(parameters, request.CancellationToken))
+                {
+                    if (_generation != currentGeneration)
+                        return CreateResult(startIndex, request.Count);
 
-                _cachedItems.Add(item);
-                _lastCursor = CursorSelector(item);
-                fetchedCount++;
+                    _cachedItems.Add(item);
+                    _lastCursor = CursorSelector(item);
+                    fetchedCount++;
+                }
+            }
+            catch (HttpRequestException e)
+            {
+                // Keep what loaded; the error renders under it and stops further paging.
+                _loadError = e;
+                _hasMoreItems = false;
+                StateHasChanged();
+                break;
             }
 
             if (fetchedCount < parameters.PageSize)
@@ -154,6 +181,7 @@ public partial class EcoDataVirtualizedList<TItem, TParams> : ComponentBase
         _hasMoreItems = true;
         _isEmpty = false;
         _isInitialLoading = true;
+        _loadError = null;
         StateHasChanged();
 
         await LoadInitialDataAsync();

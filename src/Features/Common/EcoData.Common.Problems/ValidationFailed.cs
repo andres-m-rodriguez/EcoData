@@ -5,4 +5,8 @@ public sealed record ValidationFailed(IReadOnlyDictionary<string, string[]> Erro
 {
     /// <summary>Every message across every field, in field order.</summary>
     public string[] AllMessages => Errors.Values.SelectMany(messages => messages).ToArray();
+
+    /// <summary>The per-field errors carried by a <see cref="ProblemTypes.Validation"/> problem.</summary>
+    public static ValidationFailed From(EcoDataProblemDetails problem) =>
+        new(problem.Errors ?? new Dictionary<string, string[]>());
 }
