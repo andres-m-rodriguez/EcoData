@@ -88,6 +88,11 @@ public interface IMapController<TMarker>
     IReadOnlyList<MapCircle> Circles { get; }
 
     /// <summary>
+    /// The search radius currently shown, kept so a map that initializes later can draw it.
+    /// </summary>
+    (MapCoordinate Center, double RadiusMeters)? SearchRadius { get; }
+
+    /// <summary>
     /// Replace all circles on the map.
     /// </summary>
     void SetCircles(IEnumerable<MapCircle> circles);
