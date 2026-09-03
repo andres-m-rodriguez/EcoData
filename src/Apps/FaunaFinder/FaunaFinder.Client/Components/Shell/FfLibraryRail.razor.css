@@ -40,19 +40,20 @@
     overscroll-behavior: contain;
 }
 
-/* The same anatomy as the account page's link cards: tile, text, chevron. */
+/* The account page's link cards, verbatim: surface, hairline, primary icon,
+   muted chevron. MudIcon renders its own root, hence ::deep for the icons. */
 .ff-rail-card {
     display: flex;
     align-items: center;
-    gap: 12px;
-    padding: 12px;
+    gap: 14px;
+    padding: 16px 18px;
+    background: var(--fauna-surface);
     border: 1px solid var(--fauna-line);
     border-radius: 12px;
-    background: var(--fauna-bg-alt);
     color: var(--fauna-fg);
     text-decoration: none;
-    transition: background-color var(--fauna-t-base) var(--fauna-ease),
-                border-color var(--fauna-t-base) var(--fauna-ease);
+    transition: border-color var(--fauna-t-base) var(--fauna-ease),
+                background-color var(--fauna-t-base) var(--fauna-ease);
 }
 
 .ff-rail-card:hover {
@@ -61,26 +62,13 @@
 }
 
 .ff-rail-card:focus-visible {
-    outline: 2px solid var(--fauna-primary-500);
+    outline: 2px solid var(--fauna-primary-400);
     outline-offset: 2px;
 }
 
-/* A duotone tile like the field-guide art, so a card reads as a tool at a glance. */
-.ff-rail-card-icon {
+.ff-rail-card ::deep .ff-rail-card-icon {
     flex: none;
-    width: 36px;
-    height: 36px;
-    border-radius: 9px;
-    display: grid;
-    place-items: center;
-    color: #ffffff;
-    background: linear-gradient(135deg, var(--fauna-primary) 0%, var(--fauna-primary-500) 100%);
-    box-shadow: var(--fauna-shadow-1);
-}
-
-.ff-rail-card-icon i {
-    font-size: 15px;
-    line-height: 1;
+    color: var(--fauna-primary);
 }
 
 .ff-rail-card-text {
@@ -92,19 +80,16 @@
 }
 
 .ff-rail-card-title {
-    font: 600 0.9375rem/1.25 var(--fauna-font-serif);
-    letter-spacing: var(--fauna-tracking-tight);
+    font: 600 15px/1.3 var(--fauna-font-sans);
 }
 
 .ff-rail-card-desc {
-    font: var(--fauna-body-sm);
-    font-size: 12px;
+    font: 400 13px/1.4 var(--fauna-font-sans);
     color: var(--fauna-fg-3);
 }
 
-.ff-rail-card-chevron {
+.ff-rail-card ::deep .ff-rail-card-chevron {
     flex: none;
-    font-size: 12px;
     color: var(--fauna-fg-4);
 }
 
