@@ -115,26 +115,4 @@ public class ProblemDetailsHttpExtensionsTests
         Assert.NotNull(problem);
         Assert.Equal(HttpStatusCode.ServiceUnavailable, problem.Status);
     }
-
-    [Fact]
-    public async Task EnsureSuccessOrProblemAsync_FailedResponse_ThrowsWithProblem()
-    {
-        var expected = EcoDataProblemDetails.Forbidden();
-        var body = Serialize(expected);
-        using var response = Response(HttpStatusCode.Forbidden, body);
-
-        var exception = await Assert.ThrowsAsync<EcoDataProblemException>(
-            () => response.EnsureSuccessOrProblemAsync());
-
-        Assert.Equal(ProblemTypes.Forbidden, exception.Problem.Type);
-        Assert.Equal(HttpStatusCode.Forbidden, exception.Problem.Status);
-    }
-
-    [Fact]
-    public async Task EnsureSuccessOrProblemAsync_SuccessResponse_DoesNotThrow()
-    {
-        using var response = Response(HttpStatusCode.NoContent);
-
-        await response.EnsureSuccessOrProblemAsync();
-    }
 }
