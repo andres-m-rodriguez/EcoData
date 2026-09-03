@@ -103,7 +103,6 @@ src/
 - Wildlife-only constructs: JSONB owned collections (`OwnsMany(...).ToJson()` for `LocaleValue` i18n), hand-named indexes with three suffix conventions (`_uidx`/`_ix`/`_idx`), filtered indexes, the sole `HasDefaultValueSql`, `...AtUtc` suffix, `= null!` navigations (vs nullable everywhere else), a `bytea` image blob.
 - Identity: derives `IdentityDbContext<>`, only inline `OnModelCreating` mapping (renaming ASP.NET Identity tables), out-of-step package version.
 - Integration tests bypass the `Add<X>Database` extensions and re-register contexts three different ways, double-registering `OrganizationDbContext` and losing snake_case/NoTracking settings.
-- Dead config: `SEED_TEST_DATA=true` set in AppHost Testing env; nothing reads it.
 
 Ranking (cleanest → messiest): Locations, Organization, Sensors, Identity, Wildlife.
 

@@ -14,6 +14,9 @@ builder.AddIdentityDatabase();
 builder.AddLocationsDatabase();
 builder.AddWildlifeDatabase();
 
+builder.Services.AddScoped<SeedOrganizations>();
+builder.Services.AddScoped<SeedRoles>();
+builder.Services.AddScoped<SeedUsers>();
 builder.Services.AddHostedService<DatabaseSeederWorker>();
 
 var host = builder.Build();

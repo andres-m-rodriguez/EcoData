@@ -98,7 +98,7 @@ public sealed class EcoDataTestFixture : IAsyncLifetime
         // Authenticate once for all tests (cookies stored in shared HttpClient)
         var authClient = _serviceProvider.GetRequiredService<IAuthHttpClient>();
         var authResult = await authClient.LoginAsync(
-            new LoginRequest("admin@gmail.com", "Admin@123")
+            new LoginRequest("global@admin.dev", "Dev@12345")
         );
 
         if (!authResult.IsT0)
