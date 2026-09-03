@@ -137,7 +137,7 @@
     [Command]
     private async Task Submit()
     {
-        await _form.Validate();
+        await _form.ValidateAsync();
         if (!CanSubmit || _selectedOrganization is null || _selectedRoleName is null)
             return;
 

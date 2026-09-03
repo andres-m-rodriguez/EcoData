@@ -47,7 +47,7 @@ else if (_loadError is not null)
 else
 {
     <MudPaper Elevation="0" Class="rounded-lg">
-        @foreach (var role in LoadRolesState.Result)
+        @foreach (var role in LoadRolesState.Result ?? [])
         {
             <MudPaper Elevation="0" Class="pa-4 border-b">
                 <MudStack Row AlignItems="AlignItems.Start" Justify="Justify.SpaceBetween" Class="flex-wrap gap-3">

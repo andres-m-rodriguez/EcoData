@@ -27,11 +27,12 @@
                 }
                 <span class="status-text">@(Sensor.IsActive ? "Active" : "Inactive")</span>
             </div>
-            <MudIconButton Icon="@Icons.Material.Filled.MoreVert"
-                           Size="Size.Small"
-                           Color="Color.Default"
-                           Class="sensor-menu-btn"
-                           OnClick:stopPropagation="true" />
+            <span @onclick:stopPropagation="true">
+                <MudIconButton Icon="@Icons.Material.Filled.MoreVert"
+                               Size="Size.Small"
+                               Color="Color.Default"
+                               Class="sensor-menu-btn" />
+            </span>
         </div>
     </MudHidden>
 
@@ -45,11 +46,12 @@
                 }
                 <span class="status-text">@(Sensor.IsActive ? "Active" : "Inactive")</span>
             </div>
-            <MudIconButton Icon="@Icons.Material.Filled.MoreVert"
-                           Size="Size.Small"
-                           Color="Color.Default"
-                           Class="sensor-menu-btn"
-                           OnClick:stopPropagation="true" />
+            <span @onclick:stopPropagation="true">
+                <MudIconButton Icon="@Icons.Material.Filled.MoreVert"
+                               Size="Size.Small"
+                               Color="Color.Default"
+                               Class="sensor-menu-btn" />
+            </span>
         </div>
     </MudHidden>
 </div>

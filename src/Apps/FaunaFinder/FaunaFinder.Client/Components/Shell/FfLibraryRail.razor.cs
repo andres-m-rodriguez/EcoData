@@ -56,7 +56,7 @@ public partial class FfLibraryRail : EcoDataComponent
         base.Dispose();
     }
 
-    private void HandleNotebookChanged() => _ = InvokeAsync(RefreshNotebookAsync);
+    private void HandleNotebookChanged() => _ = InvokeAsync(() => RefreshNotebookAsync());
 
     private async Task RefreshNotebookAsync()
     {
@@ -132,11 +132,11 @@ public partial class FfLibraryRail : EcoDataComponent
     }
 
     [Command, RunOnLoad]
-    private async Task<IReadOnlyList<NotebookEntry>?> LoadSaved(CancellationToken ct) =>
+    private async Task<IReadOnlyList<NotebookEntry>> LoadSaved(CancellationToken ct) =>
         await Notebook.GetSavedAsync(ct);
 
     [Command]
-    private async Task<IReadOnlyList<SpeciesNearbyDto>?> LoadNearby(CancellationToken ct)
+    private async Task<IReadOnlyList<SpeciesNearbyDto>> LoadNearby(CancellationToken ct)
     {
         var result = await SpeciesClient.GetNearbyAsync(
             _originLatitude,
