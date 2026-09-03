@@ -53,6 +53,20 @@ context.ReportDiagnostic(diagnostic);
 
 Not flagged (hoisting must be provably safe): `nameof(...)`, ref and out arguments, constructor arguments, calls where any observable work (a call, object creation, assignment, increment, or await) completes earlier in the same statement, and any context where a hoisted local would run at a different time, frequency, or scope: lambda and expression-bodied members, conditional access chains, ternaries and short-circuit operators, switch and query expressions, case when clauses, catch filters, object, collection, array, and with initializers, and while, do, and for loop headers (foreach sources evaluate once and are still flagged).
 
+## ECO003: Method group should not be passed as an argument
+
+A callback argument is written as a lambda, so the call it makes and the values it forwards are visible where it is passed.
+
+```csharp
+// Wrong
+return result.MapT1(RequestFailed.From);
+
+// Right
+return result.MapT1(problem => RequestFailed.From(problem));
+```
+
+Flagged: any expression that binds to a method and converts to a delegate while sitting in an argument list, including constructor arguments. Not flagged: lambdas, delegate-typed locals, `nameof`, invocation results, and method groups in assignments or event subscriptions. The fix names the lambda parameters after the target method's own parameters, with a numeric suffix when a name is already in use.
+
 ## Adding a new rule
 
 1. Analyzer class in `Rules/` with the next `ECO00X` id, concurrent execution enabled, generated code excluded.
