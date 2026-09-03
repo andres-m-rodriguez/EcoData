@@ -174,8 +174,15 @@ public sealed class SpeciesRepository(IDbContextFactory<WildlifeDbContext> conte
         {
             foreach (var location in species.Locations)
             {
-                // Ray casting: count edge crossings of a horizontal ray from the point.
+                // An occurrence is a circle, not a point: it matches when its centre is
+                // inside the polygon or any edge passes within its radius. Distances use
+                // a flat projection around the centre, accurate at the scale of a drawn area.
+                const double metersPerDegree = 6371000 * Math.PI / 180;
+                var metersPerDegreeLongitude = Math.Cos(location.Latitude * Math.PI / 180) * metersPerDegree;
+                var radiusSquared = location.RadiusMeters * location.RadiusMeters;
+
                 var inside = false;
+                var touchesEdge = false;
                 for (int i = 0, j = coordinates.Count - 1; i < coordinates.Count; j = i++)
                 {
                     var xi = coordinates[i].Longitude;
@@ -183,6 +190,7 @@ public sealed class SpeciesRepository(IDbContextFactory<WildlifeDbContext> conte
                     var xj = coordinates[j].Longitude;
                     var yj = coordinates[j].Latitude;
 
+                    // Ray casting: count edge crossings of a horizontal ray from the centre.
                     if (
                         ((yi > location.Latitude) != (yj > location.Latitude))
                         && (
@@ -191,9 +199,23 @@ public sealed class SpeciesRepository(IDbContextFactory<WildlifeDbContext> conte
                         )
                     )
                         inside = !inside;
+
+                    // Nearest point on this edge to the centre, in metres.
+                    var ax = (xj - location.Longitude) * metersPerDegreeLongitude;
+                    var ay = (yj - location.Latitude) * metersPerDegree;
+                    var bx = (xi - location.Longitude) * metersPerDegreeLongitude;
+                    var by = (yi - location.Latitude) * metersPerDegree;
+                    var dx = bx - ax;
+                    var dy = by - ay;
+                    var lengthSquared = dx * dx + dy * dy;
+                    var t = lengthSquared == 0 ? 0 : Math.Clamp((-ax * dx - ay * dy) / lengthSquared, 0, 1);
+                    var nearestX = ax + t * dx;
+                    var nearestY = ay + t * dy;
+                    if (nearestX * nearestX + nearestY * nearestY <= radiusSquared)
+                        touchesEdge = true;
                 }
 
-                if (!inside)
+                if (!inside && !touchesEdge)
                     continue;
 
                 const double earthRadiusMeters = 6371000;
