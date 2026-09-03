@@ -16,16 +16,16 @@
                placeholder="-66.5901"
                @bind="_longitude" @bind:culture="CultureInfo.InvariantCulture" />
     </label>
-    <label class="ff-coord-field ff-coord-field--wide">
+    <label class="ff-coord-field">
         <span>@L["Rail_Coordinates_Radius"]</span>
         <input type="number" step="1" min="1" max="50" required
                @bind="_radiusKm" @bind:culture="CultureInfo.InvariantCulture" />
     </label>
     @if (_coordinatesError is { } coordinatesError)
     {
-        <p class="ff-coord-error ff-coord-field--wide">@coordinatesError</p>
+        <p class="ff-coord-error">@coordinatesError</p>
     }
-    <button type="submit" class="ff-coord-action ff-coord-field--wide">
+    <button type="submit" class="ff-coord-action">
         <i class="fa-solid fa-location-dot" aria-hidden="true"></i>
         @L["Rail_Coordinates_Show"]
     </button>

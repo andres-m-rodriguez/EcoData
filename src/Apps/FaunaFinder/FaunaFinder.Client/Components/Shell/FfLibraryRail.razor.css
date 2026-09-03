@@ -43,15 +43,20 @@
 /* The account page's link cards, verbatim: surface, hairline, primary icon,
    muted chevron. MudIcon renders its own root, hence ::deep for the icons. */
 .ff-rail-card {
+    appearance: none;
     display: flex;
     align-items: center;
     gap: 14px;
+    width: 100%;
     padding: 16px 18px;
     background: var(--fauna-surface);
     border: 1px solid var(--fauna-line);
     border-radius: 12px;
     color: var(--fauna-fg);
+    font: inherit;
+    text-align: left;
     text-decoration: none;
+    cursor: pointer;
     transition: border-color var(--fauna-t-base) var(--fauna-ease),
                 background-color var(--fauna-t-base) var(--fauna-ease);
 }
@@ -93,8 +98,62 @@
     color: var(--fauna-fg-4);
 }
 
+/* --- A tool's view: a back button beside the title, then the tool --------- */
+
+.ff-rail-view-head {
+    flex: none;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 12px 8px;
+}
+
+.ff-rail-back {
+    appearance: none;
+    flex: none;
+    width: 32px;
+    height: 32px;
+    display: grid;
+    place-items: center;
+    border: 1px solid var(--fauna-line);
+    border-radius: 8px;
+    background: transparent;
+    color: var(--fauna-fg-2);
+    cursor: pointer;
+    transition: background-color var(--fauna-t-base) var(--fauna-ease),
+                border-color var(--fauna-t-base) var(--fauna-ease),
+                color var(--fauna-t-base) var(--fauna-ease);
+}
+
+.ff-rail-back:hover {
+    border-color: var(--fauna-primary-300);
+    background: var(--fauna-primary-50);
+    color: var(--fauna-primary);
+}
+
+.ff-rail-back:focus-visible {
+    outline: 2px solid var(--fauna-primary-400);
+    outline-offset: 2px;
+}
+
+.ff-rail-view-title {
+    margin: 0;
+    font: 600 1.0625rem/1.2 var(--fauna-font-serif);
+    letter-spacing: var(--fauna-tracking-tight);
+    color: var(--fauna-fg);
+}
+
+.ff-rail-tool {
+    flex: 1 1 auto;
+    min-height: 0;
+    padding: 4px 12px 14px;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+}
+
 @media (prefers-reduced-motion: reduce) {
-    .ff-rail-card {
+    .ff-rail-card,
+    .ff-rail-back {
         transition: none;
     }
 }

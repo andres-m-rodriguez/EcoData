@@ -63,7 +63,6 @@ public partial class FfBottomNav : EcoDataComponent
         {
             "/" or "" => NavigationTab.Map,
             var p when p.StartsWith("/map", StringComparison.OrdinalIgnoreCase) => NavigationTab.Map,
-            var p when p.StartsWith("/coordinates", StringComparison.OrdinalIgnoreCase) => NavigationTab.Map,
             var p when p.StartsWith("/species", StringComparison.OrdinalIgnoreCase) => NavigationTab.Species,
             var p when p.StartsWith("/municipalities", StringComparison.OrdinalIgnoreCase) => NavigationTab.Municipalities,
             var p when p.StartsWith("/browse", StringComparison.OrdinalIgnoreCase) => NavigationTab.Browse,

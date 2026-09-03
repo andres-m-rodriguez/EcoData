@@ -1,17 +1,34 @@
 @namespace FaunaFinder.Client.Components.Shell
 @inherits EcoDataComponent
+@using FaunaFinder.Client.Components.Map
 
 <aside class="ff-rail">
-    <h2 class="ff-rail-heading">@L["Rail_Heading"]</h2>
+    @if (_view == RailView.Coordinates)
+    {
+        <header class="ff-rail-view-head">
+            <button type="button" class="ff-rail-back" @onclick="ShowCards" aria-label="@L["Rail_Back"]">
+                <MudIcon Icon="@Icons.Material.Filled.ArrowBack" Size="Size.Small" />
+            </button>
+            <h2 class="ff-rail-view-title">@L["Rail_Card_Coordinates"]</h2>
+        </header>
 
-    <nav class="ff-rail-cards" aria-label="@L["Rail_Heading"]">
-        <a href="/coordinates" class="ff-rail-card">
-            <MudIcon Icon="@Icons.Material.Outlined.PinDrop" Class="ff-rail-card-icon" />
-            <span class="ff-rail-card-text">
-                <span class="ff-rail-card-title">@L["Rail_Card_Coordinates"]</span>
-                <span class="ff-rail-card-desc">@L["Rail_Card_Coordinates_Lede"]</span>
-            </span>
-            <MudIcon Icon="@Icons.Material.Filled.ChevronRight" Size="Size.Small" Class="ff-rail-card-chevron" />
-        </a>
-    </nav>
+        <div class="ff-rail-tool">
+            <CoordinatesTool />
+        </div>
+    }
+    else
+    {
+        <h2 class="ff-rail-heading">@L["Rail_Heading"]</h2>
+
+        <nav class="ff-rail-cards" aria-label="@L["Rail_Heading"]">
+            <button type="button" class="ff-rail-card" @onclick="ShowCoordinates">
+                <MudIcon Icon="@Icons.Material.Outlined.PinDrop" Class="ff-rail-card-icon" />
+                <span class="ff-rail-card-text">
+                    <span class="ff-rail-card-title">@L["Rail_Card_Coordinates"]</span>
+                    <span class="ff-rail-card-desc">@L["Rail_Card_Coordinates_Lede"]</span>
+                </span>
+                <MudIcon Icon="@Icons.Material.Filled.ChevronRight" Size="Size.Small" Class="ff-rail-card-chevron" />
+            </button>
+        </nav>
+    }
 </aside>

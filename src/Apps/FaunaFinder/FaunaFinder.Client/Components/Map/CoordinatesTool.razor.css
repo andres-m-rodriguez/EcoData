@@ -1,7 +1,7 @@
 .ff-coord-form {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
 }
 
 .ff-coord-field {
@@ -9,10 +9,6 @@
     flex-direction: column;
     gap: 4px;
     min-width: 0;
-}
-
-.ff-coord-field--wide {
-    grid-column: 1 / -1;
 }
 
 .ff-coord-field span {
@@ -116,12 +112,6 @@
     font: var(--fauna-body-sm);
     font-size: 12px;
     color: var(--fauna-fg-4);
-}
-
-@media (max-width: 480px) {
-    .ff-coord-form {
-        grid-template-columns: 1fr;
-    }
 }
 
 @media (prefers-reduced-motion: reduce) {
