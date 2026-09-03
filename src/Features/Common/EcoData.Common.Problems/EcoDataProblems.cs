@@ -20,7 +20,7 @@ public static class EcoDataProblems
             {
                 Type = ProblemTypes.Validation,
                 Title = "One or more validation errors occurred.",
-                Status = (int)HttpStatusCode.BadRequest,
+                Status = HttpStatusCode.BadRequest,
                 Detail = detail,
                 Instance = instance,
                 Errors = errors,
@@ -32,7 +32,7 @@ public static class EcoDataProblems
         {
             Type = ProblemTypes.NotFound,
             Title = "The requested resource was not found.",
-            Status = (int)HttpStatusCode.NotFound,
+            Status = HttpStatusCode.NotFound,
             Detail = detail,
             Instance = instance,
         };
@@ -42,7 +42,7 @@ public static class EcoDataProblems
         {
             Type = ProblemTypes.Unauthorized,
             Title = "Authentication is required.",
-            Status = (int)HttpStatusCode.Unauthorized,
+            Status = HttpStatusCode.Unauthorized,
             Detail = detail,
             Instance = instance,
         };
@@ -52,7 +52,7 @@ public static class EcoDataProblems
         {
             Type = ProblemTypes.Forbidden,
             Title = "You are not allowed to perform this action.",
-            Status = (int)HttpStatusCode.Forbidden,
+            Status = HttpStatusCode.Forbidden,
             Detail = detail,
             Instance = instance,
         };
@@ -62,7 +62,7 @@ public static class EcoDataProblems
         {
             Type = ProblemTypes.Conflict,
             Title = "The request conflicts with the current state of the resource.",
-            Status = (int)HttpStatusCode.Conflict,
+            Status = HttpStatusCode.Conflict,
             Detail = detail,
             Instance = instance,
         };
@@ -72,7 +72,7 @@ public static class EcoDataProblems
         {
             Type = ProblemTypes.Internal,
             Title = "An unexpected error occurred.",
-            Status = (int)HttpStatusCode.InternalServerError,
+            Status = HttpStatusCode.InternalServerError,
             TraceId = traceId,
             Instance = instance,
         };

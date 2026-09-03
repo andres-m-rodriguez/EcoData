@@ -1,3 +1,4 @@
+using System.Net;
 using Xunit;
 
 namespace EcoData.Common.Problems.Tests;
@@ -15,7 +16,7 @@ public class RequestFailedTests
     [Fact]
     public void HttpStatusCode_IsNotTransportFailure()
     {
-        var failed = new RequestFailed(503);
+        var failed = new RequestFailed(HttpStatusCode.ServiceUnavailable);
 
         Assert.False(failed.IsTransportFailure);
         Assert.Null(failed.Message);

@@ -15,7 +15,7 @@ copies.
 | `EcoDataProblemException` | Thrown by `EnsureSuccessOrProblemAsync` when a response carries a problem. |
 | `ProblemDetailsHttpExtensions` | `HttpResponseMessage` members: `ReadProblemAsync`, `ReadOneOfAsync<T>`, `EnsureSuccessOrProblemAsync`. A failed response always yields a problem, synthesised from the status code when the body has none. |
 | `ValidationFailed` | Per-field errors with `AllMessages` for flat display. |
-| `RequestFailed` | A failure with no usable problem payload. Status code zero means the request never reached the server. |
+| `RequestFailed` | A failure with no usable problem payload. A `StatusCode` of zero (no `HttpStatusCode` member) means the request never reached the server. |
 
 `EcoData.Common.Problems.AspNetCore` adds `ProblemResults`, the single place a typed error becomes
 an `IResult` with the `application/problem+json` media type. Server-side only.

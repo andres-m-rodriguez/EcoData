@@ -1,3 +1,4 @@
+using System.Net;
 using System.Text.Json;
 using Xunit;
 
@@ -12,7 +13,7 @@ public class SerializationTests
         {
             Type = ProblemTypes.Conflict,
             Title = "Conflict",
-            Status = 409,
+            Status = HttpStatusCode.Conflict,
             Detail = "The sighting was modified by another session.",
             Instance = "/sightings/42",
             TraceId = "trace-123",
@@ -33,7 +34,7 @@ public class SerializationTests
     [Fact]
     public void Serialize_OmitsNullFields()
     {
-        var problem = new EcoDataProblemDetails { Status = 404 };
+        var problem = new EcoDataProblemDetails { Status = HttpStatusCode.NotFound };
 
         var json = JsonSerializer.Serialize(problem, EcoDataProblemJsonContext.Default.EcoDataProblemDetails);
 

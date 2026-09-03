@@ -43,7 +43,7 @@ public class ReadOneOfAsyncTests
 
         Assert.True(result.IsT1);
         Assert.Equal(ProblemTypes.NotFound, result.AsT1.Type);
-        Assert.Equal(404, result.AsT1.Status);
+        Assert.Equal(HttpStatusCode.NotFound, result.AsT1.Status);
     }
 
     [Fact]
@@ -54,7 +54,7 @@ public class ReadOneOfAsyncTests
         var result = await response.ReadOneOfAsync(TestJsonContext.Default.SampleDto);
 
         Assert.True(result.IsT1);
-        Assert.Equal(503, result.AsT1.Status);
+        Assert.Equal(HttpStatusCode.ServiceUnavailable, result.AsT1.Status);
     }
 
     [Fact]
