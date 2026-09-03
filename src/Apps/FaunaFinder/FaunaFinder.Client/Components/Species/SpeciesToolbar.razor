@@ -122,6 +122,9 @@
 
     [Parameter] public SpeciesStatsDto? Stats { get; set; }
 
+    // Set once the stats request has failed, so the meta line stops claiming to load.
+    [Parameter] public string? StatsError { get; set; }
+
     private string SearchPlaceholder => L["Species_Toolbar_SearchPlaceholder"];
 
     private static readonly (SpeciesSort Value, string LabelKey)[] SortOptions =
@@ -167,9 +170,12 @@
     private string TaxaLabel => string.Join(", ",
         Filter.TaxonCodes.Select(code => L[TaxonIcons.GetLabelKey(code)]));
 
-    private string RecordsMeta => Stats is null
-        ? L["Species_Toolbar_RecordsMeta_Loading"]
-        : L["Species_Toolbar_RecordsMeta", Stats.TotalSpecies.ToString("N0"), Stats.MunicipalitiesCovered];
+    private string RecordsMeta => (Stats, StatsError) switch
+    {
+        ({ } stats, _) => L["Species_Toolbar_RecordsMeta", stats.TotalSpecies.ToString("N0"), stats.MunicipalitiesCovered],
+        (null, not null) => L["Species_Toolbar_RecordsMeta_Unavailable"],
+        _ => L["Species_Toolbar_RecordsMeta_Loading"],
+    };
 
     private string VisibleCounterText => Stats is null
         ? ""
