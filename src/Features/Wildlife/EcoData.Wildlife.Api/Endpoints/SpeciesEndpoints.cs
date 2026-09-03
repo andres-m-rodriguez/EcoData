@@ -5,6 +5,8 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Routing;
+using EcoData.Common.Problems;
+using EcoData.Common.Problems.AspNetCore;
 
 namespace EcoData.Wildlife.Api.Endpoints;
 
@@ -43,7 +45,7 @@ public static class SpeciesEndpoints
         group
             .MapGet(
                 "/{id:guid}",
-                async Task<Results<Ok<SpeciesDtoForDetail>, NotFound>> (
+                async Task<Results<Ok<SpeciesDtoForDetail>, JsonHttpResult<EcoDataProblemDetails>>> (
                     Guid id,
                     ISpeciesRepository repository,
                     CancellationToken ct
@@ -51,7 +53,7 @@ public static class SpeciesEndpoints
                 {
                     var species = await repository.GetByIdAsync(id, ct);
                     return species is null
-                        ? TypedResults.NotFound()
+                        ? ProblemResults.NotFound($"Species {id} was not found.")
                         : TypedResults.Ok(species);
                 }
             )
@@ -60,7 +62,7 @@ public static class SpeciesEndpoints
         group
             .MapGet(
                 "/{id:guid}/image",
-                async Task<Results<FileContentHttpResult, NotFound>> (
+                async Task<Results<FileContentHttpResult, JsonHttpResult<EcoDataProblemDetails>>> (
                     Guid id,
                     ISpeciesRepository repository,
                     CancellationToken ct
@@ -68,7 +70,7 @@ public static class SpeciesEndpoints
                 {
                     var imageData = await repository.GetProfileImageAsync(id, ct);
                     return imageData is null
-                        ? TypedResults.NotFound()
+                        ? ProblemResults.NotFound($"Species {id} has no profile image.")
                         : TypedResults.File(imageData, "image/jpeg");
                 }
             )

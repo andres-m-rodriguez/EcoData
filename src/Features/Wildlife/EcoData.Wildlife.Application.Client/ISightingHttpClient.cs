@@ -1,7 +1,6 @@
-using EcoData.Common.Problems.Contracts;
+using EcoData.Common.Problems;
 using EcoData.Wildlife.Contracts;
 using EcoData.Wildlife.Contracts.Dtos;
-using EcoData.Wildlife.Contracts.Errors;
 using EcoData.Wildlife.Contracts.Parameters;
 using OneOf;
 using OneOf.Types;

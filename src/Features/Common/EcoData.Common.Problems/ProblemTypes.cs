@@ -22,4 +22,10 @@ public static class ProblemTypes
 
     /// <summary>An unexpected server-side failure.</summary>
     public const string Internal = "urn:ecodata:problem:internal";
+
+    /// <summary>The request never reached the server.</summary>
+    public const string Unreachable = "urn:ecodata:problem:unreachable";
+
+    /// <summary>The client gave up waiting for the server.</summary>
+    public const string Timeout = "urn:ecodata:problem:timeout";
 }

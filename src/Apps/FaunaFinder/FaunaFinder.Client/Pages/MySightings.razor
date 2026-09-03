@@ -60,6 +60,10 @@
                         </ActionContent>
                     </NuiEmptyState>
                 </EmptyTemplate>
+                <ErrorTemplate Context="error">
+                    <NuiEmptyState Icon="@Icons.Material.Outlined.CloudOff"
+                                   Title="@L[error.StatusCode is null or 0 ? UnreachableKey : LoadFailedKey]" />
+                </ErrorTemplate>
                 <ItemTemplate Context="sighting">
                     <button type="button" class="ff-sighting-row" @onclick="() => OpenDetail(sighting)">
                         <div class="ff-sighting-row-main">

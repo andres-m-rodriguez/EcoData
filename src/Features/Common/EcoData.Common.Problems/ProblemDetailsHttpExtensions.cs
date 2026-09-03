@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using System.Net.Http.Json;
 using System.Text.Json;
 using System.Text.Json.Serialization.Metadata;
@@ -13,6 +14,9 @@ public static class ProblemDetailsHttpExtensions
     /// <summary>The RFC 9457 media type for problem responses.</summary>
     public const string ProblemMediaType = "application/problem+json";
 
+    private const string ReflectionWarning =
+        "Uses reflection-based JSON serialization. Pass a JsonTypeInfo<T> instead where trimming or AOT matters.";
+
     extension(HttpResponseMessage response)
     {
         /// <summary>
@@ -23,10 +27,8 @@ public static class ProblemDetailsHttpExtensions
         public async Task<EcoDataProblemDetails?> ReadProblemAsync(CancellationToken cancellationToken = default)
         {
             ArgumentNullException.ThrowIfNull(response);
-
             if (response.IsSuccessStatusCode)
                 return null;
-
 
             // Media types are case-insensitive per RFC 9110.
             var mediaType = response.Content.Headers.ContentType?.MediaType;
@@ -75,6 +77,26 @@ public static class ProblemDetailsHttpExtensions
 
             var payload = await response.Content
                 .ReadFromJsonAsync(typeInfo, cancellationToken)
+                .ConfigureAwait(false);
+            return payload is null
+                ? throw new JsonException("The success response body deserialized to null.")
+                : payload;
+        }
+
+        /// <summary>
+        /// Reflection-based counterpart of the <see cref="JsonTypeInfo{T}"/> overload, for callers
+        /// without a source-generated context.
+        /// </summary>
+        [RequiresUnreferencedCode(ReflectionWarning)]
+        [RequiresDynamicCode(ReflectionWarning)]
+        public async Task<OneOf<T, EcoDataProblemDetails>> ReadOneOfAsync<T>(CancellationToken cancellationToken = default)
+        {
+            var problem = await response.ReadProblemAsync(cancellationToken).ConfigureAwait(false);
+            if (problem is not null)
+                return problem;
+
+            var payload = await response.Content
+                .ReadFromJsonAsync<T>(cancellationToken)
                 .ConfigureAwait(false);
             return payload is null
                 ? throw new JsonException("The success response body deserialized to null.")

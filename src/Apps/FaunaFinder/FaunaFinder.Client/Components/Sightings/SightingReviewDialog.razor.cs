@@ -1,3 +1,4 @@
+using System.Net;
 using EcoData.Spa.Blazor;
 using EcoData.Wildlife.Application.Client;
 using EcoData.Wildlife.Contracts.Dtos;
@@ -72,11 +73,11 @@ public partial class SightingReviewDialog : EcoDataComponent
         {
             var message = requestFailed.StatusCode switch
             {
-                0 => L["Sighting_Error_Unreachable"],
-                401 => L["Sighting_Error_SignedOut"],
-                403 => L["Sighting_Review_Error_Forbidden"],
-                404 => L["Sighting_Review_Error_NotFound"],
-                429 => L["Sighting_Error_TooMany"],
+                HttpStatusCode.Unauthorized => L["Sighting_Error_SignedOut"],
+                HttpStatusCode.Forbidden => L["Sighting_Review_Error_Forbidden"],
+                HttpStatusCode.NotFound => L["Sighting_Review_Error_NotFound"],
+                HttpStatusCode.TooManyRequests => L["Sighting_Error_TooMany"],
+                _ when requestFailed.IsTransportFailure => L["Sighting_Error_Unreachable"],
                 _ => L["Sighting_Error_Generic"],
             };
             Snackbar.Add(message, Severity.Error);

@@ -4,7 +4,7 @@
 @using EcoData.Wildlife.Application.Client
 @using EcoData.Wildlife.Contracts.Dtos
 @using EcoData.Wildlife.Contracts.Parameters
-@using EcoData.Common.Problems.Contracts
+@using EcoData.Common.Problems
 @using FaunaFinder.Client.Components.Map
 @using OneOf
 @inherits StatefulComponent
@@ -511,7 +511,7 @@
     }
 
     private static string ErrorMessage(RequestFailed error, string fallback) =>
-        error.StatusCode == 0
+        error.IsTransportFailure
             ? "Couldn't reach the server."
             : error.Message ?? fallback;
 

@@ -1,5 +1,6 @@
+using System.Net;
 using System.Globalization;
-using EcoData.Common.Problems.Contracts;
+using EcoData.Common.Problems;
 using EcoData.Spa.Blazor;
 using EcoData.Wildlife.Contracts;
 using EcoData.Wildlife.Contracts.Dtos;
@@ -254,11 +255,11 @@ public partial class ReviewSightings : EcoDataComponent
 
     private string FailureMessage(RequestFailed failed) => failed.StatusCode switch
     {
-        0 => L["Sighting_Error_Unreachable"],
-        401 => L["Sighting_Error_SignedOut"],
-        403 => L["Sighting_Review_Error_Forbidden"],
-        404 => L["Sighting_Review_Error_NotFound"],
-        429 => L["Sighting_Error_TooMany"],
+        HttpStatusCode.Unauthorized => L["Sighting_Error_SignedOut"],
+        HttpStatusCode.Forbidden => L["Sighting_Review_Error_Forbidden"],
+        HttpStatusCode.NotFound => L["Sighting_Review_Error_NotFound"],
+        HttpStatusCode.TooManyRequests => L["Sighting_Error_TooMany"],
+        _ when failed.IsTransportFailure => L["Sighting_Error_Unreachable"],
         _ => L["Sighting_Error_Generic"],
     };
 }

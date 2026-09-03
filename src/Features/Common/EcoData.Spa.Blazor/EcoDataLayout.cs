@@ -36,7 +36,7 @@ public abstract class EcoDataLayout : StatefulLayoutComponent
     {
     }
 
-    private void HandleLanguageChanged() => _ = Mutate(OnLanguageChanged);
+    private void HandleLanguageChanged() => _ = Mutate(() => OnLanguageChanged());
 
     public override void Dispose()
     {

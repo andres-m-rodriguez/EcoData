@@ -67,6 +67,24 @@ public static class EcoDataProblems
             Instance = instance,
         };
 
+        /// <summary>Creates a status-zero problem for a request that never reached the server.</summary>
+        public static EcoDataProblemDetails Unreachable(string? detail = null) => new()
+        {
+            Type = ProblemTypes.Unreachable,
+            Title = "The server could not be reached.",
+            Status = 0,
+            Detail = detail,
+        };
+
+        /// <summary>Creates a status-zero problem for a request the client stopped waiting for.</summary>
+        public static EcoDataProblemDetails Timeout(string? detail = null) => new()
+        {
+            Type = ProblemTypes.Timeout,
+            Title = "The server took too long to answer.",
+            Status = 0,
+            Detail = detail,
+        };
+
         /// <summary>Creates a 500 problem carrying an optional correlation identifier.</summary>
         public static EcoDataProblemDetails Internal(string? traceId = null, string? instance = null) => new()
         {

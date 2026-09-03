@@ -58,9 +58,9 @@ public partial class Account : EcoDataComponent
     }
 
     [Command]
-    private async Task<IReadOnlyList<SightingDto>?> LoadRecent(CancellationToken ct)
+    private async Task<IReadOnlyList<SightingDto>> LoadRecent(CancellationToken ct)
     {
-        if (!Auth.IsAuthenticated) return null;
+        if (!Auth.IsAuthenticated) return [];
 
         var recent = new List<SightingDto>(RecentCount);
         await foreach (var sighting in SightingClient.GetMineAsync(new SightingParameters(PageSize: RecentCount), ct))

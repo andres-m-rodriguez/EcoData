@@ -122,6 +122,7 @@ public static class FaunaFinderStrings
         ["Species_Toolbar_Heading"] = "Find what you're looking for",
         ["Species_Toolbar_RecordsMeta"] = "{0} records · {1} municipios",
         ["Species_Toolbar_RecordsMeta_Loading"] = "Loading catalogue…",
+        ["Species_Toolbar_RecordsMeta_Unavailable"] = "Catalogue unavailable",
         ["Species_Toolbar_SearchPlaceholder"] = "Search by common name, scientific name, or species…",
         ["Species_Toolbar_Counter_Of"] = "of {0}",
         ["Species_Toolbar_Sort_Prefix"] = "Sort:",
@@ -139,6 +140,7 @@ public static class FaunaFinderStrings
 
         ["Species_Filter_Heading"] = "Refine the catalogue",
         ["Species_Filter_TotalRecords"] = "{0} records",
+        ["Species_Filter_CountsUnavailable"] = "Counts are unavailable right now.",
         ["Species_Filter_Section_Taxa"] = "Taxonomic group",
         ["Species_Filter_Section_Status"] = "Conservation status (IUCN)",
         ["Species_Filter_Section_Qualifiers"] = "Qualifiers",
@@ -175,6 +177,8 @@ public static class FaunaFinderStrings
         ["Species_Grid_LoadMore"] = "Load more records",
         ["Species_Grid_EndOfCatalogue"] = "— end of catalogue —",
         ["Species_Grid_Empty_Title"] = "No species match",
+        ["Species_Grid_Error_Unreachable"] = "Couldn't reach the server.",
+        ["Species_Grid_Error_Generic"] = "Something went wrong while loading species.",
         ["Species_Grid_Empty_Description"] = "Try adjusting your filters or search terms.",
 
         ["Time_MinutesAgo"] = "{0}m ago",
@@ -572,6 +576,7 @@ public static class FaunaFinderStrings
         ["Species_Toolbar_Heading"] = "Encuentra lo que buscas",
         ["Species_Toolbar_RecordsMeta"] = "{0} registros · {1} municipios",
         ["Species_Toolbar_RecordsMeta_Loading"] = "Cargando catálogo…",
+        ["Species_Toolbar_RecordsMeta_Unavailable"] = "Catálogo no disponible",
         ["Species_Toolbar_SearchPlaceholder"] = "Busca por nombre común, nombre científico o especie…",
         ["Species_Toolbar_Counter_Of"] = "de {0}",
         ["Species_Toolbar_Sort_Prefix"] = "Orden:",
@@ -589,6 +594,7 @@ public static class FaunaFinderStrings
 
         ["Species_Filter_Heading"] = "Refinar el catálogo",
         ["Species_Filter_TotalRecords"] = "{0} registros",
+        ["Species_Filter_CountsUnavailable"] = "Los conteos no están disponibles ahora.",
         ["Species_Filter_Section_Taxa"] = "Grupo taxonómico",
         ["Species_Filter_Section_Status"] = "Estado de conservación (UICN)",
         ["Species_Filter_Section_Qualifiers"] = "Criterios",
@@ -625,6 +631,8 @@ public static class FaunaFinderStrings
         ["Species_Grid_LoadMore"] = "Cargar más registros",
         ["Species_Grid_EndOfCatalogue"] = "— fin del catálogo —",
         ["Species_Grid_Empty_Title"] = "Sin coincidencias",
+        ["Species_Grid_Error_Unreachable"] = "No se pudo conectar con el servidor.",
+        ["Species_Grid_Error_Generic"] = "Algo salió mal al cargar las especies.",
         ["Species_Grid_Empty_Description"] = "Ajusta los filtros o los términos de búsqueda.",
 
         ["Time_MinutesAgo"] = "hace {0} min",

@@ -76,7 +76,7 @@ public partial class FfSearch : EcoDataComponent
             return;
 
         Clear();
-        InvokeAsync(StateHasChanged);
+        InvokeAsync(() => StateHasChanged());
     }
 
     private async Task HandleQueryChanged(string? value)
@@ -126,7 +126,7 @@ public partial class FfSearch : EcoDataComponent
     // that can't reach the server degrades to the same empty line a genuine
     // no-match gets.
     [Command]
-    private async Task<IReadOnlyList<SpeciesDtoForList>?> SearchSpecies(CancellationToken ct)
+    private async Task<IReadOnlyList<SpeciesDtoForList>> SearchSpecies(CancellationToken ct)
     {
         var collected = new List<SpeciesDtoForList>();
 
@@ -148,7 +148,7 @@ public partial class FfSearch : EcoDataComponent
     }
 
     [Command]
-    private async Task<IReadOnlyList<MunicipalityDtoForList>?> SearchMunicipalities(CancellationToken ct)
+    private async Task<IReadOnlyList<MunicipalityDtoForList>> SearchMunicipalities(CancellationToken ct)
     {
         var collected = new List<MunicipalityDtoForList>();
 

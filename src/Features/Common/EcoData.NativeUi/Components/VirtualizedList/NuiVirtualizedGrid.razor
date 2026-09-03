@@ -11,6 +11,13 @@
         @LoadingTemplate
     }
 }
+else if (_loadError is { } initialError && _cachedItems.Count == 0)
+{
+    @if (ErrorTemplate is not null)
+    {
+        @ErrorTemplate(initialError)
+    }
+}
 else if (_isEmpty)
 {
     @if (EmptyTemplate is not null)
@@ -48,4 +55,8 @@ else
             </Placeholder>
         </Virtualize>
     </div>
+    @if (_loadError is { } pageError && ErrorTemplate is not null)
+    {
+        @ErrorTemplate(pageError)
+    }
 }

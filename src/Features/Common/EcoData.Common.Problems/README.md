@@ -16,6 +16,13 @@ copies.
 | `ValidationFailed` | Per-field errors with `AllMessages` for flat display. |
 | `RequestFailed` | A failure with no usable problem payload. A `StatusCode` of zero (no `HttpStatusCode` member) means the request never reached the server. |
 
+`TransportFailureHandler` and `RequestCancelledFailureHandler` are `DelegatingHandler`s the host attaches to every
+`HttpClient` with `AddProblemHandlers()`. The cancelled-failure handler owns the timeout (30 seconds unless `AddProblemHandlers` is given another), because
+`HttpClient` links its own timeout into the token it passes down and would make a timeout look like a caller's
+cancellation. A lost connection or a timeout becomes a status-zero problem
+(`urn:ecodata:problem:unreachable` or `:timeout`) that reads like any other, so no client catches transport
+exceptions itself. A cancellation the caller asked for still propagates.
+
 `EcoData.Common.Problems.AspNetCore` adds `ProblemResults`, the single place a typed error becomes
 an `IResult` with the `application/problem+json` media type. Server-side only.
 
