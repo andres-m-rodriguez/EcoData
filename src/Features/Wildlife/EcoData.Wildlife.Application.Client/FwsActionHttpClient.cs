@@ -1,5 +1,4 @@
-using System.Net.Http.Json;
-using EcoData.Common.Problems.Contracts;
+using EcoData.Common.Problems;
 using EcoData.Wildlife.Contracts.Dtos;
 using OneOf;
 
@@ -10,22 +9,8 @@ public sealed class FwsActionHttpClient(HttpClient httpClient) : IFwsActionHttpC
     public async Task<OneOf<IReadOnlyList<FwsActionDtoForList>, RequestFailed>> GetListAsync(
         CancellationToken ct = default)
     {
-        try
-        {
-            var response = await httpClient.GetAsync("wildlife/fws-actions", ct);
-            if (!response.IsSuccessStatusCode)
-            {
-                var problem = await ProblemDetailsParser.ParseAsync(response, ct);
-                return new RequestFailed((int)response.StatusCode, problem?.Detail ?? problem?.Title);
-            }
-            var actions = await response.Content.ReadFromJsonAsync<IReadOnlyList<FwsActionDtoForList>>(ct);
-            if (actions is null)
-                return new RequestFailed((int)response.StatusCode, "The server returned an empty response.");
-            return OneOf<IReadOnlyList<FwsActionDtoForList>, RequestFailed>.FromT0(actions);
-        }
-        catch (HttpRequestException e)
-        {
-            return new RequestFailed(0, e.Message);
-        }
+        var response = await httpClient.GetAsync("wildlife/fws-actions", ct);
+        var result = await response.ReadOneOfAsync<IReadOnlyList<FwsActionDtoForList>>(ct);
+        return result.MapT1(problem => RequestFailed.From(problem));
     }
 }

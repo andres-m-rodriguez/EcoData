@@ -1,7 +1,7 @@
 using System.Globalization;
 using System.Net.Http.Json;
 using EcoData.Common.Http.Helpers;
-using EcoData.Common.Problems.Contracts;
+using EcoData.Common.Problems;
 using EcoData.Wildlife.Contracts.Dtos;
 using EcoData.Wildlife.Contracts.Parameters;
 using OneOf;
@@ -31,67 +31,25 @@ public sealed class SpeciesHttpClient(HttpClient httpClient) : ISpeciesHttpClien
 
         var queryString = BuildListQueryString(parameters, includePageSize: false);
 
-        try
-        {
-            var response = await httpClient.GetAsync($"wildlife/species/count{queryString}", ct);
-            if (!response.IsSuccessStatusCode)
-            {
-                var problem = await ProblemDetailsParser.ParseAsync(response, ct);
-                return new RequestFailed((int)response.StatusCode, problem?.Detail ?? problem?.Title);
-            }
-            var payload = await response.Content.ReadFromJsonAsync<CountPayload>(ct);
-            if (payload is null)
-                return new RequestFailed((int)response.StatusCode, "The server returned an empty response.");
-            return payload.Count;
-        }
-        catch (HttpRequestException e)
-        {
-            return new RequestFailed(0, e.Message);
-        }
+        var response = await httpClient.GetAsync($"wildlife/species/count{queryString}", ct);
+        var result = await response.ReadOneOfAsync<CountPayload>(ct);
+        return result.MapT0(payload => payload.Count).MapT1(problem => RequestFailed.From(problem));
     }
 
     public async Task<OneOf<SpeciesDtoForDetail, RequestFailed>> GetByIdAsync(
         Guid id,
         CancellationToken ct = default)
     {
-        try
-        {
-            var response = await httpClient.GetAsync($"wildlife/species/{id}", ct);
-            if (!response.IsSuccessStatusCode)
-            {
-                var problem = await ProblemDetailsParser.ParseAsync(response, ct);
-                return new RequestFailed((int)response.StatusCode, problem?.Detail ?? problem?.Title);
-            }
-            var species = await response.Content.ReadFromJsonAsync<SpeciesDtoForDetail>(ct);
-            if (species is null)
-                return new RequestFailed((int)response.StatusCode, "The server returned an empty response.");
-            return species;
-        }
-        catch (HttpRequestException e)
-        {
-            return new RequestFailed(0, e.Message);
-        }
+        var response = await httpClient.GetAsync($"wildlife/species/{id}", ct);
+        var result = await response.ReadOneOfAsync<SpeciesDtoForDetail>(ct);
+        return result.MapT1(problem => RequestFailed.From(problem));
     }
 
     public async Task<OneOf<SpeciesStatsDto, RequestFailed>> GetStatsAsync(CancellationToken ct = default)
     {
-        try
-        {
-            var response = await httpClient.GetAsync("wildlife/species/stats", ct);
-            if (!response.IsSuccessStatusCode)
-            {
-                var problem = await ProblemDetailsParser.ParseAsync(response, ct);
-                return new RequestFailed((int)response.StatusCode, problem?.Detail ?? problem?.Title);
-            }
-            var stats = await response.Content.ReadFromJsonAsync<SpeciesStatsDto>(ct);
-            if (stats is null)
-                return new RequestFailed((int)response.StatusCode, "The server returned an empty response.");
-            return stats;
-        }
-        catch (HttpRequestException e)
-        {
-            return new RequestFailed(0, e.Message);
-        }
+        var response = await httpClient.GetAsync("wildlife/species/stats", ct);
+        var result = await response.ReadOneOfAsync<SpeciesStatsDto>(ct);
+        return result.MapT1(problem => RequestFailed.From(problem));
     }
 
     public async Task<OneOf<SpeciesFacetsDto, RequestFailed>> GetFacetsAsync(
@@ -102,67 +60,25 @@ public sealed class SpeciesHttpClient(HttpClient httpClient) : ISpeciesHttpClien
 
         var queryString = BuildListQueryString(parameters, includePageSize: false);
 
-        try
-        {
-            var response = await httpClient.GetAsync($"wildlife/species/facets{queryString}", ct);
-            if (!response.IsSuccessStatusCode)
-            {
-                var problem = await ProblemDetailsParser.ParseAsync(response, ct);
-                return new RequestFailed((int)response.StatusCode, problem?.Detail ?? problem?.Title);
-            }
-            var facets = await response.Content.ReadFromJsonAsync<SpeciesFacetsDto>(ct);
-            if (facets is null)
-                return new RequestFailed((int)response.StatusCode, "The server returned an empty response.");
-            return facets;
-        }
-        catch (HttpRequestException e)
-        {
-            return new RequestFailed(0, e.Message);
-        }
+        var response = await httpClient.GetAsync($"wildlife/species/facets{queryString}", ct);
+        var result = await response.ReadOneOfAsync<SpeciesFacetsDto>(ct);
+        return result.MapT1(problem => RequestFailed.From(problem));
     }
 
     public async Task<OneOf<IReadOnlyList<SpeciesDtoForList>, RequestFailed>> GetFeaturedAsync(
         CancellationToken ct = default)
     {
-        try
-        {
-            var response = await httpClient.GetAsync("wildlife/species/featured", ct);
-            if (!response.IsSuccessStatusCode)
-            {
-                var problem = await ProblemDetailsParser.ParseAsync(response, ct);
-                return new RequestFailed((int)response.StatusCode, problem?.Detail ?? problem?.Title);
-            }
-            var species = await response.Content.ReadFromJsonAsync<IReadOnlyList<SpeciesDtoForList>>(ct);
-            if (species is null)
-                return new RequestFailed((int)response.StatusCode, "The server returned an empty response.");
-            return OneOf<IReadOnlyList<SpeciesDtoForList>, RequestFailed>.FromT0(species);
-        }
-        catch (HttpRequestException e)
-        {
-            return new RequestFailed(0, e.Message);
-        }
+        var response = await httpClient.GetAsync("wildlife/species/featured", ct);
+        var result = await response.ReadOneOfAsync<IReadOnlyList<SpeciesDtoForList>>(ct);
+        return result.MapT1(problem => RequestFailed.From(problem));
     }
 
     public async Task<OneOf<IReadOnlyList<MunicipalitySpeciesCountDto>, RequestFailed>> GetCountsByMunicipalityAsync(
         CancellationToken ct = default)
     {
-        try
-        {
-            var response = await httpClient.GetAsync("wildlife/species/counts-by-municipality", ct);
-            if (!response.IsSuccessStatusCode)
-            {
-                var problem = await ProblemDetailsParser.ParseAsync(response, ct);
-                return new RequestFailed((int)response.StatusCode, problem?.Detail ?? problem?.Title);
-            }
-            var counts = await response.Content.ReadFromJsonAsync<IReadOnlyList<MunicipalitySpeciesCountDto>>(ct);
-            if (counts is null)
-                return new RequestFailed((int)response.StatusCode, "The server returned an empty response.");
-            return OneOf<IReadOnlyList<MunicipalitySpeciesCountDto>, RequestFailed>.FromT0(counts);
-        }
-        catch (HttpRequestException e)
-        {
-            return new RequestFailed(0, e.Message);
-        }
+        var response = await httpClient.GetAsync("wildlife/species/counts-by-municipality", ct);
+        var result = await response.ReadOneOfAsync<IReadOnlyList<MunicipalitySpeciesCountDto>>(ct);
+        return result.MapT1(problem => RequestFailed.From(problem));
     }
 
     public async Task<OneOf<IReadOnlyList<SpeciesNearbyDto>, RequestFailed>> GetNearbyAsync(
@@ -177,71 +93,29 @@ public sealed class SpeciesHttpClient(HttpClient httpClient) : ISpeciesHttpClien
             .Add("radiusMeters", radiusMeters.ToString(CultureInfo.InvariantCulture))
             .Build();
 
-        try
-        {
-            var response = await httpClient.GetAsync($"wildlife/species/nearby{query}", ct);
-            if (!response.IsSuccessStatusCode)
-            {
-                var problem = await ProblemDetailsParser.ParseAsync(response, ct);
-                return new RequestFailed((int)response.StatusCode, problem?.Detail ?? problem?.Title);
-            }
-            var species = await response.Content.ReadFromJsonAsync<IReadOnlyList<SpeciesNearbyDto>>(ct);
-            if (species is null)
-                return new RequestFailed((int)response.StatusCode, "The server returned an empty response.");
-            return OneOf<IReadOnlyList<SpeciesNearbyDto>, RequestFailed>.FromT0(species);
-        }
-        catch (HttpRequestException e)
-        {
-            return new RequestFailed(0, e.Message);
-        }
+        var response = await httpClient.GetAsync($"wildlife/species/nearby{query}", ct);
+        var result = await response.ReadOneOfAsync<IReadOnlyList<SpeciesNearbyDto>>(ct);
+        return result.MapT1(problem => RequestFailed.From(problem));
     }
 
     public async Task<OneOf<IReadOnlyList<SpeciesNearbyDto>, RequestFailed>> GetInPolygonAsync(
         IReadOnlyList<PolygonCoordinate> coordinates,
         CancellationToken ct = default)
     {
-        try
-        {
-            var response = await httpClient.PostAsJsonAsync(
-                "wildlife/species/in-polygon",
-                new PolygonSearchParameters(coordinates),
-                ct);
-            if (!response.IsSuccessStatusCode)
-            {
-                var problem = await ProblemDetailsParser.ParseAsync(response, ct);
-                return new RequestFailed((int)response.StatusCode, problem?.Detail ?? problem?.Title);
-            }
-            var species = await response.Content.ReadFromJsonAsync<IReadOnlyList<SpeciesNearbyDto>>(ct);
-            if (species is null)
-                return new RequestFailed((int)response.StatusCode, "The server returned an empty response.");
-            return OneOf<IReadOnlyList<SpeciesNearbyDto>, RequestFailed>.FromT0(species);
-        }
-        catch (HttpRequestException e)
-        {
-            return new RequestFailed(0, e.Message);
-        }
+        var response = await httpClient.PostAsJsonAsync(
+            "wildlife/species/in-polygon",
+            new PolygonSearchParameters(coordinates),
+            ct);
+        var result = await response.ReadOneOfAsync<IReadOnlyList<SpeciesNearbyDto>>(ct);
+        return result.MapT1(problem => RequestFailed.From(problem));
     }
 
     public async Task<OneOf<IReadOnlyList<HeatmapPointDto>, RequestFailed>> GetHeatmapAsync(
         CancellationToken ct = default)
     {
-        try
-        {
-            var response = await httpClient.GetAsync("wildlife/species/heatmap", ct);
-            if (!response.IsSuccessStatusCode)
-            {
-                var problem = await ProblemDetailsParser.ParseAsync(response, ct);
-                return new RequestFailed((int)response.StatusCode, problem?.Detail ?? problem?.Title);
-            }
-            var points = await response.Content.ReadFromJsonAsync<IReadOnlyList<HeatmapPointDto>>(ct);
-            if (points is null)
-                return new RequestFailed((int)response.StatusCode, "The server returned an empty response.");
-            return OneOf<IReadOnlyList<HeatmapPointDto>, RequestFailed>.FromT0(points);
-        }
-        catch (HttpRequestException e)
-        {
-            return new RequestFailed(0, e.Message);
-        }
+        var response = await httpClient.GetAsync("wildlife/species/heatmap", ct);
+        var result = await response.ReadOneOfAsync<IReadOnlyList<HeatmapPointDto>>(ct);
+        return result.MapT1(problem => RequestFailed.From(problem));
     }
 
     private static string BuildListQueryString(SpeciesParameters parameters, bool includePageSize)

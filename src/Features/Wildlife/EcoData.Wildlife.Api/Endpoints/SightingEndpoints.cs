@@ -1,5 +1,7 @@
 using System.Security.Claims;
 using EcoData.Common.Authorization;
+using EcoData.Common.Problems;
+using EcoData.Common.Problems.AspNetCore;
 using EcoData.Identity.Contracts.Claims;
 using EcoData.Wildlife.Application;
 using EcoData.Wildlife.Contracts;
@@ -7,6 +9,7 @@ using EcoData.Wildlife.Contracts.Dtos;
 using EcoData.Wildlife.Contracts.Parameters;
 using EcoData.Wildlife.Contracts.Validators;
 using EcoData.Wildlife.DataAccess.Interfaces;
+using FluentValidation.Results;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
@@ -29,7 +32,7 @@ public static class SightingEndpoints
             .MapPost(
                 "/organizations/{organizationId:guid}/sightings",
                 async Task<
-                    Results<Created<SightingDto>, ValidationProblem, NotFound, UnauthorizedHttpResult>
+                    Results<Created<SightingDto>, JsonHttpResult<EcoDataProblemDetails>>
                 > (
                     Guid organizationId,
                     SightingDtoForCreate dto,
@@ -40,11 +43,11 @@ public static class SightingEndpoints
                 {
                     var caller = new RequestClaimToken(user);
                     if (!caller.IsAuthenticated)
-                        return TypedResults.Unauthorized();
+                        return ProblemResults.Unauthorized("Sign in to report a sighting.");
 
                     var validation = new SightingDtoForCreateValidator().Validate(dto);
                     if (!validation.IsValid)
-                        return TypedResults.ValidationProblem(validation.ToDictionary());
+                        return ValidationFailure(validation);
 
                     var result = await repository.CreateAsync(
                         organizationId,
@@ -54,7 +57,7 @@ public static class SightingEndpoints
                         ct
                     );
                     if (result.IsT1)
-                        return TypedResults.NotFound();
+                        return ProblemResults.NotFound("The species or organization was not found.");
 
                     var sighting = result.AsT0;
                     return TypedResults.Created(
@@ -89,7 +92,7 @@ public static class SightingEndpoints
             .MapPost(
                 "/sightings/{id:guid}/notes",
                 async Task<
-                    Results<Created<SightingNoteDto>, ValidationProblem, NotFound, ForbidHttpResult>
+                    Results<Created<SightingNoteDto>, JsonHttpResult<EcoDataProblemDetails>>
                 > (
                     Guid id,
                     SightingNoteDtoForCreate dto,
@@ -101,7 +104,7 @@ public static class SightingEndpoints
                 {
                     var owner = await repository.GetOwnerAsync(id, ct);
                     if (owner is null)
-                        return TypedResults.NotFound();
+                        return ProblemResults.NotFound($"Sighting {id} was not found.");
 
                     var caller = new RequestClaimToken(user);
                     var isReporter = caller.UserId == owner.Value.ReporterUserId;
@@ -113,11 +116,11 @@ public static class SightingEndpoints
                             ct
                         )
                     )
-                        return TypedResults.Forbid();
+                        return ProblemResults.Forbidden("Only the reporter or a reviewer in the organization may do this.");
 
                     var validation = new SightingNoteDtoForCreateValidator().Validate(dto);
                     if (!validation.IsValid)
-                        return TypedResults.ValidationProblem(validation.ToDictionary());
+                        return ValidationFailure(validation);
 
                     var result = await repository.AddNoteAsync(
                         id,
@@ -127,7 +130,7 @@ public static class SightingEndpoints
                         ct
                     );
                     if (result.IsT1)
-                        return TypedResults.NotFound();
+                        return ProblemResults.NotFound($"Sighting {id} was not found.");
 
                     return TypedResults.Created(
                         $"/wildlife/organizations/{owner.Value.OrganizationId}/sightings/{id}",
@@ -149,7 +152,7 @@ public static class SightingEndpoints
         review
             .MapGet(
                 "/",
-                async Task<Results<Ok<IReadOnlyList<SightingDto>>, ForbidHttpResult>> (
+                async Task<Results<Ok<IReadOnlyList<SightingDto>>, JsonHttpResult<EcoDataProblemDetails>>> (
                     Guid organizationId,
                     [AsParameters] SightingParameters parameters,
                     IAuthorization auth,
@@ -158,7 +161,7 @@ public static class SightingEndpoints
                 ) =>
                 {
                     if (!await auth.HasAsync(WildlifePermissions.VerifyOccurrence, organizationId, ct))
-                        return TypedResults.Forbid();
+                        return ProblemResults.Forbidden("You do not review sightings for this organization.");
 
                     var page = await repository
                         .GetByOrganizationAsync(organizationId, parameters, ct)
@@ -171,7 +174,7 @@ public static class SightingEndpoints
         review
             .MapGet(
                 "/count",
-                async Task<Results<Ok<int>, ForbidHttpResult>> (
+                async Task<Results<Ok<int>, JsonHttpResult<EcoDataProblemDetails>>> (
                     Guid organizationId,
                     SightingStatus? status,
                     IAuthorization auth,
@@ -180,7 +183,7 @@ public static class SightingEndpoints
                 ) =>
                 {
                     if (!await auth.HasAsync(WildlifePermissions.VerifyOccurrence, organizationId, ct))
-                        return TypedResults.Forbid();
+                        return ProblemResults.Forbidden("You do not review sightings for this organization.");
                     var count = await repository.CountAsync(organizationId, status, ct);
                     return TypedResults.Ok(count);
                 }
@@ -190,7 +193,7 @@ public static class SightingEndpoints
         review
             .MapGet(
                 "/{id:guid}",
-                async Task<Results<Ok<SightingDto>, NotFound, ForbidHttpResult>> (
+                async Task<Results<Ok<SightingDto>, JsonHttpResult<EcoDataProblemDetails>>> (
                     Guid organizationId,
                     Guid id,
                     IAuthorization auth,
@@ -199,11 +202,11 @@ public static class SightingEndpoints
                 ) =>
                 {
                     if (!await auth.HasAsync(WildlifePermissions.VerifyOccurrence, organizationId, ct))
-                        return TypedResults.Forbid();
+                        return ProblemResults.Forbidden("You do not review sightings for this organization.");
 
                     var sighting = await repository.GetByIdAsync(organizationId, id, ct);
                     if (sighting is null)
-                        return TypedResults.NotFound();
+                        return ProblemResults.NotFound($"Sighting {id} was not found.");
 
                     return TypedResults.Ok(sighting);
                 }
@@ -213,7 +216,7 @@ public static class SightingEndpoints
         review
             .MapPost(
                 "/{id:guid}/approve",
-                async Task<Results<NoContent, NotFound, ForbidHttpResult, ValidationProblem>> (
+                async Task<Results<NoContent, JsonHttpResult<EcoDataProblemDetails>>> (
                     Guid organizationId,
                     Guid id,
                     SightingApprovalDto dto,
@@ -224,11 +227,11 @@ public static class SightingEndpoints
                 ) =>
                 {
                     if (!await auth.HasAsync(WildlifePermissions.VerifyOccurrence, organizationId, ct))
-                        return TypedResults.Forbid();
+                        return ProblemResults.Forbidden("You do not review sightings for this organization.");
 
                     var validation = new SightingApprovalDtoValidator().Validate(dto);
                     if (!validation.IsValid)
-                        return TypedResults.ValidationProblem(validation.ToDictionary());
+                        return ValidationFailure(validation);
 
                     var reviewer = new RequestClaimToken(user);
                     var result = await repository.ApproveAsync(
@@ -240,7 +243,7 @@ public static class SightingEndpoints
                         ct
                     );
                     if (result.IsT1)
-                        return TypedResults.NotFound();
+                        return ProblemResults.NotFound($"Sighting {id} was not found.");
 
                     return TypedResults.NoContent();
                 }
@@ -250,7 +253,7 @@ public static class SightingEndpoints
         review
             .MapPost(
                 "/{id:guid}/deny",
-                async Task<Results<NoContent, NotFound, ForbidHttpResult, ValidationProblem>> (
+                async Task<Results<NoContent, JsonHttpResult<EcoDataProblemDetails>>> (
                     Guid organizationId,
                     Guid id,
                     SightingDenialDto dto,
@@ -261,11 +264,11 @@ public static class SightingEndpoints
                 ) =>
                 {
                     if (!await auth.HasAsync(WildlifePermissions.VerifyOccurrence, organizationId, ct))
-                        return TypedResults.Forbid();
+                        return ProblemResults.Forbidden("You do not review sightings for this organization.");
 
                     var validation = new SightingDenialDtoValidator().Validate(dto);
                     if (!validation.IsValid)
-                        return TypedResults.ValidationProblem(validation.ToDictionary());
+                        return ValidationFailure(validation);
 
                     var reviewer = new RequestClaimToken(user);
                     var result = await repository.DenyAsync(
@@ -277,7 +280,7 @@ public static class SightingEndpoints
                         ct
                     );
                     if (result.IsT1)
-                        return TypedResults.NotFound();
+                        return ProblemResults.NotFound($"Sighting {id} was not found.");
 
                     return TypedResults.NoContent();
                 }
@@ -287,7 +290,7 @@ public static class SightingEndpoints
         review
             .MapPost(
                 "/{id:guid}/unapprove",
-                async Task<Results<NoContent, NotFound, ForbidHttpResult>> (
+                async Task<Results<NoContent, JsonHttpResult<EcoDataProblemDetails>>> (
                     Guid organizationId,
                     Guid id,
                     IAuthorization auth,
@@ -296,11 +299,11 @@ public static class SightingEndpoints
                 ) =>
                 {
                     if (!await auth.HasAsync(WildlifePermissions.VerifyOccurrence, organizationId, ct))
-                        return TypedResults.Forbid();
+                        return ProblemResults.Forbidden("You do not review sightings for this organization.");
 
                     var result = await repository.UnapproveAsync(organizationId, id, ct);
                     if (result.IsT1)
-                        return TypedResults.NotFound();
+                        return ProblemResults.NotFound($"Sighting {id} was not found.");
 
                     return TypedResults.NoContent();
                 }
@@ -318,7 +321,7 @@ public static class SightingEndpoints
             .MapPost(
                 "/",
                 async Task<
-                    Results<Created<SightingImageDto>, ValidationProblem, NotFound, ForbidHttpResult>
+                    Results<Created<SightingImageDto>, JsonHttpResult<EcoDataProblemDetails>>
                 > (
                     Guid id,
                     IFormFile file,
@@ -330,11 +333,11 @@ public static class SightingEndpoints
                 {
                     var owner = await repository.GetOwnerAsync(id, ct);
                     if (owner is null)
-                        return TypedResults.NotFound();
+                        return ProblemResults.NotFound($"Sighting {id} was not found.");
 
                     var caller = new RequestClaimToken(user);
                     if (caller.UserId != owner.Value.ReporterUserId)
-                        return TypedResults.Forbid();
+                        return ProblemResults.Forbidden("Only the reporter may manage this sighting's photos.");
 
                     if (await repository.CountImagesAsync(id, ct) >= MaxImagesPerSighting)
                         return FileProblem($"A sighting can have at most {MaxImagesPerSighting} images");
@@ -395,7 +398,7 @@ public static class SightingEndpoints
         images
             .MapGet(
                 "/{imageId:guid}",
-                async Task<Results<FileStreamHttpResult, NotFound, ForbidHttpResult>> (
+                async Task<Results<FileStreamHttpResult, JsonHttpResult<EcoDataProblemDetails>>> (
                     Guid id,
                     Guid imageId,
                     ClaimsPrincipal user,
@@ -408,7 +411,7 @@ public static class SightingEndpoints
                 {
                     var owner = await repository.GetOwnerAsync(id, ct);
                     if (owner is null)
-                        return TypedResults.NotFound();
+                        return ProblemResults.NotFound($"Sighting {id} was not found.");
 
                     var caller = new RequestClaimToken(user);
                     if (
@@ -419,15 +422,15 @@ public static class SightingEndpoints
                             ct
                         )
                     )
-                        return TypedResults.Forbid();
+                        return ProblemResults.Forbidden("Only the reporter or a reviewer in the organization may do this.");
 
                     var image = await repository.GetImageAsync(id, imageId, ct);
                     if (image is null)
-                        return TypedResults.NotFound();
+                        return ProblemResults.NotFound($"Image {imageId} was not found.");
 
                     var content = await store.OpenReadAsync(image.BlobName, ct);
                     if (content is null)
-                        return TypedResults.NotFound();
+                        return ProblemResults.NotFound($"Image {imageId} was not found.");
 
                     // Reusable within a session, never shareable: the cookie
                     // decides who may read, so the cache stays private.
@@ -440,7 +443,7 @@ public static class SightingEndpoints
         images
             .MapDelete(
                 "/{imageId:guid}",
-                async Task<Results<NoContent, NotFound, ForbidHttpResult>> (
+                async Task<Results<NoContent, JsonHttpResult<EcoDataProblemDetails>>> (
                     Guid id,
                     Guid imageId,
                     ClaimsPrincipal user,
@@ -451,21 +454,21 @@ public static class SightingEndpoints
                 {
                     var owner = await repository.GetOwnerAsync(id, ct);
                     if (owner is null)
-                        return TypedResults.NotFound();
+                        return ProblemResults.NotFound($"Sighting {id} was not found.");
 
                     var caller = new RequestClaimToken(user);
                     if (caller.UserId != owner.Value.ReporterUserId)
-                        return TypedResults.Forbid();
+                        return ProblemResults.Forbidden("Only the reporter may manage this sighting's photos.");
 
                     var image = await repository.GetImageAsync(id, imageId, ct);
                     if (image is null)
-                        return TypedResults.NotFound();
+                        return ProblemResults.NotFound($"Image {imageId} was not found.");
 
                     // Row first, so a blob delete that fails leaves nothing the
                     // API would still serve; the store tolerates a blob already gone.
                     var deleted = await repository.DeleteImageAsync(id, imageId, ct);
                     if (deleted.IsT1)
-                        return TypedResults.NotFound();
+                        return ProblemResults.NotFound($"Image {imageId} was not found.");
 
                     await store.DeleteAsync(image.BlobName, ct);
                     return TypedResults.NoContent();
@@ -476,6 +479,12 @@ public static class SightingEndpoints
         return app;
     }
 
-    private static ValidationProblem FileProblem(string message) =>
-        TypedResults.ValidationProblem(new Dictionary<string, string[]> { ["File"] = [message] });
+    private static JsonHttpResult<EcoDataProblemDetails> ValidationFailure(ValidationResult validation)
+    {
+        var errors = new Dictionary<string, string[]>(validation.ToDictionary());
+        return ProblemResults.Validation(new ValidationFailed(errors));
+    }
+
+    private static JsonHttpResult<EcoDataProblemDetails> FileProblem(string message) =>
+        ProblemResults.Validation(new ValidationFailed(new Dictionary<string, string[]> { ["File"] = [message] }));
 }

@@ -1,4 +1,4 @@
-using EcoData.Common.Problems.Contracts;
+using EcoData.Common.Problems;
 using EcoData.Wildlife.Contracts.Dtos;
 using OneOf;
 

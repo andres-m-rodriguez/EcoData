@@ -2,16 +2,17 @@ using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using EcoData.Common.Http.Helpers;
 using EcoData.Common.Pagination;
-using EcoData.Common.Problems.Contracts;
+using EcoData.Common.Problems;
 using EcoData.Wildlife.Contracts;
 using EcoData.Wildlife.Contracts.Dtos;
-using EcoData.Wildlife.Contracts.Errors;
 using EcoData.Wildlife.Contracts.Parameters;
 using OneOf;
 using OneOf.Types;
 
 namespace EcoData.Wildlife.Application.Client;
 
+// Lost connections and timeouts arrive as status-zero problems; the host's
+// handlers own them, so nothing here catches.
 public sealed class SightingHttpClient(HttpClient httpClient) : ISightingHttpClient
 {
     public async Task<OneOf<SightingDto, ValidationFailed, RequestFailed>> ReportAsync(
@@ -19,28 +20,16 @@ public sealed class SightingHttpClient(HttpClient httpClient) : ISightingHttpCli
         SightingDtoForCreate dto,
         CancellationToken ct = default)
     {
-        try
-        {
-            var response = await httpClient.PostAsJsonAsync(
-                $"wildlife/organizations/{organizationId}/sightings",
-                dto,
-                ct);
-            if (!response.IsSuccessStatusCode)
-            {
-                var problem = await ProblemDetailsParser.ParseAsync(response, ct);
-                if (problem?.Errors is { Count: > 0 } errors)
-                    return new ValidationFailed(errors);
-                return new RequestFailed((int)response.StatusCode, problem?.Detail ?? problem?.Title);
-            }
-            var sighting = await response.Content.ReadFromJsonAsync<SightingDto>(ct);
-            if (sighting is null)
-                return new RequestFailed((int)response.StatusCode, "The server returned an empty response.");
+        var response = await httpClient.PostAsJsonAsync(
+            $"wildlife/organizations/{organizationId}/sightings",
+            dto,
+            ct);
+        var result = await response.ReadOneOfAsync<SightingDto>(ct);
+        if (result.TryPickT0(out var sighting, out var problem))
             return sighting;
-        }
-        catch (HttpRequestException e)
-        {
-            return new RequestFailed(0, e.Message);
-        }
+        if (problem.Type == ProblemTypes.Validation)
+            return ValidationFailed.From(problem);
+        return RequestFailed.From(problem);
     }
 
     public IAsyncEnumerable<SightingDto> GetMineAsync(
@@ -67,30 +56,18 @@ public sealed class SightingHttpClient(HttpClient httpClient) : ISightingHttpCli
         string contentType,
         CancellationToken ct = default)
     {
-        try
-        {
-            using var form = new MultipartFormDataContent();
-            var file = new StreamContent(content);
-            file.Headers.ContentType = new MediaTypeHeaderValue(contentType);
-            form.Add(file, "file", fileName);
+        using var form = new MultipartFormDataContent();
+        var file = new StreamContent(content);
+        file.Headers.ContentType = new MediaTypeHeaderValue(contentType);
+        form.Add(file, "file", fileName);
 
-            var response = await httpClient.PostAsync($"wildlife/sightings/{sightingId}/images", form, ct);
-            if (!response.IsSuccessStatusCode)
-            {
-                var problem = await ProblemDetailsParser.ParseAsync(response, ct);
-                if (problem?.Errors is { Count: > 0 } errors)
-                    return new ValidationFailed(errors);
-                return new RequestFailed((int)response.StatusCode, problem?.Detail ?? problem?.Title);
-            }
-            var image = await response.Content.ReadFromJsonAsync<SightingImageDto>(ct);
-            if (image is null)
-                return new RequestFailed((int)response.StatusCode, "The server returned an empty response.");
+        var response = await httpClient.PostAsync($"wildlife/sightings/{sightingId}/images", form, ct);
+        var result = await response.ReadOneOfAsync<SightingImageDto>(ct);
+        if (result.TryPickT0(out var image, out var problem))
             return image;
-        }
-        catch (HttpRequestException e)
-        {
-            return new RequestFailed(0, e.Message);
-        }
+        if (problem.Type == ProblemTypes.Validation)
+            return ValidationFailed.From(problem);
+        return RequestFailed.From(problem);
     }
 
     public async Task<OneOf<Success, RequestFailed>> DeleteImageAsync(
@@ -98,20 +75,11 @@ public sealed class SightingHttpClient(HttpClient httpClient) : ISightingHttpCli
         Guid imageId,
         CancellationToken ct = default)
     {
-        try
-        {
-            var response = await httpClient.DeleteAsync($"wildlife/sightings/{sightingId}/images/{imageId}", ct);
-            if (!response.IsSuccessStatusCode)
-            {
-                var problem = await ProblemDetailsParser.ParseAsync(response, ct);
-                return new RequestFailed((int)response.StatusCode, problem?.Detail ?? problem?.Title);
-            }
+        var response = await httpClient.DeleteAsync($"wildlife/sightings/{sightingId}/images/{imageId}", ct);
+        var problem = await response.ReadProblemAsync(ct);
+        if (problem is null)
             return new Success();
-        }
-        catch (HttpRequestException e)
-        {
-            return new RequestFailed(0, e.Message);
-        }
+        return RequestFailed.From(problem);
     }
 
     public async Task<OneOf<SightingNoteDto, ValidationFailed, RequestFailed>> AddNoteAsync(
@@ -119,28 +87,16 @@ public sealed class SightingHttpClient(HttpClient httpClient) : ISightingHttpCli
         SightingNoteDtoForCreate dto,
         CancellationToken ct = default)
     {
-        try
-        {
-            var response = await httpClient.PostAsJsonAsync(
-                $"wildlife/sightings/{sightingId}/notes",
-                dto,
-                ct);
-            if (!response.IsSuccessStatusCode)
-            {
-                var problem = await ProblemDetailsParser.ParseAsync(response, ct);
-                if (problem?.Errors is { Count: > 0 } errors)
-                    return new ValidationFailed(errors);
-                return new RequestFailed((int)response.StatusCode, problem?.Detail ?? problem?.Title);
-            }
-            var note = await response.Content.ReadFromJsonAsync<SightingNoteDto>(ct);
-            if (note is null)
-                return new RequestFailed((int)response.StatusCode, "The server returned an empty response.");
+        var response = await httpClient.PostAsJsonAsync(
+            $"wildlife/sightings/{sightingId}/notes",
+            dto,
+            ct);
+        var result = await response.ReadOneOfAsync<SightingNoteDto>(ct);
+        if (result.TryPickT0(out var note, out var problem))
             return note;
-        }
-        catch (HttpRequestException e)
-        {
-            return new RequestFailed(0, e.Message);
-        }
+        if (problem.Type == ProblemTypes.Validation)
+            return ValidationFailed.From(problem);
+        return RequestFailed.From(problem);
     }
 
     public async Task<OneOf<IReadOnlyList<SightingDto>, RequestFailed>> GetByOrganizationAsync(
@@ -154,25 +110,11 @@ public sealed class SightingHttpClient(HttpClient httpClient) : ISightingHttpCli
             .Add("speciesId", parameters.SpeciesId)
             .Build();
 
-        try
-        {
-            var response = await httpClient.GetAsync(
-                $"wildlife/organizations/{organizationId}/sightings{queryString}",
-                ct);
-            if (!response.IsSuccessStatusCode)
-            {
-                var problem = await ProblemDetailsParser.ParseAsync(response, ct);
-                return new RequestFailed((int)response.StatusCode, problem?.Detail ?? problem?.Title);
-            }
-            var sightings = await response.Content.ReadFromJsonAsync<IReadOnlyList<SightingDto>>(ct);
-            if (sightings is null)
-                return new RequestFailed((int)response.StatusCode, "The server returned an empty response.");
-            return OneOf<IReadOnlyList<SightingDto>, RequestFailed>.FromT0(sightings);
-        }
-        catch (HttpRequestException e)
-        {
-            return new RequestFailed(0, e.Message);
-        }
+        var response = await httpClient.GetAsync(
+            $"wildlife/organizations/{organizationId}/sightings{queryString}",
+            ct);
+        var result = await response.ReadOneOfAsync<IReadOnlyList<SightingDto>>(ct);
+        return result.MapT1(problem => RequestFailed.From(problem));
     }
 
     public async Task<OneOf<int, RequestFailed>> CountAsync(
@@ -182,22 +124,11 @@ public sealed class SightingHttpClient(HttpClient httpClient) : ISightingHttpCli
     {
         var queryString = new QueryStringBuilder().Add("status", status).Build();
 
-        try
-        {
-            var response = await httpClient.GetAsync(
-                $"wildlife/organizations/{organizationId}/sightings/count{queryString}",
-                ct);
-            if (!response.IsSuccessStatusCode)
-            {
-                var problem = await ProblemDetailsParser.ParseAsync(response, ct);
-                return new RequestFailed((int)response.StatusCode, problem?.Detail ?? problem?.Title);
-            }
-            return await response.Content.ReadFromJsonAsync<int>(ct);
-        }
-        catch (HttpRequestException e)
-        {
-            return new RequestFailed(0, e.Message);
-        }
+        var response = await httpClient.GetAsync(
+            $"wildlife/organizations/{organizationId}/sightings/count{queryString}",
+            ct);
+        var result = await response.ReadOneOfAsync<int>(ct);
+        return result.MapT1(problem => RequestFailed.From(problem));
     }
 
     public async Task<OneOf<SightingDto, RequestFailed>> GetByIdAsync(
@@ -205,25 +136,11 @@ public sealed class SightingHttpClient(HttpClient httpClient) : ISightingHttpCli
         Guid id,
         CancellationToken ct = default)
     {
-        try
-        {
-            var response = await httpClient.GetAsync(
-                $"wildlife/organizations/{organizationId}/sightings/{id}",
-                ct);
-            if (!response.IsSuccessStatusCode)
-            {
-                var problem = await ProblemDetailsParser.ParseAsync(response, ct);
-                return new RequestFailed((int)response.StatusCode, problem?.Detail ?? problem?.Title);
-            }
-            var sighting = await response.Content.ReadFromJsonAsync<SightingDto>(ct);
-            if (sighting is null)
-                return new RequestFailed((int)response.StatusCode, "The server returned an empty response.");
-            return sighting;
-        }
-        catch (HttpRequestException e)
-        {
-            return new RequestFailed(0, e.Message);
-        }
+        var response = await httpClient.GetAsync(
+            $"wildlife/organizations/{organizationId}/sightings/{id}",
+            ct);
+        var result = await response.ReadOneOfAsync<SightingDto>(ct);
+        return result.MapT1(problem => RequestFailed.From(problem));
     }
 
     public async Task<OneOf<Success, ValidationFailed, RequestFailed>> ApproveAsync(
@@ -232,25 +149,16 @@ public sealed class SightingHttpClient(HttpClient httpClient) : ISightingHttpCli
         SightingApprovalDto dto,
         CancellationToken ct = default)
     {
-        try
-        {
-            var response = await httpClient.PostAsJsonAsync(
-                $"wildlife/organizations/{organizationId}/sightings/{id}/approve",
-                dto,
-                ct);
-            if (!response.IsSuccessStatusCode)
-            {
-                var problem = await ProblemDetailsParser.ParseAsync(response, ct);
-                if (problem?.Errors is { Count: > 0 } errors)
-                    return new ValidationFailed(errors);
-                return new RequestFailed((int)response.StatusCode, problem?.Detail ?? problem?.Title);
-            }
+        var response = await httpClient.PostAsJsonAsync(
+            $"wildlife/organizations/{organizationId}/sightings/{id}/approve",
+            dto,
+            ct);
+        var problem = await response.ReadProblemAsync(ct);
+        if (problem is null)
             return new Success();
-        }
-        catch (HttpRequestException e)
-        {
-            return new RequestFailed(0, e.Message);
-        }
+        if (problem.Type == ProblemTypes.Validation)
+            return ValidationFailed.From(problem);
+        return RequestFailed.From(problem);
     }
 
     public async Task<OneOf<Success, ValidationFailed, RequestFailed>> DenyAsync(
@@ -259,25 +167,16 @@ public sealed class SightingHttpClient(HttpClient httpClient) : ISightingHttpCli
         SightingDenialDto dto,
         CancellationToken ct = default)
     {
-        try
-        {
-            var response = await httpClient.PostAsJsonAsync(
-                $"wildlife/organizations/{organizationId}/sightings/{id}/deny",
-                dto,
-                ct);
-            if (!response.IsSuccessStatusCode)
-            {
-                var problem = await ProblemDetailsParser.ParseAsync(response, ct);
-                if (problem?.Errors is { Count: > 0 } errors)
-                    return new ValidationFailed(errors);
-                return new RequestFailed((int)response.StatusCode, problem?.Detail ?? problem?.Title);
-            }
+        var response = await httpClient.PostAsJsonAsync(
+            $"wildlife/organizations/{organizationId}/sightings/{id}/deny",
+            dto,
+            ct);
+        var problem = await response.ReadProblemAsync(ct);
+        if (problem is null)
             return new Success();
-        }
-        catch (HttpRequestException e)
-        {
-            return new RequestFailed(0, e.Message);
-        }
+        if (problem.Type == ProblemTypes.Validation)
+            return ValidationFailed.From(problem);
+        return RequestFailed.From(problem);
     }
 
     public async Task<OneOf<Success, RequestFailed>> UnapproveAsync(
@@ -285,22 +184,13 @@ public sealed class SightingHttpClient(HttpClient httpClient) : ISightingHttpCli
         Guid id,
         CancellationToken ct = default)
     {
-        try
-        {
-            var response = await httpClient.PostAsync(
-                $"wildlife/organizations/{organizationId}/sightings/{id}/unapprove",
-                null,
-                ct);
-            if (!response.IsSuccessStatusCode)
-            {
-                var problem = await ProblemDetailsParser.ParseAsync(response, ct);
-                return new RequestFailed((int)response.StatusCode, problem?.Detail ?? problem?.Title);
-            }
+        var response = await httpClient.PostAsync(
+            $"wildlife/organizations/{organizationId}/sightings/{id}/unapprove",
+            null,
+            ct);
+        var problem = await response.ReadProblemAsync(ct);
+        if (problem is null)
             return new Success();
-        }
-        catch (HttpRequestException e)
-        {
-            return new RequestFailed(0, e.Message);
-        }
+        return RequestFailed.From(problem);
     }
 }
