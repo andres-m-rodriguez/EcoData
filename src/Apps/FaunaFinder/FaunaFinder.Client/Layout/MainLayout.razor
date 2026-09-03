@@ -23,11 +23,11 @@
                     <div class="d-flex align-center">
                         @if (ShowLibraryRail)
                         {
-                            <MudTooltip Text="@NotebookToggleLabel">
-                                <MudIconButton Icon="@NotebookToggleIcon"
+                            <MudTooltip Text="@RailToggleLabel">
+                                <MudIconButton Icon="@RailToggleIcon"
                                                Class="ff-notebook-toggle"
                                                Edge="Edge.Start"
-                                               aria-label="@NotebookToggleLabel"
+                                               aria-label="@RailToggleLabel"
                                                aria-expanded="@(_railOpen ? "true" : "false")"
                                                OnClick="ToggleRail"
                                                @onmouseenter="() => _railHovered = true"
@@ -200,11 +200,11 @@
 
     private string RailPanelClass => _railOpen ? "ff-rail-panel" : "ff-rail-panel is-collapsed";
 
-    private string NotebookToggleIcon => !_railHovered
-        ? FaunaFinderIcons.NotebookPanel
-        : _railOpen ? FaunaFinderIcons.NotebookCollapse : FaunaFinderIcons.NotebookExpand;
+    private string RailToggleIcon => !_railHovered
+        ? FaunaFinderIcons.RailPanel
+        : _railOpen ? FaunaFinderIcons.RailCollapse : FaunaFinderIcons.RailExpand;
 
-    private string NotebookToggleLabel => _railOpen ? L["Rail_Collapse"] : L["Rail_Expand"];
+    private string RailToggleLabel => _railOpen ? L["Rail_Collapse"] : L["Rail_Expand"];
 
     private void ToggleRail() => _railOpen = !_railOpen;
 
