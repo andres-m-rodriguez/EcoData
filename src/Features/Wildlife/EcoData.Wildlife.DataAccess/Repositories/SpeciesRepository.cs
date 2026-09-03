@@ -255,24 +255,6 @@ public sealed class SpeciesRepository(IDbContextFactory<WildlifeDbContext> conte
             .ToList();
     }
 
-    public async Task<IReadOnlyList<HeatmapPointDto>> GetHeatmapAsync(
-        CancellationToken cancellationToken = default
-    )
-    {
-        await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
-
-        return await context
-            .Species.AsNoTracking()
-            .Where(s => s.Locations.Any())
-            .SelectMany(s => s.Locations.Select(l => new HeatmapPointDto(
-                l.Latitude,
-                l.Longitude,
-                1.0,
-                s.IsFauna
-            )))
-            .ToListAsync(cancellationToken);
-    }
-
     public async IAsyncEnumerable<SpeciesDtoForList> GetSpeciesAsync(
         SpeciesParameters parameters,
         [EnumeratorCancellation] CancellationToken cancellationToken = default

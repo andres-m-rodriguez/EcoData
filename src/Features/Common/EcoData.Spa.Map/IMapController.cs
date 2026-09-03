@@ -139,21 +139,6 @@ public interface IMapController<TMarker>
     void ClearDrawnPolygon();
 
     /// <summary>
-    /// Show (or refresh) the heatmap layer with the given points.
-    /// </summary>
-    void ShowHeatmap(IReadOnlyList<MapHeatPoint> points, MapHeatmapFilter filter = MapHeatmapFilter.All);
-
-    /// <summary>
-    /// Re-filter the currently shown heatmap.
-    /// </summary>
-    void SetHeatmapFilter(MapHeatmapFilter filter);
-
-    /// <summary>
-    /// Remove the heatmap layer.
-    /// </summary>
-    void HideHeatmap();
-
-    /// <summary>
     /// Ask the browser for the user's current position. Returns null when no map
     /// component is attached yet.
     /// </summary>
@@ -229,11 +214,6 @@ public interface IMapController<TMarker>
     /// Fired when the user cancels polygon drawing (Escape).
     /// </summary>
     event Action? OnPolygonDrawCancelled;
-
-    /// <summary>
-    /// Fired when the heatmap state changes.
-    /// </summary>
-    event Action? OnHeatmapChanged;
 
     /// <summary>
     /// Called by the component when a marker is clicked.

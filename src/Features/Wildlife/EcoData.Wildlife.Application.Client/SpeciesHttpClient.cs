@@ -110,14 +110,6 @@ public sealed class SpeciesHttpClient(HttpClient httpClient) : ISpeciesHttpClien
         return result.MapT1(problem => RequestFailed.From(problem));
     }
 
-    public async Task<OneOf<IReadOnlyList<HeatmapPointDto>, RequestFailed>> GetHeatmapAsync(
-        CancellationToken ct = default)
-    {
-        var response = await httpClient.GetAsync("wildlife/species/heatmap", ct);
-        var result = await response.ReadOneOfAsync<IReadOnlyList<HeatmapPointDto>>(ct);
-        return result.MapT1(problem => RequestFailed.From(problem));
-    }
-
     private static string BuildListQueryString(SpeciesParameters parameters, bool includePageSize)
     {
         var builder = new QueryStringBuilder()

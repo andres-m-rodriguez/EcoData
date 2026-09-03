@@ -36,7 +36,6 @@
         Controller.OnCircleFocusRequested += HandleCircleFocusRequested;
         Controller.OnSearchRadiusChanged += HandleSearchRadiusChanged;
         Controller.OnPolygonDrawActionRequested += HandlePolygonDrawActionRequested;
-        Controller.OnHeatmapChanged += HandleHeatmapChanged;
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -205,35 +204,6 @@
         });
     }
 
-    private async void HandleHeatmapChanged()
-    {
-        if (!_isInitialized || _mapInstance is null || _module is null) return;
-        if (Controller is not MapController<TMarker> mapController) return;
-
-        await InvokeAsync(async () =>
-        {
-            if (!mapController.HeatmapVisible)
-            {
-                await _module.InvokeVoidAsync("hideHeatmap", _mapInstance);
-                return;
-            }
-
-            var points = mapController.HeatPoints.Select(p => new
-            {
-                latitude = p.Latitude,
-                longitude = p.Longitude,
-                intensity = p.Intensity,
-                isFauna = p.IsFauna
-            }).ToArray();
-
-            await _module.InvokeVoidAsync(
-                "showHeatmap",
-                _mapInstance,
-                points,
-                mapController.HeatmapFilter.ToString().ToLowerInvariant());
-        });
-    }
-
     private async Task<MapGeolocationResult?> GetCurrentPositionAsync()
     {
         if (_module is null) return null;
@@ -323,7 +293,6 @@
         Controller.OnCircleFocusRequested -= HandleCircleFocusRequested;
         Controller.OnSearchRadiusChanged -= HandleSearchRadiusChanged;
         Controller.OnPolygonDrawActionRequested -= HandlePolygonDrawActionRequested;
-        Controller.OnHeatmapChanged -= HandleHeatmapChanged;
 
         if (Controller is MapController<TMarker> mapController)
         {

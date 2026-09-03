@@ -48,14 +48,6 @@
                             aria-label="@L["Map_DrawArea_Label"]"
                             OnClick="StartDrawArea" />
                 </MudTooltip>
-                <MudTooltip Text="@(_heatmapVisible ? L["Map_Heatmap_Hide"] : L["Map_Heatmap_Show"])" Placement="Placement.Left">
-                    <MudFab Color="@(_heatmapVisible ? Color.Warning : Color.Default)"
-                            StartIcon="@Icons.Material.Filled.BlurOn"
-                            Size="Size.Medium"
-                            Disabled="LoadHeatmapState.IsLoading"
-                            aria-label="@(_heatmapVisible ? L["Map_Heatmap_Hide"] : L["Map_Heatmap_Show"])"
-                            OnClick="ToggleHeatmap" />
-                </MudTooltip>
                 <MudTooltip Text="@L["Map_Travel_Label"]" Placement="Placement.Left">
                     <MudFab Color="Color.Default"
                             StartIcon="@Icons.Material.Filled.Public"
@@ -87,25 +79,6 @@
                 <MudButton Variant="Variant.Text" Size="Size.Small" OnClick="CancelDrawArea">
                     @L["Map_Draw_Cancel"]
                 </MudButton>
-            </div>
-        }
-
-        @if (_heatmapVisible)
-        {
-            <div class="heatmap-card">
-                <MudChipSet T="MapHeatmapFilter" SelectedValue="_heatmapFilter"
-                            SelectedValueChanged="SetHeatmapFilter"
-                            SelectionMode="SelectionMode.SingleSelection" CheckMark="false">
-                    <MudChip T="MapHeatmapFilter" Value="MapHeatmapFilter.All" Size="Size.Small"
-                             Color="Color.Primary" Variant="Variant.Outlined">@L["Map_Heatmap_All"]</MudChip>
-                    <MudChip T="MapHeatmapFilter" Value="MapHeatmapFilter.Fauna" Size="Size.Small"
-                             Color="Color.Primary" Variant="Variant.Outlined">@L["Map_Heatmap_Fauna"]</MudChip>
-                    <MudChip T="MapHeatmapFilter" Value="MapHeatmapFilter.Flora" Size="Size.Small"
-                             Color="Color.Primary" Variant="Variant.Outlined">@L["Map_Heatmap_Flora"]</MudChip>
-                </MudChipSet>
-                <button type="button" class="heatmap-close" @onclick="ToggleHeatmap" aria-label="@L["Map_Heatmap_Hide"]">
-                    <MudIcon Icon="@Icons.Material.Filled.Close" Size="Size.Small" />
-                </button>
             </div>
         }
 
@@ -227,9 +200,6 @@
     private IReadOnlyList<PolygonCoordinate>? _polygonCoordinates;
     private bool _isDrawing;
     private bool _isLocating;
-
-    private bool _heatmapVisible;
-    private MapHeatmapFilter _heatmapFilter = MapHeatmapFilter.All;
 
     private Guid _viewingSpeciesId;
     private SpeciesDtoForDetail? _viewingSpecies;
@@ -656,43 +626,6 @@
         None,
         NearMe,
         DrawnArea,
-    }
-
-    [Command]
-    private async Task<IReadOnlyList<HeatmapPointDto>?> LoadHeatmap(CancellationToken ct)
-    {
-        var result = await SpeciesHttpClient.GetHeatmapAsync(ct);
-        if (!result.TryPickT0(out var points, out var error))
-        {
-            Snackbar.Add(ErrorMessage(error, "Something went wrong while loading the heatmap."), Severity.Error);
-            return [];
-        }
-        return points;
-    }
-
-    private async Task ToggleHeatmap()
-    {
-        if (_heatmapVisible)
-        {
-            _heatmapVisible = false;
-            _mapController.HideHeatmap();
-            return;
-        }
-
-        await LoadHeatmapState.TryExecute();
-        var points = LoadHeatmapState.Result;
-        if (points is null || points.Count == 0) return;
-
-        _heatmapVisible = true;
-        _mapController.ShowHeatmap(
-            points.Select(p => new MapHeatPoint(p.Latitude, p.Longitude, p.Intensity, p.IsFauna)).ToList(),
-            _heatmapFilter);
-    }
-
-    private void SetHeatmapFilter(MapHeatmapFilter filter)
-    {
-        _heatmapFilter = filter;
-        _mapController.SetHeatmapFilter(filter);
     }
 
     [Command]

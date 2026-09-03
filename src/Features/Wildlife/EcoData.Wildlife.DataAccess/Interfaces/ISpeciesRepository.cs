@@ -42,8 +42,4 @@ public interface ISpeciesRepository
         IReadOnlyList<PolygonCoordinate> coordinates,
         CancellationToken cancellationToken = default
     );
-
-    Task<IReadOnlyList<HeatmapPointDto>> GetHeatmapAsync(
-        CancellationToken cancellationToken = default
-    );
 }

@@ -57,13 +57,6 @@ public sealed record SpeciesNearbyDto(
     string? LocationDescription
 );
 
-public sealed record HeatmapPointDto(
-    double Latitude,
-    double Longitude,
-    double Intensity,
-    bool IsFauna
-);
-
 public sealed record SpeciesDtoForCreate(
     IReadOnlyList<LocaleValue> CommonName,
     string ScientificName,

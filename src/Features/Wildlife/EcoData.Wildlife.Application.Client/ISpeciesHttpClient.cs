@@ -36,9 +36,6 @@ public interface ISpeciesHttpClient
         IReadOnlyList<PolygonCoordinate> coordinates,
         CancellationToken ct = default);
 
-    Task<OneOf<IReadOnlyList<HeatmapPointDto>, RequestFailed>> GetHeatmapAsync(
-        CancellationToken ct = default);
-
     Task<OneOf<IReadOnlyList<MunicipalitySpeciesCountDto>, RequestFailed>> GetCountsByMunicipalityAsync(
         CancellationToken ct = default);
 }
