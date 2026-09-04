@@ -48,10 +48,6 @@ else
                 {
                     <span class="mnp-dot color-@(index % PaletteSize)"></span>
                 }
-                else
-                {
-                    <span class="mnp-dot is-blank"></span>
-                }
                 <div class="mnp-row-body">
                     @{
                         var nearbyName = Locale.Resolve(current.CommonName, fallback: current.ScientificName);

@@ -95,19 +95,14 @@
     background: rgba(255, 255, 255, 0.06);
 }
 
-/* No circles on the map, so nothing to fly to. */
+/* No circles on the map, so no dot to match and nothing to fly to. */
 .mnp-row.is-static {
+    grid-template-columns: 1fr auto;
     cursor: default;
 }
 
 .mnp-row.is-static:hover {
     background: transparent;
-}
-
-.mnp-dot.is-blank {
-    background: transparent;
-    border: 1px solid var(--fauna-map-fg-2);
-    opacity: 0.5;
 }
 
 .mnp-dot {
