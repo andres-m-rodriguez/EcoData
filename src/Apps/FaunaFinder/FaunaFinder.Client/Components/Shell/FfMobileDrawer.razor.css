@@ -169,17 +169,17 @@
     color: var(--fauna-fg-4);
 }
 
-/* --- A tool's panel: floats where the app bar was, map still usable ------ */
+/* --- A tool's panel: the drawer's footprint, full width ------------------ */
 
 .ff-drawer-tool {
     position: fixed;
     top: calc(var(--fauna-shell-gutter) + env(safe-area-inset-top, 0px));
+    bottom: calc(var(--fauna-shell-gutter) * 2 + var(--ff-bottom-nav-height) + 2px + env(safe-area-inset-bottom, 0px));
     left: var(--fauna-shell-gutter);
     right: var(--fauna-shell-gutter);
     z-index: 1300;
     display: flex;
     flex-direction: column;
-    max-height: calc(100vh - var(--fauna-shell-gutter) * 3 - var(--ff-bottom-nav-height) - 2px - env(safe-area-inset-bottom, 0px));
     background: var(--fauna-surface);
     border: 1px solid var(--fauna-line);
     border-radius: var(--fauna-shell-radius);
