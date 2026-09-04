@@ -48,6 +48,13 @@ public partial class FfMobileDrawer : EcoDataComponent
         _tool = DrawerTool.Coordinates;
     }
 
+    // The top bar is already hidden, so only the panels swap.
+    private void BackToDrawer()
+    {
+        _tool = DrawerTool.None;
+        _open = true;
+    }
+
     private void Close()
     {
         _open = false;

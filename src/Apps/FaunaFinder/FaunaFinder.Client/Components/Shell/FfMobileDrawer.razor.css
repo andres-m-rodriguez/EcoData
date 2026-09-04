@@ -187,7 +187,44 @@
     overflow: hidden;
 }
 
+.ff-drawer-tool-head {
+    justify-content: flex-start;
+    padding-left: 10px;
+}
+
+/* The rail's back button. */
+.ff-drawer-back {
+    appearance: none;
+    flex: none;
+    width: 32px;
+    height: 32px;
+    display: grid;
+    place-items: center;
+    padding: 0;
+    border: 1px solid var(--fauna-line);
+    border-radius: 8px;
+    background: transparent;
+    color: var(--fauna-fg-2);
+    cursor: pointer;
+    transition: background-color var(--fauna-t-base) var(--fauna-ease),
+                border-color var(--fauna-t-base) var(--fauna-ease),
+                color var(--fauna-t-base) var(--fauna-ease);
+}
+
+.ff-drawer-back:hover {
+    border-color: var(--fauna-primary-300);
+    background: var(--fauna-primary-50);
+    color: var(--fauna-primary);
+}
+
+.ff-drawer-back:focus-visible {
+    outline: 2px solid var(--fauna-primary-400);
+    outline-offset: 2px;
+}
+
 .ff-drawer-tool-title {
+    flex: 1 1 auto;
+    min-width: 0;
     margin: 0;
     font: 600 1.0625rem/1.2 var(--fauna-font-serif);
     letter-spacing: var(--fauna-tracking-tight);
@@ -206,6 +243,7 @@
     .ff-drawer,
     .ff-drawer-backdrop,
     .ff-drawer-close,
+    .ff-drawer-back,
     .ff-drawer-card {
         transition: none;
     }

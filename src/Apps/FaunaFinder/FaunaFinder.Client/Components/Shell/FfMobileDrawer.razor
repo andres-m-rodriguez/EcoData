@@ -33,7 +33,10 @@
 @if (_tool == DrawerTool.Coordinates)
 {
     <section class="ff-drawer-tool" aria-label="@L["Rail_Card_Coordinates"]">
-        <header class="ff-drawer-head">
+        <header class="ff-drawer-head ff-drawer-tool-head">
+            <button type="button" class="ff-drawer-back" @onclick="BackToDrawer" aria-label="@L["Rail_Back"]">
+                <MudIcon Icon="@Icons.Material.Filled.ArrowBack" Size="Size.Small" />
+            </button>
             <h2 class="ff-drawer-tool-title">@L["Rail_Card_Coordinates"]</h2>
             <button type="button" class="ff-drawer-close" @onclick="CloseTool" aria-label="@L["Common_Close"]">
                 <MudIcon Icon="@Icons.Material.Filled.Close" Size="Size.Small" />
