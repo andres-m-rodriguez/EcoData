@@ -53,4 +53,10 @@ public class MapGeoJson
     /// Default stroke width in pixels.
     /// </summary>
     public int StrokeWidth { get; init; } = 2;
+
+    /// <summary>
+    /// Whether features answer to clicks. A non-interactive layer is a backdrop:
+    /// clicks pass through it to the map.
+    /// </summary>
+    public bool Interactive { get; init; } = true;
 }

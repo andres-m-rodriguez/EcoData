@@ -10,7 +10,6 @@
 @using OneOf
 @inherits StatefulComponent
 @inject ISpeciesHttpClient SpeciesHttpClient
-@inject IConservationLinkHttpClient ConservationLinkHttpClient
 @inject AuthStateService Auth
 @inject ShapeAreaRequest Shapes
 @inject NavigationManager NavigationManager
@@ -31,6 +30,14 @@
                 Controller="_mapController"
                 Height="100%"
                 Width="100%" />
+
+        @if (ShowTapHint)
+        {
+            <div class="tap-hint">
+                <MudIcon Icon="@Icons.Material.Filled.TouchApp" Size="Size.Small" />
+                <span>@L["Map_Tap_Hint"]</span>
+            </div>
+        }
 
         @if (ShowActionButtons)
         {
@@ -84,25 +91,6 @@
             </div>
         }
 
-        <MapConservationFilterDialog @bind-Visible="_filterDialogVisible"
-                                     AvailableNrcsPractices="@AvailableNrcsPractices"
-                                     AvailableFwsActions="@AvailableFwsActions"
-                                     SelectedNrcsPractices="@_selectedNrcsPractices"
-                                     SelectedFwsActions="@_selectedFwsActions"
-                                     OnToggleNrcsPractice="ToggleNrcsPractice"
-                                     OnToggleFwsAction="ToggleFwsAction"
-                                     OnClearFilters="ClearConservationFiltersAndReload" />
-
-        @if (_viewingSpecies is not null)
-        {
-            <MapLocationNavigator Species="_viewingSpecies"
-                                  CurrentIndex="_locationIndex"
-                                  OnClose="CloseSpeciesLocations"
-                                  OnPrevious="PreviousLocation"
-                                  OnNext="NextLocation"
-                                  OnFocusCurrent="FocusCurrentLocation" />
-        }
-
         @if (_travelSheetOpen)
         {
             <MapTravelSheet Current="_region"
@@ -115,30 +103,13 @@
         @if (PanelVisible)
         {
             <aside class="desktop-sidebar @(_sidebarOpen ? "open" : "")">
-                @if (_selectedMunicipality is not null)
-                {
-                    <MapSpeciesPanel Title="@_selectedMunicipality.Name"
-                                     MunicipalityId="@_selectedMunicipality.Id"
-                                     NrcsPracticeCodes="@SelectedNrcsPracticeCodes"
-                                     FwsActionCodes="@SelectedFwsActionCodes"
-                                     TotalCount="@LoadSpeciesCountsState.Result?.Total"
-                                     FilteredCount="@LoadSpeciesCountsState.Result?.Filtered"
-                                     ActiveFilterCount="@ActiveFilterCount"
-                                     OnFilterClick="OpenFilterDialog"
-                                     OnClose="CloseSidebar"
-                                     OnSpeciesClick="OnSpeciesClicked"
-                                     OnViewLocations="ViewSpeciesLocations" />
-                }
-                else
-                {
-                    <MapNearbyPanel Title="@SearchTitle"
-                                    Eyebrow="@SearchEyebrow"
-                                    IsLoading="@SearchAreaState.IsLoading"
-                                    Species="@SearchAreaState.Result"
-                                    OnClose="CloseSidebar"
-                                    OnFocusSpecies="FocusNearbySpecies"
-                                    OnDetailsClick="OnNearbyDetailsClicked" />
-                }
+                <MapNearbyPanel Title="@SearchTitle"
+                                Eyebrow="@SearchEyebrow"
+                                IsLoading="@SearchAreaState.IsLoading"
+                                Species="@SearchAreaState.Result"
+                                OnClose="CloseSidebar"
+                                OnFocusSpecies="FocusNearbySpecies"
+                                OnDetailsClick="OnNearbyDetailsClicked" />
             </aside>
         }
     </MudHidden>
@@ -148,30 +119,13 @@
         {
             <div class="mobile-sheet-backdrop @(_sheetOpen ? "open" : "")" @onclick="CloseSheet"></div>
             <div class="mobile-sheet @(_sheetOpen ? "open" : "")">
-                @if (_selectedMunicipality is not null)
-                {
-                    <MapSpeciesPanel Title="@_selectedMunicipality.Name"
-                                     MunicipalityId="@_selectedMunicipality.Id"
-                                     NrcsPracticeCodes="@SelectedNrcsPracticeCodes"
-                                     FwsActionCodes="@SelectedFwsActionCodes"
-                                     TotalCount="@LoadSpeciesCountsState.Result?.Total"
-                                     FilteredCount="@LoadSpeciesCountsState.Result?.Filtered"
-                                     ActiveFilterCount="@ActiveFilterCount"
-                                     OnFilterClick="OpenFilterDialog"
-                                     OnClose="CloseSheet"
-                                     OnSpeciesClick="OnSpeciesClicked"
-                                     OnViewLocations="ViewSpeciesLocations" />
-                }
-                else
-                {
-                    <MapNearbyPanel Title="@SearchTitle"
-                                    Eyebrow="@SearchEyebrow"
-                                    IsLoading="@SearchAreaState.IsLoading"
-                                    Species="@SearchAreaState.Result"
-                                    OnClose="CloseSheet"
-                                    OnFocusSpecies="FocusNearbySpeciesFromSheet"
-                                    OnDetailsClick="OnNearbyDetailsClicked" />
-                }
+                <MapNearbyPanel Title="@SearchTitle"
+                                Eyebrow="@SearchEyebrow"
+                                IsLoading="@SearchAreaState.IsLoading"
+                                Species="@SearchAreaState.Result"
+                                OnClose="CloseSheet"
+                                OnFocusSpecies="FocusNearbySpeciesFromSheet"
+                                OnDetailsClick="OnNearbyDetailsClicked" />
             </div>
         }
     </MudHidden>
@@ -194,7 +148,6 @@
     private bool _sheetOpen;
 
     private const int PanelRevealFrameMs = 16;
-    private SelectedMunicipality? _selectedMunicipality;
 
     private string? _mapLoadError;
 
@@ -205,10 +158,6 @@
     private ShapeArea? _shape;
     private bool _isDrawing;
     private bool _isLocating;
-
-    private Guid _viewingSpeciesId;
-    private SpeciesDtoForDetail? _viewingSpecies;
-    private int _locationIndex;
 
     private MapCoordinate? _lastTappedPoint;
 
@@ -237,19 +186,25 @@
     [Event]
     private void OnAuthChanged(MainLayout.AuthChanged _) { }
 
+    // A tap anywhere is a search around that point. The boundary layer is not
+    // interactive, so a tap inside a municipio reaches here like any other.
     private void OnMapClicked(MapCoordinate point)
     {
         _lastTappedPoint = point;
-        InvokeAsync(StateHasChanged);
+        if (_isDrawing || _travelSheetOpen) return;
+
+        _ = InvokeAsync(async () => await SearchAroundAsync(point, NearMeRadiusMeters, AreaSearchMode.Point));
     }
 
-    private bool PanelVisible => _selectedMunicipality is not null || _searchMode != AreaSearchMode.None;
+    private bool PanelVisible => _searchMode != AreaSearchMode.None;
 
-    private bool ShowActionButtons =>
-        !PanelVisible && !_isDrawing && _viewingSpecies is null && !_travelSheetOpen;
+    private bool ShowActionButtons => !PanelVisible && !_isDrawing && !_travelSheetOpen;
+
+    private bool ShowTapHint => _searchMode == AreaSearchMode.None && !_isDrawing && !_travelSheetOpen;
 
     private string SearchTitle => _searchMode switch
     {
+        AreaSearchMode.Point => L["Map_Point_Title"],
         AreaSearchMode.NearMe => L["Map_NearMe_Title"],
         AreaSearchMode.Coordinates => L["Map_Coordinates_Title"],
         AreaSearchMode.ShapeFile => L["Map_Shape_Title"],
@@ -258,7 +213,7 @@
 
     private string SearchEyebrow => _searchMode switch
     {
-        AreaSearchMode.NearMe => L["Map_NearMe_Eyebrow", _searchRadiusMeters / 1000],
+        AreaSearchMode.Point or AreaSearchMode.NearMe => L["Map_NearMe_Eyebrow", _searchRadiusMeters / 1000],
         AreaSearchMode.Coordinates when _searchOrigin is { } origin => L[
             "Map_Coordinates_Eyebrow",
             _searchRadiusMeters / 1000,
@@ -303,14 +258,13 @@
     {
         base.OnInitialized();
         L.LanguageChanged += OnLanguageChanged;
-        _mapController.OnGeoJsonClicked += OnGeoJsonClicked;
         _mapController.OnGeoJsonLoaded += OnGeoJsonLoaded;
         _mapController.OnPolygonDrawn += OnPolygonDrawn;
         _mapController.OnPolygonDrawCancelled += OnPolygonDrawCancelled;
         _mapController.OnMapClicked += OnMapClicked;
 
         _mapController.SetView(_region.Center, InitialZoom);
-        _mapController.AddGeoJson(MunicipalityBoundaries.ForRegion(_region));
+        _mapController.AddGeoJson(MunicipalityBoundaries.ForRegion(_region, interactive: false));
     }
 
     private void OpenTravelSheet()
@@ -333,12 +287,10 @@
 
         _sidebarOpen = false;
         _sheetOpen = false;
-        _selectedMunicipality = null;
-        CloseSpeciesLocations();
         ClearAreaSearch();
 
         _mapController.RemoveGeoJson(MunicipalityBoundaries.LayerIdFor(leaving));
-        _mapController.AddGeoJson(MunicipalityBoundaries.ForRegion(region));
+        _mapController.AddGeoJson(MunicipalityBoundaries.ForRegion(region, interactive: false));
         _mapController.FitToBounds(region.Bounds);
 
         StateHasChanged();
@@ -352,156 +304,6 @@
 
         _mapLoadError = success ? null : "Something went wrong while loading the map.";
         InvokeAsync(StateHasChanged);
-    }
-
-    private async void OnGeoJsonClicked(string layerId, string? properties)
-    {
-        // JS suppresses these in draw mode; this also covers the interop gap
-        // between StartDrawArea and the map actually entering draw mode.
-        if (_isDrawing) return;
-
-        if (!MunicipalityBoundaries.IsBoundaryLayer(layerId) || string.IsNullOrEmpty(properties))
-            return;
-
-        try
-        {
-            using var props = System.Text.Json.JsonDocument.Parse(properties);
-            var root = props.RootElement;
-
-            if (!root.TryGetProperty("id", out var idEl) ||
-                !root.TryGetProperty("name", out var nameEl))
-            {
-                return;
-            }
-
-            var id = idEl.GetGuid();
-            if (id == Guid.Empty) return;
-
-            var name = nameEl.GetString() ?? string.Empty;
-            await InvokeAsync(() => SelectMunicipalityAsync(new SelectedMunicipality(id, name)));
-        }
-        catch (Exception ex)
-        {
-            Console.Error.WriteLine($"Failed to handle municipality click: {ex.Message}");
-        }
-    }
-
-    private async Task SelectMunicipalityAsync(SelectedMunicipality municipality)
-    {
-        ClearAreaSearch();
-        CloseSpeciesLocations();
-        ClearConservationFilters();
-
-        _selectedMunicipality = municipality;
-        await RevealPanelAsync();
-
-        _ = LoadConservationCodesState.TryExecute();
-        await LoadSpeciesCountsState.TryExecute();
-    }
-
-    [Command]
-    private async Task<SpeciesCounts?> LoadSpeciesCounts(CancellationToken ct)
-    {
-        var municipalityId = _selectedMunicipality!.Id;
-
-        var totalResult = await SpeciesHttpClient.GetCountAsync(
-            new SpeciesParameters(MunicipalityId: municipalityId),
-            ct
-        );
-        if (!totalResult.TryPickT0(out var total, out _))
-        {
-            return null;
-        }
-
-        if (ActiveFilterCount == 0)
-        {
-            return new SpeciesCounts(total, total);
-        }
-
-        var filteredResult = await SpeciesHttpClient.GetCountAsync(
-            new SpeciesParameters(
-                MunicipalityId: municipalityId,
-                NrcsPracticeCodes: SelectedNrcsPracticeCodes,
-                FwsActionCodes: SelectedFwsActionCodes
-            ),
-            ct
-        );
-
-        return filteredResult.TryPickT0(out var filtered, out _)
-            ? new SpeciesCounts(total, filtered)
-            : new SpeciesCounts(total, total);
-    }
-
-    private sealed record SpeciesCounts(int Total, int Filtered);
-
-    private sealed record SelectedMunicipality(Guid Id, string Name);
-
-    private bool _filterDialogVisible;
-    private readonly HashSet<string> _selectedNrcsPractices = [];
-    private readonly HashSet<string> _selectedFwsActions = [];
-
-    [Command]
-    private async Task<IReadOnlyList<SpeciesConservationCodesDto>?> LoadConservationCodes(CancellationToken ct)
-    {
-        var result = await ConservationLinkHttpClient.GetCodesByMunicipalityAsync(_selectedMunicipality!.Id, ct);
-        return result.TryPickT0(out var codes, out _) ? codes : [];
-    }
-
-    private IReadOnlyList<string> AvailableNrcsPractices =>
-        (LoadConservationCodesState.Result ?? [])
-            .SelectMany(c => c.NrcsPracticeCodes)
-            .Distinct()
-            .Order()
-            .ToList();
-
-    private IReadOnlyList<string> AvailableFwsActions =>
-        (LoadConservationCodesState.Result ?? [])
-            .SelectMany(c => c.FwsActionCodes)
-            .Distinct()
-            .Order()
-            .ToList();
-
-    private int ActiveFilterCount => _selectedNrcsPractices.Count + _selectedFwsActions.Count;
-
-    // Ordered so the panel can tell a real selection change from a re-render.
-    private string[]? SelectedNrcsPracticeCodes =>
-        _selectedNrcsPractices.Count > 0 ? _selectedNrcsPractices.Order().ToArray() : null;
-
-    private string[]? SelectedFwsActionCodes =>
-        _selectedFwsActions.Count > 0 ? _selectedFwsActions.Order().ToArray() : null;
-
-    private void OpenFilterDialog() => _filterDialogVisible = true;
-
-    private async Task ToggleNrcsPractice(string code)
-    {
-        if (!_selectedNrcsPractices.Remove(code))
-        {
-            _selectedNrcsPractices.Add(code);
-        }
-
-        await LoadSpeciesCountsState.TryExecute();
-    }
-
-    private async Task ToggleFwsAction(string code)
-    {
-        if (!_selectedFwsActions.Remove(code))
-        {
-            _selectedFwsActions.Add(code);
-        }
-
-        await LoadSpeciesCountsState.TryExecute();
-    }
-
-    private void ClearConservationFilters()
-    {
-        _selectedNrcsPractices.Clear();
-        _selectedFwsActions.Clear();
-    }
-
-    private async Task ClearConservationFiltersAndReload()
-    {
-        ClearConservationFilters();
-        await LoadSpeciesCountsState.TryExecute();
     }
 
     private async Task StartNearMeSearch()
@@ -529,13 +331,11 @@
 
     private async Task SearchShapeAsync(ShapeArea area)
     {
-        _selectedMunicipality = null;
-        CloseSpeciesLocations();
-
         _searchMode = AreaSearchMode.ShapeFile;
         _shape = area;
         _searchOrigin = null;
         _polygonCoordinates = null;
+        _mapController.ClearSearchRadius();
         await RevealPanelAsync();
 
         var rings = area.Polygons
@@ -569,15 +369,16 @@
         return nearest.Values.OrderBy(s => s.DistanceMeters).ToList();
     }
 
-    // Near me and Coordinates are the same search with a different origin.
+    // A tap, near me and coordinates are the same search with a different origin.
     private async Task SearchAroundAsync(MapCoordinate origin, double radiusMeters, AreaSearchMode mode)
     {
-        _selectedMunicipality = null;
-        CloseSpeciesLocations();
-
         _searchMode = mode;
         _searchOrigin = origin;
         _searchRadiusMeters = radiusMeters;
+        _polygonCoordinates = null;
+        _shape = null;
+        _mapController.ClearPolygons();
+        _mapController.ClearDrawnPolygon();
         await RevealPanelAsync();
 
         _mapController.ShowSearchRadius(origin, radiusMeters);
@@ -600,9 +401,7 @@
 
     private void StartDrawArea()
     {
-        _selectedMunicipality = null;
         ClearAreaSearch();
-        CloseSpeciesLocations();
 
         _isDrawing = true;
         _mapController.EnablePolygonDraw();
@@ -647,7 +446,7 @@
     {
         OneOf<IReadOnlyList<SpeciesNearbyDto>, RequestFailed> result = _searchMode switch
         {
-            AreaSearchMode.NearMe or AreaSearchMode.Coordinates when _searchOrigin is { } origin =>
+            AreaSearchMode.Point or AreaSearchMode.NearMe or AreaSearchMode.Coordinates when _searchOrigin is { } origin =>
                 await SpeciesHttpClient.GetNearbyAsync(origin.Latitude, origin.Longitude, _searchRadiusMeters, ct),
             AreaSearchMode.DrawnArea when _polygonCoordinates is { } polygon =>
                 await SpeciesHttpClient.GetInPolygonAsync(polygon, ct),
@@ -739,82 +538,16 @@
     private enum AreaSearchMode
     {
         None,
+        Point,
         NearMe,
         Coordinates,
         DrawnArea,
         ShapeFile,
     }
 
-    [Command]
-    private async Task<SpeciesDtoForDetail?> LoadSpeciesLocations(CancellationToken ct)
-    {
-        var result = await SpeciesHttpClient.GetByIdAsync(_viewingSpeciesId, ct);
-        if (!result.TryPickT0(out var detail, out var error))
-        {
-            Snackbar.Add(ErrorMessage(error, "Something went wrong while loading species locations."), Severity.Error);
-            return null;
-        }
-        return detail;
-    }
-
-    private async Task ViewSpeciesLocations(SpeciesDtoForList species)
-    {
-        _viewingSpeciesId = species.Id;
-        await LoadSpeciesLocationsState.TryExecute();
-
-        var detail = LoadSpeciesLocationsState.Result;
-        if (detail is null) return;
-
-        if (detail.Locations.Count == 0)
-        {
-            Snackbar.Add(L["Map_NoLocations_ForSpecies"], Severity.Info);
-            return;
-        }
-
-        _selectedMunicipality = null;
-        ClearAreaSearch();
-
-        _viewingSpecies = detail;
-        _locationIndex = 0;
-
-        _mapController.SetCircles(detail.Locations.Select(l => new MapCircle(
-            new MapCoordinate(l.Latitude, l.Longitude),
-            l.RadiusMeters,
-            CirclePalette[0],
-            CirclePalette[0],
-            System.Net.WebUtility.HtmlEncode(l.Description ?? L["Map_Location_Unnamed"]))));
-        _mapController.FocusAllCircles();
-    }
-
-    private void PreviousLocation()
-    {
-        if (_locationIndex == 0) return;
-        _locationIndex--;
-        _mapController.FocusCircle(_locationIndex);
-    }
-
-    private void NextLocation()
-    {
-        if (_viewingSpecies is null || _locationIndex >= _viewingSpecies.Locations.Count - 1) return;
-        _locationIndex++;
-        _mapController.FocusCircle(_locationIndex);
-    }
-
-    private void FocusCurrentLocation() => _mapController.FocusCircle(_locationIndex);
-
-    private void CloseSpeciesLocations()
-    {
-        if (_viewingSpecies is null) return;
-
-        _viewingSpecies = null;
-        _locationIndex = 0;
-        _mapController.ClearCircles();
-    }
-
     private void CloseSidebar()
     {
         _sidebarOpen = false;
-        _selectedMunicipality = null;
         ClearAreaSearch();
     }
 
@@ -824,13 +557,9 @@
         StateHasChanged();
 
         await Task.Delay(300);
-        _selectedMunicipality = null;
         ClearAreaSearch();
         StateHasChanged();
     }
-
-    private void OnSpeciesClicked(SpeciesDtoForList species) =>
-        NavigationManager.NavigateTo($"/species/{species.Id}");
 
     private async Task RevealPanelAsync()
     {
@@ -873,7 +602,6 @@
         SyncBottomNav(false);
 
         L.LanguageChanged -= OnLanguageChanged;
-        _mapController.OnGeoJsonClicked -= OnGeoJsonClicked;
         _mapController.OnGeoJsonLoaded -= OnGeoJsonLoaded;
         _mapController.OnPolygonDrawn -= OnPolygonDrawn;
         _mapController.OnPolygonDrawCancelled -= OnPolygonDrawCancelled;

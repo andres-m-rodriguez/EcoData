@@ -129,6 +129,29 @@
 }
 
 /* Polygon draw instruction banner — top center */
+/* Sits where the draw banner does, while nothing is searched yet. */
+.tap-hint {
+    position: absolute;
+    top: 12px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 600;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    max-width: min(480px, calc(100% - 24px));
+    padding: 8px 14px;
+    background: var(--fauna-map-glass);
+    -webkit-backdrop-filter: blur(20px) saturate(1.3);
+    backdrop-filter: blur(20px) saturate(1.3);
+    border: 1px solid var(--fauna-map-line);
+    border-radius: 12px;
+    box-shadow: var(--fauna-map-panel-shadow);
+    color: var(--fauna-map-fg-2);
+    font: var(--fauna-body-sm);
+    pointer-events: none;
+}
+
 .draw-banner {
     position: absolute;
     top: 12px;

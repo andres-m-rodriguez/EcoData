@@ -133,6 +133,7 @@ function loadGeoJsonFromUrl(map, layer, generation) {
 
 function addGeoJsonLayer(map, layer, geoJsonData) {
     const geoJsonLayer = L.geoJSON(geoJsonData, {
+        interactive: layer.interactive !== false,
         style: {
             fillColor: layer.fillColor,
             fillOpacity: layer.fillOpacity,
@@ -140,6 +141,7 @@ function addGeoJsonLayer(map, layer, geoJsonData) {
             weight: layer.strokeWidth
         },
         onEachFeature: (feature, leafletLayer) => {
+            if (layer.interactive === false) return;
             // GeoJSON feature click handler. While drawing a polygon the
             // click must bubble to the map's draw handler instead, so the
             // feature neither swallows the vertex placement nor selects.
