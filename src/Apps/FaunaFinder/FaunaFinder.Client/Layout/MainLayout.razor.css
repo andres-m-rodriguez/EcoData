@@ -76,10 +76,10 @@
    truncates, so it gets the slack: trim the toolbar's own padding and the
    toggle's margin rather than letting a species name lose its last letter. */
 @media (max-width: 959.98px) {
-    /* The drawer parks its back arrow and opener in this corner (two 32px
-       buttons, 2px apart, 4px in), so the title starts after them. */
+    /* The drawer parks its back arrow and opener in this corner (two 40px
+       buttons, 4px apart, 8px in), so the title starts after them. */
     ::deep .ff-appbar > .mud-toolbar {
-        padding-left: 76px;
+        padding-left: 100px;
         padding-right: 4px;
     }
 

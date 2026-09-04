@@ -51,7 +51,7 @@
     justify-content: space-between;
     gap: 12px;
     /* Starts after the corner controls, which float over this edge. */
-    padding: 14px 10px 14px 76px;
+    padding: 14px 10px 14px 100px;
     border-bottom: 1px solid var(--fauna-line);
 }
 
@@ -59,30 +59,21 @@
 
 .ff-drawer-controls {
     position: fixed;
-    top: calc(var(--fauna-shell-gutter) + (var(--fauna-shell-topbar) - 32px) / 2);
-    left: calc(var(--fauna-shell-gutter) + 4px);
+    top: calc(var(--fauna-shell-gutter) + (var(--fauna-shell-topbar) - 40px) / 2);
+    left: calc(var(--fauna-shell-gutter) + 8px);
     z-index: 1310;
     display: flex;
     align-items: center;
-    gap: 2px;
-    height: 32px;
-    transition: transform var(--fauna-t-slow) var(--fauna-ease),
-                opacity var(--fauna-t-base) var(--fauna-ease);
-}
-
-/* Goes with the app bar when the scroll auto-hide takes it. */
-:root[data-nav-autohide="hidden"] .ff-drawer-controls {
-    transform: translate3d(0, calc(-100% - var(--fauna-shell-gutter) * 2 - env(safe-area-inset-top, 0px)), 0);
-    opacity: 0;
-    pointer-events: none;
+    gap: 4px;
+    height: 40px;
 }
 
 .ff-drawer-control {
     appearance: none;
     display: grid;
     place-items: center;
-    width: 32px;
-    height: 32px;
+    width: 40px;
+    height: 40px;
     padding: 0;
     border: 0;
     border-radius: 50%;
@@ -108,11 +99,11 @@
 }
 
 .ff-drawer-control ::deep .mud-icon-root {
-    font-size: 18px;
+    font-size: 22px;
 }
 
 .ff-drawer-opener ::deep .mud-icon-root {
-    font-size: 22px;
+    font-size: 26px;
 }
 
 .ff-drawer-wordmark {
@@ -315,7 +306,6 @@
 @media (prefers-reduced-motion: reduce) {
     .ff-drawer,
     .ff-drawer-tool,
-    .ff-drawer-controls,
     .ff-drawer-backdrop,
     .ff-drawer-close,
     .ff-drawer-back,
