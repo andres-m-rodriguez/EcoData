@@ -50,7 +50,6 @@ public static class LoginRateLimiterExtensions
                     : "Too many login attempts. Please try again in 1 minute.";
 
                 context.HttpContext.Response.Headers.RetryAfter = ((int)retryAfter.TotalSeconds).ToString();
-                context.HttpContext.Response.ContentType = "application/problem+json";
 
                 var problemDetails = new
                 {
@@ -60,7 +59,12 @@ public static class LoginRateLimiterExtensions
                     detail
                 };
 
-                await context.HttpContext.Response.WriteAsJsonAsync(problemDetails, cancellationToken);
+                await context.HttpContext.Response.WriteAsJsonAsync(
+                    problemDetails,
+                    options: null,
+                    contentType: "application/problem+json",
+                    cancellationToken
+                );
             };
         });
 

@@ -113,6 +113,9 @@
             requestFailed => _errorMessage = requestFailed.StatusCode switch
             {
                 0 => L["Auth_ServerUnreachable"],
+                401 => L["Auth_InvalidCredentials"],
+                423 => L["Auth_AccountLocked"],
+                429 => L["Auth_TooManyAttempts"],
                 _ => requestFailed.Message ?? L["Auth_SignInFailed"],
             }
         );
