@@ -72,7 +72,7 @@
 
 .ff-account-title {
     margin: 0 0 16px;
-    font: 700 clamp(1.9375rem, calc(5vw - 0.3125rem), 3.9375rem)/1.02 var(--fauna-font-serif);
+    font: 700 clamp(1.625rem, calc(5vw - 0.625rem), 3.625rem)/1.02 var(--fauna-font-serif);
     letter-spacing: -0.035em;
     color: var(--fauna-primary);
 }
@@ -86,7 +86,7 @@
 .ff-account-lede {
     margin: 0;
     max-width: 520px;
-    font: 400 1.0625rem/1.55 var(--fauna-font-sans);
+    font: 400 0.9375rem/1.6 var(--fauna-font-sans);
     color: var(--fauna-fg-3);
 }
 
