@@ -29,6 +29,48 @@
 /* --- Mobile tab pill (hidden on desktop) --------------------------- */
 .mm-tab-input { display: none; }
 
+/* Region switch — a segmented pill, shown on every width. */
+.mm-regions {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    width: fit-content;
+    padding: 4px;
+    margin: 20px 0 0;
+    background: var(--fauna-bg-alt);
+    border: 1px solid var(--fauna-line);
+    border-radius: 999px;
+}
+
+.mm-region {
+    appearance: none;
+    border: 0;
+    padding: 8px 16px;
+    border-radius: 999px;
+    background: transparent;
+    font: 600 11px/1 var(--fauna-font-sans);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--fauna-fg-3);
+    cursor: pointer;
+    transition: background-color var(--fauna-t-base) var(--fauna-ease),
+                color var(--fauna-t-base) var(--fauna-ease);
+}
+
+.mm-region:hover {
+    color: var(--fauna-fg);
+}
+
+.mm-region.is-active {
+    background: var(--fauna-primary);
+    color: var(--fauna-surface);
+}
+
+.mm-region:focus-visible {
+    outline: 2px solid var(--fauna-primary-500);
+    outline-offset: 2px;
+}
+
 .mm-tabs {
     display: none;
     align-items: center;

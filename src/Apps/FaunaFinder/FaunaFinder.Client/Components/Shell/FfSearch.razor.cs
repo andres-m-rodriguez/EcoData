@@ -22,8 +22,6 @@ public partial class FfSearch : EcoDataComponent
 
     private const int ResultsPerGroup = 5;
 
-    private const string StateCode = "PR";
-
     // Keys held as consts so they can appear in Razor attribute forms
     // (`Placeholder="@L[SearchPlaceholderKey]"`) without tripping the
     // nested-quote rule.
@@ -157,7 +155,6 @@ public partial class FfSearch : EcoDataComponent
             await foreach (var municipality in MunicipalityClient.GetMunicipalitiesAsync(
                                new MunicipalityParameters(
                                    PageSize: ResultsPerGroup,
-                                   StateCode: StateCode,
                                    Search: Query),
                                ct))
             {

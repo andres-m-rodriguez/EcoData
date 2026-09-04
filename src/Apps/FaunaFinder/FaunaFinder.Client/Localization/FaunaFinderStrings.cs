@@ -219,6 +219,8 @@ public static class FaunaFinderStrings
         ["Muni_Stats_Hotspots_Label"] = "Endemic hotspots",
         ["Muni_Stats_Hotspots_Sub"] = "≥ 10 endemic species present",
 
+        ["Muni_Region_Label"] = "Region",
+        ["Muni_Region_Label"] = "Región",
         ["Muni_Tab_Map"] = "Map",
         ["Muni_Tab_List"] = "List",
 
