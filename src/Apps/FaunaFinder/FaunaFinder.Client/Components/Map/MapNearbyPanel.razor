@@ -43,8 +43,15 @@ else
         {
             var index = idx++;
             var current = s;
-            <div class="mnp-row" @onclick="@(() => HandleFocus(index))">
-                <span class="mnp-dot color-@(index % PaletteSize)"></span>
+            <div class="@(AreasVisible ? "mnp-row" : "mnp-row is-static")" @onclick="@(() => HandleFocus(index))">
+                @if (AreasVisible)
+                {
+                    <span class="mnp-dot color-@(index % PaletteSize)"></span>
+                }
+                else
+                {
+                    <span class="mnp-dot is-blank"></span>
+                }
                 <div class="mnp-row-body">
                     @{
                         var nearbyName = Locale.Resolve(current.CommonName, fallback: current.ScientificName);
@@ -54,9 +61,9 @@ else
                     {
                         <div class="mnp-row-sci">@current.ScientificName</div>
                     }
-                    @if (!string.IsNullOrEmpty(current.LocationDescription))
+                    @if (!string.IsNullOrEmpty(current.Area?.Description))
                     {
-                        <div class="mnp-row-desc">@current.LocationDescription</div>
+                        <div class="mnp-row-desc">@current.Area.Description</div>
                     }
                 </div>
                 <div class="mnp-row-side">
@@ -80,6 +87,9 @@ else
     [Parameter] public string? Eyebrow { get; set; }
     [Parameter] public IReadOnlyList<SpeciesNearbyDto>? Species { get; set; }
     [Parameter] public bool IsLoading { get; set; }
+
+    // False when the server withheld the areas: rows then have no circle to fly to.
+    [Parameter] public bool AreasVisible { get; set; } = true;
     [Parameter] public EventCallback OnClose { get; set; }
     [Parameter] public EventCallback<int> OnFocusSpecies { get; set; }
     [Parameter] public EventCallback<SpeciesNearbyDto> OnDetailsClick { get; set; }
@@ -87,7 +97,7 @@ else
     [CascadingParameter] public LocaleContext Locale { get; set; } = LocaleContext.English;
 
     private Task HandleClose() => OnClose.InvokeAsync();
-    private Task HandleFocus(int index) => OnFocusSpecies.InvokeAsync(index);
+    private Task HandleFocus(int index) => AreasVisible ? OnFocusSpecies.InvokeAsync(index) : Task.CompletedTask;
     private Task HandleDetails(SpeciesNearbyDto s) => OnDetailsClick.InvokeAsync(s);
 
     private static string FormatDistance(double meters) =>

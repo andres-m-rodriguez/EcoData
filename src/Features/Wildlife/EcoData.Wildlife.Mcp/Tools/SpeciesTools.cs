@@ -137,7 +137,7 @@ public sealed class SpeciesTools
                 species.ScientificName,
                 WildlifeMcpMapping.Kind(species.IsFauna),
                 species.DistanceMeters,
-                species.LocationDescription
+                species.Area?.Description
             ))
             .ToList();
     }

@@ -26,6 +26,7 @@ internal sealed partial class SeedRoles(OrganizationDbContext context, ILogger<S
                 SensorPermissions.Sensor.Update,
                 SensorPermissions.Sensor.Delete,
                 WildlifePermissions.Species.Read,
+                WildlifePermissions.Species.ViewAreas,
                 WildlifePermissions.Occurrence.Submit,
                 WildlifePermissions.Occurrence.Verify,
             ]
@@ -40,6 +41,7 @@ internal sealed partial class SeedRoles(OrganizationDbContext context, ILogger<S
                 SensorPermissions.Sensor.Update,
                 SensorPermissions.Sensor.Delete,
                 WildlifePermissions.Species.Read,
+                WildlifePermissions.Species.ViewAreas,
                 WildlifePermissions.Occurrence.Submit,
                 WildlifePermissions.Occurrence.Verify,
             ]
@@ -51,6 +53,7 @@ internal sealed partial class SeedRoles(OrganizationDbContext context, ILogger<S
                 SensorPermissions.Sensor.Create,
                 SensorPermissions.Sensor.Update,
                 WildlifePermissions.Species.Read,
+                WildlifePermissions.Species.ViewAreas,
                 WildlifePermissions.Occurrence.Submit,
             ]
         ),
@@ -66,7 +69,11 @@ internal sealed partial class SeedRoles(OrganizationDbContext context, ILogger<S
         ("Student", [WildlifePermissions.Species.Read, WildlifePermissions.Occurrence.Submit]),
         (
             "FaunaAdministrator",
-            [OrgPermissions.Organization.ManageMembers, WildlifePermissions.Occurrence.Verify]
+            [
+                OrgPermissions.Organization.ManageMembers,
+                WildlifePermissions.Species.ViewAreas,
+                WildlifePermissions.Occurrence.Verify,
+            ]
         ),
     ];
 

@@ -1,3 +1,6 @@
+using System.Security.Claims;
+using EcoData.Common.Authorization;
+using EcoData.Wildlife.Application;
 using EcoData.Wildlife.Contracts.Dtos;
 using EcoData.Wildlife.Contracts.Parameters;
 using EcoData.Wildlife.DataAccess.Interfaces;
@@ -122,17 +125,27 @@ public static class SpeciesEndpoints
                 "/nearby",
                 async Task<Ok<IReadOnlyList<SpeciesNearbyDto>>> (
                     [AsParameters] NearbySpeciesParameters parameters,
+                    ClaimsPrincipal user,
+                    IAuthorization auth,
                     ISpeciesRepository repository,
                     CancellationToken ct
                 ) =>
-                    TypedResults.Ok(
-                        await repository.GetNearbyAsync(
-                            parameters.Latitude,
-                            parameters.Longitude,
-                            parameters.RadiusMeters,
-                            ct
-                        )
-                    )
+                {
+                    var species = await repository.GetNearbyAsync(
+                        parameters.Latitude,
+                        parameters.Longitude,
+                        parameters.RadiusMeters,
+                        ct
+                    );
+                    var visible = await WithAreasIfPermittedAsync(
+                        species,
+                        parameters.OrganizationId,
+                        user,
+                        auth,
+                        ct
+                    );
+                    return TypedResults.Ok(visible);
+                }
             )
             .WithName("GetSpeciesNearby");
 
@@ -141,12 +154,45 @@ public static class SpeciesEndpoints
                 "/in-polygon",
                 async Task<Ok<IReadOnlyList<SpeciesNearbyDto>>> (
                     PolygonSearchParameters parameters,
+                    ClaimsPrincipal user,
+                    IAuthorization auth,
                     ISpeciesRepository repository,
                     CancellationToken ct
-                ) => TypedResults.Ok(await repository.GetInPolygonAsync(parameters.Coordinates, ct))
+                ) =>
+                {
+                    var species = await repository.GetInPolygonAsync(parameters.Coordinates, ct);
+                    var visible = await WithAreasIfPermittedAsync(
+                        species,
+                        parameters.OrganizationId,
+                        user,
+                        auth,
+                        ct
+                    );
+                    return TypedResults.Ok(visible);
+                }
             )
             .WithName("GetSpeciesInPolygon");
 
         return app;
+    }
+
+    // Where a species was found is a grant, not public data: anonymous callers
+    // and members without it get the same list with the areas stripped.
+    private static async Task<IReadOnlyList<SpeciesNearbyDto>> WithAreasIfPermittedAsync(
+        IReadOnlyList<SpeciesNearbyDto> species,
+        Guid? organizationId,
+        ClaimsPrincipal user,
+        IAuthorization auth,
+        CancellationToken ct
+    )
+    {
+        if (
+            organizationId is { } id
+            && user.Identity?.IsAuthenticated == true
+            && await auth.HasAsync(WildlifePermissions.ViewSpeciesAreas, id, ct)
+        )
+            return species;
+
+        return species.Select(s => s with { Area = null }).ToList();
     }
 }
