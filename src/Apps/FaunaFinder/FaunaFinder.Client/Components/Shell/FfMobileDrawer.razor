@@ -2,7 +2,11 @@
 @inherits EcoDataComponent
 @using FaunaFinder.Client.Components.Map
 
-<div class="@(_open ? "ff-drawer-backdrop is-open" : "ff-drawer-backdrop")" @onclick="Close"></div>
+@{
+    var toolOpen = _tool == DrawerTool.Coordinates;
+}
+
+<div class="@(_open || toolOpen ? "ff-drawer-backdrop is-open" : "ff-drawer-backdrop")" @onclick="DismissAll"></div>
 
 <aside class="@(_open ? "ff-drawer is-open" : "ff-drawer")"
        aria-hidden="@(_open ? "false" : "true")"
@@ -30,9 +34,6 @@
     </div>
 </aside>
 
-@{
-    var toolOpen = _tool == DrawerTool.Coordinates;
-}
 <section class="@(toolOpen ? "ff-drawer-tool is-open" : "ff-drawer-tool")"
          aria-hidden="@(toolOpen ? "false" : "true")"
          aria-label="@L["Rail_Card_Coordinates"]">

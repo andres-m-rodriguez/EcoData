@@ -61,6 +61,18 @@ public partial class FfMobileDrawer : EcoDataComponent
         Bus.Publish<MainLayout.TopBarShown>();
     }
 
+    // The backdrop sits behind whichever panel is out.
+    private void DismissAll()
+    {
+        if (_tool != DrawerTool.None)
+        {
+            CloseTool();
+            return;
+        }
+
+        Close();
+    }
+
     private void CloseTool()
     {
         _tool = DrawerTool.None;
