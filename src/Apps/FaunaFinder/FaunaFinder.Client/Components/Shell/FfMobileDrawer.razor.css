@@ -50,8 +50,7 @@
     align-items: center;
     justify-content: space-between;
     gap: 12px;
-    /* Starts after the layout's controls pill, which floats over this corner. */
-    padding: 14px 10px 14px calc(var(--ff-controls-width, 44px) + 16px);
+    padding: 14px 10px 14px 18px;
     border-bottom: 1px solid var(--fauna-line);
 }
 
@@ -203,6 +202,7 @@
 
 .ff-drawer-tool-head {
     justify-content: flex-start;
+    padding-left: 10px;
 }
 
 /* The rail's back button. */

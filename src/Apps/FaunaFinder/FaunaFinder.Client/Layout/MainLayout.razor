@@ -17,6 +17,11 @@
         <MudLayout>
             <MudAppBar Elevation="0" Fixed="true" Class="@AppBarClass">
                 <MudHidden Breakpoint="Breakpoint.MdAndUp">
+                    <MudIconButton Icon="@FaunaFinderIcons.RailPanel"
+                                   Class="ff-notebook-toggle"
+                                   Edge="Edge.Start"
+                                   aria-label="@L["Rail_Expand"]"
+                                   OnClick="() => Bus.Publish<FfMobileDrawer.Toggle>()" />
                     <FfMobileTitle />
                 </MudHidden>
 
@@ -163,29 +168,6 @@
         </MudLayout>
 
         <MudHidden Breakpoint="Breakpoint.MdAndUp">
-            @* Back and the drawer opener share one pill that sits outside the
-               app bar, so it stays put while the bar slides away and the
-               drawer comes in behind it. *@
-            <div class="ff-controls">
-                @if (ShowMobileBack)
-                {
-                    <button type="button"
-                            class="ff-controls-button"
-                            @onclick="() => Navigation.GoBackAsync()"
-                            aria-label="@L["Rail_Back"]">
-                        <MudIcon Icon="@Icons.Material.Filled.ArrowBack" Size="Size.Small" />
-                    </button>
-                    <span class="ff-controls-divider"></span>
-                }
-                <button type="button"
-                        class="ff-controls-button"
-                        @onclick="() => Bus.Publish<FfMobileDrawer.Toggle>()"
-                        aria-label="@L["Rail_Expand"]"
-                        aria-expanded="@(_topBarHidden ? "true" : "false")">
-                    <MudIcon Icon="@FaunaFinderIcons.RailPanel" />
-                </button>
-            </div>
-
             <FfMobileDrawer />
             <FfBottomNav />
         </MudHidden>
@@ -237,12 +219,7 @@
 
     private bool ShowLibraryRail => true;
 
-    private string ShellClass =>
-        (_railOpen ? "ff-shell has-rail-open" : "ff-shell") + (ShowMobileBack ? " has-back" : "");
-
-    // The pill drops its back arrow while the drawer or a tool is out: the
-    // panel heads carry their own, and the opener must not shift.
-    private bool ShowMobileBack => !_topBarHidden && !IsRootPage && Navigation.State.CanGoBack;
+    private string ShellClass => _railOpen ? "ff-shell has-rail-open" : "ff-shell";
 
     private bool ShowPendingBadge => Auth.AccessRequest?.Status == "Pending";
 
