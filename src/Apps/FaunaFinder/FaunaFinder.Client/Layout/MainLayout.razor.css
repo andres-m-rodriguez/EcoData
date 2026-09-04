@@ -76,11 +76,75 @@
    truncates, so it gets the slack: trim the toolbar's own padding and the
    toggle's margin rather than letting a species name lose its last letter. */
 @media (max-width: 959.98px) {
-    /* The drawer parks its back arrow and opener in this corner (two 40px
-       buttons, 4px apart, 8px in), so the title starts after them. */
+    /* Width of the controls pill, read by the toolbar and the drawer heads so
+       their content starts after it. */
+    .ff-shell {
+        --ff-controls-width: 44px;
+    }
+
+    .ff-shell.has-back {
+        --ff-controls-width: 85px;
+    }
+
     ::deep .ff-appbar > .mud-toolbar {
-        padding-left: 100px;
+        padding-left: calc(var(--ff-controls-width) + 16px);
         padding-right: 4px;
+    }
+
+    /* Back and the drawer opener, in one floating pill at the app bar's left.
+       Fixed and above the drawer, so it is the one thing that never moves. */
+    .ff-controls {
+        position: fixed;
+        top: calc(var(--fauna-shell-gutter) + (var(--fauna-shell-topbar) - 40px) / 2);
+        left: calc(var(--fauna-shell-gutter) + 8px);
+        z-index: 1310;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        height: 40px;
+        padding: 0 6px;
+        background: color-mix(in srgb, var(--fauna-surface) 90%, transparent);
+        border: 1px solid var(--fauna-line);
+        border-radius: 999px;
+        box-shadow: var(--fauna-shell-shadow);
+        backdrop-filter: blur(14px) saturate(1.3);
+        -webkit-backdrop-filter: blur(14px) saturate(1.3);
+    }
+
+    .ff-controls-button {
+        appearance: none;
+        display: grid;
+        place-items: center;
+        width: 32px;
+        height: 32px;
+        padding: 0;
+        border: 0;
+        border-radius: 50%;
+        background: transparent;
+        color: var(--fauna-fg-2);
+        cursor: pointer;
+        transition: background-color var(--fauna-t-base) var(--fauna-ease),
+                    color var(--fauna-t-base) var(--fauna-ease);
+    }
+
+    .ff-controls-button:hover {
+        color: var(--fauna-primary);
+        background: var(--fauna-primary-50);
+    }
+
+    .ff-controls-button:focus-visible {
+        outline: 2px solid var(--fauna-primary-400);
+        outline-offset: 2px;
+    }
+
+    .ff-controls-button ::deep .mud-icon-root {
+        font-size: 22px;
+    }
+
+    .ff-controls-divider {
+        width: 1px;
+        height: 14px;
+        background: var(--fauna-line);
     }
 
     /* The spacer also grows, so it and the title slot were halving the free

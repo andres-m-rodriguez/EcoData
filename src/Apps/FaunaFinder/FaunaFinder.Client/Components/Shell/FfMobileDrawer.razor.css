@@ -50,60 +50,9 @@
     align-items: center;
     justify-content: space-between;
     gap: 12px;
-    /* Starts after the corner controls, which float over this edge. */
-    padding: 14px 10px 14px 100px;
+    /* Starts after the layout's controls pill, which floats over this corner. */
+    padding: 14px 10px 14px calc(var(--ff-controls-width, 44px) + 16px);
     border-bottom: 1px solid var(--fauna-line);
-}
-
-/* --- Corner controls ---------------------------------------------------- */
-
-.ff-drawer-controls {
-    position: fixed;
-    top: calc(var(--fauna-shell-gutter) + (var(--fauna-shell-topbar) - 40px) / 2);
-    left: calc(var(--fauna-shell-gutter) + 8px);
-    z-index: 1310;
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    height: 40px;
-}
-
-.ff-drawer-control {
-    appearance: none;
-    display: grid;
-    place-items: center;
-    width: 40px;
-    height: 40px;
-    padding: 0;
-    border: 0;
-    border-radius: 50%;
-    background: transparent;
-    color: var(--fauna-fg-2);
-    cursor: pointer;
-    transition: background-color var(--fauna-t-base) var(--fauna-ease),
-                color var(--fauna-t-base) var(--fauna-ease);
-}
-
-.ff-drawer-control.is-placeholder {
-    pointer-events: none;
-}
-
-.ff-drawer-control:hover {
-    color: var(--fauna-primary);
-    background: var(--fauna-primary-50);
-}
-
-.ff-drawer-control:focus-visible {
-    outline: 2px solid var(--fauna-primary-400);
-    outline-offset: 2px;
-}
-
-.ff-drawer-control ::deep .mud-icon-root {
-    font-size: 22px;
-}
-
-.ff-drawer-opener ::deep .mud-icon-root {
-    font-size: 26px;
 }
 
 .ff-drawer-wordmark {
@@ -309,7 +258,6 @@
     .ff-drawer-backdrop,
     .ff-drawer-close,
     .ff-drawer-back,
-    .ff-drawer-control,
     .ff-drawer-card {
         transition: none;
     }

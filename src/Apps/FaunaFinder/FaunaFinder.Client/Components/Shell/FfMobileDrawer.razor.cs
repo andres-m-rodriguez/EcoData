@@ -11,17 +11,14 @@ namespace FaunaFinder.Client.Components.Shell;
 // the C# symbol frontend can.
 public partial class FfMobileDrawer : EcoDataComponent
 {
+    // Published by the app bar's panel glyph.
+    public sealed record Toggle;
+
     private bool _open;
     private DrawerTool _tool = DrawerTool.None;
 
-    // The panels carry their own back; the corner's arrow is for pages.
-    private bool ShowBack =>
-        !_open
-        && _tool == DrawerTool.None
-        && Navigation.State.Path is not ("/" or "")
-        && Navigation.State.CanGoBack;
-
-    private void ToggleDrawer()
+    [Event]
+    private void OnToggle(Toggle _)
     {
         if (_open)
         {
