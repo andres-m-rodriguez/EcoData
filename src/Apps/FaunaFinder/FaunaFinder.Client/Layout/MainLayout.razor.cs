@@ -22,6 +22,18 @@ public partial class MainLayout : EcoDataLayout
     [Event]
     private void OnNavigationChanged(NavigationChanged _) { }
 
+    // Published by whatever needs the top bar out of the way, the phone drawer
+    // for one; the bar slides off the same way the scroll auto-hide takes it.
+    public sealed record TopBarHidden;
+
+    public sealed record TopBarShown;
+
+    [Event]
+    private void OnTopBarHidden(TopBarHidden _) => _topBarHidden = true;
+
+    [Event]
+    private void OnTopBarShown(TopBarShown _) => _topBarHidden = false;
+
     [Event]
     private void OnNavbarChanged(NavbarChanged _) { }
 

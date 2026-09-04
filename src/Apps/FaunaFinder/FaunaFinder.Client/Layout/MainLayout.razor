@@ -14,8 +14,13 @@
 <CascadingValue Value="_locale" IsFixed="false">
     <div class="@ShellClass">
         <MudLayout>
-            <MudAppBar Elevation="0" Fixed="true" Class="ff-appbar">
+            <MudAppBar Elevation="0" Fixed="true" Class="@AppBarClass">
                 <MudHidden Breakpoint="Breakpoint.MdAndUp">
+                    <MudIconButton Icon="@FaunaFinderIcons.RailPanel"
+                                   Class="ff-notebook-toggle"
+                                   Edge="Edge.Start"
+                                   aria-label="@L["Rail_Expand"]"
+                                   OnClick="() => Bus.Publish<FfMobileDrawer.Toggle>()" />
                     <FfMobileTitle />
                 </MudHidden>
 
@@ -156,6 +161,7 @@
         </MudLayout>
 
         <MudHidden Breakpoint="Breakpoint.MdAndUp">
+            <FfMobileDrawer />
             <FfBottomNav />
         </MudHidden>
     </div>
@@ -166,6 +172,7 @@
 
     private bool _railOpen = true;
     private bool _railHovered;
+    private bool _topBarHidden;
 
     private bool _isDarkMode;
     private IJSObjectReference? _themeModule;
@@ -197,6 +204,8 @@
     private string RailToggleLabel => _railOpen ? L["Rail_Collapse"] : L["Rail_Expand"];
 
     private void ToggleRail() => _railOpen = !_railOpen;
+
+    private string AppBarClass => _topBarHidden ? "ff-appbar is-hidden" : "ff-appbar";
 
     private string ThemeToggleIcon => _isDarkMode
         ? Icons.Material.Filled.LightMode
