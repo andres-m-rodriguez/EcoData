@@ -1,7 +1,6 @@
 @using System.ComponentModel.DataAnnotations
 @using EcoData.Locations.Contracts.Dtos
-@using EcoPortal.Client.Components
-@using static EcoPortal.Client.Components.LocationPicker
+@using static EcoPortal.Client.Features.Sensors.Components.LocationPicker
 
 <MudStack Spacing="3">
     @if (!string.IsNullOrEmpty(ErrorMessage))
@@ -49,7 +48,7 @@
 
     <MudText Typo="Typo.subtitle2" Class="mt-2">Location</MudText>
     <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mb-1">
-        Click on the map or enter coordinates manually to set the sensor location.
+        Enter coordinates or use your current location to set the sensor location.
     </MudText>
 
     <LocationPicker InitialLatitude="Model.Latitude"

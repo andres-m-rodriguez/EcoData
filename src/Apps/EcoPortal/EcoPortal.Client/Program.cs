@@ -9,7 +9,7 @@ using EcoPortal.Client.Features.Organizations.Services;
 using EcoPortal.Client.Features.Organizations.Workspace;
 using EcoPortal.Client.Layout;
 using EcoPortal.Client.Services;
-using EcoPortal.Client.Services.Charts;
+using EcoPortal.Client.Features.Data.Services;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using MudBlazor.Services;
