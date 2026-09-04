@@ -15,6 +15,7 @@ public partial class FfMobileDrawer : EcoDataComponent
     public sealed record Toggle;
 
     private bool _open;
+    private DrawerTool _tool = DrawerTool.None;
 
     [Event]
     private void OnToggle(Toggle _)
@@ -29,16 +30,39 @@ public partial class FfMobileDrawer : EcoDataComponent
         Bus.Publish<MainLayout.TopBarHidden>();
     }
 
+    // A tool that lands somewhere (coordinates, a shape) has done its job; the
+    // map wants the screen back.
     [Event]
     private void OnNavigationChanged(NavigationChanged _)
     {
         if (_open)
             Close();
+        else if (_tool != DrawerTool.None)
+            CloseTool();
+    }
+
+    // The drawer goes away but the top bar stays hidden: the tool takes its place.
+    private void ShowCoordinates()
+    {
+        _open = false;
+        _tool = DrawerTool.Coordinates;
     }
 
     private void Close()
     {
         _open = false;
         Bus.Publish<MainLayout.TopBarShown>();
+    }
+
+    private void CloseTool()
+    {
+        _tool = DrawerTool.None;
+        Bus.Publish<MainLayout.TopBarShown>();
+    }
+
+    private enum DrawerTool
+    {
+        None,
+        Coordinates
     }
 }

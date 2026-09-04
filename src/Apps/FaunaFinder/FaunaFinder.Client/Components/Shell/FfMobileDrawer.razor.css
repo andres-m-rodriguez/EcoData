@@ -90,6 +90,114 @@
 .ff-drawer-body {
     flex: 1 1 auto;
     min-height: 0;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+}
+
+.ff-drawer-heading {
+    flex: none;
+    margin: 0;
+    padding: 16px 16px 10px;
+    font: 600 1.0625rem/1.2 var(--fauna-font-serif);
+    letter-spacing: var(--fauna-tracking-tight);
+    color: var(--fauna-fg);
+}
+
+/* --- Cards: the rail's, verbatim ---------------------------------------- */
+
+.ff-drawer-cards {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 0 10px 12px;
+}
+
+.ff-drawer-card {
+    appearance: none;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    width: 100%;
+    padding: 16px 18px;
+    background: var(--fauna-surface);
+    border: 1px solid var(--fauna-line);
+    border-radius: 12px;
+    color: var(--fauna-fg);
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+    transition: border-color var(--fauna-t-base) var(--fauna-ease),
+                background-color var(--fauna-t-base) var(--fauna-ease);
+}
+
+.ff-drawer-card:hover {
+    background: var(--fauna-primary-50);
+    border-color: var(--fauna-primary-200);
+}
+
+.ff-drawer-card:focus-visible {
+    outline: 2px solid var(--fauna-primary-400);
+    outline-offset: 2px;
+}
+
+.ff-drawer-card ::deep .ff-drawer-card-icon {
+    flex: none;
+    color: var(--fauna-primary);
+}
+
+.ff-drawer-card-text {
+    flex: 1 1 auto;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.ff-drawer-card-title {
+    font: 600 15px/1.3 var(--fauna-font-sans);
+}
+
+.ff-drawer-card-desc {
+    font: 400 13px/1.4 var(--fauna-font-sans);
+    color: var(--fauna-fg-3);
+}
+
+.ff-drawer-card ::deep .ff-drawer-card-chevron {
+    flex: none;
+    color: var(--fauna-fg-4);
+}
+
+/* --- A tool's panel: floats where the app bar was, map still usable ------ */
+
+.ff-drawer-tool {
+    position: fixed;
+    top: calc(var(--fauna-shell-gutter) + env(safe-area-inset-top, 0px));
+    left: var(--fauna-shell-gutter);
+    right: var(--fauna-shell-gutter);
+    z-index: 1300;
+    display: flex;
+    flex-direction: column;
+    max-height: calc(100vh - var(--fauna-shell-gutter) * 3 - var(--ff-bottom-nav-height) - 2px - env(safe-area-inset-bottom, 0px));
+    background: var(--fauna-surface);
+    border: 1px solid var(--fauna-line);
+    border-radius: var(--fauna-shell-radius);
+    box-shadow: var(--fauna-shell-shadow);
+    overflow: hidden;
+}
+
+.ff-drawer-tool-title {
+    margin: 0;
+    font: 600 1.0625rem/1.2 var(--fauna-font-serif);
+    letter-spacing: var(--fauna-tracking-tight);
+    color: var(--fauna-fg);
+}
+
+.ff-drawer-tool-body {
+    flex: 1 1 auto;
+    min-height: 0;
+    padding: 12px 14px 16px;
     overflow-y: auto;
     overscroll-behavior: contain;
 }
@@ -97,7 +205,8 @@
 @media (prefers-reduced-motion: reduce) {
     .ff-drawer,
     .ff-drawer-backdrop,
-    .ff-drawer-close {
+    .ff-drawer-close,
+    .ff-drawer-card {
         transition: none;
     }
 }

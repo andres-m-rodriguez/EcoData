@@ -1,5 +1,6 @@
 @namespace FaunaFinder.Client.Components.Shell
 @inherits EcoDataComponent
+@using FaunaFinder.Client.Components.Map
 
 <div class="@(_open ? "ff-drawer-backdrop is-open" : "ff-drawer-backdrop")" @onclick="Close"></div>
 
@@ -13,5 +14,34 @@
         </button>
     </header>
 
-    <div class="ff-drawer-body"></div>
+    <div class="ff-drawer-body">
+        <h2 class="ff-drawer-heading">@L["Rail_Heading"]</h2>
+
+        <nav class="ff-drawer-cards" aria-label="@L["Rail_Heading"]">
+            <button type="button" class="ff-drawer-card" @onclick="ShowCoordinates">
+                <MudIcon Icon="@Icons.Material.Outlined.PinDrop" Class="ff-drawer-card-icon" />
+                <span class="ff-drawer-card-text">
+                    <span class="ff-drawer-card-title">@L["Rail_Card_Coordinates"]</span>
+                    <span class="ff-drawer-card-desc">@L["Rail_Card_Coordinates_Lede"]</span>
+                </span>
+                <MudIcon Icon="@Icons.Material.Filled.ChevronRight" Size="Size.Small" Class="ff-drawer-card-chevron" />
+            </button>
+        </nav>
+    </div>
 </aside>
+
+@if (_tool == DrawerTool.Coordinates)
+{
+    <section class="ff-drawer-tool" aria-label="@L["Rail_Card_Coordinates"]">
+        <header class="ff-drawer-head">
+            <h2 class="ff-drawer-tool-title">@L["Rail_Card_Coordinates"]</h2>
+            <button type="button" class="ff-drawer-close" @onclick="CloseTool" aria-label="@L["Common_Close"]">
+                <MudIcon Icon="@Icons.Material.Filled.Close" Size="Size.Small" />
+            </button>
+        </header>
+
+        <div class="ff-drawer-tool-body">
+            <CoordinatesTool />
+        </div>
+    </section>
+}
