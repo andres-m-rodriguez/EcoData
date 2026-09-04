@@ -40,38 +40,68 @@
 /* --------------------------------------------------------------------------
    Editorial header
    -------------------------------------------------------------------------- */
-.ff-account-head {
-    max-width: 640px;
-    margin-bottom: 40px;
+/* Mirrors the editorial hero on the species, municipalities, practices and
+   actions pages; the container's own top padding makes up the rest. */
+.ff-account-hero {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 48px;
+    align-items: end;
+    padding: 32px 0 32px;
+    margin-bottom: 32px;
+    border-bottom: 1px solid var(--fauna-line);
 }
 
 .ff-account-eyebrow {
-    display: block;
-    margin-bottom: 12px;
-    font: 700 11px/1 var(--fauna-font-sans);
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 20px;
+    font: var(--fauna-eyebrow);
     letter-spacing: var(--fauna-tracking-eyebrow);
     text-transform: uppercase;
     color: var(--fauna-accent);
 }
 
+.ff-account-eyebrow::before {
+    content: "";
+    width: 24px;
+    height: 1px;
+    background: var(--fauna-accent);
+}
+
 .ff-account-title {
     margin: 0 0 16px;
-    font: 700 clamp(2rem, 4vw, 3rem)/1.1 var(--fauna-font-serif);
-    letter-spacing: var(--fauna-tracking-tight);
+    font: 700 clamp(1.625rem, calc(5vw - 0.625rem), 3.625rem)/1.02 var(--fauna-font-serif);
+    letter-spacing: -0.035em;
     color: var(--fauna-primary);
 }
 
 .ff-account-title em {
     font-style: italic;
-    font-weight: 400;
-    opacity: 0.85;
+    font-weight: 500;
+    color: var(--fauna-accent);
 }
 
 .ff-account-lede {
     margin: 0;
-    max-width: 560px;
-    font: 400 16px/1.7 var(--fauna-font-sans);
+    max-width: 520px;
+    font: 400 0.9375rem/1.6 var(--fauna-font-sans);
     color: var(--fauna-fg-3);
+}
+
+.ff-account-hero-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font: var(--fauna-mono);
+    color: var(--fauna-fg-4);
+    text-align: right;
+}
+
+.ff-account-hero-meta span:first-child {
+    color: var(--fauna-primary);
+    font-weight: 500;
 }
 
 /* --------------------------------------------------------------------------
@@ -380,9 +410,16 @@
     white-space: nowrap;
 }
 
-@media (max-width: 960px) {
-    .ff-account-head {
+@media (max-width: 900px) {
+    .ff-account-hero {
+        grid-template-columns: 1fr;
+        gap: 20px;
+        padding: 8px 0 24px;
         margin-bottom: 24px;
+    }
+
+    .ff-account-hero-meta {
+        text-align: left;
     }
 }
 
