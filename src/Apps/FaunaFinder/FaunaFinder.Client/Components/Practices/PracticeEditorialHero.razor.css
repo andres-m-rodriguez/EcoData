@@ -26,7 +26,7 @@
 }
 
 .pp-hero-heading {
-    font: 700 clamp(2.25rem, 5vw, 4.25rem)/1.02 var(--fauna-font-serif);
+    font: 700 clamp(1.9375rem, calc(5vw - 0.3125rem), 3.9375rem)/1.02 var(--fauna-font-serif);
     letter-spacing: -0.035em;
     color: var(--fauna-primary);
     margin: 0;

@@ -35,10 +35,17 @@
     else
     {
         <MudContainer MaxWidth="MaxWidth.Large" Class="py-6">
-            <header class="ff-account-head">
-                <span class="ff-account-eyebrow">@L["Account_Eyebrow"]</span>
-                <h1 class="ff-account-title">@L["Account_Title"] <em>@L["Account_Title_Em"]</em></h1>
-                <p class="ff-account-lede">@L["Account_Lede"]</p>
+            <header class="ff-account-hero">
+                <div class="ff-account-hero-main">
+                    <div class="ff-account-eyebrow">@L["Account_Eyebrow"]</div>
+                    <h1 class="ff-account-title">@L["Account_Title"] <em>@L["Account_Title_Em"]</em></h1>
+                    <p class="ff-account-lede">@L["Account_Lede"]</p>
+                </div>
+                <div class="ff-account-hero-meta">
+                    <span>@Auth.CurrentUser?.DisplayName</span>
+                    <span>@L["Account_MemberSince"] @MemberSince</span>
+                    <span>@RoleText</span>
+                </div>
             </header>
 
             <MudGrid Spacing="4">
