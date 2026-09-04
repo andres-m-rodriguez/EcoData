@@ -39,6 +39,8 @@
 </div>
 
 @code {
+    [Parameter] public MapRegion Region { get; set; } = MapRegions.Default;
+
     [Parameter] public IReadOnlyList<MunicipalityDtoForList>? Municipalities { get; set; }
     [Parameter] public IReadOnlyDictionary<Guid, int>? Counts { get; set; }
     [Parameter] public MunicipalityDtoForList? SelectedMunicipality { get; set; }
@@ -48,6 +50,7 @@
 
     private readonly MapController<MunicipalityMarker> _controller = new();
     private Guid? _lastSelectedId;
+    private string _lastRegionCode = MapRegions.Default.Code;
     private bool _geoJsonLoaded;
     private string? _geoJsonLoadError;
 
@@ -73,6 +76,12 @@
 
     protected override void OnParametersSet()
     {
+        if (Region.Code != _lastRegionCode)
+        {
+            _lastRegionCode = Region.Code;
+            _controller.FitToBounds(Region.Bounds);
+        }
+
         if (!_geoJsonLoaded) return;
 
         var selectedId = SelectedMunicipality?.Id;

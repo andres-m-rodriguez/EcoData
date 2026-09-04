@@ -6,6 +6,7 @@
 @using EcoData.Wildlife.Application.Client
 @using EcoData.Wildlife.Contracts.Dtos
 @using EcoData.Wildlife.Contracts.Parameters
+@using FaunaFinder.Client.Components.Map
 @using FaunaFinder.Client.Components.Municipalities
 @inherits StatefulComponent
 @inject IMunicipalityHttpClient MunicipalityClient
@@ -84,6 +85,19 @@ else
             <MudAlert Severity="Severity.Error">@listLoadError</MudAlert>
         }
 
+        <nav class="mm-regions" role="tablist" aria-label="@L["Muni_Region_Label"]">
+            @foreach (var region in MapRegions.All)
+            {
+                <button type="button"
+                        role="tab"
+                        class="@(region == _region ? "mm-region is-active" : "mm-region")"
+                        aria-selected="@(region == _region ? "true" : "false")"
+                        @onclick="() => ShowRegion(region)">
+                    @L[region.NameKey]
+                </button>
+            }
+        </nav>
+
         @* Mobile tab toggle — radio-input driven, no JS. Inputs must live as
            siblings of .mm-tabs and .mm-layout so `:checked ~` can target them. *@
         <input type="radio" name="mm-tab" id="mm-tab-map" class="mm-tab-input" checked />
@@ -110,6 +124,7 @@ else
 
             <MunicipalityMap Municipalities="@_municipalities"
                              Counts="@_countsMap"
+                             Region="@_region"
                              SelectedMunicipality="@_selected"
                              OnSelected="HandleSelected"
                              OnCleared="HandleCleared"
@@ -132,6 +147,8 @@ else
     private IReadOnlyDictionary<Guid, int>? _countsMap;
 
     private MunicipalityDtoForList? _selected;
+
+    private MapRegion _region = MapRegions.Default;
 
     private Guid? _loadedDetailId;
 
@@ -192,7 +209,7 @@ else
         try
         {
             await foreach (var m in MunicipalityClient.GetMunicipalitiesAsync(
-                               new MunicipalityParameters(PageSize: 200, StateCode: "PR"),
+                               new MunicipalityParameters(PageSize: 200, StateCode: _region.Code),
                                ct))
             {
                 collected.Add(m);
@@ -220,6 +237,16 @@ else
 
         _countsMap = counts.ToDictionary(c => c.MunicipalityId, c => c.Count);
         _municipalities = collected;
+    }
+
+    private void ShowRegion(MapRegion region)
+    {
+        if (region == _region) return;
+
+        _region = region;
+        _selected = null;
+        _municipalities = null;
+        _ = LoadMunicipalitiesState.TryExecute();
     }
 
     [Command]
