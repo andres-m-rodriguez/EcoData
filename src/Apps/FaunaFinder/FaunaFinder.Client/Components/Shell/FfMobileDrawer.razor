@@ -1,6 +1,33 @@
 @namespace FaunaFinder.Client.Components.Shell
 @inherits EcoDataComponent
 @using FaunaFinder.Client.Components.Map
+@inject INavigationManager Navigation
+
+@* Back and the opener, flat in the app bar's corner. The back slot is
+   reserved even when there is nothing to go back to, so the opener never
+   shifts. Fixed above the panels: the one thing that stays put. *@
+<div class="ff-drawer-controls">
+    @if (ShowBack)
+    {
+        <button type="button"
+                class="ff-drawer-control"
+                @onclick="() => Navigation.GoBackAsync()"
+                aria-label="@L["Rail_Back"]">
+            <MudIcon Icon="@Icons.Material.Filled.ArrowBack" Size="Size.Small" />
+        </button>
+    }
+    else
+    {
+        <span class="ff-drawer-control is-placeholder" aria-hidden="true"></span>
+    }
+    <button type="button"
+            class="ff-drawer-control ff-drawer-opener"
+            @onclick="ToggleDrawer"
+            aria-label="@L["Rail_Expand"]"
+            aria-expanded="@(_open ? "true" : "false")">
+        <MudIcon Icon="@FaunaFinderIcons.RailPanel" />
+    </button>
+</div>
 
 @{
     var toolOpen = _tool != DrawerTool.None;
