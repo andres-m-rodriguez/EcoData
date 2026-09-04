@@ -17,10 +17,22 @@ public partial class MainLayout : EcoDataLayout
     // the account page's pending count follows the decision.
     public sealed record SightingsReviewed;
 
-    // The shell renders straight off the managers' State; the phone drawer is
-    // the one thing a navigation has to put away.
+    // The shell renders straight off the two managers' State, so subscribing is
+    // the whole job — the handler body has nothing to add.
     [Event]
-    private void OnNavigationChanged(NavigationChanged _) => _drawerOpen = false;
+    private void OnNavigationChanged(NavigationChanged _) { }
+
+    // Published by whatever needs the top bar out of the way, the phone drawer
+    // for one; the bar slides off the same way the scroll auto-hide takes it.
+    public sealed record TopBarHidden;
+
+    public sealed record TopBarShown;
+
+    [Event]
+    private void OnTopBarHidden(TopBarHidden _) => _topBarHidden = true;
+
+    [Event]
+    private void OnTopBarShown(TopBarShown _) => _topBarHidden = false;
 
     [Event]
     private void OnNavbarChanged(NavbarChanged _) { }

@@ -122,7 +122,8 @@
         will-change: transform;
     }
 
-    :root[data-nav-autohide="hidden"] .ff-shell ::deep .ff-appbar {
+    :root[data-nav-autohide="hidden"] .ff-shell ::deep .ff-appbar,
+    ::deep .ff-appbar.is-hidden {
         transform: translate3d(0, calc(-100% - var(--fauna-shell-gutter) - env(safe-area-inset-top, 0px)), 0);
         opacity: 0;
         pointer-events: none;

@@ -14,14 +14,13 @@
 <CascadingValue Value="_locale" IsFixed="false">
     <div class="@ShellClass">
         <MudLayout>
-            <MudAppBar Elevation="0" Fixed="true" Class="ff-appbar">
+            <MudAppBar Elevation="0" Fixed="true" Class="@AppBarClass">
                 <MudHidden Breakpoint="Breakpoint.MdAndUp">
                     <MudIconButton Icon="@FaunaFinderIcons.RailPanel"
                                    Class="ff-notebook-toggle"
                                    Edge="Edge.Start"
                                    aria-label="@L["Rail_Expand"]"
-                                   aria-expanded="@(_drawerOpen ? "true" : "false")"
-                                   OnClick="ToggleDrawer" />
+                                   OnClick="() => Bus.Publish<FfMobileDrawer.Toggle>()" />
                     <FfMobileTitle />
                 </MudHidden>
 
@@ -162,7 +161,7 @@
         </MudLayout>
 
         <MudHidden Breakpoint="Breakpoint.MdAndUp">
-            <FfMobileDrawer Open="_drawerOpen" OnClose="CloseDrawer" />
+            <FfMobileDrawer />
             <FfBottomNav />
         </MudHidden>
     </div>
@@ -173,7 +172,7 @@
 
     private bool _railOpen = true;
     private bool _railHovered;
-    private bool _drawerOpen;
+    private bool _topBarHidden;
 
     private bool _isDarkMode;
     private IJSObjectReference? _themeModule;
@@ -206,9 +205,7 @@
 
     private void ToggleRail() => _railOpen = !_railOpen;
 
-    private void ToggleDrawer() => _drawerOpen = !_drawerOpen;
-
-    private void CloseDrawer() => _drawerOpen = false;
+    private string AppBarClass => _topBarHidden ? "ff-appbar is-hidden" : "ff-appbar";
 
     private string ThemeToggleIcon => _isDarkMode
         ? Icons.Material.Filled.LightMode
