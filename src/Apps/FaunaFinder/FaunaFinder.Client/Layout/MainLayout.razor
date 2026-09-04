@@ -51,16 +51,6 @@
                         <a href="/categories" class="@GetNavLinkClass("/categories")">@L["Nav_Categories"]</a>
                         <a href="/practices" class="@GetNavLinkClass("/practices")">@L["Nav_Practices"]</a>
                         <a href="/actions" class="@GetNavLinkClass("/actions")">@L["Nav_Actions"]</a>
-                        @if (Auth.CanReviewSightings)
-                        {
-                            <MudBadge Content="@LoadPendingCountState.Result"
-                                      Visible="@(LoadPendingCountState.Result > 0)"
-                                      Color="Color.Warning"
-                                      Overlap="true"
-                                      Class="ff-nav-badge">
-                                <a href="/sightings/review" class="@GetNavLinkClass("/sightings/review")">@L["Sighting_Review_Nav"]</a>
-                            </MudBadge>
-                        }
                     </nav>
                 </MudHidden>
 

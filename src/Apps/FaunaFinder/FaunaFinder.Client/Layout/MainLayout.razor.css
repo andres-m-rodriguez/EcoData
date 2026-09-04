@@ -544,7 +544,3 @@
     }
 }
 
-/* Pending-review count on the desktop nav entry. */
-::deep .ff-nav-badge {
-    margin-left: 2px;
-}
