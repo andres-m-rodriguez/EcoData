@@ -175,6 +175,11 @@ public interface IMapController<TMarker>
     event Action? OnViewChanged;
 
     /// <summary>
+    /// Fired when the caller asks the map to frame specific bounds.
+    /// </summary>
+    event Action<MapBounds>? OnFitBoundsRequested;
+
+    /// <summary>
     /// Fired when GeoJSON layers change.
     /// </summary>
     event Action? OnGeoJsonChanged;

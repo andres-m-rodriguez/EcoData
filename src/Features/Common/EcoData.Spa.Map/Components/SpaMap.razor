@@ -31,6 +31,7 @@
     {
         Controller.OnMarkersChanged += HandleMarkersChanged;
         Controller.OnViewChanged += HandleViewChanged;
+        Controller.OnFitBoundsRequested += HandleFitBoundsRequested;
         Controller.OnGeoJsonChanged += HandleGeoJsonChanged;
         Controller.OnCirclesChanged += HandleCirclesChanged;
         Controller.OnCircleFocusRequested += HandleCircleFocusRequested;
@@ -133,6 +134,22 @@
                     Controller.Zoom);
             });
         }
+    }
+
+    private async void HandleFitBoundsRequested(MapBounds bounds)
+    {
+        if (!_isInitialized || _mapInstance is null || _module is null) return;
+
+        await InvokeAsync(async () =>
+        {
+            await _module.InvokeVoidAsync(
+                "fitToBounds",
+                _mapInstance,
+                bounds.SouthWest.Latitude,
+                bounds.SouthWest.Longitude,
+                bounds.NorthEast.Latitude,
+                bounds.NorthEast.Longitude);
+        });
     }
 
     private async void HandleGeoJsonChanged()
@@ -309,6 +326,7 @@
     {
         Controller.OnMarkersChanged -= HandleMarkersChanged;
         Controller.OnViewChanged -= HandleViewChanged;
+        Controller.OnFitBoundsRequested -= HandleFitBoundsRequested;
         Controller.OnGeoJsonChanged -= HandleGeoJsonChanged;
         Controller.OnCirclesChanged -= HandleCirclesChanged;
         Controller.OnCircleFocusRequested -= HandleCircleFocusRequested;
