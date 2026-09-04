@@ -19,7 +19,8 @@ public static class MunicipalityBoundaries
         string fillColor = "#40916c",
         double fillOpacity = 0.3,
         string strokeColor = "#2d6a4f",
-        int strokeWidth = 2
+        int strokeWidth = 2,
+        bool interactive = true
     ) =>
         new()
         {
@@ -31,5 +32,6 @@ public static class MunicipalityBoundaries
             FillOpacity = fillOpacity,
             StrokeColor = strokeColor,
             StrokeWidth = strokeWidth,
+            Interactive = interactive,
         };
 }

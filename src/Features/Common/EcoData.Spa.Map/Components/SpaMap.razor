@@ -281,7 +281,8 @@
                 fillColor = g.FillColor,
                 fillOpacity = g.FillOpacity,
                 strokeColor = g.StrokeColor,
-                strokeWidth = g.StrokeWidth
+                strokeWidth = g.StrokeWidth,
+                interactive = g.Interactive
             }).ToArray();
 
             await _module.InvokeVoidAsync("setGeoJson", _mapInstance, geoJsonLayers);
