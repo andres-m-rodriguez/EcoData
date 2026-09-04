@@ -26,6 +26,12 @@ public partial class FfMobileDrawer : EcoDataComponent
             return;
         }
 
+        if (_tool != DrawerTool.None)
+        {
+            CloseTool();
+            return;
+        }
+
         _open = true;
         Bus.Publish<MainLayout.TopBarHidden>();
     }

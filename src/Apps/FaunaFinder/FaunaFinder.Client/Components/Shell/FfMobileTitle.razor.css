@@ -1,5 +1,6 @@
 /* ==========================================================================
-   Mobile app bar lead — back button, optional portrait, page title.
+   Mobile app bar lead — optional portrait and page title; the back arrow
+   lives in the layout's controls pill.
 
    Moved here from MainLayout when the slot became its own component so it
    could own the Avatar event.
@@ -18,29 +19,6 @@
        from the content width means it only gives ground when it has to. */
     flex: 1 1 auto;
     min-width: 0;
-}
-
-/* The back arrow.
-
-   NuiNativeNavbar hardcodes Color.Dark on it, which resolves to near-black in
-   either theme and disappears against the dark ground. That component is
-   shared with EcoPortal, so re-point the colour here instead of changing it
-   there. MudBlazor sets its own colour on the same element, hence the
-   !important. */
-.ff-mobile-title ::deep .mud-icon-button {
-    color: var(--fauna-fg) !important;
-    /* Half the default padding: the arrow belongs beside the drawer opener,
-       not a full hit box away from it. */
-    padding: 6px;
-    margin-left: -4px;
-}
-
-.ff-mobile-title ::deep .mud-icon-button .mud-icon-root {
-    color: inherit !important;
-}
-
-.ff-mobile-title ::deep .mud-icon-button:hover {
-    background-color: var(--fauna-bg-alt);
 }
 
 /* Wordmark, shown at the root instead of a back button */
