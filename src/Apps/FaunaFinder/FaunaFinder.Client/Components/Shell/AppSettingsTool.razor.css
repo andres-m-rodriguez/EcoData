@@ -1,0 +1,83 @@
+/* ==========================================================================
+   AppSettingsTool — theme and language as two segmented pills, the shape the
+   municipalities page uses for its region switch.
+   ========================================================================== */
+
+.ff-settings {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.ff-settings-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.ff-settings-label {
+    margin: 0;
+    font: var(--fauna-mono);
+    font-size: 11px;
+    letter-spacing: var(--fauna-tracking-pill);
+    text-transform: uppercase;
+    color: var(--fauna-fg-4);
+}
+
+.ff-settings-segments {
+    display: flex;
+    gap: 4px;
+    padding: 4px;
+    background: var(--fauna-bg-alt);
+    border: 1px solid var(--fauna-line);
+    border-radius: 12px;
+}
+
+.ff-settings-segment {
+    appearance: none;
+    flex: 1 1 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-width: 0;
+    min-height: 40px;
+    padding: 8px 12px;
+    border: 0;
+    border-radius: 9px;
+    background: transparent;
+    color: var(--fauna-fg-3);
+    font: var(--fauna-body-sm);
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color var(--fauna-t-base) var(--fauna-ease),
+                color var(--fauna-t-base) var(--fauna-ease),
+                box-shadow var(--fauna-t-base) var(--fauna-ease);
+}
+
+.ff-settings-segment:hover {
+    color: var(--fauna-fg);
+}
+
+.ff-settings-segment.is-active {
+    background: var(--fauna-surface);
+    color: var(--fauna-primary);
+    box-shadow: var(--fauna-shell-shadow);
+}
+
+.ff-settings-segment:focus-visible {
+    outline: 2px solid var(--fauna-primary-400);
+    outline-offset: 2px;
+}
+
+.ff-settings-code {
+    font: var(--fauna-mono);
+    font-size: 11px;
+    color: var(--fauna-fg-4);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .ff-settings-segment {
+        transition: none;
+    }
+}

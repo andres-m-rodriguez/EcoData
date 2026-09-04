@@ -6,6 +6,7 @@ using EcoData.Ui;
 using EcoData.Wildlife.Application.Client;
 using FaunaFinder.Client.Localization;
 using FaunaFinder.Client.Services.Account;
+using FaunaFinder.Client.Services.Theme;
 using FaunaFinder.Client.Services.Shapes;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
@@ -29,6 +30,7 @@ builder.Services.AddHttpClient<IAccountHttpClient, AccountHttpClient>(client =>
 });
 
 builder.Services.AddScoped<AuthStateService>();
+builder.Services.AddScoped<ThemePreference>();
 builder.Services.AddScoped<AuthenticationStateProvider, FaunaFinderAuthStateProvider>();
 builder.Services.AddAuthorizationCore();
 

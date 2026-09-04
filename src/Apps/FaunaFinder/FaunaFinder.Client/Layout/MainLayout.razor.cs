@@ -1,6 +1,7 @@
 using EcoData.Spa.Blazor;
 using EcoData.Spa.Navigation.Events;
 using FaunaFinder.Client.Localization;
+using FaunaFinder.Client.Services.Theme;
 using Tempest;
 
 namespace FaunaFinder.Client.Layout;
@@ -33,6 +34,10 @@ public partial class MainLayout : EcoDataLayout
 
     [Event]
     private void OnTopBarShown(TopBarShown _) => _topBarHidden = false;
+
+    // The theme provider reads Theme.IsDark on render; subscribing is the whole job.
+    [Event]
+    private void OnThemeChanged(ThemePreference.Changed _) { }
 
     [Event]
     private void OnNavbarChanged(NavbarChanged _) { }

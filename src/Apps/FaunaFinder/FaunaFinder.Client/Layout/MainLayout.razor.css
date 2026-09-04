@@ -81,8 +81,14 @@
         padding-right: 4px;
     }
 
-    ::deep .ff-theme-toggle {
-        margin-right: 0;
+    /* Edge.Start pulls the opener 12px into the toolbar's padding; ease that
+       by 2px and grow the glyph by 3px. */
+    ::deep .ff-notebook-toggle {
+        margin-left: -10px;
+    }
+
+    ::deep .ff-notebook-toggle .mud-icon-root {
+        font-size: 23px;
     }
 
     /* The spacer also grows, so it and the title slot were halving the free
