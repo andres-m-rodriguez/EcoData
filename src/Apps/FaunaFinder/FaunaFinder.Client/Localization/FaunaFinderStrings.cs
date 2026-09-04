@@ -380,6 +380,9 @@ public static class FaunaFinderStrings
         ["Auth_RequestNotSubmitted"] = "Your account was created, but the student access request could not be sent. Please try again later.",
         ["Auth_ServerUnreachable"] = "Couldn't reach the server. Please try again.",
         ["Auth_SignInFailed"] = "Something went wrong while signing in. Please try again.",
+        ["Auth_InvalidCredentials"] = "That email and password don't match.",
+        ["Auth_AccountLocked"] = "Your account is locked for now after too many failed attempts. Try again later.",
+        ["Auth_TooManyAttempts"] = "Too many sign-in attempts. Wait a couple of minutes and try again.",
         ["Auth_SignUpFailed"] = "Something went wrong while creating your account. Please try again.",
 
         ["Sighting_Report_PageTitle"] = "Report a sighting",
@@ -834,6 +837,9 @@ public static class FaunaFinderStrings
         ["Auth_RequestNotSubmitted"] = "Tu cuenta fue creada, pero no se pudo enviar la solicitud de acceso de estudiante. Inténtalo más tarde.",
         ["Auth_ServerUnreachable"] = "No se pudo conectar con el servidor. Inténtalo de nuevo.",
         ["Auth_SignInFailed"] = "Algo salió mal al iniciar sesión. Inténtalo de nuevo.",
+        ["Auth_InvalidCredentials"] = "Ese correo y contraseña no coinciden.",
+        ["Auth_AccountLocked"] = "Tu cuenta está bloqueada por ahora tras demasiados intentos fallidos. Inténtalo más tarde.",
+        ["Auth_TooManyAttempts"] = "Demasiados intentos de inicio de sesión. Espera un par de minutos e inténtalo de nuevo.",
         ["Auth_SignUpFailed"] = "Algo salió mal al crear tu cuenta. Inténtalo de nuevo.",
 
         ["Sighting_Report_PageTitle"] = "Reportar un avistamiento",

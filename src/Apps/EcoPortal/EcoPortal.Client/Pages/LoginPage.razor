@@ -120,6 +120,8 @@
             requestFailed => _errorMessage = requestFailed.StatusCode switch
             {
                 401 => requestFailed.Message ?? "Invalid email or password",
+                423 => "Your account is locked for now after too many failed attempts. Try again later.",
+                429 => "Too many sign-in attempts. Wait a couple of minutes and try again.",
                 0 => "Couldn't reach the server. Please try again.",
                 _ => requestFailed.Message ?? "Login failed"
             }

@@ -14,6 +14,7 @@ using FaunaFinder.Server.Organization;
 using FaunaFinder.Server.RateLimiting;
 using FaunaFinder.Server.Reports;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.Extensions.Http.Resilience;
 using MudBlazor.Services;
 using Tempest;
 
@@ -40,12 +41,29 @@ builder.Services.AddHttpClient(
 // Account proxying needs its own client: the default handler keeps a shared
 // CookieContainer, which would capture one user's Set-Cookie and replay it on
 // every later request through the same handler.
+// Every call through this client forwards one person's action, so nothing is
+// retried. The pipeline service defaults put on every client treats the login
+// limiter's 429 as transient and honours its Retry-After, which left the caller
+// waiting out the whole request timeout instead of reading the limiter's
+// message; a retried registration could also double-submit. That pipeline is
+// one nameless handler shared by all clients, so this client drops it and
+// carries its own, with the retry switched off.
 builder
     .Services.AddHttpClient(
         AccountEndpoints.HttpClientName,
         client => client.BaseAddress = new Uri("https+http://ecoportal")
     )
-    .ConfigurePrimaryHttpMessageHandler(() => new SocketsHttpHandler { UseCookies = false });
+    .ConfigurePrimaryHttpMessageHandler(() => new SocketsHttpHandler { UseCookies = false })
+    .ConfigureAdditionalHttpMessageHandlers((handlers, _) =>
+    {
+        for (var i = handlers.Count - 1; i >= 0; i--)
+        {
+            if (handlers[i] is ResilienceHandler)
+                handlers.RemoveAt(i);
+        }
+    })
+    .AddStandardResilienceHandler(options =>
+        options.Retry.ShouldHandle = _ => ValueTask.FromResult(false));
 
 // FaunaFinder holds no JWT secrets: the session is validated by asking
 // EcoPortal, and permission questions are answered the same way.
