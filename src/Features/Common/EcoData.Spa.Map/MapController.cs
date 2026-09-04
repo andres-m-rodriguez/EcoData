@@ -34,6 +34,7 @@ public class MapController<TMarker> : IMapController<TMarker>
 
     public event Action? OnMarkersChanged;
     public event Action? OnViewChanged;
+    public event Action<MapBounds>? OnFitBoundsRequested;
     public event Action? OnGeoJsonChanged;
     public event Action<int>? OnMarkerClicked;
     public event Action<MapCoordinate>? OnMapClicked;
@@ -123,7 +124,7 @@ public class MapController<TMarker> : IMapController<TMarker>
 
     public void FitToBounds(MapBounds bounds)
     {
-        OnViewChanged?.Invoke();
+        OnFitBoundsRequested?.Invoke(bounds);
     }
 
     public void SetCircles(IEnumerable<MapCircle> circles)
