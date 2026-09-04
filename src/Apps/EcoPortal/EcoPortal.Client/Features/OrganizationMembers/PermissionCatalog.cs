@@ -56,6 +56,11 @@ public static class PermissionCatalog
                     "Browse the species catalogue."
                 ),
                 new(
+                    WildlifePermissions.Species.ViewAreas,
+                    "View species areas",
+                    "See where each species has been found on the map."
+                ),
+                new(
                     WildlifePermissions.Occurrence.Submit,
                     "Submit sightings",
                     "Record species occurrences."

@@ -45,16 +45,21 @@ public sealed record SpeciesLocationDto(
     string? Description
 );
 
+// Area is null when the caller may not see where the species was found.
 public sealed record SpeciesNearbyDto(
     Guid Id,
     IReadOnlyList<LocaleValue> CommonName,
     string ScientificName,
     bool IsFauna,
     double DistanceMeters,
+    SpeciesAreaDto? Area
+);
+
+public sealed record SpeciesAreaDto(
     double Latitude,
     double Longitude,
     double RadiusMeters,
-    string? LocationDescription
+    string? Description
 );
 
 public sealed record SpeciesDtoForCreate(

@@ -26,14 +26,17 @@ public interface ISpeciesHttpClient
     Task<OneOf<IReadOnlyList<SpeciesDtoForList>, RequestFailed>> GetFeaturedAsync(
         CancellationToken ct = default);
 
+    // The organization whose grants decide whether Area is filled in.
     Task<OneOf<IReadOnlyList<SpeciesNearbyDto>, RequestFailed>> GetNearbyAsync(
         double latitude,
         double longitude,
         double radiusMeters,
+        Guid? organizationId,
         CancellationToken ct = default);
 
     Task<OneOf<IReadOnlyList<SpeciesNearbyDto>, RequestFailed>> GetInPolygonAsync(
         IReadOnlyList<PolygonCoordinate> coordinates,
+        Guid? organizationId,
         CancellationToken ct = default);
 
     Task<OneOf<IReadOnlyList<MunicipalitySpeciesCountDto>, RequestFailed>> GetCountsByMunicipalityAsync(

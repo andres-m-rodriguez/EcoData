@@ -119,10 +119,12 @@ public sealed class SpeciesRepository(IDbContextFactory<WildlifeDbContext> conte
                             species.ScientificName,
                             species.IsFauna,
                             distance,
-                            location.Latitude,
-                            location.Longitude,
-                            location.RadiusMeters,
-                            location.Description
+                            new SpeciesAreaDto(
+                                location.Latitude,
+                                location.Longitude,
+                                location.RadiusMeters,
+                                location.Description
+                            )
                         )
                     );
             }
@@ -239,10 +241,12 @@ public sealed class SpeciesRepository(IDbContextFactory<WildlifeDbContext> conte
                         species.ScientificName,
                         species.IsFauna,
                         distance,
-                        location.Latitude,
-                        location.Longitude,
-                        location.RadiusMeters,
-                        location.Description
+                        new SpeciesAreaDto(
+                            location.Latitude,
+                            location.Longitude,
+                            location.RadiusMeters,
+                            location.Description
+                        )
                     )
                 );
             }

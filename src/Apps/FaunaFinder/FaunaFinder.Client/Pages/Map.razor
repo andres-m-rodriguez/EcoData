@@ -93,6 +93,7 @@
                                 Eyebrow="@SearchEyebrow"
                                 IsLoading="@SearchAreaState.IsLoading"
                                 Species="@SearchAreaState.Result"
+                                AreasVisible="@AreasVisible"
                                 OnClose="CloseSidebar"
                                 OnFocusSpecies="FocusNearbySpecies"
                                 OnDetailsClick="OnNearbyDetailsClicked" />
@@ -109,6 +110,7 @@
                                 Eyebrow="@SearchEyebrow"
                                 IsLoading="@SearchAreaState.IsLoading"
                                 Species="@SearchAreaState.Result"
+                                AreasVisible="@AreasVisible"
                                 OnClose="CloseSheet"
                                 OnFocusSpecies="FocusNearbySpeciesFromSheet"
                                 OnDetailsClick="OnNearbyDetailsClicked" />
@@ -313,7 +315,7 @@
         var nearest = new Dictionary<Guid, SpeciesNearbyDto>();
         foreach (var polygon in polygons)
         {
-            var result = await SpeciesHttpClient.GetInPolygonAsync(polygon, ct);
+            var result = await SpeciesHttpClient.GetInPolygonAsync(polygon, Auth.Organization?.Id, ct);
             if (!result.TryPickT0(out var found, out var error))
                 return error;
 
@@ -405,9 +407,9 @@
         OneOf<IReadOnlyList<SpeciesNearbyDto>, RequestFailed> result = _searchMode switch
         {
             AreaSearchMode.Point or AreaSearchMode.NearMe or AreaSearchMode.Coordinates when _searchOrigin is { } origin =>
-                await SpeciesHttpClient.GetNearbyAsync(origin.Latitude, origin.Longitude, _searchRadiusMeters, ct),
+                await SpeciesHttpClient.GetNearbyAsync(origin.Latitude, origin.Longitude, _searchRadiusMeters, Auth.Organization?.Id, ct),
             AreaSearchMode.DrawnArea when _polygonCoordinates is { } polygon =>
-                await SpeciesHttpClient.GetInPolygonAsync(polygon, ct),
+                await SpeciesHttpClient.GetInPolygonAsync(polygon, Auth.Organization?.Id, ct),
             AreaSearchMode.ShapeFile when _shape is { } shape =>
                 await SearchPolygonsAsync(shape.Polygons, ct),
             _ => OneOf<IReadOnlyList<SpeciesNearbyDto>, RequestFailed>.FromT0([]),
@@ -421,9 +423,11 @@
         return species;
     }
 
+    private bool AreasVisible => SearchAreaState.Result is { Count: > 0 } found && found[0].Area is not null;
+
     private void ShowNearbyCircles(IReadOnlyList<SpeciesNearbyDto>? results)
     {
-        if (results is null || results.Count == 0)
+        if (results is null || results.Count == 0 || results[0].Area is null)
         {
             _mapController.ClearCircles();
             return;
@@ -432,9 +436,10 @@
         _mapController.SetCircles(results.Select((s, i) =>
         {
             var color = CirclePalette[i % CirclePalette.Length];
+            var area = s.Area!;
             return new MapCircle(
-                new MapCoordinate(s.Latitude, s.Longitude),
-                s.RadiusMeters,
+                new MapCoordinate(area.Latitude, area.Longitude),
+                area.RadiusMeters,
                 color,
                 color,
                 BuildNearbyPopup(s));
@@ -451,9 +456,9 @@
         var distance = species.DistanceMeters < 1000
             ? $"{species.DistanceMeters:N0} m"
             : $"{species.DistanceMeters / 1000:N1} km";
-        var description = string.IsNullOrEmpty(species.LocationDescription)
+        var description = string.IsNullOrEmpty(species.Area?.Description)
             ? string.Empty
-            : $"<br/><small>{System.Net.WebUtility.HtmlEncode(species.LocationDescription)}</small>";
+            : $"<br/><small>{System.Net.WebUtility.HtmlEncode(species.Area.Description)}</small>";
 
         return $"<strong>{name}</strong><br/>{scientific}{distance}{description}";
     }

@@ -85,12 +85,14 @@ public sealed class SpeciesHttpClient(HttpClient httpClient) : ISpeciesHttpClien
         double latitude,
         double longitude,
         double radiusMeters,
+        Guid? organizationId,
         CancellationToken ct = default)
     {
         var query = new QueryStringBuilder()
             .Add("latitude", latitude.ToString(CultureInfo.InvariantCulture))
             .Add("longitude", longitude.ToString(CultureInfo.InvariantCulture))
             .Add("radiusMeters", radiusMeters.ToString(CultureInfo.InvariantCulture))
+            .Add("organizationId", organizationId)
             .Build();
 
         var response = await httpClient.GetAsync($"wildlife/species/nearby{query}", ct);
@@ -100,11 +102,12 @@ public sealed class SpeciesHttpClient(HttpClient httpClient) : ISpeciesHttpClien
 
     public async Task<OneOf<IReadOnlyList<SpeciesNearbyDto>, RequestFailed>> GetInPolygonAsync(
         IReadOnlyList<PolygonCoordinate> coordinates,
+        Guid? organizationId,
         CancellationToken ct = default)
     {
         var response = await httpClient.PostAsJsonAsync(
             "wildlife/species/in-polygon",
-            new PolygonSearchParameters(coordinates),
+            new PolygonSearchParameters(coordinates, organizationId),
             ct);
         var result = await response.ReadOneOfAsync<IReadOnlyList<SpeciesNearbyDto>>(ct);
         return result.MapT1(problem => RequestFailed.From(problem));
