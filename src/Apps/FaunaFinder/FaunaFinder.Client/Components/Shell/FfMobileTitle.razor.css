@@ -29,10 +29,6 @@
    !important. */
 .ff-mobile-title ::deep .mud-icon-button {
     color: var(--fauna-fg) !important;
-    /* Half the default padding: the arrow belongs beside the drawer opener,
-       not a full hit box away from it. */
-    padding: 6px;
-    margin-left: -4px;
 }
 
 .ff-mobile-title ::deep .mud-icon-button .mud-icon-root {
