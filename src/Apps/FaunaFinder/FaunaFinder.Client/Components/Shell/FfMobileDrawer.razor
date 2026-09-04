@@ -3,7 +3,7 @@
 @using FaunaFinder.Client.Components.Map
 
 @{
-    var toolOpen = _tool == DrawerTool.Coordinates;
+    var toolOpen = _tool != DrawerTool.None;
 }
 
 <div class="@(_open || toolOpen ? "ff-drawer-backdrop is-open" : "ff-drawer-backdrop")" @onclick="DismissAll"></div>
@@ -22,11 +22,24 @@
         <h2 class="ff-drawer-heading">@L["Rail_Heading"]</h2>
 
         <nav class="ff-drawer-cards" aria-label="@L["Rail_Heading"]">
-            <button type="button" class="ff-drawer-card" @onclick="ShowCoordinates">
+            <button type="button" class="ff-drawer-card" @onclick="() => ShowTool(DrawerTool.Coordinates)">
                 <MudIcon Icon="@Icons.Material.Outlined.PinDrop" Class="ff-drawer-card-icon" />
                 <span class="ff-drawer-card-text">
                     <span class="ff-drawer-card-title">@L["Rail_Card_Coordinates"]</span>
                     <span class="ff-drawer-card-desc">@L["Rail_Card_Coordinates_Lede"]</span>
+                </span>
+                <MudIcon Icon="@Icons.Material.Filled.ChevronRight" Size="Size.Small" Class="ff-drawer-card-chevron" />
+            </button>
+        </nav>
+
+        <h2 class="ff-drawer-heading">@L["Drawer_Settings_Heading"]</h2>
+
+        <nav class="ff-drawer-cards" aria-label="@L["Drawer_Settings_Heading"]">
+            <button type="button" class="ff-drawer-card" @onclick="() => ShowTool(DrawerTool.Settings)">
+                <MudIcon Icon="@Icons.Material.Outlined.Tune" Class="ff-drawer-card-icon" />
+                <span class="ff-drawer-card-text">
+                    <span class="ff-drawer-card-title">@L["Drawer_Card_Settings"]</span>
+                    <span class="ff-drawer-card-desc">@L["Drawer_Card_Settings_Lede"]</span>
                 </span>
                 <MudIcon Icon="@Icons.Material.Filled.ChevronRight" Size="Size.Small" Class="ff-drawer-card-chevron" />
             </button>
@@ -36,18 +49,25 @@
 
 <section class="@(toolOpen ? "ff-drawer-tool is-open" : "ff-drawer-tool")"
          aria-hidden="@(toolOpen ? "false" : "true")"
-         aria-label="@L["Rail_Card_Coordinates"]">
+         aria-label="@ToolTitle">
     <header class="ff-drawer-head ff-drawer-tool-head">
         <button type="button" class="ff-drawer-back" @onclick="BackToDrawer" aria-label="@L["Rail_Back"]">
             <MudIcon Icon="@Icons.Material.Filled.ArrowBack" Size="Size.Small" />
         </button>
-        <h2 class="ff-drawer-tool-title">@L["Rail_Card_Coordinates"]</h2>
+        <h2 class="ff-drawer-tool-title">@ToolTitle</h2>
         <button type="button" class="ff-drawer-close" @onclick="CloseTool" aria-label="@L["Common_Close"]">
             <MudIcon Icon="@Icons.Material.Filled.Close" Size="Size.Small" />
         </button>
     </header>
 
     <div class="ff-drawer-tool-body">
-        <CoordinatesTool />
+        @if (_tool == DrawerTool.Settings)
+        {
+            <AppSettingsTool />
+        }
+        else
+        {
+            <CoordinatesTool />
+        }
     </div>
 </section>

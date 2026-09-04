@@ -1,0 +1,49 @@
+@namespace FaunaFinder.Client.Components.Shell
+@inherits EcoDataComponent
+@using FaunaFinder.Client.Services.Theme
+@inject ThemePreference Theme
+
+<div class="ff-settings">
+    <section class="ff-settings-group">
+        <h3 class="ff-settings-label">@L["Settings_Theme"]</h3>
+        <div class="ff-settings-segments" role="group" aria-label="@L["Settings_Theme"]">
+            <button type="button"
+                    class="@SegmentClass(!Theme.IsDark)"
+                    aria-pressed="@(!Theme.IsDark ? "true" : "false")"
+                    @onclick="() => Theme.SetAsync(false)">
+                <MudIcon Icon="@Icons.Material.Filled.LightMode" Size="Size.Small" />
+                <span>@L["Settings_Theme_Light"]</span>
+            </button>
+            <button type="button"
+                    class="@SegmentClass(Theme.IsDark)"
+                    aria-pressed="@(Theme.IsDark ? "true" : "false")"
+                    @onclick="() => Theme.SetAsync(true)">
+                <MudIcon Icon="@Icons.Material.Filled.DarkMode" Size="Size.Small" />
+                <span>@L["Settings_Theme_Dark"]</span>
+            </button>
+        </div>
+    </section>
+
+    <section class="ff-settings-group">
+        <h3 class="ff-settings-label">@L["Settings_Language"]</h3>
+        <div class="ff-settings-segments" role="group" aria-label="@L["Settings_Language"]">
+            @foreach (var lang in L.GetAvailableLanguages())
+            {
+                var langCode = lang.Code;
+                var active = string.Equals(langCode, L.CurrentLanguage, StringComparison.OrdinalIgnoreCase);
+                <button type="button"
+                        class="@SegmentClass(active)"
+                        aria-pressed="@(active ? "true" : "false")"
+                        @onclick="() => L.SetLanguage(langCode)">
+                    <span>@lang.Name</span>
+                    <span class="ff-settings-code">@langCode.ToUpperInvariant()</span>
+                </button>
+            }
+        </div>
+    </section>
+</div>
+
+@code {
+    private static string SegmentClass(bool active) =>
+        active ? "ff-settings-segment is-active" : "ff-settings-segment";
+}

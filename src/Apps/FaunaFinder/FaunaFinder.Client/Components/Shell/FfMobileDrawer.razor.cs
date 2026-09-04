@@ -41,11 +41,18 @@ public partial class FfMobileDrawer : EcoDataComponent
             CloseTool();
     }
 
+    private string ToolTitle => _tool switch
+    {
+        DrawerTool.Coordinates => L["Rail_Card_Coordinates"],
+        DrawerTool.Settings => L["Drawer_Settings_Heading"],
+        _ => string.Empty,
+    };
+
     // The drawer goes away but the top bar stays hidden: the tool takes its place.
-    private void ShowCoordinates()
+    private void ShowTool(DrawerTool tool)
     {
         _open = false;
-        _tool = DrawerTool.Coordinates;
+        _tool = tool;
     }
 
     // The top bar is already hidden, so only the panels swap.
@@ -82,6 +89,7 @@ public partial class FfMobileDrawer : EcoDataComponent
     private enum DrawerTool
     {
         None,
-        Coordinates
+        Coordinates,
+        Settings
     }
 }

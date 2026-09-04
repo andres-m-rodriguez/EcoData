@@ -1,12 +1,13 @@
 @using EcoData.Common.i18n
 @using FaunaFinder.Client.Services.Account
+@using FaunaFinder.Client.Services.Theme
 @inherits EcoDataLayout
 @inject INavigationManager Navigation
 @inject INavbarManager Navbar
-@inject IJavascriptSafeInterop JS
 @inject AuthStateService Auth
+@inject ThemePreference Theme
 
-<MudThemeProvider Theme="FaunaFinderTheme.Default" IsDarkMode="_isDarkMode" />
+<MudThemeProvider Theme="FaunaFinderTheme.Default" IsDarkMode="Theme.IsDark" />
 <MudPopoverProvider />
 <MudDialogProvider />
 <MudSnackbarProvider />
@@ -65,13 +66,17 @@
                     <FfSearch />
                 </MudHidden>
 
-                <MudTooltip Text="@ThemeToggleLabel">
-                    <MudIconButton Icon="@ThemeToggleIcon"
-                                   Class="ff-theme-toggle"
-                                   Size="Size.Small"
-                                   aria-label="@ThemeToggleLabel"
-                                   OnClick="ToggleThemeAsync" />
-                </MudTooltip>
+                @* Phones get theme and language in the drawer's settings panel; the
+                   bar keeps only the language pill. *@
+                <MudHidden Breakpoint="Breakpoint.SmAndDown">
+                    <MudTooltip Text="@ThemeToggleLabel">
+                        <MudIconButton Icon="@ThemeToggleIcon"
+                                       Class="ff-theme-toggle"
+                                       Size="Size.Small"
+                                       aria-label="@ThemeToggleLabel"
+                                       OnClick="() => Theme.SetAsync(!Theme.IsDark)" />
+                    </MudTooltip>
+                </MudHidden>
 
                 @* Language dropdown — MudMenu using its built-in activator
                    (Label + StartIcon + EndIcon) instead of ActivatorContent.
@@ -101,29 +106,31 @@
                     }
                 </MudMenu>
 
-                @if (Auth.IsAuthenticated)
-                {
-                    <MudBadge Visible="ShowPendingBadge"
-                              Dot="true"
-                              Color="Color.Warning"
-                              Overlap="true"
-                              Class="ff-account-badge">
-                        <a href="/account" class="ff-user-pill" aria-label="@L["Auth_AccountLabel"]">
-                            <span class="ff-user-initial">@UserInitial</span>
-                            <span class="ff-user-name">@Auth.CurrentUser?.DisplayName</span>
-                        </a>
-                    </MudBadge>
-                }
-                else
-                {
-                    <MudTooltip Text="@L["Auth_SignIn"]">
-                        <MudIconButton Icon="@Icons.Material.Filled.AccountCircle"
-                                       Class="ff-signin-button"
-                                       Size="Size.Small"
-                                       Href="/login"
-                                       aria-label="@L["Auth_SignIn"]" />
-                    </MudTooltip>
-                }
+                <MudHidden Breakpoint="Breakpoint.SmAndDown">
+                    @if (Auth.IsAuthenticated)
+                    {
+                        <MudBadge Visible="ShowPendingBadge"
+                                  Dot="true"
+                                  Color="Color.Warning"
+                                  Overlap="true"
+                                  Class="ff-account-badge">
+                            <a href="/account" class="ff-user-pill" aria-label="@L["Auth_AccountLabel"]">
+                                <span class="ff-user-initial">@UserInitial</span>
+                                <span class="ff-user-name">@Auth.CurrentUser?.DisplayName</span>
+                            </a>
+                        </MudBadge>
+                    }
+                    else
+                    {
+                        <MudTooltip Text="@L["Auth_SignIn"]">
+                            <MudIconButton Icon="@Icons.Material.Filled.AccountCircle"
+                                           Class="ff-signin-button"
+                                           Size="Size.Small"
+                                           Href="/login"
+                                           aria-label="@L["Auth_SignIn"]" />
+                        </MudTooltip>
+                    }
+                </MudHidden>
 
                 <MudHidden Breakpoint="Breakpoint.MdAndUp">
                     @if (!IsRootPage)
@@ -174,9 +181,6 @@
     private bool _railHovered;
     private bool _topBarHidden;
 
-    private bool _isDarkMode;
-    private IJSObjectReference? _themeModule;
-
     private bool IsRootPage => Navigation.State.Path == "/" || Navigation.State.Path == "";
 
     private bool IsMapPage =>
@@ -207,11 +211,11 @@
 
     private string AppBarClass => _topBarHidden ? "ff-appbar is-hidden" : "ff-appbar";
 
-    private string ThemeToggleIcon => _isDarkMode
+    private string ThemeToggleIcon => Theme.IsDark
         ? Icons.Material.Filled.LightMode
         : Icons.Material.Filled.DarkMode;
 
-    private string ThemeToggleLabel => _isDarkMode ? L["Theme_ToLight"] : L["Theme_ToDark"];
+    private string ThemeToggleLabel => Theme.IsDark ? L["Theme_ToLight"] : L["Theme_ToDark"];
 
     private bool ShowLibraryRail => true;
 
@@ -235,41 +239,8 @@
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (!firstRender)
-        {
-            return;
-        }
-
-        var imported = await JS.ImportAsync("./js/fauna-theme.js");
-        if (!imported.TryPickT0(out var module, out _))
-        {
-            return;
-        }
-
-        _themeModule = module;
-
-        var theme = await JS.InvokeAsync<string>(module, "getTheme");
-        _isDarkMode = theme.TryPickT0(out var name, out _)
-            && string.Equals(name, "dark", StringComparison.OrdinalIgnoreCase);
-        StateHasChanged();
-    }
-
-    private async Task ToggleThemeAsync()
-    {
-        if (_themeModule is null)
-        {
-            return;
-        }
-
-        var next = _isDarkMode ? "light" : "dark";
-
-        var stamped = await JS.InvokeVoidAsync(_themeModule, "setTheme", next);
-        if (!stamped.IsT0)
-        {
-            return;
-        }
-
-        _isDarkMode = next == "dark";
+        if (firstRender)
+            await Theme.InitializeAsync();
     }
 
     private string GetNavLinkClass(string path, bool exact = false)
