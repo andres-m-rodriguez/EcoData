@@ -85,7 +85,7 @@ public sealed class SpeciesHttpClient(HttpClient httpClient) : ISpeciesHttpClien
         double latitude,
         double longitude,
         double radiusMeters,
-        Guid? organizationId = null,
+        Guid? organizationId,
         CancellationToken ct = default)
     {
         var query = new QueryStringBuilder()
@@ -102,7 +102,7 @@ public sealed class SpeciesHttpClient(HttpClient httpClient) : ISpeciesHttpClien
 
     public async Task<OneOf<IReadOnlyList<SpeciesNearbyDto>, RequestFailed>> GetInPolygonAsync(
         IReadOnlyList<PolygonCoordinate> coordinates,
-        Guid? organizationId = null,
+        Guid? organizationId,
         CancellationToken ct = default)
     {
         var response = await httpClient.PostAsJsonAsync(

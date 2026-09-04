@@ -315,7 +315,7 @@
         var nearest = new Dictionary<Guid, SpeciesNearbyDto>();
         foreach (var polygon in polygons)
         {
-            var result = await SpeciesHttpClient.GetInPolygonAsync(polygon, AreaOrganizationId, ct);
+            var result = await SpeciesHttpClient.GetInPolygonAsync(polygon, Auth.Organization?.Id, ct);
             if (!result.TryPickT0(out var found, out var error))
                 return error;
 
@@ -407,9 +407,9 @@
         OneOf<IReadOnlyList<SpeciesNearbyDto>, RequestFailed> result = _searchMode switch
         {
             AreaSearchMode.Point or AreaSearchMode.NearMe or AreaSearchMode.Coordinates when _searchOrigin is { } origin =>
-                await SpeciesHttpClient.GetNearbyAsync(origin.Latitude, origin.Longitude, _searchRadiusMeters, AreaOrganizationId, ct),
+                await SpeciesHttpClient.GetNearbyAsync(origin.Latitude, origin.Longitude, _searchRadiusMeters, Auth.Organization?.Id, ct),
             AreaSearchMode.DrawnArea when _polygonCoordinates is { } polygon =>
-                await SpeciesHttpClient.GetInPolygonAsync(polygon, AreaOrganizationId, ct),
+                await SpeciesHttpClient.GetInPolygonAsync(polygon, Auth.Organization?.Id, ct),
             AreaSearchMode.ShapeFile when _shape is { } shape =>
                 await SearchPolygonsAsync(shape.Polygons, ct),
             _ => OneOf<IReadOnlyList<SpeciesNearbyDto>, RequestFailed>.FromT0([]),
@@ -422,10 +422,6 @@
         }
         return species;
     }
-
-    // The server fills Area in only for members with the view-areas grant; the
-    // membership is sent along so it knows whose grants to check.
-    private Guid? AreaOrganizationId => Auth.IsAuthenticated ? Auth.Organization?.Id : null;
 
     private bool AreasVisible => SearchAreaState.Result is { Count: > 0 } found && found[0].Area is not null;
 
