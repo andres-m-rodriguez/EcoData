@@ -81,6 +81,16 @@
         padding-right: 4px;
     }
 
+    /* The drawer opener is the phone's main handle: a bigger glyph, and no
+       trailing margin so the back arrow can sit right beside it. */
+    ::deep .ff-notebook-toggle {
+        margin-right: 0;
+    }
+
+    ::deep .ff-notebook-toggle .mud-icon-root {
+        font-size: 26px;
+    }
+
     /* The spacer also grows, so it and the title slot were halving the free
        space between them. The title is the only thing here that truncates —
        let it take the lot and leave the spacer as a plain separator. */
