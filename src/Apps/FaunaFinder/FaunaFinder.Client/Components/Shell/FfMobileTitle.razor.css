@@ -29,8 +29,8 @@
    !important. */
 .ff-mobile-title ::deep .mud-icon-button {
     color: var(--fauna-fg) !important;
-    /* 4px closer to the drawer opener. */
-    margin-left: -4px;
+    /* 7px closer to the drawer opener. */
+    margin-left: -7px;
 }
 
 .ff-mobile-title ::deep .mud-icon-button .mud-icon-root {
