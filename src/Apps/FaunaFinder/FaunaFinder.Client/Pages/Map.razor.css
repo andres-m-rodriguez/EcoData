@@ -152,6 +152,35 @@
     pointer-events: none;
 }
 
+/* The one part of the hint that takes a tap. */
+.tap-hint-close {
+    appearance: none;
+    display: grid;
+    place-items: center;
+    width: 26px;
+    height: 26px;
+    margin: -4px -8px -4px 0;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: transparent;
+    color: var(--fauna-map-fg-2);
+    cursor: pointer;
+    pointer-events: auto;
+    transition: background-color var(--fauna-t-base) var(--fauna-ease),
+                color var(--fauna-t-base) var(--fauna-ease);
+}
+
+.tap-hint-close:hover {
+    background: var(--fauna-map-line);
+    color: var(--fauna-map-fg);
+}
+
+.tap-hint-close:focus-visible {
+    outline: 2px solid var(--fauna-primary-400);
+    outline-offset: 2px;
+}
+
 .draw-banner {
     position: absolute;
     top: 12px;
