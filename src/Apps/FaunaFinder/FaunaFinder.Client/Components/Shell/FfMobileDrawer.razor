@@ -1,0 +1,25 @@
+@namespace FaunaFinder.Client.Components.Shell
+@inherits EcoDataComponent
+
+<div class="@(Open ? "ff-drawer-backdrop is-open" : "ff-drawer-backdrop")" @onclick="HandleClose"></div>
+
+<aside class="@(Open ? "ff-drawer is-open" : "ff-drawer")"
+       aria-hidden="@(Open ? "false" : "true")"
+       aria-label="@L["Rail_Heading"]">
+    <header class="ff-drawer-head">
+        <span class="ff-drawer-wordmark">FaunaFinder</span>
+        <button type="button" class="ff-drawer-close" @onclick="HandleClose" aria-label="@L["Common_Close"]">
+            <MudIcon Icon="@Icons.Material.Filled.Close" Size="Size.Small" />
+        </button>
+    </header>
+
+    <div class="ff-drawer-body"></div>
+</aside>
+
+@code {
+    [Parameter] public bool Open { get; set; }
+
+    [Parameter] public EventCallback OnClose { get; set; }
+
+    private Task HandleClose() => OnClose.InvokeAsync();
+}

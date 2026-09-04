@@ -1,0 +1,102 @@
+/* ==========================================================================
+   FfMobileDrawer — the phone's take on the library rail: the same floating
+   panel (surface, hairline, shell radius, soft shadow) parked in the gutter,
+   but off-canvas until the panel glyph in the app bar slides it in.
+   ========================================================================== */
+
+.ff-drawer-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 1290;
+    background: color-mix(in srgb, var(--fauna-fg) 28%, transparent);
+    backdrop-filter: blur(3px);
+    -webkit-backdrop-filter: blur(3px);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity var(--fauna-t-base) var(--fauna-ease);
+}
+
+.ff-drawer-backdrop.is-open {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.ff-drawer {
+    position: fixed;
+    top: var(--fauna-shell-gutter);
+    bottom: var(--fauna-shell-gutter);
+    left: var(--fauna-shell-gutter);
+    z-index: 1300;
+    width: min(320px, calc(100vw - var(--fauna-shell-gutter) * 4));
+    display: flex;
+    flex-direction: column;
+    background: var(--fauna-surface);
+    border: 1px solid var(--fauna-line);
+    border-radius: var(--fauna-shell-radius);
+    box-shadow: var(--fauna-shell-shadow);
+    transform: translateX(calc(-100% - var(--fauna-shell-gutter) * 2));
+    transition: transform var(--fauna-t-slow) var(--fauna-ease);
+    overflow: hidden;
+}
+
+.ff-drawer.is-open {
+    transform: translateX(0);
+}
+
+.ff-drawer-head {
+    flex: none;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 14px 10px 14px 18px;
+    border-bottom: 1px solid var(--fauna-line);
+}
+
+.ff-drawer-wordmark {
+    font: 700 1.125rem/1 var(--fauna-font-serif);
+    letter-spacing: var(--fauna-tracking-tight);
+    color: var(--fauna-primary);
+}
+
+.ff-drawer-close {
+    appearance: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: transparent;
+    color: var(--fauna-fg-3);
+    cursor: pointer;
+    transition: background-color var(--fauna-t-base) var(--fauna-ease),
+                color var(--fauna-t-base) var(--fauna-ease);
+}
+
+.ff-drawer-close:hover {
+    background: var(--fauna-primary-50);
+    color: var(--fauna-primary);
+}
+
+.ff-drawer-close:focus-visible {
+    outline: 2px solid var(--fauna-primary-400);
+    outline-offset: 2px;
+}
+
+.ff-drawer-body {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .ff-drawer,
+    .ff-drawer-backdrop,
+    .ff-drawer-close {
+        transition: none;
+    }
+}

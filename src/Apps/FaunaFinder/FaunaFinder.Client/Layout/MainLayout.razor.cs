@@ -17,10 +17,10 @@ public partial class MainLayout : EcoDataLayout
     // the account page's pending count follows the decision.
     public sealed record SightingsReviewed;
 
-    // The shell renders straight off the two managers' State, so subscribing is
-    // the whole job — the handler body has nothing to add.
+    // The shell renders straight off the managers' State; the phone drawer is
+    // the one thing a navigation has to put away.
     [Event]
-    private void OnNavigationChanged(NavigationChanged _) { }
+    private void OnNavigationChanged(NavigationChanged _) => _drawerOpen = false;
 
     [Event]
     private void OnNavbarChanged(NavbarChanged _) { }
