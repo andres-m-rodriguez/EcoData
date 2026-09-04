@@ -188,6 +188,14 @@
                     }
                     else
                     {
+                        @* TryExecute swallows exceptions into Error; without this the
+                           page would sit there as if nothing had been pressed. *@
+                        @if (SubmitState.IsError)
+                        {
+                            <MudAlert Severity="Severity.Error" Variant="Variant.Outlined" Dense="true">
+                                @L["Sighting_Error_Generic"]
+                            </MudAlert>
+                        }
                         <MudButton Variant="Variant.Filled"
                                    Color="Color.Primary"
                                    FullWidth="true"
