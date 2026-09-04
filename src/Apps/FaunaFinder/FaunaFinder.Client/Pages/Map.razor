@@ -15,6 +15,7 @@
 @inject NavigationManager NavigationManager
 @inject ISnackbar Snackbar
 @inject ILocalizer L
+@inject IJavascriptSafeInterop JS
 
 <PageTitle>FaunaFinder — @L["Nav_Map"]</PageTitle>
 
@@ -36,6 +37,9 @@
             <div class="tap-hint">
                 <MudIcon Icon="@Icons.Material.Filled.TouchApp" Size="Size.Small" />
                 <span>@L["Map_Tap_Hint"]</span>
+                <button type="button" class="tap-hint-close" @onclick="DismissTapHint" aria-label="@L["Common_Close"]">
+                    <MudIcon Icon="@Icons.Material.Filled.Close" Size="Size.Small" />
+                </button>
             </div>
         }
 
@@ -186,7 +190,28 @@
 
     private bool ShowActionButtons => !PanelVisible && !_isDrawing;
 
-    private bool ShowTapHint => _searchMode == AreaSearchMode.None && !_isDrawing;
+    // Hidden until storage has been read, so a reader who dismissed it never sees it flash.
+    private bool _tapHintDismissed = true;
+
+    private const string TapHintDismissedKey = "faunafinder-tap-hint-dismissed";
+
+    private bool ShowTapHint => !_tapHintDismissed && _searchMode == AreaSearchMode.None && !_isDrawing;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender) return;
+
+        var stored = await JS.InvokeAsync<string?>("localStorage.getItem", TapHintDismissedKey);
+        _tapHintDismissed = stored.Match(value => value is not null, _ => false);
+        StateHasChanged();
+    }
+
+    // Storage failing (private mode) only costs the memory across reloads.
+    private void DismissTapHint()
+    {
+        _tapHintDismissed = true;
+        _ = JS.InvokeVoidAsync("localStorage.setItem", TapHintDismissedKey, "1");
+    }
 
     private string SearchTitle => _searchMode switch
     {
