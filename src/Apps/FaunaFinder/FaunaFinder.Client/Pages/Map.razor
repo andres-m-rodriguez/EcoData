@@ -57,13 +57,6 @@
                             aria-label="@L["Map_DrawArea_Label"]"
                             OnClick="StartDrawArea" />
                 </MudTooltip>
-                <MudTooltip Text="@L["Map_Travel_Label"]" Placement="Placement.Left">
-                    <MudFab Color="Color.Default"
-                            StartIcon="@Icons.Material.Filled.Public"
-                            Size="Size.Medium"
-                            aria-label="@L["Map_Travel_Label"]"
-                            OnClick="OpenTravelSheet" />
-                </MudTooltip>
                 @if (Auth.IsAuthenticated)
                 {
                     <MudTooltip Text="@L["Sighting_Report_Action"]" Placement="Placement.Left">
@@ -89,13 +82,6 @@
                     @L["Map_Draw_Cancel"]
                 </MudButton>
             </div>
-        }
-
-        @if (_travelSheetOpen)
-        {
-            <MapTravelSheet Current="_region"
-                            OnSelect="TravelTo"
-                            OnClose="CloseTravelSheet" />
         }
     </div>
 
@@ -142,8 +128,6 @@
     private const int InitialZoom = 9;
 
     private MapController<MunicipalityMarker> _mapController = new();
-    private MapRegion _region = MapRegions.Default;
-    private bool _travelSheetOpen;
     private bool _sidebarOpen;
     private bool _sheetOpen;
 
@@ -191,16 +175,16 @@
     private void OnMapClicked(MapCoordinate point)
     {
         _lastTappedPoint = point;
-        if (_isDrawing || _travelSheetOpen) return;
+        if (_isDrawing) return;
 
         _ = InvokeAsync(async () => await SearchAroundAsync(point, NearMeRadiusMeters, AreaSearchMode.Point));
     }
 
     private bool PanelVisible => _searchMode != AreaSearchMode.None;
 
-    private bool ShowActionButtons => !PanelVisible && !_isDrawing && !_travelSheetOpen;
+    private bool ShowActionButtons => !PanelVisible && !_isDrawing;
 
-    private bool ShowTapHint => _searchMode == AreaSearchMode.None && !_isDrawing && !_travelSheetOpen;
+    private bool ShowTapHint => _searchMode == AreaSearchMode.None && !_isDrawing;
 
     private string SearchTitle => _searchMode switch
     {
@@ -263,37 +247,11 @@
         _mapController.OnPolygonDrawCancelled += OnPolygonDrawCancelled;
         _mapController.OnMapClicked += OnMapClicked;
 
-        _mapController.SetView(_region.Center, InitialZoom);
-        _mapController.AddGeoJson(MunicipalityBoundaries.ForRegion(_region, interactive: false));
-    }
+        _mapController.SetView(MapRegions.Default.Center, InitialZoom);
 
-    private void OpenTravelSheet()
-    {
-        _travelSheetOpen = true;
-        StateHasChanged();
-    }
-
-    private void CloseTravelSheet()
-    {
-        _travelSheetOpen = false;
-        StateHasChanged();
-    }
-
-    private void TravelTo(MapRegion region)
-    {
-        _travelSheetOpen = false;
-        var leaving = _region;
-        _region = region;
-
-        _sidebarOpen = false;
-        _sheetOpen = false;
-        ClearAreaSearch();
-
-        _mapController.RemoveGeoJson(MunicipalityBoundaries.LayerIdFor(leaving));
-        _mapController.AddGeoJson(MunicipalityBoundaries.ForRegion(region, interactive: false));
-        _mapController.FitToBounds(region.Bounds);
-
-        StateHasChanged();
+        // Both regions stay on the map so a visitor can pan to the islands and tap there.
+        foreach (var region in MapRegions.All)
+            _mapController.AddGeoJson(MunicipalityBoundaries.ForRegion(region, interactive: false));
     }
 
     private void OnLanguageChanged() => InvokeAsync(StateHasChanged);

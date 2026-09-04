@@ -50,7 +50,7 @@
 
     private readonly MapController<MunicipalityMarker> _controller = new();
     private Guid? _lastSelectedId;
-    private string _lastRegionCode = MapRegions.Default.Code;
+    private string? _lastRegionCode;
     private bool _geoJsonLoaded;
     private string? _geoJsonLoadError;
 
@@ -62,24 +62,30 @@
 
         // Spa.Map has no default location, so place the map before the first render.
         _controller.SetView(MapRegions.Default.Center, 9);
-
-        foreach (var region in MapRegions.All)
-        {
-            _controller.AddGeoJson(MunicipalityBoundaries.ForRegion(
-                region,
-                fillColor: "#3f7d5f",
-                fillOpacity: 0.22,
-                strokeColor: "#1f4d3a",
-                strokeWidth: 2));
-        }
     }
 
     protected override void OnParametersSet()
     {
         if (Region.Code != _lastRegionCode)
         {
+            var firstRegion = _lastRegionCode is null;
             _lastRegionCode = Region.Code;
-            _controller.FitToBounds(Region.Bounds);
+
+            // Only the chosen region answers clicks; the other stays as a muted backdrop.
+            foreach (var region in MapRegions.All)
+            {
+                var active = region == Region;
+                _controller.AddGeoJson(MunicipalityBoundaries.ForRegion(
+                    region,
+                    fillColor: active ? "#3f7d5f" : "#9aa59f",
+                    fillOpacity: active ? 0.22 : 0.10,
+                    strokeColor: active ? "#1f4d3a" : "#7d8883",
+                    strokeWidth: active ? 2 : 1,
+                    interactive: active));
+            }
+
+            if (!firstRegion)
+                _controller.FitToBounds(Region.Bounds);
         }
 
         if (!_geoJsonLoaded) return;
