@@ -185,6 +185,19 @@
     border-radius: var(--fauna-shell-radius);
     box-shadow: var(--fauna-shell-shadow);
     overflow: hidden;
+    /* Waits off the right edge, the mirror of the drawer waiting off the left,
+       so going back reads as one panel leaving while the other comes in. */
+    transform: translateX(calc(100% + var(--fauna-shell-gutter) * 2));
+    visibility: hidden;
+    transition: transform var(--fauna-t-slow) var(--fauna-ease),
+                visibility 0s linear var(--fauna-t-slow);
+}
+
+.ff-drawer-tool.is-open {
+    transform: translateX(0);
+    visibility: visible;
+    transition: transform var(--fauna-t-slow) var(--fauna-ease),
+                visibility 0s;
 }
 
 .ff-drawer-tool-head {
@@ -241,6 +254,7 @@
 
 @media (prefers-reduced-motion: reduce) {
     .ff-drawer,
+    .ff-drawer-tool,
     .ff-drawer-backdrop,
     .ff-drawer-close,
     .ff-drawer-back,
