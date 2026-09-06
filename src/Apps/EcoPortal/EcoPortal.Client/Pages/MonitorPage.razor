@@ -1,6 +1,7 @@
 @page "/monitor"
-@inject INavigationManager Navigation
-@inject INavbarManager Navbar
+@inject NavigationManager Navigation
+@inject Navbar Navbar
+@inject PageNavigation PageNavigation
 
 <PageTitle>Monitor - EcoData</PageTitle>
 
@@ -19,6 +20,8 @@
 </div>
 
 @code {
+    protected override void OnParametersSet() => PageNavigation.Record();
+
     protected override void OnInitialized()
     {
         Navbar.SetTitle("Monitor");

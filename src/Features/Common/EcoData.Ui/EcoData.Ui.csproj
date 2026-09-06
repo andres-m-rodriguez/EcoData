@@ -18,7 +18,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\EcoData.Spa.Navigation\EcoData.Spa.Navigation.csproj" />
+    <ProjectReference Include="..\EcoData.Spa\EcoData.Spa.csproj" />
   </ItemGroup>
 
 </Project>

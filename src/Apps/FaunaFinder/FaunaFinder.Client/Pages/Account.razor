@@ -2,8 +2,10 @@
 @inherits EcoDataComponent
 @using System.Globalization
 @inject AuthStateService Auth
-@inject INavigationManager Navigation
-@inject INavbarManager Navbar
+@inject NavigationManager Navigation
+@inject Navbar Navbar
+@inject PageNavigation PageNavigation
+@inject ISightingHttpClient SightingClient
 
 <PageTitle>FaunaFinder | @L["Account_PageTitle"]</PageTitle>
 
@@ -184,6 +186,8 @@
 </div>
 
 @code {
+    protected override void OnParametersSet() => PageNavigation.Record();
+
     private string UserInitial => Auth.CurrentUser?.DisplayName is { Length: > 0 } name
         ? name[..1].ToUpperInvariant()
         : "?";

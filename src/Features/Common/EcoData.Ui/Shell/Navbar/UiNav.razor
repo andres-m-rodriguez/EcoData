@@ -1,11 +1,11 @@
 @namespace EcoData.Ui.Shell.Navbar
 @inherits StatefulComponent
-@inject INavigationManager Navigation
+@inject NavigationManager Navigation
 
 <nav class="ui-nav">
     @foreach (var link in Links)
     {
-        <a href="@link.Href" class="@(link.IsActive(Navigation.State.Path) ? "ui-nav-link is-active" : "ui-nav-link")">
+        <a href="@link.Href" class="@(link.IsActive(new Uri(Navigation.Uri).AbsolutePath) ? "ui-nav-link is-active" : "ui-nav-link")">
             @link.Label
         </a>
     }

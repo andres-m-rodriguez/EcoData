@@ -4,9 +4,10 @@
 @using EcoData.Sensors.Application.Client
 @using EcoData.Sensors.Contracts.Parameters
 @inherits StatefulComponent
-@inject INavbarManager Navbar
+@inject Navbar Navbar
 @inject ISensorHttpClient SensorClient
 @inject ISensorReadingHttpClient ReadingClient
+@inject PageNavigation PageNavigation
 
 <PageTitle>Data Portal - EcoData</PageTitle>
 
@@ -183,6 +184,8 @@
 </div>
 
 @code {
+    protected override void OnParametersSet() => PageNavigation.Record();
+
     private string? _loadError;
 
     protected override void OnInitialized()

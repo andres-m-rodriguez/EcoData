@@ -1,4 +1,4 @@
-using EcoData.Spa.Navigation;
+using Microsoft.AspNetCore.Components;
 
 namespace EcoPortal.Client.Services;
 
@@ -20,11 +20,11 @@ public interface ITabNavigationService
 
 public sealed class TabNavigationService : ITabNavigationService
 {
-    private readonly INavigationManager _nav;
+    private readonly NavigationManager _nav;
 
-    public TabNavigationService(INavigationManager nav) => _nav = nav;
+    public TabNavigationService(NavigationManager nav) => _nav = nav;
 
-    public NavigationTab CurrentTab => GetTabFromPath(_nav.State.Path);
+    public NavigationTab CurrentTab => GetTabFromPath(new Uri(_nav.Uri).AbsolutePath);
 
     public void NavigateToTab(NavigationTab tab) => _nav.NavigateTo(GetTabRoot(tab));
 

@@ -22,6 +22,7 @@
     <ProjectReference Include="..\..\..\Features\Common\EcoData.Common.Problems.Contracts\EcoData.Common.Problems.Contracts.csproj" />
     <ProjectReference Include="..\..\..\Features\Common\EcoData.NativeUi\EcoData.NativeUi.csproj" />
     <ProjectReference Include="..\..\..\Features\Common\EcoData.Ui\EcoData.Ui.csproj" />
+    <ProjectReference Include="..\..\..\Features\Common\EcoData.Spa\EcoData.Spa.csproj" />
     <ProjectReference Include="..\..\..\Features\Common\EcoData.Spa.Blazor\EcoData.Spa.Blazor.csproj" />
     <ProjectReference Include="..\..\..\Features\Common\EcoData.Spa.Map\EcoData.Spa.Map.csproj" />
     <ProjectReference Include="..\..\..\Features\Identity\EcoData.Identity.Contracts\EcoData.Identity.Contracts.csproj" />

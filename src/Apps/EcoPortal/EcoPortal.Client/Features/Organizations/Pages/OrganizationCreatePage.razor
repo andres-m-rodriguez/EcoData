@@ -5,7 +5,8 @@
 @using EcoPortal.Client.Features.Organizations.Components
 @inherits StatefulComponent
 @inject IOrganizationHttpClient OrganizationClient
-@inject INavigationManager Navigation
+@inject NavigationManager Navigation
+@inject PageNavigation PageNavigation
 @inject ISnackbar Snackbar
 
 <PageTitle>Create Organization - EcoData</PageTitle>
@@ -18,6 +19,8 @@
 </NuiPageLayout>
 
 @code {
+    protected override void OnParametersSet() => PageNavigation.Record();
+
     private readonly OrganizationForm.OrganizationFormModel _model = new();
     private string? _errorMessage;
 
@@ -67,5 +70,5 @@
         );
     }
 
-    private void NavigateBack() => _ = Navigation.GoBackAsync();
+    private void NavigateBack() => PageNavigation.GoBack();
 }

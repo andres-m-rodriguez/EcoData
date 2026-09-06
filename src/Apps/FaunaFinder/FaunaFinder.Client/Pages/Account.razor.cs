@@ -21,9 +21,6 @@ public partial class Account : EcoDataComponent
     private const string EmptyTitleKey = "Sighting_Mine_Empty_Title";
     private const string EmptyDescriptionKey = "Sighting_Mine_Empty_Description";
 
-    [Inject]
-    private ISightingHttpClient SightingClient { get; set; } = default!;
-
     [CascadingParameter]
     public LocaleContext Locale { get; set; } = LocaleContext.English;
 

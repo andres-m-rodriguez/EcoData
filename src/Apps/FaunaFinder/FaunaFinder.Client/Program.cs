@@ -1,7 +1,7 @@
 using EcoData.Common.i18n;
 using EcoData.Common.Problems;
 using EcoData.Locations.Application.Client;
-using EcoData.Spa.Navigation;
+using EcoData.Spa;
 using EcoData.Ui;
 using EcoData.Wildlife.Application.Client;
 using FaunaFinder.Client.Localization;
@@ -34,7 +34,7 @@ builder.Services.AddScoped<ThemePreference>();
 builder.Services.AddScoped<AuthenticationStateProvider, FaunaFinderAuthStateProvider>();
 builder.Services.AddAuthorizationCore();
 
-builder.Services.AddSpaNavigation();
+builder.Services.AddEcoDataSpa();
 builder.Services.AddEcoDataUi();
 builder.Services.AddMudServices();
 

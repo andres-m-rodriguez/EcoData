@@ -15,6 +15,8 @@ namespace FaunaFinder.Client.Pages;
 // frontend can.
 public partial class MySightings : EcoDataComponent
 {
+    protected override void OnParametersSet() => PageNavigation.Record();
+
     private const int PageSize = 20;
 
     // Keys held as consts so they can appear in Razor attribute forms

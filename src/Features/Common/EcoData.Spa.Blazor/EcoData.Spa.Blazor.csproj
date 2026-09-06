@@ -20,7 +20,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\EcoData.Common.i18n\EcoData.Common.i18n.csproj" />
-    <ProjectReference Include="..\EcoData.Spa.Core\EcoData.Spa.Core.csproj" />
   </ItemGroup>
 
 </Project>

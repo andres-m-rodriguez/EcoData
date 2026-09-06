@@ -1,6 +1,7 @@
 @page "/getting-started"
 @using BlazorStaticNavigation
-@inject INavbarManager Navbar
+@inject Navbar Navbar
+@inject PageNavigation PageNavigation
 
 <PageTitle>Getting Started - EcoData</PageTitle>
 
@@ -82,6 +83,8 @@
 </div>
 
 @code {
+    protected override void OnParametersSet() => PageNavigation.Record();
+
     protected override void OnInitialized()
     {
         Navbar.SetTitle("Getting Started");

@@ -8,7 +8,8 @@
 @inherits StatefulComponent
 @inject IOrganizationHttpClient OrganizationClient
 @inject AuthStateService AuthState
-@inject INavigationManager Navigation
+@inject NavigationManager Navigation
+@inject PageNavigation PageNavigation
 
 <PageTitle>My Organizations - EcoData</PageTitle>
 
@@ -84,6 +85,8 @@
 </NuiPageLayout>
 
 @code {
+    protected override void OnParametersSet() => PageNavigation.Record();
+
     private List<MyOrganizationDto> _myOrganizations = [];
     private bool _showLoginPrompt;
 

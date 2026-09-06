@@ -1,31 +1,31 @@
 @namespace EcoData.NativeUi.Components.NativeNavbar
 @inherits StatefulComponent
-@inject INavbarManager Navbar
-@inject INavigationManager Navigation
+@inject Navbar Navbar
+@inject PageNavigation PageNavigation
 
-@if (ShowBackButton && Navigation.State.CanGoBack)
+@if (ShowBackButton && PageNavigation.CanGoBack)
 {
     <MudIconButton Icon="@Icons.Material.Filled.ArrowBack"
                    Color="Color.Dark"
-                   OnClick="GoBackAsync" />
+                   OnClick="@(() => PageNavigation.GoBack())" />
 }
 
-@if (ShowTitle && Navbar.State.Title is not null)
+@if (ShowTitle && Navbar.Title is not null)
 {
     <span class="nui-navbar-title @TitleClass">
-        @Navbar.State.Title
+        @Navbar.Title
     </span>
 }
 
-@if (ShowActions && Navbar.State.Actions.Count > 0)
+@if (ShowActions && Navbar.Actions.Count > 0)
 {
-    @if (Navbar.State.Actions.Count == 1)
+    @if (Navbar.Actions.Count == 1)
     {
         <MudButton Variant="Variant.Filled"
                    Color="Color.Primary"
                    Size="Size.Small"
-                   OnClick="@(() => Navbar.State.Actions[0].OnClick())">
-            @Navbar.State.Actions[0].Title
+                   OnClick="@(() => Navbar.Actions[0].OnClick())">
+            @Navbar.Actions[0].Title
         </MudButton>
     }
     else
@@ -34,7 +34,7 @@
                  Color="Color.Dark"
                  AnchorOrigin="Origin.BottomRight"
                  TransformOrigin="Origin.TopRight">
-            @foreach (var action in Navbar.State.Actions)
+            @foreach (var action in Navbar.Actions)
             {
                 <MudMenuItem OnClick="@(() => action.OnClick())">
                     @action.Title
@@ -76,9 +76,4 @@
 
     [Event]
     private void OnNavigationChanged(NavigationChanged _) { }
-
-    private async Task GoBackAsync()
-    {
-        await Navigation.GoBackAsync();
-    }
 }

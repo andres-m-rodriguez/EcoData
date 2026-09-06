@@ -3,8 +3,9 @@
 @inject ISpeciesCategoryHttpClient CategoryClient
 @inject INrcsPracticeHttpClient PracticeClient
 @inject IFwsActionHttpClient ActionClient
-@inject INavbarManager Navbar
+@inject Navbar Navbar
 @inject ILocalizer L
+@inject PageNavigation PageNavigation
 
 <PageTitle>FaunaFinder — @L["Browse_PageTitle"]</PageTitle>
 
@@ -52,6 +53,8 @@
 </div>
 
 @code {
+    protected override void OnParametersSet() => PageNavigation.Record();
+
     private string CategoriesCountText => LoadCategoryCountState.Result is { } count
         ? count.ToString()
         : L["Browse_Count_Pending"];

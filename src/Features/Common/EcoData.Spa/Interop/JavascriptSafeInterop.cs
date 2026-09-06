@@ -2,7 +2,7 @@ using Microsoft.JSInterop;
 using OneOf;
 using OneOf.Types;
 
-namespace EcoData.Ui.Interop;
+namespace EcoData.Spa.Interop;
 
 public sealed class JavascriptSafeInterop(IJSRuntime js) : IJavascriptSafeInterop
 {

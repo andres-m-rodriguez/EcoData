@@ -1,5 +1,6 @@
 @namespace EcoData.Ui.Shell.Navbar
 @inherits StatefulComponent
+@inject NavAutoHide AutoHide
 
 <nav class="@BarClass" aria-hidden="@(_hidden ? "true" : "false")">
     <MudStack Row="true" Justify="Justify.SpaceAround" AlignItems="AlignItems.Center" Class="ui-bottom-nav-row">

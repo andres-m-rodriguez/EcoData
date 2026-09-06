@@ -1,5 +1,5 @@
 using EcoData.Spa.Blazor;
-using EcoData.Spa.Navigation.Events;
+using EcoData.Spa.Navigation;
 using FaunaFinder.Client.Localization;
 using Tempest;
 
@@ -17,7 +17,7 @@ public partial class FfMobileTitle : EcoDataComponent
     private string? _avatarAlt;
 
     private bool IsRootPage =>
-        Navigation.State.Path is "/" or "";
+        new Uri(Navigation.Uri).AbsolutePath is "/" or "";
 
     [Event]
     private void OnAvatar(Avatar avatar)

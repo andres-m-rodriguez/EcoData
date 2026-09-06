@@ -1,4 +1,4 @@
-using EcoData.Ui.Interop;
+using EcoData.Spa.Interop;
 using Microsoft.JSInterop;
 
 namespace EcoData.Ui.Shell.Navbar;

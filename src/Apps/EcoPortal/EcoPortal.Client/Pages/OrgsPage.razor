@@ -1,8 +1,9 @@
 @page "/orgs"
 @using EcoPortal.Client.Services
-@inject INavigationManager Navigation
-@inject INavbarManager Navbar
+@inject NavigationManager Navigation
+@inject Navbar Navbar
 @inject AuthStateService AuthState
+@inject PageNavigation PageNavigation
 
 <PageTitle>Organizations - EcoData</PageTitle>
 
@@ -29,6 +30,8 @@
 </div>
 
 @code {
+    protected override void OnParametersSet() => PageNavigation.Record();
+
     protected override void OnInitialized()
     {
         Navbar.SetTitle("Organizations");

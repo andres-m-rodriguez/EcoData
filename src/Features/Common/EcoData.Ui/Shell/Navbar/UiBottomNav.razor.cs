@@ -1,4 +1,4 @@
-using EcoData.Spa.Navigation.Events;
+using EcoData.Spa.Navigation;
 using Microsoft.AspNetCore.Components;
 using Tempest;
 
@@ -20,10 +20,6 @@ public partial class UiBottomNav : StatefulComponent
 
     [Parameter]
     public EventCallback<string> OnSelect { get; set; }
-
-    // Transient: this bar owns its watcher for as long as it is on screen.
-    [Inject]
-    private NavAutoHide AutoHide { get; set; } = default!;
 
     private bool _hidden;
 
