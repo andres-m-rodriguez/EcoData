@@ -1,0 +1,6 @@
+root = true
+
+[*.cs]
+# ECO003 requires a lambda where a method group would do, so the IDE rule pulling the other way is off.
+csharp_style_prefer_method_group_conversion = false
+dotnet_diagnostic.IDE0200.severity = none
