@@ -35,12 +35,6 @@ public partial class SightingReviewDialog : EcoDataComponent
     [Parameter]
     public LocaleContext Locale { get; set; } = LocaleContext.English;
 
-    [Inject]
-    private ISightingHttpClient SightingClient { get; set; } = default!;
-
-    [Inject]
-    private ISnackbar Snackbar { get; set; } = default!;
-
     private string _reason = string.Empty;
     private string? _reasonError;
 

@@ -11,11 +11,12 @@
 @inject ISpeciesHttpClient SpeciesHttpClient
 @inject ISpeciesCategoryHttpClient SpeciesCategoryHttpClient
 @inject IMunicipalityHttpClient MunicipalityHttpClient
-@inject INavbarManager Navbar
+@inject Navbar Navbar
 @inject NavigationManager NavigationManager
 @inject IDialogService Dialogs
 @inject IBrowserViewportService Viewport
 @inject ILocalizer L
+@inject PageNavigation PageNavigation
 
 <PageTitle>@L["Species_PageTitle"]</PageTitle>
 
@@ -138,6 +139,8 @@ else
 }
 
 @code {
+    protected override void OnParametersSet() => PageNavigation.Record();
+
     [Parameter] public Guid? Id { get; set; }
 
     // Keys held as consts so they can appear in Razor attribute forms
@@ -351,7 +354,7 @@ else
 
     private void OnLanguageChanged()
     {
-        Navbar.SetTitle(Id is null ? L["Nav_Species"] : Navbar.State.Title ?? L["Nav_Species"]);
+        Navbar.SetTitle(Id is null ? L["Nav_Species"] : Navbar.Title ?? L["Nav_Species"]);
         InvokeAsync(StateHasChanged);
     }
 

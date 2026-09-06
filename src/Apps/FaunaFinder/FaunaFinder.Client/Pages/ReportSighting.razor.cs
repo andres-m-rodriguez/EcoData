@@ -79,6 +79,7 @@ public partial class ReportSighting : EcoDataComponent
 
     protected override void OnParametersSet()
     {
+        PageNavigation.Record();
         if (_prefilled) return;
         _prefilled = true;
 

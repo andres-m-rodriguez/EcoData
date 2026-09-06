@@ -10,7 +10,8 @@
 @using EcoData.Common.Authorization
 @inherits StatefulComponent
 @inject ISensorHttpClient SensorClient
-@inject INavigationManager Navigation
+@inject NavigationManager Navigation
+@inject PageNavigation PageNavigation
 @inject ISnackbar Snackbar
 @inject IAuthorization Auth
 @inject AuthStateService AuthState
@@ -64,6 +65,8 @@
 </NuiPageLayout>
 
 @code {
+    protected override void OnParametersSet() => PageNavigation.Record();
+
     [Parameter]
     public Guid SensorId { get; set; }
 
@@ -146,5 +149,5 @@
         );
     }
 
-    private void NavigateBack() => _ = Navigation.GoBackAsync();
+    private void NavigateBack() => PageNavigation.GoBack();
 }

@@ -3,7 +3,8 @@
 @using EcoPortal.Client.Services
 @inject AuthStateService AuthState
 @inject ITabNavigationService Tabs
-@inject INavbarManager Navbar
+@inject Navbar Navbar
+@inject PageNavigation PageNavigation
 
 <PageTitle>Account - EcoData</PageTitle>
 
@@ -142,6 +143,8 @@ else
 }
 
 @code {
+    protected override void OnParametersSet() => PageNavigation.Record();
+
     private int _sensorCount;
 
     protected override void OnInitialized()

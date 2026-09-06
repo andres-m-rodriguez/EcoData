@@ -1,6 +1,6 @@
 @namespace EcoData.NativeUi.Components.PageLayout
-@inject INavigationManager Navigation
-@inject INavbarManager Navbar
+@inject PageNavigation PageNavigation
+@inject Navbar Navbar
 
 <div class="nui-page-layout">
     @if (!string.IsNullOrEmpty(ParentPath))
@@ -78,7 +78,7 @@
 
         if (ParentPath is not null)
         {
-            Navigation.SetParentPath(ParentPath);
+            PageNavigation.SetParentPath(ParentPath);
         }
 
         if (Actions is { Count: > 0 })
@@ -87,9 +87,9 @@
         }
         else
         {
-            Navbar.ClearActions();
+            Navbar.SetActions();
         }
     }
 
-    private void GoBack() => _ = Navigation.GoBackAsync();
+    private void GoBack() => PageNavigation.GoBack();
 }

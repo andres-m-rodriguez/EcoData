@@ -20,6 +20,8 @@ namespace FaunaFinder.Client.Pages;
 // C# symbol frontend can.
 public partial class ReviewSightings : EcoDataComponent
 {
+    protected override void OnParametersSet() => PageNavigation.Record();
+
     private const int PageSize = 20;
     private const int SearchPageSize = 10;
 

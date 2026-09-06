@@ -12,7 +12,8 @@
 @using OrganizationPermissions = EcoData.Organization.Contracts.Permissions
 @using SensorPermissions = EcoData.Sensors.Contracts.Permissions
 @inject AuthStateService AuthState
-@inject INavigationManager Navigation
+@inject NavigationManager Navigation
+@inject PageNavigation PageNavigation
 
 
 <OrganizationWorkspace OrganizationId="Id" Section="CurrentSection">
@@ -59,6 +60,8 @@
 </OrganizationWorkspace>
 
 @code {
+    protected override void OnParametersSet() => PageNavigation.Record();
+
     [Parameter]
     public Guid Id { get; set; }
 
@@ -113,7 +116,7 @@
         // the host keeps that behavior for the guarded sections.
         if (RequiredPermission is not null && !AuthState.IsAuthenticated)
         {
-            var returnUrl = Uri.EscapeDataString(Navigation.State.Path);
+            var returnUrl = Uri.EscapeDataString(new Uri(Navigation.Uri).AbsolutePath);
             Navigation.NavigateTo($"/login?returnUrl={returnUrl}");
         }
     }

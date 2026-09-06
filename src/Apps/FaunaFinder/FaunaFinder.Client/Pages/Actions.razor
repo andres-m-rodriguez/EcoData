@@ -6,9 +6,10 @@
 @inject IFwsActionHttpClient ActionClient
 @inject IConservationLinkHttpClient LinkClient
 @inject ISpeciesHttpClient SpeciesHttpClient
-@inject INavbarManager Navbar
+@inject Navbar Navbar
 @inject NavigationManager NavigationManager
 @inject ILocalizer L
+@inject PageNavigation PageNavigation
 
 <PageTitle>FaunaFinder — @L["Actions_PageTitle"]</PageTitle>
 
@@ -171,6 +172,8 @@ else
 }
 
 @code {
+    protected override void OnParametersSet() => PageNavigation.Record();
+
     [Parameter] public string? Code { get; set; }
 
     [CascadingParameter] public LocaleContext Locale { get; set; } = LocaleContext.English;

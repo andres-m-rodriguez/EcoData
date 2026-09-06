@@ -12,9 +12,10 @@
 @inject IOrganizationHttpClient OrganizationClient
 @inject ISensorHttpClient SensorClient
 @inject ISensorReadingHttpClient ReadingClient
-@inject INavigationManager Navigation
-@inject INavbarManager Navbar
+@inject NavigationManager Navigation
+@inject Navbar Navbar
 @inject AuthStateService AuthState
+@inject PageNavigation PageNavigation
 
 <PageTitle>Discover Organizations - EcoData</PageTitle>
 
@@ -146,6 +147,8 @@
 </div>
 
 @code {
+    protected override void OnParametersSet() => PageNavigation.Record();
+
     private EcoDataVirtualizedList<OrganizationDtoForList, OrganizationParameters>? _virtualizedList;
 
     private string? _loadError;

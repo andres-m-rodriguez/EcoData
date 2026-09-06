@@ -5,8 +5,8 @@
 @using EcoPortal.Client.Themes
 @inherits StatefulComponent
 @inject AuthStateService AuthState
-@inject INavigationManager Navigation
-@inject INavbarManager Navbar
+@inject NavigationManager Navigation
+@inject Navbar Navbar
 @inject ITabNavigationService Tabs
 @inject NotificationService NotificationService
 
@@ -104,7 +104,7 @@
 
     private bool _railOpen = true;
 
-    private string Path => Navigation.State.Path;
+    private string Path => new Uri(Navigation.Uri).AbsolutePath;
 
     private bool IsHomePage => Tabs.CurrentTab == NavigationTab.Home;
 
@@ -113,7 +113,7 @@
     private string? DesktopTitle =>
         IsHomePage || NavLinks.Any(l => Path.Equals(l.Href, StringComparison.OrdinalIgnoreCase))
             ? null
-            : Navbar.State.Title;
+            : Navbar.Title;
 
     private string UserInitial
     {

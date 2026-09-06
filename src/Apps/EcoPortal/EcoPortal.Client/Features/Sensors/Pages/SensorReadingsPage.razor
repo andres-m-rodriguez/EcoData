@@ -9,6 +9,7 @@
 @inject ISensorHttpClient SensorClient
 @inject ISensorReadingHttpClient ReadingClient
 @inject IDialogService DialogService
+@inject PageNavigation PageNavigation
 
 <PageTitle>Sensor Readings - EcoData</PageTitle>
 
@@ -56,6 +57,8 @@
 </NuiPageLayout>
 
 @code {
+    protected override void OnParametersSet() => PageNavigation.Record();
+
     private SensorReadingsList? _readingsList;
     private SensorDtoForDetail? _sensor;
     private string? _loadError;

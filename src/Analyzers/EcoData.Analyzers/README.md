@@ -212,6 +212,26 @@ Blazor markup never carries a `style` attribute or a `<style>` element. Every vi
 
 Flagged: every `style` attribute in a `.razor` file, whether the value is a literal, a bound value (`style="@Style"`, `style="width:@Width"`), or a component `Style` parameter, and every `<style>` element, reported once at its opening tag. Not flagged: the CSS inside a `<style>` element (the element itself already is), attributes that merely end in `style` such as `data-style`, text inside Razor comments (`@* ... *@`), identifiers inside `@code` and `@functions` blocks, and `.cshtml` files. There is no fix: the right class name and the stylesheet it belongs in are design decisions.
 
+## ECO011: Component services should be declared with @inject
+
+A component's dependencies are read at the top of its `.razor` file. A code-behind never carries an `[Inject]` property, whether the file is a `.razor.cs` partial or a plain component class. The exception is an abstract base class such as `EcoDataComponent`: it has no `.razor` file to hold the directive, so `[Inject]` is the only way it can receive a service that every subclass needs.
+
+```csharp
+// Wrong: SpeciesGrid.razor.cs
+public partial class SpeciesGrid
+{
+    [Inject]
+    private ISpeciesHttpClient Client { get; set; } = default!;
+}
+```
+
+```razor
+@* Right: SpeciesGrid.razor *@
+@inject ISpeciesHttpClient Client
+```
+
+Flagged: every `[Inject]` on a member of a non-abstract type, matched by symbol so a same-named attribute from another namespace is ignored. Not flagged: `[Inject]` on a member of an abstract class. There is no fix: the directive moves to another file, and the analyzer cannot see the `.razor` half of the component.
+
 ## Adding a new rule
 
 1. Analyzer class in `Rules/` with the next `ECO00X` id, concurrent execution enabled, generated code excluded.

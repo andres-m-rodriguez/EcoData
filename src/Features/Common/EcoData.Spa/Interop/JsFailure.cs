@@ -1,4 +1,4 @@
-namespace EcoData.Ui.Interop;
+namespace EcoData.Spa.Interop;
 
 public enum JsFailureKind
 {

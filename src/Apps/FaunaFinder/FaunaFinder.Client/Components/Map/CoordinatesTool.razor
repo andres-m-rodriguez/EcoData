@@ -2,6 +2,8 @@
 @inherits EcoDataComponent
 @using System.Globalization
 @using FaunaFinder.Client.Services.Shapes
+@inject NavigationManager Navigation
+@inject ShapeAreaRequest Shapes
 
 <form class="ff-coord-form" @onsubmit="ShowOnMap" @onsubmit:preventDefault="true">
     <label class="ff-coord-field">

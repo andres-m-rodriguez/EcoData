@@ -12,10 +12,11 @@
 @inject ISensorHttpClient SensorClient
 @inject ISensorHealthHttpClient HealthClient
 @inject IMunicipalityHttpClient MunicipalityClient
-@inject INavigationManager Navigation
+@inject NavigationManager Navigation
 @inject ISnackbar Snackbar
 @inject IAuthorization Auth
 @inject AuthStateService AuthState
+@inject PageNavigation PageNavigation
 
 <PageTitle>Configure Sensor - EcoData</PageTitle>
 
@@ -251,6 +252,8 @@
 </NuiPageLayout>
 
 @code {
+    protected override void OnParametersSet() => PageNavigation.Record();
+
     private MudForm? _form;
     private SensorDtoForDetail? _sensor;
     private MunicipalityDtoForDetail? _municipality;

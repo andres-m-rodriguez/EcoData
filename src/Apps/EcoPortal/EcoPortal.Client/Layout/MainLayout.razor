@@ -1,19 +1,20 @@
 @inherits StatefulLayoutComponent
 @using EcoPortal.Client.Services
-@inject INavigationManager Navigation
+@inject NavigationManager Navigation
+@inject PageNavigation PageNavigation
 @inject ITabNavigationService Tabs
 
 <EpShell>
     @if (IsFullBleedPage)
     {
-        <div class="@_pageTransitionClass" @key="_navigationKey">
+        <div class="page-transition" @key="_navigationKey">
             @Body
         </div>
     }
     else
     {
         <MudContainer MaxWidth="MaxWidth.Large" Class="py-6 px-4">
-            <div class="@_pageTransitionClass" @key="_navigationKey">
+            <div class="page-transition" @key="_navigationKey">
                 @Body
             </div>
         </MudContainer>
@@ -25,11 +26,10 @@
     // AuthStateService; anyone showing auth-derived chrome reacts through this record.
     public sealed record AuthChanged;
 
-    private string _pageTransitionClass = "";
     private string _navigationKey = Guid.NewGuid().ToString();
     private string _lastUri = "";
 
-    private string Path => Navigation.State.Path;
+    private string Path => new Uri(Navigation.Uri).AbsolutePath;
 
     private bool IsHomePage => Tabs.CurrentTab == NavigationTab.Home;
 
@@ -41,21 +41,20 @@
         || Path.Equals("/organizations/discover", StringComparison.OrdinalIgnoreCase)
         || Path.Equals("/sensor-dashboard", StringComparison.OrdinalIgnoreCase);
 
-    [Event]
-    private void OnNavigationChanged(NavigationChanged e)
+    protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (_lastUri == e.State.Uri)
-        {
-            return;
-        }
+        if (firstRender)
+            await PageNavigation.InitializeAsync();
+    }
 
-        _lastUri = e.State.Uri;
-        _pageTransitionClass = e.State.Direction switch
-        {
-            NavigationDirection.Forward => "page-transition-forward",
-            NavigationDirection.Back => "page-transition-back",
-            _ => ""
-        };
+    // A fresh key re-mounts the page so the slide-in runs once per navigation.
+    [Event]
+    private void OnNavigationChanged(NavigationChanged _)
+    {
+        if (_lastUri == Navigation.Uri)
+            return;
+
+        _lastUri = Navigation.Uri;
         _navigationKey = Guid.NewGuid().ToString();
     }
 }

@@ -1,5 +1,5 @@
 using EcoData.Spa.Blazor;
-using EcoData.Spa.Navigation.Events;
+using EcoData.Spa.Navigation;
 using FaunaFinder.Client.Localization;
 using FaunaFinder.Client.Services.Theme;
 using Tempest;

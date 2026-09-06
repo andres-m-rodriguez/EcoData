@@ -1,24 +1,24 @@
 @namespace EcoData.Ui.Shell.Navbar
 @inherits StatefulComponent
-@inject INavbarManager Navbar
+@inject Navbar Navbar
 
-@if (Navbar.State.Actions.Count == 1)
+@if (Navbar.Actions.Count == 1)
 {
     <MudButton Variant="Variant.Filled"
                Color="Color.Primary"
                Size="Size.Small"
                Class="ui-page-action"
-               OnClick="@(() => Navbar.State.Actions[0].OnClick())">
-        @Navbar.State.Actions[0].Title
+               OnClick="@(() => Navbar.Actions[0].OnClick())">
+        @Navbar.Actions[0].Title
     </MudButton>
 }
-else if (Navbar.State.Actions.Count > 1)
+else if (Navbar.Actions.Count > 1)
 {
     <MudMenu Icon="@Icons.Material.Filled.MoreVert"
              AnchorOrigin="Origin.BottomRight"
              TransformOrigin="Origin.TopRight"
              AriaLabel="Page actions">
-        @foreach (var action in Navbar.State.Actions)
+        @foreach (var action in Navbar.Actions)
         {
             <MudMenuItem OnClick="@(() => action.OnClick())">@action.Title</MudMenuItem>
         }

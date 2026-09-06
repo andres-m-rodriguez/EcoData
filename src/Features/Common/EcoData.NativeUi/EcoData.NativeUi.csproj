@@ -18,7 +18,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\EcoData.Common.Pagination\EcoData.Common.Pagination.csproj" />
-    <ProjectReference Include="..\EcoData.Spa.Navigation\EcoData.Spa.Navigation.csproj" />
+    <ProjectReference Include="..\EcoData.Spa\EcoData.Spa.csproj" />
   </ItemGroup>
 
 </Project>

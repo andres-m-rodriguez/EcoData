@@ -54,15 +54,6 @@ public partial class SightingDetailDialog : EcoDataComponent
     [Parameter]
     public EventCallback<SightingDto> OnUnapprove { get; set; }
 
-    [Inject]
-    private ISightingHttpClient SightingClient { get; set; } = default!;
-
-    [Inject]
-    private ISnackbar Snackbar { get; set; } = default!;
-
-    [Inject]
-    private IDialogService Dialogs { get; set; } = default!;
-
     private readonly MapController<SightingMarker> _mapController = new();
     private readonly List<SightingNoteDto> _notes = [];
     private readonly List<SightingImageDto> _images = [];

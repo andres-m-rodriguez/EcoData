@@ -2,8 +2,9 @@
 @using FaunaFinder.Client.Services.Account
 @using FaunaFinder.Client.Services.Theme
 @inherits EcoDataLayout
-@inject INavigationManager Navigation
-@inject INavbarManager Navbar
+@inject NavigationManager Navigation
+@inject PageNavigation PageNavigation
+@inject Navbar Navbar
 @inject AuthStateService Auth
 @inject ThemePreference Theme
 
@@ -44,7 +45,7 @@
                         @if (ShowTitleDivider)
                         {
                             <MudDivider Vertical="true" FlexItem="true" Class="mx-4 my-3" />
-                            <span class="page-title">@Navbar.State.Title</span>
+                            <span class="page-title">@Navbar.Title</span>
                         }
                     </div>
                 </MudHidden>
@@ -181,23 +182,25 @@
     private bool _railHovered;
     private bool _topBarHidden;
 
-    private bool IsRootPage => Navigation.State.Path == "/" || Navigation.State.Path == "";
+    private string Path => new Uri(Navigation.Uri).AbsolutePath;
+
+    private bool IsRootPage => Path == "/" || Path == "";
 
     private bool IsMapPage =>
-        IsRootPage || Navigation.State.Path.StartsWith("/map", StringComparison.OrdinalIgnoreCase);
+        IsRootPage || Path.StartsWith("/map", StringComparison.OrdinalIgnoreCase);
 
     private bool IsEditorialListPage =>
-        string.Equals(Navigation.State.Path, "/species", StringComparison.OrdinalIgnoreCase) ||
-        string.Equals(Navigation.State.Path, "/municipalities", StringComparison.OrdinalIgnoreCase) ||
-        string.Equals(Navigation.State.Path, "/browse", StringComparison.OrdinalIgnoreCase) ||
-        string.Equals(Navigation.State.Path, "/categories", StringComparison.OrdinalIgnoreCase) ||
-        string.Equals(Navigation.State.Path, "/practices", StringComparison.OrdinalIgnoreCase) ||
-        string.Equals(Navigation.State.Path, "/actions", StringComparison.OrdinalIgnoreCase);
+        string.Equals(Path, "/species", StringComparison.OrdinalIgnoreCase) ||
+        string.Equals(Path, "/municipalities", StringComparison.OrdinalIgnoreCase) ||
+        string.Equals(Path, "/browse", StringComparison.OrdinalIgnoreCase) ||
+        string.Equals(Path, "/categories", StringComparison.OrdinalIgnoreCase) ||
+        string.Equals(Path, "/practices", StringComparison.OrdinalIgnoreCase) ||
+        string.Equals(Path, "/actions", StringComparison.OrdinalIgnoreCase);
 
     private bool IsFullBleedPage => IsMapPage || IsEditorialListPage;
 
     private bool ShowTitleDivider =>
-        !IsMapPage && !IsEditorialListPage && Navbar.State.Title is not null;
+        !IsMapPage && !IsEditorialListPage && Navbar.Title is not null;
 
     private string RailPanelClass => _railOpen ? "ff-rail-panel" : "ff-rail-panel is-collapsed";
 
@@ -239,13 +242,16 @@
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (firstRender)
-            await Theme.InitializeAsync();
+        if (!firstRender)
+            return;
+
+        await PageNavigation.InitializeAsync();
+        await Theme.InitializeAsync();
     }
 
     private string GetNavLinkClass(string path, bool exact = false)
     {
-        var currentPath = Navigation.State.Path;
+        var currentPath = Path;
         var isActive = exact
             ? (path == "/" ? currentPath == "/" || string.IsNullOrEmpty(currentPath) : string.Equals(currentPath, path, StringComparison.OrdinalIgnoreCase))
             : currentPath.StartsWith(path, StringComparison.OrdinalIgnoreCase);

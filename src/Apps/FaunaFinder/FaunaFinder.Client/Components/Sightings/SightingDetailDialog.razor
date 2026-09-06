@@ -3,6 +3,9 @@
 @using System.Globalization
 @using EcoData.Wildlife.Contracts
 @using EcoData.Wildlife.Contracts.Dtos
+@inject ISightingHttpClient SightingClient
+@inject ISnackbar Snackbar
+@inject IDialogService Dialogs
 
 <MudDialog>
     <TitleContent>

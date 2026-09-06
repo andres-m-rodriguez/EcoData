@@ -3,8 +3,8 @@
 @using EcoPortal.Client.Services
 @inherits StatefulComponent
 @inject OrganizationWorkspaceState State
-@inject INavbarManager Navbar
-@inject INavigationManager Navigation
+@inject Navbar Navbar
+@inject PageNavigation PageNavigation
 @inject AuthStateService AuthState
 
 <PageTitle>@(_context?.Organization.Name ?? "Organization") - EcoData</PageTitle>
@@ -132,7 +132,7 @@ else
         }
 
         Navbar.SetTitle(_context.Organization.Name);
-        Navigation.SetParentPath("/organizations/my");
+        PageNavigation.SetParentPath("/organizations/my");
 
         if (_context.IsMember)
         {

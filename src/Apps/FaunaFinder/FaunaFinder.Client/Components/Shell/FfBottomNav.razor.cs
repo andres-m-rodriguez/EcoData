@@ -1,6 +1,5 @@
 using EcoData.Spa.Blazor;
 using EcoData.Spa.Navigation;
-using EcoData.Spa.Navigation.Events;
 using EcoData.Ui.Shell.Navbar;
 using FaunaFinder.Client.Localization;
 using Microsoft.AspNetCore.Components;
@@ -22,15 +21,12 @@ public partial class FfBottomNav : EcoDataComponent
     private bool _hidden;
     private NavigationTab _currentTab = NavigationTab.Map;
 
-    [Inject]
-    private NavAutoHide AutoHide { get; set; } = default!;
-
     private string BarClass => _hidden ? "bottom-nav is-hidden" : "bottom-nav";
 
     protected override void OnInitialized()
     {
         base.OnInitialized();
-        UpdateCurrentTab(Navigation.State.Path);
+        UpdateCurrentTab(new Uri(Navigation.Uri).AbsolutePath);
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -55,7 +51,7 @@ public partial class FfBottomNav : EcoDataComponent
     private void OnShown(Shown _) => _hidden = false;
 
     [Event]
-    private void OnNavigationChanged(NavigationChanged e) => UpdateCurrentTab(e.State.Path);
+    private void OnNavigationChanged(NavigationChanged _) => UpdateCurrentTab(new Uri(Navigation.Uri).AbsolutePath);
 
     private void UpdateCurrentTab(string path)
     {

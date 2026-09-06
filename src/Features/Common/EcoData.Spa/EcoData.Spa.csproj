@@ -10,15 +10,13 @@
     <SupportedPlatform Include="browser" />
   </ItemGroup>
 
-  <!-- Services and contracts only: no MudBlazor and no Razor SDK, so a host can
-       have navigation without inheriting a design system. -->
+  <!-- Services only: no Razor SDK and no MudBlazor. Anything that renders belongs in EcoData.Ui. -->
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.Components" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" />
     <PackageReference Include="Microsoft.JSInterop" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\EcoData.Spa.Core\EcoData.Spa.Core.csproj" />
+    <PackageReference Include="OneOf" />
+    <PackageReference Include="Tempest.Abstract" />
   </ItemGroup>
 
 </Project>

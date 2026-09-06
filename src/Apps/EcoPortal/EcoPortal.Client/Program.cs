@@ -1,7 +1,7 @@
 using EcoData.Common.Authorization;
 using EcoData.Identity.Application.Client;
 using EcoData.Locations.Application.Client;
-using EcoData.Spa.Navigation;
+using EcoData.Spa;
 using EcoData.Ui;
 using EcoData.Organization.Application.Client;
 using EcoData.Sensors.Application.Client;
@@ -39,7 +39,7 @@ builder.Services.AddMemoryCache();
 builder.Services.AddSingleton<IOrganizationCacheService, OrganizationCacheService>();
 builder.Services.AddScoped<IChartService, ChartService>();
 
-builder.Services.AddSpaNavigation();
+builder.Services.AddEcoDataSpa();
 builder.Services.AddEcoDataUi();
 builder.Services.AddScoped<ITabNavigationService, TabNavigationService>();
 

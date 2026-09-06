@@ -1,6 +1,5 @@
 using System.Globalization;
 using EcoData.Spa.Blazor;
-using EcoData.Spa.Navigation;
 using FaunaFinder.Client.Services.Shapes;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
@@ -12,12 +11,6 @@ public partial class CoordinatesTool : EcoDataComponent
     private const double DefaultRadiusKm = 5;
 
     private const long MaxShapeBytes = 10 * 1024 * 1024;
-
-    [Inject]
-    private INavigationManager Navigation { get; set; } = default!;
-
-    [Inject]
-    private ShapeAreaRequest Shapes { get; set; } = default!;
 
     private double? _latitude;
     private double? _longitude;

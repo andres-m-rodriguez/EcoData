@@ -1,6 +1,7 @@
 @namespace FaunaFinder.Client.Components.Shell
 @inherits EcoDataComponent
-@inject INavigationManager Navigation
+@inject NavigationManager Navigation
+@inject NavAutoHide AutoHide
 
 <nav class="@BarClass" aria-hidden="@(_hidden ? "true" : "false")">
     <MudStack Row="true" Justify="Justify.SpaceAround" AlignItems="AlignItems.Center" Class="bottom-nav-container">

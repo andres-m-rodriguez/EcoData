@@ -9,10 +9,11 @@
 @using EcoPortal.Client.Components.Charts
 @using EcoPortal.Client.Services.Charts
 @inherits StatefulComponent
-@inject INavbarManager Navbar
+@inject Navbar Navbar
 @inject ISensorReadingHttpClient ReadingClient
 @inject IMunicipalityHttpClient MunicipalityClient
 @inject ISnackbar Snackbar
+@inject PageNavigation PageNavigation
 
 <PageTitle>Surface Water · EcoData</PageTitle>
 
@@ -234,6 +235,8 @@
                             </div>
 
 @code {
+    protected override void OnParametersSet() => PageNavigation.Record();
+
     private string? _loadError;
     private string _range = "7D";
     private FeaturedStation? _featured;

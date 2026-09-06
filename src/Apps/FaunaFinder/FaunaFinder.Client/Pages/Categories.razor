@@ -5,9 +5,10 @@
 @inherits StatefulComponent
 @inject ISpeciesCategoryHttpClient CategoryHttpClient
 @inject ISpeciesHttpClient SpeciesHttpClient
-@inject INavbarManager Navbar
+@inject Navbar Navbar
 @inject NavigationManager NavigationManager
 @inject ILocalizer L
+@inject PageNavigation PageNavigation
 
 <PageTitle>FaunaFinder — @L["Categories_PageTitle"]</PageTitle>
 
@@ -95,6 +96,8 @@ else
 }
 
 @code {
+    protected override void OnParametersSet() => PageNavigation.Record();
+
     [Parameter] public Guid? Id { get; set; }
 
     private const int SpeciesPageSize = 24;

@@ -5,7 +5,8 @@
 @using EcoPortal.Client.Features.Notifications.Components
 @inject NotificationService NotificationService
 @inject NavigationManager Navigation
-@inject INavbarManager Navbar
+@inject Navbar Navbar
+@inject PageNavigation PageNavigation
 
 <PageTitle>Notifications - EcoData</PageTitle>
 
@@ -14,6 +15,8 @@
 </MudContainer>
 
 @code {
+    protected override void OnParametersSet() => PageNavigation.Record();
+
     public const string Path = "/notifications";
 
     protected override void OnInitialized()

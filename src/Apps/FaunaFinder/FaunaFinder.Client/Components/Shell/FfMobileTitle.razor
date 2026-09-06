@@ -1,7 +1,7 @@
 @namespace FaunaFinder.Client.Components.Shell
 @inherits EcoDataComponent
-@inject INavigationManager Navigation
-@inject INavbarManager Navbar
+@inject NavigationManager Navigation
+@inject Navbar Navbar
 
 <div class="ff-mobile-title">
     @if (IsRootPage)
@@ -20,6 +20,6 @@
                  loading="lazy" />
         }
 
-        <span class="page-title">@Navbar.State.Title</span>
+        <span class="page-title">@Navbar.Title</span>
     }
 </div>

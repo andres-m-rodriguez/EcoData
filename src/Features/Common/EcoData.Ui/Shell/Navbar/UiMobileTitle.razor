@@ -1,7 +1,7 @@
 @namespace EcoData.Ui.Shell.Navbar
 @inherits StatefulComponent
-@inject INavigationManager Navigation
-@inject INavbarManager Navbar
+@inject PageNavigation PageNavigation
+@inject Navbar Navbar
 
 <div class="ui-mobile-title">
     @if (IsRoot)
@@ -10,12 +10,12 @@
     }
     else
     {
-        @if (Navigation.State.CanGoBack)
+        @if (PageNavigation.CanGoBack)
         {
             <MudIconButton Icon="@Icons.Material.Filled.ArrowBack" Class="ui-mobile-back" aria-label="Back"
-                           OnClick="@(() => Navigation.GoBackAsync())" />
+                           OnClick="@(() => PageNavigation.GoBack())" />
         }
-        <span class="ui-mobile-page">@Navbar.State.Title</span>
+        <span class="ui-mobile-page">@Navbar.Title</span>
     }
 </div>
 

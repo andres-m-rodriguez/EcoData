@@ -4,7 +4,8 @@
 @using EcoPortal.Client.Components
 @inherits StatefulComponent
 @inject ISensorAlertHttpClient AlertClient
-@inject INavigationManager Navigation
+@inject NavigationManager Navigation
+@inject PageNavigation PageNavigation
 
 <PageTitle>Alert Details - EcoData</PageTitle>
 
@@ -103,6 +104,8 @@
 </NuiPageLayout>
 
 @code {
+    protected override void OnParametersSet() => PageNavigation.Record();
+
     [Parameter]
     public Guid AlertId { get; set; }
 

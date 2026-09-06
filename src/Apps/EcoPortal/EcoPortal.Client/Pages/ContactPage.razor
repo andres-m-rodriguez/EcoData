@@ -1,5 +1,6 @@
 @page "/contact"
-@inject INavbarManager Navbar
+@inject Navbar Navbar
+@inject PageNavigation PageNavigation
 
 <PageTitle>Contact - EcoData</PageTitle>
 
@@ -39,6 +40,8 @@
 </MudContainer>
 
 @code {
+    protected override void OnParametersSet() => PageNavigation.Record();
+
     private const string ContactEmail = "andresm.rodriguezcan@gmail.com";
     private const string MailtoHref = $"mailto:{ContactEmail}";
 

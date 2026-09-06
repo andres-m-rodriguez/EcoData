@@ -44,10 +44,9 @@
     <Project Path="src/Features/Common/EcoData.Common.Problems.AspNetCore/EcoData.Common.Problems.AspNetCore.csproj" />
     <Project Path="src/Features/Common/EcoData.Common.Problems.Contracts/EcoData.Common.Problems.Contracts.csproj" />
     <Project Path="src/Features/Common/EcoData.NativeUi/EcoData.NativeUi.csproj" />
+    <Project Path="src/Features/Common/EcoData.Spa/EcoData.Spa.csproj" />
     <Project Path="src/Features/Common/EcoData.Spa.Blazor/EcoData.Spa.Blazor.csproj" />
-    <Project Path="src/Features/Common/EcoData.Spa.Core/EcoData.Spa.Core.csproj" />
     <Project Path="src/Features/Common/EcoData.Spa.Map/EcoData.Spa.Map.csproj" />
-    <Project Path="src/Features/Common/EcoData.Spa.Navigation/EcoData.Spa.Navigation.csproj" />
     <Project Path="src/Features/Common/EcoData.Ui/EcoData.Ui.csproj" />
   </Folder>
   <Folder Name="/Features/Identity/">

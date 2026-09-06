@@ -15,3 +15,4 @@ ECO007 | Naming | Warning | Type name should not end in a generic suffix
 ECO008 | Design | Warning | Contract record should carry only data
 ECO009 | Usage | Warning | Warning suppression needs a justification
 ECO010 | Style | Warning | Razor markup should not use inline styles
+ECO011 | Usage | Warning | Component services should be declared with @inject

@@ -12,7 +12,8 @@
 @inject ISensorReadingHttpClient ReadingClient
 @inject IMunicipalityHttpClient MunicipalityClient
 @inject IDialogService DialogService
-@inject INavigationManager Navigation
+@inject NavigationManager Navigation
+@inject PageNavigation PageNavigation
 @inject ISnackbar Snackbar
 
 <MudPaper Elevation="0" Class="pa-5 pa-md-8 mb-4 rounded-lg border-solid border mud-border-lines-default">
@@ -328,7 +329,7 @@
                 async _ =>
                 {
                     Snackbar.Add("Sensor deleted successfully", Severity.Success);
-                    await Navigation.GoBackAsync();
+                    PageNavigation.GoBack();
                 },
                 requestFailed =>
                 {

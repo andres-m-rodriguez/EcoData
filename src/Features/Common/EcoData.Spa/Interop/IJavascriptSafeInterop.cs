@@ -2,7 +2,7 @@ using Microsoft.JSInterop;
 using OneOf;
 using OneOf.Types;
 
-namespace EcoData.Ui.Interop;
+namespace EcoData.Spa.Interop;
 
 // JS interop that never throws at the call site. Every failure a JS call can
 // produce — a script error, a gone browser, interop not being available yet,
