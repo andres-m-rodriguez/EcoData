@@ -105,26 +105,6 @@
     background: transparent;
 }
 
-.mnp-dot {
-    width: 12px;
-    height: 12px;
-    border-radius: 50%;
-    /* Punched out of the dark panel, then ringed by the panel hairline. */
-    border: 2px solid var(--fauna-map-bg);
-    box-shadow: 0 0 0 1px var(--fauna-map-line);
-    flex-shrink: 0;
-}
-
-/* Palette mirrors the circle colors assigned per result index on the map. */
-.mnp-dot.color-0 { background: #10b981; }
-.mnp-dot.color-1 { background: #3b82f6; }
-.mnp-dot.color-2 { background: #f59e0b; }
-.mnp-dot.color-3 { background: #8b5cf6; }
-.mnp-dot.color-4 { background: #ef4444; }
-.mnp-dot.color-5 { background: #06b6d4; }
-.mnp-dot.color-6 { background: #ec4899; }
-.mnp-dot.color-7 { background: #84cc16; }
-
 .mnp-row-body {
     min-width: 0;
 }
@@ -139,16 +119,6 @@
 
 .mnp-row-sci {
     font: italic 400 12px/1.3 var(--fauna-font-serif);
-    color: var(--fauna-map-fg-2);
-    margin-top: 2px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-.mnp-row-desc {
-    font: var(--fauna-body-sm);
-    font-size: 11px;
     color: var(--fauna-map-fg-2);
     margin-top: 2px;
     overflow: hidden;

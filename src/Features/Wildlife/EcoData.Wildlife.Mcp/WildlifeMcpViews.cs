@@ -33,8 +33,7 @@ public sealed record NearbySpecies(
     string CommonName,
     string ScientificName,
     string Kind,
-    double DistanceMeters,
-    string? LocationDescription
+    double DistanceMeters
 );
 
 public sealed record MunicipalityRichness(Guid MunicipalityId, int SpeciesCount);

@@ -1,11 +1,9 @@
 @using EcoData.Common.i18n
-@using FaunaFinder.Client.Services.Account
 @using FaunaFinder.Client.Services.Theme
 @inherits EcoDataLayout
 @inject NavigationManager Navigation
 @inject PageNavigation PageNavigation
 @inject Navbar Navbar
-@inject AuthStateService Auth
 @inject ThemePreference Theme
 
 <MudThemeProvider Theme="FaunaFinderTheme.Default" IsDarkMode="Theme.IsDark" />
@@ -107,32 +105,6 @@
                     }
                 </MudMenu>
 
-                <MudHidden Breakpoint="Breakpoint.SmAndDown">
-                    @if (Auth.IsAuthenticated)
-                    {
-                        <MudBadge Visible="ShowPendingBadge"
-                                  Dot="true"
-                                  Color="Color.Warning"
-                                  Overlap="true"
-                                  Class="ff-account-badge">
-                            <a href="/account" class="ff-user-pill" aria-label="@L["Auth_AccountLabel"]">
-                                <span class="ff-user-initial">@UserInitial</span>
-                                <span class="ff-user-name">@Auth.CurrentUser?.DisplayName</span>
-                            </a>
-                        </MudBadge>
-                    }
-                    else
-                    {
-                        <MudTooltip Text="@L["Auth_SignIn"]">
-                            <MudIconButton Icon="@Icons.Material.Filled.AccountCircle"
-                                           Class="ff-signin-button"
-                                           Size="Size.Small"
-                                           Href="/login"
-                                           aria-label="@L["Auth_SignIn"]" />
-                        </MudTooltip>
-                    }
-                </MudHidden>
-
                 <MudHidden Breakpoint="Breakpoint.MdAndUp">
                     @if (!IsRootPage)
                     {
@@ -224,20 +196,10 @@
 
     private string ShellClass => _railOpen ? "ff-shell has-rail-open" : "ff-shell";
 
-    private bool ShowPendingBadge => Auth.AccessRequest?.Status == "Pending";
-
-    private string UserInitial => Auth.CurrentUser?.DisplayName is { Length: > 0 } name
-        ? name[..1].ToUpperInvariant()
-        : "?";
-
     protected override void OnInitialized()
     {
         base.OnInitialized();
         _locale = L.CurrentLanguage == "es" ? LocaleContext.Spanish : LocaleContext.English;
-
-        // Fire-and-forget: the probe publishes AuthChanged when it lands, and
-        // the [Event] handler re-renders the shell with the signed-in state.
-        _ = Auth.InitializeAsync();
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
