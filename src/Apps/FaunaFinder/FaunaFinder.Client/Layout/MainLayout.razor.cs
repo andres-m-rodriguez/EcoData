@@ -12,19 +12,11 @@ namespace FaunaFinder.Client.Layout;
 // the C# symbol frontend can.
 public partial class MainLayout : EcoDataLayout
 {
-    public sealed record AuthChanged;
-
-    // Published by the review page after every approve, deny or unapprove so
-    // the account page's pending count follows the decision.
-    public sealed record SightingsReviewed;
-
     // The shell renders straight off the two managers' State, so subscribing is
     // the whole job — the handler body has nothing to add.
     [Event]
     private void OnNavigationChanged(NavigationChanged _) { }
 
-    // Published by whatever needs the top bar out of the way, the phone drawer
-    // for one; the bar slides off the same way the scroll auto-hide takes it.
     public sealed record TopBarHidden;
 
     public sealed record TopBarShown;

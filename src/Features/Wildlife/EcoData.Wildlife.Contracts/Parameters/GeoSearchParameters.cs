@@ -2,12 +2,10 @@ using System.Text.Json.Serialization;
 
 namespace EcoData.Wildlife.Contracts.Parameters;
 
-// OrganizationId names the membership whose grants decide whether areas come back.
 public sealed record NearbySpeciesParameters(
     double Latitude,
     double Longitude,
-    double RadiusMeters = 5000,
-    Guid? OrganizationId = null
+    double RadiusMeters = 5000
 );
 
 public sealed record PolygonCoordinate(
@@ -16,6 +14,5 @@ public sealed record PolygonCoordinate(
 );
 
 public sealed record PolygonSearchParameters(
-    [property: JsonPropertyName("coordinates")] IReadOnlyList<PolygonCoordinate> Coordinates,
-    [property: JsonPropertyName("organizationId")] Guid? OrganizationId = null
+    [property: JsonPropertyName("coordinates")] IReadOnlyList<PolygonCoordinate> Coordinates
 );

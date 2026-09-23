@@ -31,11 +31,6 @@ public static class DependencyInjection
             client.BaseAddress = baseAddress;
         });
 
-        services.AddHttpClient<ISightingHttpClient, SightingHttpClient>(client =>
-        {
-            client.BaseAddress = baseAddress;
-        });
-
         return services;
     }
 }

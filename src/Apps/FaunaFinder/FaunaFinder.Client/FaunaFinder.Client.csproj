@@ -9,14 +9,12 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.AspNetCore.Components.Authorization" />
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" />
     <PackageReference Include="MudBlazor" />
     <PackageReference Include="Tempest.Blazor" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\..\Features\Common\EcoData.Common.Authorization\EcoData.Common.Authorization.csproj" />
     <ProjectReference Include="..\..\..\Features\Common\EcoData.Common.Pagination.Blazor\EcoData.Common.Pagination.Blazor.csproj" />
     <ProjectReference Include="..\..\..\Features\Common\EcoData.Common.Problems\EcoData.Common.Problems.csproj" />
     <ProjectReference Include="..\..\..\Features\Common\EcoData.Common.Problems.Contracts\EcoData.Common.Problems.Contracts.csproj" />
@@ -25,8 +23,6 @@
     <ProjectReference Include="..\..\..\Features\Common\EcoData.Spa\EcoData.Spa.csproj" />
     <ProjectReference Include="..\..\..\Features\Common\EcoData.Spa.Blazor\EcoData.Spa.Blazor.csproj" />
     <ProjectReference Include="..\..\..\Features\Common\EcoData.Spa.Map\EcoData.Spa.Map.csproj" />
-    <ProjectReference Include="..\..\..\Features\Identity\EcoData.Identity.Contracts\EcoData.Identity.Contracts.csproj" />
-    <ProjectReference Include="..\..\..\Features\Organization\EcoData.Organization.Contracts\EcoData.Organization.Contracts.csproj" />
     <ProjectReference Include="..\..\..\Features\Wildlife\EcoData.Wildlife.Contracts\EcoData.Wildlife.Contracts.csproj" />
     <ProjectReference Include="..\..\..\Features\Wildlife\EcoData.Wildlife.Application.Client\EcoData.Wildlife.Application.Client.csproj" />
     <ProjectReference Include="..\..\..\Features\Locations\EcoData.Locations.Contracts\EcoData.Locations.Contracts.csproj" />
