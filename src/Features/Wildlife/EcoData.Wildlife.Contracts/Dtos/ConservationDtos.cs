@@ -14,6 +14,14 @@ public sealed record NrcsPracticeDtoForList(
     IReadOnlyList<LocaleValue> Name
 );
 
+public sealed record NrcsPracticeDtoForDetail(
+    Guid Id,
+    string Code,
+    IReadOnlyList<LocaleValue> Name,
+    IReadOnlyList<LocaleValue> Description,
+    string? NrcsUrl
+);
+
 public sealed record FwsLinkDtoForDetail(
     Guid Id,
     Guid SpeciesId,

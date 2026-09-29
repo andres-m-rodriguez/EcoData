@@ -9,6 +9,8 @@ public sealed class NrcsPractice
     public required Guid Id { get; set; }
     public required string Code { get; set; }
     public List<LocaleValue> Name { get; set; } = [];
+    public List<LocaleValue> Description { get; set; } = [];
+    public string? NrcsUrl { get; set; }
 
     public ICollection<FwsLink> FwsLinks { get; set; } = [];
 
@@ -21,7 +23,10 @@ public sealed class NrcsPractice
 
             builder.Property(static e => e.Code).HasMaxLength(20).IsRequired();
 
+            builder.Property(static e => e.NrcsUrl).HasMaxLength(500);
+
             builder.OwnsMany(static e => e.Name, b => b.ToJson());
+            builder.OwnsMany(static e => e.Description, b => b.ToJson());
 
             builder
                 .HasIndex(static e => e.Code)

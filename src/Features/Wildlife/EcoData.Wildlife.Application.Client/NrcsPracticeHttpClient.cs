@@ -13,4 +13,13 @@ public sealed class NrcsPracticeHttpClient(HttpClient httpClient) : INrcsPractic
         var result = await response.ReadOneOfAsync<IReadOnlyList<NrcsPracticeDtoForList>>(ct);
         return result.MapT1(problem => RequestFailed.From(problem));
     }
+
+    public async Task<OneOf<NrcsPracticeDtoForDetail, RequestFailed>> GetByCodeAsync(
+        string code,
+        CancellationToken ct = default)
+    {
+        var response = await httpClient.GetAsync($"wildlife/nrcs-practices/{code}", ct);
+        var result = await response.ReadOneOfAsync<NrcsPracticeDtoForDetail>(ct);
+        return result.MapT1(problem => RequestFailed.From(problem));
+    }
 }

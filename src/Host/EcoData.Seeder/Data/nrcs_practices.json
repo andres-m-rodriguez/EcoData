@@ -10,7 +10,18 @@
         "code": "es",
         "value": "Cultivo en Callejones"
       }
-    ]
+    ],
+    "description": [
+      {
+        "code": "en",
+        "value": "Rows of trees or shrubs are planted with crops or forage grown in the alleys between them. The trees improve the microclimate, reduce runoff and erosion, recycle nutrients, add wildlife habitat and store carbon, while producing extra products such as fruit, nuts or timber."
+      },
+      {
+        "code": "es",
+        "value": "Se siembran hileras de árboles o arbustos y se cultivan cosechas o pastos en los callejones entre ellas. Los árboles mejoran el microclima, reducen la escorrentía y la erosión, reciclan nutrientes, dan hábitat a la fauna y almacenan carbono, a la vez que producen frutas, nueces o madera."
+      }
+    ],
+    "nrcsUrl": "https://www.nrcs.usda.gov/resources/guides-and-instructions/alley-cropping-ac-311-conservation-practice-standard"
   },
   {
     "code": "380",
@@ -23,7 +34,18 @@
         "code": "es",
         "value": "Establecimiento y Renovación de Cortavientos/Cinturones de Protección"
       }
-    ]
+    ],
+    "description": [
+      {
+        "code": "en",
+        "value": "Planting, improving or renewing windbreaks, which are single or multiple rows of trees and shrubs placed across the prevailing wind. They reduce wind erosion, shelter crops, animals and buildings, filter dust and odors, save energy and store carbon."
+      },
+      {
+        "code": "es",
+        "value": "Consiste en sembrar, mejorar o renovar cortavientos, que son una o varias hileras de árboles y arbustos colocadas frente al viento predominante. Reducen la erosión por viento, protegen cultivos, animales y estructuras, filtran polvo y olores, ahorran energía y almacenan carbono."
+      }
+    ],
+    "nrcsUrl": "https://www.nrcs.usda.gov/resources/guides-and-instructions/windbreakshelterbelt-establishment-and-renovation-ft-380"
   },
   {
     "code": "381",
@@ -36,7 +58,18 @@
         "code": "es",
         "value": "Silvopastoreo"
       }
-    ]
+    ],
+    "description": [
+      {
+        "code": "en",
+        "value": "Establishing or managing trees and forage together on the same land so livestock can graze among them. The trees give shade and shelter, and the combined system improves water and soil quality, reduces erosion, supports wildlife and pollinators and stores carbon."
+      },
+      {
+        "code": "es",
+        "value": "Consiste en establecer o manejar árboles y pastos juntos en el mismo terreno para que el ganado pueda pastar entre ellos. Los árboles dan sombra y refugio, y el sistema mejora la calidad del agua y del suelo, reduce la erosión, apoya la vida silvestre y los polinizadores, y almacena carbono."
+      }
+    ],
+    "nrcsUrl": "https://www.nrcs.usda.gov/resources/guides-and-instructions/silvopasture-ac-381-conservation-practice-standard"
   },
   {
     "code": "391",
@@ -49,7 +82,18 @@
         "code": "es",
         "value": "Zona de Amortiguamiento Forestal Ribereña"
       }
-    ]
+    ],
+    "description": [
+      {
+        "code": "en",
+        "value": "A strip of trees and shrubs kept or planted along a stream, river, lake or other water body. It traps sediment, nutrients and chemicals before they reach the water, shades and cools the stream, and provides habitat for fish and wildlife."
+      },
+      {
+        "code": "es",
+        "value": "Una franja de árboles y arbustos que se conserva o se siembra a lo largo de una quebrada, río, lago u otro cuerpo de agua. Atrapa sedimentos, nutrientes y químicos antes de que lleguen al agua, da sombra y refresca la corriente, y ofrece hábitat a peces y fauna silvestre."
+      }
+    ],
+    "nrcsUrl": "https://www.nrcs.usda.gov/resources/guides-and-instructions/riparian-forest-buffer-ac-391-conservation-practice-standard"
   },
   {
     "code": "396",
@@ -62,7 +106,18 @@
         "code": "es",
         "value": "Paso para Organismos Acuáticos"
       }
-    ]
+    ],
+    "description": [
+      {
+        "code": "en",
+        "value": "Modifying or removing barriers such as culverts, small dams or road crossings that block the movement of fish and other aquatic animals. Restoring passage lets these species reach the upstream and downstream habitat they need to feed, breed and migrate."
+      },
+      {
+        "code": "es",
+        "value": "Consiste en modificar o eliminar barreras como alcantarillas, represas pequeñas o cruces de caminos que impiden el paso de peces y otros animales acuáticos. Restaurar el paso les permite llegar al hábitat río arriba y río abajo que necesitan para alimentarse, reproducirse y migrar."
+      }
+    ],
+    "nrcsUrl": "https://www.nrcs.usda.gov/resources/guides-and-instructions/aquatic-organism-passage-mi-396-conservation-practice-standard"
   },
   {
     "code": "420",
@@ -75,7 +130,18 @@
         "code": "es",
         "value": "Siembra para Hábitat de Vida Silvestre"
       }
-    ]
+    ],
+    "description": [
+      {
+        "code": "en",
+        "value": "Creating wildlife habitat by planting herbaceous plants or shrubs, often on land previously used for crops or pasture. The planting improves degraded habitat for target species and aims to resemble the native plant community that originally grew there."
+      },
+      {
+        "code": "es",
+        "value": "Consiste en crear hábitat para la vida silvestre sembrando plantas herbáceas o arbustos, a menudo en terrenos antes usados para cultivos o pastos. La siembra mejora el hábitat degradado para las especies de interés y busca parecerse a la comunidad de plantas nativas original del lugar."
+      }
+    ],
+    "nrcsUrl": "https://www.nrcs.usda.gov/resources/guides-and-instructions/wildlife-habitat-planting-ac-420-conservation-practice-standard"
   },
   {
     "code": "472",
@@ -88,7 +154,18 @@
         "code": "es",
         "value": "Control de Acceso"
       }
-    ]
+    ],
+    "description": [
+      {
+        "code": "en",
+        "value": "Temporarily or permanently keeping animals, people, vehicles or equipment out of an area using measures like gates, signs or markers. Controlling when and how an area is used protects plant health, prevents soil compaction and reduces erosion and water pollution."
+      },
+      {
+        "code": "es",
+        "value": "Consiste en impedir, de forma temporal o permanente, la entrada de animales, personas, vehículos o equipo a un área mediante portones, rótulos o marcas. Controlar cuándo y cómo se usa un área protege la salud de las plantas, evita la compactación del suelo y reduce la erosión y la contaminación del agua."
+      }
+    ],
+    "nrcsUrl": "https://www.nrcs.usda.gov/resources/guides-and-instructions/access-control-ac-472-conservation-practice-standard"
   },
   {
     "code": "490",
@@ -101,7 +178,18 @@
         "code": "es",
         "value": "Preparación de Sitio para Árboles/Arbustos"
       }
-    ]
+    ],
+    "description": [
+      {
+        "code": "en",
+        "value": "Treating a site before planting or natural regrowth so that desired trees and shrubs can take hold. It manages soil and water conditions and reduces competing weeds, pests and diseases to improve seedling establishment, survival and growth."
+      },
+      {
+        "code": "es",
+        "value": "Consiste en tratar un terreno antes de la siembra o de la regeneración natural para que los árboles y arbustos deseados puedan establecerse. Maneja las condiciones del suelo y del agua y reduce la competencia de yerbajos, plagas y enfermedades para mejorar el establecimiento, la supervivencia y el crecimiento de las plántulas."
+      }
+    ],
+    "nrcsUrl": "https://www.nrcs.usda.gov/resources/guides-and-instructions/treeshrub-site-preparation-ac-490-conservation-practice-standard"
   },
   {
     "code": "612",
@@ -114,7 +202,18 @@
         "code": "es",
         "value": "Establecimiento de Árboles y Arbustos"
       }
-    ]
+    ],
+    "description": [
+      {
+        "code": "en",
+        "value": "Establishing trees and shrubs by planting, direct seeding or natural regeneration. The new woody plants help restore native plant communities, control erosion, improve water quality, create habitat for wildlife and pollinators, and store carbon."
+      },
+      {
+        "code": "es",
+        "value": "Consiste en establecer árboles y arbustos mediante siembra, siembra directa de semillas o regeneración natural. Las nuevas plantas leñosas ayudan a restaurar comunidades de plantas nativas, controlar la erosión, mejorar la calidad del agua, crear hábitat para la fauna y los polinizadores, y almacenar carbono."
+      }
+    ],
+    "nrcsUrl": "https://www.nrcs.usda.gov/resources/guides-and-instructions/treeshrub-establishment-ac-612-conservation-practice-standard"
   },
   {
     "code": "643",
@@ -127,7 +226,18 @@
         "code": "es",
         "value": "Restauración de Comunidades Naturales Raras o en Declive"
       }
-    ]
+    ],
+    "description": [
+      {
+        "code": "en",
+        "value": "Restoring the physical, chemical and biological conditions a site needs to support rare or declining communities of native plants and animals. It targets land that partly supports, or once supported, such a community, to recover degraded vegetation and wildlife habitat."
+      },
+      {
+        "code": "es",
+        "value": "Consiste en restaurar las condiciones físicas, químicas y biológicas que un lugar necesita para sostener comunidades raras o en declive de plantas y animales nativos. Se aplica en terrenos que sostienen en parte, o sostuvieron antes, una de estas comunidades, para recuperar la vegetación y el hábitat degradados."
+      }
+    ],
+    "nrcsUrl": "https://www.nrcs.usda.gov/resources/guides-and-instructions/restoration-of-rare-or-declining-natural-communities-ac-643"
   },
   {
     "code": "644",
@@ -140,7 +250,18 @@
         "code": "es",
         "value": "Manejo del Hábitat de Vida Silvestre en Humedales"
       }
-    ]
+    ],
+    "description": [
+      {
+        "code": "en",
+        "value": "Keeping, developing or managing wetland habitat for the wildlife that depends on it. It maintains or improves conditions for waterfowl, shorebirds, furbearers and other wetland plants and animals, on natural wetlands and on ones that were previously restored or created."
+      },
+      {
+        "code": "es",
+        "value": "Consiste en conservar, desarrollar o manejar el hábitat de humedales para la vida silvestre que depende de él. Mantiene o mejora las condiciones para aves acuáticas, aves playeras, mamíferos y otras plantas y animales de humedal, tanto en humedales naturales como en los restaurados o creados."
+      }
+    ],
+    "nrcsUrl": null
   },
   {
     "code": "645",
@@ -153,7 +274,18 @@
         "code": "es",
         "value": "Manejo del Hábitat de Vida Silvestre en Tierras Altas"
       }
-    ]
+    ],
+    "description": [
+      {
+        "code": "en",
+        "value": "Managing habitat to benefit desired wild animal species, both vertebrates and invertebrates. It addresses what limits them, such as food, cover and shelter, by adjusting vegetation, planting food or cover, and changing the timing of farm operations to improve habitat and connectivity."
+      },
+      {
+        "code": "es",
+        "value": "Consiste en manejar el hábitat para beneficiar especies de animales silvestres deseadas, tanto vertebrados como invertebrados. Atiende lo que las limita, como alimento, cobertura y refugio, ajustando la vegetación, sembrando alimento o cobertura y cambiando el momento de las labores agrícolas para mejorar el hábitat y su conectividad."
+      }
+    ],
+    "nrcsUrl": "https://www.nrcs.usda.gov/resources/guides-and-instructions/wildlife-habitat-management-ac-645-conservation-practice-standard"
   },
   {
     "code": "647",
@@ -166,7 +298,18 @@
         "code": "es",
         "value": "Desarrollo/Manejo de Hábitat de Sucesión Temprana"
       }
-    ]
+    ],
+    "description": [
+      {
+        "code": "en",
+        "value": "Managing plant succession to create and keep young, open habitat such as grasses, wildflowers and low shrubs. This benefits wildlife and natural communities that need early successional habitat for all or part of their life cycle."
+      },
+      {
+        "code": "es",
+        "value": "Consiste en manejar la sucesión de las plantas para crear y mantener hábitat joven y abierto, como yerbas, flores silvestres y arbustos bajos. Esto beneficia a la fauna y a las comunidades naturales que necesitan hábitat de sucesión temprana durante todo o parte de su ciclo de vida."
+      }
+    ],
+    "nrcsUrl": "https://www.nrcs.usda.gov/resources/guides-and-instructions/early-successional-habitat-developmentmanagement-ac-647"
   },
   {
     "code": "657",
@@ -179,7 +322,18 @@
         "code": "es",
         "value": "Restauración de Humedales"
       }
-    ]
+    ],
+    "description": [
+      {
+        "code": "en",
+        "value": "Returning a drained or filled wetland as closely as possible to its original conditions by restoring its hydrology, landforms and soils. This improves water quality, wildlife habitat and native vegetation on the site."
+      },
+      {
+        "code": "es",
+        "value": "Consiste en devolver un humedal drenado o rellenado lo más posible a su condición original, restaurando su hidrología, su relieve y sus suelos. Esto mejora la calidad del agua, el hábitat de la vida silvestre y la vegetación nativa del lugar."
+      }
+    ],
+    "nrcsUrl": "https://www.nrcs.usda.gov/resources/guides-and-instructions/wetland-restoration-ac-657-conservation-practice-standard"
   },
   {
     "code": "660",
@@ -192,7 +346,18 @@
         "code": "es",
         "value": "Poda de Árboles y Arbustos"
       }
-    ]
+    ],
+    "description": [
+      {
+        "code": "en",
+        "value": "Removing all or part of selected branches, leaders or roots from trees and shrubs. Pruning improves plant health and vigor, reduces pest pressure, shapes the desired plant structure, lets light reach understory plants and lowers wildfire and safety hazards."
+      },
+      {
+        "code": "es",
+        "value": "Consiste en remover total o parcialmente ramas, guías o raíces seleccionadas de árboles y arbustos. La poda mejora la salud y el vigor de las plantas, reduce las plagas, forma la estructura deseada, deja pasar luz a las plantas del sotobosque y disminuye el riesgo de incendios y accidentes."
+      }
+    ],
+    "nrcsUrl": "https://www.nrcs.usda.gov/resources/guides-and-instructions/treeshrub-pruning-ac-660-conservation-practice-standard"
   },
   {
     "code": "666",
@@ -205,6 +370,17 @@
         "code": "es",
         "value": "Mejoramiento de Rodales Forestales"
       }
-    ]
+    ],
+    "description": [
+      {
+        "code": "en",
+        "value": "Adjusting the mix of tree and shrub species, the forest structure or its density, usually by selectively cutting or thinning, to reach desired forest conditions. It improves forest health and productivity, habitat for wildlife, fish and pollinators, and carbon storage while reducing pests and wildfire risk."
+      },
+      {
+        "code": "es",
+        "value": "Consiste en ajustar la mezcla de especies de árboles y arbustos, la estructura del bosque o su densidad, por lo general mediante cortas selectivas o raleos, para lograr las condiciones deseadas. Mejora la salud y productividad del bosque, el hábitat para fauna, peces y polinizadores, y el almacenamiento de carbono, a la vez que reduce plagas y riesgo de incendios."
+      }
+    ],
+    "nrcsUrl": "https://www.nrcs.usda.gov/resources/guides-and-instructions/forest-stand-improvement-ac-666-conservation-practice-standard"
   }
 ]

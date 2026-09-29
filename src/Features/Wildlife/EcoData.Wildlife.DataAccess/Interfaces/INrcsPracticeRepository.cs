@@ -5,4 +5,6 @@ namespace EcoData.Wildlife.DataAccess.Interfaces;
 public interface INrcsPracticeRepository
 {
     Task<IReadOnlyList<NrcsPracticeDtoForList>> GetListAsync(CancellationToken cancellationToken = default);
+
+    Task<NrcsPracticeDtoForDetail?> GetByCodeAsync(string code, CancellationToken cancellationToken = default);
 }

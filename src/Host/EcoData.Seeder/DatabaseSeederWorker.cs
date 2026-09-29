@@ -388,15 +388,23 @@ public sealed class DatabaseSeederWorker(
 
         foreach (var dto in practices)
         {
-            if (!existing.ContainsKey(dto.Code))
-                context.NrcsPractices.Add(
-                    new NrcsPractice
-                    {
-                        Id = Guid.CreateVersion7(),
-                        Code = dto.Code,
-                        Name = dto.Name,
-                    }
-                );
+            if (existing.TryGetValue(dto.Code, out var practice))
+            {
+                practice.Description = dto.Description;
+                practice.NrcsUrl = dto.NrcsUrl;
+                continue;
+            }
+
+            context.NrcsPractices.Add(
+                new NrcsPractice
+                {
+                    Id = Guid.CreateVersion7(),
+                    Code = dto.Code,
+                    Name = dto.Name,
+                    Description = dto.Description,
+                    NrcsUrl = dto.NrcsUrl,
+                }
+            );
         }
 
         await context.SaveChangesAsync(stoppingToken);
@@ -1078,6 +1086,12 @@ public sealed class DatabaseSeederWorker(
 
         [JsonPropertyName("name")]
         public required List<LocaleValue> Name { get; init; }
+
+        [JsonPropertyName("description")]
+        public List<LocaleValue> Description { get; init; } = [];
+
+        [JsonPropertyName("nrcsUrl")]
+        public string? NrcsUrl { get; init; }
     }
 
     private sealed class FwsActionDto

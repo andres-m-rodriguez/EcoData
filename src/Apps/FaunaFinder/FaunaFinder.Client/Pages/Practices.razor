@@ -32,6 +32,25 @@
                         <MudText Typo="Typo.h6">@Locale.Resolve(practice.Name, practice.Code)</MudText>
                     </MudStack>
                     <MudText Typo="Typo.caption" Color="Color.Secondary">@L["PracticeDetail_Subline"]</MudText>
+                    @if (LoadPracticeState.Result is { } detail)
+                    {
+                        @if (detail.Description.Count > 0)
+                        {
+                            <MudText Typo="Typo.body1" Class="mt-3">@Locale.Resolve(detail.Description)</MudText>
+                        }
+                        @if (detail.NrcsUrl is not null)
+                        {
+                            <MudButton Href="@detail.NrcsUrl"
+                                       Target="_blank"
+                                       rel="noopener"
+                                       Variant="Variant.Text"
+                                       Color="Color.Primary"
+                                       EndIcon="@Icons.Material.Filled.OpenInNew"
+                                       Class="mt-2 px-0">
+                                @L["PracticeDetail_NrcsLink"]
+                            </MudButton>
+                        }
+                    }
                 </MudPaper>
             }
 
@@ -228,6 +247,7 @@ else
             _loadedCode = code;
 
             Navbar.SetTitle(PracticeTitle ?? code);
+            await LoadPracticeState.TryExecute();
             await LoadActionsState.TryExecute();
             await LoadSpeciesCountState.TryExecute();
         }
@@ -250,6 +270,13 @@ else
             ? "Couldn't reach the server."
             : error.Message ?? "Something went wrong while loading conservation practices.";
         return [];
+    }
+
+    [Command]
+    private async Task<NrcsPracticeDtoForDetail?> LoadPractice(CancellationToken ct)
+    {
+        var result = await PracticeClient.GetByCodeAsync(_loadedCode!, ct);
+        return result.TryPickT0(out var practice, out _) ? practice : null;
     }
 
     [Command]
