@@ -16,7 +16,10 @@ public sealed class FwsActionRepository(IDbContextFactory<WildlifeDbContext> con
 
         return await context
             .FwsActions
-            .OrderBy(a => a.Code)
+            // Codes are "major.minor" and sort as numbers: 2.1 before 10.1, 2.9 before 2.10.
+            .OrderBy(a => a.Code.IndexOf("."))
+            .ThenBy(a => a.Code.Length)
+            .ThenBy(a => a.Code)
             .Select(a => new FwsActionDtoForList(a.Id, a.Code, a.Name))
             .ToListAsync(cancellationToken);
     }

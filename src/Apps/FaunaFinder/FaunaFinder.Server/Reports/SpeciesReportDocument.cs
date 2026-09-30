@@ -213,6 +213,8 @@ public sealed class SpeciesReportDocument(
 
                     var ordered = links
                         .OrderBy(l => l.NrcsPractice.Code, StringComparer.Ordinal)
+                        .ThenBy(l => l.FwsAction.Code.IndexOf('.'))
+                        .ThenBy(l => l.FwsAction.Code.Length)
                         .ThenBy(l => l.FwsAction.Code, StringComparer.Ordinal);
 
                     foreach (var link in ordered)

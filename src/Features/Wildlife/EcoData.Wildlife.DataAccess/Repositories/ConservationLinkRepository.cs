@@ -43,7 +43,10 @@ public sealed class ConservationLinkRepository(IDbContextFactory<WildlifeDbConte
         return await context
             .FwsActions
             .Where(a => a.FwsLinks.Any(l => l.NrcsPractice.Code == practiceCode))
-            .OrderBy(a => a.Code)
+            // Codes are "major.minor" and sort as numbers: 2.1 before 10.1, 2.9 before 2.10.
+            .OrderBy(a => a.Code.IndexOf("."))
+            .ThenBy(a => a.Code.Length)
+            .ThenBy(a => a.Code)
             .Select(a => new PracticeActionDtoForList(
                 new FwsActionDtoForList(a.Id, a.Code, a.Name),
                 a.FwsLinks
