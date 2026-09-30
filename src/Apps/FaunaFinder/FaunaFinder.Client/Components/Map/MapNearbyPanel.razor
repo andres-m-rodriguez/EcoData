@@ -1,6 +1,7 @@
 @namespace FaunaFinder.Client.Components.Map
 @inherits EcoDataComponent
 @using EcoData.Wildlife.Contracts.Dtos
+@using System.Globalization
 
 <header class="mnp-head">
     <div class="mnp-head-meta">
@@ -11,6 +12,35 @@
         <MudIcon Icon="@Icons.Material.Filled.Close" Size="Size.Small" />
     </button>
 </header>
+
+@if (RadiusKm is { } radiusKm)
+{
+    <div class="mnp-radius" role="group" aria-label="@L["Map_Radius_Label"]">
+        @foreach (var option in RadiusOptionsKm)
+        {
+            var km = option;
+            <button type="button"
+                    class="mnp-radius-chip @(km == radiusKm ? "is-active" : null)"
+                    aria-pressed="@(km == radiusKm ? "true" : "false")"
+                    disabled="@IsLoading"
+                    @onclick="@(() => OnRadiusChange.InvokeAsync(km))">
+                @L["Map_Radius_Option", km]
+            </button>
+        }
+        <label class="mnp-radius-custom">
+            <input type="number"
+                   inputmode="decimal"
+                   min="@MinRadiusKm"
+                   max="@MaxRadiusKm"
+                   step="0.5"
+                   value="@radiusKm.ToString(CultureInfo.InvariantCulture)"
+                   disabled="@IsLoading"
+                   aria-label="@L["Map_Radius_Custom"]"
+                   @onchange="HandleCustomRadius" />
+            <span>km</span>
+        </label>
+    </div>
+}
 
 @if (IsLoading)
 {
@@ -84,6 +114,14 @@ else
     [Parameter] public IReadOnlyList<SpeciesNearbyDto>? Species { get; set; }
     [Parameter] public bool IsLoading { get; set; }
 
+    public static readonly double[] RadiusOptionsKm = [1, 2, 5, 10, 25];
+    public const double MinRadiusKm = 1;
+    public const double MaxRadiusKm = 50;
+
+    // Null for drawn areas and shape files, which have no radius to change.
+    [Parameter] public double? RadiusKm { get; set; }
+    [Parameter] public EventCallback<double> OnRadiusChange { get; set; }
+
     // False when the server withheld the areas: rows then have no circle to fly to.
     [Parameter] public bool AreasVisible { get; set; } = true;
     [Parameter] public EventCallback OnClose { get; set; }
@@ -93,6 +131,12 @@ else
     [CascadingParameter] public LocaleContext Locale { get; set; } = LocaleContext.English;
 
     private Task HandleClose() => OnClose.InvokeAsync();
+
+    // The number input posts invariant text whatever the page language.
+    private Task HandleCustomRadius(ChangeEventArgs e) =>
+        double.TryParse(e.Value?.ToString(), NumberStyles.Float, CultureInfo.InvariantCulture, out var km)
+            ? OnRadiusChange.InvokeAsync(Math.Clamp(km, MinRadiusKm, MaxRadiusKm))
+            : Task.CompletedTask;
     private Task HandleFocus(int index) => AreasVisible ? OnFocusSpecies.InvokeAsync(index) : Task.CompletedTask;
     private Task HandleDetails(SpeciesNearbyDto s) => OnDetailsClick.InvokeAsync(s);
 

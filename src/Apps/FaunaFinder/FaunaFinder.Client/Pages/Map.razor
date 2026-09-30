@@ -98,6 +98,8 @@
                                 IsLoading="@SearchAreaState.IsLoading"
                                 Species="@SearchAreaState.Result"
                                 AreasVisible="@AreasVisible"
+                                RadiusKm="@(IsCircleSearch ? _searchRadiusMeters / 1000 : null)"
+                                OnRadiusChange="ChangeRadius"
                                 OnClose="CloseSidebar"
                                 OnFocusSpecies="FocusNearbySpecies"
                                 OnDetailsClick="OnNearbyDetailsClicked" />
@@ -115,6 +117,8 @@
                                 IsLoading="@SearchAreaState.IsLoading"
                                 Species="@SearchAreaState.Result"
                                 AreasVisible="@AreasVisible"
+                                RadiusKm="@(IsCircleSearch ? _searchRadiusMeters / 1000 : null)"
+                                OnRadiusChange="ChangeRadius"
                                 OnClose="CloseSheet"
                                 OnFocusSpecies="FocusNearbySpeciesFromSheet"
                                 OnDetailsClick="OnNearbyDetailsClicked" />
@@ -124,7 +128,7 @@
 </div>
 
 @code {
-    private const double NearMeRadiusMeters = 5000;
+    private const double DefaultRadiusKm = 5;
     private const int CoordinateZoom = 12;
 
     // Circle colors; index-aligned with MapNearbyPanel's .mnp-dot palette classes.
@@ -143,7 +147,12 @@
 
     private AreaSearchMode _searchMode;
     private MapCoordinate? _searchOrigin;
-    private double _searchRadiusMeters = NearMeRadiusMeters;
+    private double _searchRadiusMeters = DefaultRadiusKm * 1000;
+
+    // What the reader last picked in the panel; taps and near me search this far.
+    private double _radiusKm = DefaultRadiusKm;
+
+    private const string RadiusKmKey = "faunafinder-search-radius-km";
     private IReadOnlyList<PolygonCoordinate>? _polygonCoordinates;
     private ShapeArea? _shape;
     private bool _isDrawing;
@@ -183,7 +192,7 @@
         _lastTappedPoint = point;
         if (_isDrawing) return;
 
-        _ = InvokeAsync(async () => await SearchAroundAsync(point, NearMeRadiusMeters, AreaSearchMode.Point));
+        _ = InvokeAsync(async () => await SearchAroundAsync(point, _radiusKm * 1000, AreaSearchMode.Point));
     }
 
     private bool PanelVisible => _searchMode != AreaSearchMode.None;
@@ -203,7 +212,39 @@
 
         var stored = await JS.InvokeAsync<string?>("localStorage.getItem", TapHintDismissedKey);
         _tapHintDismissed = stored.Match(value => value is not null, _ => false);
+
+        var storedRadius = await JS.InvokeAsync<string?>("localStorage.getItem", RadiusKmKey);
+        if (storedRadius.TryPickT0(out var radiusText, out _)
+            && double.TryParse(radiusText, System.Globalization.CultureInfo.InvariantCulture, out var radiusKm)
+            && radiusKm is >= MapNearbyPanel.MinRadiusKm and <= MapNearbyPanel.MaxRadiusKm)
+        {
+            _radiusKm = radiusKm;
+        }
+
         StateHasChanged();
+    }
+
+    private bool IsCircleSearch => _searchMode is AreaSearchMode.Point or AreaSearchMode.NearMe or AreaSearchMode.Coordinates;
+
+    // The pick sticks for later taps. The panel stays open, so this reruns the
+    // query in place rather than going through SearchAroundAsync's reveal.
+    private async Task ChangeRadius(double radiusKm)
+    {
+        _radiusKm = radiusKm;
+        _ = JS.InvokeVoidAsync("localStorage.setItem", RadiusKmKey, radiusKm.ToString(System.Globalization.CultureInfo.InvariantCulture));
+
+        if (_searchOrigin is not { } origin) return;
+
+        _searchRadiusMeters = radiusKm * 1000;
+
+        // Keeps a reload or shared link on the new radius; the parameters then
+        // match this search and leave it alone.
+        if (_searchMode == AreaSearchMode.Coordinates)
+            NavigationManager.NavigateTo(NavigationManager.GetUriWithQueryParameter("km", radiusKm), replace: true);
+
+        _mapController.ShowSearchRadius(origin, _searchRadiusMeters);
+        await SearchAreaState.TryExecute();
+        ShowNearbyCircles(SearchAreaState.Result);
     }
 
     // Storage failing (private mode) only costs the memory across reloads.
@@ -257,7 +298,7 @@
             return;
 
         var origin = new MapCoordinate(latitude, longitude);
-        var radiusMeters = Math.Clamp(QueryRadiusKm ?? NearMeRadiusMeters / 1000, 1, 50) * 1000;
+        var radiusMeters = Math.Clamp(QueryRadiusKm ?? _radiusKm, MapNearbyPanel.MinRadiusKm, MapNearbyPanel.MaxRadiusKm) * 1000;
         if (_searchMode == AreaSearchMode.Coordinates && _searchOrigin == origin && _searchRadiusMeters == radiusMeters)
             return;
 
@@ -306,7 +347,7 @@
             }
 
             var origin = new MapCoordinate(position.Latitude, position.Longitude);
-            await SearchAroundAsync(origin, NearMeRadiusMeters, AreaSearchMode.NearMe);
+            await SearchAroundAsync(origin, _radiusKm * 1000, AreaSearchMode.NearMe);
         }
         finally
         {

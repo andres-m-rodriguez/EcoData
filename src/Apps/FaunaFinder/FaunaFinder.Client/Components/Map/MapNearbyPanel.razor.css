@@ -232,3 +232,84 @@
     color: var(--fauna-map-fg-2);
     max-width: 240px;
 }
+
+.mnp-radius {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    padding: 12px 20px;
+    border-bottom: 1px solid var(--fauna-map-line);
+}
+
+.mnp-radius-chip {
+    min-height: 32px;
+    padding: 0 12px;
+    border-radius: 999px;
+    border: 1px solid var(--fauna-map-line);
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--fauna-map-fg-2);
+    font: var(--fauna-mono);
+    font-size: 12px;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: background-color var(--fauna-t-base) var(--fauna-ease),
+                border-color var(--fauna-t-base) var(--fauna-ease),
+                color var(--fauna-t-base) var(--fauna-ease);
+}
+
+.mnp-radius-chip:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.12);
+    color: var(--fauna-map-fg);
+}
+
+.mnp-radius-chip.is-active {
+    border-color: var(--fauna-map-accent);
+    color: var(--fauna-map-accent);
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.mnp-radius-chip:disabled {
+    cursor: default;
+    opacity: 0.6;
+}
+
+.mnp-radius-chip:focus-visible {
+    outline: 2px solid var(--fauna-map-accent);
+    outline-offset: 2px;
+}
+
+.mnp-radius-custom {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 32px;
+    padding: 0 10px;
+    border-radius: 999px;
+    border: 1px solid var(--fauna-map-line);
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--fauna-map-fg-2);
+    font: var(--fauna-mono);
+    font-size: 12px;
+}
+
+.mnp-radius-custom:focus-within {
+    border-color: var(--fauna-map-accent);
+}
+
+.mnp-radius-custom input {
+    width: 4.5ch;
+    border: none;
+    background: transparent;
+    color: var(--fauna-map-fg);
+    font: inherit;
+    text-align: right;
+    outline: none;
+    appearance: textfield;
+    -moz-appearance: textfield;
+}
+
+.mnp-radius-custom input::-webkit-inner-spin-button,
+.mnp-radius-custom input::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
