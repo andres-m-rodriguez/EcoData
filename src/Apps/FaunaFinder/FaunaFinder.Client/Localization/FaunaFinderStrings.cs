@@ -107,7 +107,7 @@ public static class FaunaFinderStrings
         ["Hero_Eyebrow"] = "Volume 03 · Living Atlas",
         ["Hero_LastSync"] = "Last sync · {0}",
 
-        ["Species_PageTitle"] = "FaunaFinder — Species",
+        ["Species_PageTitle"] = "MAT — Species",
         ["Species_Hero_HeadingLead"] = "Species of",
         ["Species_Hero_HeadingTail"] = ", catalogued and observed.",
         ["Species_Hero_Lede"] = "A living field guide to the island's flora and fauna — drawn from verified sightings across 78 municipios. Browse by taxon, conservation status, or habitat; follow any record through to its distribution map and source observations.",
@@ -208,7 +208,7 @@ public static class FaunaFinderStrings
         ["SpeciesDetail_NotFound_Title"] = "Species not found",
         ["SpeciesDetail_NotFound_Description"] = "The species you're looking for doesn't exist or has been removed.",
 
-        ["Muni_PageTitle"] = "FaunaFinder — Municipios",
+        ["Muni_PageTitle"] = "MAT — Municipios",
         ["Muni_Hero_HeadingLead"] = "Municipios of",
         ["Muni_Hero_HeadingTail"] = ", mapped and observed.",
         ["Muni_Hero_Lede"] = "A geographic index to Puerto Rico's 78 municipios — each annotated with the species recorded inside its boundaries. Search by name, sort by biodiversity, or tap any pin to pull up a municipio's full roster and its notable residents.",
@@ -575,7 +575,7 @@ public static class FaunaFinderStrings
         ["Hero_Eyebrow"] = "Volumen 03 · Atlas Viviente",
         ["Hero_LastSync"] = "Última sincronización · {0}",
 
-        ["Species_PageTitle"] = "FaunaFinder — Especies",
+        ["Species_PageTitle"] = "MAT — Especies",
         ["Species_Hero_HeadingLead"] = "Especies de",
         ["Species_Hero_HeadingTail"] = ", catalogadas y observadas.",
         ["Species_Hero_Lede"] = "Una guía de campo viva de la flora y fauna de la isla — construida con avistamientos verificados en los 78 municipios. Explora por taxón, estado de conservación o hábitat; sigue cualquier registro hasta su mapa de distribución y observaciones originales.",
@@ -676,7 +676,7 @@ public static class FaunaFinderStrings
         ["SpeciesDetail_NotFound_Title"] = "Especie no encontrada",
         ["SpeciesDetail_NotFound_Description"] = "La especie que buscas no existe o fue eliminada.",
 
-        ["Muni_PageTitle"] = "FaunaFinder — Municipios",
+        ["Muni_PageTitle"] = "MAT — Municipios",
         ["Muni_Hero_HeadingLead"] = "Municipios de",
         ["Muni_Hero_HeadingTail"] = ", en el mapa y observados.",
         ["Muni_Hero_Lede"] = "Un índice geográfico de los 78 municipios de Puerto Rico — cada uno anotado con las especies registradas dentro de sus límites. Busca por nombre, ordena por biodiversidad, o toca un pin para abrir el registro completo del municipio y sus residentes más destacados.",

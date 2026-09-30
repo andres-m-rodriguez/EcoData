@@ -49,7 +49,7 @@ public sealed class SpeciesReportDocument(
                 row.RelativeItem()
                     .Column(column =>
                     {
-                        column.Item().Text("FaunaFinder").FontSize(9).FontColor(Muted);
+                        column.Item().Text("MAT · Management Action Tool").FontSize(9).FontColor(Muted);
                         column.Item().Text(labels.Title).FontSize(11).SemiBold().FontColor(Green);
                     });
 
