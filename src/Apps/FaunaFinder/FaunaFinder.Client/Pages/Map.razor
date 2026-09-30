@@ -6,12 +6,15 @@
 @using EcoData.Wildlife.Contracts.Parameters
 @using EcoData.Common.Problems
 @using FaunaFinder.Client.Components.Map
+@using FaunaFinder.Client.Services.MapSearch
 @using FaunaFinder.Client.Services.Shapes
 @using OneOf
 @inherits StatefulComponent
 @inject ISpeciesHttpClient SpeciesHttpClient
 @inject AuthStateService Auth
 @inject ShapeAreaRequest Shapes
+@inject MapSearchReturn SearchReturn
+@inject PageNavigation PageNavigation
 @inject NavigationManager NavigationManager
 @inject ISnackbar Snackbar
 @inject ILocalizer L
@@ -279,6 +282,28 @@
     {
         await base.OnParametersSetAsync();
 
+        if (SearchReturn.Pending is { } snapshot)
+        {
+            SearchReturn.Pending = null;
+            switch (snapshot)
+            {
+                case { Mode: AreaSearchMode.Point or AreaSearchMode.NearMe or AreaSearchMode.Coordinates, Origin: { } returnOrigin }:
+                    await SearchAroundAsync(returnOrigin, snapshot.RadiusMeters, snapshot.Mode);
+                    return;
+                case { Mode: AreaSearchMode.DrawnArea, Polygon: { } polygon }:
+                    _searchMode = AreaSearchMode.DrawnArea;
+                    _polygonCoordinates = polygon;
+                    _mapController.ShowPolygons([polygon.Select(p => new MapCoordinate(p.Latitude, p.Longitude)).ToList()]);
+                    await RevealPanelAsync();
+                    await SearchAreaState.TryExecute();
+                    ShowNearbyCircles(SearchAreaState.Result);
+                    return;
+                case { Mode: AreaSearchMode.ShapeFile, Shape: { } shape }:
+                    await SearchShapeAsync(shape);
+                    return;
+            }
+        }
+
         if (QueryShape is not null)
         {
             if (Shapes.Pending is not { } area)
@@ -540,8 +565,14 @@
         _sheetOpen = true;
     }
 
-    private void OnNearbyDetailsClicked(SpeciesNearbyDto species) =>
+    // Opting into the back stack only here keeps the map out of it for every
+    // other exit; the species page's back then returns to this search.
+    private void OnNearbyDetailsClicked(SpeciesNearbyDto species)
+    {
+        SearchReturn.Pending = new MapSearchSnapshot(_searchMode, _searchOrigin, _searchRadiusMeters, _polygonCoordinates, _shape);
+        PageNavigation.Record();
         NavigationManager.NavigateTo($"/species/{species.Id}");
+    }
 
     private void ClearAreaSearch()
     {
@@ -562,16 +593,6 @@
         _mapController.ClearSearchRadius();
         _mapController.ClearDrawnPolygon();
         _mapController.CancelPolygonDraw();
-    }
-
-    private enum AreaSearchMode
-    {
-        None,
-        Point,
-        NearMe,
-        Coordinates,
-        DrawnArea,
-        ShapeFile,
     }
 
     private void CloseSidebar()
