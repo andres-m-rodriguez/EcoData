@@ -81,6 +81,17 @@ public static class SpeciesEndpoints
 
         group
             .MapGet(
+                "/{id:guid}/documents",
+                async Task<Ok<IReadOnlyList<SpeciesDocumentDto>>> (
+                    Guid id,
+                    ISpeciesDocumentRepository repository,
+                    CancellationToken ct
+                ) => TypedResults.Ok(await repository.GetBySpeciesAsync(id, ct))
+            )
+            .WithName("GetSpeciesDocuments");
+
+        group
+            .MapGet(
                 "/stats",
                 async Task<Ok<SpeciesStatsDto>> (
                     ISpeciesRepository repository,

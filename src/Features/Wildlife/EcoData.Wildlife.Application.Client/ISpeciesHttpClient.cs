@@ -17,6 +17,8 @@ public interface ISpeciesHttpClient
 
     Task<OneOf<SpeciesDtoForDetail, RequestFailed>> GetByIdAsync(Guid id, CancellationToken ct = default);
 
+    Task<OneOf<IReadOnlyList<SpeciesDocumentDto>, RequestFailed>> GetDocumentsAsync(Guid id, CancellationToken ct = default);
+
     Task<OneOf<SpeciesStatsDto, RequestFailed>> GetStatsAsync(CancellationToken ct = default);
 
     Task<OneOf<SpeciesFacetsDto, RequestFailed>> GetFacetsAsync(

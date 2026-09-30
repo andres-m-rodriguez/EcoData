@@ -1,0 +1,76 @@
+@namespace FaunaFinder.Client.Components.Species
+@using EcoData.Wildlife.Contracts.Dtos
+@using EcoData.Wildlife.Application.Client
+@inherits StatefulComponent
+@inject ISpeciesHttpClient SpeciesClient
+@inject ILocalizer L
+
+<MudPaper Elevation="0" Class="pa-4 pa-md-6 rounded-lg border-solid border mud-border-lines-default mb-4">
+    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Class="mb-4">
+        <MudIcon Icon="@Icons.Material.Filled.Description" Color="Color.Primary" />
+        <MudText Typo="Typo.h6">@L["SpeciesDetail_Documents_Heading"]</MudText>
+        <MudSpacer />
+        @if (LoadDocumentsState.Result is { Count: > 0 } documents)
+        {
+            <MudText Typo="Typo.caption" Color="Color.Secondary">@documents.Count</MudText>
+        }
+    </MudStack>
+
+    @if (_loadError is not null)
+    {
+        <MudAlert Severity="Severity.Error">@_loadError</MudAlert>
+    }
+    else if (LoadDocumentsState.Result is null || LoadDocumentsState.IsLoading)
+    {
+        <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="56px" Class="rounded-lg" />
+    }
+    else if (LoadDocumentsState.Result.Count == 0)
+    {
+        <NuiEmptyState Icon="@Icons.Material.Outlined.Description"
+                       Title="@L[EmptyTitle]"
+                       Description="@L[EmptyDescription]" />
+    }
+    else
+    {
+        <MudList T="SpeciesDocumentDto" Dense="true">
+            @foreach (var document in LoadDocumentsState.Result)
+            {
+                <MudListItem T="SpeciesDocumentDto"
+                             Icon="@Icons.Material.Filled.PictureAsPdf"
+                             IconColor="Color.Error"
+                             Href="@($"/documents/species/{document.FileName}")"
+                             Target="_blank">
+                    <MudText Typo="Typo.body1">@Locale.Resolve(document.Title, document.FileName)</MudText>
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">PDF</MudText>
+                </MudListItem>
+            }
+        </MudList>
+    }
+</MudPaper>
+
+@code {
+    [Parameter, EditorRequired]
+    public Guid SpeciesId { get; set; }
+
+    [CascadingParameter] public LocaleContext Locale { get; set; } = LocaleContext.English;
+
+    private const string EmptyTitle = "SpeciesDetail_Documents_Empty_Title";
+    private const string EmptyDescription = "SpeciesDetail_Documents_Empty_Description";
+
+    private string? _loadError;
+
+    [Command, RunOnLoad]
+    private async Task<IReadOnlyList<SpeciesDocumentDto>?> LoadDocuments(CancellationToken ct)
+    {
+        var result = await SpeciesClient.GetDocumentsAsync(SpeciesId, ct);
+        if (result.TryPickT0(out var documents, out var error))
+        {
+            _loadError = null;
+            return documents;
+        }
+        _loadError = error.StatusCode == 0
+            ? "Couldn't reach the server."
+            : error.Message ?? "Something went wrong while loading documents.";
+        return [];
+    }
+}

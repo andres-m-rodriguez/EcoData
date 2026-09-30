@@ -45,6 +45,15 @@ public sealed class SpeciesHttpClient(HttpClient httpClient) : ISpeciesHttpClien
         return result.MapT1(problem => RequestFailed.From(problem));
     }
 
+    public async Task<OneOf<IReadOnlyList<SpeciesDocumentDto>, RequestFailed>> GetDocumentsAsync(
+        Guid id,
+        CancellationToken ct = default)
+    {
+        var response = await httpClient.GetAsync($"wildlife/species/{id}/documents", ct);
+        var result = await response.ReadOneOfAsync<IReadOnlyList<SpeciesDocumentDto>>(ct);
+        return result.MapT1(problem => RequestFailed.From(problem));
+    }
+
     public async Task<OneOf<SpeciesStatsDto, RequestFailed>> GetStatsAsync(CancellationToken ct = default)
     {
         var response = await httpClient.GetAsync("wildlife/species/stats", ct);

@@ -18,6 +18,7 @@ public static class DependencyInjection
         services.AddScoped<INrcsPracticeRepository, NrcsPracticeRepository>();
         services.AddScoped<IFwsActionRepository, FwsActionRepository>();
         services.AddScoped<IConservationLinkRepository, ConservationLinkRepository>();
+        services.AddScoped<ISpeciesDocumentRepository, SpeciesDocumentRepository>();
         services.AddScoped<ISightingRepository, SightingRepository>();
 
         // Over the BlobContainerClient the host registers for the

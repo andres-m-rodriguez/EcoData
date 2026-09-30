@@ -3,6 +3,7 @@ using System;
 using EcoData.Wildlife.Database;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace EcoData.Wildlife.Database.Migrations
 {
     [DbContext(typeof(WildlifeDbContext))]
-    partial class WildlifeDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260930080023_AddSpeciesDocuments")]
+    partial class AddSpeciesDocuments
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -123,11 +126,6 @@ namespace EcoData.Wildlife.Database.Migrations
                         .HasMaxLength(20)
                         .HasColumnType("character varying(20)")
                         .HasColumnName("code");
-
-                    b.Property<string>("NrcsUrl")
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)")
-                        .HasColumnName("nrcs_url");
 
                     b.HasKey("Id")
                         .HasName("pk_nrcs_practices");
@@ -642,32 +640,6 @@ namespace EcoData.Wildlife.Database.Migrations
 
             modelBuilder.Entity("EcoData.Wildlife.Database.Models.NrcsPractice", b =>
                 {
-                    b.OwnsMany("EcoData.Common.i18n.LocaleValue", "Description", b1 =>
-                        {
-                            b1.Property<Guid>("NrcsPracticeId");
-
-                            b1.Property<int>("__synthesizedOrdinal")
-                                .ValueGeneratedOnAdd();
-
-                            b1.Property<string>("Code")
-                                .IsRequired();
-
-                            b1.Property<string>("Value")
-                                .IsRequired();
-
-                            b1.HasKey("NrcsPracticeId", "__synthesizedOrdinal");
-
-                            b1.ToTable("nrcs_practices");
-
-                            b1
-                                .ToJson("description")
-                                .HasColumnType("jsonb");
-
-                            b1.WithOwner()
-                                .HasForeignKey("NrcsPracticeId")
-                                .HasConstraintName("fk_nrcs_practices_nrcs_practices_nrcs_practice_id");
-                        });
-
                     b.OwnsMany("EcoData.Common.i18n.LocaleValue", "Name", b1 =>
                         {
                             b1.Property<Guid>("NrcsPracticeId");
@@ -693,8 +665,6 @@ namespace EcoData.Wildlife.Database.Migrations
                                 .HasForeignKey("NrcsPracticeId")
                                 .HasConstraintName("fk_nrcs_practices_nrcs_practices_nrcs_practice_id");
                         });
-
-                    b.Navigation("Description");
 
                     b.Navigation("Name");
                 });

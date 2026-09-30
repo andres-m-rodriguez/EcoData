@@ -260,6 +260,7 @@ public sealed class DatabaseSeederWorker(
         await SeedFwsActionsAsync(context, stoppingToken);
         await SeedSpeciesAsync(context, locationsContext, stoppingToken);
         await SeedFwsLinksAsync(context, stoppingToken);
+        await SeedSpeciesDocumentsAsync(context, stoppingToken);
     }
 
     private async Task SeedSpeciesCategoriesAsync(
@@ -464,6 +465,72 @@ public sealed class DatabaseSeederWorker(
 
         await context.SaveChangesAsync(stoppingToken);
         logger.LogInformation("FWS actions seeded: {Count}", actions.Count);
+    }
+
+    // The JSON is the source of truth: rows it no longer lists are removed, and
+    // a title edit reaches rows that already exist.
+    private async Task SeedSpeciesDocumentsAsync(
+        WildlifeDbContext context,
+        CancellationToken stoppingToken
+    )
+    {
+        var jsonPath = Path.Combine(AppContext.BaseDirectory, "Data", "species_documents.json");
+        if (!File.Exists(jsonPath))
+        {
+            logger.LogWarning("species_documents.json not found. Skipping species documents seeding.");
+            return;
+        }
+
+        var json = await File.ReadAllTextAsync(jsonPath, stoppingToken);
+        var documents = JsonSerializer.Deserialize<List<SpeciesDocumentDto>>(json, JsonOptions);
+        if (documents is null)
+            return;
+
+        var speciesIds = await context.Species.ToDictionaryAsync(
+            s => s.ScientificName,
+            s => s.Id,
+            stoppingToken
+        );
+        var existing = await context.SpeciesDocuments.ToListAsync(stoppingToken);
+
+        var sanctioned = new HashSet<(Guid SpeciesId, string FileName)>();
+        foreach (var dto in documents)
+        {
+            if (!speciesIds.TryGetValue(dto.ScientificName, out var speciesId))
+            {
+                logger.LogWarning("Species document skipped, unknown species {ScientificName}", dto.ScientificName);
+                continue;
+            }
+
+            sanctioned.Add((speciesId, dto.FileName));
+            var document = existing.FirstOrDefault(d => d.SpeciesId == speciesId && d.FileName == dto.FileName);
+            if (document is not null)
+            {
+                document.Title = dto.Title;
+                continue;
+            }
+
+            context.SpeciesDocuments.Add(
+                new SpeciesDocument
+                {
+                    Id = Guid.CreateVersion7(),
+                    SpeciesId = speciesId,
+                    FileName = dto.FileName,
+                    Title = dto.Title,
+                }
+            );
+        }
+
+        var removed = existing.Where(d => !sanctioned.Contains((d.SpeciesId, d.FileName))).ToList();
+        context.SpeciesDocuments.RemoveRange(removed);
+
+        await context.SaveChangesAsync(stoppingToken);
+
+        logger.LogInformation(
+            "Species documents seeded: {Count}, removed (not in source): {Removed}",
+            sanctioned.Count,
+            removed.Count
+        );
     }
 
     private async Task SeedSpeciesAsync(
@@ -1092,6 +1159,18 @@ public sealed class DatabaseSeederWorker(
 
         [JsonPropertyName("nrcsUrl")]
         public string? NrcsUrl { get; init; }
+    }
+
+    private sealed class SpeciesDocumentDto
+    {
+        [JsonPropertyName("scientificName")]
+        public required string ScientificName { get; init; }
+
+        [JsonPropertyName("fileName")]
+        public required string FileName { get; init; }
+
+        [JsonPropertyName("title")]
+        public required List<LocaleValue> Title { get; init; }
     }
 
     private sealed class FwsActionDto

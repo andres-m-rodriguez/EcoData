@@ -37,6 +37,12 @@ public sealed record SpeciesDtoForDetail(
     IReadOnlyList<SpeciesLocationDto> Locations
 );
 
+public sealed record SpeciesDocumentDto(
+    Guid Id,
+    IReadOnlyList<LocaleValue> Title,
+    string FileName
+);
+
 public sealed record SpeciesLocationDto(
     Guid Id,
     double Latitude,
