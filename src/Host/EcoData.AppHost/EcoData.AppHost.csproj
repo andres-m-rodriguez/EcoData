@@ -6,26 +6,19 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <UserSecretsId>55334bac-5b11-4e1a-8794-850dcd60d61e</UserSecretsId>
-    <NoWarn>$(NoWarn);ASPIREAZURE002;ASPIREACADOMAINS001</NoWarn>
+    <NoWarn>$(NoWarn);ASPIREAZURE002</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Aspire.Hosting.Azure.ApplicationInsights" />
     <PackageReference Include="Aspire.Hosting.Azure.AppContainers" />
-    <PackageReference Include="Aspire.Hosting.Azure.KeyVault" />
     <PackageReference Include="Aspire.Hosting.Azure.OperationalInsights" />
     <PackageReference Include="Aspire.Hosting.Azure.PostgreSQL" />
-    <PackageReference Include="Aspire.Hosting.Azure.ServiceBus" />
-    <PackageReference Include="Aspire.Hosting.Azure.Storage" />
     <PackageReference Include="Aspire.Hosting.PostgreSQL" />
     <PackageReference Include="Npgsql" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\Apps\EcoPortal\EcoPortal.Server\EcoPortal.Server.csproj" />
     <ProjectReference Include="..\..\Apps\FaunaFinder\FaunaFinder.Server\FaunaFinder.Server.csproj" />
-    <ProjectReference Include="..\..\Features\Sensors\EcoData.Sensors.Contracts\EcoData.Sensors.Contracts.csproj" IsAspireProjectResource="false" />
-    <ProjectReference Include="..\..\Features\Sensors\EcoData.Sensors.Ingestion\EcoData.Sensors.Ingestion.csproj" />
     <ProjectReference Include="..\EcoData.Seeder\EcoData.Seeder.csproj" />
     <ProjectReference Include="..\EcoData.VirginIslandsBackfill\EcoData.VirginIslandsBackfill.csproj" />
     <ProjectReference Include="..\Aspire.Hosting.Zig\Aspire.Hosting.Zig.csproj" IsAspireProjectResource="false" />

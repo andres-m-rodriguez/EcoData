@@ -1,12 +1,8 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using EcoData.Common.i18n;
-using EcoData.Identity.Database;
 using EcoData.Locations.Database;
 using EcoData.Locations.Database.Models;
-using EcoData.Organization.Database;
-using EcoData.Sensors.Database;
-using EcoData.Sensors.Database.Models;
 using EcoData.Wildlife.Contracts;
 using EcoData.Wildlife.Database;
 using EcoData.Wildlife.Database.Models;
@@ -19,7 +15,6 @@ namespace EcoData.Seeder;
 public sealed class DatabaseSeederWorker(
     IServiceProvider serviceProvider,
     IHostApplicationLifetime lifetime,
-    IHostEnvironment environment,
     ILogger<DatabaseSeederWorker> logger
 ) : BackgroundService
 {
@@ -30,32 +25,11 @@ public sealed class DatabaseSeederWorker(
             await using var scope = serviceProvider.CreateAsyncScope();
             var services = scope.ServiceProvider;
 
-            await MigrateOrganizationAsync(services, stoppingToken);
-            await MigrateSensorsAsync(services, stoppingToken);
-            await MigrateIdentityAsync(services, stoppingToken);
             await MigrateLocationsAsync(services, stoppingToken);
             await MigrateWildlifeAsync(services, stoppingToken);
 
-            // Dev data is everything outside Production: the local run, the
-            // integration tests, a deployed dev slot. Organizations go first so
-            // the roles pass covers the dev ones and the dev users can join them.
-            var seedDevelopmentData = !environment.IsProduction();
-            var organizations = services.GetRequiredService<SeedOrganizations>();
-
-            await organizations.SeedAsync(stoppingToken);
-            if (seedDevelopmentData)
-                await organizations.SeedDevelopmentAsync(stoppingToken);
-
-            await services.GetRequiredService<SeedRoles>().SeedAsync(stoppingToken);
-
-            if (seedDevelopmentData)
-                await services.GetRequiredService<SeedUsers>().SeedDevelopmentAsync(stoppingToken);
-
             await SeedLocationsAsync(services, stoppingToken);
             await SeedWildlifeAsync(services, stoppingToken);
-            await SeedPhenomenaAsync(services, stoppingToken);
-            await SeedUsgsParameterMappingsAsync(services, stoppingToken);
-            await BackfillReadingsAsync(services, stoppingToken);
 
             logger.LogInformation("All database migrations and seeding completed successfully.");
         }
@@ -71,39 +45,6 @@ public sealed class DatabaseSeederWorker(
         {
             lifetime.StopApplication();
         }
-    }
-
-    private async Task MigrateOrganizationAsync(
-        IServiceProvider services,
-        CancellationToken stoppingToken
-    )
-    {
-        var context = services.GetRequiredService<OrganizationDbContext>();
-        logger.LogInformation("Applying Organization database migrations...");
-        await context.Database.MigrateAsync(stoppingToken);
-        logger.LogInformation("Organization database migrations applied.");
-    }
-
-    private async Task MigrateSensorsAsync(
-        IServiceProvider services,
-        CancellationToken stoppingToken
-    )
-    {
-        var context = services.GetRequiredService<SensorsDbContext>();
-        logger.LogInformation("Applying Sensors database migrations...");
-        await context.Database.MigrateAsync(stoppingToken);
-        logger.LogInformation("Sensors database migrations applied.");
-    }
-
-    private async Task MigrateIdentityAsync(
-        IServiceProvider services,
-        CancellationToken stoppingToken
-    )
-    {
-        var context = services.GetRequiredService<IdentityDbContext>();
-        logger.LogInformation("Applying Identity database migrations...");
-        await context.Database.MigrateAsync(stoppingToken);
-        logger.LogInformation("Identity database migrations applied.");
     }
 
     private async Task MigrateLocationsAsync(
@@ -260,6 +201,7 @@ public sealed class DatabaseSeederWorker(
         await SeedFwsActionsAsync(context, stoppingToken);
         await SeedSpeciesAsync(context, locationsContext, stoppingToken);
         await SeedFwsLinksAsync(context, stoppingToken);
+        await SeedSpeciesDocumentsAsync(context, stoppingToken);
     }
 
     private async Task SeedSpeciesCategoriesAsync(
@@ -456,6 +398,72 @@ public sealed class DatabaseSeederWorker(
 
         await context.SaveChangesAsync(stoppingToken);
         logger.LogInformation("FWS actions seeded: {Count}", actions.Count);
+    }
+
+    // The JSON is the source of truth: rows it no longer lists are removed, and
+    // a title edit reaches rows that already exist.
+    private async Task SeedSpeciesDocumentsAsync(
+        WildlifeDbContext context,
+        CancellationToken stoppingToken
+    )
+    {
+        var jsonPath = Path.Combine(AppContext.BaseDirectory, "Data", "species_documents.json");
+        if (!File.Exists(jsonPath))
+        {
+            logger.LogWarning("species_documents.json not found. Skipping species documents seeding.");
+            return;
+        }
+
+        var json = await File.ReadAllTextAsync(jsonPath, stoppingToken);
+        var documents = JsonSerializer.Deserialize<List<SpeciesDocumentDto>>(json, JsonOptions);
+        if (documents is null)
+            return;
+
+        var speciesIds = await context.Species.ToDictionaryAsync(
+            s => s.ScientificName,
+            s => s.Id,
+            stoppingToken
+        );
+        var existing = await context.SpeciesDocuments.ToListAsync(stoppingToken);
+
+        var sanctioned = new HashSet<(Guid SpeciesId, string FileName)>();
+        foreach (var dto in documents)
+        {
+            if (!speciesIds.TryGetValue(dto.ScientificName, out var speciesId))
+            {
+                logger.LogWarning("Species document skipped, unknown species {ScientificName}", dto.ScientificName);
+                continue;
+            }
+
+            sanctioned.Add((speciesId, dto.FileName));
+            var document = existing.FirstOrDefault(d => d.SpeciesId == speciesId && d.FileName == dto.FileName);
+            if (document is not null)
+            {
+                document.Title = dto.Title;
+                continue;
+            }
+
+            context.SpeciesDocuments.Add(
+                new SpeciesDocument
+                {
+                    Id = Guid.CreateVersion7(),
+                    SpeciesId = speciesId,
+                    FileName = dto.FileName,
+                    Title = dto.Title,
+                }
+            );
+        }
+
+        var removed = existing.Where(d => !sanctioned.Contains((d.SpeciesId, d.FileName))).ToList();
+        context.SpeciesDocuments.RemoveRange(removed);
+
+        await context.SaveChangesAsync(stoppingToken);
+
+        logger.LogInformation(
+            "Species documents seeded: {Count}, removed (not in source): {Removed}",
+            sanctioned.Count,
+            removed.Count
+        );
     }
 
     private async Task SeedSpeciesAsync(
@@ -855,215 +863,6 @@ public sealed class DatabaseSeederWorker(
         logger.LogInformation("FWS links removed (not in source): {Count}", staleIds.Count);
     }
 
-    private const string UsgsDataSourceName = "USGS Puerto Rico";
-
-    private async Task SeedPhenomenaAsync(IServiceProvider services, CancellationToken stoppingToken)
-    {
-        var context = services.GetRequiredService<SensorsDbContext>();
-
-        var existingCodes = await context.Phenomena.Select(p => p.Code).ToListAsync(stoppingToken);
-        var existingSet = existingCodes.ToHashSet(StringComparer.OrdinalIgnoreCase);
-
-        var now = DateTimeOffset.UtcNow;
-        var toAdd = PhenomenonCatalog
-            .All.Where(p => !existingSet.Contains(p.Code))
-            .Select(p => new Phenomenon
-            {
-                Id = Guid.CreateVersion7(),
-                Code = p.Code,
-                Name = p.Name,
-                Description = p.Description,
-                CanonicalUnit = p.CanonicalUnit,
-                DefaultValueShape = p.DefaultValueShape,
-                Capabilities = p.Capabilities,
-                CreatedAt = now,
-            })
-            .ToList();
-
-        if (toAdd.Count == 0)
-        {
-            logger.LogInformation("All {Total} phenomena already seeded", PhenomenonCatalog.All.Count);
-            return;
-        }
-
-        context.Phenomena.AddRange(toAdd);
-        await context.SaveChangesAsync(stoppingToken);
-        logger.LogInformation("Seeded {Count} phenomena", toAdd.Count);
-    }
-
-    private async Task SeedUsgsParameterMappingsAsync(
-        IServiceProvider services,
-        CancellationToken stoppingToken
-    )
-    {
-        var organizationContext = services.GetRequiredService<OrganizationDbContext>();
-        var dataSourceId = await organizationContext
-            .DataSources.Where(ds => ds.Name == UsgsDataSourceName)
-            .Select(ds => (Guid?)ds.Id)
-            .FirstOrDefaultAsync(stoppingToken);
-
-        if (dataSourceId is null)
-        {
-            logger.LogWarning(
-                "USGS data source '{Name}' not found; skipping USGS parameter mapping seed. Mappings will be seeded on the next deploy after the data source is created.",
-                UsgsDataSourceName
-            );
-            return;
-        }
-
-        var context = services.GetRequiredService<SensorsDbContext>();
-
-        var phenomenaByCode = await context.Phenomena.ToDictionaryAsync(
-            p => p.Code,
-            p => p.Id,
-            StringComparer.OrdinalIgnoreCase,
-            stoppingToken
-        );
-
-        var existingCodes = await context
-            .Parameters.Where(p => p.SourceId == dataSourceId)
-            .Select(p => p.Code)
-            .ToListAsync(stoppingToken);
-        var existingSet = existingCodes.ToHashSet(StringComparer.OrdinalIgnoreCase);
-
-        var now = DateTimeOffset.UtcNow;
-        var toAdd = new List<Parameter>();
-        foreach (var mapping in UsgsParameterMappings.All)
-        {
-            if (existingSet.Contains(mapping.Code))
-                continue;
-            if (!phenomenaByCode.TryGetValue(mapping.PhenomenonCode, out var phenomenonId))
-            {
-                logger.LogWarning(
-                    "USGS code {Code} maps to phenomenon '{PhenomenonCode}' which is not in the catalog; skipping",
-                    mapping.Code,
-                    mapping.PhenomenonCode
-                );
-                continue;
-            }
-
-            toAdd.Add(new Parameter
-            {
-                Id = Guid.CreateVersion7(),
-                SourceId = dataSourceId.Value,
-                Code = mapping.Code,
-                Name = mapping.Name,
-                DefaultUnit = mapping.SourceUnit,
-                SensorTypeId = null,
-                PhenomenonId = phenomenonId,
-                SourceUnit = mapping.SourceUnit,
-                UnitFactor = mapping.UnitFactor,
-                UnitOffset = mapping.UnitOffset,
-                ValueShape = mapping.ValueShape,
-                CreatedAt = now,
-            });
-        }
-
-        if (toAdd.Count == 0)
-        {
-            logger.LogInformation(
-                "All {Total} USGS parameter mappings already seeded",
-                UsgsParameterMappings.All.Count
-            );
-            return;
-        }
-
-        context.Parameters.AddRange(toAdd);
-        await context.SaveChangesAsync(stoppingToken);
-        logger.LogInformation("Seeded {Count} USGS parameter mappings", toAdd.Count);
-    }
-
-    // Resolves phenomenon_id, parameter_id, and canonical_value on any readings ingested before
-    // their parameter mappings existed (e.g. the entire prod backlog before this seeder shipped).
-    // Batched so a single statement doesn't blow past Npgsql's command timeout: a 741k-row UPDATE
-    // hit the 30s read timeout and rolled the entire transaction back.
-    private const int BackfillBatchSize = 50_000;
-
-    private async Task BackfillReadingsAsync(IServiceProvider services, CancellationToken stoppingToken)
-    {
-        var context = services.GetRequiredService<SensorsDbContext>();
-
-        var unresolvedCount = await context
-            .Readings.AsNoTracking()
-            .Where(r => r.PhenomenonId == null)
-            .LongCountAsync(stoppingToken);
-
-        if (unresolvedCount == 0)
-        {
-            logger.LogInformation("No unresolved readings to backfill");
-            return;
-        }
-
-        logger.LogInformation(
-            "Backfilling canonical values on {Count} unresolved reading(s) in batches of {BatchSize}",
-            unresolvedCount,
-            BackfillBatchSize
-        );
-
-        var lastId = Guid.Empty;
-        long totalScanned = 0;
-        long totalResolved = 0;
-
-        while (!stoppingToken.IsCancellationRequested)
-        {
-            var batchIds = await context
-                .Database.SqlQuery<Guid>(
-                    $@"
-                    SELECT id AS ""Value"" FROM readings
-                    WHERE phenomenon_id IS NULL AND id > {lastId}
-                    ORDER BY id
-                    LIMIT {BackfillBatchSize}
-                    "
-                )
-                .ToListAsync(stoppingToken);
-
-            if (batchIds.Count == 0)
-                break;
-
-            totalScanned += batchIds.Count;
-            lastId = batchIds[^1];
-
-            var rowsUpdated = await context.Database.ExecuteSqlInterpolatedAsync(
-                $@"
-                UPDATE readings r
-                SET phenomenon_id   = p.phenomenon_id,
-                    parameter_id    = p.id,
-                    canonical_value = r.value * p.unit_factor + p.unit_offset
-                FROM sensors s, parameters p
-                WHERE r.id = ANY({batchIds})
-                  AND r.sensor_id = s.id
-                  AND p.source_id = s.source_id
-                  AND p.code = r.parameter
-                  AND r.phenomenon_id IS NULL
-                ",
-                stoppingToken
-            );
-
-            totalResolved += rowsUpdated;
-
-            logger.LogInformation(
-                "Backfill batch resolved {Resolved}/{Scanned}; running total {TotalResolved}/{TotalScanned}",
-                rowsUpdated,
-                batchIds.Count,
-                totalResolved,
-                totalScanned
-            );
-
-            if (batchIds.Count < BackfillBatchSize)
-                break;
-        }
-
-        var stillUnresolved = totalScanned - totalResolved;
-        if (stillUnresolved > 0)
-            logger.LogWarning(
-                "Backfill resolved {Resolved} reading(s); {Remaining} remain unresolved (no parameter mapping for their source/code)",
-                totalResolved,
-                stillUnresolved
-            );
-        else
-            logger.LogInformation("Backfill resolved {Resolved} reading(s)", totalResolved);
-    }
-
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
         PropertyNameCaseInsensitive = true,
@@ -1078,6 +877,18 @@ public sealed class DatabaseSeederWorker(
 
         [JsonPropertyName("name")]
         public required List<LocaleValue> Name { get; init; }
+    }
+
+    private sealed class SpeciesDocumentDto
+    {
+        [JsonPropertyName("scientificName")]
+        public required string ScientificName { get; init; }
+
+        [JsonPropertyName("fileName")]
+        public required string FileName { get; init; }
+
+        [JsonPropertyName("title")]
+        public required List<LocaleValue> Title { get; init; }
     }
 
     private sealed class FwsActionDto

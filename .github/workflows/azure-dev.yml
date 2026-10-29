@@ -63,10 +63,6 @@ jobs:
           Azure__SubscriptionId: ${{ env.AZURE_SUBSCRIPTION_ID }}
           Azure__Location: ${{ env.AZURE_LOCATION }}
           Azure__ResourceGroup: ${{ env.AZURE_RESOURCE_GROUP }}
-          Parameters__jwt-user-secret-key: ${{ secrets.JWT_USER_SECRET_KEY }}
-          Parameters__jwt-sensor-secret-key: ${{ secrets.JWT_SENSOR_SECRET_KEY }}
-          Parameters__customDomain: ${{ vars.CUSTOM_DOMAIN }}
-          Parameters__certificateName: ${{ vars.CERTIFICATE_NAME }}
           # Empty on a manual dispatch, where there is no previous-push ref.
           DEPLOY_FROM: ${{ inputs.from || github.event.before }}
           DEPLOY_TO: ${{ github.sha }}
